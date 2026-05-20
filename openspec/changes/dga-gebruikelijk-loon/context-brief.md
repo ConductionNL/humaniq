@@ -1,0 +1,47 @@
+---
+status: draft
+---
+
+# DGA Gebruikelijk-loon Flow
+
+## Purpose
+
+DGA-specifieke flow: gebruikelijk-loon-toets (2026: EUR 56k of hoger marktconform), gerelateerde-vennootschap structuur, voorkomen pseudo-eindheffing.
+
+## Priority & Demand
+
+- **Priority:** P0-must
+- **Demand evidence:** NL-specific gap
+- **Dependencies:** payroll-core-basic, contract-management
+
+## Competitor Evidence (from intelligence-db)
+
+- adp-nl :: 30%-regeling :: Expat 30%-regeling beheer
+- adp-nl :: Global Payroll Streamline :: Multi-country payroll vanuit een platform; NL + 140+ landen
+- adp-nl :: NL Payroll Service Bureau :: Service-bureau model met ADP payroll experts; full UPA
+- afas-hrm :: 13e maand + vakantiegeld :: Automatische reservering + uitbetaling
+- afas-hrm :: 30%-regeling :: Expat 30%-regeling
+- afas-hrm :: DGA-administratie :: Gebruikelijk-loon DGA + holdingstructuur
+- afas-hrm :: Loonbeslag automatisering :: Beslag-berekening + beslagvrije voet
+- centric-hrm :: Centric Payroll :: NL payroll engine, sterk in CAR-UWO, CAO Rijk, zorg-CAOs
+- centric-hrm :: Loonbeslag automatisering :: Beslag + beslagvrije voet + deurwaarder
+- cipal-schaubroeck :: BE sociale zekerheid :: RSZ-aanlevering BE
+- cipal-schaubroeck :: BE/NL payroll :: Native BE + NL payroll engines
+- cipal-schaubroeck :: Loonbeslag :: Beslag-procedures
+- easy-loon :: 30%-regeling :: Expat regeling
+- easy-loon :: DGA salarisrun :: Specifiek DGA gebruikelijk-loon + spaarloon
+- easy-loon :: MKB salarisrun :: Bruto-netto NL met loonheffing + ZVW
+- employes :: 30%-regeling :: Expat 30%-regeling
+- employes :: DGA-flow :: Gebruikelijk-loon DGA
+- employes :: Loonbeslag :: Beslag + beslagvrije voet
+- employes :: Salarisrun automatisch :: NL payroll engine, maandelijkse run
+- exact-online-hrm :: 13e maand en vakantiegeld :: Automatische reservering en uitbetaling
+- exact-online-hrm :: 30%-regeling expat :: 30%-regeling administratie voor expats
+- exact-online-hrm :: Loonheffingskorting beheer :: Heffingskorting toepassing met werknemer-verklaring
+- exact-online-hrm :: Salarisrun maandelijks :: Bruto-netto, loonheffing, ZVW, WW, WIA
+- frappe-hr :: Loans + advances :: Employee loans with repayment via payroll
+- frappe-hr :: Payroll Entry :: Periodic payroll run; India/UAE focus
+
+## Notes
+
+This spec was triaged from market intelligence research dated 2026-05-20 covering 30 competitor implementations. See `/tmp/hrmq-research-gap-report.md` for full landscape, feature coverage matrix, and risk analysis.
