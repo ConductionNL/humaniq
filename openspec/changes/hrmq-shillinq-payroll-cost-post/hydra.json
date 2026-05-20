@@ -1,0 +1,10 @@
+{
+  "spec_slug": "hrmq-shillinq-payroll-cost-post",
+  "title": "Cross-app: Payroll Cost \u2192 shillinq GL Post",
+  "app": "hrmq",
+  "repo": "https://github.com/ConductionNL/hrmq",
+  "depends_on": [
+    "payroll-core-basic"
+  ],
+  "issue": null
+}
