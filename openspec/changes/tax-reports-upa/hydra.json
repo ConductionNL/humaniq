@@ -1,0 +1,10 @@
+{
+  "spec_slug": "tax-reports-upa",
+  "title": "UPA Loonaangifte to Belastingdienst",
+  "app": "hrmq",
+  "repo": "https://github.com/ConductionNL/hrmq",
+  "depends_on": [
+    "payroll-core-basic"
+  ],
+  "issue": null
+}
