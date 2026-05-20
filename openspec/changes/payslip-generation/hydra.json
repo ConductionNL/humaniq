@@ -1,0 +1,10 @@
+{
+  "spec_slug": "payslip-generation",
+  "title": "Payslip / Loonstrook Generation",
+  "app": "hrmq",
+  "repo": "https://github.com/ConductionNL/hrmq",
+  "depends_on": [
+    "payroll-core-basic"
+  ],
+  "issue": null
+}
