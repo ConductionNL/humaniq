@@ -3,6 +3,17 @@ status: draft
 ---
 # 30%-regeling Administratie (Expatregeling)
 
+## Placement & Information Architecture
+
+**Placement type:** `SUB_PAGE` — Sub-page beneath a top-level menu entry. Renders as a page inside the parent surface (usually reachable via a router child route or a tab on the parent index page).
+
+**Lives at:** Salarissen › 30%-regeling
+
+**Rationale:** Expat-regeling.  
+_Source: /tmp/ia-procest-hrmq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 De 30%-regeling — formeel de "extraterritoriale-kostenregeling" uit art. 31a Wet LB 1964 jo. art. 10ea Uitvoeringsbesluit LB — is voor Nederlandse werkgevers met internationaal personeel een zware administratieve last met aanzienlijke fiscale risico's. Werkgevers mogen 30% van het bruto-loon onbelast uitkeren als forfaitaire vergoeding voor extraterritoriale kosten (huisvesting, dubbele-huishouding, repatriëringskosten, taalcursussen) zonder bonnetjes te hoeven overleggen. Daar staan strenge voorwaarden tegenover: geldige Belastingdienst-beschikking, salarisdrempel (€46.660 bruto fiscaal loon excl. de 30%-vergoeding voor 2026; €35.468 voor jong-onderzoekers <30 jaar met master-diploma), 150-km-criterium (>16 van de 24 maanden vóór indiensttreding op >150 km van de Nederlandse grens woonachtig), maximaal 5 jaar looptijd (sinds 2024 afgebouwd: 30/20/10% in jaar 1-2, 2-3, 4-5 — definitief afgeschaft voor nieuwe gevallen vanaf 2027 in Belastingplan 2026 onder voorbehoud), maximale grondslag = WNT-norm (€246.000 voor 2026; alleen 30% over het deel onder de norm), en jaarlijkse her-toetsing van het loonniveau.
