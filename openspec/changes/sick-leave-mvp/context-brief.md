@@ -4,6 +4,17 @@ status: draft
 
 # Sick Leave / Verzuim MVP (70%/70%, UWV)
 
+## Placement & Information Architecture
+
+**Placement type:** `SUB_PAGE` — Sub-page beneath a top-level menu entry. Renders as a page inside the parent surface (usually reachable via a router child route or a tab on the parent index page).
+
+**Lives at:** Verlof & verzuim › Ziekmeldingen
+
+**Rationale:** Verzuim-MVP.  
+_Source: /tmp/ia-procest-hrmq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Ziekmelding/hersteldmelding, wachtdag, 70%/70% doorbetalingsplicht 1e/2e jaar, UWV-koppeling voor 42e-weeks-melding.
