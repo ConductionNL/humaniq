@@ -3,6 +3,17 @@ status: draft
 ---
 # AOR Ambtenarenrecht — Public-Sector Employment Workflows
 
+## Placement & Information Architecture
+
+**Placement type:** `SETTING` — Setting under the app's Beheer/Admin/Configuration surface. Lives in the existing settings UI; no top-level menu entry.
+
+**Lives at:** Configuratie › CAO's & regelingen
+
+**Rationale:** Public-sector ruleset.  
+_Source: /tmp/ia-procest-hrmq.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 The `aor-ambtenarenrecht` app codifies the public-sector employment workflows that survived the Wet normalisering rechtspositie ambtenaren (Wnra, 1 January 2020). Although civil servants now operate under private employment law, a thick layer of administrative procedures, integrity safeguards, and special appeal rights remains in force across Rijk, provincies, gemeenten, waterschappen, and zelfstandige bestuursorganen. Without dedicated tooling, these procedures live in ad-hoc Word templates, shared mailboxes, and tribal knowledge held by a handful of HR-juristen — a fragile setup that risks procedural mistakes, missed termijnen, and reputational damage when integriteitskwesties are mishandled. In practice, organisations report dat 30-40% van ontslagdossiers proceduregebreken bevat die in beroep tot vernietiging leiden, simpelweg omdat handmatig bewaakte termijnen worden gemist of verkeerde bevoegd-gezag-vermelding op het besluit staat.
