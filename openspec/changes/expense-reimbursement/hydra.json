@@ -1,0 +1,8 @@
+{
+  "spec_slug": "expense-reimbursement",
+  "title": "Onkostendeclaratie (Declaratie entity + approval workflow)",
+  "app": "hrmq",
+  "repo": "https://github.com/ConductionNL/hrmq",
+  "depends_on": [],
+  "issue": null
+}
