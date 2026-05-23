@@ -1,0 +1,8 @@
+{
+  "spec_slug": "bhv-organisatie",
+  "title": "BHV Organisatie \u2014 Bedrijfshulpverlening Management",
+  "app": "hrmq",
+  "repo": "https://github.com/ConductionNL/hrmq",
+  "depends_on": [],
+  "issue": null
+}
