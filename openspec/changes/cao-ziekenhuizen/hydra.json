@@ -1,0 +1,8 @@
+{
+  "spec_slug": "cao-ziekenhuizen",
+  "title": "CAO Ziekenhuizen \u2014 NVZ Arbeidsvoorwaarden Module",
+  "app": "hrmq",
+  "repo": "https://github.com/ConductionNL/hrmq",
+  "depends_on": [],
+  "issue": null
+}
