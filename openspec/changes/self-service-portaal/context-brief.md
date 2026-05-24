@@ -4,6 +4,17 @@ status: draft
 
 # Werknemer Self-service Portal (SSO)
 
+## Placement & Information Architecture
+
+**Placement type:** `TOP_MENU` — Top-level menu entry — this functionality earns its own item in the app's left-nav.
+
+**Lives at:** Mijn HR (role-filtered top-level menu)
+
+**Rationale:** Per ADR-001 rule 2: Self-service is rol-gefilterde wrapper, geen aparte app. Mijn HR IS de self-service top-level menu — medewerker ziet loonstrook/verlof/NAW; manager ziet team-widgets.  
+_Source: manual tag 2026-05-24_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Werknemer-login (Nextcloud SSO): loonstrook download, verlof aanvragen, NAW-mutaties (met manager-approval voor IBAN/BSN), jaaropgaaf.
