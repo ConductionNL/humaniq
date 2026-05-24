@@ -4,6 +4,17 @@ status: draft
 
 # Compliance Reporting AVG/GDPR
 
+## Placement & Information Architecture
+
+**Placement type:** `SUB_PAGE` — Sub-page beneath a top-level menu entry. Renders as a page inside the parent surface (usually reachable via a router child route or a tab on the parent index page).
+
+**Lives at:** Compliance / AVG-rapportage
+
+**Rationale:** GDPR rapportages zijn een eigen werkruimte binnen Compliance. Niet TOP_MENU (Compliance is de top), niet SETTING (rapportages worden interactief gegenereerd).  
+_Source: manual tag 2026-05-24_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 BSN versleuteld at-rest (AES-256), GDPR dataverzoek-export (1 klik per werknemer), retentie-trigger 7 jaar fiscaal + 5 jaar arbeid post-uitdienst.
