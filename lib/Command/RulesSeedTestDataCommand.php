@@ -1,0 +1,77 @@
+<?php
+
+/**
+ * Rules Seed Test-Data Command
+ *
+ * `occ hrmq:rules:seed-testdata` — idempotently backfills the local TEST data so
+ * it satisfies the enforced HR/labour rules (creates compliant sample objects for
+ * empty types and backfills provider-declared field defaults on existing rows).
+ * Run after a clean-env reset so a fresh environment audits at 100%.
+ * Test/dev utility only.
+ *
+ * @category Command
+ * @package  OCA\Hrmq\Command
+ *
+ * @author    Conduction Development Team <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @link https://conduction.nl
+ *
+ * @spec openspec/changes/hrm-rule-testdata-seed/specs/hrm-rule-engine/spec.md
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Hrmq\Command;
+
+use OCA\Hrmq\Service\RuleTestDataSeeder;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+/**
+ * occ command that seeds compliant local test data.
+ */
+class RulesSeedTestDataCommand extends Command
+{
+    /**
+     * @param RuleTestDataSeeder $seeder The test-data seeder.
+     */
+    public function __construct(
+        private readonly RuleTestDataSeeder $seeder,
+    ) {
+        parent::__construct();
+
+    }//end __construct()
+
+    /**
+     * @return void
+     */
+    protected function configure(): void
+    {
+        $this->setName('hrmq:rules:seed-testdata')
+            ->setDescription('Backfill local test data to satisfy the enforced rules (idempotent; test/dev only).');
+
+    }//end configure()
+
+    /**
+     * @param InputInterface  $input  Console input.
+     * @param OutputInterface $output Console output.
+     *
+     * @return int
+     */
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $result = $this->seeder->seed();
+
+        $output->writeln('<info>Hrmq rules test-data seeder</info>');
+        $output->writeln(sprintf('  provider objects created : %d', ($result['providerObjectsCreated'] ?? 0)));
+        $output->writeln(sprintf('  provider fields backfilled : %d', ($result['providerFieldsAdded'] ?? 0)));
+        $output->writeln(sprintf('  already compliant          : %d', $result['alreadyCompliant']));
+        $output->writeln('Run <info>occ hrmq:rules:audit</info> to confirm 100% compliance.');
+
+        return 0;
+
+    }//end execute()
+}//end class
