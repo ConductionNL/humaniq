@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>hrmq</id>
+    <name lang="en">HRMQ</name>
+    <name lang="nl">HRMQ</name>
+    <summary lang="en">Open-source HR and payroll administration with built-in labour-law and wage-tax compliance.</summary>
+    <summary lang="nl">Open-source HR- en salarisadministratie met ingebouwde arbeidsrecht- en loonheffingencompliance.</summary>
+    <description lang="en"><![CDATA[Open-source HR and payroll administration for Dutch and EU employers, built on the OpenRegister data layer.
+
+HRMQ ships a static, versioned corpus of international HR/labour and payroll rules (EU labour directives, ILO conventions, GDPR for employee data, occupational health & safety, national labour law, and payroll / wage-tax & social-security compliance) and an executable RuleEngine that audits the register's HR objects against the machine-checkable rules and reports compliance coverage.
+
+**Key Features**
+
+- **OpenRegister integration** — all Employee / EmploymentContract / Payslip / PayrollRun objects live in the OpenRegister `hrmq` register
+- **Compliance rule engine** — auto-discovered per-domain CheckProviders enforce the machine-checkable rule corpus
+- **`occ hrmq:rules:audit`** — reports enforced ÷ machine-checkable coverage, violations, and per-object-type compliance
+- **`occ hrmq:rules:seed-testdata`** — idempotently seeds compliant local test data
+- **Full quality pipeline** — PHPCS, PHPMD, Psalm, PHPStan
+
+Free and open source under the EUPL-1.2 license.
+
+**Support:** For support, contact support@conduction.nl.
+    ]]></description>
+    <description lang="nl"><![CDATA[Open-source HR- en salarisadministratie voor Nederlandse en EU-werkgevers, gebouwd op de OpenRegister-datalaag. HRMQ levert een statisch, geversioneerd corpus van internationale HR/arbeids- en loonheffingenregels en een uitvoerbare RuleEngine die de HR-objecten in het register toetst aan de machine-controleerbare regels.
+
+Vrij en open source onder de EUPL-1.2-licentie.
+
+**Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl.
+    ]]></description>
+    <version>0.1.0</version>
+    <licence>agpl</licence>
+    <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
+    <namespace>Hrmq</namespace>
+    <documentation>
+        <user>https://github.com/ConductionNL/hrmq</user>
+        <admin>https://github.com/ConductionNL/hrmq</admin>
+        <developer>https://github.com/ConductionNL/hrmq</developer>
+    </documentation>
+    <category>organization</category>
+    <website>https://github.com/ConductionNL/hrmq</website>
+    <discussion>https://github.com/ConductionNL/hrmq/discussions</discussion>
+    <bugs>https://github.com/ConductionNL/hrmq/issues</bugs>
+    <repository>https://github.com/ConductionNL/hrmq</repository>
+
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/hrmq/main/img/app-store.svg</screenshot>
+
+    <dependencies>
+        <nextcloud min-version="28" max-version="34"/>
+        <php min-version="8.3"/>
+    </dependencies>
+
+    <repair-steps>
+        <post-migration>
+            <!-- Import the hrmq register (lib/Settings/hrmq_register.json +
+                 register.d/*.json fragments) into OpenRegister. Idempotent;
+                 fails soft when OpenRegister is not installed. -->
+            <step>OCA\Hrmq\Repair\InitializeRegister</step>
+        </post-migration>
+    </repair-steps>
+
+    <commands>
+        <!-- Audit the register's HR/labour objects against the machine-checkable
+             rule corpus (lib/Standards/RuleCatalogue + RuleEngine). Read-only. -->
+        <command>OCA\Hrmq\Command\RulesAuditCommand</command>
+        <!-- Idempotently backfill local TEST data to satisfy the enforced rules
+             (provider sample objects + provider field defaults). Test/dev. -->
+        <command>OCA\Hrmq\Command\RulesSeedTestDataCommand</command>
+    </commands>
+</info>
