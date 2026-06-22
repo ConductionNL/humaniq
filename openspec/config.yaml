@@ -1,0 +1,33 @@
+schema: spec-driven
+
+context: |
+  Project: HRMQ
+  Repo: Conduction/hrmq
+  Type: Nextcloud App (PHP backend + Vue 2 frontend)
+  Description: Open-source HR & payroll administration for Dutch/EU employers, built on the OpenRegister data layer. Ships a versioned HR/labour & payroll compliance rule corpus + RuleEngine, and HR/labour features (employee master, payroll, timesheets, expenses).
+  Database: PostgreSQL (via OpenRegister's ObjectService)
+  Mount path: /var/www/html/custom_apps/hrmq
+
+  Architecture:
+    Pattern: Thin client — HRMQ owns no database tables; all HR objects live in the OpenRegister `hrmq` register.
+    Data layer: OpenRegister (JSON object storage with schema validation + declarative x-openregister-lifecycle state machines + LifecycleGuardInterface guards).
+    Frontend: Vue 2.7 + @conduction/nextcloud-vue manifest renderer (CnAppRoot/CnPageRenderer); declarative type:"index"/type:"detail" pages read/write OR directly.
+    Backend: Minimal — SettingsService imports the register; PageController is SPA-shell glue; lifecycle guards add cross-actor rules the state machine cannot express.
+
+  Standards:
+    Primary: Schema.org type annotations for entities (schema:Person, schema:Invoice, schema:Action).
+    Domain: EU labour directives, ILO conventions, GDPR (employee data), national labour law, payroll/wage-tax & social-security.
+
+rules:
+  proposal:
+    - Reference the OpenRegister abstraction (ADR-022) — HRMQ owns no backend CRUD; HR objects live in the OpenRegister `hrmq` register.
+    - Prefer declarative manifest pages + x-openregister-lifecycle over bespoke Vue views and PHP services (ADR-031 / ADR-001).
+  specs:
+    - Use Schema.org type annotations for all entities.
+    - Model object lifecycles declaratively via x-openregister-lifecycle; only add a LifecycleGuardInterface when a rule is not declaratively expressible.
+  design:
+    - Uses OpenRegister API directly from the frontend (no own backend CRUD).
+    - Register config in lib/Settings/hrmq_register.json + lib/Settings/register.d/*.json fragments (OpenAPI 3.0.0), imported via ConfigurationService::importFromApp() in a repair step.
+  tasks:
+    - Verify schemas + lifecycle annotations import into OpenRegister.
+    - Keep any genuine approval business-rule in PHP only when not declaratively expressible.

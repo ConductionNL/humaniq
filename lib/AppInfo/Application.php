@@ -27,6 +27,7 @@ namespace OCA\Hrmq\AppInfo;
 
 use OCA\Hrmq\Command\RulesAuditCommand;
 use OCA\Hrmq\Command\RulesSeedTestDataCommand;
+use OCA\Hrmq\Lifecycle\NoSelfApprovalGuard;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -82,6 +83,18 @@ class Application extends App implements IBootstrap
             RulesSeedTestDataCommand::class,
             static function ($c): RulesSeedTestDataCommand {
                 return new RulesSeedTestDataCommand($c->get(\OCA\Hrmq\Service\RuleTestDataSeeder::class));
+            }
+        );
+
+        // OpenRegister lifecycle guard for the Timesheet/Expense approve+reject
+        // transitions (separation of duties — no self-approval). Registered keyed
+        // by its FQCN so OpenRegister's LifecycleGuardRegistry resolves the
+        // `requires` tag declared on the transitions. The guard has no app
+        // dependencies, so a plain construction closure suffices.
+        $context->registerService(
+            NoSelfApprovalGuard::class,
+            static function ($c): NoSelfApprovalGuard {
+                return new NoSelfApprovalGuard();
             }
         );
 

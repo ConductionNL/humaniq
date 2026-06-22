@@ -50,6 +50,15 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <php min-version="8.3"/>
     </dependencies>
 
+    <navigations>
+        <navigation>
+            <id>hrmq</id>
+            <name>HRMQ</name>
+            <route>hrmq.page.index</route>
+            <icon>app.svg</icon>
+        </navigation>
+    </navigations>
+
     <repair-steps>
         <post-migration>
             <!-- Import the hrmq register (lib/Settings/hrmq_register.json +
