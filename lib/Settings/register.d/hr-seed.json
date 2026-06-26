@@ -1,0 +1,111 @@
+{
+    "x-hrmq-fragment": "hr-seed",
+    "components": {
+        "objects": [
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Timesheet",
+                    "slug": "timesheet-jansen-2026-05"
+                },
+                "employeeId": "employee-jansen",
+                "period": "2026-05",
+                "hours": 152,
+                "description": "Reguliere uren mei 2026 — projectwerk en intern overleg.",
+                "projectId": "project-alpha",
+                "costCenter": "CC-100",
+                "billable": true,
+                "status": "submitted",
+                "submittedAt": "2026-06-01T08:15:00Z"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Timesheet",
+                    "slug": "timesheet-devries-2026-05"
+                },
+                "employeeId": "employee-devries",
+                "period": "2026-05",
+                "hours": 168,
+                "description": "Uren mei 2026 — support en onboarding.",
+                "projectId": "project-beta",
+                "costCenter": "CC-200",
+                "billable": false,
+                "status": "approved",
+                "submittedAt": "2026-06-01T09:00:00Z",
+                "approvedBy": "manager-pietersen",
+                "approvedAt": "2026-06-02T10:30:00Z"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Timesheet",
+                    "slug": "timesheet-bakker-2026-05"
+                },
+                "employeeId": "employee-bakker",
+                "period": "2026-05",
+                "hours": 140,
+                "description": "Uren mei 2026 — gecorrigeerd na afkeuring.",
+                "billable": false,
+                "status": "rejected",
+                "submittedAt": "2026-06-01T11:45:00Z",
+                "approvedBy": "manager-pietersen",
+                "approvedAt": "2026-06-02T14:00:00Z",
+                "rejectionReason": "Aantal uren komt niet overeen met de geregistreerde aanwezigheid; graag corrigeren en opnieuw indienen."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Expense",
+                    "slug": "expense-jansen-hotel"
+                },
+                "employeeId": "employee-jansen",
+                "title": "Hotelovernachting Amsterdam",
+                "description": "Verblijf tijdens klantbezoek, 1 nacht.",
+                "amount": 185.5,
+                "currency": "EUR",
+                "category": "accommodation",
+                "expenseDate": "2026-05-14",
+                "status": "submitted",
+                "submittedAt": "2026-05-15T07:30:00Z"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Expense",
+                    "slug": "expense-devries-train"
+                },
+                "employeeId": "employee-devries",
+                "title": "Treinreis Utrecht — Den Haag",
+                "description": "Retour tweede klas voor projectoverleg.",
+                "amount": 27.4,
+                "currency": "EUR",
+                "category": "travel",
+                "expenseDate": "2026-05-20",
+                "status": "approved",
+                "submittedAt": "2026-05-20T18:00:00Z",
+                "approvedBy": "manager-pietersen",
+                "approvedAt": "2026-05-21T09:15:00Z"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Expense",
+                    "slug": "expense-bakker-software"
+                },
+                "employeeId": "employee-bakker",
+                "title": "JetBrains licentie (jaarabonnement)",
+                "description": "Ontwikkeltooling, na goedkeuring uitbetaald.",
+                "amount": 219,
+                "currency": "EUR",
+                "category": "software",
+                "expenseDate": "2026-04-30",
+                "status": "reimbursed",
+                "submittedAt": "2026-05-01T08:00:00Z",
+                "approvedBy": "manager-pietersen",
+                "approvedAt": "2026-05-02T11:00:00Z",
+                "reimbursedAt": "2026-05-05T12:00:00Z"
+            }
+        ]
+    }
+}

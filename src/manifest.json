@@ -1,0 +1,131 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"version": "1.0.0",
+	"dependencies": [
+		"openregister"
+	],
+	"deepLinks": [
+		{ "registerSlug": "hrmq", "schemaSlug": "Timesheet", "urlTemplate": "/apps/hrmq/timesheets/{uuid}", "displayName": "Timesheet" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Expense", "urlTemplate": "/apps/hrmq/expenses/{uuid}", "displayName": "Expense" }
+	],
+	"menu": [
+		{
+			"id": "TimesheetsGroup",
+			"label": "Uren",
+			"icon": "ClockCheckOutline",
+			"order": 100,
+			"children": [
+				{
+					"id": "Timesheets",
+					"label": "Urenregistratie",
+					"icon": "ClockCheckOutline",
+					"route": "Timesheets"
+				},
+				{
+					"id": "TimesheetApproval",
+					"label": "Urengoedkeuring",
+					"icon": "CheckDecagramOutline",
+					"route": "TimesheetApproval"
+				}
+			]
+		},
+		{
+			"id": "ExpensesGroup",
+			"label": "Onkosten",
+			"icon": "Receipt",
+			"order": 110,
+			"children": [
+				{
+					"id": "Expenses",
+					"label": "Declaraties",
+					"icon": "Receipt",
+					"route": "Expenses"
+				},
+				{
+					"id": "ExpenseApproval",
+					"label": "Declaratiegoedkeuring",
+					"icon": "CheckDecagramOutline",
+					"route": "ExpenseApproval"
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Timesheets",
+			"route": "/timesheets",
+			"type": "index",
+			"title": "Urenregistratie",
+			"config": {
+				"register": "hrmq",
+				"schema": "Timesheet",
+				"columns": ["employeeId", "period", "hours", "billable", "status"],
+				"filters": ["status", "period", "billable"],
+				"sort": { "field": "period", "order": "desc" }
+			}
+		},
+		{
+			"id": "TimesheetApproval",
+			"route": "/timesheets/approval",
+			"type": "index",
+			"title": "Urengoedkeuring",
+			"config": {
+				"register": "hrmq",
+				"schema": "Timesheet",
+				"description": "Ingediende urenstaten die wachten op goedkeuring of afkeuring.",
+				"columns": ["employeeId", "period", "hours", "submittedAt", "status"],
+				"filters": ["status", "period"],
+				"defaultFilters": { "status": "submitted" },
+				"sort": { "field": "submittedAt", "order": "asc" }
+			}
+		},
+		{
+			"id": "TimesheetDetail",
+			"route": "/timesheets/:id",
+			"type": "detail",
+			"title": "Urenstaat",
+			"config": {
+				"register": "hrmq",
+				"schema": "Timesheet"
+			}
+		},
+		{
+			"id": "Expenses",
+			"route": "/expenses",
+			"type": "index",
+			"title": "Declaraties",
+			"config": {
+				"register": "hrmq",
+				"schema": "Expense",
+				"columns": ["employeeId", "title", "amount", "category", "expenseDate", "status"],
+				"filters": ["status", "category"],
+				"sort": { "field": "expenseDate", "order": "desc" }
+			}
+		},
+		{
+			"id": "ExpenseApproval",
+			"route": "/expenses/approval",
+			"type": "index",
+			"title": "Declaratiegoedkeuring",
+			"config": {
+				"register": "hrmq",
+				"schema": "Expense",
+				"description": "Ingediende declaraties die wachten op goedkeuring of afkeuring.",
+				"columns": ["employeeId", "title", "amount", "category", "submittedAt", "status"],
+				"filters": ["status", "category"],
+				"defaultFilters": { "status": "submitted" },
+				"sort": { "field": "submittedAt", "order": "asc" }
+			}
+		},
+		{
+			"id": "ExpenseDetail",
+			"route": "/expenses/:id",
+			"type": "detail",
+			"title": "Declaratie",
+			"config": {
+				"register": "hrmq",
+				"schema": "Expense"
+			}
+		}
+	]
+}
