@@ -1,0 +1,142 @@
+{
+    "x-hrmq-fragment": "hr-leave",
+    "components": {
+        "schemas": {
+            "LeaveRequest": {
+                "slug": "LeaveRequest",
+                "icon": "CalendarClock",
+                "version": "0.1.0",
+                "title": "Leave request",
+                "description": "An employee request for leave (verlofaanvraag): a period of holiday, sick, unpaid, special, care or parental leave submitted for manager approval. The request lifecycle (draft → submitted → approved/rejected, with the shared no-self-approval separation-of-duties guard) is fully declarative per ADR-031, mirroring the Timesheet and Expense workflows. Leave is the HR/labour surface the portaliq fleet review flagged as missing in hrmq; external employees create and track these requests through the shared external portal (ADR-046), while approval stays a back-office manager action.",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "employeeId",
+                    "leaveType",
+                    "startDate",
+                    "endDate",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "draft",
+                        "terminal": [],
+                        "transitions": {
+                            "submit": {
+                                "from": [
+                                    "draft",
+                                    "rejected"
+                                ],
+                                "to": "submitted",
+                                "description": "The employee submits the leave request for manager approval. A rejected request may be corrected and re-submitted."
+                            },
+                            "approve": {
+                                "from": [
+                                    "submitted"
+                                ],
+                                "to": "approved",
+                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "A manager approves the submitted leave request. The NoSelfApprovalGuard rejects self-approval (the approver may not be the requesting employee)."
+                            },
+                            "reject": {
+                                "from": [
+                                    "submitted"
+                                ],
+                                "to": "rejected",
+                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "A manager rejects the submitted leave request (with a rejectionReason). The NoSelfApprovalGuard rejects self-rejection. The employee may correct the request and re-submit."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Employee",
+                        "description": "UUID reference to the Employee domain object who requests the leave (the requester) — a domain-object reference, never a Nextcloud user id (ADR-046 A4). Drives the self-approval guard and scopes the portaliq external-employee view."
+                    },
+                    "leaveType": {
+                        "type": "string",
+                        "title": "Leave type",
+                        "description": "The kind of leave requested, aligned with Dutch HR practice (Wet arbeid en zorg / BW 7): holiday (vakantie), sick (ziekteverlof), unpaid (onbetaald verlof), special (bijzonder verlof), care (zorgverlof), parental (ouderschapsverlof).",
+                        "enum": [
+                            "holiday",
+                            "sick",
+                            "unpaid",
+                            "special",
+                            "care",
+                            "parental"
+                        ]
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Start date",
+                        "description": "First day of the requested leave period (ISO 8601 date)."
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "End date",
+                        "description": "Last day of the requested leave period, inclusive (ISO 8601 date)."
+                    },
+                    "hours": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Hours",
+                        "description": "Optional total number of leave hours requested — for partial-day leave or when the leave balance is administered in hours rather than days."
+                    },
+                    "reason": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 2000,
+                        "title": "Reason",
+                        "description": "Optional free-text motivation for the request (e.g. the occasion for special leave)."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Approval workflow status. Governed by the x-openregister-lifecycle state machine (draft → submitted → approved/rejected).",
+                        "enum": [
+                            "draft",
+                            "submitted",
+                            "approved",
+                            "rejected"
+                        ],
+                        "default": "draft"
+                    },
+                    "submittedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Submitted at",
+                        "description": "ISO 8601 UTC timestamp the employee submitted the leave request for approval."
+                    },
+                    "approvedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Approved by",
+                        "description": "User ID of the manager who approved (or rejected) the leave request. Must differ from the requesting employee (no self-approval)."
+                    },
+                    "approvedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Approved at",
+                        "description": "ISO 8601 UTC timestamp of approval or rejection."
+                    },
+                    "rejectionReason": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 2000,
+                        "title": "Rejection reason",
+                        "description": "Reason the manager rejected the leave request, shown to the employee so it can be corrected and re-submitted."
+                    }
+                }
+            }
+        }
+    }
+}
