@@ -155,7 +155,7 @@
 					"field": "status",
 					"transitions": ["submit", "approve", "reject", "reopen"]
 				},
-				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab", "config": { "linkedType": "audit-trail" } } ] }
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
 			}
 		},
 		{
@@ -211,7 +211,7 @@
 					"field": "status",
 					"transitions": ["submit", "approve", "reject", "reimburse"]
 				},
-				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab", "config": { "linkedType": "audit-trail" } } ] }
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
 			}
 		},
 		{
@@ -258,7 +258,7 @@
 					{ "label": "Pending expenses", "register": "hrmq", "schema": "Expense", "metric": "count", "filter": { "employeeId": "@objectId", "status": "submitted" } },
 					{ "label": "Hours logged", "register": "hrmq", "schema": "Timesheet", "metric": "sum", "field": "hours", "filter": { "employeeId": "@objectId" } }
 				],
-				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab" } ] }
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
 		},
 		{
@@ -291,7 +291,7 @@
 					{ "id": "1", "widgetId": "ct-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
 					{ "id": "2", "widgetId": "ct-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 5 }
 				],
-				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab" } ] }
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
 		},
 		{
@@ -328,7 +328,7 @@
 					{ "id": "3", "widgetId": "ps-data", "gridX": 0, "gridY": 2, "gridWidth": 8, "gridHeight": 7 },
 					{ "id": "4", "widgetId": "ps-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 9 }
 				],
-				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab" } ] }
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
 		},
 		{
@@ -365,7 +365,7 @@
 					{ "id": "3", "widgetId": "pr-liability", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
 					{ "id": "4", "widgetId": "pr-data", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 6 }
 				],
-				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab" } ] }
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
 		},
 		{
@@ -399,7 +399,7 @@
 					{ "id": "1", "widgetId": "fi-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 6 },
 					{ "id": "2", "widgetId": "fi-files", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 4 }
 				],
-				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab" } ] }
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
 		}
 	]
