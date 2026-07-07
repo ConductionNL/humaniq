@@ -6,9 +6,34 @@
 	],
 	"deepLinks": [
 		{ "registerSlug": "hrmq", "schemaSlug": "Timesheet", "urlTemplate": "/apps/hrmq/timesheets/{uuid}", "displayName": "Timesheet" },
-		{ "registerSlug": "hrmq", "schemaSlug": "Expense", "urlTemplate": "/apps/hrmq/expenses/{uuid}", "displayName": "Expense" }
+		{ "registerSlug": "hrmq", "schemaSlug": "Expense", "urlTemplate": "/apps/hrmq/expenses/{uuid}", "displayName": "Expense" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Employee", "urlTemplate": "/apps/hrmq/employees/{uuid}", "displayName": "Employee" },
+		{ "registerSlug": "hrmq", "schemaSlug": "EmploymentContract", "urlTemplate": "/apps/hrmq/contracts/{uuid}", "displayName": "Employment Contract" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Payslip", "urlTemplate": "/apps/hrmq/payslips/{uuid}", "displayName": "Payslip" },
+		{ "registerSlug": "hrmq", "schemaSlug": "PayrollRun", "urlTemplate": "/apps/hrmq/payroll-runs/{uuid}", "displayName": "Payroll Run" },
+		{ "registerSlug": "hrmq", "schemaSlug": "LoonaangifteFiling", "urlTemplate": "/apps/hrmq/filings/{uuid}", "displayName": "Wage Tax Filing" }
 	],
 	"menu": [
+		{
+			"id": "EmployeesGroup",
+			"label": "Personeel",
+			"icon": "AccountOutline",
+			"order": 90,
+			"children": [
+				{
+					"id": "Employees",
+					"label": "Werknemers",
+					"icon": "AccountOutline",
+					"route": "Employees"
+				},
+				{
+					"id": "EmploymentContracts",
+					"label": "Contracten",
+					"icon": "FileSignOutline",
+					"route": "EmploymentContracts"
+				}
+			]
+		},
 		{
 			"id": "TimesheetsGroup",
 			"label": "Uren",
@@ -46,6 +71,32 @@
 					"label": "Declaratiegoedkeuring",
 					"icon": "CheckDecagramOutline",
 					"route": "ExpenseApproval"
+				}
+			]
+		},
+		{
+			"id": "PayrollGroup",
+			"label": "Loonadministratie",
+			"icon": "CogPlayOutline",
+			"order": 120,
+			"children": [
+				{
+					"id": "Payslips",
+					"label": "Loonstroken",
+					"icon": "ReceiptTextOutline",
+					"route": "Payslips"
+				},
+				{
+					"id": "PayrollRuns",
+					"label": "Loonruns",
+					"icon": "CogPlayOutline",
+					"route": "PayrollRuns"
+				},
+				{
+					"id": "LoonaangifteFilings",
+					"label": "Aangiftes",
+					"icon": "FileSendOutline",
+					"route": "LoonaangifteFilings"
 				}
 			]
 		}
@@ -161,6 +212,194 @@
 					"transitions": ["submit", "approve", "reject", "reimburse"]
 				},
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab", "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "Employees",
+			"route": "/employees",
+			"type": "index",
+			"title": "Werknemers",
+			"config": {
+				"register": "hrmq",
+				"schema": "Employee",
+				"columns": ["employeeNumber", "firstName", "lastName", "startDate", "endDate", "taxTableColor"],
+				"filters": ["taxTableColor"],
+				"sort": { "field": "lastName", "order": "asc" }
+			}
+		},
+		{
+			"id": "EmployeeDetail",
+			"route": "/employees/:id",
+			"type": "detail",
+			"title": "Werknemer",
+			"config": {
+				"register": "hrmq",
+				"schema": "Employee",
+				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in hrmq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. The data widget (identity + payroll/compliance attributes: BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting) leads at 8-wide; EmploymentContract sits beside it (4-wide) since the active contract's type/hourlyWage/awfTariff is the context every other number on this page depends on. Below, Payslip and Timesheet are paired FK-scoped lists (both period-based pay/hours records), then Expense and a Files leaf for the personnel file (justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile -- real statutory document-retention fields on this schema, not a generic add). NO calendar/contacts/talk: Employee declares no appointment or comms linkedType -- the person's own identity data lives on this record, it is not a link to a separate NC contact. summaryAggregates give the at-a-glance headcount-of-one KPIs (contracts, payslips, pending expenses, hours logged). No lifecycleActions -- Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab.",
+				"widgets": [
+					{ "id": "emp-data", "type": "data", "title": "Employee", "content": { "columns": 2 } },
+					{ "id": "emp-contracts", "type": "object-list", "title": "Contracts", "content": { "register": "hrmq", "schema": "EmploymentContract", "filter": { "employeeId": "@objectId" }, "sort": { "field": "startDate", "dir": "desc" }, "columns": [ { "key": "type", "label": "Type" }, { "key": "startDate", "label": "Start" }, { "key": "endDate", "label": "End" }, { "key": "hourlyWage", "label": "Hourly wage" }, { "key": "awfTariff", "label": "Awf tariff" } ], "limit": 10, "rowRoute": "EmploymentContractDetail" } },
+					{ "id": "emp-payslips", "type": "object-list", "title": "Payslips", "content": { "register": "hrmq", "schema": "Payslip", "filter": { "employeeId": "@objectId" }, "sort": { "field": "period", "dir": "desc" }, "columns": [ { "key": "period", "label": "Period" }, { "key": "jurisdiction", "label": "Jurisdiction" }, { "key": "grossPay", "label": "Gross" }, { "key": "nettoPay", "label": "Net" } ], "limit": 10, "rowRoute": "PayslipDetail" } },
+					{ "id": "emp-timesheets", "type": "object-list", "title": "Timesheets", "content": { "register": "hrmq", "schema": "Timesheet", "filter": { "employeeId": "@objectId" }, "sort": { "field": "period", "dir": "desc" }, "columns": [ { "key": "period", "label": "Period" }, { "key": "hours", "label": "Hours" }, { "key": "status", "label": "Status" } ], "limit": 10, "rowRoute": "TimesheetDetail" } },
+					{ "id": "emp-expenses", "type": "object-list", "title": "Expenses", "content": { "register": "hrmq", "schema": "Expense", "filter": { "employeeId": "@objectId" }, "sort": { "field": "expenseDate", "dir": "desc" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "amount", "label": "Amount" }, { "key": "status", "label": "Status" } ], "limit": 10, "rowRoute": "ExpenseDetail" } },
+					{ "id": "emp-files", "type": "integration", "integrationId": "files", "title": "Personnel file" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "emp-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "emp-contracts", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 },
+					{ "id": "3", "widgetId": "emp-payslips", "gridX": 0, "gridY": 6, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": "4", "widgetId": "emp-timesheets", "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": "5", "widgetId": "emp-expenses", "gridX": 0, "gridY": 11, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": "6", "widgetId": "emp-files", "gridX": 6, "gridY": 11, "gridWidth": 6, "gridHeight": 5 }
+				],
+				"summaryAggregates": [
+					{ "label": "Contracts", "register": "hrmq", "schema": "EmploymentContract", "metric": "count", "filter": { "employeeId": "@objectId" } },
+					{ "label": "Payslips", "register": "hrmq", "schema": "Payslip", "metric": "count", "filter": { "employeeId": "@objectId" } },
+					{ "label": "Pending expenses", "register": "hrmq", "schema": "Expense", "metric": "count", "filter": { "employeeId": "@objectId", "status": "submitted" } },
+					{ "label": "Hours logged", "register": "hrmq", "schema": "Timesheet", "metric": "sum", "field": "hours", "filter": { "employeeId": "@objectId" } }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab" } ] }
+			}
+		},
+		{
+			"id": "EmploymentContracts",
+			"route": "/contracts",
+			"type": "index",
+			"title": "Contracten",
+			"config": {
+				"register": "hrmq",
+				"schema": "EmploymentContract",
+				"columns": ["employeeId", "type", "startDate", "endDate", "hourlyWage", "awfTariff"],
+				"filters": ["type", "awfTariff"],
+				"sort": { "field": "startDate", "order": "desc" }
+			}
+		},
+		{
+			"id": "EmploymentContractDetail",
+			"route": "/contracts/:id",
+			"type": "detail",
+			"title": "Contract",
+			"config": {
+				"register": "hrmq",
+				"schema": "EmploymentContract",
+				"_note": "Leaf compliance record: no other schema in hrmq references EmploymentContract by FK, so the page is a simple two-panel layout -- the data widget (type/writtenContract/dates/hoursPerWeek/hourlyWage/cao/awfTariff plus the jurisdiction-specific fields: workingTimeDocumented, overtimeMultiplier, ftePartOfYearMinijob, dpaeFiledBeforeStart) at 8-wide, and Related at 4-wide for the one meaningful outbound ref this schema carries -- employeeId, the Employee the contract belongs to. No child lists (nothing points at a contract), no files/calendar/comms leaves (no linkedType or document field evidence on this schema), no lifecycleActions (EmploymentContract has no x-openregister-lifecycle). Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "ct-data", "type": "data", "title": "Contract", "content": { "columns": 2 } },
+					{ "id": "ct-related", "type": "related", "title": "Related" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "ct-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "2", "widgetId": "ct-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 5 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab" } ] }
+			}
+		},
+		{
+			"id": "Payslips",
+			"route": "/payslips",
+			"type": "index",
+			"title": "Loonstroken",
+			"config": {
+				"register": "hrmq",
+				"schema": "Payslip",
+				"columns": ["employeeId", "period", "jurisdiction", "grossPay", "nettoPay"],
+				"filters": ["jurisdiction", "period"],
+				"sort": { "field": "period", "order": "desc" }
+			}
+		},
+		{
+			"id": "PayslipDetail",
+			"route": "/payslips/:id",
+			"type": "detail",
+			"title": "Loonstrook",
+			"config": {
+				"register": "hrmq",
+				"schema": "Payslip",
+				"_note": "Financial-document archetype (x-schema-org: schema:Invoice), same family as Expense's amount-first design: two headline stat KPIs (gross/net pay) lead the page since that is what an employee or approver checks first, followed by the dense data widget carrying the full gross-to-net withholding breakdown (NL loonheffing/zvw/wkr, DE Lohnsteuer/Soli/Kirchensteuer, FR cotisations/PAS, US FICA/Medicare -- the schema is genuinely multi-jurisdiction so all fields surface via the data widget rather than being cherry-picked). Related sits alongside for the one outbound ref -- employeeId, the Employee this payslip was issued to. Stat format uses 'number' not 'currency' because Payslip.currency varies per record (EUR/USD) and a widget's format is static. No files/calendar/comms leaves: nothing in the schema models an attachable payslip document or appointment, and Payslip carries no x-openregister-lifecycle so there are no lifecycleActions. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "ps-gross", "type": "stat", "title": "Gross pay", "content": { "label": "Gross pay", "caption": "this period", "icon": "CashPlus", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "Payslip", "metric": "sum", "field": "grossPay", "filter": { "id": "@objectId" } } } },
+					{ "id": "ps-net", "type": "stat", "title": "Net pay", "content": { "label": "Net pay", "caption": "paid out", "icon": "CashCheck", "valueColor": "#46ba61", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "Payslip", "metric": "sum", "field": "nettoPay", "filter": { "id": "@objectId" } } } },
+					{ "id": "ps-data", "type": "data", "title": "Payslip breakdown", "content": { "columns": 2 } },
+					{ "id": "ps-related", "type": "related", "title": "Related" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "ps-gross", "gridX": 0, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "2", "widgetId": "ps-net", "gridX": 4, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "3", "widgetId": "ps-data", "gridX": 0, "gridY": 2, "gridWidth": 8, "gridHeight": 7 },
+					{ "id": "4", "widgetId": "ps-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 9 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab" } ] }
+			}
+		},
+		{
+			"id": "PayrollRuns",
+			"route": "/payroll-runs",
+			"type": "index",
+			"title": "Loonruns",
+			"config": {
+				"register": "hrmq",
+				"schema": "PayrollRun",
+				"columns": ["period", "administrationId", "jurisdiction", "status", "totalGross", "totalNet"],
+				"filters": ["status", "jurisdiction"],
+				"sort": { "field": "period", "order": "desc" }
+			}
+		},
+		{
+			"id": "PayrollRunDetail",
+			"route": "/payroll-runs/:id",
+			"type": "detail",
+			"title": "Loonrun",
+			"config": {
+				"register": "hrmq",
+				"schema": "PayrollRun",
+				"_note": "Batch/reconciliation archetype: a PayrollRun is a per-period aggregate of an administration's payslips, so its page leads with the GL-reconciliation totals (totalGross/totalNet/withholdingLiabilityBalance -- exactly the numbers xc-payroll-gl-reconciliation and xc-withholding-liability-clearing check) as stat KPIs, then the full record (period/administrationId/jurisdiction/status/glLiabilityPosted/glExpensePosted/withholdingsClearedToZero) in the data widget below. NO Payslip child list and NO related panel: Payslip carries no payrollRunId (or any) FK back to PayrollRun in the schema, and administrationId is a bare string, not a resolvable object reference -- adding either would fabricate a relation the schema does not carry. NO lifecycleActions: `status` is a plain enum (draft/approved/posted/paid) with no `x-openregister-lifecycle` transition map on this schema, unlike Timesheet/Expense -- driving lifecycleActions here would invent transition names the backend does not guard. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "pr-gross", "type": "stat", "title": "Total gross", "content": { "label": "Total gross", "caption": "this period", "icon": "CashMultiple", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "PayrollRun", "metric": "sum", "field": "totalGross", "filter": { "id": "@objectId" } } } },
+					{ "id": "pr-net", "type": "stat", "title": "Total net", "content": { "label": "Total net", "caption": "paid out", "icon": "CashCheck", "valueColor": "#46ba61", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "PayrollRun", "metric": "sum", "field": "totalNet", "filter": { "id": "@objectId" } } } },
+					{ "id": "pr-liability", "type": "stat", "title": "Withholding liability balance", "content": { "label": "Liability balance", "caption": "should clear to zero", "icon": "ScaleBalance", "valueColor": "#e9322d", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "PayrollRun", "metric": "sum", "field": "withholdingLiabilityBalance", "filter": { "id": "@objectId" } } } },
+					{ "id": "pr-data", "type": "data", "title": "Payroll run", "content": { "columns": 2 } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "pr-gross", "gridX": 0, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "2", "widgetId": "pr-net", "gridX": 4, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "3", "widgetId": "pr-liability", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "4", "widgetId": "pr-data", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 6 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab" } ] }
+			}
+		},
+		{
+			"id": "LoonaangifteFilings",
+			"route": "/filings",
+			"type": "index",
+			"title": "Aangiftes",
+			"config": {
+				"register": "hrmq",
+				"schema": "LoonaangifteFiling",
+				"description": "Wage-tax / social-security filings by period and statutory deadline.",
+				"columns": ["period", "jurisdiction", "filingType", "deadline", "submittedDate", "electronicallyFiled"],
+				"filters": ["jurisdiction", "filingType"],
+				"sort": { "field": "deadline", "order": "asc" }
+			}
+		},
+		{
+			"id": "LoonaangifteFilingDetail",
+			"route": "/filings/:id",
+			"type": "detail",
+			"title": "Aangifte",
+			"config": {
+				"register": "hrmq",
+				"schema": "LoonaangifteFiling",
+				"_note": "Statutory-deadline archetype: a filing's whole purpose is 'was it filed on time and is proof retained', so the page leads with the deadline/submittedDate/paidDate/electronicallyFiled facts in the data widget, no stat KPIs (the fields are dates/booleans, not summable amounts) and no related panel (the schema carries no employeeId/administrationId or any other object-FK -- a filing is an organisation-level record, not scoped to a person). Files is included full-width for the filed submission/deposit proof, justified by the schema's own retainedUntil/furnishedToRecipientDate/filedWithAuthorityDate retention-evidence fields (NL 7yr / DE 6yr / US 4yr retention obligations). No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. No lifecycleActions -- the schema declares no `status` field or x-openregister-lifecycle; submittedDate/paidDate are plain timestamps, not a guarded state machine. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "fi-data", "type": "data", "title": "Filing", "content": { "columns": 2 } },
+					{ "id": "fi-files", "type": "integration", "integrationId": "files", "title": "Filing proof / deposit confirmation" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "fi-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "fi-files", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "component": "CnAuditTrailTab" } ] }
 			}
 		}
 	]
