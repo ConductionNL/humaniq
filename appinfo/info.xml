@@ -38,12 +38,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <developer>https://github.com/ConductionNL/hrmq</developer>
     </documentation>
     <category>organization</category>
-    <website>https://github.com/ConductionNL/hrmq</website>
-    <discussion>https://github.com/ConductionNL/hrmq/discussions</discussion>
-    <bugs>https://github.com/ConductionNL/hrmq/issues</bugs>
-    <repository>https://github.com/ConductionNL/hrmq</repository>
+    <website>https://codeberg.org/Conduction/hrmq</website>
+    <bugs>https://codeberg.org/Conduction/hrmq/issues</bugs>
+    <repository>https://codeberg.org/Conduction/hrmq</repository>
 
-    <screenshot>https://raw.githubusercontent.com/ConductionNL/hrmq/main/img/app-store.svg</screenshot>
+    <screenshot>https://codeberg.org/Conduction/hrmq/raw/branch/main/img/app-store.svg</screenshot>
 
     <dependencies>
         <nextcloud min-version="28" max-version="34"/>
