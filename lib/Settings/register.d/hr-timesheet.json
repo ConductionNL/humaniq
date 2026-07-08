@@ -5,7 +5,7 @@
             "Timesheet": {
                 "slug": "Timesheet",
                 "icon": "ClockCheckOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Timesheet",
                 "description": "A per-employee, per-period record of worked hours submitted for approval (urenregistratie / time sheet). An employee logs hours against a period (and optionally a project/cost centre), submits the timesheet, and a manager approves or rejects it. The approval lifecycle (submitted → approved/rejected, with approver and timestamp) is the genuinely new, correctly-homed HR/labour surface that pipelinq's \"Timesheet approval\" deep-link previously pointed at shillinq for — shillinq's UrenRegistratie is an append-only billing time-log with no approval state, so this Timesheet schema owns the approval workflow in hrmq, the HR/labour app.",
                 "type": "object",
@@ -61,39 +61,54 @@
                         "type": "string",
                         "format": "uuid",
                         "$ref": "Employee",
+                        "title": "Employee",
                         "description": "Reference to the Employee who logged the hours (the claimant). Drives the self-approval guard — the approver may not equal this employee."
                     },
                     "period": {
                         "type": "string",
+                        "title": "Period",
                         "description": "The period the timesheet covers, in YYYY-MM (or YYYY-Www for a week / YYYY-Wnn-D for a day)."
                     },
                     "hours": {
                         "type": "number",
+                        "title": "Hours",
                         "description": "Total hours worked in the period. Reused by OpenRegister aggregations for per-employee and per-period totals.",
                         "minimum": 0
                     },
                     "description": {
                         "type": "string",
+                        "title": "Description",
                         "description": "Free-text description of the work performed.",
                         "maxLength": 2000
                     },
                     "projectId": {
                         "type": "string",
                         "nullable": true,
+                        "title": "Project",
                         "description": "Optional reference to the project the hours were worked on (for cost allocation). No Project schema is modeled in hrmq — plain string, not a $ref relation (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."
                     },
                     "costCenter": {
                         "type": "string",
                         "nullable": true,
+                        "title": "Cost centre",
                         "description": "Optional cost centre / kostenplaats the hours are booked against. No CostCenter schema is modeled in hrmq — plain string, not a $ref relation."
                     },
                     "billable": {
                         "type": "boolean",
+                        "title": "Billable",
                         "description": "Whether the hours are billable to a client/project.",
                         "default": false
                     },
+                    "clientRef": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true,
+                        "title": "Client",
+                        "description": "Optional UUID reference to the client domain object (contact/organisation) who reviews and approves the billable hours on this timesheet — a domain-object reference, never a Nextcloud user id (ADR-046 A4). Scopes the read-only client view in the shared external portal (portaliq scopeField)."
+                    },
                     "status": {
                         "type": "string",
+                        "title": "Status",
                         "description": "Approval workflow status. Governed by the x-openregister-lifecycle state machine.",
                         "enum": [
                             "draft",
@@ -107,22 +122,26 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
+                        "title": "Submitted at",
                         "description": "ISO 8601 UTC timestamp the employee submitted the timesheet for approval."
                     },
                     "approvedBy": {
                         "type": "string",
                         "nullable": true,
+                        "title": "Approved by",
                         "description": "Nextcloud user ID of the manager who approved (or rejected) the timesheet — an NC user id, not an object FK, so it stays plain per ADR-046. Must differ from the claiming employee (no self-approval)."
                     },
                     "approvedAt": {
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
+                        "title": "Approved at",
                         "description": "ISO 8601 UTC timestamp of approval or rejection."
                     },
                     "rejectionReason": {
                         "type": "string",
                         "nullable": true,
+                        "title": "Rejection reason",
                         "description": "Reason the manager rejected the timesheet, shown to the employee so it can be corrected and re-submitted.",
                         "maxLength": 2000
                     }
