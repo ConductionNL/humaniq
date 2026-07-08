@@ -70,6 +70,7 @@ class PortalContributionProvider
         return [
             'external-employee',
             'client',
+            'manager',
         ];
 
     }//end getAudiences()
@@ -125,6 +126,10 @@ class PortalContributionProvider
 
         if ($audience === 'client') {
             return $this->clientManifest();
+        }
+
+        if ($audience === 'manager') {
+            return $this->managerManifest();
         }
 
         return null;
@@ -293,4 +298,83 @@ class PortalContributionProvider
         ];
 
     }//end clientManifest()
+
+    /**
+     * The manager manifest: an external team lead / department manager (no
+     * Nextcloud account) reviews and approves/rejects the timesheets for their
+     * cost centre, scoped by `Timesheet.costCenter` == the `costCenter` claim.
+     *
+     * The read is field-projected — only the review-relevant fields leave hrmq;
+     * `costCenter` (the scope key), `billable`, `projectId` and `submittedAt`
+     * stay internal.
+     *
+     * APPROVE/REJECT is deliberately NOT wired as a portal `type: update`
+     * transition. Portaliq's claim-scoped update DOES support this (ownership is
+     * re-verified by the resolved costCenter claim), but hrmq's Timesheet carries
+     * a declarative lifecycle hook that requires an authenticated Nextcloud user
+     * to change `status` ("U moet ingelogd zijn om goed te keuren of af te
+     * keuren"). Portal writes bypass OpenRegister RBAC but NOT lifecycle hooks, so
+     * an external approver (no NC account by premise) is stopped at the hook. The
+     * external approve/reject therefore needs either the A6 bearer-forward action
+     * (hrmq's own endpoint runs the transition with app context) or a
+     * portal-subject-aware lifecycle hook — tracked as a follow-up. Until then
+     * this manifest is READ-ONLY, matching the client manifest's stance.
+     *
+     * @return array<string, mixed> The manifest.
+     *
+     * @spec openspec/changes/portal-contribution/tasks.md#task-3
+     */
+    private function managerManifest(): array
+    {
+        return [
+            'label'         => 'HRMQ',
+            'collections'   => [
+                [
+                    'id'          => 'teamTimesheets',
+                    'register'    => 'hrmq',
+                    'schema'      => 'Timesheet',
+                    'scopeField'  => 'costCenter',
+                    'scopeClaim'  => 'costCenter',
+                    'minTrust'    => 'low',
+                    'label'       => 'Team timesheets',
+                    'listable'    => true,
+                    // Read-side projection (the DATA authority): only review
+                    // fields leave hrmq. costCenter (the scope key), billable,
+                    // projectId and submittedAt are dropped.
+                    'fields'      => [
+                        'employeeId',
+                        'period',
+                        'hours',
+                        'status',
+                        'description',
+                    ],
+                    'columns'     => [
+                        ['field' => 'employeeId', 'label' => 'Medewerker'],
+                        ['field' => 'period', 'label' => 'Periode'],
+                        ['field' => 'hours', 'label' => 'Uren'],
+                        ['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+                    ],
+                    'detail'      => ['layout' => 'card', 'fields' => ['employeeId', 'period', 'hours', 'status', 'description']],
+                    'defaultSort' => ['field' => 'period', 'direction' => 'desc'],
+                ],
+            ],
+            'actions'       => [],
+            'pages'         => [
+                [
+                    'id'     => 'timesheets',
+                    'label'  => 'Urenbriefjes',
+                    'icon'   => 'ClockCheck',
+                    'blocks' => [
+                        [
+                            'type'     => 'richText',
+                            'markdown' => '## Urenbriefjes van uw team'."\n".'Bekijk de ingediende urenbriefjes van uw kostenplaats.',
+                        ],
+                        ['type' => 'collection', 'collection' => 'teamTimesheets'],
+                    ],
+                ],
+            ],
+            'notifications' => [],
+        ];
+
+    }//end managerManifest()
 }//end class

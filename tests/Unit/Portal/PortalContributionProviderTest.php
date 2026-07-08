@@ -118,9 +118,29 @@ class PortalContributionProviderTest extends TestCase
      */
     public function testGetAudiencesReturnsBothAudiences(): void
     {
-        $this->assertSame(['external-employee', 'client'], $this->provider->getAudiences());
+        $this->assertSame(['external-employee', 'client', 'manager'], $this->provider->getAudiences());
 
     }//end testGetAudiencesReturnsBothAudiences()
+
+    public function testManagerManifestIsReadOnlyTimesheetsScopedByCostCentreClaim(): void
+    {
+        $manifest = $this->provider->getContribution(['audience' => 'manager']);
+
+        $this->assertIsArray($manifest);
+        // Team timesheets: scoped by the costCenter claim, projected to review
+        // fields only.
+        $collection = $manifest['collections'][0];
+        $this->assertSame('teamTimesheets', $collection['id']);
+        $this->assertSame('costCenter', $collection['scopeField']);
+        $this->assertSame('costCenter', $collection['scopeClaim']);
+        $this->assertNotContains('billable', $collection['fields']);
+        $this->assertNotContains('costCenter', $collection['fields']);
+        // Read-only: no rowActions and no actions — approve/reject is blocked by
+        // hrmq's Timesheet lifecycle hook (needs A6 / a portal-aware hook).
+        $this->assertArrayNotHasKey('rowActions', $collection);
+        $this->assertSame([], $manifest['actions']);
+
+    }//end testManagerManifestIsReadOnlyTimesheetsScopedByCostCentreClaim()
 
 
     /**
