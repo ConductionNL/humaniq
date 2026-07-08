@@ -61,6 +61,8 @@
                 "properties": {
                     "employeeId": {
                         "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
                         "description": "Reference to the Employee who submitted the claim (the claimant). Drives the self-approval guard — the approver may not equal this employee."
                     },
                     "title": {
@@ -130,7 +132,7 @@
                     "approvedBy": {
                         "type": "string",
                         "nullable": true,
-                        "description": "User ID of the manager who approved (or rejected) the claim. Must differ from the claiming employee (no self-approval)."
+                        "description": "Nextcloud user ID of the manager who approved (or rejected) the claim — an NC user id, not an object FK, so it stays plain per ADR-046. Must differ from the claiming employee (no self-approval)."
                     },
                     "approvedAt": {
                         "type": "string",

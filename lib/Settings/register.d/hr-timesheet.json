@@ -59,6 +59,8 @@
                 "properties": {
                     "employeeId": {
                         "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
                         "description": "Reference to the Employee who logged the hours (the claimant). Drives the self-approval guard — the approver may not equal this employee."
                     },
                     "period": {
@@ -78,12 +80,12 @@
                     "projectId": {
                         "type": "string",
                         "nullable": true,
-                        "description": "Optional reference to the project the hours were worked on (for cost allocation)."
+                        "description": "Optional reference to the project the hours were worked on (for cost allocation). No Project schema is modeled in hrmq — plain string, not a $ref relation (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."
                     },
                     "costCenter": {
                         "type": "string",
                         "nullable": true,
-                        "description": "Optional cost centre / kostenplaats the hours are booked against."
+                        "description": "Optional cost centre / kostenplaats the hours are booked against. No CostCenter schema is modeled in hrmq — plain string, not a $ref relation."
                     },
                     "billable": {
                         "type": "boolean",
@@ -110,7 +112,7 @@
                     "approvedBy": {
                         "type": "string",
                         "nullable": true,
-                        "description": "User ID of the manager who approved (or rejected) the timesheet. Must differ from the claiming employee (no self-approval)."
+                        "description": "Nextcloud user ID of the manager who approved (or rejected) the timesheet — an NC user id, not an object FK, so it stays plain per ADR-046. Must differ from the claiming employee (no self-approval)."
                     },
                     "approvedAt": {
                         "type": "string",
