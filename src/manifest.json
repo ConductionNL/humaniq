@@ -252,10 +252,16 @@
 				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in hrmq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling/A1 posting/jurisdiction-specific onboarding flags — 18 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then a Files leaf for the personnel file (justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add). NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab.",
 				"widgets": [
 					{ "id": "emp-person", "type": "data", "title": "Person", "icon": "Account", "content": { "columns": 2, "include": ["employeeNumber", "firstName", "lastName", "dateOfBirth", "bsn"] } },
-					{ "id": "emp-stats", "type": "stats-block", "title": "Overview", "icon": "ChartBar", "content": { "entries": [
-						{ "title": "Contracts", "register": "hrmq", "schema": "EmploymentContract", "metric": "count", "filter": { "employeeId": "@objectId" }, "route": "EmploymentContracts" },
-						{ "title": "Payslips", "register": "hrmq", "schema": "Payslip", "metric": "count", "filter": { "employeeId": "@objectId" }, "route": "Payslips" },
-						{ "title": "Pending expenses", "register": "hrmq", "schema": "Expense", "metric": "count", "filter": { "employeeId": "@objectId", "status": "submitted" }, "route": "ExpenseApproval" },
+					{ "id": "emp-stats-contracts", "type": "stats-block", "title": "Contracts", "icon": "ChartBar", "content": { "entries": [
+						{ "title": "Contracts", "register": "hrmq", "schema": "EmploymentContract", "metric": "count", "filter": { "employeeId": "@objectId" }, "route": "EmploymentContracts" }
+					] } },
+					{ "id": "emp-stats-payslips", "type": "stats-block", "title": "Payslips", "icon": "ChartBar", "content": { "entries": [
+						{ "title": "Payslips", "register": "hrmq", "schema": "Payslip", "metric": "count", "filter": { "employeeId": "@objectId" }, "route": "Payslips" }
+					] } },
+					{ "id": "emp-stats-pending-expenses", "type": "stats-block", "title": "Pending expenses", "icon": "ChartBar", "content": { "entries": [
+						{ "title": "Pending expenses", "register": "hrmq", "schema": "Expense", "metric": "count", "filter": { "employeeId": "@objectId", "status": "submitted" }, "route": "ExpenseApproval" }
+					] } },
+					{ "id": "emp-stats-hours-logged", "type": "stats-block", "title": "Hours logged", "icon": "ChartBar", "content": { "entries": [
 						{ "title": "Hours logged", "register": "hrmq", "schema": "Timesheet", "metric": "sum", "field": "hours", "filter": { "employeeId": "@objectId" }, "route": "Timesheets" }
 					] } },
 					{ "id": "emp-compliance", "type": "data", "title": "Employment & compliance", "icon": "ShieldCheckOutline", "content": { "columns": 3, "exclude": ["employeeNumber", "firstName", "lastName", "dateOfBirth", "bsn"] } },
@@ -267,13 +273,16 @@
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "emp-person", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
-					{ "id": "2", "widgetId": "emp-stats", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 },
-					{ "id": "3", "widgetId": "emp-compliance", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 7 },
-					{ "id": "4", "widgetId": "emp-contracts", "gridX": 0, "gridY": 13, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "5", "widgetId": "emp-timesheets", "gridX": 6, "gridY": 13, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "6", "widgetId": "emp-payslips", "gridX": 0, "gridY": 17, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "7", "widgetId": "emp-expenses", "gridX": 6, "gridY": 17, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "8", "widgetId": "emp-files", "gridX": 0, "gridY": 21, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "2-1", "widgetId": "emp-stats-contracts", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "2-2", "widgetId": "emp-stats-payslips", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "2-3", "widgetId": "emp-stats-pending-expenses", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "2-4", "widgetId": "emp-stats-hours-logged", "gridX": 8, "gridY": 6, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "3", "widgetId": "emp-compliance", "gridX": 0, "gridY": 8, "gridWidth": 12, "gridHeight": 7 },
+					{ "id": "4", "widgetId": "emp-contracts", "gridX": 0, "gridY": 15, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "5", "widgetId": "emp-timesheets", "gridX": 6, "gridY": 15, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "6", "widgetId": "emp-payslips", "gridX": 0, "gridY": 19, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "7", "widgetId": "emp-expenses", "gridX": 6, "gridY": 19, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "8", "widgetId": "emp-files", "gridX": 0, "gridY": 23, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
