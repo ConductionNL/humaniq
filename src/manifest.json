@@ -147,7 +147,7 @@
 					{ "id": "ts-files", "type": "integration", "integrationId": "files", "title": "Approval documents", "icon": "FolderOutline" }
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "ts-hours", "gridX": 0, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "1", "widgetId": "ts-hours", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 2 },
 					{ "id": "2", "widgetId": "ts-data", "gridX": 0, "gridY": 2, "gridWidth": 8, "gridHeight": 4 },
 					{ "id": "3", "widgetId": "ts-approval", "gridX": 0, "gridY": 6, "gridWidth": 8, "gridHeight": 4 },
 					{ "id": "4", "widgetId": "ts-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 10 },
@@ -201,7 +201,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Expense",
-				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). This grid is deliberately DIFFERENT from the Timesheet: the operational hero here is the RECEIPT, so the Files widget is a large band under the header -- the approver's first job is to open the bon and verify it against the claimed amount. An amount KPI stat sits top-right so the payout figure is unmissable. ADR-062 round-2: the data widget SPLIT into 'Claim' (title/description/amount/currency/category/expenseDate/receiptFile) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt), both excluding employeeId since Related already resolves the claiming Employee by name. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab.",
+				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab.",
 				"widgets": [
 					{ "id": "ex-amount", "type": "stat", "title": "Claimed amount", "icon": "CashMultiple", "content": { "label": "Claimed amount", "caption": "to reimburse", "icon": "CashMultiple", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "EUR", "decimals": 2 }, "source": { "register": "hrmq", "schema": "Expense", "metric": "sum", "field": "amount", "filter": { "id": "@objectId" } } } },
 					{ "id": "ex-receipt", "type": "integration", "integrationId": "files", "title": "Receipt / bon", "icon": "FolderOutline" },
@@ -210,11 +210,11 @@
 					{ "id": "ex-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "ex-receipt", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "2", "widgetId": "ex-data", "gridX": 0, "gridY": 4, "gridWidth": 8, "gridHeight": 5 },
-					{ "id": "3", "widgetId": "ex-approval", "gridX": 0, "gridY": 9, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "1", "widgetId": "ex-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "2", "widgetId": "ex-approval", "gridX": 0, "gridY": 5, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "3", "widgetId": "ex-receipt", "gridX": 0, "gridY": 9, "gridWidth": 12, "gridHeight": 4 },
 					{ "id": "4", "widgetId": "ex-amount", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "5", "widgetId": "ex-related", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 11 }
+					{ "id": "5", "widgetId": "ex-related", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 7 }
 				],
 				"lifecycleActions": {
 					"field": "status",
@@ -377,10 +377,10 @@
 					{ "id": "pr-data", "type": "data", "title": "Payroll run", "icon": "TableColumn", "content": { "columns": 2 } }
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "pr-gross", "gridX": 0, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "2", "widgetId": "pr-net", "gridX": 4, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "3", "widgetId": "pr-liability", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "4", "widgetId": "pr-data", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 8 }
+					{ "id": "1", "widgetId": "pr-gross", "gridX": 0, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "2", "widgetId": "pr-net", "gridX": 4, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "3", "widgetId": "pr-liability", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "4", "widgetId": "pr-data", "gridX": 0, "gridY": 3, "gridWidth": 12, "gridHeight": 7 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
