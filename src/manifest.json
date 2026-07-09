@@ -155,7 +155,12 @@
 				],
 				"lifecycleActions": {
 					"field": "status",
-					"transitions": ["submit", "approve", "reject", "reopen"]
+					"transitions": [
+						{ "action": "submit", "from": ["draft", "rejected"], "to": "submitted", "label": "Submit" },
+						{ "action": "approve", "from": ["submitted"], "to": "approved", "label": "Approve" },
+						{ "action": "reject", "from": ["submitted"], "to": "rejected", "label": "Reject" },
+						{ "action": "reopen", "from": ["approved"], "to": "draft", "label": "Reopen" }
+					]
 				},
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
 			}
@@ -213,7 +218,12 @@
 				],
 				"lifecycleActions": {
 					"field": "status",
-					"transitions": ["submit", "approve", "reject", "reimburse"]
+					"transitions": [
+						{ "action": "submit", "from": ["draft", "rejected"], "to": "submitted", "label": "Submit" },
+						{ "action": "approve", "from": ["submitted"], "to": "approved", "label": "Approve" },
+						{ "action": "reject", "from": ["submitted"], "to": "rejected", "label": "Reject" },
+						{ "action": "reimburse", "from": ["approved"], "to": "reimbursed", "label": "Reimburse" }
+					]
 				},
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
 			}
