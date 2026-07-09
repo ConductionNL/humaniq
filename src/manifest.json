@@ -256,14 +256,14 @@
 					{ "id": "emp-files", "type": "integration", "integrationId": "files", "title": "Personnel file", "icon": "FolderOutline" }
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "emp-person", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "2", "widgetId": "emp-stats", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "3", "widgetId": "emp-compliance", "gridX": 0, "gridY": 4, "gridWidth": 12, "gridHeight": 7 },
-					{ "id": "4", "widgetId": "emp-contracts", "gridX": 0, "gridY": 11, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "5", "widgetId": "emp-timesheets", "gridX": 6, "gridY": 11, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "6", "widgetId": "emp-payslips", "gridX": 0, "gridY": 15, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "7", "widgetId": "emp-expenses", "gridX": 6, "gridY": 15, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "8", "widgetId": "emp-files", "gridX": 0, "gridY": 19, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "1", "widgetId": "emp-person", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "emp-stats", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 },
+					{ "id": "3", "widgetId": "emp-compliance", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 7 },
+					{ "id": "4", "widgetId": "emp-contracts", "gridX": 0, "gridY": 13, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "5", "widgetId": "emp-timesheets", "gridX": 6, "gridY": 13, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "6", "widgetId": "emp-payslips", "gridX": 0, "gridY": 17, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "7", "widgetId": "emp-expenses", "gridX": 6, "gridY": 17, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "8", "widgetId": "emp-files", "gridX": 0, "gridY": 21, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
