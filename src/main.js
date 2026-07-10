@@ -8,6 +8,7 @@ import { translate as t, translatePlural as n, loadTranslations } from '@nextclo
 import { generateUrl } from '@nextcloud/router'
 import {
 	CnPageRenderer,
+	buildManifest,
 	defaultPageTypes,
 	registerIcons,
 	registerTranslations,
@@ -15,6 +16,7 @@ import {
 import pinia from './pinia.js'
 import App from './App.vue'
 import bundledManifest from './manifest.json'
+import menuLayout from './menu-layout.json'
 import registry from './registry.js'
 import appIcons from './icons.js'
 
@@ -79,10 +81,23 @@ function routesFromManifest(manifest) {
 	return routes
 }
 
+// Assemble the effective manifest from the bundled base + modular
+// manifest.d/*.json fragments (ADR-037) laid out per menu-layout.json
+// (ADR-044). require.context is resolved by webpack at build time; the shared
+// buildManifest() merges pages/menu and applies the canonical relocations that
+// nest the four leaf pages under their frozen ADR-001 top-level groups.
+const fragmentCtx = require.context('./manifest.d/', false, /\.json$/)
+const fragments = fragmentCtx.keys().sort().map((key) => fragmentCtx(key))
+// Object.freeze is Vue 2's documented escape hatch from observe()'s recursive
+// reactive-conversion walk: the manifest is a static, never-mutated artifact,
+// so freezing it before it becomes a prop avoids dozens of needless
+// getter/setter installs on every app boot (see hrmq-manifest-boot-and-http-cost).
+const effectiveManifest = Object.freeze(buildManifest(bundledManifest, fragments, menuLayout))
+
 const router = new VueRouter({
 	mode: 'history',
 	base: generateUrl('/apps/hrmq'),
-	routes: routesFromManifest(bundledManifest),
+	routes: routesFromManifest(effectiveManifest),
 })
 
 tryLoadTranslations()
@@ -92,8 +107,13 @@ tryLoadTranslations()
 // bundle shapes — Vue 2's `Vue.extend()` mutates component definitions to
 // attach an internal `_Ctor` cache, which throws against a frozen source map.
 // Cloning yields extensible objects without altering resolved values.
-const pageTypesProp = { ...defaultPageTypes }
-const registryProp = { ...registry }
+// Freeze the shallow clones too — they are static registry maps the app never
+// mutates after boot, so Vue should not deep-reactive-convert them either
+// (hrmq-manifest-boot-and-http-cost). Freezing the object's own properties does
+// not stop Vue reacting to the prop *reference* changing, only the per-property
+// conversion of the static contents.
+const pageTypesProp = Object.freeze({ ...defaultPageTypes })
+const registryProp = Object.freeze({ ...registry })
 
 // eslint-disable-next-line no-new
 new Vue({
@@ -101,7 +121,7 @@ new Vue({
 	router,
 	render: (h) => h(App, {
 		props: {
-			manifest: bundledManifest,
+			manifest: effectiveManifest,
 			registry: registryProp,
 			pageTypes: pageTypesProp,
 		},

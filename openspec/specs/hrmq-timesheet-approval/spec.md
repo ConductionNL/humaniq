@@ -71,7 +71,9 @@ The system SHALL surface timesheets through declarative manifest pages rendered 
 `type:"index"` list page, a `TimesheetApproval` `type:"index"` page whose default filter is
 `status == submitted` (the pending-approval queue), and a `TimesheetDetail` `type:"detail"` page,
 each configured only with `{ register: "hrmq", schema: "Timesheet", … }`. HRMQ SHALL appear in the
-Nextcloud app menu via an `<navigations>` entry routing to the SPA shell.
+Nextcloud app menu via an `<navigations>` entry routing to the SPA shell; the `Timesheets` and
+`TimesheetApproval` menu entries SHALL nest under the frozen ADR-001 "Verlof & verzuim" top-level
+group (relocated via `src/menu-layout.json`; the page routes are unchanged).
 
 **Feature tier**: MVP
 

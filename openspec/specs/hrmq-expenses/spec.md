@@ -69,7 +69,9 @@ the `@conduction/nextcloud-vue` library — NOT bespoke Vue components (unlike p
 hand-written `ExpenseList.vue` / `ExpenseDetail.vue`). There SHALL be an `Expenses` `type:"index"`
 list page, an `ExpenseApproval` `type:"index"` page whose default filter is `status == submitted`
 (the pending-approval queue), and an `ExpenseDetail` `type:"detail"` page, each configured only
-with `{ register: "hrmq", schema: "Expense", … }`, reached from an "Onkosten" menu group.
+with `{ register: "hrmq", schema: "Expense", … }`, reached under the frozen ADR-001
+"Declaraties & assets" top-level menu group (the `Expenses`/`ExpenseApproval` leaf entries are
+relocated there via `src/menu-layout.json`; the page routes are unchanged).
 
 **Feature tier**: MVP
 

@@ -30,3 +30,8 @@ psalm-output.json
 
 # Hydra builder internal state — emitted by run-hydra-gates.sh
 task-audit.json
+
+# Playwright e2e artefacts + auth state
+/tests/e2e/.auth/
+/playwright-report/
+/test-results/

@@ -16,8 +16,16 @@
  * contributed by an auto-discovered per-domain CheckProvider under
  * lib/Standards/Checks/. Only rules with a registered predicate are enforced
  * today; the rest of the corpus is catalogued and grows an executable check per
- * wave. The predicates are side-effect free and unit-tested; the lifecycle wiring
- * + object loading live in OCA\Hrmq\Lifecycle\RuleComplianceGuard.
+ * wave. The predicates are side-effect free and unit-tested (see
+ * tests/Unit/Standards/ — RuleCatalogueTest, RuleEngineTest,
+ * Checks/NlWageTaxFilingChecksTest). This engine is
+ * advisory/reporting-only today: there is no `OCA\Hrmq\Lifecycle\RuleComplianceGuard`
+ * and no write-time lifecycle-guard hook on the compliance-checked schemas. Its
+ * only consumer today is the read-only `occ hrmq:rules:audit` command, which now
+ * exits non-zero when a mandatory-severity violation is found so it can be wired
+ * into CI/ops as an actionable gate. Write-time enforcement remains a tracked
+ * design decision — see
+ * openspec/changes/hrmq-rule-compliance-enforcement/design.md.
  *
  * @category Standards
  * @package  OCA\Hrmq\Standards

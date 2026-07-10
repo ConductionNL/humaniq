@@ -1,0 +1,24 @@
+{
+    "translations": {
+        "Hours": "Hours",
+        "Leave & absence": "Leave & absence",
+        "Expenses & assets": "Expenses & assets",
+        "Timesheets": "Timesheets",
+        "Timesheet approval": "Timesheet approval",
+        "Timesheet": "Timesheet",
+        "Expenses": "Expenses",
+        "Expense approval": "Expense approval",
+        "Expense": "Expense",
+        "Submitted timesheets awaiting approval or rejection.": "Submitted timesheets awaiting approval or rejection.",
+        "Submitted expense claims awaiting approval or rejection.": "Submitted expense claims awaiting approval or rejection.",
+        "Total hours": "Total hours",
+        "logged this period": "logged this period",
+        "Claimed amount": "Claimed amount",
+        "to reimburse": "to reimburse",
+        "Expense claim": "Expense claim",
+        "Receipt / bon": "Receipt / bon",
+        "Approval documents": "Approval documents",
+        "History": "History",
+        "Related": "Related"
+    }
+}

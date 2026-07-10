@@ -1,0 +1,24 @@
+{
+    "translations": {
+        "Hours": "Uren",
+        "Leave & absence": "Verlof & verzuim",
+        "Expenses & assets": "Declaraties & assets",
+        "Timesheets": "Urenregistratie",
+        "Timesheet approval": "Urengoedkeuring",
+        "Timesheet": "Urenstaat",
+        "Expenses": "Declaraties",
+        "Expense approval": "Declaratiegoedkeuring",
+        "Expense": "Declaratie",
+        "Submitted timesheets awaiting approval or rejection.": "Ingediende urenstaten die wachten op goedkeuring of afkeuring.",
+        "Submitted expense claims awaiting approval or rejection.": "Ingediende declaraties die wachten op goedkeuring of afkeuring.",
+        "Total hours": "Totaal uren",
+        "logged this period": "geregistreerd deze periode",
+        "Claimed amount": "Gedeclareerd bedrag",
+        "to reimburse": "te vergoeden",
+        "Expense claim": "Onkostendeclaratie",
+        "Receipt / bon": "Bon",
+        "Approval documents": "Goedkeuringsdocumenten",
+        "History": "Geschiedenis",
+        "Related": "Gerelateerd"
+    }
+}

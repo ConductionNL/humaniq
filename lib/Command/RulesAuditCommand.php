@@ -54,7 +54,11 @@ class RulesAuditCommand extends Command
     protected function configure(): void
     {
         $this->setName('hrmq:rules:audit')
-            ->setDescription('Audit HR/labour data against the machine-checkable rule corpus.')
+            ->setDescription(
+                'Audit HR/labour data against the machine-checkable rule corpus. '
+                . 'Exits non-zero when any mandatory-severity violation is found, '
+                . 'so this command can be wired into CI/ops as an actionable gate.'
+            )
             ->addOption('jurisdiction', null, InputOption::VALUE_REQUIRED, 'Jurisdiction context (ISO alpha-2)', 'NL');
 
     }//end configure()
@@ -101,6 +105,17 @@ class RulesAuditCommand extends Command
             foreach ($report['topViolatedRules'] as $row) {
                 $output->writeln(sprintf('    %-34s %d', $row['ruleId'], $row['count']));
             }
+        }
+
+        $mandatoryViolations = $report['violationsBySeverity']['mandatory'] ?? 0;
+        if ($mandatoryViolations > 0) {
+            $output->writeln('');
+            $output->writeln(sprintf(
+                '<error>%d mandatory violation(s) found — exiting non-zero.</error>',
+                $mandatoryViolations
+            ));
+
+            return 1;
         }
 
         return 0;

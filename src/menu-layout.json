@@ -1,0 +1,14 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "Canonical navigation layout applied AFTER all manifest.d fragments merge (see buildManifest in main.js). Fragments stay the source of WHAT exists in the menu (ADR-037); this file is the single place deciding WHERE entries live. relocations: leafId -> targetGroupId, nesting the four leaf pages under the two frozen ADR-001 top-level groups (Verlof & verzuim / Declaraties & assets). The page ROUTES are unchanged (ADR-044 no-functionality-loss invariant); only the menu parent changes. removals: none."
+	},
+	"relocations": {
+		"Timesheets": "VerlofVerzuim",
+		"TimesheetApproval": "VerlofVerzuim",
+		"Expenses": "DeclaratiesAssets",
+		"ExpenseApproval": "DeclaratiesAssets"
+	},
+	"removals": []
+}

@@ -58,7 +58,11 @@
                 },
                 "properties": {
                     "employeeId": {
-                        "type": "string",
+                        "type": "object",
+                        "$ref": "#/components/schemas/Employee",
+                        "objectConfiguration": {
+                            "handling": "related-object"
+                        },
                         "description": "Reference to the Employee who logged the hours (the claimant). Drives the self-approval guard — the approver may not equal this employee."
                     },
                     "period": {

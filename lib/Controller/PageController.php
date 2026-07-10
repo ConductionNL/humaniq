@@ -63,6 +63,15 @@ class PageController extends Controller
 
 
     /**
+     * The decoded manifest, memoised for the request lifecycle so repeat calls
+     * within one request do not re-read + re-parse the file.
+     *
+     * @var array<string, mixed>|null
+     */
+    private ?array $manifestCache = null;
+
+
+    /**
      * Render the main SPA page.
      *
      * @return TemplateResponse
@@ -97,6 +106,14 @@ class PageController extends Controller
     /**
      * Return the bundled app manifest as JSON (ADR-024 §4).
      *
+     * The manifest is a build-time, versioned, immutable-per-deploy artifact, so
+     * the response carries an ETag derived from the app id + version and a
+     * revalidating Cache-Control header. When the client sends a matching
+     * `If-None-Match` the framework short-circuits with a `304 Not Modified`,
+     * avoiding a re-download of the full payload. The decoded manifest is
+     * memoised for the request lifecycle so repeat calls within one request do
+     * not re-read + re-parse the file.
+     *
      * @return JSONResponse
      *
      * @spec exclude framework glue — returns the bundled src/manifest.json blob unchanged
@@ -109,11 +126,22 @@ class PageController extends Controller
             return new JSONResponse(data: ['error' => 'Not authenticated'], statusCode: Http::STATUS_UNAUTHORIZED);
         }
 
-        $manifestPath = __DIR__.'/../../src/manifest.json';
-        $manifestJson = file_get_contents($manifestPath);
-        $manifest     = json_decode($manifestJson, associative: true);
+        if ($this->manifestCache === null) {
+            $manifestPath        = __DIR__.'/../../src/manifest.json';
+            $manifestJson        = (string) file_get_contents($manifestPath);
+            $this->manifestCache = (array) json_decode($manifestJson, associative: true);
+        }
 
-        return new JSONResponse($manifest);
+        $response = new JSONResponse($this->manifestCache);
+
+        // ETag ties cache validity to the deployed app version so a new release
+        // busts the cache; Cache-Control lets clients revalidate rather than
+        // re-download when the ETag is unchanged.
+        $version = (string) ($this->manifestCache['version'] ?? '0');
+        $response->setETag(md5(Application::APP_ID.':'.$version));
+        $response->cacheFor(3600, public: false, immutable: false);
+
+        return $response;
 
     }//end manifest()
 
