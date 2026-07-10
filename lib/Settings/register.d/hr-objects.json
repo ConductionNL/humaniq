@@ -54,7 +54,7 @@
                     "startDate"
                 ],
                 "properties": {
-                    "employeeId": {"type": "string", "description": "Reference to the Employee this contract belongs to."},
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "description": "Reference to the Employee this contract belongs to."},
                     "type": {"type": "string", "enum": ["permanent", "temporary", "agency", "minijob"], "description": "Contract type. 'permanent' (written, indefinite) takes the Awf low tariff; flexible/temporary take the high tariff (nl-awf-laag-hoog-tarief)."},
                     "writtenContract": {"type": "boolean", "description": "Whether the contract is in writing — a precondition for the Awf low tariff (nl-awf-laag-hoog-tarief)."},
                     "startDate": {"type": "string", "format": "date", "description": "Contract start date (ISO 8601)."},
@@ -84,7 +84,7 @@
                     "nettoPay"
                 ],
                 "properties": {
-                    "employeeId": {"type": "string", "description": "Reference to the Employee."},
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "description": "Reference to the Employee."},
                     "period": {"type": "string", "description": "Wage period in YYYY-MM (or YYYY-Pnn for four-weekly)."},
                     "jurisdiction": {"type": "string", "description": "ISO 3166-1 alpha-2 country whose payroll rules govern this payslip (NL/DE/FR/US)."},
                     "currency": {"type": "string", "description": "ISO 4217 pay currency (EUR/USD)."},
@@ -154,7 +154,7 @@
                 ],
                 "properties": {
                     "period": {"type": "string", "description": "Wage period in YYYY-MM."},
-                    "administrationId": {"type": "string", "description": "The administration/employer this run belongs to."},
+                    "administrationId": {"type": "string", "description": "The administration/employer this run belongs to. No Administration schema is modeled in hrmq — plain string, not a $ref relation (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."},
                     "jurisdiction": {"type": "string", "description": "ISO 3166-1 alpha-2 country governing this run."},
                     "status": {"type": "string", "enum": ["draft", "approved", "posted", "paid"], "description": "Run lifecycle state."},
                     "totalGross": {"type": "number", "description": "Total gross wages for the period."},

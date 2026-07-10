@@ -1,0 +1,159 @@
+{
+    "x-hrmq-fragment": "hr-expense",
+    "components": {
+        "schemas": {
+            "Expense": {
+                "slug": "Expense",
+                "icon": "Receipt",
+                "version": "0.1.0",
+                "title": "Expense",
+                "description": "An employee expense-reimbursement claim (onkostendeclaratie / declaratie). An employee submits a claim (amount, category, date, receipt), a manager approves or rejects it, and once approved the amount is reimbursed to the employee. The submit → approve → reimburse lifecycle is owned here in hrmq, the HR/labour app — re-homing the Expenses feature that previously lived in pipelinq. The pipelinq-specific Shillinq accounts-payable sync coupling is intentionally NOT ported: reimbursement here is the HR-side claim workflow; any downstream AP/GL posting is a separate integration concern that OpenConnector/shillinq own.",
+                "type": "object",
+                "x-schema-org": "schema:Invoice",
+                "required": [
+                    "employeeId",
+                    "title",
+                    "amount",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "draft",
+                        "terminal": [
+                            "reimbursed"
+                        ],
+                        "transitions": {
+                            "submit": {
+                                "from": [
+                                    "draft",
+                                    "rejected"
+                                ],
+                                "to": "submitted",
+                                "description": "The employee submits the expense claim for manager approval. A rejected claim may be corrected and re-submitted."
+                            },
+                            "approve": {
+                                "from": [
+                                    "submitted"
+                                ],
+                                "to": "approved",
+                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "A manager approves the claim. The NoSelfApprovalGuard rejects self-approval (the approver may not be the claiming employee); approvedBy and approvedAt are stamped on the carrying write."
+                            },
+                            "reject": {
+                                "from": [
+                                    "submitted"
+                                ],
+                                "to": "rejected",
+                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "A manager rejects the claim (with a rejectionReason). The NoSelfApprovalGuard rejects self-rejection. The employee may correct it and re-submit."
+                            },
+                            "reimburse": {
+                                "from": [
+                                    "approved"
+                                ],
+                                "to": "reimbursed",
+                                "description": "The approved claim is paid out to the employee; reimbursedAt records the payout date. Terminal."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "description": "Reference to the Employee who submitted the claim (the claimant). Drives the self-approval guard — the approver may not equal this employee."
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Short title for the expense (schema:name).",
+                        "maxLength": 255,
+                        "minLength": 1
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Free-text description of the expense.",
+                        "maxLength": 2000
+                    },
+                    "amount": {
+                        "type": "number",
+                        "description": "Claimed amount in the configured currency. Reused by OpenRegister aggregations for per-employee and per-status totals.",
+                        "minimum": 0
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "ISO 4217 currency code.",
+                        "default": "EUR",
+                        "maxLength": 3,
+                        "minLength": 3
+                    },
+                    "category": {
+                        "type": "string",
+                        "description": "Expense category.",
+                        "enum": [
+                            "travel",
+                            "accommodation",
+                            "meals",
+                            "supplies",
+                            "software",
+                            "training",
+                            "other"
+                        ]
+                    },
+                    "expenseDate": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "The date the expense was incurred (ISO 8601)."
+                    },
+                    "receiptFile": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Reference (Nextcloud Files path or OpenRegister file id) to the attached receipt / bon."
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Reimbursement workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "enum": [
+                            "draft",
+                            "submitted",
+                            "approved",
+                            "rejected",
+                            "reimbursed"
+                        ],
+                        "default": "draft"
+                    },
+                    "submittedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "ISO 8601 UTC timestamp the employee submitted the claim."
+                    },
+                    "approvedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Nextcloud user ID of the manager who approved (or rejected) the claim — an NC user id, not an object FK, so it stays plain per ADR-046. Must differ from the claiming employee (no self-approval)."
+                    },
+                    "approvedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "ISO 8601 UTC timestamp of approval or rejection."
+                    },
+                    "rejectionReason": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Reason the manager rejected the claim, shown to the employee so it can be corrected and re-submitted.",
+                        "maxLength": 2000
+                    },
+                    "reimbursedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "ISO 8601 UTC timestamp the approved claim was paid out to the employee."
+                    }
+                }
+            }
+        }
+    }
+}

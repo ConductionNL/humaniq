@@ -8,11 +8,13 @@
     <summary lang="nl">Open-source HR- en salarisadministratie met ingebouwde arbeidsrecht- en loonheffingencompliance.</summary>
     <description lang="en"><![CDATA[Open-source HR and payroll administration for Dutch and EU employers, built on the OpenRegister data layer.
 
-HRMQ ships a static, versioned corpus of international HR/labour and payroll rules (EU labour directives, ILO conventions, GDPR for employee data, occupational health & safety, national labour law, and payroll / wage-tax & social-security compliance) and an executable RuleEngine that audits the register's HR objects against the machine-checkable rules and reports compliance coverage.
+Employees log hours and submit expense claims through a submit → approve/reject workflow. The underlying register also holds Employee, EmploymentContract, PayrollRun, Payslip and WageTaxFiling records, which a static, versioned corpus of international HR/labour and payroll rules (EU labour directives, ILO conventions, GDPR for employee data, occupational health & safety, national labour law, and payroll / wage-tax & social-security compliance) is audited against by an executable RuleEngine that reports compliance coverage.
 
 **Key Features**
 
-- **OpenRegister integration** — all Employee / EmploymentContract / Payslip / PayrollRun objects live in the OpenRegister `hrmq` register
+- **Timesheets** — per-employee, per-period hour registration with a submit → approve/reject/reopen approval workflow
+- **Expense claims** — submit → approve/reject → reimbursed workflow for employee expense claims
+- **OpenRegister integration** — Employee / EmploymentContract / Payslip / PayrollRun / WageTaxFiling objects live in the OpenRegister `hrmq` register
 - **Compliance rule engine** — auto-discovered per-domain CheckProviders enforce the machine-checkable rule corpus
 - **`occ hrmq:rules:audit`** — reports enforced ÷ machine-checkable coverage, violations, and per-object-type compliance
 - **`occ hrmq:rules:seed-testdata`** — idempotently seeds compliant local test data
@@ -22,33 +24,61 @@ Free and open source under the EUPL-1.2 license.
 
 **Support:** For support, contact support@conduction.nl.
     ]]></description>
-    <description lang="nl"><![CDATA[Open-source HR- en salarisadministratie voor Nederlandse en EU-werkgevers, gebouwd op de OpenRegister-datalaag. HRMQ levert een statisch, geversioneerd corpus van internationale HR/arbeids- en loonheffingenregels en een uitvoerbare RuleEngine die de HR-objecten in het register toetst aan de machine-controleerbare regels.
+    <description lang="nl"><![CDATA[Open-source HR- en salarisadministratie voor Nederlandse en EU-werkgevers, gebouwd op de OpenRegister-datalaag.
+
+Medewerkers registreren uren en dienen declaraties in via een indienen → goedkeuren/afkeuren-workflow. Het onderliggende register houdt ook Employee-, EmploymentContract-, PayrollRun-, Payslip- en WageTaxFiling-gegevens vast, die een statisch, geversioneerd corpus van internationale HR/arbeids- en loonheffingenregels toetst via een uitvoerbare RuleEngine die de compliance-dekking rapporteert.
+
+**Belangrijkste functies**
+
+- **Urenregistratie** — per-medewerker, per-periode urenregistratie met een indienen → goedkeuren/afkeuren/heropenen-workflow
+- **Declaraties** — indienen → goedkeuren/afkeuren → vergoed-workflow voor declaraties van medewerkers
+- **OpenRegister-integratie** — Employee-, EmploymentContract-, Payslip-, PayrollRun- en WageTaxFiling-objecten leven in het OpenRegister `hrmq`-register
+- **Compliance-regelengine** — automatisch gedetecteerde CheckProviders per domein handhaven het machine-controleerbare regelcorpus
+- **`occ hrmq:rules:audit`** — rapporteert gehandhaafd ÷ machine-controleerbaar dekkingspercentage, overtredingen en compliance per objecttype
+- **`occ hrmq:rules:seed-testdata`** — vult idempotent lokale testdata die aan de gehandhaafde regels voldoet
 
 Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl.
     ]]></description>
-    <version>0.1.0</version>
+    <version>0.1.3</version>
     <licence>agpl</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Hrmq</namespace>
     <documentation>
-        <user>https://github.com/ConductionNL/hrmq</user>
-        <admin>https://github.com/ConductionNL/hrmq</admin>
-        <developer>https://github.com/ConductionNL/hrmq</developer>
+        <user>https://codeberg.org/Conduction/hrmq</user>
+        <admin>https://codeberg.org/Conduction/hrmq</admin>
+        <developer>https://codeberg.org/Conduction/hrmq</developer>
     </documentation>
     <category>organization</category>
-    <website>https://github.com/ConductionNL/hrmq</website>
-    <discussion>https://github.com/ConductionNL/hrmq/discussions</discussion>
-    <bugs>https://github.com/ConductionNL/hrmq/issues</bugs>
-    <repository>https://github.com/ConductionNL/hrmq</repository>
+    <website>https://codeberg.org/Conduction/hrmq</website>
+    <discussion>https://codeberg.org/Conduction/hrmq/issues</discussion>
+    <bugs>https://codeberg.org/Conduction/hrmq/issues</bugs>
+    <repository>https://codeberg.org/Conduction/hrmq</repository>
 
-    <screenshot>https://raw.githubusercontent.com/ConductionNL/hrmq/main/img/app-store.svg</screenshot>
+    <screenshot>https://codeberg.org/Conduction/hrmq/raw/branch/main/img/app-store.svg</screenshot>
 
     <dependencies>
         <nextcloud min-version="28" max-version="34"/>
         <php min-version="8.3"/>
+        <!-- App dependency (not expressible in app-info.xsd): OpenRegister.
+             HRMQ owns no database tables — Employee / EmploymentContract /
+             PayrollRun / Payslip / WageTaxFiling / Timesheet / Expense objects
+             all live in the OpenRegister `hrmq` register (imported via
+             OCA\Hrmq\Repair\InitializeRegister), and the Vue manifest pages
+             read/write that register directly through the
+             @conduction/nextcloud-vue object store (src/manifest.json
+             declares "dependencies": ["openregister"]). -->
     </dependencies>
+
+    <navigations>
+        <navigation>
+            <id>hrmq</id>
+            <name>HRMQ</name>
+            <route>hrmq.page.index</route>
+            <icon>app.svg</icon>
+        </navigation>
+    </navigations>
 
     <repair-steps>
         <post-migration>
