@@ -136,6 +136,98 @@
                         "description": "Reason the manager rejected the leave request, shown to the employee so it can be corrected and re-submitted."
                     }
                 }
+            },
+            "LeaveBalance": {
+                "slug": "LeaveBalance",
+                "icon": "ScaleBalance",
+                "version": "0.1.0",
+                "title": "Leave balance",
+                "description": "Per-employee, per-year, per-leave-type entitlement and usage ledger (verlofsaldo): the statutory plus bovenwettelijk hours granted for a year, the hours used, and a declaratively calculated remaining balance (x-openregister-calculations). Read by the nl-verlof-wettelijk-minimum / nl-verlof-saldo-niet-negatief / nl-verlof-vervaltermijn rule checks (lib/Standards/rules/labour.json, leave-verzuim-mvp). usedHours is not yet auto-posted from approved LeaveRequests — that cross-object write hook is a declared follow-up; this MVP records and audits the balance.",
+                "type": "object",
+                "required": [
+                    "employeeId",
+                    "year",
+                    "leaveType",
+                    "entitledHours"
+                ],
+                "configuration": {
+                    "x-openregister-calculations": {
+                        "remainingHours": {
+                            "type": "number",
+                            "materialise": true,
+                            "title": "Remaining hours",
+                            "description": "entitledHours + bovenwettelijkHours − usedHours, evaluated by OpenRegister on save. Declared only here (never as a stored property) so it can never shadow a stored field.",
+                            "expression": {
+                                "-": [
+                                    {
+                                        "+": [
+                                            { "prop": "entitledHours" },
+                                            { "prop": "bovenwettelijkHours" }
+                                        ]
+                                    },
+                                    { "prop": "usedHours" }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "UUID reference to the Employee domain object this leave balance belongs to."
+                    },
+                    "year": {
+                        "type": "integer",
+                        "title": "Year",
+                        "description": "Calendar year this leave balance covers."
+                    },
+                    "leaveType": {
+                        "type": "string",
+                        "title": "Leave type",
+                        "description": "The kind of leave this balance tracks, identical to the LeaveRequest.leaveType value set: holiday (vakantie), sick (ziekteverlof), unpaid (onbetaald verlof), special (bijzonder verlof), care (zorgverlof), parental (ouderschapsverlof).",
+                        "enum": [
+                            "holiday",
+                            "sick",
+                            "unpaid",
+                            "special",
+                            "care",
+                            "parental"
+                        ]
+                    },
+                    "entitledHours": {
+                        "type": "number",
+                        "title": "Entitled hours",
+                        "description": "Total hours entitled for the year. For statutory holiday leave the minimum is 4x the contractual weekly working time (BW art. 7:634) — checked by nl-verlof-wettelijk-minimum against the contractHoursPerWeek snapshot below."
+                    },
+                    "bovenwettelijkHours": {
+                        "type": "number",
+                        "default": 0,
+                        "title": "Bovenwettelijk hours",
+                        "description": "Additional (above-statutory) hours granted by contract/CAO on top of the statutory entitlement."
+                    },
+                    "usedHours": {
+                        "type": "number",
+                        "default": 0,
+                        "title": "Used hours",
+                        "description": "Hours of this leave type used/taken so far in the year. Recorded from approved LeaveRequests; not yet auto-posted (follow-up). Checked against the total entitlement by nl-verlof-saldo-niet-negatief."
+                    },
+                    "contractHoursPerWeek": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Contract hours per week",
+                        "description": "Snapshot of the employee's contractual weekly working hours at the time this balance was granted. RuleEngine predicates are single-object (no cross-object lookup), so this denormalised snapshot — not a live read of EmploymentContract — drives the nl-verlof-wettelijk-minimum check; left null when not decidable, in which case that check passes vacuously. May legitimately diverge from the employee's current contract after a later contract change — by design, the balance was granted under the hours in force at grant time."
+                    },
+                    "expiryDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Expiry date",
+                        "description": "Date the statutory leave hours of this year lapse — 1 July of the following year (BW art. 7:640a). Checked by nl-verlof-vervaltermijn."
+                    }
+                }
             }
         }
     }

@@ -267,6 +267,106 @@
                 "deadline": "2026-06-30",
                 "status": "bevestigd",
                 "responseStatus": "geen"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "LeaveBalance",
+                    "slug": "leavebalance-jansen-2026-holiday"
+                },
+                "employeeId": "employee-jansen",
+                "year": 2026,
+                "leaveType": "holiday",
+                "contractHoursPerWeek": 40,
+                "entitledHours": 160,
+                "bovenwettelijkHours": 40,
+                "usedHours": 56,
+                "expiryDate": "2027-07-01"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "LeaveBalance",
+                    "slug": "leavebalance-devries-2026-holiday"
+                },
+                "employeeId": "employee-devries",
+                "year": 2026,
+                "leaveType": "holiday",
+                "contractHoursPerWeek": 32,
+                "entitledHours": 128,
+                "bovenwettelijkHours": 0,
+                "usedHours": 140,
+                "expiryDate": "2027-07-01"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "LeaveBalance",
+                    "slug": "leavebalance-bakker-2026-holiday"
+                },
+                "employeeId": "employee-bakker",
+                "year": 2026,
+                "leaveType": "holiday",
+                "contractHoursPerWeek": 36,
+                "entitledHours": 120,
+                "bovenwettelijkHours": 0,
+                "usedHours": 16,
+                "expiryDate": "2027-07-01"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "SickLeaveCase",
+                    "slug": "sickcase-jansen-flu"
+                },
+                "employeeId": "employee-jansen",
+                "firstSickDay": "2026-05-04",
+                "recoveredDate": "2026-05-08",
+                "status": "hersteld",
+                "wachtdag": true,
+                "loondoorbetalingPercentage": 70,
+                "probleemanalyseDue": null,
+                "probleemanalyseDone": null,
+                "planVanAanpakDue": null,
+                "planVanAanpakDone": null,
+                "uwv42WeekMeldingDue": null,
+                "uwv42WeekMeldingDone": null,
+                "eerstejaarsevaluatieDue": null,
+                "eerstejaarsevaluatieDone": null
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "SickLeaveCase",
+                    "slug": "sickcase-devries-week7"
+                },
+                "employeeId": "employee-devries",
+                "firstSickDay": "2026-05-25",
+                "status": "gemeld",
+                "wachtdag": false,
+                "loondoorbetalingPercentage": 70,
+                "probleemanalyseDue": "2026-07-06",
+                "planVanAanpakDue": "2026-07-20",
+                "uwv42WeekMeldingDue": "2027-03-15",
+                "eerstejaarsevaluatieDue": "2027-05-24"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "SickLeaveCase",
+                    "slug": "sickcase-bakker-longterm"
+                },
+                "employeeId": "employee-bakker",
+                "firstSickDay": "2025-09-29",
+                "status": "gemeld",
+                "wachtdag": false,
+                "loondoorbetalingPercentage": 70,
+                "probleemanalyseDue": "2025-11-10",
+                "probleemanalyseDone": "2025-11-06",
+                "planVanAanpakDue": "2025-11-24",
+                "planVanAanpakDone": "2025-11-20",
+                "uwv42WeekMeldingDue": "2026-07-20",
+                "eerstejaarsevaluatieDue": "2026-09-28"
             }
         ]
     }

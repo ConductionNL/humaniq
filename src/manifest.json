@@ -12,7 +12,10 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "Payslip", "urlTemplate": "/apps/hrmq/payslips/{uuid}", "displayName": "Payslip" },
 		{ "registerSlug": "hrmq", "schemaSlug": "PayrollRun", "urlTemplate": "/apps/hrmq/payroll-runs/{uuid}", "displayName": "Payroll Run" },
 		{ "registerSlug": "hrmq", "schemaSlug": "LoonaangifteFiling", "urlTemplate": "/apps/hrmq/filings/{uuid}", "displayName": "Wage Tax Filing" },
-		{ "registerSlug": "hrmq", "schemaSlug": "PensionFiling", "urlTemplate": "/apps/hrmq/pension-filings/{uuid}", "displayName": "Pension Filing" }
+		{ "registerSlug": "hrmq", "schemaSlug": "PensionFiling", "urlTemplate": "/apps/hrmq/pension-filings/{uuid}", "displayName": "Pension Filing" },
+		{ "registerSlug": "hrmq", "schemaSlug": "LeaveRequest", "urlTemplate": "/apps/hrmq/leave-requests/{uuid}", "displayName": "Leave Request" },
+		{ "registerSlug": "hrmq", "schemaSlug": "LeaveBalance", "urlTemplate": "/apps/hrmq/leave-balances/{uuid}", "displayName": "Leave Balance" },
+		{ "registerSlug": "hrmq", "schemaSlug": "SickLeaveCase", "urlTemplate": "/apps/hrmq/sick-leave/{uuid}", "displayName": "Sick Leave Case" }
 	],
 	"menu": [
 		{
@@ -52,6 +55,38 @@
 					"label": "Urengoedkeuring",
 					"icon": "CheckDecagramOutline",
 					"route": "TimesheetApproval"
+				}
+			]
+		},
+		{
+			"id": "VerlofVerzuimGroup",
+			"label": "Verlof & verzuim",
+			"icon": "CalendarClock",
+			"order": 105,
+			"children": [
+				{
+					"id": "LeaveRequests",
+					"label": "Verlofaanvragen",
+					"icon": "CalendarClock",
+					"route": "LeaveRequests"
+				},
+				{
+					"id": "LeaveApproval",
+					"label": "Verlofgoedkeuring",
+					"icon": "CheckDecagramOutline",
+					"route": "LeaveApproval"
+				},
+				{
+					"id": "LeaveBalances",
+					"label": "Verlofsaldi",
+					"icon": "ScaleBalance",
+					"route": "LeaveBalances"
+				},
+				{
+					"id": "SickLeaveCases",
+					"label": "Ziekmeldingen",
+					"icon": "EmoticonSickOutline",
+					"route": "SickLeaveCases"
 				}
 			]
 		},
@@ -491,6 +526,125 @@
 					]
 				},
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
+			}
+		},
+		{
+			"id": "LeaveRequests",
+			"route": "/leave-requests",
+			"type": "index",
+			"title": "Verlofaanvragen",
+			"config": {
+				"register": "hrmq",
+				"schema": "LeaveRequest",
+				"columns": ["employeeId", "leaveType", "startDate", "endDate", "hours", "status"],
+				"filters": ["status", "leaveType"],
+				"sort": { "field": "startDate", "order": "desc" }
+			}
+		},
+		{
+			"id": "LeaveApproval",
+			"route": "/leave-requests/approval",
+			"type": "index",
+			"title": "Verlofgoedkeuring",
+			"config": {
+				"register": "hrmq",
+				"schema": "LeaveRequest",
+				"description": "Ingediende verlofaanvragen die wachten op goedkeuring of afkeuring.",
+				"columns": ["employeeId", "leaveType", "startDate", "endDate", "submittedAt", "status"],
+				"filters": ["status", "leaveType"],
+				"defaultFilters": { "status": "submitted" },
+				"sort": { "field": "submittedAt", "order": "asc" }
+			}
+		},
+		{
+			"id": "LeaveRequestDetail",
+			"route": "/leave-requests/:id",
+			"type": "detail",
+			"title": "Verlofaanvraag",
+			"config": {
+				"register": "hrmq",
+				"schema": "LeaveRequest",
+				"_note": "leave-verzuim-mvp (2026-07-12): drives the EXISTING LeaveRequest lifecycle from portal-schemas (submit -> approve/reject, guarded server-side by NoSelfApprovalGuard) -- nothing on the schema changes here, only its UI. TimesheetDetail pattern: the data widget is SPLIT into 'Request' (leaveType/startDate/endDate/hours/reason -- what is being requested) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason -- the workflow trail), both excluding employeeId since Related already resolves and links the requesting Employee by name. Files sits full-width below for supporting documents (e.g. a bijzonder-verlof invitation). NO stat KPI tile: unlike Timesheet's hours-sum or Expense's amount-sum, a leave request has no single numeric headline worth a dedicated stat (hours is optional and nullable). lifecycleActions expose exactly submit/approve/reject -- no invented cancel/withdraw edge (PayrollRunDetail _note precedent: never claim a transition the backend does not guard). Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "lr-data", "type": "data", "title": "Request", "icon": "CalendarClock", "content": { "columns": 2, "exclude": ["employeeId"] } },
+					{ "id": "lr-approval", "type": "data", "title": "Approval", "icon": "CheckCircleOutline", "content": { "columns": 2, "include": ["status", "submittedAt", "approvedBy", "approvedAt", "rejectionReason"] } },
+					{ "id": "lr-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "lr-files", "type": "integration", "integrationId": "files", "title": "Supporting documents", "icon": "FolderOutline" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "lr-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "2", "widgetId": "lr-approval", "gridX": 0, "gridY": 5, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "3", "widgetId": "lr-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 9 },
+					{ "id": "4", "widgetId": "lr-files", "gridX": 0, "gridY": 9, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "submit", "from": ["draft", "rejected"], "to": "submitted", "label": "Submit" },
+						{ "action": "approve", "from": ["submitted"], "to": "approved", "label": "Approve" },
+						{ "action": "reject", "from": ["submitted"], "to": "rejected", "label": "Reject" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "LeaveBalances",
+			"route": "/leave-balances",
+			"type": "index",
+			"title": "Verlofsaldi",
+			"config": {
+				"register": "hrmq",
+				"schema": "LeaveBalance",
+				"description": "Verlofsaldi per medewerker, jaar en type: toegekende, bovenwettelijke en gebruikte uren, plus het berekende resterende saldo.",
+				"columns": ["employeeId", "year", "leaveType", "entitledHours", "bovenwettelijkHours", "usedHours", "remainingHours", "expiryDate"],
+				"filters": ["year", "leaveType"],
+				"sort": { "field": "year", "order": "desc" }
+			}
+		},
+		{
+			"id": "SickLeaveCases",
+			"route": "/sick-leave",
+			"type": "index",
+			"title": "Ziekmeldingen",
+			"config": {
+				"register": "hrmq",
+				"schema": "SickLeaveCase",
+				"description": "Ziektegevallen en de Wet-verbetering-poortwachter-mijlpalen (administratieve gegevens, geen medische gegevens).",
+				"columns": ["employeeId", "firstSickDay", "recoveredDate", "status"],
+				"filters": ["status"],
+				"sort": { "field": "firstSickDay", "order": "desc" }
+			}
+		},
+		{
+			"id": "SickLeaveCaseDetail",
+			"route": "/sick-leave/:id",
+			"type": "detail",
+			"title": "Ziekmelding",
+			"config": {
+				"register": "hrmq",
+				"schema": "SickLeaveCase",
+				"_note": "leave-verzuim-mvp (2026-07-12): administrative-only sickness case -- NO medical/diagnosis data exists on this schema or its widgets (REQ-VWP-002). The 'Case' data widget (firstSickDay/recoveredDate/status/wachtdag/loondoorbetalingPercentage) excludes employeeId since Related already resolves and links the sick Employee by name; the 'Poortwachter milestones' widget surfaces all eight Due/Done WVP dates (probleemanalyse/plan van aanpak/UWV 42-wekenmelding/eerstejaarsevaluatie) so the re-integration clock is the page's second headline fact. Files is labeled and described for gespreksverslagen & plan-van-aanpak process documents ONLY -- repeating the no-medical-data warning, matching the schema's own privacy stance. lifecycleActions expose exactly herstellen/heropenen (gemeld<->hersteld) -- no invented edges. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "slc-case", "type": "data", "title": "Case", "icon": "EmoticonSickOutline", "content": { "columns": 2, "exclude": ["employeeId", "probleemanalyseDue", "probleemanalyseDone", "planVanAanpakDue", "planVanAanpakDone", "uwv42WeekMeldingDue", "uwv42WeekMeldingDone", "eerstejaarsevaluatieDue", "eerstejaarsevaluatieDone"] } },
+					{ "id": "slc-milestones", "type": "data", "title": "Poortwachter milestones", "icon": "CalendarClock", "content": { "columns": 2, "include": ["probleemanalyseDue", "probleemanalyseDone", "planVanAanpakDue", "planVanAanpakDone", "uwv42WeekMeldingDue", "uwv42WeekMeldingDone", "eerstejaarsevaluatieDue", "eerstejaarsevaluatieDone"] } },
+					{ "id": "slc-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "slc-files", "type": "integration", "integrationId": "files", "title": "Gespreksverslagen & plan van aanpak", "icon": "FolderOutline" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "slc-case", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "2", "widgetId": "slc-milestones", "gridX": 0, "gridY": 5, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "3", "widgetId": "slc-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 13 },
+					{ "id": "4", "widgetId": "slc-files", "gridX": 0, "gridY": 13, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "herstellen", "from": ["gemeld"], "to": "hersteld", "label": "Herstellen" },
+						{ "action": "heropenen", "from": ["hersteld"], "to": "gemeld", "label": "Heropenen" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
 			}
 		}
 	]
