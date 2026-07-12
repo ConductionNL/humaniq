@@ -192,6 +192,11 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects
                     'w4OnFile'                       => true,
                     'i9VerifiedWithinThreeDays'      => true,
                     'newHireReportedDate'            => '2022-01-05',
+                    // payroll-sepa-netpay-shillinq: placeholder bank details so
+                    // `occ hrmq:rules:audit` stays green under nl-netpay-iban-present
+                    // for this seeded run/payslip (both payable).
+                    'iban'                           => 'NL00BANK0000000001',
+                    'tenaamstelling'                 => 'S. de Vries',
                 ],
             ],
             'EmploymentContract' => [

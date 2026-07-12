@@ -14,6 +14,7 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "LoonaangifteFiling", "urlTemplate": "/apps/hrmq/filings/{uuid}", "displayName": "Wage Tax Filing" },
 		{ "registerSlug": "hrmq", "schemaSlug": "PensionFiling", "urlTemplate": "/apps/hrmq/pension-filings/{uuid}", "displayName": "Pension Filing" },
 		{ "registerSlug": "hrmq", "schemaSlug": "PayrollGLPost", "urlTemplate": "/apps/hrmq/gl-posts/{uuid}", "displayName": "Payroll GL Post" },
+		{ "registerSlug": "hrmq", "schemaSlug": "PayrollPaymentBatch", "urlTemplate": "/apps/hrmq/payment-batches/{uuid}", "displayName": "Payroll Payment Batch" },
 		{ "registerSlug": "hrmq", "schemaSlug": "LeaveRequest", "urlTemplate": "/apps/hrmq/leave-requests/{uuid}", "displayName": "Leave Request" },
 		{ "registerSlug": "hrmq", "schemaSlug": "LeaveBalance", "urlTemplate": "/apps/hrmq/leave-balances/{uuid}", "displayName": "Leave Balance" },
 		{ "registerSlug": "hrmq", "schemaSlug": "SickLeaveCase", "urlTemplate": "/apps/hrmq/sick-leave/{uuid}", "displayName": "Sick Leave Case" },
@@ -241,6 +242,12 @@
 					"label": "Loonjournaalposten",
 					"icon": "BookEditOutline",
 					"route": "PayrollGLPosts"
+				},
+				{
+					"id": "PayrollPaymentBatches",
+					"label": "Betaalbatches",
+					"icon": "BankTransferOutline",
+					"route": "PayrollPaymentBatches"
 				}
 			]
 		}
@@ -761,6 +768,42 @@
 					{ "id": "1", "widgetId": "pg-status", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 3 },
 					{ "id": "2", "widgetId": "pg-data", "gridX": 0, "gridY": 3, "gridWidth": 8, "gridHeight": 8 },
 					{ "id": "3", "widgetId": "pg-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 11 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
+			}
+		},
+		{
+			"id": "PayrollPaymentBatches",
+			"route": "/payment-batches",
+			"type": "index",
+			"title": "Betaalbatches",
+			"config": {
+				"register": "hrmq",
+				"schema": "PayrollPaymentBatch",
+				"description": "Netto-loon betaalbatches: per betaalbare loonrun een concept SEPA PaymentRun klaargezet in shillinq.",
+				"columns": ["period", "status", "totalAmount", "lineCount", "createdAt"],
+				"filters": ["status"],
+				"sort": { "field": "createdAt", "order": "desc" }
+			}
+		},
+		{
+			"id": "PayrollPaymentBatchDetail",
+			"route": "/payment-batches/:id",
+			"type": "detail",
+			"title": "Betaalbatch",
+			"config": {
+				"register": "hrmq",
+				"schema": "PayrollPaymentBatch",
+				"_note": "payroll-sepa-netpay-shillinq (2026-07-13): a PayrollPaymentBatch is hrmq's log of ONE net-pay handoff attempt into shillinq's PaymentRun register -- never the payment batch itself (design.md D1), same PayrollGLPostDetail shape. pb-status leads top-left with the prominent outcome facts (status/createdAt/errorMessage), pb-related sits top-right to resolve and link the referenced PayrollRun (a real $ref, unlike shillinqPaymentRunRef), then pb-data runs below with the remaining record fields including the runNumber/shillinqPaymentRunRef pointer into shillinq (plain display only -- no cross-app deep link in MVP). Copy says 'klaargezet in shillinq', NEVER 'betaald': created != paid, money only moves after shillinq's controller approves and exports (design.md D4). NO lifecycleActions: status has no x-openregister-lifecycle transition map -- PayrollNetPayService drives every transition server-side from `occ hrmq:netpay:run`, exactly the PayrollGLPostDetail precedent (never invent a user-facing transition the backend does not guard). No Files/calendar/comms leaves -- this is a system-generated audit record, not a document or event. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "pb-status", "type": "data", "title": "Status", "icon": "CheckCircleOutline", "content": { "columns": 4, "include": ["status", "createdAt", "errorMessage"] } },
+					{ "id": "pb-data", "type": "data", "title": "Betaalbatch", "icon": "BankTransferOutline", "content": { "columns": 2, "exclude": ["payrollRunId"] } },
+					{ "id": "pb-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "pb-status", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 3 },
+					{ "id": "2", "widgetId": "pb-data", "gridX": 0, "gridY": 3, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "3", "widgetId": "pb-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 11 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}

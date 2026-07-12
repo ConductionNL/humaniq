@@ -100,5 +100,10 @@ Vrij en open source onder de EUPL-1.2-licentie.
              shillinq's JournalEntry register (payroll-glpost-shillinq MVP
              trigger). Duck-typed no-op when shillinq is absent. -->
         <command>OCA\Hrmq\Command\GlPostRunCommand</command>
+        <!-- Hand off each payable PayrollRun's payslips as a draft SEPA
+             PaymentRun into shillinq's PaymentRun register
+             (payroll-sepa-netpay-shillinq MVP trigger). Duck-typed no-op when
+             shillinq is absent. -->
+        <command>OCA\Hrmq\Command\NetPayRunCommand</command>
     </commands>
 </info>

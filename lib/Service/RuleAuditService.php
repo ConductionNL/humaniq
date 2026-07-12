@@ -95,6 +95,14 @@ class RuleAuditService
         // clockOut for the same employee without re-querying the register.
         $context['attendance'] = $this->buildAttendanceContext();
 
+        // payroll-sepa-netpay-shillinq: an employee-IBAN-presence index (keyed by
+        // id, slug, AND employeeNumber -- the same three-way resolution
+        // PayrollNetPayService uses) plus the set of periods with a payable
+        // (approved/posted) PayrollRun, so NlNetPayChecks::checks()['Payslip']
+        // ['nl-netpay-iban-present'] stays a pure fn(array $o, array $context)
+        // instead of re-querying siblings.
+        $context['netpay'] = $this->buildNetPayContext();
+
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
         $enforceable      = count(RuleEngine::checkedRuleIds());
@@ -339,6 +347,58 @@ class RuleAuditService
         return ['clockByEmployeeDate' => $clockByEmployeeDate];
 
     }//end buildAttendanceContext()
+
+
+    /**
+     * Build the employee-IBAN-presence index and payable-period set consumed
+     * by NlNetPayChecks' `nl-netpay-iban-present` predicate
+     * (payroll-sepa-netpay-shillinq, design.md D2/D4): `ibanByEmployeeKey` maps
+     * each Employee's object id, slug, AND employeeNumber to whether an `iban`
+     * is present -- the same three-way resolution PayrollNetPayService uses --
+     * and `payablePeriods` is the set of periods with a payable
+     * (approved/posted) PayrollRun. Degrades gracefully to empty
+     * sets when the Employee/PayrollRun schemas do not exist yet in the
+     * register.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildNetPayContext(): array
+    {
+        $ibanByEmployeeKey = [];
+        foreach ($this->loadAll('Employee') as $employee) {
+            $hasIban = (trim((string) ($employee['iban'] ?? '')) !== '');
+
+            $id = (string) ($employee['id'] ?? $employee['@self']['id'] ?? '');
+            if ($id !== '') {
+                $ibanByEmployeeKey[$id] = $hasIban;
+            }
+
+            $slug = (string) ($employee['@self']['slug'] ?? '');
+            if ($slug !== '') {
+                $ibanByEmployeeKey[$slug] = $hasIban;
+            }
+
+            $number = trim((string) ($employee['employeeNumber'] ?? ''));
+            if ($number !== '') {
+                $ibanByEmployeeKey[$number] = $hasIban;
+            }
+        }
+
+        $payablePeriods = [];
+        foreach ($this->loadAll('PayrollRun') as $run) {
+            $period = (string) ($run['period'] ?? '');
+            $status = (string) ($run['status'] ?? '');
+            if ($period !== '' && in_array($status, ['approved', 'posted'], true) === true) {
+                $payablePeriods[$period] = true;
+            }
+        }
+
+        return [
+            'ibanByEmployeeKey' => $ibanByEmployeeKey,
+            'payablePeriods'    => array_keys($payablePeriods),
+        ];
+
+    }//end buildNetPayContext()
 
 
     /**

@@ -17,7 +17,9 @@
                 "taxTableColor": "wit",
                 "identityDocumentVerified": true,
                 "loonheffingenVerklaringOnFile": true,
-                "nextcloudUserId": "admin"
+                "nextcloudUserId": "admin",
+                "iban": "NL00BANK0123456789",
+                "tenaamstelling": "S. Jansen"
             },
             {
                 "@self": {

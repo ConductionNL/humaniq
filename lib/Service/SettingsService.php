@@ -160,6 +160,40 @@ class SettingsService
 
 
     /**
+     * The day of the wage-period month used as the shillinq PaymentRun
+     * `executionDate` (payroll-sepa-netpay-shillinq design.md D5 — the
+     * customary Dutch salary date), configurable via app config key
+     * `netpay_execution_day`, clamped by the caller to the period's last day.
+     *
+     * @return int
+     */
+    public function getNetPayExecutionDay(): int
+    {
+        $value = $this->appConfig->getValueString(Application::APP_ID, 'netpay_execution_day', '25');
+        $day   = (int) $value;
+
+        return $day > 0 ? $day : 25;
+
+    }//end getNetPayExecutionDay()
+
+
+    /**
+     * The debtor IBAN passed through to the created shillinq PaymentRun's
+     * `debtorAccountIban` (payroll-sepa-netpay-shillinq design.md D5),
+     * configurable via app config key `netpay_debtor_iban`. Empty/unset means
+     * the field is omitted (nullable — the bookkeeper completes it in shillinq
+     * before approval).
+     *
+     * @return string
+     */
+    public function getNetPayDebtorIban(): string
+    {
+        return $this->appConfig->getValueString(Application::APP_ID, 'netpay_debtor_iban', '');
+
+    }//end getNetPayDebtorIban()
+
+
+    /**
      * Import the register idempotently (skips when the version is unchanged).
      *
      * @return array<string, mixed> Result with success flag, message, and version.
