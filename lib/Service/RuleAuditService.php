@@ -148,10 +148,14 @@ class RuleAuditService
      * Build the cross-type sibling index consumed by the PayrollRun/PensionFiling
      * predicates (pension-filing-upa-mvp): a PayrollRun `{id, period, status}` index
      * keyed by id, plus the set of periods with an approved-or-later run, and the
-     * set of periods that have at least one PensionFiling. Loads independently of
-     * the main per-type loop (a small, side-effect-free reload) so the index is
-     * ready before any object of either type is evaluated. Degrades gracefully to
-     * empty sets when either schema does not exist yet in the register.
+     * set of periods that have at least one PensionFiling. Also builds the
+     * Employee `{id, loonheffingenVerklaringOnFile, startDate}` index keyed by
+     * id/slug and the EmploymentContract `{type, startDate, endDate}` index keyed
+     * by employeeId (onboarding-wizard-mvp) consumed by NlOnboardingChecks. Loads
+     * independently of the main per-type loop (a small, side-effect-free reload)
+     * so the index is ready before any object of either type is evaluated.
+     * Degrades gracefully to empty sets when a schema does not exist yet in the
+     * register.
      *
      * @return array<string, array<string, mixed>>
      */
@@ -181,13 +185,59 @@ class RuleAuditService
             }
         }
 
+        // onboarding-wizard-mvp: an Employee index (loonheffingenVerklaringOnFile +
+        // startDate, keyed by id/slug — the Timesheet/Onboarding employeeId
+        // reference mechanism) so NlOnboardingChecks::checks()['Onboarding']
+        // ['nl-onboarding-loonheffingenverklaring'] can resolve the hire's Employee
+        // without re-querying the register.
+        $employeesById = [];
+        foreach ($this->loadAll('Employee') as $employee) {
+            $id = (string) ($employee['id'] ?? $employee['@self']['id'] ?? '');
+            if ($id === '') {
+                continue;
+            }
+
+            $employeesById[$id] = [
+                'id'                            => $id,
+                'loonheffingenVerklaringOnFile' => (bool) ($employee['loonheffingenVerklaringOnFile'] ?? false),
+                'startDate'                     => (string) ($employee['startDate'] ?? ''),
+            ];
+        }
+
+        // onboarding-wizard-mvp: an EmploymentContract index keyed by employeeId
+        // (the contract type/startDate/endDate that resolves for a given hire) so
+        // nl-onboarding-proeftijd-bewaking can apply the BW 7:652 contract-type cap.
+        // When more than one contract resolves for the same employeeId, the last
+        // one loaded wins (MVP simplification — contracts are optional data today,
+        // design.md D3); tightening to "most recent by startDate" is a check-only
+        // change once contract history matters for this predicate.
+        $contractsByEmployeeId = [];
+        foreach ($this->loadAll('EmploymentContract') as $contract) {
+            $employeeId = (string) ($contract['employeeId'] ?? '');
+            if ($employeeId === '') {
+                continue;
+            }
+
+            $contractsByEmployeeId[$employeeId] = [
+                'type'      => (string) ($contract['type'] ?? ''),
+                'startDate' => (string) ($contract['startDate'] ?? ''),
+                'endDate'   => (string) ($contract['endDate'] ?? ''),
+            ];
+        }
+
         return [
-            'PayrollRun'    => [
+            'PayrollRun'         => [
                 'byId'            => $byId,
                 'approvedPeriods' => array_keys($approvedPeriods),
             ],
-            'PensionFiling' => [
+            'PensionFiling'      => [
                 'filedPeriods' => array_keys($filedPeriods),
+            ],
+            'Employee'           => [
+                'byId' => $employeesById,
+            ],
+            'EmploymentContract' => [
+                'byEmployeeId' => $contractsByEmployeeId,
             ],
         ];
 

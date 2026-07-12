@@ -1,0 +1,165 @@
+{
+    "x-hrmq-fragment": "hr-onboarding",
+    "components": {
+        "schemas": {
+            "Onboarding": {
+                "slug": "Onboarding",
+                "icon": "AccountPlus",
+                "version": "0.1.0",
+                "title": "Onboarding case",
+                "description": "A deterministic onboarding case (one per hire): the concrete legal gates for a new employee's first week — contract signed, WID identity check, BSN/IBAN validated, IT provisioned, pensioen aangemeld — as checklist boolean/date fields, governed by a simplified six-state declarative lifecycle (onboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/onboarding-wizard draft's 13-state machine and 15-step wizard stepper: no OnboardingStep/WIDCheck/BSNValidatie/Reminder side entities, no wizard stepper UI (follow-up nc-vue widget, design.md D6), no BSN elfproef/IBAN modulus-97 validation services, no IT auto-provisioning, no reminder/escalation engine. The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOnboardingChecks.php), NOT by write-time guard classes — guard wiring for compliance-checked schemas is owned by the active hrmq-rule-compliance-enforcement change (design.md D2).",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "employeeId",
+                    "startDate",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "aangenomen",
+                        "terminal": [
+                            "afgerond",
+                            "geannuleerd"
+                        ],
+                        "transitions": {
+                            "contract_bevestigen": {
+                                "from": [
+                                    "aangenomen"
+                                ],
+                                "to": "contract_getekend",
+                                "description": "The employment contract has been signed. Checklist gate: contractSigned = true (enforced by audit rule, not a write-time guard — see hrmq-rule-compliance-enforcement)."
+                            },
+                            "gegevens_valideren": {
+                                "from": [
+                                    "contract_getekend"
+                                ],
+                                "to": "gegevens_gevalideerd",
+                                "description": "The hire's BSN and IBAN have been checked. Checklist gate: bsnValidated = true AND ibanVerified = true (audit-enforced)."
+                            },
+                            "gereed_melden": {
+                                "from": [
+                                    "gegevens_gevalideerd"
+                                ],
+                                "to": "gereed_eerste_werkdag",
+                                "description": "The case is ready for the first workday. Checklist gate: widCheckDone = true (WID check on or before startDate, Wet op de identificatieplicht art. 15 jo. Wet LB 1964 art. 28 lid 1 onder f), itProvisioned = true, pensioenAangemeld = true (audit-enforced)."
+                            },
+                            "starten": {
+                                "from": [
+                                    "gereed_eerste_werkdag"
+                                ],
+                                "to": "proeftijd_lopend",
+                                "description": "startDate has been reached; the proeftijd clock now runs against proeftijdEndDate (BW 7:652)."
+                            },
+                            "afronden": {
+                                "from": [
+                                    "proeftijd_lopend"
+                                ],
+                                "to": "afgerond",
+                                "description": "The proeftijd completed without termination; the onboarding case is closed out."
+                            },
+                            "annuleren": {
+                                "from": [
+                                    "aangenomen",
+                                    "contract_getekend",
+                                    "gegevens_gevalideerd",
+                                    "gereed_eerste_werkdag",
+                                    "proeftijd_lopend"
+                                ],
+                                "to": "geannuleerd",
+                                "description": "The hire is cancelled (no-show, or proeftijd termination) before the case reaches afgerond."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "UUID reference to the Employee this onboarding case hires."
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Start date",
+                        "description": "First workday. Anchor date for the WID identity check timing (nl-onboarding-wid-check) and the proeftijd clock."
+                    },
+                    "proeftijdEndDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Proeftijd end date",
+                        "description": "End of the probationary period, if agreed. BW 7:652-capped (max 1 month for fixed-term contracts under 2 years, max 2 months for permanent/2+ year contracts) but a contractual input, not derived — checked by nl-onboarding-proeftijd-bewaking. Null when no proeftijd was agreed."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Case lifecycle status. Governed by the x-openregister-lifecycle state machine (aangenomen -> contract_getekend -> gegevens_gevalideerd -> gereed_eerste_werkdag -> proeftijd_lopend -> afgerond, cancellable pre-afgerond).",
+                        "enum": [
+                            "aangenomen",
+                            "contract_getekend",
+                            "gegevens_gevalideerd",
+                            "gereed_eerste_werkdag",
+                            "proeftijd_lopend",
+                            "afgerond",
+                            "geannuleerd"
+                        ],
+                        "default": "aangenomen"
+                    },
+                    "contractSigned": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Contract signed",
+                        "description": "Whether the signed employment contract is on file (artefact stored in the files widget). Gates the contract_bevestigen transition."
+                    },
+                    "widCheckDone": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "WID check done",
+                        "description": "Whether the WID identity check was performed (original document seen, copy retained per Wet LB 1964 art. 28 lid 1 onder f). Must be true on or before startDate; checked by nl-onboarding-wid-check."
+                    },
+                    "widCheckDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "WID check date",
+                        "description": "Date the WID identity check was performed."
+                    },
+                    "bsnValidated": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "BSN validated",
+                        "description": "Whether the BSN was checked. Records the outcome only — elfproef modulus-11 automation is a non-goal."
+                    },
+                    "ibanVerified": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "IBAN verified",
+                        "description": "Whether the IBAN was verified. Records the outcome only — modulus-97 automation is a non-goal."
+                    },
+                    "itProvisioned": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "IT provisioned",
+                        "description": "Whether the Nextcloud/IT account was provisioned for the hire. Records the outcome only — OCS auto-provisioning is a non-goal."
+                    },
+                    "pensioenAangemeld": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Pensioen aangemeld",
+                        "description": "Whether the hire has been registered with the pension fund/administrator."
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Notes",
+                        "description": "Free-text case notes."
+                    }
+                }
+            }
+        }
+    }
+}

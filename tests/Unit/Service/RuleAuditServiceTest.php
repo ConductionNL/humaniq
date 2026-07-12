@@ -248,4 +248,134 @@ class RuleAuditServiceTest extends TestCase
     }//end testApprovedRunWithoutAnyFilingIsFlaggedIncomplete()
 
 
+    // -- onboarding-wizard-mvp: Employee/EmploymentContract related-context --
+
+
+    /**
+     * The onboarding-wizard-mvp hr-seed.json fixture shapes: two Employees
+     * (employee-jansen already loonheffingen-complete, employee-visser a fresh
+     * hire that is not) and the two Onboarding seeds (onboarding-jansen, a
+     * clean afgerond case; onboarding-visser, mid-flow with an overdue WID
+     * check), fed through audit() as if loaded from the register.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededOnboardingRows(): array
+    {
+        $employees = [
+            ['id' => 'employee-jansen', 'loonheffingenVerklaringOnFile' => true, 'startDate' => '2024-01-01'],
+            ['id' => 'employee-visser', 'loonheffingenVerklaringOnFile' => false, 'startDate' => '2026-07-01'],
+        ];
+
+        $onboardings = [
+            [
+                'employeeId'        => 'employee-visser',
+                'startDate'         => '2026-07-01',
+                'proeftijdEndDate'  => '2026-08-01',
+                'status'            => 'gegevens_gevalideerd',
+                'contractSigned'    => true,
+                'widCheckDone'      => false,
+                'bsnValidated'      => true,
+                'ibanVerified'      => true,
+                'itProvisioned'     => false,
+                'pensioenAangemeld' => false,
+            ],
+            [
+                'employeeId'        => 'employee-jansen',
+                'startDate'         => '2024-01-01',
+                'proeftijdEndDate'  => '2024-02-01',
+                'status'            => 'afgerond',
+                'contractSigned'    => true,
+                'widCheckDone'      => true,
+                'widCheckDate'      => '2023-12-28',
+                'bsnValidated'      => true,
+                'ibanVerified'      => true,
+                'itProvisioned'     => true,
+                'pensioenAangemeld' => true,
+            ],
+        ];
+
+        return [
+            'Employee'   => $employees,
+            'Onboarding' => $onboardings,
+        ];
+
+    }//end seededOnboardingRows()
+
+
+    /**
+     * @return void
+     */
+    public function testSeededOnboardingDataFlagsExactlyOneWidCheckViolation(): void
+    {
+        $service = $this->serviceWithRows($this->seededOnboardingRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-onboarding-wid-check'] ?? 0));
+        $this->assertArrayNotHasKey('nl-onboarding-proeftijd-bewaking', $byRule);
+        $this->assertArrayNotHasKey('nl-onboarding-loonheffingenverklaring', $byRule);
+
+    }//end testSeededOnboardingDataFlagsExactlyOneWidCheckViolation()
+
+
+    /**
+     * @return void
+     */
+    public function testOnboardingLoonheffingenverklaringViolatedWhenEmployeeMissingVerklaringAtReadyStatus(): void
+    {
+        $rows = [
+            'Employee'   => [['id' => 'employee-visser', 'loonheffingenVerklaringOnFile' => false, 'startDate' => '2026-07-01']],
+            'Onboarding' => [
+                [
+                    'employeeId'   => 'employee-visser',
+                    'startDate'    => '2020-01-01',
+                    'status'       => 'gereed_eerste_werkdag',
+                    'widCheckDone' => true,
+                ],
+            ],
+        ];
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertContains('nl-onboarding-loonheffingenverklaring', $ruleIds);
+
+    }//end testOnboardingLoonheffingenverklaringViolatedWhenEmployeeMissingVerklaringAtReadyStatus()
+
+
+    /**
+     * @return void
+     */
+    public function testOnboardingProeftijdViolatedWhenContractCapExceeded(): void
+    {
+        $rows = [
+            'EmploymentContract' => [
+                ['employeeId' => 'employee-devos', 'type' => 'temporary', 'startDate' => '2026-01-01', 'endDate' => '2026-12-31'],
+            ],
+            'Onboarding'         => [
+                [
+                    'employeeId'       => 'employee-devos',
+                    'startDate'        => '2026-07-01',
+                    'proeftijdEndDate' => '2026-09-01',
+                    'status'           => 'contract_getekend',
+                    'widCheckDone'     => true,
+                ],
+            ],
+        ];
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertContains('nl-onboarding-proeftijd-bewaking', $ruleIds);
+
+    }//end testOnboardingProeftijdViolatedWhenContractCapExceeded()
+
+
 }//end class

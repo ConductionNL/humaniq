@@ -419,6 +419,56 @@
                 "planVanAanpakDone": "2025-11-20",
                 "uwv42WeekMeldingDue": "2026-07-20",
                 "eerstejaarsevaluatieDue": "2026-09-28"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-visser"
+                },
+                "employeeNumber": "EMP-0004",
+                "firstName": "Noa",
+                "lastName": "Visser",
+                "startDate": "2026-07-01",
+                "taxTableColor": "wit",
+                "identityDocumentVerified": false,
+                "loonheffingenVerklaringOnFile": false
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Onboarding",
+                    "slug": "onboarding-visser"
+                },
+                "employeeId": "employee-visser",
+                "startDate": "2026-07-01",
+                "proeftijdEndDate": "2026-08-01",
+                "status": "gegevens_gevalideerd",
+                "contractSigned": true,
+                "widCheckDone": false,
+                "bsnValidated": true,
+                "ibanVerified": true,
+                "itProvisioned": false,
+                "pensioenAangemeld": false
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Onboarding",
+                    "slug": "onboarding-jansen"
+                },
+                "employeeId": "employee-jansen",
+                "startDate": "2024-01-01",
+                "proeftijdEndDate": "2024-02-01",
+                "status": "afgerond",
+                "contractSigned": true,
+                "widCheckDone": true,
+                "widCheckDate": "2023-12-28",
+                "bsnValidated": true,
+                "ibanVerified": true,
+                "itProvisioned": true,
+                "pensioenAangemeld": true,
+                "notes": "Volledig doorlopen onboarding, afgerond zonder bijzonderheden."
             }
         ]
     }
