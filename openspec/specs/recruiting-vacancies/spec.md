@@ -1,15 +1,15 @@
 ---
 capability: recruiting-vacancies
-status: in-progress
-built_by: openspec/changes/recruiting-ats-basic
+status: done
+built_by: openspec/changes/archive/2026-07-13-recruiting-ats-basic
 ---
 
 # recruiting-vacancies Specification
 
-**Status**: in-progress
+**Status**: done
 **Scope**: hrmq
 **OpenSpec changes**:
-- [recruiting-ats-basic](../../changes/recruiting-ats-basic/) _(active)_ — `Onboarding & ATS` menu group (frozen ADR-001 menu 6, tuple coordinated with the parallel `onboarding-wizard-mvp`), new `Vacancy` schema (fragment hr-ats.json) with declarative concept→gepubliceerd→gesloten lifecycle, Vacancies/VacancyDetail pages, seeded published vacancy (kind: config)
+- [recruiting-ats-basic](../../changes/archive/2026-07-13-recruiting-ats-basic/) _(archived 2026-07-13)_ — `Onboarding & ATS` menu group (frozen ADR-001 menu 6, tuple coordinated with the parallel `onboarding-wizard-mvp`), new `Vacancy` schema (fragment hr-ats.json) with declarative concept→gepubliceerd→gesloten lifecycle, Vacancies/VacancyDetail pages, seeded published vacancy (kind: config)
 
 ## Purpose
 
@@ -26,23 +26,54 @@ public career page (portaliq per ADR-046) are explicitly out of scope.
 
 ## Requirements
 
-Detailed requirements (REQ-RCV-001 … REQ-RCV-004) are defined in the active
-change's delta spec —
-[`openspec/changes/recruiting-ats-basic/specs/recruiting-vacancies/spec.md`](../../changes/recruiting-ats-basic/specs/recruiting-vacancies/spec.md)
-— and are merged here when the change is archived. The umbrella requirement
-below anchors the capability until then.
+### Requirement: A new `Vacancy` schema SHALL model the vacancy with a declarative publish lifecycle (REQ-RCV-001)
 
-### Requirement: Vacancies are declarative OpenRegister objects under the ADR-001 menu-6 surface (REQ-RCV-000)
+A new fragment `lib/Settings/register.d/hr-ats.json` (`x-hrmq-fragment: hr-ats`) SHALL declare `Vacancy` (version 0.1.0, icon `BriefcaseSearchOutline`): `title` (string, required — job title), `description` (string, nullable — vacancy text), `department` (string, nullable), `status` (enum `concept`/`gepubliceerd`/`gesloten`, default `concept`, required — governed by the lifecycle), `publishedDate` (string, format date, nullable — description documents that it is stamped on the carrying write of `publiceren`, the Timesheet `approvedAt` pattern), `closingDate` (string, format date, nullable — application deadline, informational in the MVP). Required: `title`, `status`. `configuration` declares `x-openregister-lifecycle`: `field: status`, `initial: concept`, transitions `publiceren` (concept→gepubliceerd) and `sluiten` (gepubliceerd→gesloten), terminal `gesloten` — no re-open or publish-from-closed edge (a closed vacancy is re-created, not resurrected). Every property carries title + description (gate-28). Register `lib/Settings/hrmq_register.json` `info.version` bumped 0.3.0 → 0.4.0.
 
-The vacancy surface MUST consist solely of the `Vacancy` schema in
-`lib/Settings/register.d/hr-ats.json` (declarative
-`x-openregister-lifecycle` concept→gepubliceerd→gesloten) plus manifest
-pages under the `OnboardingAtsGroup` menu group — no app-owned tables,
-services, controllers, or external publication connectors.
+#### Scenario: Vacancy walks publish and close
+- **GIVEN** a Vacancy created with `title: "Medior Vue-developer"` (status defaults to `concept`)
+- **WHEN** `publiceren` is executed via the OpenRegister lifecycle endpoint with the carrying write setting `publishedDate`
+- **THEN** the object's `status` is `gepubliceerd`; **AND WHEN** `sluiten` is executed **THEN** `status` is `gesloten` and no further transition is offered (terminal)
 
-#### Scenario: Vacancy surface is schema + manifest only
+#### Scenario: Illegal transition rejected
+- **GIVEN** a Vacancy in status `concept`
+- **WHEN** the `sluiten` action is attempted
+- **THEN** OpenRegister rejects the transition (`sluiten` is only declared from `gepubliceerd`)
 
-- GIVEN the hrmq codebase at HEAD after this change
-- WHEN the vacancy feature is inspected
-- THEN it consists of the `Vacancy` schema in `hr-ats.json` and the `Vacancies`/`VacancyDetail` manifest pages, with no vacancy-specific PHP service/controller and no werk.nl/LinkedIn integration code
-- @e2e exclude declarative register + manifest configuration with no bespoke UI code; rendering is covered by the shared CnPageRenderer library tests, app-level e2e suite tracked by hrmq-test-coverage-baseline
+#### Scenario: Incomplete vacancy rejected
+- **WHEN** a Vacancy is written without `title`
+- **THEN** OpenRegister schema validation rejects it (required-property violation)
+
+### Requirement: The manifest SHALL add the `Onboarding & ATS` menu group with the exact coordination tuple (REQ-RCV-002)
+
+`src/manifest.json` gains menu group `OnboardingAtsGroup` (label "Onboarding & ATS", icon `AccountPlus`, order 106 — the frozen ADR-001 menu-6 top-level entry, so no ADR amendment is needed; order 106 is the provisional slot between Verlof & verzuim 105 and Onkosten 110, final ordering owned by `hrmq-ia-navigation-alignment`) with children `Vacancies` ("Vacatures", `BriefcaseSearchOutline`) and `Applications` ("Sollicitaties", spec'd in `recruiting-applications`). The group already existed at HEAD (declared by the merged `onboarding-wizard-mvp` with an `Onboardings` child); this change adds `Vacancies` and `Applications` as further children without re-declaring the group's id/label/icon/order — a clean union (design D6). deepLinks for `Vacancy` (`/apps/hrmq/vacancies/{uuid}`) are registered, and `src/icons.js` registers `AccountPlus` (pre-existing) and `BriefcaseSearchOutline`. The manifest validates against app-manifest-v2 (`npm run check:manifest`).
+
+#### Scenario: Manifest stays valid
+- **WHEN** `npm run check:manifest` runs
+- **THEN** it exits 0
+
+#### Scenario: Single union-merged group
+- **WHEN** `src/manifest.json` is inspected after this change
+- **THEN** exactly one menu group with id `OnboardingAtsGroup` exists, with label "Onboarding & ATS", icon `AccountPlus`, order 106, and it contains the `Onboardings`, `Vacancies` and `Applications` children
+
+### Requirement: `Vacancies` and `VacancyDetail` SHALL drive exactly the declared lifecycle (REQ-RCV-003)
+
+The manifest SHALL add, under the group: `Vacancies` (index over `Vacancy`, route `/vacancies`: columns `title`, `department`, `status`, `publishedDate`, `closingDate`; filters `status`, `department`; sort `publishedDate` desc) and `VacancyDetail` (detail over `Vacancy`, route `/vacancies/:id`) carrying: a "Vacancy" data widget (all fields), a related widget "Sollicitaties" (incoming `Application.vacancyId` references resolve here — the per-vacancy candidate list), `lifecycleActions` exposing **exactly** `publiceren` ("Publiceren", from `concept`) and `sluiten` ("Sluiten", from `gepubliceerd`) — no invented edges — and an audit-history sidebar tab.
+
+#### Scenario: Detail page walks the publish workflow
+@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+- **GIVEN** a Vacancy in status `concept` opened on `VacancyDetail`
+- **WHEN** the user executes Publiceren
+- **THEN** the page reflects status `gepubliceerd` and offers Sluiten
+
+#### Scenario: No invented edges
+- **WHEN** the manifest's `lifecycleActions.transitions` for `VacancyDetail` are compared to the `x-openregister-lifecycle` in `lib/Settings/register.d/hr-ats.json`
+- **THEN** they match action-for-action (`publiceren`/`sluiten`, same from/to) with no additional action
+
+### Requirement: Seed data SHALL provide one published vacancy (REQ-RCV-004)
+
+`lib/Settings/register.d/hr-seed.json` SHALL gain `vacancy-vue-developer` (title "Medior Vue-developer", department "Engineering", status `gepubliceerd`, publishedDate `2026-06-15`, closingDate `2026-08-31`, placeholder description) — the anchor object the three seeded applications (spec'd in `recruiting-applications`) reference via `vacancyId`. The seed is an obvious placeholder (no real vacancy content) and imports idempotently via the register Repair step.
+
+#### Scenario: Idempotent seed
+- **WHEN** the register Repair import runs twice
+- **THEN** the vacancy exists exactly once

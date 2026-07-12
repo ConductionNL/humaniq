@@ -469,6 +469,66 @@
                 "itProvisioned": true,
                 "pensioenAangemeld": true,
                 "notes": "Volledig doorlopen onboarding, afgerond zonder bijzonderheden."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Vacancy",
+                    "slug": "vacancy-vue-developer"
+                },
+                "title": "Medior Vue-developer",
+                "description": "Wij zoeken een medior Vue-developer voor ons platformteam. Placeholder vacaturetekst (recruiting-ats-basic seed).",
+                "department": "Engineering",
+                "status": "gepubliceerd",
+                "publishedDate": "2026-06-15",
+                "closingDate": "2026-08-31"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Application",
+                    "slug": "application-voorbeeld-nieuw"
+                },
+                "vacancyId": "vacancy-vue-developer",
+                "candidateName": "Jan Voorbeeld",
+                "email": "voorbeeld@example.org",
+                "phone": "+31 6 00000000",
+                "cvFile": "00000000-0000-0000-0000-000000000000",
+                "motivation": "Placeholder motivatiebrief (recruiting-ats-basic seed).",
+                "status": "nieuw",
+                "talentPoolOptIn": false
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Application",
+                    "slug": "application-voorbeeld-afgewezen"
+                },
+                "vacancyId": "vacancy-vue-developer",
+                "candidateName": "Piet Voorbeeld",
+                "email": "voorbeeld+afgewezen@example.org",
+                "phone": "+31 6 00000001",
+                "cvFile": "00000000-0000-0000-0000-000000000000",
+                "motivation": "Placeholder motivatiebrief (recruiting-ats-basic seed).",
+                "status": "afgewezen",
+                "rejectedDate": "2026-06-01",
+                "talentPoolOptIn": false,
+                "retentionExpiryDate": "2026-06-29"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Application",
+                    "slug": "application-voorbeeld-aangenomen"
+                },
+                "vacancyId": "vacancy-vue-developer",
+                "candidateName": "Anna Voorbeeld",
+                "email": "voorbeeld+aangenomen@example.org",
+                "phone": "+31 6 00000002",
+                "cvFile": "00000000-0000-0000-0000-000000000000",
+                "motivation": "Placeholder motivatiebrief (recruiting-ats-basic seed).",
+                "status": "aangenomen",
+                "talentPoolOptIn": false
             }
         ]
     }
