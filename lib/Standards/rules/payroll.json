@@ -99,6 +99,74 @@
       "sourceUrl": "https://wetten.overheid.nl/BWBR0002320"
     },
     {
+      "id": "nl-loonaangifte-tijdvakcode",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Belastingdienst Handboek Loonheffingen LH 210 (2026)",
+      "statement": "Each loonaangifte filing period shall carry the official Belastingdienst tijdvakcode matching its period and tijdvak (maand/vierweken/jaar).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/themaoverstijgend/brochures_en_publicaties/aangifte-loonheffingen-tijdvakcodes-aangifte-en-betaaldatums",
+      "parameters": {
+        "maandCodes": {
+          "01": "6010",
+          "02": "6020",
+          "03": "6030",
+          "04": "6040",
+          "05": "6050",
+          "06": "6060",
+          "07": "6070",
+          "08": "6080",
+          "09": "6090",
+          "10": "6100",
+          "11": "6110",
+          "12": "6120"
+        },
+        "vierwekenCodes": [
+          "6710",
+          "6750",
+          "6790",
+          "6830",
+          "6870",
+          "6910",
+          "6950",
+          "6990",
+          "7030",
+          "7070",
+          "7110",
+          "7150",
+          "7190"
+        ],
+        "jaarCode": "6400"
+      }
+    },
+    {
+      "id": "nl-loonaangifte-deadline-derivation",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "AWR art. 19 / Belastingdienst Handboek Loonheffingen LH 210 (2026)",
+      "statement": "The statutory loonaangifte filing/payment deadline equals the last day of the calendar month following the period end, without weekend or public-holiday extension.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/themaoverstijgend/brochures_en_publicaties/aangifte-loonheffingen-tijdvakcodes-aangifte-en-betaaldatums"
+    },
+    {
+      "id": "nl-loonaangifte-deadline-alert",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "AWR art. 19",
+      "statement": "A loonaangifte filing not yet sent (status other than verzonden) whose deadline is within 14 days or has passed is a violation, to be surfaced by occ hrmq:rules:audit.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/themaoverstijgend/brochures_en_publicaties/aangifte-loonheffingen-tijdvakcodes-aangifte-en-betaaldatums"
+    },
+    {
       "id": "nl-loonadministratie-voeren",
       "domain": "ledger-integrity",
       "jurisdiction": "NL",

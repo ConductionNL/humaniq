@@ -171,14 +171,59 @@
             "LoonaangifteFiling": {
                 "slug": "LoonaangifteFiling",
                 "icon": "FileSendOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Wage Tax Filing",
-                "description": "A wage-tax / social-security filing for one wage period (NL loonaangifte / DE Lohnsteuer-Anmeldung & Beitragsnachweis / FR DSN / US Form 941 & deposits). Carries the period, deadline, submission, and tijdvak attributes the filing-window checks read.",
+                "description": "A wage-tax / social-security filing for one wage period (NL loonaangifte / DE Lohnsteuer-Anmeldung & Beitragsnachweis / FR DSN / US Form 941 & deposits). Carries the period, deadline, submission, and tijdvak attributes the filing-window checks read. For NL, the filing also carries a declarative create->review->confirm->send lifecycle (concept -> klaargezet -> bevestigd -> verzonden) plus tijdvakcode/response-capture fields (loonaangifte-filing-lifecycle).",
                 "type": "object",
                 "required": [
                     "period",
                     "deadline"
                 ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "concept",
+                        "terminal": [],
+                        "transitions": {
+                            "klaarzetten": {
+                                "from": [
+                                    "concept"
+                                ],
+                                "to": "klaargezet",
+                                "description": "Marks the filing as review-ready. Requires period, tijdvak, tijdvakcode and deadline to be present (schema-required plus the nl-loonaangifte-tijdvakcode / nl-loonaangifte-deadline-derivation checks)."
+                            },
+                            "bevestigen": {
+                                "from": [
+                                    "klaargezet"
+                                ],
+                                "to": "bevestigd",
+                                "description": "Confirms the reviewed filing for dispatch to the Belastingdienst."
+                            },
+                            "verzenden": {
+                                "from": [
+                                    "bevestigd"
+                                ],
+                                "to": "verzonden",
+                                "description": "Marks the filing as sent. submittedDate and verzondenDoor are stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern); electronicallyFiled is set by the writer."
+                            },
+                            "heropenen": {
+                                "from": [
+                                    "klaargezet",
+                                    "bevestigd"
+                                ],
+                                "to": "concept",
+                                "description": "Reopens a not-yet-sent filing for correction before it is confirmed or sent."
+                            },
+                            "corrigeren": {
+                                "from": [
+                                    "verzonden"
+                                ],
+                                "to": "concept",
+                                "description": "A sent filing can be superseded by a correction (NL allows correcties binnen het tijdvak). The usual route is a NEW filing object for the same period; this transition's reset-to-concept semantics are a simplified placeholder — full correctie-berichten (VL/IB-correcties) are a future spec."
+                            }
+                        }
+                    }
+                },
                 "properties": {
                     "period": {"type": "string", "description": "Wage period the filing covers, in YYYY-MM."},
                     "jurisdiction": {"type": "string", "description": "ISO 3166-1 alpha-2 country governing this filing (NL/DE/FR/US)."},
@@ -197,7 +242,52 @@
                     "furnishedToRecipientDate": {"type": "string", "format": "date", "nullable": true, "description": "US/DE: date the year-end statement (W-2 to employee, Lohnsteuerbescheinigung) was furnished (us-form-w2-to-employee / de-lohnsteuerbescheinigung)."},
                     "filedWithAuthorityDate": {"type": "string", "format": "date", "nullable": true, "description": "US: date Copy A / W-3 transmittal was filed with the SSA (us-form-w2-w3-to-ssa)."},
                     "returnCountInYear": {"type": "number", "description": "US: aggregate information returns filed in the year, driving the 10-return e-file rule (us-w2-efile-threshold)."},
-                    "retainedUntil": {"type": "string", "format": "date", "nullable": true, "description": "Date until which the filing records are retained (NL 7yr / DE 6yr / US 4yr)."}
+                    "retainedUntil": {"type": "string", "format": "date", "nullable": true, "description": "Date until which the filing records are retained (NL 7yr / DE 6yr / US 4yr)."},
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "NL filing lifecycle status. Governed by the x-openregister-lifecycle state machine (concept -> klaargezet -> bevestigd -> verzonden). DE/FR/US filings are unaffected by the lifecycle and stay at the default.",
+                        "enum": ["concept", "klaargezet", "bevestigd", "verzonden"],
+                        "default": "concept"
+                    },
+                    "tijdvakcode": {
+                        "type": "string",
+                        "nullable": true,
+                        "pattern": "^[67][0-9]{3}$",
+                        "title": "Tijdvakcode",
+                        "description": "Official Belastingdienst numeric period code (Handboek Loonheffingen LH 210, 2026 edition), matching this filing's period + tijdvak (nl-loonaangifte-tijdvakcode). Maand: one code per calendar month (6010 = January 2026 .. 6120 = December 2026). Vierweken: thirteen four-weekly codes (6710, 6750, 6790, 6830, 6870, 6910, 6950, 6990, 7030, 7070, 7110, 7150, 7190 = periods 1-13). Jaar: 6400. The authoritative table is data, not hard-coded here — see the nl-loonaangifte-tijdvakcode rule's `parameters` in lib/Standards/rules/payroll.json; it is re-issued annually by the Belastingdienst alongside the Gegevensspecificaties, so a new year is a data-only change."
+                    },
+                    "aangiftenummer": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Aangiftenummer",
+                        "description": "Loonheffingennummer + tijdvakcode composite identifier the Belastingdienst uses to key this filing."
+                    },
+                    "betalingskenmerk": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Betalingskenmerk",
+                        "description": "Payment reference the Belastingdienst issues for this filing period's remittance."
+                    },
+                    "responseStatus": {
+                        "type": "string",
+                        "title": "Response status",
+                        "description": "Outcome of the Belastingdienst response to a sent filing. A rejected (afgekeurd) filing is corrected via the corrigeren transition; no automated polling/ingestion happens in this app.",
+                        "enum": ["geen", "ontvangen-ok", "afgekeurd"],
+                        "default": "geen"
+                    },
+                    "responseMessage": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Response message",
+                        "description": "Free-text Belastingdienst response message (acceptance note or rejection reason)."
+                    },
+                    "verzondenDoor": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Verzonden door",
+                        "description": "Display name of the person who sent the filing, stamped on the verzenden carrying write (the Timesheet approvedBy pattern)."
+                    }
                 }
             }
         }

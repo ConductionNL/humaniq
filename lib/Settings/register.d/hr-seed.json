@@ -105,6 +105,85 @@
                 "approvedBy": "manager-pietersen",
                 "approvedAt": "2026-05-02T11:00:00Z",
                 "reimbursedAt": "2026-05-05T12:00:00Z"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "LoonaangifteFiling",
+                    "slug": "loonaangifte-2026-04"
+                },
+                "period": "2026-04",
+                "jurisdiction": "NL",
+                "filingType": "loonaangifte",
+                "tijdvak": "maand",
+                "tijdvakcode": "6040",
+                "deadline": "2026-05-31",
+                "status": "verzonden",
+                "submittedDate": "2026-05-21",
+                "paidDate": "2026-05-21",
+                "electronicallyFiled": true,
+                "aangiftenummer": "000000000L016040",
+                "betalingskenmerk": "1234000000006040",
+                "responseStatus": "ontvangen-ok",
+                "responseMessage": "Aangifte ontvangen en akkoord bevonden.",
+                "verzondenDoor": "Sanne de Vries",
+                "retainedUntil": "2033-12-31"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "LoonaangifteFiling",
+                    "slug": "loonaangifte-2026-05"
+                },
+                "period": "2026-05",
+                "jurisdiction": "NL",
+                "filingType": "loonaangifte",
+                "tijdvak": "maand",
+                "tijdvakcode": "6050",
+                "deadline": "2026-06-30",
+                "status": "verzonden",
+                "submittedDate": "2026-06-25",
+                "paidDate": "2026-06-25",
+                "electronicallyFiled": true,
+                "aangiftenummer": "000000000L016050",
+                "betalingskenmerk": "1234000000006050",
+                "responseStatus": "geen",
+                "verzondenDoor": "Sanne de Vries",
+                "retainedUntil": "2033-12-31"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "LoonaangifteFiling",
+                    "slug": "loonaangifte-2026-06"
+                },
+                "period": "2026-06",
+                "jurisdiction": "NL",
+                "filingType": "loonaangifte",
+                "tijdvak": "maand",
+                "tijdvakcode": "6060",
+                "deadline": "2026-07-31",
+                "status": "bevestigd",
+                "aangiftenummer": "000000000L016060",
+                "betalingskenmerk": "1234000000006060",
+                "responseStatus": "geen",
+                "retainedUntil": "2033-12-31"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "LoonaangifteFiling",
+                    "slug": "loonaangifte-2026-03"
+                },
+                "period": "2026-03",
+                "jurisdiction": "NL",
+                "filingType": "loonaangifte",
+                "tijdvak": "maand",
+                "tijdvakcode": "6030",
+                "deadline": "2026-04-30",
+                "status": "concept",
+                "responseStatus": "geen",
+                "retainedUntil": "2033-12-31"
             }
         ]
     }
