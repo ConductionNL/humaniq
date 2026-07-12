@@ -1,0 +1,143 @@
+{
+    "x-hrmq-fragment": "hr-verzuim",
+    "components": {
+        "schemas": {
+            "SickLeaveCase": {
+                "slug": "SickLeaveCase",
+                "icon": "EmoticonSickOutline",
+                "version": "0.1.0",
+                "title": "Sick leave case",
+                "description": "An administrative sickness case (ziekmelding) tracking the Wet verbetering poortwachter (WVP) re-integration process and statutory loondoorbetaling — NEVER medical data. Per the AVG and the Autoriteit Persoonsgegevens beleidsregels \"De zieke werknemer\", an employer may record that and how long an employee is sick and the re-integration process facts, but never the nature or cause of the illness: this schema declares no diagnosis, symptom, cause, or medical-note field of any kind (leave-verzuim-mvp REQ-VWP-002). The gemeld<->hersteld lifecycle is fully declarative per ADR-031; a relapse within 4 weeks of recovery reopens the same case rather than starting a new one (samengesteld ziektegeval, BW 7:629 lid 10). The four WVP milestone Due dates (probleemanalyse week 6, plan van aanpak week 8, UWV 42-wekenmelding week 42, eerstejaarsevaluatie week 52) are derived from firstSickDay but stored, not computed on the fly — the loonaangifte-filing-lifecycle deadline precedent — so the dossier shows the clock actually worked against and a UWV-granted deferral stays editable; derivation correctness is enforced by the nl-wvp-milestone-derivation rule check (lib/Standards/rules/labour.json), not recomputed away.",
+                "type": "object",
+                "required": [
+                    "employeeId",
+                    "firstSickDay",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "gemeld",
+                        "terminal": [],
+                        "transitions": {
+                            "herstellen": {
+                                "from": [
+                                    "gemeld"
+                                ],
+                                "to": "hersteld",
+                                "description": "The employee has recovered. recoveredDate is stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern)."
+                            },
+                            "heropenen": {
+                                "from": [
+                                    "hersteld"
+                                ],
+                                "to": "gemeld",
+                                "description": "Relapse within 4 weeks of recovery continues the same case as one samengesteld ziektegeval (BW 7:629 lid 10) rather than starting a new 104-week clock. recoveredDate is cleared on the carrying write."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "UUID reference to the sick employee."
+                    },
+                    "firstSickDay": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "First sick day",
+                        "description": "The first day of this sickness period (dag 1 ziek) — the anchor date every WVP milestone Due date is derived from (+6/8/42/52 weeks)."
+                    },
+                    "recoveredDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Recovered date",
+                        "description": "Date the employee recovered, stamped on the herstellen carrying write and cleared on the heropenen carrying write."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Case lifecycle status. Governed by the x-openregister-lifecycle state machine (gemeld <-> hersteld).",
+                        "enum": [
+                            "gemeld",
+                            "hersteld"
+                        ],
+                        "default": "gemeld"
+                    },
+                    "wachtdag": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Wachtdag",
+                        "description": "Whether the first sick day is treated as an unpaid waiting day, where the CAO/contract provides for one."
+                    },
+                    "loondoorbetalingPercentage": {
+                        "type": "number",
+                        "default": 70,
+                        "title": "Loondoorbetaling percentage",
+                        "description": "Percentage of wages continued during sickness. Statutory minimum is 70% for the first 104 weeks (BW art. 7:629 lid 1), with a first-year floor at the statutory minimum wage. Checked on open cases by nl-loondoorbetaling-minimum."
+                    },
+                    "probleemanalyseDue": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Probleemanalyse due",
+                        "description": "Statutory deadline for the probleemanalyse: firstSickDay + 6 weeks (Regeling procesgang eerste en tweede ziektejaar art. 2). Derived but stored (audit trail + UWV-deferral editability); checked by nl-wvp-milestone-derivation / nl-wvp-milestone-overdue."
+                    },
+                    "probleemanalyseDone": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Probleemanalyse done",
+                        "description": "Date the probleemanalyse was actually completed."
+                    },
+                    "planVanAanpakDue": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Plan van aanpak due",
+                        "description": "Statutory deadline for the plan van aanpak: firstSickDay + 8 weeks (Regeling procesgang art. 2)."
+                    },
+                    "planVanAanpakDone": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Plan van aanpak done",
+                        "description": "Date the plan van aanpak was actually completed."
+                    },
+                    "uwv42WeekMeldingDue": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "UWV 42-week melding due",
+                        "description": "Statutory deadline for the UWV 42-wekenmelding: firstSickDay + 42 weeks (ZW art. 38)."
+                    },
+                    "uwv42WeekMeldingDone": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "UWV 42-week melding done",
+                        "description": "Date the 42-wekenmelding was actually filed with UWV. Recorded here only — this app does not transmit it (no UWV wire integration)."
+                    },
+                    "eerstejaarsevaluatieDue": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Eerstejaarsevaluatie due",
+                        "description": "Statutory deadline for the eerstejaarsevaluatie: firstSickDay + 52 weeks (Regeling procesgang art. 4)."
+                    },
+                    "eerstejaarsevaluatieDone": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Eerstejaarsevaluatie done",
+                        "description": "Date the eerstejaarsevaluatie was actually completed."
+                    }
+                }
+            }
+        }
+    }
+}
