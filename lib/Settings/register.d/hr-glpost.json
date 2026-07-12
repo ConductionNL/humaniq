@@ -1,0 +1,128 @@
+{
+    "x-hrmq-fragment": "hr-glpost",
+    "components": {
+        "schemas": {
+            "PayrollGLPost": {
+                "slug": "PayrollGLPost",
+                "icon": "BookEditOutline",
+                "version": "0.1.0",
+                "title": "Payroll GL post",
+                "description": "The hrmq-side record of one attempt to post an approved PayrollRun's balanced loonjournaalpost into shillinq's JournalEntry register (payroll-glpost-shillinq). hrmq owns no bookkeeping machinery: this schema is a log of the handoff -- what was sent, when, and the outcome -- never the journal itself, which stays a shillinq JournalEntry created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays approved so a later `occ hrmq:glpost:run` invocation can supersede them (design.md D6). At most one PayrollGLPost per run may be `pending`/`posted` at a time -- enforced by PayrollGLPostService and audited by the nl-glpost-idempotent-per-run corpus rule.",
+                "type": "object",
+                "x-schema-org": "schema:AccountingTransaction",
+                "required": [
+                    "payrollRunId",
+                    "period",
+                    "status"
+                ],
+                "properties": {
+                    "payrollRunId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "PayrollRun",
+                        "title": "Payroll run",
+                        "description": "Reference to the PayrollRun this posting attempt belongs to."
+                    },
+                    "period": {
+                        "type": "string",
+                        "title": "Period",
+                        "description": "Wage period in YYYY-MM, copied from the run for listing/filtering."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "posted",
+                            "failed",
+                            "skipped-no-shillinq"
+                        ],
+                        "default": "pending",
+                        "title": "Status",
+                        "description": "Outcome of this posting attempt. failed/skipped-no-shillinq are superseded by a retry; the run stays approved."
+                    },
+                    "journalEntryId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Journal entry id",
+                        "description": "The shillinq JournalEntry object id this attempt produced -- plain string, NOT $ref, because it targets another app's register (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."
+                    },
+                    "journalNumber": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Journal number",
+                        "description": "The deterministic idempotency key sent to shillinq: HRMQ-LOON-{period}-{administrationId}. Doubles as the crash-recovery probe key (design.md D6)."
+                    },
+                    "errorMessage": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Error message",
+                        "description": "Failure or skip diagnostic (e.g. inconsistent run totals, shillinq unavailable, stale attempt superseded)."
+                    },
+                    "postedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Posted at",
+                        "description": "When the JournalEntry was created (or adopted) in shillinq."
+                    },
+                    "lines": {
+                        "type": "array",
+                        "title": "Lines",
+                        "description": "Snapshot of exactly the balanced journal lines sent to shillinq (audit evidence, survives shillinq-side edits).",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "accountNumber",
+                                "side",
+                                "amount"
+                            ],
+                            "properties": {
+                                "accountNumber": {
+                                    "type": "string",
+                                    "description": "RGS-coded GL account number (configurable via SettingsService)."
+                                },
+                                "side": {
+                                    "type": "string",
+                                    "enum": [
+                                        "debit",
+                                        "credit"
+                                    ]
+                                },
+                                "amount": {
+                                    "type": "number",
+                                    "description": "Line amount in the administration's currency, rounded to cents."
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "nullable": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "PayrollGLPost",
+                    "slug": "glpost-2026-01-adm-001"
+                },
+                "payrollRunId": "payroll-run-2026-01-adm-001",
+                "period": "2026-01",
+                "status": "posted",
+                "journalNumber": "HRMQ-LOON-2026-01-ADM-001",
+                "journalEntryId": "je-hrmq-loon-2026-01-placeholder",
+                "postedAt": "2026-02-05T09:00:00Z",
+                "errorMessage": null,
+                "lines": [
+                    { "accountNumber": "4001", "side": "debit", "amount": 3800.00, "description": "Loonkosten bruto" },
+                    { "accountNumber": "4002", "side": "debit", "amount": 649.80, "description": "Werkgeverslasten sociale premies" },
+                    { "accountNumber": "1701", "side": "credit", "amount": 1102.00, "description": "Loonheffing-schuld" },
+                    { "accountNumber": "1702", "side": "credit", "amount": 3347.80, "description": "Netto-loonschuld" }
+                ]
+            }
+        ]
+    }
+}

@@ -96,5 +96,9 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <!-- Idempotently backfill local TEST data to satisfy the enforced rules
              (provider sample objects + provider field defaults). Test/dev. -->
         <command>OCA\Hrmq\Command\RulesSeedTestDataCommand</command>
+        <!-- Post each approved PayrollRun as a balanced loonjournaalpost into
+             shillinq's JournalEntry register (payroll-glpost-shillinq MVP
+             trigger). Duck-typed no-op when shillinq is absent. -->
+        <command>OCA\Hrmq\Command\GlPostRunCommand</command>
     </commands>
 </info>

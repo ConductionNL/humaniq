@@ -82,6 +82,11 @@ class RuleAuditService
         // carries $context; only this index is new.
         $context['related'] = $this->buildRelatedContext();
 
+        // payroll-glpost-shillinq: a per-run active-PayrollGLPost-count index so
+        // NlGlPostChecks::checks()['PayrollGLPost']['nl-glpost-idempotent-per-run']
+        // stays a pure fn(array $o, array $context) instead of re-querying siblings.
+        $context['glpost'] = $this->buildGlPostContext();
+
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
         $enforceable      = count(RuleEngine::checkedRuleIds());
@@ -187,6 +192,38 @@ class RuleAuditService
         ];
 
     }//end buildRelatedContext()
+
+
+    /**
+     * Build the per-run active-PayrollGLPost-count index consumed by
+     * NlGlPostChecks' `nl-glpost-idempotent-per-run` predicate
+     * (payroll-glpost-shillinq): a `payrollRunId => count of pending/posted
+     * PayrollGLPost records` map. Degrades gracefully to an empty map when the
+     * PayrollGLPost schema does not exist yet in the register (e.g. before the
+     * hr-glpost.json fragment has been imported).
+     *
+     * @return array<string, mixed>
+     */
+    private function buildGlPostContext(): array
+    {
+        $activeCountByRun = [];
+        foreach ($this->loadAll('PayrollGLPost') as $glPost) {
+            $status = (string) ($glPost['status'] ?? '');
+            if (in_array($status, ['pending', 'posted'], true) === false) {
+                continue;
+            }
+
+            $runId = (string) ($glPost['payrollRunId'] ?? '');
+            if ($runId === '') {
+                continue;
+            }
+
+            $activeCountByRun[$runId] = (($activeCountByRun[$runId] ?? 0) + 1);
+        }
+
+        return ['activeCountByRun' => $activeCountByRun];
+
+    }//end buildGlPostContext()
 
 
     /**

@@ -87,6 +87,79 @@ class SettingsService
 
 
     /**
+     * The RGS-coded GL account for gross wages (payroll-glpost-shillinq D2 line 1:
+     * debit loonkosten bruto), configurable via app config key
+     * `glpost_account_gross`.
+     *
+     * @return string
+     */
+    public function getGlPostAccountGross(): string
+    {
+        return $this->glPostAccount('glpost_account_gross', '4001');
+
+    }//end getGlPostAccountGross()
+
+
+    /**
+     * The RGS-coded GL account for employer social charges (payroll-glpost-shillinq
+     * D2 line 2: debit werkgeverslasten sociale premies), configurable via app
+     * config key `glpost_account_employer_charges`.
+     *
+     * @return string
+     */
+    public function getGlPostAccountEmployerCharges(): string
+    {
+        return $this->glPostAccount('glpost_account_employer_charges', '4002');
+
+    }//end getGlPostAccountEmployerCharges()
+
+
+    /**
+     * The RGS-coded GL account for the wage-tax liability (payroll-glpost-shillinq
+     * D2 line 3: credit loonheffing-schuld), configurable via app config key
+     * `glpost_account_wage_tax_liability`.
+     *
+     * @return string
+     */
+    public function getGlPostAccountWageTaxLiability(): string
+    {
+        return $this->glPostAccount('glpost_account_wage_tax_liability', '1701');
+
+    }//end getGlPostAccountWageTaxLiability()
+
+
+    /**
+     * The RGS-coded GL account for the net-wages liability (payroll-glpost-shillinq
+     * D2 line 4: credit netto-loonschuld, which absorbs the balancing remainder R),
+     * configurable via app config key `glpost_account_net_wages_liability`.
+     *
+     * @return string
+     */
+    public function getGlPostAccountNetWagesLiability(): string
+    {
+        return $this->glPostAccount('glpost_account_net_wages_liability', '1702');
+
+    }//end getGlPostAccountNetWagesLiability()
+
+
+    /**
+     * Read a `glpost_account_*` config key, falling back to its placeholder
+     * default when unset or blank.
+     *
+     * @param string $key     The app config key.
+     * @param string $default The placeholder default account number.
+     *
+     * @return string
+     */
+    private function glPostAccount(string $key, string $default): string
+    {
+        $value = $this->appConfig->getValueString(Application::APP_ID, $key, $default);
+        return $value === '' ? $default : $value;
+
+    }//end glPostAccount()
+
+
+    /**
      * Import the register idempotently (skips when the version is unchanged).
      *
      * @return array<string, mixed> Result with success flag, message, and version.

@@ -1173,6 +1173,18 @@
       "machineCheckable": true,
       "effectiveDate": null,
       "sourceUrl": "https://www.sivi.org/standaarden/uniforme-pensioenaangifte/"
+    },
+    {
+      "id": "nl-glpost-idempotent-per-run",
+      "domain": "ledger-integrity",
+      "jurisdiction": "NL",
+      "framework": "payroll-core",
+      "source": "Bookkeeping control (payroll-to-GL posting)",
+      "statement": "Each approved payroll run shall flow into the general ledger through at most one active (pending or posted) GL-post record, and a posted record shall be complete (journal id + timestamp) with balanced lines; failed or skipped attempts are superseded by retries, never duplicated.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://www.ifac.org/"
     }
   ]
 }
