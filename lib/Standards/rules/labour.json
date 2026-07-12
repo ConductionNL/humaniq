@@ -1,0 +1,86 @@
+{
+  "domain": "labour",
+  "version": "2026-07",
+  "rules": [
+    {
+      "id": "nl-verlof-wettelijk-minimum",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:634",
+      "statement": "The yearly statutory leave entitlement shall be at least 4 times the employee's contractual weekly working time (entitledHours >= 4 x contractHoursPerWeek).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    },
+    {
+      "id": "nl-verlof-saldo-niet-negatief",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:634 jo. 7:638",
+      "statement": "Recorded leave taken shall not exceed the total leave entitlement for the year (usedHours <= entitledHours + bovenwettelijkHours) — approved leave may never push a balance negative.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    },
+    {
+      "id": "nl-verlof-vervaltermijn",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:640a",
+      "statement": "Statutory leave hours of a year shall lapse on 1 July of the following year; a balance carrying statutory hours records expiryDate = <year+1>-07-01.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2012-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    },
+    {
+      "id": "nl-wvp-milestone-derivation",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "nl-poortwachter",
+      "source": "Regeling procesgang eerste en tweede ziektejaar art. 2 en 4; ZW art. 38 (42-wekenmelding, https://wetten.overheid.nl/BWBR0002598)",
+      "statement": "The WVP milestone Due dates shall equal firstSickDay plus 6/8/42/52 weeks (probleemanalyse / plan van aanpak / UWV 42-wekenmelding / eerstejaarsevaluatie); on an open (gemeld) case none of the four Due dates may be null.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0013540",
+      "parameters": {
+        "milestoneWeeks": {
+          "probleemanalyse": 6,
+          "planVanAanpak": 8,
+          "uwv42WeekMelding": 42,
+          "eerstejaarsevaluatie": 52
+        }
+      }
+    },
+    {
+      "id": "nl-wvp-milestone-overdue",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "nl-poortwachter",
+      "source": "Regeling procesgang eerste en tweede ziektejaar art. 2 en 4; ZW art. 38",
+      "statement": "An open (gemeld) case with a milestone Due date in the past and no matching Done date is a violation (mandatory); a Due date within 14 days and not yet Done is flagged as advisory, to be surfaced by occ hrmq:rules:audit.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0013540"
+    },
+    {
+      "id": "nl-loondoorbetaling-minimum",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:629 lid 1",
+      "statement": "During sickness the employer shall continue at least 70% of wages for the first 104 weeks; an open (gemeld) case shall carry loondoorbetalingPercentage >= 70.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    }
+  ]
+}
