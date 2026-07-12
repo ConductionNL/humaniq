@@ -5,7 +5,7 @@
             "LeaveRequest": {
                 "slug": "LeaveRequest",
                 "icon": "CalendarClock",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Leave request",
                 "description": "An employee request for leave (verlofaanvraag): a period of holiday, sick, unpaid, special, care or parental leave submitted for manager approval. The request lifecycle (draft → submitted → approved/rejected, with the shared no-self-approval separation-of-duties guard) is fully declarative per ADR-031, mirroring the Timesheet and Expense workflows. Leave is the HR/labour surface the portaliq fleet review flagged as missing in hrmq; external employees create and track these requests through the shared external portal (ADR-046), while approval stays a back-office manager action.",
                 "type": "object",
@@ -134,6 +134,12 @@
                         "maxLength": 2000,
                         "title": "Rejection reason",
                         "description": "Reason the manager rejected the leave request, shown to the employee so it can be corrected and re-submitted."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "User",
+                        "description": "Denormalized Nextcloud user id of the employee this leave request belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the approvedBy convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnVerlof self-service page filters on it with the @me token."
                     }
                 }
             },

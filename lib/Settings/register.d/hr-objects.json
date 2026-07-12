@@ -5,7 +5,7 @@
             "Employee": {
                 "slug": "Employee",
                 "icon": "AccountOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Employee",
                 "description": "A natural person employed by the organisation. Carries the identity, payroll, and wage-tax attributes the payroll/wage-tax compliance checks read (BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting, minimum-wage basis).",
                 "type": "object",
@@ -37,7 +37,8 @@
                     "postedWorker": {"type": "boolean", "description": "EU: whether the employee is posted to another member state remaining home-insured (eu-a1-posted-worker)."},
                     "thirtyPercentRulingGranted": {"type": "boolean", "description": "NL: whether a 30%-beschikking has been granted (nl-30-percent-regeling / nl-30-regeling-aftoppingsgrens)."},
                     "thirtyPercentRulingRate": {"type": "number", "nullable": true, "description": "NL: applied 30%-ruling percentage; must not exceed 30 for 2025-2026 (nl-30-percent-regeling)."},
-                    "thirtyPercentCappedAtWntNorm": {"type": "boolean", "description": "NL: whether the 30%-ruling tax-free base is capped at the WNT-norm (nl-30-regeling-aftoppingsgrens)."}
+                    "thirtyPercentCappedAtWntNorm": {"type": "boolean", "description": "NL: whether the 30%-ruling tax-free base is capped at the WNT-norm (nl-30-regeling-aftoppingsgrens)."},
+                    "nextcloudUserId": {"type": "string", "nullable": true, "description": "The Nextcloud user id of this employee's own account, when they have one (mijn-hr-self-service). HR-maintained on the employee record; stays null for portal-only external employees, who keep using the UUID-claim-based portaliq scoping (ADR-046 A4). The durable Employee<->account link; per-record `userId` on Timesheet/Expense/LeaveRequest/Payslip is a denormalized copy of it."}
                 }
             },
             "EmploymentContract": {
@@ -72,7 +73,7 @@
             "Payslip": {
                 "slug": "Payslip",
                 "icon": "ReceiptTextOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Payslip",
                 "description": "A per-employee, per-period wage statement (loonstrook / Lohnabrechnung / bulletin de paie / pay stub). Carries the gross-to-net composition the payroll-withholding, social-security, and statutory-content checks read.",
                 "type": "object",
@@ -85,6 +86,7 @@
                 ],
                 "properties": {
                     "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "description": "Reference to the Employee."},
+                    "userId": {"type": "string", "nullable": true, "description": "Denormalized Nextcloud user id of the employee this payslip belongs to (mijn-hr-self-service). Plain NC-user-id string, never a $ref — mirrors the approvedBy convention on Timesheet/Expense. Employees never author their own payslip, so this is set by payroll alongside employeeId when the payslip is generated; the read-only MijnLoonstroken self-service page filters on it with the @me token."},
                     "period": {"type": "string", "description": "Wage period in YYYY-MM (or YYYY-Pnn for four-weekly)."},
                     "jurisdiction": {"type": "string", "description": "ISO 3166-1 alpha-2 country whose payroll rules govern this payslip (NL/DE/FR/US)."},
                     "currency": {"type": "string", "description": "ISO 4217 pay currency (EUR/USD)."},

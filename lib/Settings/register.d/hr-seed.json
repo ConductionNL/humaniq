@@ -5,6 +5,23 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-jansen"
+                },
+                "employeeNumber": "EMP-0001",
+                "firstName": "Sam",
+                "lastName": "Jansen",
+                "dateOfBirth": "1990-03-14",
+                "startDate": "2024-01-01",
+                "grossMonthlySalary": 3800.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "nextcloudUserId": "admin"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "Timesheet",
                     "slug": "timesheet-jansen-2026-05"
                 },
@@ -16,7 +33,8 @@
                 "costCenter": "CC-100",
                 "billable": true,
                 "status": "submitted",
-                "submittedAt": "2026-06-01T08:15:00Z"
+                "submittedAt": "2026-06-01T08:15:00Z",
+                "userId": "admin"
             },
             {
                 "@self": {
@@ -67,7 +85,8 @@
                 "category": "accommodation",
                 "expenseDate": "2026-05-14",
                 "status": "submitted",
-                "submittedAt": "2026-05-15T07:30:00Z"
+                "submittedAt": "2026-05-15T07:30:00Z",
+                "userId": "admin"
             },
             {
                 "@self": {
@@ -228,6 +247,23 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "Payslip",
+                    "slug": "payslip-jansen-2026-05"
+                },
+                "employeeId": "employee-jansen",
+                "period": "2026-05",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 3800.00,
+                "hoursWorked": 152,
+                "loonheffing": 1102.00,
+                "nettoPay": 2698.00,
+                "statementProvided": true,
+                "userId": "admin"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "PensionFiling",
                     "slug": "pensionfiling-2026-05-abp"
                 },
@@ -267,6 +303,22 @@
                 "deadline": "2026-06-30",
                 "status": "bevestigd",
                 "responseStatus": "geen"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "LeaveRequest",
+                    "slug": "leave-jansen-zomer"
+                },
+                "employeeId": "employee-jansen",
+                "leaveType": "holiday",
+                "startDate": "2026-08-03",
+                "endDate": "2026-08-14",
+                "hours": 80,
+                "reason": "Zomervakantie.",
+                "status": "submitted",
+                "submittedAt": "2026-07-10T09:00:00Z",
+                "userId": "admin"
             },
             {
                 "@self": {
