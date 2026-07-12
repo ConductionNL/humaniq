@@ -184,6 +184,89 @@
                 "status": "concept",
                 "responseStatus": "geen",
                 "retainedUntil": "2033-12-31"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "PayrollRun",
+                    "slug": "payrollrun-2026-05"
+                },
+                "period": "2026-05",
+                "administrationId": "ADM-001",
+                "jurisdiction": "NL",
+                "status": "approved",
+                "totalGross": 3800.00,
+                "totalLoonheffing": 1102.00,
+                "totalEmployerCharges": 649.80,
+                "totalWithholdings": 1102.00,
+                "totalNet": 2698.00,
+                "glExpensePosted": 4449.80,
+                "glLiabilityPosted": 1751.80,
+                "withholdingsClearedToZero": true,
+                "withholdingLiabilityBalance": 0.00
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "PayrollRun",
+                    "slug": "payrollrun-2026-06"
+                },
+                "period": "2026-06",
+                "administrationId": "ADM-001",
+                "jurisdiction": "NL",
+                "status": "approved",
+                "totalGross": 3800.00,
+                "totalLoonheffing": 1102.00,
+                "totalEmployerCharges": 649.80,
+                "totalWithholdings": 1102.00,
+                "totalNet": 2698.00,
+                "glExpensePosted": 4449.80,
+                "glLiabilityPosted": 1751.80,
+                "withholdingsClearedToZero": true,
+                "withholdingLiabilityBalance": 0.00
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "PensionFiling",
+                    "slug": "pensionfiling-2026-05-abp"
+                },
+                "payrollRunId": "payrollrun-2026-05",
+                "period": "2026-05",
+                "fund": "abp",
+                "aanleverkenmerk": "UPA-000000000000",
+                "deadline": "2026-06-30",
+                "status": "verzonden",
+                "submittedDate": "2026-06-20",
+                "verzondenDoor": "manager-pietersen",
+                "responseStatus": "ontvangen-ok",
+                "responseMessage": "Aanlevering ontvangen en verwerkt."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "PensionFiling",
+                    "slug": "pensionfiling-2026-06-abp"
+                },
+                "payrollRunId": "payrollrun-2026-06",
+                "period": "2026-06",
+                "fund": "abp",
+                "deadline": "2026-07-31",
+                "status": "concept",
+                "responseStatus": "geen"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "PensionFiling",
+                    "slug": "pensionfiling-2026-05-spw"
+                },
+                "payrollRunId": "payrollrun-2026-05",
+                "period": "2026-05",
+                "fund": "spw",
+                "deadline": "2026-06-30",
+                "status": "bevestigd",
+                "responseStatus": "geen"
             }
         ]
     }

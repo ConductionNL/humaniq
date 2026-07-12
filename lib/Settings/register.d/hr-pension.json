@@ -1,0 +1,150 @@
+{
+    "x-hrmq-fragment": "hr-pension",
+    "components": {
+        "schemas": {
+            "PensionFiling": {
+                "slug": "PensionFiling",
+                "icon": "PiggyBankOutline",
+                "version": "0.1.0",
+                "title": "Pension filing",
+                "description": "A UPA (Uniforme Pensioenaangifte) delivery to one sector pension fund for one wage period, reporting an approved PayrollRun (pension-filing-upa-mvp). The APG-administered funds are gated on the referenced payroll run being approved before the filing can progress past review — the verified Loket.nl/APG gating rule — via a declarative create->review->confirm->send lifecycle (concept -> gecontroleerd -> bevestigd -> verzonden) mirroring the loonaangifte filing flow.",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "payrollRunId",
+                    "period",
+                    "fund",
+                    "deadline",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "concept",
+                        "terminal": [],
+                        "transitions": {
+                            "controleren": {
+                                "from": [
+                                    "concept"
+                                ],
+                                "to": "gecontroleerd",
+                                "requires": "OCA\\Hrmq\\Lifecycle\\PayrollRunApprovedGuard",
+                                "description": "Marks the filing as reviewed. PayrollRunApprovedGuard denies the transition unless the referenced PayrollRun's status is approved, posted or paid — an HR admin may still prepare a concept filing while the run is in review, but cannot progress it further until the run is approved."
+                            },
+                            "bevestigen": {
+                                "from": [
+                                    "gecontroleerd"
+                                ],
+                                "to": "bevestigd",
+                                "description": "Confirms the reviewed filing for dispatch to the fund."
+                            },
+                            "verzenden": {
+                                "from": [
+                                    "bevestigd"
+                                ],
+                                "to": "verzonden",
+                                "description": "Marks the filing as sent. submittedDate and verzondenDoor are stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern)."
+                            },
+                            "heropenen": {
+                                "from": [
+                                    "gecontroleerd",
+                                    "bevestigd"
+                                ],
+                                "to": "concept",
+                                "description": "Reopens a not-yet-sent filing for correction before it is confirmed or sent."
+                            },
+                            "corrigeren": {
+                                "from": [
+                                    "verzonden"
+                                ],
+                                "to": "concept",
+                                "description": "A sent UPA delivery is superseded by a correction. The usual route is a corrected delivery for the same period; this transition's reset-to-concept semantics are a simplified placeholder for that correction workflow."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "payrollRunId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "PayrollRun",
+                        "title": "Payroll run",
+                        "description": "Reference to the approved PayrollRun this UPA delivery reports on. Drives PayrollRunApprovedGuard on the controleren transition and the nl-upa-payrollrun-approved reference-integrity check."
+                    },
+                    "period": {
+                        "type": "string",
+                        "title": "Period",
+                        "description": "Wage period this delivery covers, in YYYY-MM."
+                    },
+                    "fund": {
+                        "type": "string",
+                        "title": "Fund",
+                        "description": "The sector pension fund this delivery is addressed to. APG-administered funds first (nl-pensioenaangifte); other administrators extend this enum in data later.",
+                        "enum": [
+                            "abp",
+                            "spw",
+                            "bpf-bouw",
+                            "schoonmaak",
+                            "pfab",
+                            "pwri"
+                        ]
+                    },
+                    "aanleverkenmerk": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Aanleverkenmerk",
+                        "description": "The UPA delivery reference agreed or returned for this delivery."
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Deadline",
+                        "description": "The fund's aanleverschema/uitvoeringsreglement deadline for this delivery. Authoritative input — unlike the loonaangifte, there is no single statutory derivation formula across funds, so this is not derived."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "UPA delivery lifecycle status. Governed by the x-openregister-lifecycle state machine (concept -> gecontroleerd -> bevestigd -> verzonden).",
+                        "enum": [
+                            "concept",
+                            "gecontroleerd",
+                            "bevestigd",
+                            "verzonden"
+                        ],
+                        "default": "concept"
+                    },
+                    "responseStatus": {
+                        "type": "string",
+                        "title": "Response status",
+                        "description": "Outcome of the fund/APG response to a sent delivery. A rejected (afgekeurd) delivery is corrected via the corrigeren transition; no automated polling/ingestion happens in this app.",
+                        "enum": [
+                            "geen",
+                            "ontvangen-ok",
+                            "afgekeurd"
+                        ],
+                        "default": "geen"
+                    },
+                    "responseMessage": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Response message",
+                        "description": "Free-text response message from the fund/APG (acceptance note or rejection reason)."
+                    },
+                    "submittedDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Submitted date",
+                        "description": "Date the delivery was sent, stamped on the verzenden carrying write."
+                    },
+                    "verzondenDoor": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Verzonden door",
+                        "description": "Display name of the person who sent the delivery, stamped on the verzenden carrying write (the Timesheet approvedBy pattern)."
+                    }
+                }
+            }
+        }
+    }
+}

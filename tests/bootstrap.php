@@ -47,3 +47,16 @@ if (file_exists(__DIR__.'/../../../lib/base.php') === true) {
         // Nextcloud not fully installed — unit tests continue with vendor stubs only.
     }
 }
+
+// OpenRegister's lifecycle guard contract (LifecycleGuardInterface/GuardResult) is
+// a sibling-app dependency, not a composer package — hrmq's guards
+// (NoSelfApprovalGuard, PayrollRunApprovedGuard) implement/return it, but the
+// classes only exist when the OpenRegister app is actually installed alongside
+// hrmq. Load the TEST-ONLY stub (tests/stubs/OpenRegisterLifecycleStub.php) when
+// they are absent, so the standalone PHPUnit suite can exercise guard logic. Never
+// loaded via composer.json autoload, and skipped entirely when the real classes
+// are already resolvable (e.g. a full server checkout with OpenRegister installed
+// via the base.php include above) — the real classes always win.
+if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleGuardInterface') === false) {
+    require __DIR__.'/stubs/OpenRegisterLifecycleStub.php';
+}

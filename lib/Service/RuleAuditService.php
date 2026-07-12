@@ -76,6 +76,12 @@ class RuleAuditService
      */
     public function audit(array $context=[]): array
     {
+        // Cross-type pre-pass (pension-filing-upa-mvp): a lightweight sibling index
+        // so per-object predicates can see PayrollRun/PensionFiling relations without
+        // each CheckProvider re-querying the register. The predicate contract already
+        // carries $context; only this index is new.
+        $context['related'] = $this->buildRelatedContext();
+
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
         $enforceable      = count(RuleEngine::checkedRuleIds());
@@ -131,6 +137,56 @@ class RuleAuditService
         return $report;
 
     }//end audit()
+
+
+    /**
+     * Build the cross-type sibling index consumed by the PayrollRun/PensionFiling
+     * predicates (pension-filing-upa-mvp): a PayrollRun `{id, period, status}` index
+     * keyed by id, plus the set of periods with an approved-or-later run, and the
+     * set of periods that have at least one PensionFiling. Loads independently of
+     * the main per-type loop (a small, side-effect-free reload) so the index is
+     * ready before any object of either type is evaluated. Degrades gracefully to
+     * empty sets when either schema does not exist yet in the register.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function buildRelatedContext(): array
+    {
+        $byId            = [];
+        $approvedPeriods = [];
+        foreach ($this->loadAll('PayrollRun') as $run) {
+            $id     = (string) ($run['id'] ?? $run['@self']['id'] ?? '');
+            $period = (string) ($run['period'] ?? '');
+            $status = (string) ($run['status'] ?? '');
+
+            if ($id !== '') {
+                $byId[$id] = ['id' => $id, 'period' => $period, 'status' => $status];
+            }
+
+            if ($period !== '' && in_array($status, ['approved', 'posted', 'paid'], true) === true) {
+                $approvedPeriods[$period] = true;
+            }
+        }
+
+        $filedPeriods = [];
+        foreach ($this->loadAll('PensionFiling') as $filing) {
+            $period = (string) ($filing['period'] ?? '');
+            if ($period !== '') {
+                $filedPeriods[$period] = true;
+            }
+        }
+
+        return [
+            'PayrollRun'    => [
+                'byId'            => $byId,
+                'approvedPeriods' => array_keys($approvedPeriods),
+            ],
+            'PensionFiling' => [
+                'filedPeriods' => array_keys($filedPeriods),
+            ],
+        ];
+
+    }//end buildRelatedContext()
 
 
     /**
