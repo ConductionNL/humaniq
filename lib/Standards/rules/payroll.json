@@ -1137,6 +1137,42 @@
       "machineCheckable": true,
       "effectiveDate": null,
       "sourceUrl": "https://www.ifac.org/"
+    },
+    {
+      "id": "nl-upa-payrollrun-approved",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-pensioenaangifte",
+      "source": "UPA-specificatie (SIVI) / fund delivery terms",
+      "statement": "A pension delivery (PensionFiling) must reference a PayrollRun in approved, posted or paid status, since the delivery reports approved salary data.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://www.sivi.org/standaarden/uniforme-pensioenaangifte/"
+    },
+    {
+      "id": "nl-upa-monthly-completeness",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-pensioenaangifte",
+      "source": "APG aanleververplichting (UPA, monthly delivery)",
+      "statement": "APG-administered funds require a complete monthly delivery: every period with an approved PayrollRun must have a PensionFiling for each configured fund (MVP check: no approved-run period lacks any PensionFiling).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://www.sivi.org/standaarden/uniforme-pensioenaangifte/"
+    },
+    {
+      "id": "nl-upa-deadline-alert",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-pensioenaangifte",
+      "source": "Fund aanleverschema / uitvoeringsreglement",
+      "statement": "An unsent (status other than verzonden) PensionFiling whose deadline is past or within 14 days is a violation, to be surfaced by occ hrmq:rules:audit.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://www.sivi.org/standaarden/uniforme-pensioenaangifte/"
     }
   ]
 }

@@ -31,6 +31,7 @@ namespace OCA\Hrmq\AppInfo;
 use OCA\Hrmq\Command\RulesAuditCommand;
 use OCA\Hrmq\Command\RulesSeedTestDataCommand;
 use OCA\Hrmq\Lifecycle\NoSelfApprovalGuard;
+use OCA\Hrmq\Lifecycle\PayrollRunApprovedGuard;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -98,6 +99,21 @@ class Application extends App implements IBootstrap
             NoSelfApprovalGuard::class,
             static function ($c): NoSelfApprovalGuard {
                 return new NoSelfApprovalGuard();
+            }
+        );
+
+        // OpenRegister lifecycle guard for the PensionFiling `controleren` transition
+        // (pension-filing-upa-mvp) — denies review unless the referenced PayrollRun is
+        // approved/posted/paid. Unlike NoSelfApprovalGuard this guard loads the
+        // referenced run, so it needs the container (lazy ObjectService resolution)
+        // and IAppConfig (register slug), both autowired here.
+        $context->registerService(
+            PayrollRunApprovedGuard::class,
+            static function ($c): PayrollRunApprovedGuard {
+                return new PayrollRunApprovedGuard(
+                    container: $c,
+                    appConfig: $c->get(\OCP\IAppConfig::class)
+                );
             }
         );
 
