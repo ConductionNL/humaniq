@@ -490,4 +490,82 @@ class RuleAuditServiceTest extends TestCase
     }//end testDanglingOrgUnitReferenceIsFlaggedByAudit()
 
 
+    // -- time-attendance-mvp: AttendanceRecord attendance-context + seeded rows --
+
+
+    /**
+     * The time-attendance-mvp hr-seed.json fixture shapes: a compliant closed
+     * day (jansen), a consecutive-day devries pair with an 8h overnight gap
+     * (violates nl-atw-dagelijkse-rust on the second record), and an 8h
+     * zero-break bakker day (violates nl-atw-pauze), fed through audit() as
+     * if loaded from the register.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededAttendanceRows(): array
+    {
+        $records = [
+            [
+                'employeeId'   => 'employee-jansen',
+                'date'         => '2026-07-09',
+                'clockIn'      => '2026-07-09T08:30:00Z',
+                'clockOut'     => '2026-07-09T17:00:00Z',
+                'breakMinutes' => 30,
+                'workedHours'  => 8.0,
+                'status'       => 'gesloten',
+            ],
+            [
+                'employeeId'   => 'employee-devries',
+                'date'         => '2026-07-08',
+                'clockIn'      => '2026-07-08T14:00:00Z',
+                'clockOut'     => '2026-07-08T23:00:00Z',
+                'breakMinutes' => 30,
+                'workedHours'  => 8.5,
+                'status'       => 'gesloten',
+            ],
+            [
+                'employeeId'   => 'employee-devries',
+                'date'         => '2026-07-09',
+                'clockIn'      => '2026-07-09T07:00:00Z',
+                'clockOut'     => '2026-07-09T15:30:00Z',
+                'breakMinutes' => 30,
+                'workedHours'  => 8.0,
+                'status'       => 'gesloten',
+            ],
+            [
+                'employeeId'   => 'employee-bakker',
+                'date'         => '2026-07-10',
+                'clockIn'      => '2026-07-10T08:00:00Z',
+                'clockOut'     => '2026-07-10T16:00:00Z',
+                'breakMinutes' => 0,
+                'workedHours'  => 8.0,
+                'status'       => 'gesloten',
+            ],
+        ];
+
+        return ['AttendanceRecord' => $records];
+
+    }//end seededAttendanceRows()
+
+
+    /**
+     * @return void
+     */
+    public function testSeededAttendanceDataFlagsExactlyTheIntendedViolations(): void
+    {
+        $service = $this->serviceWithRows($this->seededAttendanceRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-atw-dagelijkse-rust'] ?? 0));
+        $this->assertSame(1, ($byRule['nl-atw-pauze'] ?? 0));
+        $this->assertArrayNotHasKey('nl-atw-max-werkdag', $byRule);
+
+    }//end testSeededAttendanceDataFlagsExactlyTheIntendedViolations()
+
+
 }//end class

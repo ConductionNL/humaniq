@@ -599,6 +599,67 @@
                 "role": "Junior consultant",
                 "startDate": "2026-06-01",
                 "endDate": "2026-05-01"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AttendanceRecord",
+                    "slug": "attendance-jansen-0709"
+                },
+                "employeeId": "employee-jansen",
+                "date": "2026-07-09",
+                "clockIn": "2026-07-09T08:30:00Z",
+                "clockOut": "2026-07-09T17:00:00Z",
+                "breakMinutes": 30,
+                "workedHours": 8.0,
+                "location": "kantoor",
+                "status": "gesloten",
+                "userId": "admin"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AttendanceRecord",
+                    "slug": "attendance-devries-0708"
+                },
+                "employeeId": "employee-devries",
+                "date": "2026-07-08",
+                "clockIn": "2026-07-08T14:00:00Z",
+                "clockOut": "2026-07-08T23:00:00Z",
+                "breakMinutes": 30,
+                "workedHours": 8.5,
+                "location": "klant",
+                "status": "gesloten"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AttendanceRecord",
+                    "slug": "attendance-devries-0709"
+                },
+                "employeeId": "employee-devries",
+                "date": "2026-07-09",
+                "clockIn": "2026-07-09T07:00:00Z",
+                "clockOut": "2026-07-09T15:30:00Z",
+                "breakMinutes": 30,
+                "workedHours": 8.0,
+                "location": "kantoor",
+                "status": "gesloten"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AttendanceRecord",
+                    "slug": "attendance-bakker-0710"
+                },
+                "employeeId": "employee-bakker",
+                "date": "2026-07-10",
+                "clockIn": "2026-07-10T08:00:00Z",
+                "clockOut": "2026-07-10T16:00:00Z",
+                "breakMinutes": 0,
+                "workedHours": 8.0,
+                "location": "thuis",
+                "status": "gesloten"
             }
         ]
     }

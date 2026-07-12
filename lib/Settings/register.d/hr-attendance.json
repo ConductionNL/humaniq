@@ -1,0 +1,51 @@
+{
+    "x-hrmq-fragment": "hr-attendance",
+    "components": {
+        "schemas": {
+            "AttendanceRecord": {
+                "slug": "AttendanceRecord",
+                "icon": "ClockOutline",
+                "version": "0.1.0",
+                "title": "Attendance record",
+                "description": "One clock day per employee (klokregistratie): raw clockIn/clockOut timestamps, a break duration, and the working day they belong to. Feeds the three Arbeidstijdenwet checks (nl-arbeidstijdenwet, lib/Standards/rules/labour.json) via NlAttendanceChecks and the RuleAuditService attendance context. AttendanceRecord is raw clock data; Timesheet (hr-timesheet.json) remains the per-period approved-hours record — aggregating attendance into a timesheet is a documented follow-up (time-attendance-mvp design D5), not automated here. No approval states on this schema; the open<->gesloten lifecycle only tracks whether the day is still being clocked or is complete.",
+                "type": "object",
+                "required": [
+                    "employeeId",
+                    "date",
+                    "clockIn",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "open",
+                        "terminal": [],
+                        "transitions": {
+                            "sluiten": {
+                                "from": ["open"],
+                                "to": "gesloten",
+                                "description": "The employee closes the day once clocked out. The carrying write supplies clockOut and workedHours (writer-maintained, not a declarative calculation — see workedHours description)."
+                            },
+                            "heropenen": {
+                                "from": ["gesloten"],
+                                "to": "open",
+                                "description": "Reopen a closed day for correction. Edits stay visible in the audit trail (the SickLeaveCase heropenen precedent)."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "title": "Employee", "description": "UUID reference to the employee this clock day belongs to."},
+                    "date": {"type": "string", "format": "date", "title": "Date", "description": "The working day this record belongs to (ISO 8601 date), including for a night shift whose clockOut falls after midnight — the working-day key stays this record's date."},
+                    "clockIn": {"type": "string", "format": "date-time", "title": "Clock in", "description": "ISO 8601 UTC timestamp the employee started work (the fleet's submittedAt timestamp convention)."},
+                    "clockOut": {"type": "string", "format": "date-time", "nullable": true, "title": "Clock out", "description": "ISO 8601 UTC timestamp the employee stopped work; null while the day is still open. The nl-atw-max-werkdag and nl-atw-pauze checks pass vacuously while this is null (shift length not decidable yet)."},
+                    "breakMinutes": {"type": "number", "minimum": 0, "default": 0, "title": "Break minutes", "description": "Total unpaid break minutes taken during the shift. Input to the nl-atw-pauze check (Arbeidstijdenwet art. 5:4 lid 1 break tiers)."},
+                    "workedHours": {"type": "number", "nullable": true, "title": "Worked hours", "description": "Stored, writer-maintained number: (clockOut minus clockIn) in hours, minus breakMinutes/60, rounded to 2 decimals. NOT a declarative x-openregister-calculations field — that operator vocabulary is prop/+/- over numeric properties only and cannot express a date-time subtraction. Presentation/aggregation convenience only: the Arbeidstijdenwet compliance checks always compute from the raw clockIn/clockOut/breakMinutes fields, never from this value, so a stale or hand-edited workedHours can neither mask nor fabricate a violation."},
+                    "location": {"type": "string", "nullable": true, "enum": ["kantoor", "thuis", "klant", "anders"], "title": "Location", "description": "Where the day was worked. Plain metadata — no GPS/geofence tracking (deferred, own AVG/consent spec)."},
+                    "userId": {"type": "string", "nullable": true, "title": "User", "description": "Denormalized Nextcloud user id of the employee this record belongs to (mijn-hr-self-service pattern) — a plain NC-user-id string, a copy of the linked Employee's nextcloudUserId, never a $ref relation, mirroring the Timesheet.userId description verbatim. Drives the MijnAanwezigheid @me self-service page."},
+                    "status": {"type": "string", "enum": ["open", "gesloten"], "default": "open", "title": "Status", "description": "Clock-day lifecycle status. Governed by the x-openregister-lifecycle state machine (open <-> gesloten). No approval states here — approval of worked hours lives on Timesheet."}
+                }
+            }
+        }
+    }
+}
