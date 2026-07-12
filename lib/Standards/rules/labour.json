@@ -81,6 +81,42 @@
       "machineCheckable": true,
       "effectiveDate": null,
       "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    },
+    {
+      "id": "nl-onboarding-wid-check",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "nl-wid",
+      "source": "Wet op de identificatieplicht art. 15 jo. Wet LB 1964 art. 28 lid 1 onder f",
+      "statement": "The employer verifies the new hire's identity from an original WID document on or before the first workday and retains a copy; an onboarding case whose start date has passed (or that reports ready-for-first-workday or later) without widCheckDone violates.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0006297"
+    },
+    {
+      "id": "nl-onboarding-proeftijd-bewaking",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:652",
+      "statement": "A proeftijd may not exceed 1 month for fixed-term contracts shorter than 2 years and 2 months for permanent/2+ year contracts (deviations only by CAO); a running proeftijd past its end date must be explicitly closed.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    },
+    {
+      "id": "nl-onboarding-loonheffingenverklaring",
+      "domain": "payroll",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Wet LB 1964 art. 29 jo. 28",
+      "statement": "The employee's loonheffingenverklaring (gegevens voor de loonheffingen) must be on file before the first payroll run; a ready-or-started onboarding whose Employee lacks loonheffingenVerklaringOnFile violates.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0002471"
     }
   ]
 }

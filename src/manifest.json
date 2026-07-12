@@ -16,7 +16,8 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "PayrollGLPost", "urlTemplate": "/apps/hrmq/gl-posts/{uuid}", "displayName": "Payroll GL Post" },
 		{ "registerSlug": "hrmq", "schemaSlug": "LeaveRequest", "urlTemplate": "/apps/hrmq/leave-requests/{uuid}", "displayName": "Leave Request" },
 		{ "registerSlug": "hrmq", "schemaSlug": "LeaveBalance", "urlTemplate": "/apps/hrmq/leave-balances/{uuid}", "displayName": "Leave Balance" },
-		{ "registerSlug": "hrmq", "schemaSlug": "SickLeaveCase", "urlTemplate": "/apps/hrmq/sick-leave/{uuid}", "displayName": "Sick Leave Case" }
+		{ "registerSlug": "hrmq", "schemaSlug": "SickLeaveCase", "urlTemplate": "/apps/hrmq/sick-leave/{uuid}", "displayName": "Sick Leave Case" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Onboarding", "urlTemplate": "/apps/hrmq/onboardings/{uuid}", "displayName": "Onboarding" }
 	],
 	"menu": [
 		{
@@ -127,6 +128,20 @@
 					"label": "Ziekmeldingen",
 					"icon": "EmoticonSickOutline",
 					"route": "SickLeaveCases"
+				}
+			]
+		},
+		{
+			"id": "OnboardingAtsGroup",
+			"label": "Onboarding & ATS",
+			"icon": "AccountPlus",
+			"order": 106,
+			"children": [
+				{
+					"id": "Onboardings",
+					"label": "Onboardings",
+					"icon": "AccountPlusOutline",
+					"route": "Onboardings"
 				}
 			]
 		},
@@ -807,6 +822,55 @@
 					"transitions": [
 						{ "action": "herstellen", "from": ["gemeld"], "to": "hersteld", "label": "Herstellen" },
 						{ "action": "heropenen", "from": ["hersteld"], "to": "gemeld", "label": "Heropenen" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "Onboardings",
+			"route": "/onboardings",
+			"type": "index",
+			"title": "Onboardings",
+			"config": {
+				"register": "hrmq",
+				"schema": "Onboarding",
+				"description": "Onboardingcases per nieuwe medewerker: contract, WID-check, BSN/IBAN, IT-provisioning en pensioenaanmelding, met de proeftijd- en startdatum als klok.",
+				"columns": ["employeeId", "status", "startDate", "proeftijdEndDate"],
+				"filters": ["status"],
+				"sort": { "field": "startDate", "order": "desc" }
+			}
+		},
+		{
+			"id": "OnboardingDetail",
+			"route": "/onboardings/:id",
+			"type": "detail",
+			"title": "Onboarding",
+			"config": {
+				"register": "hrmq",
+				"schema": "Onboarding",
+				"_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), NOT write-time guards: no transition here blocks on an unmet checklist field -- guard wiring for compliance-checked schemas is owned by the active hrmq-rule-compliance-enforcement change (design.md D2). Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "ob-case", "type": "data", "title": "Case", "icon": "AccountPlus", "content": { "columns": 2, "exclude": ["employeeId", "contractSigned", "widCheckDone", "widCheckDate", "bsnValidated", "ibanVerified", "itProvisioned", "pensioenAangemeld", "notes"] } },
+					{ "id": "ob-checklist", "type": "data", "title": "Checklist", "icon": "CheckDecagramOutline", "content": { "columns": 2, "include": ["contractSigned", "widCheckDone", "widCheckDate", "bsnValidated", "ibanVerified", "itProvisioned", "pensioenAangemeld", "notes"] } },
+					{ "id": "ob-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "ob-files", "type": "integration", "integrationId": "files", "title": "Contract & WID-documenten", "icon": "FolderOutline" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "ob-case", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "2", "widgetId": "ob-checklist", "gridX": 0, "gridY": 5, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "3", "widgetId": "ob-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 13 },
+					{ "id": "4", "widgetId": "ob-files", "gridX": 0, "gridY": 13, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "contract_bevestigen", "from": ["aangenomen"], "to": "contract_getekend", "label": "Contract bevestigen" },
+						{ "action": "gegevens_valideren", "from": ["contract_getekend"], "to": "gegevens_gevalideerd", "label": "Gegevens valideren" },
+						{ "action": "gereed_melden", "from": ["gegevens_gevalideerd"], "to": "gereed_eerste_werkdag", "label": "Gereed melden" },
+						{ "action": "starten", "from": ["gereed_eerste_werkdag"], "to": "proeftijd_lopend", "label": "Starten" },
+						{ "action": "afronden", "from": ["proeftijd_lopend"], "to": "afgerond", "label": "Afronden" },
+						{ "action": "annuleren", "from": ["aangenomen", "contract_getekend", "gegevens_gevalideerd", "gereed_eerste_werkdag", "proeftijd_lopend"], "to": "geannuleerd", "label": "Annuleren" }
 					]
 				},
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }

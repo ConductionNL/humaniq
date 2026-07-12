@@ -15,7 +15,7 @@ Each file is `{ "domain": "<key>", "rules": [ <rule>, ... ] }`.
 | `id`             | yes      | stable slug, unique across the whole corpus (e.g. `wtd-art6-max-weekly-hours`)            |
 | `domain`         | yes      | sub-domain key (e.g. `working-time`, `leave`, `pay`, `payroll`, `gdpr-employee`)         |
 | `jurisdiction`   | yes      | ISO 3166-1 alpha-2, or `EU` (EU-wide), or `global`                                       |
-| `framework`      | yes      | framework/law slug (e.g. `wtd-2003-88`, `eu-2019-1152`, `gdpr`, `bw7-10`, `wml`, `nl-pensioenaangifte`, `nl-poortwachter`) |
+| `framework`      | yes      | framework/law slug (e.g. `wtd-2003-88`, `eu-2019-1152`, `gdpr`, `bw7-10`, `wml`, `nl-pensioenaangifte`, `nl-poortwachter`, `nl-wid`) |
 | `source`         | yes      | human citation (e.g. `WTD 2003/88/EC art. 6(b)`)                                          |
 | `statement`      | yes      | the operative rule statement                                                             |
 | `severity`       | yes      | `mandatory` \| `conditional` \| `recommended`                                            |

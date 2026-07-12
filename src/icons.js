@@ -20,6 +20,8 @@ import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
 import EmoticonSickOutline from 'vue-material-design-icons/EmoticonSickOutline.vue'
 import FileSendOutline from 'vue-material-design-icons/FileSendOutline.vue'
 import PiggyBankOutline from 'vue-material-design-icons/PiggyBankOutline.vue'
+import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
+import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
 
 export default {
 	AccountOutline,
@@ -35,4 +37,6 @@ export default {
 	EmoticonSickOutline,
 	FileSendOutline,
 	PiggyBankOutline,
+	AccountPlus,
+	AccountPlusOutline,
 }
