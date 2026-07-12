@@ -151,11 +151,13 @@ class RuleAuditService
      * set of periods that have at least one PensionFiling. Also builds the
      * Employee `{id, loonheffingenVerklaringOnFile, startDate}` index keyed by
      * id/slug and the EmploymentContract `{type, startDate, endDate}` index keyed
-     * by employeeId (onboarding-wizard-mvp) consumed by NlOnboardingChecks. Loads
-     * independently of the main per-type loop (a small, side-effect-free reload)
-     * so the index is ready before any object of either type is evaluated.
-     * Degrades gracefully to empty sets when a schema does not exist yet in the
-     * register.
+     * by employeeId (onboarding-wizard-mvp) consumed by NlOnboardingChecks, and an
+     * OrgUnit `{id, parentUnitId, active}` index keyed by id (org-chart-basic)
+     * consumed by NlOrgChecks for the assignment-consistency (active-unit lookup)
+     * and unit-cycle (parent walk) predicates. Loads independently of the main
+     * per-type loop (a small, side-effect-free reload) so the index is ready
+     * before any object of either type is evaluated. Degrades gracefully to empty
+     * sets when a schema does not exist yet in the register.
      *
      * @return array<string, array<string, mixed>>
      */
@@ -225,6 +227,25 @@ class RuleAuditService
             ];
         }
 
+        // org-chart-basic: an OrgUnit index (id, parentUnitId, active), keyed by
+        // id, so NlOrgChecks::checks()['OrgAssignment']['nl-org-assignment-consistency']
+        // can resolve an assignment's unit without re-querying the register, and
+        // ['OrgUnit']['nl-org-unit-cycle'] can walk the parentUnitId chain through
+        // the same index.
+        $orgUnitsById = [];
+        foreach ($this->loadAll('OrgUnit') as $unit) {
+            $id = (string) ($unit['id'] ?? $unit['@self']['id'] ?? '');
+            if ($id === '') {
+                continue;
+            }
+
+            $orgUnitsById[$id] = [
+                'id'           => $id,
+                'parentUnitId' => (string) ($unit['parentUnitId'] ?? ''),
+                'active'       => (bool) ($unit['active'] ?? true),
+            ];
+        }
+
         return [
             'PayrollRun'         => [
                 'byId'            => $byId,
@@ -238,6 +259,9 @@ class RuleAuditService
             ],
             'EmploymentContract' => [
                 'byEmployeeId' => $contractsByEmployeeId,
+            ],
+            'OrgUnit'            => [
+                'byId' => $orgUnitsById,
             ],
         ];
 
