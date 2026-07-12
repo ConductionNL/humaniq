@@ -529,6 +529,76 @@
                 "motivation": "Placeholder motivatiebrief (recruiting-ats-basic seed).",
                 "status": "aangenomen",
                 "talentPoolOptIn": false
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "OrgUnit",
+                    "slug": "orgunit-directie"
+                },
+                "name": "Directie",
+                "type": "afdeling",
+                "managerId": "employee-jansen",
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "OrgUnit",
+                    "slug": "orgunit-consultancy"
+                },
+                "name": "Consultancy",
+                "type": "team",
+                "parentUnitId": "orgunit-directie",
+                "costCenter": "CC-100",
+                "managerId": "employee-devries",
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "OrgUnit",
+                    "slug": "orgunit-backoffice"
+                },
+                "name": "Backoffice",
+                "type": "afdeling",
+                "parentUnitId": "orgunit-directie",
+                "costCenter": "CC-200",
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "OrgAssignment",
+                    "slug": "orgassignment-jansen-consultancy"
+                },
+                "employeeId": "employee-jansen",
+                "orgUnitId": "orgunit-consultancy",
+                "role": "Consultant",
+                "startDate": "2024-01-01"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "OrgAssignment",
+                    "slug": "orgassignment-devries-backoffice"
+                },
+                "employeeId": "employee-devries",
+                "orgUnitId": "orgunit-backoffice",
+                "role": "Officemanager",
+                "startDate": "2025-03-01"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "OrgAssignment",
+                    "slug": "orgassignment-bakker-consultancy"
+                },
+                "employeeId": "employee-bakker",
+                "orgUnitId": "orgunit-consultancy",
+                "role": "Junior consultant",
+                "startDate": "2026-06-01",
+                "endDate": "2026-05-01"
             }
         ]
     }

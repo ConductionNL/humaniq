@@ -117,6 +117,30 @@
       "machineCheckable": true,
       "effectiveDate": null,
       "sourceUrl": "https://wetten.overheid.nl/BWBR0002471"
+    },
+    {
+      "id": "nl-org-assignment-consistency",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-org-core",
+      "source": "HR-administration control (organisational-structure integrity)",
+      "statement": "An active OrgAssignment (no endDate, or endDate not in the past) must reference an existing OrgUnit with active: true, and startDate <= endDate must hold whenever endDate is present.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": null
+    },
+    {
+      "id": "nl-org-unit-cycle",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-org-core",
+      "source": "HR-administration control (organisational-structure integrity)",
+      "statement": "An OrgUnit's parentUnitId ancestor chain must be acyclic — no unit may be its own (transitive) parent.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": null
     }
   ]
 }

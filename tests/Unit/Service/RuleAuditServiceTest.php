@@ -378,4 +378,116 @@ class RuleAuditServiceTest extends TestCase
     }//end testOnboardingProeftijdViolatedWhenContractCapExceeded()
 
 
+    // -- org-chart-basic: OrgUnit related-context + seeded hierarchy --
+
+
+    /**
+     * The org-chart-basic hr-seed.json fixture shapes: the Directie ->
+     * Consultancy/Backoffice hierarchy (three OrgUnits, all active) and three
+     * OrgAssignments, one deliberately date-inconsistent (bakker,
+     * endDate < startDate), fed through audit() as if loaded from the
+     * register.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededOrgRows(): array
+    {
+        $units = [
+            ['id' => 'orgunit-directie', 'name' => 'Directie', 'type' => 'afdeling', 'parentUnitId' => '', 'managerId' => 'employee-jansen', 'active' => true],
+            ['id' => 'orgunit-consultancy', 'name' => 'Consultancy', 'type' => 'team', 'parentUnitId' => 'orgunit-directie', 'costCenter' => 'CC-100', 'managerId' => 'employee-devries', 'active' => true],
+            ['id' => 'orgunit-backoffice', 'name' => 'Backoffice', 'type' => 'afdeling', 'parentUnitId' => 'orgunit-directie', 'costCenter' => 'CC-200', 'active' => true],
+        ];
+
+        $assignments = [
+            ['id' => 'orgassignment-jansen-consultancy', 'employeeId' => 'employee-jansen', 'orgUnitId' => 'orgunit-consultancy', 'role' => 'Consultant', 'startDate' => '2024-01-01', 'endDate' => ''],
+            ['id' => 'orgassignment-devries-backoffice', 'employeeId' => 'employee-devries', 'orgUnitId' => 'orgunit-backoffice', 'role' => 'Officemanager', 'startDate' => '2025-03-01', 'endDate' => ''],
+            ['id' => 'orgassignment-bakker-consultancy', 'employeeId' => 'employee-bakker', 'orgUnitId' => 'orgunit-consultancy', 'role' => 'Junior consultant', 'startDate' => '2026-06-01', 'endDate' => '2026-05-01'],
+        ];
+
+        return [
+            'OrgUnit'       => $units,
+            'OrgAssignment' => $assignments,
+        ];
+
+    }//end seededOrgRows()
+
+
+    /**
+     * @return void
+     */
+    public function testSeededOrgDataFlagsExactlyOneAssignmentConsistencyViolation(): void
+    {
+        $service = $this->serviceWithRows($this->seededOrgRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-org-assignment-consistency'] ?? 0));
+
+    }//end testSeededOrgDataFlagsExactlyOneAssignmentConsistencyViolation()
+
+
+    /**
+     * @return void
+     */
+    public function testSeededOrgDataHasNoUnitCycleViolations(): void
+    {
+        $service = $this->serviceWithRows($this->seededOrgRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-org-unit-cycle', $ruleIds);
+
+    }//end testSeededOrgDataHasNoUnitCycleViolations()
+
+
+    /**
+     * @return void
+     */
+    public function testTwoNodeUnitCycleIsFlaggedForBothUnitsThroughAudit(): void
+    {
+        $rows = [
+            'OrgUnit' => [
+                ['id' => 'unit-a', 'name' => 'A', 'type' => 'afdeling', 'parentUnitId' => 'unit-b', 'active' => true],
+                ['id' => 'unit-b', 'name' => 'B', 'type' => 'afdeling', 'parentUnitId' => 'unit-a', 'active' => true],
+            ],
+        ];
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(2, ($byRule['nl-org-unit-cycle'] ?? 0));
+
+    }//end testTwoNodeUnitCycleIsFlaggedForBothUnitsThroughAudit()
+
+
+    /**
+     * @return void
+     */
+    public function testDanglingOrgUnitReferenceIsFlaggedByAudit(): void
+    {
+        $rows = [
+            'OrgUnit'       => [],
+            'OrgAssignment' => [
+                ['id' => 'orgassignment-x', 'employeeId' => 'employee-x', 'orgUnitId' => 'no-such-unit', 'startDate' => '2026-01-01', 'endDate' => ''],
+            ],
+        ];
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertContains('nl-org-assignment-consistency', $ruleIds);
+
+    }//end testDanglingOrgUnitReferenceIsFlaggedByAudit()
+
+
 }//end class
