@@ -5,7 +5,7 @@
             "Expense": {
                 "slug": "Expense",
                 "icon": "Receipt",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Expense",
                 "description": "An employee expense-reimbursement claim (onkostendeclaratie / declaratie). An employee submits a claim (amount, category, date, receipt), a manager approves or rejects it, and once approved the amount is reimbursed to the employee. The submit → approve → reimburse lifecycle is owned here in hrmq, the HR/labour app — re-homing the Expenses feature that previously lived in pipelinq. The pipelinq-specific Shillinq accounts-payable sync coupling is intentionally NOT ported: reimbursement here is the HR-side claim workflow; any downstream AP/GL posting is a separate integration concern that OpenConnector/shillinq own.",
                 "type": "object",
@@ -151,6 +151,11 @@
                         "format": "date-time",
                         "nullable": true,
                         "description": "ISO 8601 UTC timestamp the approved claim was paid out to the employee."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Denormalized Nextcloud user id of the employee this expense claim belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the approvedBy convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnDeclaraties self-service page filters on it with the @me token."
                     }
                 }
             }
