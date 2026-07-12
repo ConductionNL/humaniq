@@ -1,0 +1,226 @@
+{
+    "x-hrmq-fragment": "hr-ats",
+    "components": {
+        "schemas": {
+            "Vacancy": {
+                "slug": "Vacancy",
+                "icon": "BriefcaseSearchOutline",
+                "version": "0.1.0",
+                "title": "Vacancy",
+                "description": "A job vacancy (vacature) published by the employer. Models the ADR-001 menu-6 'Onboarding & ATS' recruiting surface (recruiting-ats-basic): a declarative concept -> gepubliceerd -> gesloten publish lifecycle, no external multiposting (werk.nl/LinkedIn is an OpenConnector follow-up) and no public career page (portaliq per ADR-046). Applications reference this Vacancy via Application.vacancyId.",
+                "type": "object",
+                "x-schema-org": "schema:JobPosting",
+                "required": [
+                    "title",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "concept",
+                        "terminal": [
+                            "gesloten"
+                        ],
+                        "transitions": {
+                            "publiceren": {
+                                "from": [
+                                    "concept"
+                                ],
+                                "to": "gepubliceerd",
+                                "description": "The vacancy is published (inside hrmq only — no external channel wiring in the MVP). publishedDate is stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern)."
+                            },
+                            "sluiten": {
+                                "from": [
+                                    "gepubliceerd"
+                                ],
+                                "to": "gesloten",
+                                "description": "The vacancy is closed. Terminal — no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "title": "Title",
+                        "description": "Job title (schema:title)."
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Description",
+                        "description": "Free-text vacancy text (schema:description)."
+                    },
+                    "department": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Department",
+                        "description": "Department or team the vacancy belongs to."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Publish workflow status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd -> gesloten).",
+                        "enum": [
+                            "concept",
+                            "gepubliceerd",
+                            "gesloten"
+                        ],
+                        "default": "concept"
+                    },
+                    "publishedDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Published date",
+                        "description": "Date the vacancy was published, stamped on the publiceren carrying write."
+                    },
+                    "closingDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Closing date",
+                        "description": "Application deadline. Informational only in the MVP — it does not drive the sluiten transition."
+                    }
+                }
+            },
+            "Application": {
+                "slug": "Application",
+                "icon": "FileAccountOutline",
+                "version": "0.1.0",
+                "title": "Application",
+                "description": "A candidate's application (sollicitatie) against a Vacancy. Candidate PII (name/email/phone/CV/motivation) lives DIRECTLY on this object — there is deliberately no separate Candidate entity in the MVP (AVG data-minimisation, design D2): one object carries one retention clock (retentionExpiryDate) and one deletion (deleting the Application deletes the candidate's data atomically). The declarative pipeline lifecycle runs nieuw -> screening -> gesprek -> aanbod -> aangenomen, with afwijzen reachable from every active stage. Rejecting an application stamps rejectedDate and derives retentionExpiryDate per the Autoriteit Persoonsgegevens sollicitatie-richtlijn (4 weeks, or 1 year with explicit talentPoolOptIn consent) — enforced by the nl-ats-retentie-derivatie and nl-ats-retentie-verlopen checks (lib/Standards/Checks/NlAtsChecks.php, lib/Standards/rules/privacy.json). aannemen documents a MANUAL onboarding hand-off (creating the Employee from this data is a manual follow-up action in the MVP — no cross-object write hook).",
+                "type": "object",
+                "x-schema-org": "schema:JobApplication",
+                "required": [
+                    "vacancyId",
+                    "candidateName",
+                    "email",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "nieuw",
+                        "terminal": [
+                            "aangenomen",
+                            "afgewezen"
+                        ],
+                        "transitions": {
+                            "screenen": {
+                                "from": [
+                                    "nieuw"
+                                ],
+                                "to": "screening",
+                                "description": "The application enters CV/motivation screening."
+                            },
+                            "uitnodigen": {
+                                "from": [
+                                    "screening"
+                                ],
+                                "to": "gesprek",
+                                "description": "The candidate is invited for an interview. No calendar/scheduling integration in the MVP."
+                            },
+                            "aanbieden": {
+                                "from": [
+                                    "gesprek"
+                                ],
+                                "to": "aanbod",
+                                "description": "An offer is extended to the candidate. No offer-letter generation/e-signature in the MVP."
+                            },
+                            "aannemen": {
+                                "from": [
+                                    "aanbod"
+                                ],
+                                "to": "aangenomen",
+                                "description": "The candidate is hired. Terminal. Onboarding hand-off is a MANUAL follow-up action in the MVP — HR creates the Employee/Onboarding case by hand from this application's data (the same deferral class as leave-balance auto-posting); no cross-object write hook fires here."
+                            },
+                            "afwijzen": {
+                                "from": [
+                                    "nieuw",
+                                    "screening",
+                                    "gesprek",
+                                    "aanbod"
+                                ],
+                                "to": "afgewezen",
+                                "description": "The candidate is rejected (or, absent a public career page and candidate actor, a withdrawal is also recorded this way by HR). Terminal. rejectedDate and retentionExpiryDate are stamped on the carrying write: retentionExpiryDate = rejectedDate + 4 weeks, or + 1 year with talentPoolOptIn consent (Autoriteit Persoonsgegevens sollicitatie-richtlijn)."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "vacancyId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Vacancy",
+                        "title": "Vacancy",
+                        "description": "UUID reference to the Vacancy this application is for."
+                    },
+                    "candidateName": {
+                        "type": "string",
+                        "title": "Candidate name",
+                        "description": "Full name of the candidate. Candidate PII lives on this object only (design D2) — deleting the Application deletes this data."
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "title": "Email",
+                        "description": "Candidate email address."
+                    },
+                    "phone": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Phone",
+                        "description": "Candidate phone number."
+                    },
+                    "cvFile": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "CV file",
+                        "description": "Reference (Nextcloud Files path or OpenRegister file id) to the uploaded CV, the Expense.receiptFile pattern."
+                    },
+                    "motivation": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Motivation",
+                        "description": "Free-text motivation letter / cover note."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Pipeline status. Governed by the x-openregister-lifecycle state machine (nieuw -> screening -> gesprek -> aanbod -> aangenomen, afwijzen reachable from every active stage).",
+                        "enum": [
+                            "nieuw",
+                            "screening",
+                            "gesprek",
+                            "aanbod",
+                            "aangenomen",
+                            "afgewezen"
+                        ],
+                        "default": "nieuw"
+                    },
+                    "rejectedDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Rejected date",
+                        "description": "Date the application was rejected, stamped on the afwijzen carrying write. Null on every non-afgewezen status."
+                    },
+                    "talentPoolOptIn": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Talent pool opt-in",
+                        "description": "Explicit candidate consent to extended talent-pool retention. Extends the retentionExpiryDate derivation from 4 weeks to the Autoriteit Persoonsgegevens maximum of 1 year."
+                    },
+                    "retentionExpiryDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Retention expiry date",
+                        "description": "Stored-but-rule-checked AVG retention deadline (design D4): rejectedDate + 4 weeks without talentPoolOptIn, or + 1 year with it (Autoriteit Persoonsgegevens sollicitatie-richtlijn, AVG art. 5 lid 1 sub e). Checked by nl-ats-retentie-derivatie / nl-ats-retentie-verlopen. Null on every non-afgewezen status."
+                    }
+                }
+            }
+        }
+    }
+}

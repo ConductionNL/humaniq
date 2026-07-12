@@ -17,7 +17,9 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "LeaveRequest", "urlTemplate": "/apps/hrmq/leave-requests/{uuid}", "displayName": "Leave Request" },
 		{ "registerSlug": "hrmq", "schemaSlug": "LeaveBalance", "urlTemplate": "/apps/hrmq/leave-balances/{uuid}", "displayName": "Leave Balance" },
 		{ "registerSlug": "hrmq", "schemaSlug": "SickLeaveCase", "urlTemplate": "/apps/hrmq/sick-leave/{uuid}", "displayName": "Sick Leave Case" },
-		{ "registerSlug": "hrmq", "schemaSlug": "Onboarding", "urlTemplate": "/apps/hrmq/onboardings/{uuid}", "displayName": "Onboarding" }
+		{ "registerSlug": "hrmq", "schemaSlug": "Onboarding", "urlTemplate": "/apps/hrmq/onboardings/{uuid}", "displayName": "Onboarding" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Vacancy", "urlTemplate": "/apps/hrmq/vacancies/{uuid}", "displayName": "Vacancy" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Application", "urlTemplate": "/apps/hrmq/applications/{uuid}", "displayName": "Application" }
 	],
 	"menu": [
 		{
@@ -142,6 +144,18 @@
 					"label": "Onboardings",
 					"icon": "AccountPlusOutline",
 					"route": "Onboardings"
+				},
+				{
+					"id": "Vacancies",
+					"label": "Vacatures",
+					"icon": "BriefcaseSearchOutline",
+					"route": "Vacancies"
+				},
+				{
+					"id": "Applications",
+					"label": "Sollicitaties",
+					"icon": "FileAccountOutline",
+					"route": "Applications"
 				}
 			]
 		},
@@ -871,6 +885,95 @@
 						{ "action": "starten", "from": ["gereed_eerste_werkdag"], "to": "proeftijd_lopend", "label": "Starten" },
 						{ "action": "afronden", "from": ["proeftijd_lopend"], "to": "afgerond", "label": "Afronden" },
 						{ "action": "annuleren", "from": ["aangenomen", "contract_getekend", "gegevens_gevalideerd", "gereed_eerste_werkdag", "proeftijd_lopend"], "to": "geannuleerd", "label": "Annuleren" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "Vacancies",
+			"route": "/vacancies",
+			"type": "index",
+			"title": "Vacatures",
+			"config": {
+				"register": "hrmq",
+				"schema": "Vacancy",
+				"description": "Vacatures (recruiting-ats-basic): concept -> gepubliceerd -> gesloten publish-lifecycle. Geen externe multiposting (werk.nl/LinkedIn) en geen publieke vacaturepagina in de MVP.",
+				"columns": ["title", "department", "status", "publishedDate", "closingDate"],
+				"filters": ["status", "department"],
+				"sort": { "field": "publishedDate", "order": "desc" }
+			}
+		},
+		{
+			"id": "VacancyDetail",
+			"route": "/vacancies/:id",
+			"type": "detail",
+			"title": "Vacature",
+			"config": {
+				"register": "hrmq",
+				"schema": "Vacancy",
+				"_note": "recruiting-ats-basic (2026-07-13): the 'Vacancy' widget carries every field (title/description/department/status/publishedDate/closingDate). The 'Sollicitaties' related widget resolves the incoming Application.vacancyId references -- the candidate list per vacancy. lifecycleActions expose exactly publiceren/sluiten (design D3) -- no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "vac-data", "type": "data", "title": "Vacancy", "icon": "BriefcaseSearchOutline", "content": { "columns": 2, "include": ["title", "description", "department", "status", "publishedDate", "closingDate"] } },
+					{ "id": "vac-related", "type": "related", "title": "Sollicitaties", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "vac-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "2", "widgetId": "vac-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 8 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "publiceren", "from": ["concept"], "to": "gepubliceerd", "label": "Publiceren" },
+						{ "action": "sluiten", "from": ["gepubliceerd"], "to": "gesloten", "label": "Sluiten" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "Applications",
+			"route": "/applications",
+			"type": "index",
+			"title": "Sollicitaties",
+			"config": {
+				"register": "hrmq",
+				"schema": "Application",
+				"description": "Sollicitatiepipeline (recruiting-ats-basic): nieuw -> screening -> gesprek -> aanbod -> aangenomen/afgewezen. De status-filter is de MVP-pipeline-surface -- elke fase is een filterwaarde; een kanban-board is een nc-vue widget follow-up (design D7).",
+				"columns": ["candidateName", "vacancyId", "status", "talentPoolOptIn", "retentionExpiryDate"],
+				"filters": ["status"],
+				"sort": { "field": "candidateName", "order": "asc" }
+			}
+		},
+		{
+			"id": "ApplicationDetail",
+			"route": "/applications/:id",
+			"type": "detail",
+			"title": "Sollicitatie",
+			"config": {
+				"register": "hrmq",
+				"schema": "Application",
+				"_note": "recruiting-ats-basic (2026-07-13): candidate PII (candidateName/email/phone/cvFile/motivation) lives DIRECTLY on this Application -- there is deliberately no separate Candidate entity (AVG data-minimisation, design D2): one object = one retention clock = one delete. The 'Application' widget excludes vacancyId (Related resolves the Vacancy) and the three privacy fields (talentPoolOptIn/rejectedDate/retentionExpiryDate), which instead surface on the dedicated 'Privacy & retention' widget so the AVG retention clock is never buried among ordinary fields. lifecycleActions expose exactly screenen/uitnodigen/aanbieden/aannemen/afwijzen (design D3) -- no invented edges; aannemen's onboarding hand-off (creating the Employee from this data) is a MANUAL follow-up action in the MVP, no cross-object write hook fires here. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "app-data", "type": "data", "title": "Application", "icon": "FileAccountOutline", "content": { "columns": 2, "exclude": ["vacancyId", "talentPoolOptIn", "rejectedDate", "retentionExpiryDate"] } },
+					{ "id": "app-privacy", "type": "data", "title": "Privacy & retention", "icon": "ShieldLockOutline", "content": { "columns": 2, "include": ["talentPoolOptIn", "rejectedDate", "retentionExpiryDate"] } },
+					{ "id": "app-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "app-files", "type": "integration", "integrationId": "files", "title": "CV & motivatiebrief", "icon": "FolderOutline" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "app-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "2", "widgetId": "app-privacy", "gridX": 0, "gridY": 5, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "3", "widgetId": "app-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 9 },
+					{ "id": "4", "widgetId": "app-files", "gridX": 0, "gridY": 9, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "screenen", "from": ["nieuw"], "to": "screening", "label": "Screenen" },
+						{ "action": "uitnodigen", "from": ["screening"], "to": "gesprek", "label": "Uitnodigen" },
+						{ "action": "aanbieden", "from": ["gesprek"], "to": "aanbod", "label": "Aanbieden" },
+						{ "action": "aannemen", "from": ["aanbod"], "to": "aangenomen", "label": "Aannemen" },
+						{ "action": "afwijzen", "from": ["nieuw", "screening", "gesprek", "aanbod"], "to": "afgewezen", "label": "Afwijzen" }
 					]
 				},
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }

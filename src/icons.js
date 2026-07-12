@@ -22,6 +22,8 @@ import FileSendOutline from 'vue-material-design-icons/FileSendOutline.vue'
 import PiggyBankOutline from 'vue-material-design-icons/PiggyBankOutline.vue'
 import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
+import BriefcaseSearchOutline from 'vue-material-design-icons/BriefcaseSearchOutline.vue'
+import FileAccountOutline from 'vue-material-design-icons/FileAccountOutline.vue'
 
 export default {
 	AccountOutline,
@@ -39,4 +41,6 @@ export default {
 	PiggyBankOutline,
 	AccountPlus,
 	AccountPlusOutline,
+	BriefcaseSearchOutline,
+	FileAccountOutline,
 }
