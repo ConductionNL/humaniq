@@ -73,6 +73,8 @@ class RuleAuditService
      * @param array<string, mixed> $context Evaluation context (e.g. jurisdiction).
      *
      * @return array<string, mixed>
+     *
+     * @spec openspec/changes/time-attendance-mvp/specs/time-attendance/spec.md#REQ-TA-004
      */
     public function audit(array $context=[]): array
     {
@@ -86,6 +88,12 @@ class RuleAuditService
         // NlGlPostChecks::checks()['PayrollGLPost']['nl-glpost-idempotent-per-run']
         // stays a pure fn(array $o, array $context) instead of re-querying siblings.
         $context['glpost'] = $this->buildGlPostContext();
+
+        // time-attendance-mvp: a per-employee date-indexed AttendanceRecord clock
+        // index so NlAttendanceChecks::checks()['AttendanceRecord']
+        // ['nl-atw-dagelijkse-rust'] can resolve the previous working day's
+        // clockOut for the same employee without re-querying the register.
+        $context['attendance'] = $this->buildAttendanceContext();
 
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
@@ -298,6 +306,39 @@ class RuleAuditService
         return ['activeCountByRun' => $activeCountByRun];
 
     }//end buildGlPostContext()
+
+
+    /**
+     * Build the per-employee date-indexed clock index consumed by
+     * NlAttendanceChecks' `nl-atw-dagelijkse-rust` predicate
+     * (time-attendance-mvp, design D3): `clockByEmployeeDate` maps
+     * `employeeId => [date => ['clockIn' => ..., 'clockOut' => ...]]` from
+     * every `AttendanceRecord` in the register, loaded once per audit run —
+     * the same pattern as `buildRelatedContext()`/`buildGlPostContext()`.
+     * Degrades gracefully to an empty index when the AttendanceRecord schema
+     * does not exist yet in the register.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildAttendanceContext(): array
+    {
+        $clockByEmployeeDate = [];
+        foreach ($this->loadAll('AttendanceRecord') as $record) {
+            $employeeId = (string) ($record['employeeId'] ?? '');
+            $date       = (string) ($record['date'] ?? '');
+            if ($employeeId === '' || $date === '') {
+                continue;
+            }
+
+            $clockByEmployeeDate[$employeeId][$date] = [
+                'clockIn'  => ($record['clockIn'] ?? null),
+                'clockOut' => ($record['clockOut'] ?? null),
+            ];
+        }
+
+        return ['clockByEmployeeDate' => $clockByEmployeeDate];
+
+    }//end buildAttendanceContext()
 
 
     /**

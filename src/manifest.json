@@ -21,7 +21,8 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "Vacancy", "urlTemplate": "/apps/hrmq/vacancies/{uuid}", "displayName": "Vacancy" },
 		{ "registerSlug": "hrmq", "schemaSlug": "Application", "urlTemplate": "/apps/hrmq/applications/{uuid}", "displayName": "Application" },
 		{ "registerSlug": "hrmq", "schemaSlug": "OrgUnit", "urlTemplate": "/apps/hrmq/org-units/{uuid}", "displayName": "Organisational Unit" },
-		{ "registerSlug": "hrmq", "schemaSlug": "OrgAssignment", "urlTemplate": "/apps/hrmq/org-assignments/{uuid}", "displayName": "Organisational Assignment" }
+		{ "registerSlug": "hrmq", "schemaSlug": "OrgAssignment", "urlTemplate": "/apps/hrmq/org-assignments/{uuid}", "displayName": "Organisational Assignment" },
+		{ "registerSlug": "hrmq", "schemaSlug": "AttendanceRecord", "urlTemplate": "/apps/hrmq/attendance/{uuid}", "displayName": "Attendance Record" }
 	],
 	"menu": [
 		{
@@ -60,6 +61,12 @@
 					"label": "Mijn loonstroken",
 					"icon": "ReceiptTextOutline",
 					"route": "MijnLoonstroken"
+				},
+				{
+					"id": "MijnAanwezigheid",
+					"label": "Mijn aanwezigheid",
+					"icon": "ClockOutline",
+					"route": "MijnAanwezigheid"
 				}
 			]
 		},
@@ -144,6 +151,12 @@
 					"label": "Ziekmeldingen",
 					"icon": "EmoticonSickOutline",
 					"route": "SickLeaveCases"
+				},
+				{
+					"id": "AttendanceRecords",
+					"label": "Aanwezigheid",
+					"icon": "ClockOutline",
+					"route": "AttendanceRecords"
 				}
 			]
 		},
@@ -314,6 +327,20 @@
 				"columns": ["period", "jurisdiction", "grossPay", "nettoPay"],
 				"sort": { "field": "period", "order": "desc" },
 				"actionToggles": { "showAdd": false, "showEditAction": false, "showDeleteAction": false, "showCopyAction": false }
+			}
+		},
+		{
+			"id": "MijnAanwezigheid",
+			"route": "/mijn/aanwezigheid",
+			"type": "index",
+			"title": "Mijn aanwezigheid",
+			"config": {
+				"register": "hrmq",
+				"schema": "AttendanceRecord",
+				"description": "Jouw eigen aanwezigheid.",
+				"filter": { "userId": "@me" },
+				"columns": ["date", "clockIn", "clockOut", "workedHours", "status"],
+				"sort": { "field": "date", "order": "desc" }
 			}
 		},
 		{
@@ -852,6 +879,47 @@
 					"transitions": [
 						{ "action": "herstellen", "from": ["gemeld"], "to": "hersteld", "label": "Herstellen" },
 						{ "action": "heropenen", "from": ["hersteld"], "to": "gemeld", "label": "Heropenen" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "AttendanceRecords",
+			"route": "/attendance",
+			"type": "index",
+			"title": "Aanwezigheid",
+			"config": {
+				"register": "hrmq",
+				"schema": "AttendanceRecord",
+				"description": "Klokregistraties per medewerker per werkdag, met de Arbeidstijdenwet-nalevingscontroles op rusttijd, maximale diensttijd en pauze.",
+				"columns": ["employeeId", "date", "clockIn", "clockOut", "workedHours", "status"],
+				"filters": ["status", "location"],
+				"sort": { "field": "date", "order": "desc" }
+			}
+		},
+		{
+			"id": "AttendanceRecordDetail",
+			"route": "/attendance/:id",
+			"type": "detail",
+			"title": "Aanwezigheid",
+			"config": {
+				"register": "hrmq",
+				"schema": "AttendanceRecord",
+				"_note": "time-attendance-mvp (2026-07-13): raw per-day clock record (klokregistratie) -- AttendanceRecord is raw clock data, Timesheet stays the per-period approved-hours record (design D5, no automation between them). The 'Attendance' data widget excludes employeeId since Related already resolves and links the Employee by name. lifecycleActions expose exactly sluiten/heropenen (open<->gesloten, design D4) -- no invented approval edges (approval lives on Timesheet, not here). No files widget -- the schema carries no document/retention field (the EmploymentContractDetail no-fabricated-leaves reasoning). No stat KPI -- a single day's hours is not a headline aggregate (the LeaveRequestDetail precedent). No comms/calendar leaves. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "ar-data", "type": "data", "title": "Attendance", "icon": "ClockOutline", "content": { "columns": 2, "exclude": ["employeeId"] } },
+					{ "id": "ar-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "ar-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "ar-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "sluiten", "from": ["open"], "to": "gesloten", "label": "Sluiten" },
+						{ "action": "heropenen", "from": ["gesloten"], "to": "open", "label": "Heropenen" }
 					]
 				},
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }

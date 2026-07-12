@@ -141,6 +141,48 @@
       "machineCheckable": true,
       "effectiveDate": null,
       "sourceUrl": null
+    },
+    {
+      "id": "nl-atw-dagelijkse-rust",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "nl-arbeidstijdenwet",
+      "source": "Arbeidstijdenwet art. 5:3 lid 2",
+      "statement": "After a working day the employee has at least 11 hours of unbroken rest before the next working day starts: on consecutive calendar days, clockIn(D) minus clockOut(D-1) must be >= 11 hours for the same employee. The lawful once-per-7-days reduction to 8 hours is not modeled — this is the strict default norm.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "1996-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0007671"
+    },
+    {
+      "id": "nl-atw-max-werkdag",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "nl-arbeidstijdenwet",
+      "source": "Arbeidstijdenwet art. 5:7 lid 1",
+      "statement": "A single dienst is at most 12 hours: clockOut minus clockIn must not exceed 12 hours, computed from the raw clock fields and never from a stored workedHours value.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "1996-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0007671"
+    },
+    {
+      "id": "nl-atw-pauze",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "nl-arbeidstijdenwet",
+      "source": "Arbeidstijdenwet art. 5:4 lid 1",
+      "statement": "Work of more than 5.5 hours requires at least 30 minutes of break; more than 10 hours requires at least 45 minutes, evaluated from breakMinutes against the elapsed clockOut minus clockIn using the tiers in parameters.breakTiers.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "1996-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0007671",
+      "parameters": {
+        "breakTiers": [
+          {"minHours": 5.5, "requiredBreakMinutes": 30},
+          {"minHours": 10, "requiredBreakMinutes": 45}
+        ]
+      }
     }
   ]
 }
