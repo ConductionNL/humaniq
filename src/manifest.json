@@ -403,8 +403,8 @@
 				"register": "hrmq",
 				"schema": "LoonaangifteFiling",
 				"description": "Wage-tax / social-security filings by period and statutory deadline.",
-				"columns": ["period", "jurisdiction", "filingType", "deadline", "submittedDate", "electronicallyFiled"],
-				"filters": ["jurisdiction", "filingType"],
+				"columns": ["period", "tijdvakcode", "status", "deadline", "submittedDate", "responseStatus"],
+				"filters": ["jurisdiction", "filingType", "status"],
 				"sort": { "field": "deadline", "order": "asc" }
 			}
 		},
@@ -416,15 +416,27 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "LoonaangifteFiling",
-				"_note": "Statutory-deadline archetype: a filing's whole purpose is 'was it filed on time and is proof retained', so the page leads with the deadline/submittedDate/paidDate/electronicallyFiled facts in the data widget, no stat KPIs (the fields are dates/booleans, not summable amounts) and no related panel (the schema carries no employeeId/administrationId or any other object-FK -- a filing is an organisation-level record, not scoped to a person). Files is included full-width for the filed submission/deposit proof, justified by the schema's own retainedUntil/furnishedToRecipientDate/filedWithAuthorityDate retention-evidence fields (NL 7yr / DE 6yr / US 4yr retention obligations). No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. No lifecycleActions -- the schema declares no `status` field or x-openregister-lifecycle; submittedDate/paidDate are plain timestamps, not a guarded state machine. Audit history is a sidebar tab.",
+				"_note": "Statutory-deadline archetype: a filing's whole purpose is 'was it filed on time and is proof retained'. loonaangifte-filing-lifecycle (2026-07-12) gave NL filings a real create->review->confirm->send workflow, so the page now leads with a compact status/tijdvakcode/deadline/response widget (fi-status) before the full filing data widget, and exposes the klaarzetten/bevestigen/verzenden/heropenen/corrigeren transitions via lifecycleActions (Timesheet pattern). No stats-block KPI tile is used for Status/Deadline: the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports count/sum aggregation, which cannot echo a non-numeric field (enum/date) of the current object, so fi-status is a `data` widget instead -- schema-valid and functionally equivalent (prominent, top-of-page). No related panel (the schema carries no employeeId/administrationId or any other object-FK -- a filing is an organisation-level record, not scoped to a person). Files is included full-width for the filed submission/deposit proof, justified by the schema's own retainedUntil/furnishedToRecipientDate/filedWithAuthorityDate retention-evidence fields (NL 7yr / DE 6yr / US 4yr retention obligations). No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. Audit history is a sidebar tab.",
 				"widgets": [
+					{ "id": "fi-status", "type": "data", "title": "Status & deadline", "icon": "CalendarClock", "content": { "columns": 4, "include": ["status", "tijdvakcode", "deadline", "submittedDate", "responseStatus", "responseMessage"] } },
 					{ "id": "fi-data", "type": "data", "title": "Filing", "icon": "FileDocument", "content": { "columns": 2 } },
 					{ "id": "fi-files", "type": "integration", "integrationId": "files", "title": "Filing proof / deposit confirmation", "icon": "FolderOutline" }
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "fi-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 10 },
-					{ "id": "2", "widgetId": "fi-files", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "1", "widgetId": "fi-status", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 3 },
+					{ "id": "2", "widgetId": "fi-data", "gridX": 0, "gridY": 3, "gridWidth": 12, "gridHeight": 9 },
+					{ "id": "3", "widgetId": "fi-files", "gridX": 0, "gridY": 12, "gridWidth": 12, "gridHeight": 4 }
 				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "klaarzetten", "from": ["concept"], "to": "klaargezet", "label": "Klaarzetten" },
+						{ "action": "bevestigen", "from": ["klaargezet"], "to": "bevestigd", "label": "Bevestigen" },
+						{ "action": "verzenden", "from": ["bevestigd"], "to": "verzonden", "label": "Verzenden" },
+						{ "action": "heropenen", "from": ["klaargezet", "bevestigd"], "to": "concept", "label": "Heropenen" },
+						{ "action": "corrigeren", "from": ["verzonden"], "to": "concept", "label": "Corrigeren" }
+					]
+				},
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
 		}
