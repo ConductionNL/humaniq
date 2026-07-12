@@ -1,0 +1,21 @@
+# Tasks — onboarding-wizard-mvp
+
+- [ ] 1. Fragment: create `lib/Settings/register.d/hr-onboarding.json` with the `Onboarding` schema (properties, required list, defaults, `x-schema-org: schema:Action`, icon `AccountPlus`, version 0.1.0) per REQ-OBW-001
+- [ ] 2. Lifecycle: add `configuration.x-openregister-lifecycle` (contract_bevestigen, gegevens_valideren, gereed_melden, starten, afronden, annuleren; terminal afgerond/geannuleerd; NO `requires:` guards) to `Onboarding` per REQ-OBW-002, with each forward transition's description naming its checklist gate fields
+- [ ] 3. Corpus: add `nl-onboarding-wid-check`, `nl-onboarding-proeftijd-bewaking`, `nl-onboarding-loonheffingenverklaring` to `lib/Standards/rules/labour.json` (frameworks `nl-wid`/`bw7-10`/`nl-loonheffingen`, sources and wetten.overheid.nl sourceUrls per REQ-OBW-003); add the `nl-wid` framework slug to `lib/Standards/rules/SCHEMA.md` examples; `RuleCatalogue::VERSION` stays `2026-07`
+- [ ] 4. Audit context: extend `RuleAuditService::buildRelatedContext()` with the `Employee` (loonheffingenVerklaringOnFile/startDate by id+slug) and `EmploymentContract` (type/startDate/endDate by employeeId) indexes per REQ-OBW-004
+- [ ] 5. Checks: implement `lib/Standards/Checks/NlOnboardingChecks.php` (CheckProvider, no SeedsObjects) with the three `Onboarding` predicates — WID timing (skip geannuleerd), proeftijd contract-cap (skip when no contract resolves) + overdue-unclosed, loonheffingenverklaring fail-closed at ready-or-later statuses — per REQ-OBW-004
+- [ ] 6. Unit tests: PHPUnit coverage for the three predicates (happy/violating paths incl. geannuleerd never WID-flags, missing contract skips the cap branch, dangling employeeId fails closed at gereed status) and for the extended `buildRelatedContext()` through `RuleAuditService::audit()` with a fake ObjectService double — extend `tests/Unit/`, bootstrap per `tests/bootstrap.php`
+- [ ] 7. Icons: register `AccountPlus` and `AccountPlusOutline` in `src/icons.js` per REQ-OBW-005
+- [ ] 8. Manifest: add the `OnboardingAtsGroup` menu group with the exact coordination tuple `{id: OnboardingAtsGroup, label: "Onboarding & ATS", icon: AccountPlus, order: 106}` + `Onboardings` child; if `recruiting-ats-basic` merged first, union the child into its existing group instead per REQ-OBW-005
+- [ ] 9. Manifest pages: add the `Onboardings` index page (columns employeeId/status/startDate/proeftijdEndDate, filter status, sort startDate desc) and the `OnboardingDetail` detail page (Case + Checklist data widgets, related, files integration widget, lifecycleActions with exactly the REQ-OBW-002 edges, audit sidebar tab) per REQ-OBW-005; `npm run check:manifest` passes
+- [ ] 10. Seed data: add the `employee-visser` Employee seed and the `onboarding-visser` (mid-flow, WID overdue) + `onboarding-jansen` (afgerond clean) Onboarding seeds to `lib/Settings/register.d/hr-seed.json` per REQ-OBW-006 (placeholders only)
+- [ ] 11. Quality gates: `composer check:strict` (or the repo's lint pipeline) + PHPUnit green, `npm run check:manifest` exits 0, `npm run build` compiles; verify via the audit path (occ `hrmq:rules:audit` on a live instance, or the standalone RuleCatalogue/RuleEngine script fallback the pension change used) that seed data yields exactly the one expected `nl-onboarding-wid-check` violation on `onboarding-visser` and no pre-existing check regresses
+
+Acceptance criteria (plain reminders, not tasks):
+- lifecycle edges exactly as REQ-OBW-002 (no shortcut edges; `annuleren` never from `afgerond`/`geannuleerd`; NO `requires:` guard on any transition — guard wiring belongs to `hrmq-rule-compliance-enforcement`)
+- corpus rule ids/frameworks/sourceUrls exactly as the design.md table; severity vocabulary is mandatory/conditional/recommended only
+- status enum exactly `aangenomen|contract_getekend|gegevens_gevalideerd|gereed_eerste_werkdag|proeftijd_lopend|afgerond|geannuleerd`; renames later are breaking and not planned
+- menu-group tuple byte-identical to the design.md D5 pin (coordination with the parallel `recruiting-ats-basic` change)
+- wizard stepper UI is NOT built here (follow-up nc-vue widget `onboarding-stepper-widget`); no custom Vue components in hrmq
+- i18n: new page labels/actions use English keys per ADR-007 (Dutch strings go to l10n once `hrmq-i18n-locale-completeness` lands; keep keys stable)
