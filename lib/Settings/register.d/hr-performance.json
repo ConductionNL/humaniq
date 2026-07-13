@@ -1,0 +1,271 @@
+{
+    "x-hrmq-fragment": "hr-performance",
+    "components": {
+        "schemas": {
+            "ReviewCycle": {
+                "slug": "ReviewCycle",
+                "icon": "CalendarSyncOutline",
+                "version": "0.1.0",
+                "title": "Review Cycle",
+                "description": "The orchestration container for a performance-review round (jaargesprekken, beoordelingscyclus, or a tussentijds check-in). A cycle walks concept -> open -> gesloten; PerformanceReview objects reference an open cycle via cycleId. Deliberately generic (jaargesprek/beoordeling/tussentijds) so a future comp-planning cycle can reference cycles rather than reinvent them (ADR-001 Rule 6).",
+                "type": "object",
+                "x-schema-org": "schema:Event",
+                "required": [
+                    "name",
+                    "year",
+                    "type",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "concept",
+                        "terminal": [
+                            "gesloten"
+                        ],
+                        "transitions": {
+                            "openen": {
+                                "from": [
+                                    "concept"
+                                ],
+                                "to": "open",
+                                "description": "Open the cycle for reviews. From this point PerformanceReview objects may reference this cycle as their in-progress round."
+                            },
+                            "sluiten": {
+                                "from": [
+                                    "open"
+                                ],
+                                "to": "gesloten",
+                                "description": "Close the cycle. A closed cycle is history and is not reopened (the Vacancy no-resurrection precedent) -- a correction means starting a new cycle."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "Display name of the review cycle, e.g. \"Jaargesprekken 2026\"."
+                    },
+                    "year": {
+                        "type": "integer",
+                        "title": "Year",
+                        "description": "The cycle's calendar year."
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Type",
+                        "description": "The kind of review round this cycle covers. Enum is append-only.",
+                        "enum": [
+                            "jaargesprek",
+                            "beoordeling",
+                            "tussentijds"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Cycle workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "enum": [
+                            "concept",
+                            "open",
+                            "gesloten"
+                        ],
+                        "default": "concept"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Start date",
+                        "description": "Planned start date of the review cycle."
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "End date",
+                        "description": "Planned end date of the review cycle."
+                    }
+                }
+            },
+            "PerformanceReview": {
+                "slug": "PerformanceReview",
+                "icon": "ClipboardAccountOutline",
+                "version": "0.1.0",
+                "title": "Performance Review",
+                "description": "A single employee's beoordelingsdossier for one review cycle: rating, sterktes/ontwikkelpunten/afspraken and goals, on a concept -> ingediend -> besproken -> vastgesteld lifecycle with a heropenen correction edge. Under BW 7:669 lid 3 sub d a documented, vastgestelde beoordeling with a rating and concrete afspraken is the precondition for any underperformance dismissal -- this object is that dossier. Goals are recorded INSIDE the review (no separate Goal entity, design D2): they freeze with the dossier under one lifecycle, one audit trail and one retention context.",
+                "type": "object",
+                "x-schema-org": "schema:Review",
+                "required": [
+                    "employeeId",
+                    "cycleId",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "concept",
+                        "terminal": [],
+                        "transitions": {
+                            "indienen": {
+                                "from": [
+                                    "concept"
+                                ],
+                                "to": "ingediend",
+                                "description": "The reviewer submits the draft verslag."
+                            },
+                            "bespreken": {
+                                "from": [
+                                    "ingediend"
+                                ],
+                                "to": "besproken",
+                                "description": "The beoordelingsgesprek has taken place. besprokenOp is stamped on the carrying write."
+                            },
+                            "vaststellen": {
+                                "from": [
+                                    "besproken"
+                                ],
+                                "to": "vastgesteld",
+                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "The beoordeling is vastgesteld. NoSelfApprovalGuard denies the transition when the acting user equals employeeId -- the employee under review may not vaststellen their own beoordeling. vastgesteldDoor is stamped on the carrying write."
+                            },
+                            "heropenen": {
+                                "from": [
+                                    "vastgesteld"
+                                ],
+                                "to": "besproken",
+                                "description": "Correction edge: a vastgesteld verslag that turns out wrong is reopened to besproken for correction. Every path back to vastgesteld passes the NoSelfApprovalGuard again."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "The employee under review. Drives the self-approval guard on vaststellen -- the acting user may not equal this employee."
+                    },
+                    "cycleId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "ReviewCycle",
+                        "title": "Review cycle",
+                        "description": "Reference to the ReviewCycle this review belongs to."
+                    },
+                    "reviewerId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "nullable": true,
+                        "title": "Reviewer",
+                        "description": "Optional reference to the manager/Employee conducting the beoordelingsgesprek."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Review workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "enum": [
+                            "concept",
+                            "ingediend",
+                            "besproken",
+                            "vastgesteld"
+                        ],
+                        "default": "concept"
+                    },
+                    "rating": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Rating",
+                        "description": "Overall beoordeling rating. Nullable by design: a concept/ingediend review legitimately has no rating yet. A vastgesteld review without a rating is flagged by the nl-performance-dossiervorming audit rule, not blocked by the schema.",
+                        "enum": [
+                            "onvoldoende",
+                            "matig",
+                            "voldoende",
+                            "goed",
+                            "uitstekend"
+                        ]
+                    },
+                    "sterktes": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Sterktes",
+                        "description": "Free-text description of the employee's strengths discussed in the gesprek.",
+                        "maxLength": 4000
+                    },
+                    "ontwikkelpunten": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Ontwikkelpunten",
+                        "description": "Free-text description of development points discussed in the gesprek.",
+                        "maxLength": 4000
+                    },
+                    "afspraken": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Afspraken",
+                        "description": "Concrete afspraken/verbetertraject agreed in the gesprek -- the BW 7:669 lid 3 sub d dossiervorming evidence. A vastgesteld review with empty afspraken is flagged by the nl-performance-dossiervorming audit rule.",
+                        "maxLength": 4000
+                    },
+                    "goals": {
+                        "type": "array",
+                        "title": "Goals",
+                        "description": "Goals agreed as part of this review, recorded INSIDE the review rather than as a separate Goal entity (design D2) -- they freeze with the dossier under the same lifecycle, audit trail and retention context. A carried-over goal is re-entered in the next review; goals are not tracked across cycles in this MVP.",
+                        "default": [],
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "titel"
+                            ],
+                            "properties": {
+                                "titel": {
+                                    "type": "string",
+                                    "title": "Titel",
+                                    "description": "Short description of the goal."
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "title": "Status",
+                                    "description": "The goal's own status, independent of the review's lifecycle.",
+                                    "enum": [
+                                        "open",
+                                        "behaald",
+                                        "vervallen"
+                                    ],
+                                    "default": "open"
+                                },
+                                "toelichting": {
+                                    "type": "string",
+                                    "nullable": true,
+                                    "title": "Toelichting",
+                                    "description": "Optional free-text explanation of the goal or its progress."
+                                }
+                            }
+                        }
+                    },
+                    "besprokenOp": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Besproken op",
+                        "description": "Date the beoordelingsgesprek took place. Stamped on the carrying write of the bespreken transition."
+                    },
+                    "vastgesteldDoor": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Vastgesteld door",
+                        "description": "Nextcloud user id of the manager who vaststelde the beoordeling -- an NC user id, not an object FK (the approvedBy convention), never a $ref. Stamped on the carrying write of the vaststellen transition. Must differ from the reviewed employee (no self-approval)."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "User",
+                        "description": "Denormalized Nextcloud user id of the employee this review belongs to (mijn-hr-self-service) -- a plain NC-user-id string, mirroring the Timesheet convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnBeoordelingen self-service page filters on it with the @me token."
+                    }
+                }
+            }
+        }
+    }
+}

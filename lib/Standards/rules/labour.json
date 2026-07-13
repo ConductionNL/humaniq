@@ -274,6 +274,18 @@
       "machineCheckable": true,
       "effectiveDate": null,
       "sourceUrl": null
+    },
+    {
+      "id": "nl-performance-dossiervorming",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:669 lid 3 sub d (redelijke grond disfunctioneren, ontslagrecht via Wet werk en zekerheid); vaste rechtspraak over dossieropbouw/verbetertraject",
+      "statement": "A vastgesteld PerformanceReview must carry a non-null rating and non-empty afspraken -- without a documented beoordeling + concrete afspraken there is no ontslagdossier.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": "2015-07-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
     }
   ]
 }

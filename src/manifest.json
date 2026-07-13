@@ -25,7 +25,9 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "OrgAssignment", "urlTemplate": "/apps/hrmq/org-assignments/{uuid}", "displayName": "Organisational Assignment" },
 		{ "registerSlug": "hrmq", "schemaSlug": "AttendanceRecord", "urlTemplate": "/apps/hrmq/attendance/{uuid}", "displayName": "Attendance Record" },
 		{ "registerSlug": "hrmq", "schemaSlug": "Asset", "urlTemplate": "/apps/hrmq/assets/{uuid}", "displayName": "Asset" },
-		{ "registerSlug": "hrmq", "schemaSlug": "AssetAssignment", "urlTemplate": "/apps/hrmq/asset-assignments/{uuid}", "displayName": "Asset Assignment" }
+		{ "registerSlug": "hrmq", "schemaSlug": "AssetAssignment", "urlTemplate": "/apps/hrmq/asset-assignments/{uuid}", "displayName": "Asset Assignment" },
+		{ "registerSlug": "hrmq", "schemaSlug": "ReviewCycle", "urlTemplate": "/apps/hrmq/review-cycles/{uuid}", "displayName": "Review Cycle" },
+		{ "registerSlug": "hrmq", "schemaSlug": "PerformanceReview", "urlTemplate": "/apps/hrmq/reviews/{uuid}", "displayName": "Performance Review" }
 	],
 	"menu": [
 		{
@@ -70,6 +72,12 @@
 					"label": "Mijn aanwezigheid",
 					"icon": "ClockOutline",
 					"route": "MijnAanwezigheid"
+				},
+				{
+					"id": "MijnBeoordelingen",
+					"label": "Mijn beoordelingen",
+					"icon": "StarCheckOutline",
+					"route": "MijnBeoordelingen"
 				}
 			]
 		},
@@ -108,6 +116,12 @@
 					"label": "Documenten",
 					"icon": "FileDocumentOutline",
 					"route": "GeneratedDocuments"
+				},
+				{
+					"id": "ReviewCycles",
+					"label": "Beoordelingscycli",
+					"icon": "CalendarSyncOutline",
+					"route": "ReviewCycles"
 				}
 			]
 		},
@@ -523,7 +537,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Employee",
-				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in hrmq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling/A1 posting/jurisdiction-specific onboarding flags — 18 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row before the personnel-file Files leaf, which shifts down. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab.",
+				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in hrmq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling/A1 posting/jurisdiction-specific onboarding flags — 18 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, before the personnel-file Files leaf, which shifts down. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab.",
 				"widgets": [
 					{ "id": "emp-person", "type": "data", "title": "Person", "icon": "Account", "content": { "columns": 2, "include": ["employeeNumber", "firstName", "lastName", "dateOfBirth", "bsn"] } },
 					{ "id": "emp-stats-contracts", "type": "stats-block", "title": "Contracts", "icon": "ChartBar", "content": { "entries": [
@@ -544,6 +558,7 @@
 					{ "id": "emp-payslips", "type": "object-list", "title": "Payslips", "icon": "Cash", "content": { "register": "hrmq", "schema": "Payslip", "filter": { "employeeId": "@objectId" }, "sort": { "field": "period", "dir": "desc" }, "columns": [ { "key": "period", "label": "Period" }, { "key": "jurisdiction", "label": "Jurisdiction" }, { "key": "grossPay", "label": "Gross" }, { "key": "nettoPay", "label": "Net" } ], "limit": 25, "rowRoute": "PayslipDetail", "viewAllRoute": "Payslips", "viewAllQuery": { "employeeId": "@objectId" }, "emptyText": "No payslips yet", "allowCreate": false } },
 					{ "id": "emp-expenses", "type": "object-list", "title": "Expenses", "icon": "CashMultiple", "content": { "register": "hrmq", "schema": "Expense", "filter": { "employeeId": "@objectId" }, "sort": { "field": "expenseDate", "dir": "desc" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "amount", "label": "Amount" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ExpenseDetail", "viewAllRoute": "Expenses", "viewAllQuery": { "employeeId": "@objectId" }, "emptyText": "No expense claims yet" } },
 					{ "id": "emp-assignments", "type": "object-list", "title": "Assignments", "icon": "AccountArrowRightOutline", "content": { "register": "hrmq", "schema": "OrgAssignment", "filter": { "employeeId": "@objectId" }, "sort": { "field": "startDate", "dir": "desc" }, "columns": [ { "key": "orgUnitId", "label": "Unit" }, { "key": "role", "label": "Role" }, { "key": "startDate", "label": "Start" }, { "key": "endDate", "label": "End" } ], "limit": 25, "rowRoute": "OrgAssignmentDetail", "viewAllRoute": "OrgAssignments", "viewAllQuery": { "employeeId": "@objectId" }, "emptyText": "No placements yet" } },
+					{ "id": "emp-reviews", "type": "object-list", "title": "Beoordelingen", "icon": "ClipboardAccountOutline", "content": { "register": "hrmq", "schema": "PerformanceReview", "filter": { "employeeId": "@objectId" }, "sort": { "field": "besprokenOp", "dir": "desc" }, "columns": [ { "key": "cycleId", "label": "Cycle" }, { "key": "status", "label": "Status" }, { "key": "rating", "label": "Rating" }, { "key": "besprokenOp", "label": "Besproken op" } ], "limit": 25, "rowRoute": "PerformanceReviewDetail", "emptyText": "No reviews yet" } },
 					{ "id": "emp-files", "type": "integration", "integrationId": "files", "title": "Personnel file", "icon": "FolderOutline" }
 				],
 				"layout": [
@@ -558,7 +573,8 @@
 					{ "id": "6", "widgetId": "emp-payslips", "gridX": 0, "gridY": 19, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "7", "widgetId": "emp-expenses", "gridX": 6, "gridY": 19, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "8", "widgetId": "emp-assignments", "gridX": 0, "gridY": 23, "gridWidth": 12, "gridHeight": 4 },
-					{ "id": "9", "widgetId": "emp-files", "gridX": 0, "gridY": 27, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "9", "widgetId": "emp-reviews", "gridX": 0, "gridY": 27, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "10", "widgetId": "emp-files", "gridX": 0, "gridY": 31, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
@@ -1381,6 +1397,90 @@
 					{ "id": "2", "widgetId": "aa-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 5 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "ReviewCycles",
+			"route": "/review-cycles",
+			"type": "index",
+			"title": "Beoordelingscycli",
+			"config": {
+				"register": "hrmq",
+				"schema": "ReviewCycle",
+				"description": "Beoordelingscycli (jaargesprekken, beoordelingen, tussentijdse gesprekken) waaronder PerformanceReview-dossiers per medewerker worden verzameld.",
+				"columns": ["name", "year", "type", "status", "startDate", "endDate"],
+				"filters": ["status", "type"],
+				"sort": { "field": "year", "order": "desc" }
+			}
+		},
+		{
+			"id": "ReviewCycleDetail",
+			"route": "/review-cycles/:id",
+			"type": "detail",
+			"title": "Beoordelingscyclus",
+			"config": {
+				"register": "hrmq",
+				"schema": "ReviewCycle",
+				"_note": "performance-reviews-mvp (2026-07-13): the orchestration half of the performance-review MVP (ADR-001 Rule 6 — sub-pages under the EXISTING Personeel/EmployeesGroup, no new top-level menu). The 'Cycle' data widget carries every field (name/year/type/status/startDate/endDate — no $ref to exclude, ReviewCycle has no outbound relations). The 'Beoordelingen in deze cyclus' object-list (PerformanceReview.cycleId = @objectId) is the cycle's in-progress roster, rowRoute to PerformanceReviewDetail. lifecycleActions expose exactly openen/sluiten (concept->open->gesloten, hr-performance.json) -- no re-open edge, a closed cycle is history (the Vacancy no-resurrection precedent). Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "rc-data", "type": "data", "title": "Cycle", "icon": "CalendarSyncOutline", "content": { "columns": 2 } },
+					{ "id": "rc-reviews", "type": "object-list", "title": "Beoordelingen in deze cyclus", "icon": "ClipboardAccountOutline", "content": { "register": "hrmq", "schema": "PerformanceReview", "filter": { "cycleId": "@objectId" }, "sort": { "field": "besprokenOp", "dir": "desc" }, "columns": [ { "key": "employeeId", "label": "Employee" }, { "key": "status", "label": "Status" }, { "key": "rating", "label": "Rating" } ], "limit": 25, "rowRoute": "PerformanceReviewDetail", "emptyText": "No reviews in this cycle yet" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "rc-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "rc-reviews", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 5 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "openen", "from": ["concept"], "to": "open", "label": "Openen" },
+						{ "action": "sluiten", "from": ["open"], "to": "gesloten", "label": "Sluiten" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "PerformanceReviewDetail",
+			"route": "/reviews/:id",
+			"type": "detail",
+			"title": "Beoordeling",
+			"config": {
+				"register": "hrmq",
+				"schema": "PerformanceReview",
+				"_note": "performance-reviews-mvp (2026-07-13): the dossier half of the performance-review MVP (ADR-001 Rule 6 — the primary surface is actually the EmployeeDetail emp-reviews row; this page is a routed detail, reached from that row, the cycle's review list, or the deepLink, and is deliberately NOT a menu child, the TimesheetDetail convention). The 'Beoordeling' data widget carries rating/sterktes/ontwikkelpunten/afspraken/goals/besprokenOp/vastgesteldDoor, excluding employeeId/cycleId/reviewerId (Related resolves and links all three by name) and userId (the internal @me self-service field, not a display fact). Goals are recorded INSIDE this review (design D2 — no separate Goal entity anywhere in the register); besprokenOp/vastgesteldDoor are stamped on the carrying writes of bespreken/vaststellen. lifecycleActions expose exactly indienen/bespreken/vaststellen/heropenen (hr-performance.json) -- vaststellen is guarded server-side by the existing NoSelfApprovalGuard (the employee under review may not vaststellen their own beoordeling); heropenen is the correction edge back to besproken. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "pv-data", "type": "data", "title": "Beoordeling", "icon": "ClipboardAccountOutline", "content": { "columns": 2, "exclude": ["employeeId", "cycleId", "reviewerId", "userId"] } },
+					{ "id": "pv-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "pv-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 9 },
+					{ "id": "2", "widgetId": "pv-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 9 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "indienen", "from": ["concept"], "to": "ingediend", "label": "Indienen" },
+						{ "action": "bespreken", "from": ["ingediend"], "to": "besproken", "label": "Bespreken" },
+						{ "action": "vaststellen", "from": ["besproken"], "to": "vastgesteld", "label": "Vaststellen" },
+						{ "action": "heropenen", "from": ["vastgesteld"], "to": "besproken", "label": "Heropenen" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "MijnBeoordelingen",
+			"route": "/mijn/beoordelingen",
+			"type": "index",
+			"title": "Mijn beoordelingen",
+			"config": {
+				"register": "hrmq",
+				"schema": "PerformanceReview",
+				"description": "Jouw eigen beoordelingen.",
+				"filter": { "userId": "@me" },
+				"columns": ["cycleId", "status", "rating", "besprokenOp"],
+				"sort": { "field": "besprokenOp", "order": "desc" }
 			}
 		}
 	]
