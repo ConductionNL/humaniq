@@ -185,6 +185,61 @@
       }
     },
     {
+      "id": "nl-offboarding-transitievergoeding",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:673",
+      "statement": "Dismissal-initiated departures (opzegging-werkgever; einde-contract non-renewal) carry a statutory transitievergoeding of 1/3 monthly wage per service year, capped at the indexed maximum or one annual salary if higher; an offboarding case at or past eindafrekening_gereed without a recorded transitievergoedingBedrag >= 0 violates.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290",
+      "parameters": {
+        "wageFractionPerServiceYear": "1/3",
+        "capEur": 98000,
+        "_note": "TODO: capEur 98000 is the published 2025 indexed cap (Regeling indexering transitievergoeding); the 2026 figure could not be verified confidently at authoring time and MUST be replaced with the published 2026 number from wetten.overheid.nl before this constant is relied upon for computation.",
+        "capAlternative": "one gross annual salary when higher than capEur",
+        "dismissalInitiatedReasons": ["opzegging-werkgever", "einde-contract"]
+      }
+    },
+    {
+      "id": "nl-offboarding-verlofsaldo-uitbetaling",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:641",
+      "statement": "Untaken leave is paid out at end of employment; a completed (afgerond) offboarding case whose employee still holds a positive open leave balance (sum of entitledHours + bovenwettelijkHours - usedHours across LeaveBalance rows) without verlofsaldoUitbetaald violates. When no LeaveBalance row resolves for the employee the check is skipped (not fail-closed — balance rows are optional MVP data).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    },
+    {
+      "id": "nl-offboarding-getuigschrift",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:656",
+      "statement": "The employer provides a getuigschrift on the employee's request; a completed (afgerond) offboarding case without getuigschriftVerstrekt is flagged for HR verification (the MVP has no requested field, so the flag is advisory).",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    },
+    {
+      "id": "nl-offboarding-einddatum-consistentie",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:667",
+      "statement": "The HR master record's Employee.endDate equals the completed (afgerond) offboarding case's lastWorkingDay -- the statutory reference date for loonaangifte, pensioenafmelding and the ID-retention clock; a missing/empty endDate counts as a mismatch, and the check fails closed when employeeId does not resolve at afgerond.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    },
+    {
       "id": "nl-contract-schriftelijk",
       "domain": "labour",
       "jurisdiction": "NL",

@@ -662,6 +662,60 @@
                 "workedHours": 8.0,
                 "location": "thuis",
                 "status": "gesloten"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-de-boer"
+                },
+                "employeeNumber": "EMP-0005",
+                "firstName": "Jesse",
+                "lastName": "de Boer",
+                "startDate": "2019-02-01",
+                "endDate": "2026-05-31",
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "identityDocumentRetainedUntil": "2031-12-31",
+                "loonheffingenVerklaringOnFile": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Offboarding",
+                    "slug": "offboarding-jansen"
+                },
+                "employeeId": "employee-jansen",
+                "lastWorkingDay": "2026-08-31",
+                "reason": "opzegging-werkgever",
+                "status": "eindafrekening_gereed",
+                "exitGesprekDone": null,
+                "assetsIngeleverd": false,
+                "toegangIngetrokken": false,
+                "verlofsaldoUitbetaald": false,
+                "vakantiegeldAfgerekend": true,
+                "transitievergoedingBedrag": null,
+                "getuigschriftVerstrekt": false,
+                "notes": "Ontslag werkgever; departure announced, Jansen still working until 31 augustus. Eindafrekening gereedgemeld maar transitievergoeding nog niet vastgesteld."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Offboarding",
+                    "slug": "offboarding-de-boer"
+                },
+                "employeeId": "employee-de-boer",
+                "lastWorkingDay": "2026-05-31",
+                "reason": "opzegging-werknemer",
+                "status": "afgerond",
+                "exitGesprekDone": "2026-05-28",
+                "assetsIngeleverd": true,
+                "toegangIngetrokken": true,
+                "verlofsaldoUitbetaald": true,
+                "vakantiegeldAfgerekend": true,
+                "transitievergoedingBedrag": null,
+                "getuigschriftVerstrekt": true,
+                "notes": "Vrijwillig ontslag genomen door werknemer; volledig en netjes afgerond, geen transitievergoeding verschuldigd (BW 7:673 lid 1)."
             }
         ]
     }

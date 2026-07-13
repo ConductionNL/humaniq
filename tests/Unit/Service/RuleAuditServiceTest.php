@@ -568,4 +568,145 @@ class RuleAuditServiceTest extends TestCase
     }//end testSeededAttendanceDataFlagsExactlyTheIntendedViolations()
 
 
+    // -- offboarding-wizard-mvp: Employee.endDate/LeaveBalance related-context --
+
+
+    /**
+     * The offboarding-wizard-mvp hr-seed.json fixture shapes: two Employees
+     * (employee-jansen, still active with an open 144h holiday leave balance;
+     * employee-de-boer, a cleanly departed former employee with endDate
+     * matching lastWorkingDay) and the two Offboarding seeds
+     * (offboarding-jansen, mid-flow with a missing transitievergoeding;
+     * offboarding-de-boer, a clean afgerond case), fed through audit() as if
+     * loaded from the register.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededOffboardingRows(): array
+    {
+        $employees = [
+            ['id' => 'employee-jansen', 'loonheffingenVerklaringOnFile' => true, 'startDate' => '2024-01-01', 'endDate' => ''],
+            ['id' => 'employee-de-boer', 'loonheffingenVerklaringOnFile' => true, 'startDate' => '2019-02-01', 'endDate' => '2026-05-31'],
+        ];
+
+        $leaveBalances = [
+            ['employeeId' => 'employee-jansen', 'leaveType' => 'holiday', 'year' => 2026, 'entitledHours' => 160, 'bovenwettelijkHours' => 40, 'usedHours' => 56],
+        ];
+
+        $offboardings = [
+            [
+                'employeeId'               => 'employee-jansen',
+                'lastWorkingDay'           => '2026-08-31',
+                'reason'                   => 'opzegging-werkgever',
+                'status'                   => 'eindafrekening_gereed',
+                'exitGesprekDone'          => null,
+                'assetsIngeleverd'         => false,
+                'toegangIngetrokken'       => false,
+                'verlofsaldoUitbetaald'    => false,
+                'vakantiegeldAfgerekend'   => true,
+                'transitievergoedingBedrag' => null,
+                'getuigschriftVerstrekt'   => false,
+            ],
+            [
+                'employeeId'               => 'employee-de-boer',
+                'lastWorkingDay'           => '2026-05-31',
+                'reason'                   => 'opzegging-werknemer',
+                'status'                   => 'afgerond',
+                'exitGesprekDone'          => '2026-05-28',
+                'assetsIngeleverd'         => true,
+                'toegangIngetrokken'       => true,
+                'verlofsaldoUitbetaald'    => true,
+                'vakantiegeldAfgerekend'   => true,
+                'transitievergoedingBedrag' => null,
+                'getuigschriftVerstrekt'   => true,
+            ],
+        ];
+
+        return [
+            'Employee'     => $employees,
+            'LeaveBalance' => $leaveBalances,
+            'Offboarding'  => $offboardings,
+        ];
+
+    }//end seededOffboardingRows()
+
+
+    /**
+     * @return void
+     */
+    public function testSeededOffboardingDataFlagsExactlyOneTransitievergoedingViolation(): void
+    {
+        $service = $this->serviceWithRows($this->seededOffboardingRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-offboarding-transitievergoeding'] ?? 0));
+        $this->assertArrayNotHasKey('nl-offboarding-verlofsaldo-uitbetaling', $byRule);
+        $this->assertArrayNotHasKey('nl-offboarding-getuigschrift', $byRule);
+        $this->assertArrayNotHasKey('nl-offboarding-einddatum-consistentie', $byRule);
+
+    }//end testSeededOffboardingDataFlagsExactlyOneTransitievergoedingViolation()
+
+
+    /**
+     * @return void
+     */
+    public function testOffboardingVerlofsaldoViolatedWhenAfgerondWithOpenBalanceUnpaid(): void
+    {
+        $rows = $this->seededOffboardingRows();
+        // Complete jansen's case without paying out the still-open 144h balance.
+        $rows['Offboarding'][0]['status']                = 'afgerond';
+        $rows['Offboarding'][0]['transitievergoedingBedrag'] = 4200.00;
+        $rows['Offboarding'][0]['exitGesprekDone']        = '2026-08-25';
+        $rows['Offboarding'][0]['assetsIngeleverd']       = true;
+        $rows['Offboarding'][0]['toegangIngetrokken']     = true;
+        $rows['Offboarding'][0]['getuigschriftVerstrekt'] = true;
+        $rows['Employee'][0]['endDate']                   = '2026-08-31';
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertContains('nl-offboarding-verlofsaldo-uitbetaling', $ruleIds);
+
+    }//end testOffboardingVerlofsaldoViolatedWhenAfgerondWithOpenBalanceUnpaid()
+
+
+    /**
+     * @return void
+     */
+    public function testOffboardingEinddatumViolatedWhenEmployeeEndDateMismatches(): void
+    {
+        $rows = [
+            'Employee'    => [['id' => 'employee-x', 'loonheffingenVerklaringOnFile' => true, 'startDate' => '2020-01-01', 'endDate' => '2026-06-30']],
+            'Offboarding' => [
+                [
+                    'employeeId'               => 'employee-x',
+                    'lastWorkingDay'           => '2026-05-31',
+                    'reason'                   => 'opzegging-werknemer',
+                    'status'                   => 'afgerond',
+                    'exitGesprekDone'          => '2026-05-28',
+                    'assetsIngeleverd'         => true,
+                    'toegangIngetrokken'       => true,
+                    'verlofsaldoUitbetaald'    => true,
+                    'vakantiegeldAfgerekend'   => true,
+                    'transitievergoedingBedrag' => null,
+                    'getuigschriftVerstrekt'   => true,
+                ],
+            ],
+        ];
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertContains('nl-offboarding-einddatum-consistentie', $ruleIds);
+
+    }//end testOffboardingEinddatumViolatedWhenEmployeeEndDateMismatches()
+
+
 }//end class
