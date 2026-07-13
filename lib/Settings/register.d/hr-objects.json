@@ -5,7 +5,7 @@
             "Employee": {
                 "slug": "Employee",
                 "icon": "AccountOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Employee",
                 "description": "A natural person employed by the organisation. Carries the identity, payroll, and wage-tax attributes the payroll/wage-tax compliance checks read (BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting, minimum-wage basis).",
                 "type": "object",
@@ -38,7 +38,9 @@
                     "thirtyPercentRulingGranted": {"type": "boolean", "description": "NL: whether a 30%-beschikking has been granted (nl-30-percent-regeling / nl-30-regeling-aftoppingsgrens)."},
                     "thirtyPercentRulingRate": {"type": "number", "nullable": true, "description": "NL: applied 30%-ruling percentage; must not exceed 30 for 2025-2026 (nl-30-percent-regeling)."},
                     "thirtyPercentCappedAtWntNorm": {"type": "boolean", "description": "NL: whether the 30%-ruling tax-free base is capped at the WNT-norm (nl-30-regeling-aftoppingsgrens)."},
-                    "nextcloudUserId": {"type": "string", "nullable": true, "description": "The Nextcloud user id of this employee's own account, when they have one (mijn-hr-self-service). HR-maintained on the employee record; stays null for portal-only external employees, who keep using the UUID-claim-based portaliq scoping (ADR-046 A4). The durable Employee<->account link; per-record `userId` on Timesheet/Expense/LeaveRequest/Payslip is a denormalized copy of it."}
+                    "nextcloudUserId": {"type": "string", "nullable": true, "description": "The Nextcloud user id of this employee's own account, when they have one (mijn-hr-self-service). HR-maintained on the employee record; stays null for portal-only external employees, who keep using the UUID-claim-based portaliq scoping (ADR-046 A4). The durable Employee<->account link; per-record `userId` on Timesheet/Expense/LeaveRequest/Payslip is a denormalized copy of it."},
+                    "iban": {"type": "string", "nullable": true, "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$", "description": "Bank account IBAN for net-pay SEPA credit transfers (payroll-sepa-netpay-shillinq). Shape check only — mod-97 checksum is a non-goal. Missing IBAN on a payable payroll run's payslip fails the net-pay batch closed (nl-netpay-iban-present)."},
+                    "tenaamstelling": {"type": "string", "nullable": true, "description": "Account-holder name as the bank knows it (payroll-sepa-netpay-shillinq) — printed as Cdtr/Nm on the SEPA credit transfer. Falls back to firstName + lastName when absent."}
                 }
             },
             "EmploymentContract": {

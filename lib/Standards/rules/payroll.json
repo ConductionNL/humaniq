@@ -1185,6 +1185,18 @@
       "machineCheckable": true,
       "effectiveDate": null,
       "sourceUrl": "https://www.ifac.org/"
+    },
+    {
+      "id": "nl-netpay-iban-present",
+      "domain": "ledger-integrity",
+      "jurisdiction": "NL",
+      "framework": "payroll-core",
+      "source": "Wage payment control (payroll-to-bank)",
+      "statement": "Every payslip on an approved or posted payroll run shall resolve to an employee with a bank account (IBAN) on file, so that net wages can be paid out by the agreed date (BW art. 7:625).",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
     }
   ]
 }
