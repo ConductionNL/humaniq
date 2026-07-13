@@ -1,0 +1,134 @@
+{
+    "x-hrmq-fragment": "hr-documents",
+    "components": {
+        "schemas": {
+            "GeneratedDocument": {
+                "slug": "GeneratedDocument",
+                "icon": "FileDocumentOutline",
+                "version": "0.1.0",
+                "title": "Generated document",
+                "description": "The hrmq-side record of one attempt to render a standard HR document (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift) via docudesk's template/rendering engine and store the returned PDF (hrmq-docudesk-documents). hrmq owns no template or PDF machinery of its own (design.md D1): this schema is a log of the handoff -- which template, for whom, the outcome, and where the file landed -- never the rendering itself. `skipped-no-docudesk` and `failed` are retryable outcomes: a later `occ hrmq:documents:generate` invocation (or the EmploymentContractDetail page action) can supersede them (design.md D6). At most one GeneratedDocument per (contractId|employeeId, documentType) may be `pending`/`generated` at a time -- enforced by HrDocumentService and audited by the nl-contract-schriftelijk corpus rule for arbeidsovereenkomst evidence.",
+                "type": "object",
+                "x-schema-org": "schema:DigitalDocument",
+                "required": [
+                    "documentType",
+                    "employeeId",
+                    "status"
+                ],
+                "properties": {
+                    "documentType": {
+                        "type": "string",
+                        "enum": [
+                            "arbeidsovereenkomst",
+                            "aanbiedingsbrief",
+                            "werkgeversverklaring",
+                            "getuigschrift"
+                        ],
+                        "title": "Document type",
+                        "description": "Which standard HR document this record represents. Enum append-only: renaming a value later is breaking, adding one is not."
+                    },
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Reference to the Employee this document is for."
+                    },
+                    "contractId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "EmploymentContract",
+                        "nullable": true,
+                        "title": "Contract",
+                        "description": "Reference to the EmploymentContract this document evidences -- required in practice for arbeidsovereenkomst; null for employee-level document types (aanbiedingsbrief/werkgeversverklaring/getuigschrift)."
+                    },
+                    "templateRef": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Template",
+                        "description": "The docudesk template UUID actually used to render this document -- plain string, NOT $ref, because it targets another app's register (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "generated",
+                            "failed",
+                            "skipped-no-docudesk"
+                        ],
+                        "default": "pending",
+                        "title": "Status",
+                        "description": "Outcome of this generation attempt. failed/skipped-no-docudesk are superseded by a retry; only one pending/generated record may exist per (contract|employee, documentType)."
+                    },
+                    "filePath": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "File path",
+                        "description": "Path of the stored PDF in this object's own OpenRegister folder (written via FileService::addFile), or null while pending/failed/skipped."
+                    },
+                    "errorMessage": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Error message",
+                        "description": "Failure or skip diagnostic (e.g. docudesk unavailable, ambiguous/missing template, storage failure)."
+                    },
+                    "generatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Generated at",
+                        "description": "When the PDF was produced by docudesk and stored on this object's folder."
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-jansen-permanent"
+                },
+                "employeeId": "employee-jansen",
+                "type": "permanent",
+                "writtenContract": true,
+                "startDate": "2024-01-01",
+                "endDate": null,
+                "hoursPerWeek": 40,
+                "hourlyWage": 22.5,
+                "cao": null,
+                "awfTariff": "low"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "GeneratedDocument",
+                    "slug": "gendoc-arbeidsovereenkomst-jansen"
+                },
+                "documentType": "arbeidsovereenkomst",
+                "employeeId": "employee-jansen",
+                "contractId": "contract-jansen-permanent",
+                "templateRef": "docudesk-template-placeholder-uuid",
+                "status": "generated",
+                "filePath": "arbeidsovereenkomst-EMP-0001-2026-01-15.pdf",
+                "errorMessage": null,
+                "generatedAt": "2026-01-15T10:00:00Z"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "GeneratedDocument",
+                    "slug": "gendoc-werkgeversverklaring-jansen-skipped"
+                },
+                "documentType": "werkgeversverklaring",
+                "employeeId": "employee-jansen",
+                "contractId": null,
+                "templateRef": null,
+                "status": "skipped-no-docudesk",
+                "filePath": null,
+                "errorMessage": "Docudesk was niet geïnstalleerd op het moment van deze poging; opnieuw proberen zodra docudesk beschikbaar is.",
+                "generatedAt": null
+            }
+        ]
+    }
+}

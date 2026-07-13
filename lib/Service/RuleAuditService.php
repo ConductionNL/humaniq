@@ -103,6 +103,13 @@ class RuleAuditService
         // instead of re-querying siblings.
         $context['netpay'] = $this->buildNetPayContext();
 
+        // hrmq-docudesk-documents: a per-contract index of contracts with an
+        // active generated arbeidsovereenkomst GeneratedDocument, so
+        // NlDocumentChecks::checks()['EmploymentContract']
+        // ['nl-contract-schriftelijk'] can resolve document evidence for a
+        // permanent written contract without re-querying the register.
+        $context['documents'] = $this->buildDocumentsContext();
+
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
         $enforceable      = count(RuleEngine::checkedRuleIds());
@@ -399,6 +406,42 @@ class RuleAuditService
         ];
 
     }//end buildNetPayContext()
+
+
+    /**
+     * Build the per-contract document-evidence index consumed by
+     * NlDocumentChecks' `nl-contract-schriftelijk` predicate
+     * (hrmq-docudesk-documents, design.md D-corpus): `generatedArbeidsovereenkomstByContract`
+     * maps `contractId => true` for every `GeneratedDocument` of type
+     * `arbeidsovereenkomst` in status `generated` that references it. Degrades
+     * gracefully to an empty map when the GeneratedDocument schema does not
+     * exist yet in the register.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildDocumentsContext(): array
+    {
+        $byContract = [];
+        foreach ($this->loadAll('GeneratedDocument') as $document) {
+            if ((string) ($document['documentType'] ?? '') !== 'arbeidsovereenkomst') {
+                continue;
+            }
+
+            if ((string) ($document['status'] ?? '') !== 'generated') {
+                continue;
+            }
+
+            $contractId = trim((string) ($document['contractId'] ?? ''));
+            if ($contractId === '') {
+                continue;
+            }
+
+            $byContract[$contractId] = true;
+        }
+
+        return ['generatedArbeidsovereenkomstByContract' => $byContract];
+
+    }//end buildDocumentsContext()
 
 
     /**

@@ -194,6 +194,110 @@ class SettingsService
 
 
     /**
+     * The docudesk template UUID configured for one HR document type
+     * (hrmq-docudesk-documents design.md D3 -- config-first template
+     * selection), configurable via app config key
+     * `documents_template_{documentType}`. Empty default means the caller
+     * falls through to namespace/category discovery.
+     *
+     * @param string $documentType One of arbeidsovereenkomst/aanbiedingsbrief/werkgeversverklaring/getuigschrift.
+     *
+     * @return string The configured template UUID, or '' when unset.
+     *
+     * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-003
+     */
+    public function getDocumentsTemplateId(string $documentType): string
+    {
+        return $this->appConfig->getValueString(Application::APP_ID, 'documents_template_'.$documentType, '');
+
+    }//end getDocumentsTemplateId()
+
+
+    /**
+     * The employer name merged into every docudesk render's `adHocData.employer`
+     * block (hrmq-docudesk-documents design.md D2), configurable via app config
+     * key `documents_employer_name`.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
+     */
+    public function getDocumentsEmployerName(): string
+    {
+        return $this->documentsEmployerField('documents_employer_name', 'Voorbeeld Werkgever B.V.');
+
+    }//end getDocumentsEmployerName()
+
+
+    /**
+     * The employer address merged into every docudesk render's
+     * `adHocData.employer` block, configurable via app config key
+     * `documents_employer_address`.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
+     */
+    public function getDocumentsEmployerAddress(): string
+    {
+        return $this->documentsEmployerField('documents_employer_address', 'Voorbeeldstraat 1, 1234 AB Amsterdam');
+
+    }//end getDocumentsEmployerAddress()
+
+
+    /**
+     * The employer KvK (chamber of commerce) number merged into every docudesk
+     * render's `adHocData.employer` block, configurable via app config key
+     * `documents_employer_kvk`.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
+     */
+    public function getDocumentsEmployerKvkNumber(): string
+    {
+        return $this->documentsEmployerField('documents_employer_kvk', '12345678');
+
+    }//end getDocumentsEmployerKvkNumber()
+
+
+    /**
+     * The full employer block passed as `adHocData.employer` on every docudesk
+     * render call (hrmq-docudesk-documents design.md D2).
+     *
+     * @return array<string, string>
+     *
+     * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
+     */
+    public function getDocumentsEmployerBlock(): array
+    {
+        return [
+            'name'      => $this->getDocumentsEmployerName(),
+            'address'   => $this->getDocumentsEmployerAddress(),
+            'kvkNumber' => $this->getDocumentsEmployerKvkNumber(),
+        ];
+
+    }//end getDocumentsEmployerBlock()
+
+
+    /**
+     * Read a `documents_employer_*` config key, falling back to its placeholder
+     * default when unset or blank.
+     *
+     * @param string $key     The app config key.
+     * @param string $default The placeholder default value.
+     *
+     * @return string
+     */
+    private function documentsEmployerField(string $key, string $default): string
+    {
+        $value = $this->appConfig->getValueString(Application::APP_ID, $key, $default);
+        return $value === '' ? $default : $value;
+
+    }//end documentsEmployerField()
+
+
+    /**
      * Import the register idempotently (skips when the version is unchanged).
      *
      * @return array<string, mixed> Result with success flag, message, and version.

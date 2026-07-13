@@ -100,6 +100,12 @@
 					"label": "Plaatsingen",
 					"icon": "AccountArrowRightOutline",
 					"route": "OrgAssignments"
+				},
+				{
+					"id": "GeneratedDocuments",
+					"label": "Documenten",
+					"icon": "FileDocumentOutline",
+					"route": "GeneratedDocuments"
 				}
 			]
 		},
@@ -555,6 +561,20 @@
 			"route": "/contracts/:id",
 			"type": "detail",
 			"title": "Contract",
+			"actions": [
+				{
+					"id": "generate-arbeidsovereenkomst",
+					"label": "Genereer arbeidsovereenkomst",
+					"type": "api-call",
+					"icon": "FileDocumentPlusOutline",
+					"url": "/api/documents/generate",
+					"method": "POST",
+					"params": { "contractId": "@objectId", "documentType": "arbeidsovereenkomst" },
+					"confirm": true,
+					"successMessage": "Arbeidsovereenkomst wordt gegenereerd.",
+					"errorMessage": "Genereren van de arbeidsovereenkomst is mislukt."
+				}
+			],
 			"config": {
 				"register": "hrmq",
 				"schema": "EmploymentContract",
@@ -568,6 +588,42 @@
 					{ "id": "2", "widgetId": "ct-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 7 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
+			}
+		},
+		{
+			"id": "GeneratedDocuments",
+			"route": "/documents",
+			"type": "index",
+			"title": "Documenten",
+			"config": {
+				"register": "hrmq",
+				"schema": "GeneratedDocument",
+				"description": "Gegenereerde HR-documenten (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift) via docudesk.",
+				"columns": ["documentType", "status", "employeeId", "generatedAt"],
+				"filters": ["documentType", "status"],
+				"sort": { "field": "generatedAt", "order": "desc" }
+			}
+		},
+		{
+			"id": "GeneratedDocumentDetail",
+			"route": "/documents/:id",
+			"type": "detail",
+			"title": "Document",
+			"config": {
+				"register": "hrmq",
+				"schema": "GeneratedDocument",
+				"_note": "hrmq-docudesk-documents (2026-07-13): GeneratedDocument is hrmq's log of ONE docudesk render+store handoff (design.md D1), the PayrollGLPostDetail split applied to a document instead of a ledger entry -- gd-status leads with the outcome facts (status/generatedAt/errorMessage), gd-related resolves the Employee and (nullable) EmploymentContract, gd-data carries the remaining fields (documentType/templateRef/filePath) below. No lifecycleActions -- HrDocumentService drives every transition server-side, exactly the PayrollGLPostDetail precedent. Unlike every other hrmq detail page this one IS a document, so the sidebar keeps the library's default Files tab (the stored PDF -- design.md D4, 'the whole point') alongside the default Audit Trail tab, hiding only Notes/Tags/Tasks which carry no meaning here: the custom audit-only `tabs` override the rest of hrmq uses would suppress Files too (CnObjectSidebar's open-enum `tabs` widget registry has no `files` entry), so this page opts into `hiddenTabs` instead of `tabs` -- a deliberate, documented deviation from the fleet's usual sidebar convention, needed to actually show the per-object file.",
+				"widgets": [
+					{ "id": "gd-status", "type": "data", "title": "Status", "icon": "CheckCircleOutline", "content": { "columns": 4, "include": ["status", "generatedAt", "errorMessage"] } },
+					{ "id": "gd-data", "type": "data", "title": "Document", "icon": "FileDocumentOutline", "content": { "columns": 2, "exclude": ["employeeId", "contractId"] } },
+					{ "id": "gd-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "gd-status", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 3 },
+					{ "id": "2", "widgetId": "gd-data", "gridX": 0, "gridY": 3, "gridWidth": 8, "gridHeight": 7 },
+					{ "id": "3", "widgetId": "gd-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 10 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "hiddenTabs": ["notes", "tags", "tasks"] }
 			}
 		},
 		{

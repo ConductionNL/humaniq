@@ -49,7 +49,7 @@ final class RuleCatalogue
      *
      * @var string
      */
-    public const VERSION = '2026-07.4';
+    public const VERSION = '2026-07.5';
 
     /**
      * Required keys on every rule.
