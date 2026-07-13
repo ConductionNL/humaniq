@@ -716,6 +716,72 @@
                 "transitievergoedingBedrag": null,
                 "getuigschriftVerstrekt": true,
                 "notes": "Vrijwillig ontslag genomen door werknemer; volledig en netjes afgerond, geen transitievergoeding verschuldigd (BW 7:673 lid 1)."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Asset",
+                    "slug": "asset-laptop-latitude"
+                },
+                "name": "Dell Latitude 5450",
+                "category": "laptop",
+                "serienummer": "SN-PLACEHOLDER-0001",
+                "aanschafdatum": "2025-09-01",
+                "aanschafwaarde": 1249.00,
+                "status": "uitgegeven",
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Asset",
+                    "slug": "asset-telefoon-fairphone"
+                },
+                "name": "Fairphone 5",
+                "category": "telefoon",
+                "serienummer": "SN-PLACEHOLDER-0002",
+                "status": "beschikbaar",
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Asset",
+                    "slug": "asset-bus-transit"
+                },
+                "name": "Ford Transit bedrijfsbus",
+                "category": "voertuig",
+                "kenteken": "V-000-XX",
+                "aanschafdatum": "2024-02-15",
+                "aanschafwaarde": 38500.00,
+                "status": "uitgegeven",
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AssetAssignment",
+                    "slug": "assetassignment-visser-bus"
+                },
+                "assetId": "asset-bus-transit",
+                "employeeId": "employee-visser",
+                "uitgifteDatum": "2025-01-06",
+                "innameDatum": "2025-12-19",
+                "uitgifteBonSigned": true,
+                "notes": "Winterperiode buitendienst."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AssetAssignment",
+                    "slug": "assetassignment-jansen-telefoon"
+                },
+                "assetId": "asset-telefoon-fairphone",
+                "employeeId": "employee-jansen",
+                "uitgifteDatum": "2026-06-15",
+                "innameDatum": null,
+                "uitgifteBonSigned": false,
+                "notes": "Openstaande uitgifte op een asset dat als beschikbaar geregistreerd staat -- opzettelijke seed-inconsistentie voor nl-asset-assignment-consistency."
             }
         ]
     }

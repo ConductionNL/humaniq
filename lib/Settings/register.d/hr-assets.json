@@ -1,0 +1,180 @@
+{
+    "x-hrmq-fragment": "hr-assets",
+    "components": {
+        "schemas": {
+            "Asset": {
+                "slug": "Asset",
+                "icon": "PackageVariantClosed",
+                "version": "0.1.0",
+                "title": "Asset",
+                "description": "A company-owned item issued to employees (laptop, telefoon, voertuig, gereedschap, toegangspas, kleding, overig): identity fields (serienummer, kenteken for vehicles), acquisition fields, and a guarded custody state machine (asset-management-mvp). A voertuig Asset carries its kenteken and nothing fiscal -- bijtelling automation is explicitly out of scope (engine-blocked per Spectr hrmq-canon-fleet-bijtelling; follow-up spec fleet-bijtelling). No AssetHistoryEntry: OpenRegister's object audit trail already records every mutation.",
+                "type": "object",
+                "x-schema-org": "schema:IndividualProduct",
+                "required": [
+                    "name",
+                    "category",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "beschikbaar",
+                        "terminal": [
+                            "afgeschreven"
+                        ],
+                        "transitions": {
+                            "uitgeven": {
+                                "from": [
+                                    "beschikbaar"
+                                ],
+                                "to": "uitgegeven",
+                                "description": "The asset is handed to an employee (recorded by an AssetAssignment with a matching uitgifteDatum)."
+                            },
+                            "innemen": {
+                                "from": [
+                                    "uitgegeven"
+                                ],
+                                "to": "ingenomen",
+                                "description": "The asset is returned and awaiting check. Deliberately the only exit from uitgegeven -- an issued asset must be taken in (or its loss recorded here) before it can be written off."
+                            },
+                            "vrijgeven": {
+                                "from": [
+                                    "ingenomen"
+                                ],
+                                "to": "beschikbaar",
+                                "description": "Checked and back in stock, re-issuable via uitgeven."
+                            },
+                            "afschrijven": {
+                                "from": [
+                                    "beschikbaar",
+                                    "ingenomen"
+                                ],
+                                "to": "afgeschreven",
+                                "description": "Written off. Terminal. Not reachable from uitgegeven by design (design.md D1)."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "Asset name (e.g. \"Dell Latitude 5450\", \"Ford Transit bedrijfsbus\")."
+                    },
+                    "category": {
+                        "type": "string",
+                        "enum": [
+                            "laptop",
+                            "telefoon",
+                            "voertuig",
+                            "gereedschap",
+                            "toegangspas",
+                            "kleding",
+                            "overig"
+                        ],
+                        "title": "Category",
+                        "description": "Kind of asset. Enum append-only: renaming a value later is breaking, adding one is not."
+                    },
+                    "serienummer": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Serienummer",
+                        "description": "Serial number; null for uncoded items (kleding, toegangspas)."
+                    },
+                    "kenteken": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Kenteken",
+                        "description": "Dutch licence plate -- meaningful for category voertuig. Carries no fiscal semantics; bijtelling is an explicit non-goal (Spectr hrmq-canon-fleet-bijtelling)."
+                    },
+                    "aanschafdatum": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Aanschafdatum",
+                        "description": "Acquisition date."
+                    },
+                    "aanschafwaarde": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Aanschafwaarde",
+                        "description": "Acquisition value in EUR."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "beschikbaar",
+                            "uitgegeven",
+                            "ingenomen",
+                            "afgeschreven"
+                        ],
+                        "default": "beschikbaar",
+                        "title": "Status",
+                        "description": "Custody lifecycle status. Governed by the x-openregister-lifecycle state machine (beschikbaar -> uitgegeven -> ingenomen -> beschikbaar, or beschikbaar/ingenomen -> afgeschreven, terminal)."
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "default": true,
+                        "title": "Active",
+                        "description": "Administrative visibility toggle (the OrgUnit convention), distinct from the custody lifecycle."
+                    }
+                }
+            },
+            "AssetAssignment": {
+                "slug": "AssetAssignment",
+                "icon": "HandshakeOutline",
+                "version": "0.1.0",
+                "title": "Asset assignment",
+                "description": "An effective-dated uitgifte of one Asset to one Employee (the OrgAssignment pattern, hr-org.json): uitgifteDatum required, innameDatum nullable = the asset is still out. No x-openregister-lifecycle: a plain effective-dated record, no workflow. Consistency (coherent dates, the asset in status uitgegeven while the uitgifte is open) is enforced by nl-asset-assignment-consistency (lib/Standards/rules/labour.json / lib/Standards/Checks/NlAssetChecks.php), not by a write-time guard.",
+                "type": "object",
+                "x-schema-org": "schema:OwnershipInfo",
+                "required": [
+                    "assetId",
+                    "employeeId",
+                    "uitgifteDatum"
+                ],
+                "properties": {
+                    "assetId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Asset",
+                        "title": "Asset",
+                        "description": "UUID reference to the issued Asset."
+                    },
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "UUID reference to the receiving Employee."
+                    },
+                    "uitgifteDatum": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Uitgiftedatum",
+                        "description": "Issued on (effective-dating per the OrgAssignment pattern)."
+                    },
+                    "innameDatum": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Innamedatum",
+                        "description": "Returned on; null while the asset is out. Must be on/after uitgifteDatum when present (nl-asset-assignment-consistency)."
+                    },
+                    "uitgifteBonSigned": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Uitgiftebon getekend",
+                        "description": "Whether a signed uitgiftebon is on file (the document itself lives in AssetDetail's Files widget)."
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Notities",
+                        "description": "Free-form notes (condition at handout/return)."
+                    }
+                }
+            }
+        }
+    }
+}
