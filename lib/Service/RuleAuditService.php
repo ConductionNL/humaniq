@@ -182,14 +182,25 @@ class RuleAuditService
      * predicates, and a LeaveBalance `{leaveType, year, entitledHours,
      * bovenwettelijkHours, usedHours}` list index keyed by employeeId
      * (offboarding-wizard-mvp) consumed by NlOffboardingChecks for the
-     * verlofsaldo-uitbetaling predicate. Loads independently of the main
-     * per-type loop (a small, side-effect-free reload) so the index is ready
-     * before any object of either type is evaluated. Degrades gracefully to empty
-     * sets when a schema does not exist yet in the register.
+     * verlofsaldo-uitbetaling predicate. Also builds an Asset `{id, status,
+     * active}` index keyed by id (asset-management-mvp, the OrgUnit index
+     * shape) consumed by NlAssetChecks for the assignment-consistency
+     * predicate's asset-status lookup, and a defensive Offboarding
+     * `plannedCompletionByEmployeeId` index (asset-management-mvp) mapping
+     * each employeeId to the latest `lastWorkingDay` of its non-cancelled
+     * (not `geannuleerd`) Offboarding cases, consumed by NlAssetChecks for the
+     * inname-bij-offboarding predicate -- degrading to an empty map (vacuous
+     * pass) when the Offboarding schema does not exist yet in the register
+     * (the parallel offboarding-wizard-mvp change lands in either order).
+     * Loads independently of the main per-type loop (a small, side-effect-free
+     * reload) so the index is ready before any object of either type is
+     * evaluated. Degrades gracefully to empty sets when a schema does not
+     * exist yet in the register.
      *
      * @return array<string, array<string, mixed>>
      *
      * @spec openspec/changes/offboarding-wizard-mvp/specs/offboarding-wizard/spec.md#REQ-OFB-004
+     * @spec openspec/changes/asset-management-mvp/specs/asset-management/spec.md#REQ-AST-005
      */
     private function buildRelatedContext(): array
     {
@@ -299,6 +310,57 @@ class RuleAuditService
             ];
         }
 
+        // asset-management-mvp: an Asset index (id, status, active), keyed by
+        // id, so NlAssetChecks::checks()['AssetAssignment']
+        // ['nl-asset-assignment-consistency'] can resolve an open assignment's
+        // asset status without re-querying the register.
+        $assetsById = [];
+        foreach ($this->loadAll('Asset') as $asset) {
+            $id = (string) ($asset['id'] ?? $asset['@self']['id'] ?? '');
+            if ($id === '') {
+                continue;
+            }
+
+            $assetsById[$id] = [
+                'id'     => $id,
+                'status' => (string) ($asset['status'] ?? ''),
+                'active' => (bool) ($asset['active'] ?? true),
+            ];
+        }
+
+        // asset-management-mvp (design.md D3): a defensive Offboarding
+        // plannedCompletionByEmployeeId index -- the latest `lastWorkingDay`
+        // among an employee's non-cancelled (status !== geannuleerd)
+        // Offboarding cases, keyed by employeeId -- consumed by
+        // NlAssetChecks::checks()['AssetAssignment']
+        // ['nl-asset-inname-bij-offboarding']. Entries with a missing
+        // employeeId/lastWorkingDay, or an unparseable date, are skipped
+        // (skipping degrades to vacuous pass, never to a false violation).
+        // Degrades to an empty map when the Offboarding schema does not exist
+        // yet in the register -- the two changes land in either order.
+        $plannedCompletionByEmployeeId = [];
+        foreach ($this->loadAll('Offboarding') as $offboarding) {
+            if ((string) ($offboarding['status'] ?? '') === 'geannuleerd') {
+                continue;
+            }
+
+            $employeeId = trim((string) ($offboarding['employeeId'] ?? ''));
+            $lastWorkingDay = trim((string) ($offboarding['lastWorkingDay'] ?? ''));
+            if ($employeeId === '' || $lastWorkingDay === '') {
+                continue;
+            }
+
+            $candidate = strtotime($lastWorkingDay);
+            if ($candidate === false) {
+                continue;
+            }
+
+            $current = ($plannedCompletionByEmployeeId[$employeeId] ?? null);
+            if ($current === null || strtotime($current) === false || $candidate > strtotime($current)) {
+                $plannedCompletionByEmployeeId[$employeeId] = $lastWorkingDay;
+            }
+        }
+
         return [
             'PayrollRun'         => [
                 'byId'            => $byId,
@@ -318,6 +380,12 @@ class RuleAuditService
             ],
             'LeaveBalance'       => [
                 'byEmployeeId' => $leaveBalancesByEmployeeId,
+            ],
+            'Asset'              => [
+                'byId' => $assetsById,
+            ],
+            'Offboarding'        => [
+                'plannedCompletionByEmployeeId' => $plannedCompletionByEmployeeId,
             ],
         ];
 

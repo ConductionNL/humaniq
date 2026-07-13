@@ -709,4 +709,158 @@ class RuleAuditServiceTest extends TestCase
     }//end testOffboardingEinddatumViolatedWhenEmployeeEndDateMismatches()
 
 
+    // -- asset-management-mvp: Asset/Offboarding related-context + seeded rows --
+
+
+    /**
+     * The asset-management-mvp hr-seed.json fixture shapes: three Assets (a
+     * laptop and a voertuig `uitgegeven`, a telefoon `beschikbaar`) and two
+     * AssetAssignments, one closed and consistent (visser/bus) and one
+     * deliberately open on the `beschikbaar` telefoon (jansen/telefoon), fed
+     * through audit() as if loaded from the register. No Offboarding rows in
+     * this fixture -- the parallel offboarding-wizard-mvp related-context is
+     * exercised separately below.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededAssetRows(): array
+    {
+        $assets = [
+            ['id' => 'asset-laptop-latitude', 'name' => 'Dell Latitude 5450', 'category' => 'laptop', 'status' => 'uitgegeven', 'active' => true],
+            ['id' => 'asset-telefoon-fairphone', 'name' => 'Fairphone 5', 'category' => 'telefoon', 'status' => 'beschikbaar', 'active' => true],
+            ['id' => 'asset-bus-transit', 'name' => 'Ford Transit bedrijfsbus', 'category' => 'voertuig', 'status' => 'uitgegeven', 'active' => true],
+        ];
+
+        $assignments = [
+            ['id' => 'assetassignment-visser-bus', 'assetId' => 'asset-bus-transit', 'employeeId' => 'employee-visser', 'uitgifteDatum' => '2025-01-06', 'innameDatum' => '2025-12-19', 'uitgifteBonSigned' => true],
+            ['id' => 'assetassignment-jansen-telefoon', 'assetId' => 'asset-telefoon-fairphone', 'employeeId' => 'employee-jansen', 'uitgifteDatum' => '2026-06-15', 'innameDatum' => null, 'uitgifteBonSigned' => false],
+        ];
+
+        return [
+            'Asset'           => $assets,
+            'AssetAssignment' => $assignments,
+        ];
+
+    }//end seededAssetRows()
+
+
+    /**
+     * @return void
+     */
+    public function testSeededAssetDataFlagsExactlyOneAssignmentConsistencyViolation(): void
+    {
+        $service = $this->serviceWithRows($this->seededAssetRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-asset-assignment-consistency'] ?? 0));
+        $this->assertArrayNotHasKey('nl-asset-inname-bij-offboarding', $byRule);
+
+    }//end testSeededAssetDataFlagsExactlyOneAssignmentConsistencyViolation()
+
+
+    /**
+     * @return void
+     */
+    public function testDanglingAssetReferenceIsFlaggedByAudit(): void
+    {
+        $rows = [
+            'Asset'           => [],
+            'AssetAssignment' => [
+                ['id' => 'assetassignment-x', 'assetId' => 'no-such-asset', 'employeeId' => 'employee-x', 'uitgifteDatum' => '2026-01-01', 'innameDatum' => null],
+            ],
+        ];
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertContains('nl-asset-assignment-consistency', $ruleIds);
+
+    }//end testDanglingAssetReferenceIsFlaggedByAudit()
+
+
+    /**
+     * The full asset-management-mvp + offboarding-wizard-mvp hr-seed.json
+     * fixture: the seeded assets/assignments (seededAssetRows()) plus an
+     * employee whose non-cancelled Offboarding case's lastWorkingDay is
+     * already in the past, fed through audit() as if loaded from the
+     * register.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededAssetAndOverdueOffboardingRows(): array
+    {
+        $rows                  = $this->seededAssetRows();
+        $rows['Offboarding']   = [
+            ['id' => 'offboarding-jansen', 'employeeId' => 'employee-jansen', 'lastWorkingDay' => date('Y-m-d', strtotime('-5 days')), 'reason' => 'opzegging-werkgever', 'status' => 'eindafrekening_gereed'],
+        ];
+
+        return $rows;
+
+    }//end seededAssetAndOverdueOffboardingRows()
+
+
+    /**
+     * @return void
+     */
+    public function testOpenAssignmentPastOverdueOffboardingIsFlaggedByAudit(): void
+    {
+        $service = $this->serviceWithRows($this->seededAssetAndOverdueOffboardingRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertContains('nl-asset-inname-bij-offboarding', $ruleIds);
+
+    }//end testOpenAssignmentPastOverdueOffboardingIsFlaggedByAudit()
+
+
+    /**
+     * @return void
+     */
+    public function testCancelledOffboardingIsExcludedFromThePlannedCompletionIndex(): void
+    {
+        $rows                = $this->seededAssetRows();
+        $rows['Offboarding'] = [
+            ['id' => 'offboarding-jansen', 'employeeId' => 'employee-jansen', 'lastWorkingDay' => date('Y-m-d', strtotime('-5 days')), 'reason' => 'opzegging-werkgever', 'status' => 'geannuleerd'],
+        ];
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-asset-inname-bij-offboarding', $ruleIds);
+
+    }//end testCancelledOffboardingIsExcludedFromThePlannedCompletionIndex()
+
+
+    /**
+     * @return void
+     */
+    public function testSeededOffboardingJansenLastWorkingDayInTheFutureDoesNotFlagTheOpenTelefoonUitgifte(): void
+    {
+        // The real offboarding-jansen seed (hr-seed.json): eindafrekening_gereed,
+        // lastWorkingDay 2026-08-31 -- in the future relative to the audit
+        // run date, so the open jansen/telefoon uitgifte from
+        // seededAssetRows() must NOT be flagged by nl-asset-inname-bij-offboarding
+        // even though a (non-vacuous) Offboarding index entry now resolves for
+        // employee-jansen.
+        $rows                = $this->seededAssetRows();
+        $rows['Offboarding'] = [
+            ['id' => 'offboarding-jansen', 'employeeId' => 'employee-jansen', 'lastWorkingDay' => '2026-08-31', 'reason' => 'opzegging-werkgever', 'status' => 'eindafrekening_gereed'],
+        ];
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-asset-inname-bij-offboarding', $ruleIds);
+
+    }//end testSeededOffboardingJansenLastWorkingDayInTheFutureDoesNotFlagTheOpenTelefoonUitgifte()
+
+
 }//end class

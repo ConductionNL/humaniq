@@ -23,7 +23,9 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "Application", "urlTemplate": "/apps/hrmq/applications/{uuid}", "displayName": "Application" },
 		{ "registerSlug": "hrmq", "schemaSlug": "OrgUnit", "urlTemplate": "/apps/hrmq/org-units/{uuid}", "displayName": "Organisational Unit" },
 		{ "registerSlug": "hrmq", "schemaSlug": "OrgAssignment", "urlTemplate": "/apps/hrmq/org-assignments/{uuid}", "displayName": "Organisational Assignment" },
-		{ "registerSlug": "hrmq", "schemaSlug": "AttendanceRecord", "urlTemplate": "/apps/hrmq/attendance/{uuid}", "displayName": "Attendance Record" }
+		{ "registerSlug": "hrmq", "schemaSlug": "AttendanceRecord", "urlTemplate": "/apps/hrmq/attendance/{uuid}", "displayName": "Attendance Record" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Asset", "urlTemplate": "/apps/hrmq/assets/{uuid}", "displayName": "Asset" },
+		{ "registerSlug": "hrmq", "schemaSlug": "AssetAssignment", "urlTemplate": "/apps/hrmq/asset-assignments/{uuid}", "displayName": "Asset Assignment" }
 	],
 	"menu": [
 		{
@@ -216,6 +218,18 @@
 					"label": "Declaratiegoedkeuring",
 					"icon": "CheckDecagramOutline",
 					"route": "ExpenseApproval"
+				},
+				{
+					"id": "Assets",
+					"label": "Assets",
+					"icon": "PackageVariantClosed",
+					"route": "Assets"
+				},
+				{
+					"id": "AssetAssignments",
+					"label": "Uitgiftes",
+					"icon": "HandshakeOutline",
+					"route": "AssetAssignments"
 				}
 			]
 		},
@@ -1285,6 +1299,86 @@
 				"layout": [
 					{ "id": "1", "widgetId": "oa-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
 					{ "id": "2", "widgetId": "oa-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 5 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "Assets",
+			"route": "/assets",
+			"type": "index",
+			"title": "Assets",
+			"config": {
+				"register": "hrmq",
+				"schema": "Asset",
+				"description": "Bedrijfseigendommen uitgegeven aan werknemers: laptops, telefoons, voertuigen, gereedschap, toegangspassen en kleding, met een bewaakte innamestatus.",
+				"columns": ["name", "category", "status", "serienummer"],
+				"filters": ["category", "status"],
+				"sort": { "field": "name", "order": "asc" }
+			}
+		},
+		{
+			"id": "AssetDetail",
+			"route": "/assets/:id",
+			"type": "detail",
+			"title": "Asset",
+			"config": {
+				"register": "hrmq",
+				"schema": "Asset",
+				"_note": "asset-management-mvp (2026-07-13): a company-owned item with a guarded custody lifecycle (beschikbaar -> uitgegeven -> ingenomen -> beschikbaar, or beschikbaar/ingenomen -> afgeschreven, terminal -- the Expense precedent). The data widget shows all fields (no $ref to exclude -- Asset has no outbound relations); lifecycleActions expose exactly the four fragment transitions (uitgeven/innemen/vrijgeven/afschrijven), never invented. An FK-scoped 'Uitgiftes' object-list (AssetAssignment.assetId = @objectId) is the inbound-relation direction (D2) -- who has held this asset, ordered most-recent-first, rowRoute to AssetAssignmentDetail. The Files widget (signed uitgiftebonnen) runs full-width after the domain cards, the ExpenseDetail receipt placement. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "ast-data", "type": "data", "title": "Asset", "icon": "PackageVariantClosed", "content": { "columns": 2, "include": ["name", "category", "serienummer", "kenteken", "aanschafdatum", "aanschafwaarde", "status", "active"] } },
+					{ "id": "ast-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "ast-assignments", "type": "object-list", "title": "Uitgiftes", "icon": "HandshakeOutline", "content": { "register": "hrmq", "schema": "AssetAssignment", "filter": { "assetId": "@objectId" }, "sort": { "field": "uitgifteDatum", "dir": "desc" }, "columns": [ { "key": "employeeId", "label": "Employee" }, { "key": "uitgifteDatum", "label": "Uitgifte" }, { "key": "innameDatum", "label": "Inname" }, { "key": "uitgifteBonSigned", "label": "Bon getekend" } ], "limit": 25, "rowRoute": "AssetAssignmentDetail", "viewAllRoute": "AssetAssignments", "viewAllQuery": { "assetId": "@objectId" }, "emptyText": "No uitgiftes yet" } },
+					{ "id": "ast-files", "type": "integration", "integrationId": "files", "title": "Uitgiftebonnen", "icon": "FolderOutline" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "ast-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "ast-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 },
+					{ "id": "3", "widgetId": "ast-assignments", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 5 },
+					{ "id": "4", "widgetId": "ast-files", "gridX": 0, "gridY": 11, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "uitgeven", "from": ["beschikbaar"], "to": "uitgegeven", "label": "Uitgeven" },
+						{ "action": "innemen", "from": ["uitgegeven"], "to": "ingenomen", "label": "Innemen" },
+						{ "action": "vrijgeven", "from": ["ingenomen"], "to": "beschikbaar", "label": "Vrijgeven" },
+						{ "action": "afschrijven", "from": ["beschikbaar", "ingenomen"], "to": "afgeschreven", "label": "Afschrijven" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "AssetAssignments",
+			"route": "/asset-assignments",
+			"type": "index",
+			"title": "Uitgiftes",
+			"config": {
+				"register": "hrmq",
+				"schema": "AssetAssignment",
+				"description": "Effectief-gedateerde uitgiftes van assets aan werknemers.",
+				"columns": ["assetId", "employeeId", "uitgifteDatum", "innameDatum", "uitgifteBonSigned"],
+				"sort": { "field": "uitgifteDatum", "order": "desc" }
+			}
+		},
+		{
+			"id": "AssetAssignmentDetail",
+			"route": "/asset-assignments/:id",
+			"type": "detail",
+			"title": "Uitgifte",
+			"config": {
+				"register": "hrmq",
+				"schema": "AssetAssignment",
+				"_note": "asset-management-mvp (2026-07-13): a simple two-panel leaf like OrgAssignmentDetail -- the data widget (uitgifteDatum/innameDatum/uitgifteBonSigned/notes) excludes assetId/employeeId since Related already resolves and links both the issued Asset and the receiving Employee by name. No child lists (nothing references an AssetAssignment by FK). No lifecycleActions: AssetAssignment carries no x-openregister-lifecycle -- effective-dating lives on uitgifteDatum/innameDatum, not a workflow status (design.md D1). Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "aa-data", "type": "data", "title": "Uitgifte", "icon": "HandshakeOutline", "content": { "columns": 2, "exclude": ["assetId", "employeeId"] } },
+					{ "id": "aa-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "aa-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "2", "widgetId": "aa-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 5 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
 			}
