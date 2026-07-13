@@ -863,4 +863,129 @@ class RuleAuditServiceTest extends TestCase
     }//end testSeededOffboardingJansenLastWorkingDayInTheFutureDoesNotFlagTheOpenTelefoonUitgifte()
 
 
+    // -- hr-signals: EmploymentContract signals-context + seeded devries contract --
+
+
+    /**
+     * The hr-signals `contract-devries-tijdelijk` hr-seed.json fixture: a
+     * temporary contract 11 months long, ending 19 days from today, with no
+     * successor for the same employee and no recorded `aanzegdOn`, fed
+     * through audit() as if loaded from the register.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededSignalsRows(): array
+    {
+        return [
+            'EmploymentContract' => [
+                [
+                    'id'                    => 'contract-devries-tijdelijk',
+                    'employeeId'            => 'employee-devries',
+                    'type'                  => 'temporary',
+                    'writtenContract'       => true,
+                    'startDate'             => date('Y-m-d', strtotime('-11 months -13 days')),
+                    'endDate'               => date('Y-m-d', strtotime('+19 days')),
+                    'hoursPerWeek'          => 32,
+                    'hourlyWage'            => 21.00,
+                    'awfTariff'             => 'high',
+                    'aanzegdOn'             => null,
+                    'workingTimeDocumented' => true,
+                    'overtimeMultiplier'    => 1.5,
+                    'ftePartOfYearMinijob'  => false,
+                    'dpaeFiledBeforeStart'  => true,
+                ],
+            ],
+        ];
+
+    }//end seededSignalsRows()
+
+
+    /**
+     * @return void
+     */
+    public function testSeededSignalsDataFlagsExactlyTheIntendedTwoViolations(): void
+    {
+        $service = $this->serviceWithRows($this->seededSignalsRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-signaal-contract-verloopt'] ?? 0));
+        $this->assertSame(1, ($byRule['nl-aanzegtermijn-bewaking'] ?? 0));
+        // Non-regression (design.md Seed Data): the seed's Awf tariff, wage
+        // and hours never trip the pre-existing payroll/contract rules.
+        $this->assertArrayNotHasKey('nl-awf-laag-hoog-tarief', $byRule);
+        $this->assertArrayNotHasKey('nl-minimumloon-2026', $byRule);
+        $this->assertArrayNotHasKey('nl-minimumuurloon-wet', $byRule);
+        $this->assertArrayNotHasKey('nl-contract-schriftelijk', $byRule);
+
+    }//end testSeededSignalsDataFlagsExactlyTheIntendedTwoViolations()
+
+
+    /**
+     * @return void
+     */
+    public function testSignalsSuccessorClearsTheExpiryViolationThroughAudit(): void
+    {
+        $rows                        = $this->seededSignalsRows();
+        $rows['EmploymentContract'][] = [
+            'id'         => 'contract-devries-vervolg',
+            'employeeId' => 'employee-devries',
+            'type'       => 'temporary',
+            'startDate'  => date('Y-m-d', strtotime('+20 days')),
+            'endDate'    => null,
+            // Long enough / recent aanzegdOn so this successor row itself
+            // does not introduce a NEW aanzegtermijn violation to confuse
+            // the assertion below.
+            'aanzegdOn'  => date('Y-m-d'),
+        ];
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertArrayNotHasKey('nl-signaal-contract-verloopt', $byRule);
+
+    }//end testSignalsSuccessorClearsTheExpiryViolationThroughAudit()
+
+
+    /**
+     * @return void
+     */
+    public function testSeededSignalsDataReportsBumpedCatalogueVersionAndBothNewRulesEnforceable(): void
+    {
+        $service = $this->serviceWithRows($this->seededSignalsRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+        $enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+        $this->assertContains('nl-signaal-contract-verloopt', $enforceable);
+        $this->assertContains('nl-aanzegtermijn-bewaking', $enforceable);
+
+    }//end testSeededSignalsDataReportsBumpedCatalogueVersionAndBothNewRulesEnforceable()
+
+
+    /**
+     * @return void
+     */
+    public function testSignalsContextDegradesToEmptyWhenEmploymentContractSchemaAbsent(): void
+    {
+        $service = $this->serviceWithRows([]);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $this->assertSame(0, $report['objectsChecked']);
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-signaal-contract-verloopt', $ruleIds);
+        $this->assertNotContains('nl-aanzegtermijn-bewaking', $ruleIds);
+
+    }//end testSignalsContextDegradesToEmptyWhenEmploymentContractSchemaAbsent()
+
+
 }//end class

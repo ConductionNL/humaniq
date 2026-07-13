@@ -110,6 +110,15 @@ class RuleAuditService
         // permanent written contract without re-querying the register.
         $context['documents'] = $this->buildDocumentsContext();
 
+        // hr-signals: a full-list (not last-wins) EmploymentContract index per
+        // employeeId, so NlSignalChecks::checks()['EmploymentContract']
+        // ['nl-signaal-contract-verloopt'] can decide whether a successor
+        // contract exists for the same employee -- the existing
+        // `related.EmploymentContract.byEmployeeId` index above deliberately
+        // keeps only the last-loaded contract per employee and cannot answer
+        // that question (design.md D4).
+        $context['signals'] = $this->buildSignalsContext();
+
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
         $enforceable      = count(RuleEngine::checkedRuleIds());
@@ -543,6 +552,47 @@ class RuleAuditService
         return ['generatedArbeidsovereenkomstByContract' => $byContract];
 
     }//end buildDocumentsContext()
+
+
+    /**
+     * Build the full-list per-employee EmploymentContract index consumed by
+     * NlSignalChecks' `nl-signaal-contract-verloopt` successor predicate
+     * (hr-signals, design.md D4): `contractsByEmployeeId` maps each
+     * `employeeId` to the FULL list of its contracts (`{id, type, startDate,
+     * endDate}`), unlike `buildRelatedContext()`'s
+     * `EmploymentContract.byEmployeeId` index, which keeps only the
+     * last-loaded contract per employee and therefore cannot answer "does a
+     * successor contract exist" for a sibling. Each row carries its own
+     * object id so the predicate can exclude itself when scanning for a
+     * successor. Loads independently of `buildRelatedContext()` (an
+     * accepted duplicate reload, design.md Risks) and degrades gracefully to
+     * an empty index when the EmploymentContract schema does not exist yet
+     * in the register.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/hr-signals/specs/hr-signals/spec.md#REQ-SIG-004
+     */
+    private function buildSignalsContext(): array
+    {
+        $contractsByEmployeeId = [];
+        foreach ($this->loadAll('EmploymentContract') as $contract) {
+            $employeeId = (string) ($contract['employeeId'] ?? '');
+            if ($employeeId === '') {
+                continue;
+            }
+
+            $contractsByEmployeeId[$employeeId][] = [
+                'id'        => (string) ($contract['id'] ?? $contract['@self']['id'] ?? ''),
+                'type'      => (string) ($contract['type'] ?? ''),
+                'startDate' => (string) ($contract['startDate'] ?? ''),
+                'endDate'   => (string) ($contract['endDate'] ?? ''),
+            ];
+        }
+
+        return ['contractsByEmployeeId' => $contractsByEmployeeId];
+
+    }//end buildSignalsContext()
 
 
     /**

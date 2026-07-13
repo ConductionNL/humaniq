@@ -286,6 +286,37 @@
       "machineCheckable": true,
       "effectiveDate": "2015-07-01",
       "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    },
+    {
+      "id": "nl-signaal-contract-verloopt",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-signals",
+      "source": "HR contract-lifecycle control (aflopend tijdelijk contract)",
+      "statement": "A temporary contract ending within the next 60 days with no successor contract for the same employee shall be signalled for HR follow-up (renew, aanzeggen, or offboard).",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://www.rijksoverheid.nl/onderwerpen/arbeidsovereenkomst-en-cao/vraag-en-antwoord/wat-is-de-aanzegtermijn",
+      "parameters": {
+        "windowDays": 60
+      }
+    },
+    {
+      "id": "nl-aanzegtermijn-bewaking",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:668 lid 1 (aanzegplicht)",
+      "statement": "For a fixed-term contract of at least six months the employer shall inform the employee in writing, at least one month before the end date, whether the contract will be continued; a live contract past that deadline without a recorded aanzegging violates (historical breaches after expiry are not re-flagged -- monitoring window stated in the rule).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2015-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290",
+      "parameters": {
+        "minContractMonths": 6,
+        "noticeMonths": 1
+      }
     }
   ]
 }
