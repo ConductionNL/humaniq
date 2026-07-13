@@ -782,6 +782,68 @@
                 "innameDatum": null,
                 "uitgifteBonSigned": false,
                 "notes": "Openstaande uitgifte op een asset dat als beschikbaar geregistreerd staat -- opzettelijke seed-inconsistentie voor nl-asset-assignment-consistency."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "ReviewCycle",
+                    "slug": "review-cycle-2026"
+                },
+                "name": "Jaargesprekken 2026",
+                "year": 2026,
+                "type": "jaargesprek",
+                "status": "open",
+                "startDate": "2026-01-01",
+                "endDate": "2026-12-31"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "PerformanceReview",
+                    "slug": "review-jansen-2026"
+                },
+                "employeeId": "employee-jansen",
+                "cycleId": "review-cycle-2026",
+                "reviewerId": "employee-visser",
+                "status": "vastgesteld",
+                "rating": "goed",
+                "sterktes": "Sterke samenwerking en proactieve communicatie richting het team.",
+                "ontwikkelpunten": "Kan meer initiatief nemen bij het plannen van eigen werk op langere termijn.",
+                "afspraken": "Volgt in Q3 de cursus 'Advanced Vue' en neemt het onboarding-buddyschap op zich.",
+                "goals": [
+                    {
+                        "titel": "Certificering Vue afronden",
+                        "status": "behaald",
+                        "toelichting": "Afgerond in mei."
+                    },
+                    {
+                        "titel": "Onboarding-buddy voor nieuwe collega's",
+                        "status": "open",
+                        "toelichting": null
+                    }
+                ],
+                "besprokenOp": "2026-06-15",
+                "vastgesteldDoor": "manager-pietersen",
+                "userId": "admin"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "PerformanceReview",
+                    "slug": "review-visser-2026"
+                },
+                "employeeId": "employee-visser",
+                "cycleId": "review-cycle-2026",
+                "reviewerId": null,
+                "status": "vastgesteld",
+                "rating": null,
+                "sterktes": "Betrouwbaar in buitendienstwerk en klantcontact.",
+                "ontwikkelpunten": null,
+                "afspraken": "Proeftijd-evaluatiedoelen vastleggen.",
+                "goals": [],
+                "besprokenOp": "2026-06-20",
+                "vastgesteldDoor": "manager-pietersen",
+                "userId": null
             }
         ]
     }

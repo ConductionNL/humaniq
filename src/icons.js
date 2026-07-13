@@ -26,6 +26,9 @@ import BriefcaseSearchOutline from 'vue-material-design-icons/BriefcaseSearchOut
 import FileAccountOutline from 'vue-material-design-icons/FileAccountOutline.vue'
 import AccountMinus from 'vue-material-design-icons/AccountMinus.vue'
 import AccountMinusOutline from 'vue-material-design-icons/AccountMinusOutline.vue'
+import CalendarSyncOutline from 'vue-material-design-icons/CalendarSyncOutline.vue'
+import ClipboardAccountOutline from 'vue-material-design-icons/ClipboardAccountOutline.vue'
+import StarCheckOutline from 'vue-material-design-icons/StarCheckOutline.vue'
 
 export default {
 	AccountOutline,
@@ -47,4 +50,7 @@ export default {
 	FileAccountOutline,
 	AccountMinus,
 	AccountMinusOutline,
+	CalendarSyncOutline,
+	ClipboardAccountOutline,
+	StarCheckOutline,
 }

@@ -4,19 +4,24 @@
  * Hrmq NoSelfApprovalGuard
  *
  * OpenRegister lifecycle guard shared by the Timesheet and Expense `approve`
- * and `reject` transitions. It enforces the one approval rule that the
- * declarative `x-openregister-lifecycle` state machine cannot express on its
- * own: separation of duties — the user approving or rejecting a submitted
- * timesheet / expense claim MUST NOT be the employee who claimed it.
+ * and `reject` transitions, and by the PerformanceReview `vaststellen`
+ * transition (performance-reviews-mvp). It enforces the one approval rule
+ * that the declarative `x-openregister-lifecycle` state machine cannot
+ * express on its own: separation of duties — the user approving, rejecting
+ * or vaststellen a submitted timesheet / expense claim / beoordeling MUST
+ * NOT be the employee who claimed it or is under review.
  *
- * The state machine (submitted → approved/rejected) and the field defaults are
- * fully declarative in the register fragments; this guard adds only the
- * cross-actor check (`$userId !== $object['employeeId']`). Guards are read-only
- * per OpenRegister's contract — the approver/timestamp stamping happens through
+ * The state machine (submitted → approved/rejected; besproken → vastgesteld)
+ * and the field defaults are fully declarative in the register fragments;
+ * this guard adds only the cross-actor check
+ * (`$userId !== $object['employeeId']`). Guards are read-only per
+ * OpenRegister's contract — the approver/timestamp stamping happens through
  * the ordinary object write that carries the transition, not here.
  *
  * Referenced from the Timesheet / Expense schema
- * `x-openregister-lifecycle.transitions.{approve,reject}.requires`.
+ * `x-openregister-lifecycle.transitions.{approve,reject}.requires` and from
+ * the PerformanceReview schema
+ * `x-openregister-lifecycle.transitions.vaststellen.requires`.
  *
  * @category Lifecycle
  * @package  OCA\Hrmq\Lifecycle
