@@ -159,6 +159,153 @@
                         "description": "Free-text case notes."
                     }
                 }
+            },
+            "Offboarding": {
+                "slug": "Offboarding",
+                "icon": "AccountMinus",
+                "version": "0.1.0",
+                "title": "Offboarding case",
+                "description": "A deterministic offboarding case (one per departure): the concrete gates for a leaving employee — exit interview held, assets returned, access revoked — and the statutory eindafrekening components (verlofsaldo paid out, vakantiegeld settled, transitievergoeding recorded, getuigschrift provided) as checklist boolean/date fields, governed by a simplified five-state declarative lifecycle (offboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/offboarding-wizard draft's 17-state machine and 7 entity schemas: no OffboardingStep/Eindafrekening/EquipmentReturn/ExitInterview/Getuigschrift/RetentionTimer side entities, no eindafrekening computation engine, no UWV WW-melding/pensioenfonds/ZVW submissions, no AVG retention timers, no per-item asset tracking (the parallel asset-management-mvp owns asset data — loose coupling only, design.md D6). The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOffboardingChecks.php), NOT by write-time guard classes — guard wiring for compliance-checked schemas is owned by the active hrmq-rule-compliance-enforcement change (design.md D2).",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "employeeId",
+                    "lastWorkingDay",
+                    "reason",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "aangekondigd",
+                        "terminal": [
+                            "afgerond",
+                            "geannuleerd"
+                        ],
+                        "transitions": {
+                            "afronding_plannen": {
+                                "from": [
+                                    "aangekondigd"
+                                ],
+                                "to": "afronding_gepland",
+                                "description": "lastWorkingDay is confirmed; the exit gesprek, asset return and access revocation are planned (no field gate on this transition)."
+                            },
+                            "eindafrekening_gereedmelden": {
+                                "from": [
+                                    "afronding_gepland"
+                                ],
+                                "to": "eindafrekening_gereed",
+                                "description": "The eindafrekening is ready. Checklist gate: verlofsaldoUitbetaald = true when an open leave balance remains (BW 7:641), vakantiegeldAfgerekend = true, transitievergoedingBedrag recorded for dismissal-initiated reasons (BW 7:673) (enforced by audit rule, not a write-time guard — see hrmq-rule-compliance-enforcement)."
+                            },
+                            "afronden": {
+                                "from": [
+                                    "eindafrekening_gereed"
+                                ],
+                                "to": "afgerond",
+                                "description": "The case is closed out. Checklist gate: exitGesprekDone recorded, assetsIngeleverd = true, toegangIngetrokken = true, getuigschriftVerstrekt on request (BW 7:656), Employee.endDate equals lastWorkingDay (BW 7:667) (audit-enforced)."
+                            },
+                            "annuleren": {
+                                "from": [
+                                    "aangekondigd",
+                                    "afronding_gepland",
+                                    "eindafrekening_gereed"
+                                ],
+                                "to": "geannuleerd",
+                                "description": "The departure is withdrawn (opzegging ingetrokken / VSO niet getekend) before the case reaches afgerond."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "UUID reference to the Employee this offboarding case concerns."
+                    },
+                    "lastWorkingDay": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Last working day",
+                        "description": "The employee's last working day; anchor date for the einddatum-consistentie rule (nl-offboarding-einddatum-consistentie, BW 7:667)."
+                    },
+                    "reason": {
+                        "type": "string",
+                        "title": "Reason",
+                        "description": "The departure reason. Drives transitievergoeding applicability (BW 7:673) — opzegging-werkgever and einde-contract (non-renewal) are dismissal-initiated; opzegging-werknemer, pensioen and overlijden are statutorily exempt; vso severance is negotiated, not statutory.",
+                        "enum": [
+                            "opzegging-werknemer",
+                            "opzegging-werkgever",
+                            "einde-contract",
+                            "pensioen",
+                            "overlijden",
+                            "vso"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Case lifecycle status. Governed by the x-openregister-lifecycle state machine (aangekondigd -> afronding_gepland -> eindafrekening_gereed -> afgerond, cancellable pre-afgerond).",
+                        "enum": [
+                            "aangekondigd",
+                            "afronding_gepland",
+                            "eindafrekening_gereed",
+                            "afgerond",
+                            "geannuleerd"
+                        ],
+                        "default": "aangekondigd"
+                    },
+                    "exitGesprekDone": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Exit gesprek done",
+                        "description": "Date the exit interview was held; null while pending. Gates the afronden transition."
+                    },
+                    "assetsIngeleverd": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Assets ingeleverd",
+                        "description": "Whether company property was returned. Records the outcome only — per-item tracking is the parallel asset-management-mvp's domain (design.md D6)."
+                    },
+                    "toegangIngetrokken": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Toegang ingetrokken",
+                        "description": "Whether Nextcloud/IT access has been revoked. Records the outcome only — OCS automation is a non-goal."
+                    },
+                    "verlofsaldoUitbetaald": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Verlofsaldo uitbetaald",
+                        "description": "Whether the open leave balance was paid out (BW art. 7:641). Checked cross-object by nl-offboarding-verlofsaldo-uitbetaling against the employee's LeaveBalance rows."
+                    },
+                    "vakantiegeldAfgerekend": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Vakantiegeld afgerekend",
+                        "description": "Whether accrued vakantiegeld was settled in the eindafrekening."
+                    },
+                    "transitievergoedingBedrag": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Transitievergoeding bedrag",
+                        "description": "Gross statutory transition payment in EUR (BW art. 7:673); required data for dismissal-initiated reasons, null when not applicable. Recorded input, not derived — the formula constants live as parameters on the nl-offboarding-transitievergoeding rule."
+                    },
+                    "getuigschriftVerstrekt": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Getuigschrift verstrekt",
+                        "description": "Whether the getuigschrift was provided to the leaver (BW art. 7:656; generated via the existing docudesk getuigschrift document type)."
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Notes",
+                        "description": "Free-text case notes."
+                    }
+                }
             }
         }
     }

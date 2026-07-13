@@ -24,6 +24,8 @@ import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
 import BriefcaseSearchOutline from 'vue-material-design-icons/BriefcaseSearchOutline.vue'
 import FileAccountOutline from 'vue-material-design-icons/FileAccountOutline.vue'
+import AccountMinus from 'vue-material-design-icons/AccountMinus.vue'
+import AccountMinusOutline from 'vue-material-design-icons/AccountMinusOutline.vue'
 
 export default {
 	AccountOutline,
@@ -43,4 +45,6 @@ export default {
 	AccountPlusOutline,
 	BriefcaseSearchOutline,
 	FileAccountOutline,
+	AccountMinus,
+	AccountMinusOutline,
 }

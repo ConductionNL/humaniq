@@ -172,17 +172,24 @@ class RuleAuditService
      * predicates (pension-filing-upa-mvp): a PayrollRun `{id, period, status}` index
      * keyed by id, plus the set of periods with an approved-or-later run, and the
      * set of periods that have at least one PensionFiling. Also builds the
-     * Employee `{id, loonheffingenVerklaringOnFile, startDate}` index keyed by
-     * id/slug and the EmploymentContract `{type, startDate, endDate}` index keyed
-     * by employeeId (onboarding-wizard-mvp) consumed by NlOnboardingChecks, and an
-     * OrgUnit `{id, parentUnitId, active}` index keyed by id (org-chart-basic)
-     * consumed by NlOrgChecks for the assignment-consistency (active-unit lookup)
-     * and unit-cycle (parent walk) predicates. Loads independently of the main
+     * Employee `{id, loonheffingenVerklaringOnFile, startDate, endDate}` index
+     * keyed by id/slug (the `endDate` field added by offboarding-wizard-mvp for
+     * nl-offboarding-einddatum-consistentie) and the EmploymentContract `{type,
+     * startDate, endDate}` index keyed by employeeId (onboarding-wizard-mvp)
+     * consumed by NlOnboardingChecks, an OrgUnit `{id, parentUnitId, active}`
+     * index keyed by id (org-chart-basic) consumed by NlOrgChecks for the
+     * assignment-consistency (active-unit lookup) and unit-cycle (parent walk)
+     * predicates, and a LeaveBalance `{leaveType, year, entitledHours,
+     * bovenwettelijkHours, usedHours}` list index keyed by employeeId
+     * (offboarding-wizard-mvp) consumed by NlOffboardingChecks for the
+     * verlofsaldo-uitbetaling predicate. Loads independently of the main
      * per-type loop (a small, side-effect-free reload) so the index is ready
      * before any object of either type is evaluated. Degrades gracefully to empty
      * sets when a schema does not exist yet in the register.
      *
      * @return array<string, array<string, mixed>>
+     *
+     * @spec openspec/changes/offboarding-wizard-mvp/specs/offboarding-wizard/spec.md#REQ-OFB-004
      */
     private function buildRelatedContext(): array
     {
@@ -226,6 +233,9 @@ class RuleAuditService
                 'id'                            => $id,
                 'loonheffingenVerklaringOnFile' => (bool) ($employee['loonheffingenVerklaringOnFile'] ?? false),
                 'startDate'                     => (string) ($employee['startDate'] ?? ''),
+                // offboarding-wizard-mvp: the case's endDate, consumed by
+                // nl-offboarding-einddatum-consistentie (BW 7:667).
+                'endDate'                       => (string) ($employee['endDate'] ?? ''),
             ];
         }
 
@@ -269,6 +279,26 @@ class RuleAuditService
             ];
         }
 
+        // offboarding-wizard-mvp: a LeaveBalance index keyed by employeeId (the
+        // list of {leaveType, year, entitledHours, bovenwettelijkHours,
+        // usedHours} rows) so nl-offboarding-verlofsaldo-uitbetaling can sum
+        // each employee's open leave balance without re-querying the register.
+        $leaveBalancesByEmployeeId = [];
+        foreach ($this->loadAll('LeaveBalance') as $balance) {
+            $employeeId = (string) ($balance['employeeId'] ?? '');
+            if ($employeeId === '') {
+                continue;
+            }
+
+            $leaveBalancesByEmployeeId[$employeeId][] = [
+                'leaveType'           => (string) ($balance['leaveType'] ?? ''),
+                'year'                => (int) ($balance['year'] ?? 0),
+                'entitledHours'       => (float) ($balance['entitledHours'] ?? 0),
+                'bovenwettelijkHours' => (float) ($balance['bovenwettelijkHours'] ?? 0),
+                'usedHours'           => (float) ($balance['usedHours'] ?? 0),
+            ];
+        }
+
         return [
             'PayrollRun'         => [
                 'byId'            => $byId,
@@ -285,6 +315,9 @@ class RuleAuditService
             ],
             'OrgUnit'            => [
                 'byId' => $orgUnitsById,
+            ],
+            'LeaveBalance'       => [
+                'byEmployeeId' => $leaveBalancesByEmployeeId,
             ],
         ];
 

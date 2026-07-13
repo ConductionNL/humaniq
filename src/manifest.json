@@ -190,6 +190,12 @@
 					"label": "Sollicitaties",
 					"icon": "FileAccountOutline",
 					"route": "Applications"
+				},
+				{
+					"id": "Offboardings",
+					"label": "Offboardings",
+					"icon": "AccountMinusOutline",
+					"route": "Offboardings"
 				}
 			]
 		},
@@ -1157,6 +1163,55 @@
 						{ "action": "aanbieden", "from": ["gesprek"], "to": "aanbod", "label": "Aanbieden" },
 						{ "action": "aannemen", "from": ["aanbod"], "to": "aangenomen", "label": "Aannemen" },
 						{ "action": "afwijzen", "from": ["nieuw", "screening", "gesprek", "aanbod"], "to": "afgewezen", "label": "Afwijzen" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "Offboardings",
+			"route": "/offboardings",
+			"type": "index",
+			"title": "Offboardings",
+			"config": {
+				"register": "hrmq",
+				"schema": "Offboarding",
+				"description": "Offboardingcases per vertrekkende medewerker: exit-gesprek, teruggave bedrijfseigendommen, toegangsintrekking en de eindafrekening (verlofsaldo, vakantiegeld, transitievergoeding, getuigschrift), met de laatste werkdag als klok.",
+				"columns": ["employeeId", "reason", "status", "lastWorkingDay"],
+				"filters": ["status", "reason"],
+				"sort": { "field": "lastWorkingDay", "order": "desc" }
+			}
+		},
+		{
+			"id": "OffboardingDetail",
+			"route": "/offboardings/:id",
+			"type": "detail",
+			"title": "Offboarding",
+			"config": {
+				"register": "hrmq",
+				"schema": "Offboarding",
+				"_note": "offboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the departing Employee), the checklist/eindafrekening fields and notes, leaving reason/status/lastWorkingDay; the 'Checklist' widget groups exitGesprekDone/assetsIngeleverd/toegangIngetrokken; the 'Eindafrekening' widget groups verlofsaldoUitbetaald/vakantiegeldAfgerekend/transitievergoedingBedrag/getuigschriftVerstrekt/notes -- the OnboardingDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OFB-002 edges (afronding_plannen/eindafrekening_gereedmelden/afronden/annuleren) -- no invented edges. Checklist/eindafrekening gates are audit-enforced (lib/Standards/Checks/NlOffboardingChecks.php), NOT write-time guards: no transition here blocks on an unmet gate field -- guard wiring for compliance-checked schemas is owned by the active hrmq-rule-compliance-enforcement change (design.md D2). Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "ofb-case", "type": "data", "title": "Case", "icon": "AccountMinus", "content": { "columns": 2, "exclude": ["employeeId", "exitGesprekDone", "assetsIngeleverd", "toegangIngetrokken", "verlofsaldoUitbetaald", "vakantiegeldAfgerekend", "transitievergoedingBedrag", "getuigschriftVerstrekt", "notes"] } },
+					{ "id": "ofb-checklist", "type": "data", "title": "Checklist", "icon": "CheckDecagramOutline", "content": { "columns": 2, "include": ["exitGesprekDone", "assetsIngeleverd", "toegangIngetrokken"] } },
+					{ "id": "ofb-eindafrekening", "type": "data", "title": "Eindafrekening", "icon": "ReceiptTextOutline", "content": { "columns": 2, "include": ["verlofsaldoUitbetaald", "vakantiegeldAfgerekend", "transitievergoedingBedrag", "getuigschriftVerstrekt", "notes"] } },
+					{ "id": "ofb-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "ofb-files", "type": "integration", "integrationId": "files", "title": "VSO & getuigschrift-documenten", "icon": "FolderOutline" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "ofb-case", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "2", "widgetId": "ofb-checklist", "gridX": 0, "gridY": 5, "gridWidth": 8, "gridHeight": 6 },
+					{ "id": "3", "widgetId": "ofb-eindafrekening", "gridX": 0, "gridY": 11, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "4", "widgetId": "ofb-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 19 },
+					{ "id": "5", "widgetId": "ofb-files", "gridX": 0, "gridY": 19, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "afronding_plannen", "from": ["aangekondigd"], "to": "afronding_gepland", "label": "Afronding plannen" },
+						{ "action": "eindafrekening_gereedmelden", "from": ["afronding_gepland"], "to": "eindafrekening_gereed", "label": "Eindafrekening gereedmelden" },
+						{ "action": "afronden", "from": ["eindafrekening_gereed"], "to": "afgerond", "label": "Afronden" },
+						{ "action": "annuleren", "from": ["aangekondigd", "afronding_gepland", "eindafrekening_gereed"], "to": "geannuleerd", "label": "Annuleren" }
 					]
 				},
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
