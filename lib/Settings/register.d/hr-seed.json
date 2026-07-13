@@ -328,6 +328,24 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "LeaveRequest",
+                    "slug": "leave-jansen-juli"
+                },
+                "employeeId": "employee-jansen",
+                "leaveType": "holiday",
+                "startDate": "2026-07-16",
+                "endDate": "2026-07-17",
+                "hours": 16,
+                "reason": "Verlengd weekend.",
+                "status": "approved",
+                "submittedAt": "2026-07-01T09:00:00Z",
+                "approvedBy": "manager-pietersen",
+                "approvedAt": "2026-07-02T10:00:00Z",
+                "userId": "admin"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "LeaveBalance",
                     "slug": "leavebalance-jansen-2026-holiday"
                 },
@@ -424,6 +442,26 @@
                 "planVanAanpakDone": "2025-11-20",
                 "uwv42WeekMeldingDue": "2026-07-20",
                 "eerstejaarsevaluatieDue": "2026-09-28"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "SickLeaveCase",
+                    "slug": "sickcase-degroot-wvp42"
+                },
+                "employeeId": "employee-degroot",
+                "firstSickDay": "2025-06-02",
+                "status": "gemeld",
+                "wachtdag": false,
+                "loondoorbetalingPercentage": 70,
+                "probleemanalyseDue": "2025-07-14",
+                "probleemanalyseDone": "2025-07-10",
+                "planVanAanpakDue": "2025-07-28",
+                "planVanAanpakDone": "2025-07-24",
+                "uwv42WeekMeldingDue": "2026-03-23",
+                "uwv42WeekMeldingDone": "2026-03-19",
+                "eerstejaarsevaluatieDue": "2026-06-01",
+                "eerstejaarsevaluatieDone": "2026-05-28"
             },
             {
                 "@self": {
