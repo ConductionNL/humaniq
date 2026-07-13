@@ -5,7 +5,7 @@
             "Timesheet": {
                 "slug": "Timesheet",
                 "icon": "ClockCheckOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Timesheet",
                 "description": "A per-employee, per-period record of worked hours submitted for approval (urenregistratie / time sheet). An employee logs hours against a period (and optionally a project/cost centre), submits the timesheet, and a manager approves or rejects it. The approval lifecycle (submitted → approved/rejected, with approver and timestamp) is the genuinely new, correctly-homed HR/labour surface that pipelinq's \"Timesheet approval\" deep-link previously pointed at shillinq for — shillinq's UrenRegistratie is an append-only billing time-log with no approval state, so this Timesheet schema owns the approval workflow in hrmq, the HR/labour app.",
                 "type": "object",
@@ -111,6 +111,12 @@
                         "nullable": true,
                         "title": "User",
                         "description": "Denormalized Nextcloud user id of the employee this timesheet belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the approvedBy convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnUren self-service page filters on it with the @me token."
+                    },
+                    "managerUserId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Manager user id",
+                        "description": "Denormalized Nextcloud user id of the employee's manager (mss-team-scope) — a plain NC-user-id string, never a $ref relation. A copy of the nextcloudUserId of the manager (OrgUnit.managerId) of the record's employee's active OrgAssignment unit, populated by HR/back-office alongside userId because the manifest filter grammar cannot join across schemas. The TeamUrengoedkeuring team page filters on it with the @me token; audited by nl-mss-manager-consistency."
                     },
                     "status": {
                         "type": "string",
