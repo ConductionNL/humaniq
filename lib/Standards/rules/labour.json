@@ -143,6 +143,18 @@
       "sourceUrl": null
     },
     {
+      "id": "nl-mss-manager-consistency",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-org-core",
+      "source": "HR-administration control (manager self-service scoping integrity)",
+      "statement": "A Timesheet/Expense/LeaveRequest managerUserId SHOULD equal the nextcloudUserId of the manager (OrgUnit.managerId) of the record's employee's active OrgAssignment unit; vacuous when any hop of that chain is absent (no managerUserId, no active placement, unmanaged unit, unresolvable manager, or manager without a Nextcloud account).",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": null
+    },
+    {
       "id": "nl-atw-dagelijkse-rust",
       "domain": "labour",
       "jurisdiction": "NL",

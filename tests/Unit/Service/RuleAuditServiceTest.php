@@ -11,7 +11,10 @@
  * OpenRegister ObjectService is a sibling-app dependency not available in
  * this standalone suite) with the exact pension-filing-upa-mvp seed fixture
  * shapes, and asserts the resulting report matches what `occ
- * hrmq:rules:audit` would show against the seeded register.
+ * hrmq:rules:audit` would show against the seeded register. mss-team-scope
+ * (round 3) adds coverage for the Employee.nextcloudUserId/OrgUnit.managerId
+ * index extensions and the new OrgAssignment.byEmployeeId index, through the
+ * exact seeded Timesheet/Expense/LeaveRequest managerUserId stamps.
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Service
@@ -26,6 +29,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/pension-filing-upa-mvp/specs/pension-filing-upa-mvp/spec.md
+ * @spec openspec/changes/mss-team-scope/specs/mss-team-scope/spec.md#REQ-MSS-005
  */
 
 declare(strict_types=1);
@@ -986,6 +990,155 @@ class RuleAuditServiceTest extends TestCase
         $this->assertNotContains('nl-aanzegtermijn-bewaking', $ruleIds);
 
     }//end testSignalsContextDegradesToEmptyWhenEmploymentContractSchemaAbsent()
+
+
+    // -- mss-team-scope: Employee.nextcloudUserId/OrgUnit.managerId/OrgAssignment.byEmployeeId related-context --
+
+
+    /**
+     * The mss-team-scope hr-seed.json fixture shapes after the schema bumps
+     * and seed edits: employee-jansen (nextcloudUserId `admin`) actively
+     * placed in Consultancy (managerId re-pointed to employee-jansen), and
+     * the three stamped submitted seeds (`managerUserId: "admin"` on
+     * Timesheet/Expense/LeaveRequest), fed through audit() as if loaded from
+     * the register.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededMssRows(): array
+    {
+        return [
+            'Employee'      => [
+                ['id' => 'employee-jansen', 'nextcloudUserId' => 'admin'],
+                ['id' => 'employee-devries'],
+            ],
+            'OrgUnit'       => [
+                ['id' => 'orgunit-directie', 'parentUnitId' => '', 'managerId' => 'employee-jansen', 'active' => true],
+                ['id' => 'orgunit-consultancy', 'parentUnitId' => 'orgunit-directie', 'managerId' => 'employee-jansen', 'active' => true],
+                ['id' => 'orgunit-backoffice', 'parentUnitId' => 'orgunit-directie', 'active' => true],
+            ],
+            'OrgAssignment' => [
+                ['employeeId' => 'employee-jansen', 'orgUnitId' => 'orgunit-consultancy', 'startDate' => '2024-01-01', 'endDate' => ''],
+                ['employeeId' => 'employee-devries', 'orgUnitId' => 'orgunit-backoffice', 'startDate' => '2025-03-01', 'endDate' => ''],
+            ],
+            'Timesheet'     => [
+                ['id' => 'timesheet-jansen-2026-05', 'employeeId' => 'employee-jansen', 'status' => 'submitted', 'managerUserId' => 'admin'],
+                ['id' => 'timesheet-devries-2026-05', 'employeeId' => 'employee-devries', 'status' => 'approved'],
+            ],
+            'Expense'       => [
+                ['id' => 'expense-jansen-hotel', 'employeeId' => 'employee-jansen', 'status' => 'submitted', 'managerUserId' => 'admin'],
+                ['id' => 'expense-devries-train', 'employeeId' => 'employee-devries', 'status' => 'approved'],
+            ],
+            'LeaveRequest'  => [
+                ['id' => 'leave-jansen-zomer', 'employeeId' => 'employee-jansen', 'status' => 'submitted', 'managerUserId' => 'admin'],
+            ],
+        ];
+
+    }//end seededMssRows()
+
+
+    /**
+     * @return void
+     */
+    public function testSeededMssDataFlagsZeroManagerConsistencyViolations(): void
+    {
+        $service = $this->serviceWithRows($this->seededMssRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-mss-manager-consistency', $ruleIds);
+
+    }//end testSeededMssDataFlagsZeroManagerConsistencyViolations()
+
+
+    /**
+     * @return void
+     */
+    public function testUnstampedRecordsAreNeverEvaluatedByManagerConsistency(): void
+    {
+        // The seeded approved records carry no managerUserId at all —
+        // vacuous pass, never flagged.
+        $service = $this->serviceWithRows($this->seededMssRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $this->assertGreaterThan(0, $report['objectsCompliant']);
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-mss-manager-consistency', $ruleIds);
+
+    }//end testUnstampedRecordsAreNeverEvaluatedByManagerConsistency()
+
+
+    /**
+     * @return void
+     */
+    public function testMismatchingManagerStampIsFlaggedThroughAudit(): void
+    {
+        $rows                            = $this->seededMssRows();
+        $rows['Timesheet'][0]['managerUserId'] = 'someone-else';
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-mss-manager-consistency'] ?? 0));
+
+    }//end testMismatchingManagerStampIsFlaggedThroughAudit()
+
+
+    /**
+     * @return void
+     */
+    public function testVacuousWhenEmployeeHasNoActiveAssignmentThroughAudit(): void
+    {
+        $rows                = $this->seededMssRows();
+        $rows['OrgAssignment'] = [];
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-mss-manager-consistency', $ruleIds);
+
+    }//end testVacuousWhenEmployeeHasNoActiveAssignmentThroughAudit()
+
+
+    /**
+     * @return void
+     */
+    public function testMssContextDegradesToEmptyWhenOrgSchemasAbsent(): void
+    {
+        $rows = [
+            'Timesheet' => [
+                ['id' => 'timesheet-x', 'employeeId' => 'employee-x', 'status' => 'submitted', 'managerUserId' => 'admin'],
+            ],
+        ];
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-mss-manager-consistency', $ruleIds);
+
+    }//end testMssContextDegradesToEmptyWhenOrgSchemasAbsent()
+
+
+    /**
+     * @return void
+     */
+    public function testSeededMssDataReportsBumpedCatalogueVersionAndRuleEnforceable(): void
+    {
+        $service = $this->serviceWithRows($this->seededMssRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+        $enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+        $this->assertContains('nl-mss-manager-consistency', $enforceable);
+
+    }//end testSeededMssDataReportsBumpedCatalogueVersionAndRuleEnforceable()
 
 
 }//end class

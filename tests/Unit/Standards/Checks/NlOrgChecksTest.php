@@ -6,7 +6,11 @@
  * Pins the two org-chart-basic predicates: assignment consistency
  * (nl-org-assignment-consistency, cross-object via the context's OrgUnit
  * index) and unit-cycle freedom (nl-org-unit-cycle, a visited-set parent
- * walk over the same index).
+ * walk over the same index), plus the mss-team-scope
+ * nl-mss-manager-consistency predicate shared across
+ * Timesheet/Expense/LeaveRequest (the consistent path, the mismatch
+ * violation, each vacuous hop, the multiple-active-assignments any-match
+ * pass, and the inactive-assignment skip).
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
@@ -21,6 +25,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/org-chart-basic/specs/org-chart-basic/spec.md#REQ-ORG-005
+ * @spec openspec/changes/mss-team-scope/specs/mss-team-scope/spec.md#REQ-MSS-005
  */
 
 declare(strict_types=1);
@@ -53,15 +58,25 @@ class NlOrgChecksTest extends TestCase
      */
     private array $unitChecks;
 
+    /**
+     * The registered Timesheet predicates, keyed by rule id (mss-team-scope
+     * — shared with Expense/LeaveRequest, so any one of the three suffices
+     * to exercise the shared predicate).
+     *
+     * @var array<string, callable>
+     */
+    private array $timesheetChecks;
+
 
     /**
      * @return void
      */
     protected function setUp(): void
     {
-        $checks                 = NlOrgChecks::checks();
+        $checks                = NlOrgChecks::checks();
         $this->assignmentChecks = $checks['OrgAssignment'];
         $this->unitChecks       = $checks['OrgUnit'];
+        $this->timesheetChecks  = $checks['Timesheet'];
 
     }//end setUp()
 
@@ -345,6 +360,279 @@ class NlOrgChecksTest extends TestCase
         $this->assertTrue(($this->unitChecks['nl-org-unit-cycle'])($unit, []));
 
     }//end testUnitCycleCheckWithEmptyContextIndexDoesNotFalselyViolate()
+
+
+    // -- nl-mss-manager-consistency (mss-team-scope) --
+
+
+    /**
+     * A minimal Timesheet-shaped record fixture; each test overrides the
+     * fields it exercises. Shared shape across Timesheet/Expense/LeaveRequest
+     * — all three carry the same `employeeId`/`managerUserId` fields.
+     *
+     * @param array<string, mixed> $overrides Fields to override.
+     *
+     * @return array<string, mixed>
+     */
+    private function managerScopedRecord(array $overrides=[]): array
+    {
+        return array_merge(
+            [
+                'employeeId'    => 'employee-jansen',
+                'managerUserId' => 'admin',
+            ],
+            $overrides
+        );
+
+    }//end managerScopedRecord()
+
+
+    /**
+     * A `context['related']` fixture matching RuleAuditService's pre-pass
+     * shape for the manager-consistency predicate: OrgAssignment.byEmployeeId,
+     * OrgUnit.byId (with managerId) and Employee.byId (with nextcloudUserId).
+     *
+     * @param array<string, array<int, array<string, mixed>>> $assignmentsByEmployeeId OrgAssignment index.
+     * @param array<string, array<string, mixed>>              $unitsById               OrgUnit index.
+     * @param array<string, array<string, mixed>>              $employeesById           Employee index.
+     *
+     * @return array<string, mixed>
+     */
+    private function managerContext(array $assignmentsByEmployeeId=[], array $unitsById=[], array $employeesById=[]): array
+    {
+        return [
+            'related' => [
+                'OrgAssignment' => ['byEmployeeId' => $assignmentsByEmployeeId],
+                'OrgUnit'       => ['byId' => $unitsById],
+                'Employee'      => ['byId' => $employeesById],
+            ],
+        ];
+
+    }//end managerContext()
+
+
+    /**
+     * @return void
+     */
+    public function testMatchingStampOnActivePlacementIsSatisfied(): void
+    {
+        $record  = $this->managerScopedRecord(['managerUserId' => 'admin']);
+        $context = $this->managerContext(
+            ['employee-jansen' => [['orgUnitId' => 'orgunit-consultancy', 'endDate' => '']]],
+            ['orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-jansen']],
+            ['employee-jansen' => ['id' => 'employee-jansen', 'nextcloudUserId' => 'admin']]
+        );
+
+        $this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $context));
+
+    }//end testMatchingStampOnActivePlacementIsSatisfied()
+
+
+    /**
+     * @return void
+     */
+    public function testMismatchingStampOnFullyResolvedChainViolates(): void
+    {
+        $record  = $this->managerScopedRecord(['managerUserId' => 'someone-else']);
+        $context = $this->managerContext(
+            ['employee-jansen' => [['orgUnitId' => 'orgunit-consultancy', 'endDate' => '']]],
+            ['orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-devries']],
+            ['employee-devries' => ['id' => 'employee-devries', 'nextcloudUserId' => 'admin']]
+        );
+
+        $this->assertFalse(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $context));
+
+    }//end testMismatchingStampOnFullyResolvedChainViolates()
+
+
+    /**
+     * @return void
+     */
+    public function testAbsentManagerUserIdStampIsVacuous(): void
+    {
+        $record = $this->managerScopedRecord(['managerUserId' => '']);
+
+        $this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $this->managerContext()));
+
+    }//end testAbsentManagerUserIdStampIsVacuous()
+
+
+    /**
+     * @return void
+     */
+    public function testEmptyEmployeeIdIsVacuous(): void
+    {
+        $record = $this->managerScopedRecord(['employeeId' => '', 'managerUserId' => 'admin']);
+
+        $this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $this->managerContext()));
+
+    }//end testEmptyEmployeeIdIsVacuous()
+
+
+    /**
+     * @return void
+     */
+    public function testNoActiveAssignmentIsVacuous(): void
+    {
+        $record = $this->managerScopedRecord();
+
+        // No OrgAssignment index entry at all for this employee.
+        $this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $this->managerContext()));
+
+    }//end testNoActiveAssignmentIsVacuous()
+
+
+    /**
+     * @return void
+     */
+    public function testUnmanagedUnitIsVacuous(): void
+    {
+        $record  = $this->managerScopedRecord();
+        $context = $this->managerContext(
+            ['employee-jansen' => [['orgUnitId' => 'orgunit-backoffice', 'endDate' => '']]],
+            ['orgunit-backoffice' => ['id' => 'orgunit-backoffice', 'managerId' => '']]
+        );
+
+        $this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $context));
+
+    }//end testUnmanagedUnitIsVacuous()
+
+
+    /**
+     * @return void
+     */
+    public function testUnresolvableManagerEmployeeIsVacuous(): void
+    {
+        $record  = $this->managerScopedRecord();
+        $context = $this->managerContext(
+            ['employee-jansen' => [['orgUnitId' => 'orgunit-consultancy', 'endDate' => '']]],
+            ['orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'no-such-employee']]
+        );
+
+        $this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $context));
+
+    }//end testUnresolvableManagerEmployeeIsVacuous()
+
+
+    /**
+     * @return void
+     */
+    public function testManagerWithoutNextcloudAccountIsVacuous(): void
+    {
+        $record  = $this->managerScopedRecord();
+        $context = $this->managerContext(
+            ['employee-jansen' => [['orgUnitId' => 'orgunit-consultancy', 'endDate' => '']]],
+            ['orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-devries']],
+            ['employee-devries' => ['id' => 'employee-devries', 'nextcloudUserId' => '']]
+        );
+
+        $this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $context));
+
+    }//end testManagerWithoutNextcloudAccountIsVacuous()
+
+
+    /**
+     * @return void
+     */
+    public function testInactiveAssignmentIsSkippedLeavingTheChainUnresolvedAndVacuous(): void
+    {
+        // A single, already-ended placement is skipped entirely (not
+        // "no active assignment", but the loop finds zero active rows to
+        // resolve through) — the overall predicate still passes vacuously.
+        $record  = $this->managerScopedRecord();
+        $context = $this->managerContext(
+            ['employee-jansen' => [['orgUnitId' => 'orgunit-consultancy', 'endDate' => '2020-01-01']]],
+            ['orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-devries']],
+            ['employee-devries' => ['id' => 'employee-devries', 'nextcloudUserId' => 'someone-else']]
+        );
+
+        $this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $context));
+
+    }//end testInactiveAssignmentIsSkippedLeavingTheChainUnresolvedAndVacuous()
+
+
+    /**
+     * @return void
+     */
+    public function testMultipleActiveAssignmentsAnyMatchPasses(): void
+    {
+        // Two concurrent active placements: the first resolves to a manager
+        // that does NOT match the stamp, the second resolves to one that
+        // does — any-match passes.
+        $record  = $this->managerScopedRecord(['managerUserId' => 'admin']);
+        $context = $this->managerContext(
+            [
+                'employee-jansen' => [
+                    ['orgUnitId' => 'orgunit-backoffice', 'endDate' => ''],
+                    ['orgUnitId' => 'orgunit-consultancy', 'endDate' => ''],
+                ],
+            ],
+            [
+                'orgunit-backoffice'  => ['id' => 'orgunit-backoffice', 'managerId' => 'employee-devries'],
+                'orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-jansen'],
+            ],
+            [
+                'employee-devries' => ['id' => 'employee-devries', 'nextcloudUserId' => 'someone-else'],
+                'employee-jansen'  => ['id' => 'employee-jansen', 'nextcloudUserId' => 'admin'],
+            ]
+        );
+
+        $this->assertTrue(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $context));
+
+    }//end testMultipleActiveAssignmentsAnyMatchPasses()
+
+
+    /**
+     * @return void
+     */
+    public function testMultipleActiveAssignmentsNoMatchViolates(): void
+    {
+        // Two concurrent active placements, both resolving to managers that
+        // do NOT match the stamp — a provable mismatch across every chain.
+        $record  = $this->managerScopedRecord(['managerUserId' => 'admin']);
+        $context = $this->managerContext(
+            [
+                'employee-jansen' => [
+                    ['orgUnitId' => 'orgunit-backoffice', 'endDate' => ''],
+                    ['orgUnitId' => 'orgunit-consultancy', 'endDate' => ''],
+                ],
+            ],
+            [
+                'orgunit-backoffice'  => ['id' => 'orgunit-backoffice', 'managerId' => 'employee-devries'],
+                'orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-visser'],
+            ],
+            [
+                'employee-devries' => ['id' => 'employee-devries', 'nextcloudUserId' => 'someone-else'],
+                'employee-visser'  => ['id' => 'employee-visser', 'nextcloudUserId' => 'someone-else-too'],
+            ]
+        );
+
+        $this->assertFalse(($this->timesheetChecks['nl-mss-manager-consistency'])($record, $context));
+
+    }//end testMultipleActiveAssignmentsNoMatchViolates()
+
+
+    /**
+     * @return void
+     */
+    public function testManagerConsistencySharedAcrossExpenseAndLeaveRequest(): void
+    {
+        $checks = NlOrgChecks::checks();
+
+        $this->assertArrayHasKey('nl-mss-manager-consistency', $checks['Expense']);
+        $this->assertArrayHasKey('nl-mss-manager-consistency', $checks['LeaveRequest']);
+
+        $record  = $this->managerScopedRecord(['managerUserId' => 'admin']);
+        $context = $this->managerContext(
+            ['employee-jansen' => [['orgUnitId' => 'orgunit-consultancy', 'endDate' => '']]],
+            ['orgunit-consultancy' => ['id' => 'orgunit-consultancy', 'managerId' => 'employee-jansen']],
+            ['employee-jansen' => ['id' => 'employee-jansen', 'nextcloudUserId' => 'admin']]
+        );
+
+        $this->assertTrue(($checks['Expense']['nl-mss-manager-consistency'])($record, $context));
+        $this->assertTrue(($checks['LeaveRequest']['nl-mss-manager-consistency'])($record, $context));
+
+    }//end testManagerConsistencySharedAcrossExpenseAndLeaveRequest()
 
 
 }//end class

@@ -201,6 +201,12 @@ class RuleAuditService
      * inname-bij-offboarding predicate -- degrading to an empty map (vacuous
      * pass) when the Offboarding schema does not exist yet in the register
      * (the parallel offboarding-wizard-mvp change lands in either order).
+     * mss-team-scope extends the Employee index with `nextcloudUserId`, the
+     * OrgUnit index with `managerId`, and adds a new OrgAssignment
+     * `byEmployeeId` index (`{orgUnitId, endDate}` lists), all consumed by
+     * NlOrgChecks::checks()['Timesheet'/'Expense'/'LeaveRequest']
+     * ['nl-mss-manager-consistency'] to resolve a record's employee's active
+     * placement's unit manager without re-querying the register.
      * Loads independently of the main per-type loop (a small, side-effect-free
      * reload) so the index is ready before any object of either type is
      * evaluated. Degrades gracefully to empty sets when a schema does not
@@ -210,6 +216,7 @@ class RuleAuditService
      *
      * @spec openspec/changes/offboarding-wizard-mvp/specs/offboarding-wizard/spec.md#REQ-OFB-004
      * @spec openspec/changes/asset-management-mvp/specs/asset-management/spec.md#REQ-AST-005
+     * @spec openspec/changes/mss-team-scope/specs/mss-team-scope/spec.md#REQ-MSS-005
      */
     private function buildRelatedContext(): array
     {
@@ -256,6 +263,13 @@ class RuleAuditService
                 // offboarding-wizard-mvp: the case's endDate, consumed by
                 // nl-offboarding-einddatum-consistentie (BW 7:667).
                 'endDate'                       => (string) ($employee['endDate'] ?? ''),
+                // mss-team-scope: the employee's own Nextcloud account id
+                // (when this Employee IS a manager), consumed by
+                // NlOrgChecks::checks()['Timesheet'/'Expense'/'LeaveRequest']
+                // ['nl-mss-manager-consistency'] to resolve a manager
+                // Employee's account for comparison against a record's
+                // stamped managerUserId.
+                'nextcloudUserId'               => (string) ($employee['nextcloudUserId'] ?? ''),
             ];
         }
 
@@ -296,6 +310,31 @@ class RuleAuditService
                 'id'           => $id,
                 'parentUnitId' => (string) ($unit['parentUnitId'] ?? ''),
                 'active'       => (bool) ($unit['active'] ?? true),
+                // mss-team-scope: the unit's manager (Employee UUID),
+                // consumed by NlOrgChecks::checks()['Timesheet'/'Expense'/
+                // 'LeaveRequest']['nl-mss-manager-consistency'] to resolve
+                // the manager for an active placement's unit.
+                'managerId'    => (string) ($unit['managerId'] ?? ''),
+            ];
+        }
+
+        // mss-team-scope: an OrgAssignment index keyed by employeeId (a list
+        // of {orgUnitId, endDate} placements, start dates irrelevant to
+        // activeness-at-audit — the predicate applies the endDate rule
+        // itself) so NlOrgChecks::checks()['Timesheet'/'Expense'/
+        // 'LeaveRequest']['nl-mss-manager-consistency'] can resolve a
+        // record's employee's active placements without re-querying the
+        // register.
+        $orgAssignmentsByEmployeeId = [];
+        foreach ($this->loadAll('OrgAssignment') as $assignment) {
+            $employeeId = trim((string) ($assignment['employeeId'] ?? ''));
+            if ($employeeId === '') {
+                continue;
+            }
+
+            $orgAssignmentsByEmployeeId[$employeeId][] = [
+                'orgUnitId' => (string) ($assignment['orgUnitId'] ?? ''),
+                'endDate'   => (string) ($assignment['endDate'] ?? ''),
             ];
         }
 
@@ -386,6 +425,9 @@ class RuleAuditService
             ],
             'OrgUnit'            => [
                 'byId' => $orgUnitsById,
+            ],
+            'OrgAssignment'      => [
+                'byEmployeeId' => $orgAssignmentsByEmployeeId,
             ],
             'LeaveBalance'       => [
                 'byEmployeeId' => $leaveBalancesByEmployeeId,

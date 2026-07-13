@@ -36,7 +36,8 @@
                 "billable": true,
                 "status": "submitted",
                 "submittedAt": "2026-06-01T08:15:00Z",
-                "userId": "admin"
+                "userId": "admin",
+                "managerUserId": "admin"
             },
             {
                 "@self": {
@@ -88,7 +89,8 @@
                 "expenseDate": "2026-05-14",
                 "status": "submitted",
                 "submittedAt": "2026-05-15T07:30:00Z",
-                "userId": "admin"
+                "userId": "admin",
+                "managerUserId": "admin"
             },
             {
                 "@self": {
@@ -320,7 +322,8 @@
                 "reason": "Zomervakantie.",
                 "status": "submitted",
                 "submittedAt": "2026-07-10T09:00:00Z",
-                "userId": "admin"
+                "userId": "admin",
+                "managerUserId": "admin"
             },
             {
                 "@self": {
@@ -553,7 +556,7 @@
                 "type": "team",
                 "parentUnitId": "orgunit-directie",
                 "costCenter": "CC-100",
-                "managerId": "employee-devries",
+                "managerId": "employee-jansen",
                 "active": true
             },
             {

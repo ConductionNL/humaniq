@@ -22,6 +22,21 @@
  * (ADR-001), the NlPensionFilingChecks precedent for cross-referencing
  * providers.
  *
+ * mss-team-scope (round 3) extends this provider — rather than adding a new
+ * one, since the new rule is itself an `hr-org-core` org-integrity control
+ * consuming the same OrgUnit index this provider already owns — with the
+ * shared `nl-mss-manager-consistency` predicate, registered under
+ * `Timesheet`/`Expense`/`LeaveRequest`: a record's denormalized
+ * `managerUserId` SHOULD equal the `nextcloudUserId` of the manager
+ * (`OrgUnit.managerId`) of the record's employee's active OrgAssignment
+ * unit. It reads two further `buildRelatedContext()` extensions —
+ * `context['related']['OrgAssignment']['byEmployeeId']` (a new index) and
+ * the `nextcloudUserId` field added to the existing `Employee` index — plus
+ * the `managerId` field added to the existing `OrgUnit` index. Vacuous
+ * (passes) whenever any hop of that chain is absent — this rule is
+ * `recommended` severity, the deliberate inverse posture of the two
+ * `mandatory` predicates above.
+ *
  * @category Standards
  * @package  OCA\Hrmq\Standards\Checks
  *
@@ -35,6 +50,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/org-chart-basic/specs/org-chart-basic/spec.md#REQ-ORG-005
+ * @spec openspec/changes/mss-team-scope/specs/mss-team-scope/spec.md#REQ-MSS-005
  */
 
 declare(strict_types=1);
@@ -67,6 +83,21 @@ final class NlOrgChecks implements CheckProvider
                 // Administration-integrity control — the parentUnitId chain
                 // must never re-enter a unit already walked.
                 'nl-org-unit-cycle' => static fn(array $o, array $c): bool => self::unitCycleFree($o, $c),
+            ],
+            // mss-team-scope: one shared manager-consistency predicate,
+            // registered under the three approval-carrying schemas. A
+            // `recommended`-severity data-quality lamp, deliberately the
+            // inverse posture of the two `mandatory` predicates above:
+            // fail-open (vacuous pass) on absent org data, fail-closed only
+            // on a provable mismatch.
+            'Timesheet'     => [
+                'nl-mss-manager-consistency' => static fn(array $o, array $c): bool => self::managerConsistent($o, $c),
+            ],
+            'Expense'       => [
+                'nl-mss-manager-consistency' => static fn(array $o, array $c): bool => self::managerConsistent($o, $c),
+            ],
+            'LeaveRequest'  => [
+                'nl-mss-manager-consistency' => static fn(array $o, array $c): bool => self::managerConsistent($o, $c),
             ],
         ];
 
@@ -221,6 +252,136 @@ final class NlOrgChecks implements CheckProvider
         return is_array($byId) === true ? $byId : [];
 
     }//end relatedOrgUnitsById()
+
+
+    /**
+     * True (satisfied/vacuous) unless the record carries a non-empty
+     * `managerUserId`, at least one of the employee's active OrgAssignments
+     * fully resolves a manager `nextcloudUserId` through the OrgUnit and
+     * Employee indexes, and NONE of the resolved manager ids equals
+     * `managerUserId` (mss-team-scope). Vacuous — passes — whenever any hop
+     * of the chain is absent: no stamp, no `employeeId`, no active
+     * assignment, an unresolvable/unmanaged unit, an unresolvable manager
+     * Employee, or a manager without a `nextcloudUserId`. Multiple
+     * concurrent active placements: matching ANY resolved manager passes
+     * (any-match), mirroring how a person may legitimately be placed in more
+     * than one unit.
+     *
+     * @param array<string, mixed> $o The Timesheet/Expense/LeaveRequest record.
+     * @param array<string, mixed> $c Evaluation context (carries `related`).
+     *
+     * @return bool
+     */
+    private static function managerConsistent(array $o, array $c): bool
+    {
+        $managerUserId = trim((string) ($o['managerUserId'] ?? ''));
+        if ($managerUserId === '') {
+            // Optional field, not stamped — vacuous pass.
+            return true;
+        }
+
+        $employeeId = trim((string) ($o['employeeId'] ?? ''));
+        if ($employeeId === '') {
+            return true;
+        }
+
+        $assignments = (self::relatedOrgAssignmentsByEmployeeId($c)[$employeeId] ?? []);
+        if (is_array($assignments) === false || count($assignments) === 0) {
+            // No known placement at all — vacuous pass.
+            return true;
+        }
+
+        $unitsById     = self::relatedOrgUnitsById($c);
+        $employeesById = self::relatedEmployeesById($c);
+
+        $resolvedManagerNextcloudUserIds = [];
+        foreach ($assignments as $assignment) {
+            if (is_array($assignment) === false) {
+                continue;
+            }
+
+            $endDate = trim((string) ($assignment['endDate'] ?? ''));
+            if (self::isCurrentlyActive($endDate) === false) {
+                // Historical placement — irrelevant to who manages the
+                // employee today.
+                continue;
+            }
+
+            $orgUnitId = trim((string) ($assignment['orgUnitId'] ?? ''));
+            if ($orgUnitId === '') {
+                continue;
+            }
+
+            $unit = ($unitsById[$orgUnitId] ?? null);
+            if (is_array($unit) === false) {
+                // Unresolvable unit — this hop dead-ends.
+                continue;
+            }
+
+            $unitManagerId = trim((string) ($unit['managerId'] ?? ''));
+            if ($unitManagerId === '') {
+                // Unmanaged unit — this hop dead-ends.
+                continue;
+            }
+
+            $manager = ($employeesById[$unitManagerId] ?? null);
+            if (is_array($manager) === false) {
+                // Unresolvable manager Employee — this hop dead-ends.
+                continue;
+            }
+
+            $managerNextcloudUserId = trim((string) ($manager['nextcloudUserId'] ?? ''));
+            if ($managerNextcloudUserId === '') {
+                // Manager has no Nextcloud account — this hop dead-ends.
+                continue;
+            }
+
+            $resolvedManagerNextcloudUserIds[] = $managerNextcloudUserId;
+        }//end foreach
+
+        if (count($resolvedManagerNextcloudUserIds) === 0) {
+            // No active placement's chain fully resolved — vacuous pass.
+            return true;
+        }
+
+        // Fail-closed ONLY on a provable mismatch: at least one chain fully
+        // resolved, and none of them equals the stamped managerUserId.
+        return in_array($managerUserId, $resolvedManagerNextcloudUserIds, true);
+
+    }//end managerConsistent()
+
+
+    /**
+     * The `related.OrgAssignment.byEmployeeId` index from the context (lists
+     * of `{orgUnitId, endDate}`), or an empty array when the pre-pass has not
+     * populated it.
+     *
+     * @param array<string, mixed> $c Evaluation context.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private static function relatedOrgAssignmentsByEmployeeId(array $c): array
+    {
+        $byEmployeeId = ($c['related']['OrgAssignment']['byEmployeeId'] ?? []);
+        return is_array($byEmployeeId) === true ? $byEmployeeId : [];
+
+    }//end relatedOrgAssignmentsByEmployeeId()
+
+
+    /**
+     * The `related.Employee.byId` index from the context, or an empty array
+     * when the pre-pass has not populated it.
+     *
+     * @param array<string, mixed> $c Evaluation context.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private static function relatedEmployeesById(array $c): array
+    {
+        $byId = ($c['related']['Employee']['byId'] ?? []);
+        return is_array($byId) === true ? $byId : [];
+
+    }//end relatedEmployeesById()
 
 
 }//end class
