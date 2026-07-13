@@ -844,6 +844,27 @@
                 "besprokenOp": "2026-06-20",
                 "vastgesteldDoor": "manager-pietersen",
                 "userId": null
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-devries-tijdelijk"
+                },
+                "employeeId": "employee-devries",
+                "type": "temporary",
+                "writtenContract": true,
+                "startDate": "2025-09-01",
+                "endDate": "2026-08-01",
+                "hoursPerWeek": 32,
+                "hourlyWage": 21.00,
+                "cao": null,
+                "awfTariff": "high",
+                "aanzegdOn": null,
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true
             }
         ]
     }

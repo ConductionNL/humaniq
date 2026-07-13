@@ -46,7 +46,7 @@
             "EmploymentContract": {
                 "slug": "EmploymentContract",
                 "icon": "FileSignOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Employment Contract",
                 "description": "An employment agreement between the organisation and an employee. Carries the contract attributes the payroll checks read (permanent/temporary type that drives the Awf low/high premium, contracted hours, CAO, minimum-wage hourly basis).",
                 "type": "object",
@@ -69,7 +69,8 @@
                     "workingTimeDocumented": {"type": "boolean", "description": "DE: whether daily working time is recorded within 7 days and retained ≥2 years for §17 MiLoG sectors/Minijobs (de-mindestlohn-arbeitszeit-doku)."},
                     "overtimeMultiplier": {"type": "number", "nullable": true, "description": "US: overtime pay multiplier for hours over 40/week for non-exempt employees — must be ≥1.5 (us-flsa-overtime)."},
                     "ftePartOfYearMinijob": {"type": "boolean", "description": "DE: whether the contract is a Minijob within the geringfügige Beschäftigung threshold using flat-rate contributions (de-minijob-pauschale)."},
-                    "dpaeFiledBeforeStart": {"type": "boolean", "description": "FR: whether the Déclaration Préalable À l'Embauche (DPAE) was filed in the 8 days before the hire (fr-dpae)."}
+                    "dpaeFiledBeforeStart": {"type": "boolean", "description": "FR: whether the Déclaration Préalable À l'Embauche (DPAE) was filed in the 8 days before the hire (fr-dpae)."},
+                    "aanzegdOn": {"type": "string", "format": "date", "nullable": true, "title": "Aanzegd on", "description": "NL: date the written aanzegging (BW 7:668 lid 1) was sent to the employee, informing whether a fixed-term contract of six months or longer will be continued. Must be on or before endDate minus one month to satisfy nl-aanzegtermijn-bewaking."}
                 }
             },
             "Payslip": {
