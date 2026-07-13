@@ -105,5 +105,10 @@ Vrij en open source onder de EUPL-1.2-licentie.
              (payroll-sepa-netpay-shillinq MVP trigger). Duck-typed no-op when
              shillinq is absent. -->
         <command>OCA\Hrmq\Command\NetPayRunCommand</command>
+        <!-- Generate standard HR documents (arbeidsovereenkomst, aanbiedingsbrief,
+             werkgeversverklaring, getuigschrift) via docudesk's template/rendering
+             engine (hrmq-docudesk-documents MVP trigger). Duck-typed no-op
+             (skipped-no-docudesk) when docudesk is absent. -->
+        <command>OCA\Hrmq\Command\DocumentsGenerateCommand</command>
     </commands>
 </info>

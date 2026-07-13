@@ -183,6 +183,18 @@
           {"minHours": 10, "requiredBreakMinutes": 45}
         ]
       }
+    },
+    {
+      "id": "nl-contract-schriftelijk",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:655 (schriftelijke opgave verplichtingen werkgever)",
+      "statement": "A permanent employment contract recorded as written (writtenContract: true) shall have its arbeidsovereenkomst document on file -- an active GeneratedDocument of type arbeidsovereenkomst in status generated referencing the contract -- so the written-form precondition other rules rely on (nl-awf-laag-hoog-tarief) is evidenced, not merely asserted.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
     }
   ]
 }

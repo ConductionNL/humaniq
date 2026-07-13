@@ -16,6 +16,9 @@ return [
         ['name' => 'page#index',    'url' => '/',             'verb' => 'GET'],
         // ADR-024 §4 — manifest endpoint (bundled blob).
         ['name' => 'page#manifest', 'url' => '/api/manifest', 'verb' => 'GET'],
+        // hrmq-docudesk-documents — guarded trigger for the EmploymentContractDetail
+        // "Genereer arbeidsovereenkomst" manifest api-call action (design.md D7).
+        ['name' => 'document#generate', 'url' => '/api/documents/generate', 'verb' => 'POST'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],
