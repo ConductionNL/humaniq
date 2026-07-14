@@ -43,6 +43,8 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects
      * {@inheritDoc}
      *
      * @return array<string, array<string, callable>>
+     *
+     * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-006
      */
     public static function checks(): array
     {
@@ -130,15 +132,21 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects
             'PayrollRun'         => [
                 // Payroll-to-GL control — the GL liability/expense postings reconcile to the
                 // run totals: expense = gross + employer charges; liability = gross + charges − net.
-                'xc-payroll-gl-reconciliation'       => static fn(array $o): bool => self::numeric($o, 'glExpensePosted')
+                // Scoped to posted/paid runs (payroll-core-engine): a draft/approved run has no
+                // GL postings yet by definition, so checking it would be a false positive —
+                // never surfaced before because the only seeded run is `posted`.
+                'xc-payroll-gl-reconciliation'       => static fn(array $o): bool => self::isGlPosted($o) === false
+                    || (self::numeric($o, 'glExpensePosted')
                     && self::numeric($o, 'glLiabilityPosted')
                     && self::centsEqual((float) $o['glExpensePosted'], (((float) ($o['totalGross'] ?? 0)) + ((float) ($o['totalEmployerCharges'] ?? 0))))
-                    && self::centsEqual((float) $o['glLiabilityPosted'], (((float) ($o['totalGross'] ?? 0)) + ((float) ($o['totalEmployerCharges'] ?? 0)) - ((float) ($o['totalNet'] ?? 0)))),
+                    && self::centsEqual((float) $o['glLiabilityPosted'], (((float) ($o['totalGross'] ?? 0)) + ((float) ($o['totalEmployerCharges'] ?? 0)) - ((float) ($o['totalNet'] ?? 0))))),
                 // Liability-clearing control — each withholding liability is cleared to zero on
                 // remittance, so a cleared run carries a zero residual liability balance.
-                'xc-withholding-liability-clearing'  => static fn(array $o): bool => (($o['withholdingsClearedToZero'] ?? false) === true)
+                // Same posted/paid scoping: remittance clearing only exists once posted.
+                'xc-withholding-liability-clearing'  => static fn(array $o): bool => self::isGlPosted($o) === false
+                    || ((($o['withholdingsClearedToZero'] ?? false) === true)
                     && self::numeric($o, 'withholdingLiabilityBalance')
-                    && self::centsEqual((float) $o['withholdingLiabilityBalance'], 0.0),
+                    && self::centsEqual((float) $o['withholdingLiabilityBalance'], 0.0)),
             ],
         ];
 
@@ -296,6 +304,23 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects
         ];
 
     }//end seedObjects()
+
+
+    /**
+     * Whether a PayrollRun has reached the GL-posting stage (posted/paid) —
+     * the applicability scope of the xc-payroll-gl-reconciliation and
+     * xc-withholding-liability-clearing controls (payroll-core-engine: draft
+     * engine runs have no GL postings yet by definition).
+     *
+     * @param array<string, mixed> $o The PayrollRun.
+     *
+     * @return bool
+     */
+    private static function isGlPosted(array $o): bool
+    {
+        return in_array((string) ($o['status'] ?? ''), ['posted', 'paid'], true);
+
+    }//end isGlPosted()
 
 
     /**

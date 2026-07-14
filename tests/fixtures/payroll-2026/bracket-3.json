@@ -1,0 +1,27 @@
+{
+  "name": "bracket-3 — €9.000,00 high earner (top schijventarief bracket), wit, korting toegepast, below AOW",
+  "input": {
+    "grossMonthly": 9000.00,
+    "taxTableColor": "wit",
+    "dateOfBirth": "1985-06-01",
+    "loonheffingskortingToegepast": true,
+    "awfTariff": "low",
+    "aofTariff": "laag",
+    "whkPercentage": 1.52,
+    "period": "2026-02"
+  },
+  "expected": {
+    "loonheffing": 3480.67,
+    "arbeidskorting": 135.25,
+    "volksverzekeringen": 862.42,
+    "zvw": 403.66,
+    "awf": 181.32,
+    "aof": 414.91,
+    "wko": 33.09,
+    "whk": 100.58,
+    "werknemersverzekeringen": 729.90,
+    "employerCharges": 1133.56,
+    "vakantiegeldReserved": 720.00,
+    "nettoPay": 5519.33
+  }
+}

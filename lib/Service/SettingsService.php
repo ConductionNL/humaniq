@@ -318,6 +318,52 @@ class SettingsService
 
 
     /**
+     * The employer's Aof (arbeidsongeschiktheidsfonds) tariff classification
+     * (payroll-core-engine design.md D2 step 9): `laag` for small employers,
+     * `hoog` for other employers — a per-employer fact the tax-year tables
+     * cannot know. Configurable via app config key `payroll_aof_tariff`;
+     * anything other than `hoog` falls back to the honest default `laag`.
+     *
+     * @return string `laag` or `hoog`.
+     *
+     * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
+     */
+    public function getPayrollAofTariff(): string
+    {
+        $value = strtolower(trim($this->appConfig->getValueString(Application::APP_ID, 'payroll_aof_tariff', 'laag')));
+        return $value === 'hoog' ? 'hoog' : 'laag';
+
+    }//end getPayrollAofTariff()
+
+
+    /**
+     * The employer's gedifferentieerde Whk (Werkhervattingskas) percentage
+     * (payroll-core-engine design.md D2 step 9) — employer-specific, set by
+     * the Belastingdienst Whk-beschikking. Configurable via app config key
+     * `payroll_whk_percentage`; unset/blank/non-numeric falls back to the
+     * tables' flagged national average passed in by the caller (the tables
+     * file marks its `whk` value `placeholder: true`).
+     *
+     * @param float $tablesDefault The tables' flagged national-average Whk percentage.
+     *
+     * @return float The Whk percentage (percentage scale, e.g. 1.52).
+     *
+     * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
+     */
+    public function getPayrollWhkPercentage(float $tablesDefault): float
+    {
+        $value = trim($this->appConfig->getValueString(Application::APP_ID, 'payroll_whk_percentage', ''));
+        if ($value === '' || is_numeric($value) === false) {
+            return $tablesDefault;
+        }
+
+        $percentage = (float) $value;
+        return $percentage >= 0.0 ? $percentage : $tablesDefault;
+
+    }//end getPayrollWhkPercentage()
+
+
+    /**
      * The CalDAV principal that owns the target shared calendar
      * (leave-calendar-nc design.md D6), e.g. `principals/users/hr`,
      * configurable via app config key `leave_calendar_principal`. Empty

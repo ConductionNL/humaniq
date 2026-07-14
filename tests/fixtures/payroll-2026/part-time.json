@@ -1,0 +1,27 @@
+{
+  "name": "part-time — €2.280,00 (0,6x the anchor), wit, korting toegepast, below AOW",
+  "input": {
+    "grossMonthly": 2280.00,
+    "taxTableColor": "wit",
+    "dateOfBirth": "1990-04-12",
+    "loonheffingskortingToegepast": true,
+    "awfTariff": "low",
+    "aofTariff": "laag",
+    "whkPercentage": 1.52,
+    "period": "2026-02"
+  },
+  "expected": {
+    "loonheffing": 110.33,
+    "arbeidskorting": 444.08,
+    "volksverzekeringen": 85.34,
+    "zvw": 139.08,
+    "awf": 62.47,
+    "aof": 142.96,
+    "wko": 11.40,
+    "whk": 34.66,
+    "werknemersverzekeringen": 251.49,
+    "employerCharges": 390.57,
+    "vakantiegeldReserved": 182.40,
+    "nettoPay": 2169.67
+  }
+}

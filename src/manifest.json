@@ -830,6 +830,18 @@
 			"route": "/payroll-runs",
 			"type": "index",
 			"title": "Loonruns",
+			"actions": [
+				{
+					"id": "create-run",
+					"label": "Loonrun aanmaken",
+					"type": "open-form",
+					"icon": "PlusCircleOutline",
+					"register": "hrmq",
+					"schema": "PayrollRun",
+					"onSuccessRoute": "PayrollRunDetail",
+					"successMessage": "Concept-loonrun aangemaakt. Gebruik (Her)berekenen om de loonstroken te genereren."
+				}
+			],
 			"config": {
 				"register": "hrmq",
 				"schema": "PayrollRun",
@@ -843,21 +855,37 @@
 			"route": "/payroll-runs/:id",
 			"type": "detail",
 			"title": "Loonrun",
+			"actions": [
+				{
+					"id": "recalculate",
+					"label": "(Her)berekenen",
+					"type": "api-call",
+					"icon": "Calculator",
+					"url": "/api/payroll/calculate",
+					"method": "POST",
+					"params": { "runId": "@objectId" },
+					"confirm": true,
+					"successMessage": "Loonrun (her)berekend — loonstroken en totalen zijn bijgewerkt.",
+					"errorMessage": "(Her)berekenen van de loonrun is mislukt."
+				}
+			],
 			"config": {
 				"register": "hrmq",
 				"schema": "PayrollRun",
-				"_note": "Batch/reconciliation archetype: a PayrollRun is a per-period aggregate of an administration's payslips, so its page leads with the GL-reconciliation totals (totalGross/totalNet/withholdingLiabilityBalance -- exactly the numbers xc-payroll-gl-reconciliation and xc-withholding-liability-clearing check) as stat KPIs, then the full record (period/administrationId/jurisdiction/status/glLiabilityPosted/glExpensePosted/withholdingsClearedToZero) in the data widget below. NO Payslip child list and NO related panel: Payslip carries no payrollRunId (or any) FK back to PayrollRun in the schema, and administrationId is a bare string, not a resolvable object reference -- adding either would fabricate a relation the schema does not carry. NO lifecycleActions: `status` is a plain enum (draft/approved/posted/paid) with no `x-openregister-lifecycle` transition map on this schema, unlike Timesheet/Expense -- driving lifecycleActions here would invent transition names the backend does not guard. Audit history is a sidebar tab.",
+				"_note": "Batch/reconciliation archetype: a PayrollRun is a per-period aggregate of an administration's payslips, so its page leads with the GL-reconciliation totals (totalGross/totalNet/withholdingLiabilityBalance -- exactly the numbers xc-payroll-gl-reconciliation and xc-withholding-liability-clearing check) as stat KPIs, then the full record (period/administrationId/jurisdiction/status/glLiabilityPosted/glExpensePosted/withholdingsClearedToZero plus the engine stamps engineVersion/calculatedAt) in the data widget below. payroll-core-engine (2026-07-14): Payslip NOW carries a real payrollRunId $ref back to PayrollRun (added by payroll-core-schema), so the page gains the FK-scoped Payslips child list (allowCreate:false -- generation via the engine is the only create path, design.md D5) and the page-level api-call action \"(Her)berekenen\" (POST /api/payroll/calculate with {runId: @objectId}, guarded server-side by PayrollController::authorizeRun(), draft-only -- non-draft runs get a 400). Still NO lifecycleActions: `status` is a plain enum (draft/approved/posted/paid) with no `x-openregister-lifecycle` transition map on this schema -- driving lifecycleActions here would invent transition names the backend does not guard; the recalculate action is a page action, not a transition. Audit history is a sidebar tab.",
 				"widgets": [
 					{ "id": "pr-gross", "type": "stat", "title": "Total gross", "icon": "CashMultiple", "content": { "label": "Total gross", "caption": "this period", "icon": "CashMultiple", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "PayrollRun", "metric": "sum", "field": "totalGross", "filter": { "id": "@objectId" } } } },
 					{ "id": "pr-net", "type": "stat", "title": "Total net", "icon": "CurrencyEur", "content": { "label": "Total net", "caption": "paid out", "icon": "CurrencyEur", "valueColor": "#46ba61", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "PayrollRun", "metric": "sum", "field": "totalNet", "filter": { "id": "@objectId" } } } },
 					{ "id": "pr-liability", "type": "stat", "title": "Withholding liability balance", "icon": "ScaleBalance", "content": { "label": "Liability balance", "caption": "should clear to zero", "icon": "ScaleBalance", "valueColor": "#e9322d", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "PayrollRun", "metric": "sum", "field": "withholdingLiabilityBalance", "filter": { "id": "@objectId" } } } },
-					{ "id": "pr-data", "type": "data", "title": "Payroll run", "icon": "TableColumn", "content": { "columns": 2 } }
+					{ "id": "pr-data", "type": "data", "title": "Payroll run", "icon": "TableColumn", "content": { "columns": 2 } },
+					{ "id": "pr-payslips", "type": "object-list", "title": "Loonstroken", "icon": "ReceiptTextOutline", "content": { "register": "hrmq", "schema": "Payslip", "filter": { "payrollRunId": "@objectId" }, "sort": { "field": "employeeId", "dir": "asc" }, "columns": [ { "key": "employeeId", "label": "Employee" }, { "key": "grossPay", "label": "Gross" }, { "key": "loonheffing", "label": "Loonheffing" }, { "key": "nettoPay", "label": "Net" } ], "limit": 50, "rowRoute": "PayslipDetail", "viewAllRoute": "Payslips", "viewAllQuery": { "payrollRunId": "@objectId" }, "emptyText": "Nog geen loonstroken — voer (Her)berekenen uit", "allowCreate": false } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "pr-gross", "gridX": 0, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
 					{ "id": "2", "widgetId": "pr-net", "gridX": 4, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
 					{ "id": "3", "widgetId": "pr-liability", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
-					{ "id": "4", "widgetId": "pr-data", "gridX": 0, "gridY": 3, "gridWidth": 12, "gridHeight": 7 }
+					{ "id": "4", "widgetId": "pr-data", "gridX": 0, "gridY": 3, "gridWidth": 12, "gridHeight": 7 },
+					{ "id": "5", "widgetId": "pr-payslips", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 5 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}

@@ -1,0 +1,27 @@
+{
+  "name": "aow-age — anchor input, employee born 1959-03-15 (AOW-leeftijd 67 reached 2026-03), period 2026-06",
+  "input": {
+    "grossMonthly": 3800.00,
+    "taxTableColor": "wit",
+    "dateOfBirth": "1959-03-15",
+    "loonheffingskortingToegepast": true,
+    "awfTariff": "low",
+    "aofTariff": "laag",
+    "whkPercentage": 1.52,
+    "period": "2026-06"
+  },
+  "expected": {
+    "loonheffing": 291.42,
+    "arbeidskorting": 236.58,
+    "volksverzekeringen": 116.87,
+    "zvw": 231.80,
+    "awf": 104.12,
+    "aof": 238.26,
+    "wko": 19.00,
+    "whk": 57.76,
+    "werknemersverzekeringen": 419.14,
+    "employerCharges": 650.94,
+    "vakantiegeldReserved": 304.00,
+    "nettoPay": 3508.58
+  }
+}

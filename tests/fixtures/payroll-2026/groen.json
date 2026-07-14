@@ -1,0 +1,27 @@
+{
+  "name": "groen — anchor input with taxTableColor: groen (arbeidskorting skipped, RV2026 sec. 2.2.3.4 — structure-only groen support)",
+  "input": {
+    "grossMonthly": 3800.00,
+    "taxTableColor": "groen",
+    "dateOfBirth": "1990-04-12",
+    "loonheffingskortingToegepast": true,
+    "awfTariff": "low",
+    "aofTariff": "laag",
+    "whkPercentage": 1.52,
+    "period": "2026-02"
+  },
+  "expected": {
+    "loonheffing": 1192.58,
+    "arbeidskorting": 0.00,
+    "volksverzekeringen": 781.19,
+    "zvw": 231.80,
+    "awf": 104.12,
+    "aof": 238.26,
+    "wko": 19.00,
+    "whk": 57.76,
+    "werknemersverzekeringen": 419.14,
+    "employerCharges": 650.94,
+    "vakantiegeldReserved": 304.00,
+    "nettoPay": 2607.42
+  }
+}
