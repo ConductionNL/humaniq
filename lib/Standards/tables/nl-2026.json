@@ -1,0 +1,136 @@
+{
+  "id": "nl-2026",
+  "jurisdiction": "NL",
+  "year": 2026,
+  "issued": "2026-07-13",
+  "basedOn": [
+    {"doc": "Rekenvoorschriften geautomatiseerde loonadministratie 2026, uitgave januari 2026 versie 2 (LH 991-Z62FD)", "url": "https://download.belastingdienst.nl/belastingdienst/docs/rekenvoorschriften_voor_geautomatiseerde_loonadministratie_lh991z62fd.pdf"},
+    {"doc": "Regeling premiepercentages en maximumpremieloon werknemers- en volksverzekeringen 2026 (bijlagen)", "url": "https://open.overheid.nl/documenten/916b30f3-eafd-4acf-bd5a-f58319dae544/file"},
+    {"doc": "Rijksoverheid — Bedragen minimumloon 2026", "url": "https://www.rijksoverheid.nl/onderwerpen/minimumloon/bedragen-minimumloon/bedragen-minimumloon-2026"}
+  ],
+  "parameters": {
+    "loonheffing": {
+      "Lv": {"value": 54, "source": "RV2026 tabel 1a", "verified": true},
+      "Lmax": {"value": 133110, "source": "RV2026 tabel 1a", "verified": true},
+      "tijdvakFactoren": {
+        "value": {"kwartaal": 4, "maand": 12, "vierweken": 13, "week": 52, "dag": 260},
+        "source": "RV2026 tabel 1b",
+        "verified": true
+      },
+      "schijven": {
+        "belowAow": {
+          "value": [
+            {"tot": 38883, "percentage": 35.75, "a": 0, "c": 0},
+            {"tot": 78426, "percentage": 37.56, "a": 38883, "c": 13900},
+            {"tot": null, "percentage": 49.50, "a": 78426, "c": 28752}
+          ],
+          "source": "RV2026 tabel 2",
+          "verified": true
+        },
+        "aowBorn1946OrLater": {
+          "value": [
+            {"tot": 38883, "percentage": 17.85, "a": 0, "c": 0},
+            {"tot": 78426, "percentage": 37.56, "a": 38883, "c": 6940},
+            {"tot": null, "percentage": 49.50, "a": 78426, "c": 21792}
+          ],
+          "source": "RV2026 tabel 2",
+          "verified": true
+        },
+        "aowBorn1945OrEarlier": {
+          "value": [
+            {"tot": 41123, "percentage": 17.85, "a": 0, "c": 0},
+            {"tot": 78426, "percentage": 37.56, "a": 41123, "c": 7340},
+            {"tot": null, "percentage": 49.50, "a": 78426, "c": 21351}
+          ],
+          "source": "RV2026 tabel 2",
+          "verified": true
+        }
+      }
+    },
+    "heffingskortingen": {
+      "ahkm1": {"value": {"belowAow": 3115, "aowAge": 1556}, "source": "RV2026 tabel 3", "verified": true},
+      "ahkg1": {"value": {"belowAow": 29736, "aowAge": 29736}, "source": "RV2026 tabel 3", "verified": true},
+      "ahkg2": {"value": {"belowAow": 78426, "aowAge": 78426}, "source": "RV2026 tabel 3", "verified": true},
+      "ahka1": {"value": {"belowAow": 0.06398, "aowAge": 0.03195}, "source": "RV2026 tabel 3", "verified": true},
+      "arko1": {"value": {"belowAow": 0.08324, "aowAge": 0.04156}, "source": "RV2026 tabel 6", "verified": true},
+      "arko2": {"value": {"belowAow": 0.31009, "aowAge": 0.15483}, "source": "RV2026 tabel 6", "verified": true},
+      "arko3": {"value": {"belowAow": 0.01950, "aowAge": 0.00974}, "source": "RV2026 tabel 6", "verified": true},
+      "arka1": {"value": {"belowAow": 0.06510, "aowAge": 0.03250}, "source": "RV2026 tabel 6", "verified": true},
+      "arkg1": {"value": {"belowAow": 11965, "aowAge": 11965}, "source": "RV2026 tabel 6", "verified": true},
+      "arkg2": {"value": {"belowAow": 25845, "aowAge": 25845}, "source": "RV2026 tabel 6", "verified": true},
+      "arkg3": {"value": {"belowAow": 45592, "aowAge": 45592}, "source": "RV2026 tabel 6", "verified": true},
+      "arkg4": {"value": {"belowAow": 132920, "aowAge": 132920}, "source": "RV2026 tabel 6", "verified": true},
+      "arkm1": {"value": {"belowAow": 996, "aowAge": 498}, "source": "RV2026 tabel 6", "verified": true},
+      "arkm2": {"value": {"belowAow": 5300, "aowAge": 2647}, "source": "RV2026 tabel 6", "verified": true},
+      "arkm3": {"value": {"belowAow": 5685, "aowAge": 2840}, "source": "RV2026 tabel 6", "verified": true},
+      "oukm1": {"value": {"belowAow": null, "aowAge": 2067}, "source": "RV2026 tabel 4", "verified": true, "note": "n.v.t. below AOW-leeftijd."},
+      "oukg1": {"value": {"belowAow": null, "aowAge": 46002}, "source": "RV2026 tabel 4", "verified": true, "note": "n.v.t. below AOW-leeftijd."},
+      "oukg2": {"value": {"belowAow": null, "aowAge": 59782}, "source": "RV2026 tabel 4", "verified": true, "note": "n.v.t. below AOW-leeftijd."},
+      "ouka1": {"value": {"belowAow": null, "aowAge": 0.15000}, "source": "RV2026 tabel 4", "verified": true, "note": "n.v.t. below AOW-leeftijd."},
+      "aok1": {"value": {"belowAow": null, "aowAge": 540}, "source": "RV2026 tabel 5", "verified": true, "note": "n.v.t. below AOW-leeftijd."}
+    },
+    "volksverzekeringen": {
+      "informativeSplitOnly": true,
+      "_note": "The withholding itself is the combined loonheffing (rule nl-loonheffingen-volksverzekeringen); these rates drive only the informative Payslip.volksverzekeringen split (D6 in payroll-core-engine's design).",
+      "aow": {"value": 17.90, "source": "RPP2026", "verified": true},
+      "anw": {"value": 0.10, "source": "RPP2026", "verified": true},
+      "wlz": {"value": 9.65, "source": "RPP2026", "verified": true}
+    },
+    "aow": {
+      "leeftijdJaren": {
+        "value": 67,
+        "source": "RO-AOW",
+        "verified": true,
+        "note": "Fixed 67 for 2025-2027 (RO-AOW); the engine's AOW-age variant switches bracket set + korting column from the first day of the month the employee reaches AOW-leeftijd (RV2026 tabel 3 toelichting)."
+      }
+    },
+    "zvw": {
+      "werkgeversheffing": {"value": 6.10, "source": "RPP2026", "verified": true},
+      "inhouding": {"value": 4.85, "source": "RPP2026", "verified": true},
+      "maximumbijdrageloon": {"value": 79409, "source": "RPP2026", "verified": true, "note": "Annual maximum bijdrageloon in euro/jaar."}
+    },
+    "werknemersverzekeringen": {
+      "maximumpremieloon": {
+        "value": {"jaar": 79409, "maand": 6617.41, "vierweken": 6108.38},
+        "source": "RPP2026",
+        "verified": true
+      },
+      "awf": {"value": {"laag": 2.74, "hoog": 7.74}, "source": "RPP2026", "verified": true},
+      "aof": {"value": {"laag": 6.27, "hoog": 7.63}, "source": "RPP2026", "verified": true, "note": "Aof small/other-employer classification is per-employer; both rates are verified, selection is engine input in payroll-core-engine."},
+      "wkoOpslag": {"value": 0.50, "source": "RPP2026", "verified": true},
+      "whk": {
+        "value": 1.52,
+        "source": "RPP2026 (gemiddeld)",
+        "verified": true,
+        "placeholder": true,
+        "checkAgainst": "UWV nota Gedifferentieerde premies WGA en Ziektewet 2026 / Belastingdienst Whk-beschikking (employer-specific)"
+      }
+    },
+    "wml": {
+      "hourly21Plus": {
+        "value": {"2026-01-01": 14.71, "2026-07-01": 14.99},
+        "source": "RO-WML",
+        "verified": true
+      },
+      "referentiemaandloon": {
+        "value": 2294.40,
+        "source": "RPP2026 bijlage 3",
+        "verified": true,
+        "note": "Since 2024 there is no statutory fixed monthly minimum; monthly minimum = hourly x actual hours (corpus rule nl-minimumuurloon-wet)."
+      }
+    },
+    "vakantiebijslag": {
+      "minRatePercent": {
+        "value": 8.0,
+        "source": "WML art. 15",
+        "verified": true,
+        "note": "Existing corpus rule nl-vakantiebijslag-8procent."
+      }
+    }
+  },
+  "_notes": {
+    "loonheffingFormula": "L = floor((tvl x F) / Lv) x Lv (for tvl x F <= Lmax); X1 = floor((L - a) x b/100 + c); AHK/OUK rounded up to whole euros; ARK terms rounded to 5 decimals with the cumulative-cap chain (arkm1/arkm2/arkm3) then rounded up; X = max(0, X1 - (AHK + OUK + ARK + AOK)) floored to whole euros; tijdvakbedrag x = X / F rounded to 2 decimals (RV2026 §2.1-2.2.4).",
+    "arkScope": "ARK applies only to the witte tabel (RV2026 §2.2.3.4); the groene path uses the same schijven + AHK (+ OUK/AOK for AOW-age) without ARK — that IS the structural groene support, nothing more claimed.",
+    "aboveLmax": "Above Lmax: x = y + floor2((L/F - Lmax/F) x bmax/100) (RV2026 systematiek 1) — recorded for completeness; MVP fixtures stay below Lmax."
+  }
+}
