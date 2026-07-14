@@ -561,12 +561,16 @@ class RuleAuditService
 
 
     /**
-     * Build the per-contract document-evidence index consumed by
-     * NlDocumentChecks' `nl-contract-schriftelijk` predicate
-     * (hrmq-docudesk-documents, design.md D-corpus): `generatedArbeidsovereenkomstByContract`
-     * maps `contractId => true` for every `GeneratedDocument` of type
-     * `arbeidsovereenkomst` in status `generated` that references it. Degrades
-     * gracefully to an empty map when the GeneratedDocument schema does not
+     * Build the per-contract and per-payslip document-evidence indexes
+     * consumed by NlDocumentChecks' `nl-contract-schriftelijk` and
+     * `nl-loonstrook-verplicht` predicates (hrmq-docudesk-documents design.md
+     * D-corpus, extended by payslip-pdf-docudesk design.md D7):
+     * `generatedArbeidsovereenkomstByContract` maps `contractId => true` for
+     * every `GeneratedDocument` of type `arbeidsovereenkomst` in status
+     * `generated` that references it; `generatedLoonstrookByPayslip` maps
+     * `payslipId => true` for every `GeneratedDocument` of type `loonstrook`
+     * in status `generated` that references it (via `payslipId`). Degrades
+     * gracefully to empty maps when the GeneratedDocument schema does not
      * exist yet in the register.
      *
      * @return array<string, mixed>
@@ -574,24 +578,35 @@ class RuleAuditService
     private function buildDocumentsContext(): array
     {
         $byContract = [];
+        $byPayslip  = [];
         foreach ($this->loadAll('GeneratedDocument') as $document) {
-            if ((string) ($document['documentType'] ?? '') !== 'arbeidsovereenkomst') {
-                continue;
-            }
-
             if ((string) ($document['status'] ?? '') !== 'generated') {
                 continue;
             }
 
-            $contractId = trim((string) ($document['contractId'] ?? ''));
-            if ($contractId === '') {
+            $documentType = (string) ($document['documentType'] ?? '');
+
+            if ($documentType === 'arbeidsovereenkomst') {
+                $contractId = trim((string) ($document['contractId'] ?? ''));
+                if ($contractId !== '') {
+                    $byContract[$contractId] = true;
+                }
+
                 continue;
             }
 
-            $byContract[$contractId] = true;
-        }
+            if ($documentType === 'loonstrook') {
+                $payslipId = trim((string) ($document['payslipId'] ?? ''));
+                if ($payslipId !== '') {
+                    $byPayslip[$payslipId] = true;
+                }
+            }
+        }//end foreach
 
-        return ['generatedArbeidsovereenkomstByContract' => $byContract];
+        return [
+            'generatedArbeidsovereenkomstByContract' => $byContract,
+            'generatedLoonstrookByPayslip'           => $byPayslip,
+        ];
 
     }//end buildDocumentsContext()
 

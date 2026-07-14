@@ -1,24 +1,35 @@
 <?php
 
 /**
- * NL Contract-Document Check Provider
+ * NL Contract/Payslip Document Check Provider
  *
- * Executable check for the written-contract document-evidence rule
- * (`nl-contract-schriftelijk`, lib/Standards/rules/labour.json,
- * hrmq-docudesk-documents), mapped onto the `EmploymentContract` object type.
+ * Executable checks for two document-evidence rules: the written-contract
+ * rule (`nl-contract-schriftelijk`, lib/Standards/rules/labour.json,
+ * hrmq-docudesk-documents), mapped onto `EmploymentContract`, and the
+ * loonstrook-evidence rule (`nl-loonstrook-verplicht`,
+ * lib/Standards/rules/payroll.json, payslip-pdf-docudesk design.md D7),
+ * mapped onto `Payslip`.
  *
- * The predicate is cross-object: it reads the `context['documents']
- * ['generatedArbeidsovereenkomstByContract']` index `RuleAuditService::audit()`
- * populates in its pre-pass (a contractId => true map, present only for
- * contracts with an active `generated` arbeidsovereenkomst `GeneratedDocument`)
- * rather than loading sibling rows itself. The violation is on the CONTRACT
- * (a missing document), not on the document schema -- a permanent contract
- * with `writtenContract: true` and no entry in the index is non-compliant;
- * every other contract (temporary/agency/minijob, or not written) is
- * vacuously compliant.
+ * Both predicates are cross-object: they read indexes
+ * `RuleAuditService::buildDocumentsContext()` populates in its pre-pass --
+ * `context['documents']['generatedArbeidsovereenkomstByContract']` (contractId
+ * => true, present only for contracts with an active `generated`
+ * arbeidsovereenkomst `GeneratedDocument`) and
+ * `context['documents']['generatedLoonstrookByPayslip']` (payslipId => true,
+ * present only for payslips with an active `generated` loonstrook
+ * `GeneratedDocument`) -- rather than loading sibling rows themselves. Each
+ * violation is on the SUBJECT (a missing document), not on the
+ * GeneratedDocument schema -- a permanent contract with `writtenContract:
+ * true` and no entry in its index is non-compliant (every other contract is
+ * vacuously compliant); a Payslip with no entry in its index is non-compliant
+ * (severity `recommended` -- the rule mirrors `nl-contract-schriftelijk`'s
+ * `nl-contract-schriftelijk` calibration: `statementProvided` may be honestly
+ * true via an out-of-band document, so this predicate deliberately ignores
+ * that self-asserted boolean and checks the system record instead).
  *
  * This provider does NOT implement SeedsObjects: the seeded
- * `contract-jansen-permanent` + its `generated` arbeidsovereenkomst live
+ * `contract-jansen-permanent` + its `generated` arbeidsovereenkomst, and the
+ * seeded `payslip-jansen-2026-05` + its `generated` loonstrook, live
  * declaratively in `lib/Settings/register.d/hr-documents.json` (ADR-001), the
  * same pattern NlGlPostChecks/NlPensionFilingChecks document for cross-object
  * predicates whose sample would otherwise need a resolvable sibling reference.
@@ -36,6 +47,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-009
+ * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-004
  */
 
 declare(strict_types=1);
@@ -59,6 +71,9 @@ final class NlDocumentChecks implements CheckProvider
         return [
             'EmploymentContract' => [
                 'nl-contract-schriftelijk' => static fn(array $o, array $context): bool => self::isCompliant($o, $context),
+            ],
+            'Payslip'            => [
+                'nl-loonstrook-verplicht' => static fn(array $o, array $context): bool => self::isLoonstrookDocumented($o, $context),
             ],
         ];
 
@@ -107,6 +122,30 @@ final class NlDocumentChecks implements CheckProvider
         return (bool) ($context['documents']['generatedArbeidsovereenkomstByContract'][$contractId] ?? false);
 
     }//end isCompliant()
+
+
+    /**
+     * The `nl-loonstrook-verplicht` predicate (payslip-pdf-docudesk design.md
+     * D7): every Payslip should have an active `generated` loonstrook
+     * `GeneratedDocument` referencing it.
+     *
+     * @param array<string, mixed> $o       The Payslip object.
+     * @param array<string, mixed> $context Evaluation context; reads `documents.generatedLoonstrookByPayslip`.
+     *
+     * @return bool
+     */
+    private static function isLoonstrookDocumented(array $o, array $context): bool
+    {
+        $payslipId = (string) ($o['id'] ?? $o['@self']['id'] ?? '');
+        if ($payslipId === '') {
+            // No identity to key the document index on (e.g. an unpersisted
+            // sample) -- never fabricate a violation without a resolvable id.
+            return true;
+        }
+
+        return (bool) ($context['documents']['generatedLoonstrookByPayslip'][$payslipId] ?? false);
+
+    }//end isLoonstrookDocumented()
 
 
 }//end class
