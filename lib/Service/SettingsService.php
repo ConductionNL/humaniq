@@ -298,6 +298,47 @@ class SettingsService
 
 
     /**
+     * The CalDAV principal that owns the target shared calendar
+     * (leave-calendar-nc design.md D6), e.g. `principals/users/hr`,
+     * configurable via app config key `leave_calendar_principal`. Empty
+     * (the default) means the sync is not configured and every run ends
+     * `skipped-no-calendar`. The configured calendar SHOULD be one the
+     * owning account shares with the team — the sync is a one-way
+     * projection, so events manually edited on the calendar are overwritten
+     * by the next `occ hrmq:calendar:sync`.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-001
+     */
+    public function getLeaveCalendarPrincipal(): string
+    {
+        return $this->appConfig->getValueString(Application::APP_ID, 'leave_calendar_principal', '');
+
+    }//end getLeaveCalendarPrincipal()
+
+
+    /**
+     * The CalDAV calendar URI (on the principal above) the sync writes
+     * approved-leave/sickness events into (leave-calendar-nc design.md D6),
+     * as shown in the Calendar app's link/edit dialog, configurable via app
+     * config key `leave_calendar_uri`. Empty (the default) means the sync is
+     * not configured and every run ends `skipped-no-calendar`. One-way
+     * projection caveat: manual edits to events on this calendar are
+     * overwritten by the next sync.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-001
+     */
+    public function getLeaveCalendarUri(): string
+    {
+        return $this->appConfig->getValueString(Application::APP_ID, 'leave_calendar_uri', '');
+
+    }//end getLeaveCalendarUri()
+
+
+    /**
      * Import the register idempotently (skips when the version is unchanged).
      *
      * @return array<string, mixed> Result with success flag, message, and version.
