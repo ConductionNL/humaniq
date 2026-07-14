@@ -5,7 +5,7 @@
             "Employee": {
                 "slug": "Employee",
                 "icon": "AccountOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Employee",
                 "description": "A natural person employed by the organisation. Carries the identity, payroll, and wage-tax attributes the payroll/wage-tax compliance checks read (BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting, minimum-wage basis).",
                 "type": "object",
@@ -40,7 +40,8 @@
                     "thirtyPercentCappedAtWntNorm": {"type": "boolean", "description": "NL: whether the 30%-ruling tax-free base is capped at the WNT-norm (nl-30-regeling-aftoppingsgrens)."},
                     "nextcloudUserId": {"type": "string", "nullable": true, "description": "The Nextcloud user id of this employee's own account, when they have one (mijn-hr-self-service). HR-maintained on the employee record; stays null for portal-only external employees, who keep using the UUID-claim-based portaliq scoping (ADR-046 A4). The durable Employee<->account link; per-record `userId` on Timesheet/Expense/LeaveRequest/Payslip is a denormalized copy of it."},
                     "iban": {"type": "string", "nullable": true, "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$", "description": "Bank account IBAN for net-pay SEPA credit transfers (payroll-sepa-netpay-shillinq). Shape check only — mod-97 checksum is a non-goal. Missing IBAN on a payable payroll run's payslip fails the net-pay batch closed (nl-netpay-iban-present)."},
-                    "tenaamstelling": {"type": "string", "nullable": true, "description": "Account-holder name as the bank knows it (payroll-sepa-netpay-shillinq) — printed as Cdtr/Nm on the SEPA credit transfer. Falls back to firstName + lastName when absent."}
+                    "tenaamstelling": {"type": "string", "nullable": true, "description": "Account-holder name as the bank knows it (payroll-sepa-netpay-shillinq) — printed as Cdtr/Nm on the SEPA credit transfer. Falls back to firstName + lastName when absent."},
+                    "loonheffingskortingToegepast": {"type": "boolean", "default": true, "description": "Whether the employee elected on the loonbelastingverklaring to have the loonheffingskorting (heffingskortingen) applied by this employer (Rekenvoorschriften 2026 §2.2.3; drives the AHK/ARK application in the payroll engine — payroll-core-engine). Apply with at most one employer at a time; loonheffingenVerklaringOnFile records that the statement itself is archived."}
                 }
             },
             "EmploymentContract": {
@@ -76,7 +77,7 @@
             "Payslip": {
                 "slug": "Payslip",
                 "icon": "ReceiptTextOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Payslip",
                 "description": "A per-employee, per-period wage statement (loonstrook / Lohnabrechnung / bulletin de paie / pay stub). Carries the gross-to-net composition the payroll-withholding, social-security, and statutory-content checks read.",
                 "type": "object",
@@ -142,13 +143,15 @@
                     "pasRate": {"type": "number", "description": "FR: PAS rate transmitted by the administration via DSN (fr-prelevement-a-la-source)."},
                     "reductionGeneraleApplied": {"type": "boolean", "description": "FR: whether the réduction générale (ex-Fillon) is applied on remuneration below 1,6 SMIC (fr-reduction-generale)."},
                     "conventionCollective": {"type": "string", "nullable": true, "description": "FR: applicable convention collective shown on the bulletin (fr-bulletin-de-paie-mentions)."},
-                    "retainedUntil": {"type": "string", "format": "date", "nullable": true, "description": "Date until which the payslip duplicate is retained — 5 years FR (fr-bulletin-conservation) / 4-year IRC + 3-year FLSA US."}
+                    "retainedUntil": {"type": "string", "format": "date", "nullable": true, "description": "Date until which the payslip duplicate is retained — 5 years FR (fr-bulletin-conservation) / 4-year IRC + 3-year FLSA US."},
+                    "arbeidskorting": {"type": "number", "nullable": true, "description": "NL: applied arbeidskorting for the period (tijdvakbedrag) — the witte-tabel column the Rekenvoorschriften §2.2.3.4 require the loonadministratie to record. Set by the payroll engine; null on hand-entered payslips (nl-engine-output-consistency context)."},
+                    "payrollRunId": {"type": "string", "format": "uuid", "$ref": "PayrollRun", "nullable": true, "description": "The PayrollRun that generated this payslip (payroll-core-engine). Null for hand-entered payslips. Drives idempotent recalculation and the run-scoped compliance verify (nl-engine-output-consistency scoping)."}
                 }
             },
             "PayrollRun": {
                 "slug": "PayrollRun",
                 "icon": "CogPlayOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Payroll Run",
                 "description": "A per-period payroll batch that aggregates the payslips of one administration. Carries the period totals the payroll-to-GL reconciliation and liability-clearing controls read.",
                 "type": "object",
@@ -170,7 +173,9 @@
                     "glLiabilityPosted": {"type": "number", "description": "Amount posted to payroll liability accounts in the GL — must reconcile to gross+employer charges−net (xc-payroll-gl-reconciliation)."},
                     "glExpensePosted": {"type": "number", "description": "Amount posted to payroll expense accounts in the GL — must reconcile to gross+employer charges (xc-payroll-gl-reconciliation)."},
                     "withholdingsClearedToZero": {"type": "boolean", "description": "Whether each tax/social withholding liability was cleared to zero when remitted (xc-withholding-liability-clearing)."},
-                    "withholdingLiabilityBalance": {"type": "number", "description": "Residual withholding-liability balance after remittance — zero when cleared (xc-withholding-liability-clearing)."}
+                    "withholdingLiabilityBalance": {"type": "number", "description": "Residual withholding-liability balance after remittance — zero when cleared (xc-withholding-liability-clearing)."},
+                    "calculatedAt": {"type": "string", "format": "date-time", "nullable": true, "description": "When the payroll engine (re)calculated this run's payslips and totals (nl-engine-table-version). Null for hand-entered runs."},
+                    "engineVersion": {"type": "string", "nullable": true, "description": "Versioned tax-year table file that produced this run (e.g. nl-2026 -> lib/Standards/tables/nl-2026.json) (nl-engine-table-version). Null for hand-entered runs."}
                 }
             },
             "LoonaangifteFiling": {

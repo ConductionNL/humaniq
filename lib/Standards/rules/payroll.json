@@ -1209,6 +1209,30 @@
       "machineCheckable": true,
       "effectiveDate": null,
       "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    },
+    {
+      "id": "nl-engine-table-version",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "payroll-core",
+      "source": "Rekenvoorschriften geautomatiseerde loonadministratie 2026 (traceability + gross-to-net arithmetic)",
+      "statement": "A payroll run that carries engineVersion (i.e. was produced by the calculation engine) shall reference an existing versioned tax-year table file (lib/Standards/tables/<engineVersion>.json) and carry calculatedAt, so every computed amount is traceable to the parameter set that produced it.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://download.belastingdienst.nl/belastingdienst/docs/rekenvoorschriften_voor_geautomatiseerde_loonadministratie_lh991z62fd.pdf"
+    },
+    {
+      "id": "nl-engine-output-consistency",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "payroll-core",
+      "source": "Rekenvoorschriften geautomatiseerde loonadministratie 2026 (traceability + gross-to-net arithmetic)",
+      "statement": "On a payslip produced by the calculation engine, the net wage shall reconcile cents-exact to the declared equation: nettoPay = grossPay - loonheffing - pensionContribution (null->0) - (zvw if zvwMode = inhouding); the employer-borne charges (werknemersverzekeringen, zvw under werkgeversheffing) never reduce net.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://download.belastingdienst.nl/belastingdienst/docs/rekenvoorschriften_voor_geautomatiseerde_loonadministratie_lh991z62fd.pdf"
     }
   ]
 }
