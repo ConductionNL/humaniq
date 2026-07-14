@@ -115,5 +115,14 @@ Vrij en open source onder de EUPL-1.2-licentie.
              Duck-typed no-op (skipped-no-calendar) when the calendar is not
              configured or cannot be resolved. -->
         <command>OCA\Hrmq\Command\CalendarSyncCommand</command>
+        <!-- Create (or --recalculate) the draft PayrollRun + engine Payslips
+             for a wage period via the table-driven NL payroll calculator
+             (payroll-core-engine MVP trigger). Draft-only; approval stays a
+             human act. -->
+        <command>OCA\Hrmq\Command\PayrollRunCommand</command>
+        <!-- Run-scoped corpus audit over one period's PayrollRun(s) + their
+             payslips (payroll-core-engine); exits non-zero on any mandatory
+             violation. -->
+        <command>OCA\Hrmq\Command\PayrollVerifyCommand</command>
     </commands>
 </info>

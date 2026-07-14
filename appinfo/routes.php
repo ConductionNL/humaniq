@@ -19,6 +19,9 @@ return [
         // hrmq-docudesk-documents — guarded trigger for the EmploymentContractDetail
         // "Genereer arbeidsovereenkomst" manifest api-call action (design.md D7).
         ['name' => 'document#generate', 'url' => '/api/documents/generate', 'verb' => 'POST'],
+        // payroll-core-engine — guarded trigger for the PayrollRunDetail
+        // "(Her)berekenen" manifest api-call action (design.md D6).
+        ['name' => 'payroll#calculate', 'url' => '/api/payroll/calculate', 'verb' => 'POST'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],

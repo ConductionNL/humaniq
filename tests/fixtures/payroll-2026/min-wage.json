@@ -1,0 +1,27 @@
+{
+  "name": "min-wage — €2.294,40 (the tables' referentiemaandloon), wit, korting toegepast, below AOW",
+  "input": {
+    "grossMonthly": 2294.40,
+    "taxTableColor": "wit",
+    "dateOfBirth": "2000-01-01",
+    "loonheffingskortingToegepast": true,
+    "awfTariff": "low",
+    "aofTariff": "laag",
+    "whkPercentage": 1.52,
+    "period": "2026-02"
+  },
+  "expected": {
+    "loonheffing": 114.92,
+    "arbeidskorting": 444.33,
+    "volksverzekeringen": 88.88,
+    "zvw": 139.96,
+    "awf": 62.87,
+    "aof": 143.86,
+    "wko": 11.47,
+    "whk": 34.87,
+    "werknemersverzekeringen": 253.07,
+    "employerCharges": 393.03,
+    "vakantiegeldReserved": 183.55,
+    "nettoPay": 2179.48
+  }
+}

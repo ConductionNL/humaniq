@@ -119,6 +119,15 @@ class RuleAuditService
         // that question (design.md D4).
         $context['signals'] = $this->buildSignalsContext();
 
+        // payroll-core-engine: a full PayrollRun-by-id index (engineVersion
+        // included) so NlEngineChecks::checks()['Payslip']
+        // ['nl-engine-output-consistency'] can resolve a payslip's producing
+        // run (vacuous when the run is hand-entered/unresolvable) without
+        // re-querying the register — the glpost context precedent. The
+        // existing `related.PayrollRun.byId` index deliberately projects only
+        // {id, period, status} and is left untouched (design.md D7).
+        $context['payroll'] = $this->buildPayrollContext();
+
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
         $enforceable      = count(RuleEngine::checkedRuleIds());
@@ -473,6 +482,118 @@ class RuleAuditService
         return ['activeCountByRun' => $activeCountByRun];
 
     }//end buildGlPostContext()
+
+
+    /**
+     * Run the RuleEngine over EXACTLY one period's PayrollRun(s) + their
+     * payslips — the run-scoped corpus audit behind `occ hrmq:payroll:verify`
+     * (payroll-core-engine design.md D7): the same corpus that audits
+     * hand-entered data audits a computed run, so the engine has no private
+     * truth. The full cross-object context is built exactly as in `audit()`
+     * (the sibling indexes are cheap and keep every cross-object predicate
+     * working in the scoped run too).
+     *
+     * @param string               $period           Wage period (YYYY-MM).
+     * @param string|null          $administrationId Only runs of this administration, or null for all.
+     * @param array<string, mixed> $context          Evaluation context (e.g. jurisdiction).
+     *
+     * @return array<string, mixed> {runsChecked, payslipsChecked, violations: [{objectType, objectId, ruleId, severity, statement}], mandatoryViolations}.
+     *
+     * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-006
+     */
+    public function auditPayrollRunScope(string $period, ?string $administrationId=null, array $context=[]): array
+    {
+        $context['related']    = $this->buildRelatedContext();
+        $context['glpost']     = $this->buildGlPostContext();
+        $context['attendance'] = $this->buildAttendanceContext();
+        $context['netpay']     = $this->buildNetPayContext();
+        $context['documents']  = $this->buildDocumentsContext();
+        $context['signals']    = $this->buildSignalsContext();
+        $context['payroll']    = $this->buildPayrollContext();
+
+        $runs   = [];
+        $runIds = [];
+        foreach ($this->loadAll('PayrollRun') as $run) {
+            if ((string) ($run['period'] ?? '') !== $period) {
+                continue;
+            }
+
+            if ($administrationId !== null && $administrationId !== ''
+                && (string) ($run['administrationId'] ?? '') !== $administrationId
+            ) {
+                continue;
+            }
+
+            $runs[] = $run;
+            $id     = (string) ($run['id'] ?? $run['@self']['id'] ?? '');
+            if ($id !== '') {
+                $runIds[$id] = true;
+            }
+        }
+
+        $payslips = [];
+        foreach ($this->loadAll('Payslip') as $payslip) {
+            $runId = (string) ($payslip['payrollRunId'] ?? '');
+            if ($runId !== '' && isset($runIds[$runId]) === true) {
+                $payslips[] = $payslip;
+            }
+        }
+
+        $report = [
+            'runsChecked'         => count($runs),
+            'payslipsChecked'     => count($payslips),
+            'violations'          => [],
+            'mandatoryViolations' => 0,
+        ];
+
+        foreach ([['PayrollRun', $runs], ['Payslip', $payslips]] as [$type, $objects]) {
+            foreach ($objects as $object) {
+                foreach (RuleEngine::evaluate($type, $object, $context) as $violation) {
+                    $report['violations'][] = [
+                        'objectType' => $type,
+                        'objectId'   => (string) ($object['id'] ?? $object['@self']['id'] ?? ''),
+                        'ruleId'     => $violation->ruleId,
+                        'severity'   => $violation->severity,
+                        'statement'  => $violation->statement,
+                    ];
+
+                    if ($violation->severity === 'mandatory') {
+                        $report['mandatoryViolations']++;
+                    }
+                }
+            }
+        }
+
+        return $report;
+
+    }//end auditPayrollRunScope()
+
+
+    /**
+     * Build the PayrollRun-by-id index consumed by NlEngineChecks'
+     * `nl-engine-output-consistency` predicate (payroll-core-engine design.md
+     * D7): `runsById` maps each PayrollRun id to the FULL run row (the
+     * predicate reads `engineVersion` to scope itself to engine-produced
+     * runs). Degrades gracefully to an empty map when the PayrollRun schema
+     * does not exist yet in the register.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-007
+     */
+    private function buildPayrollContext(): array
+    {
+        $runsById = [];
+        foreach ($this->loadAll('PayrollRun') as $run) {
+            $id = (string) ($run['id'] ?? $run['@self']['id'] ?? '');
+            if ($id !== '') {
+                $runsById[$id] = $run;
+            }
+        }
+
+        return ['runsById' => $runsById];
+
+    }//end buildPayrollContext()
 
 
     /**

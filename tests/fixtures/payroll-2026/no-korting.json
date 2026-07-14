@@ -1,0 +1,27 @@
+{
+  "name": "no-korting — anchor input with loonheffingskortingToegepast: false (no AHK/ARK applied)",
+  "input": {
+    "grossMonthly": 3800.00,
+    "taxTableColor": "wit",
+    "dateOfBirth": "1990-04-12",
+    "loonheffingskortingToegepast": false,
+    "awfTariff": "low",
+    "aofTariff": "laag",
+    "whkPercentage": 1.52,
+    "period": "2026-02"
+  },
+  "expected": {
+    "loonheffing": 1367.75,
+    "arbeidskorting": 0.00,
+    "volksverzekeringen": 895.93,
+    "zvw": 231.80,
+    "awf": 104.12,
+    "aof": 238.26,
+    "wko": 19.00,
+    "whk": 57.76,
+    "werknemersverzekeringen": 419.14,
+    "employerCharges": 650.94,
+    "vakantiegeldReserved": 304.00,
+    "nettoPay": 2432.25
+  }
+}
