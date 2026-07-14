@@ -284,6 +284,12 @@
 					"route": "Payslips"
 				},
 				{
+					"id": "Jaaropgaven",
+					"label": "Jaaropgaven",
+					"icon": "FileCertificateOutline",
+					"route": "Jaaropgaven"
+				},
+				{
 					"id": "PayrollRuns",
 					"label": "Loonruns",
 					"icon": "CogPlayOutline",
@@ -720,10 +726,10 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "GeneratedDocument",
-				"_note": "hrmq-docudesk-documents (2026-07-13): GeneratedDocument is hrmq's log of ONE docudesk render+store handoff (design.md D1), the PayrollGLPostDetail split applied to a document instead of a ledger entry -- gd-status leads with the outcome facts (status/generatedAt/errorMessage), gd-related resolves the Employee and (nullable) EmploymentContract, gd-data carries the remaining fields (documentType/templateRef/filePath) below. No lifecycleActions -- HrDocumentService drives every transition server-side, exactly the PayrollGLPostDetail precedent. Unlike every other hrmq detail page this one IS a document, so the sidebar keeps the library's default Files tab (the stored PDF -- design.md D4, 'the whole point') alongside the default Audit Trail tab, hiding only Notes/Tags/Tasks which carry no meaning here: the custom audit-only `tabs` override the rest of hrmq uses would suppress Files too (CnObjectSidebar's open-enum `tabs` widget registry has no `files` entry), so this page opts into `hiddenTabs` instead of `tabs` -- a deliberate, documented deviation from the fleet's usual sidebar convention, needed to actually show the per-object file.",
+				"_note": "hrmq-docudesk-documents (2026-07-13): GeneratedDocument is hrmq's log of ONE docudesk render+store handoff (design.md D1), the PayrollGLPostDetail split applied to a document instead of a ledger entry -- gd-status leads with the outcome facts (status/generatedAt/errorMessage), gd-related resolves the Employee and (nullable) EmploymentContract, gd-data carries the remaining fields (documentType/templateRef/filePath) below. No lifecycleActions -- HrDocumentService drives every transition server-side, exactly the PayrollGLPostDetail precedent. Unlike every other hrmq detail page this one IS a document, so the sidebar keeps the library's default Files tab (the stored PDF -- design.md D4, 'the whole point') alongside the default Audit Trail tab, hiding only Notes/Tags/Tasks which carry no meaning here: the custom audit-only `tabs` override the rest of hrmq uses would suppress Files too (CnObjectSidebar's open-enum `tabs` widget registry has no `files` entry), so this page opts into `hiddenTabs` instead of `tabs` -- a deliberate, documented deviation from the fleet's usual sidebar convention, needed to actually show the per-object file. payslip-pdf-docudesk (2026-07-14): gd-data additionally excludes the new payslipId/jaaropgaafId $ref fields -- gd-related resolves both.",
 				"widgets": [
 					{ "id": "gd-status", "type": "data", "title": "Status", "icon": "CheckCircleOutline", "content": { "columns": 4, "include": ["status", "generatedAt", "errorMessage"] } },
-					{ "id": "gd-data", "type": "data", "title": "Document", "icon": "FileDocumentOutline", "content": { "columns": 2, "exclude": ["employeeId", "contractId"] } },
+					{ "id": "gd-data", "type": "data", "title": "Document", "icon": "FileDocumentOutline", "content": { "columns": 2, "exclude": ["employeeId", "contractId", "payslipId", "jaaropgaafId"] } },
 					{ "id": "gd-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
 				],
 				"layout": [
@@ -752,10 +758,24 @@
 			"route": "/payslips/:id",
 			"type": "detail",
 			"title": "Loonstrook",
+			"actions": [
+				{
+					"id": "generate-loonstrook",
+					"label": "Genereer PDF",
+					"type": "api-call",
+					"icon": "FileDocumentPlusOutline",
+					"url": "/api/documents/generate",
+					"method": "POST",
+					"params": { "payslipId": "@objectId", "documentType": "loonstrook" },
+					"confirm": true,
+					"successMessage": "Loonstrook-PDF wordt gegenereerd.",
+					"errorMessage": "Genereren van de loonstrook-PDF is mislukt."
+				}
+			],
 			"config": {
 				"register": "hrmq",
 				"schema": "Payslip",
-				"_note": "Financial-document archetype (x-schema-org: schema:Invoice), same family as Expense's amount-first design: three headline tiles (gross pay, net pay, Related-to-Employee) lead the page since that is what an employee or approver checks first, followed by the dense data widget carrying the full gross-to-net withholding breakdown (NL loonheffing/zvw/wkr, DE Lohnsteuer/Soli/Kirchensteuer, FR cotisations/PAS, US FICA/Medicare -- the schema is genuinely multi-jurisdiction: only one jurisdiction's fields populate per real record, but which one varies per payslip so a static manifest cannot cherry-pick per-instance; all fields surface via one widget, sized to its true field count and set to 4 columns full-width rather than clipped at 2). ADR-062 round-2: data widget now excludes employeeId (resolved via Related instead of raw uuid) and the height budget was corrected from the round-1 h7 (which clipped ~54 fields behind a scrollbar) to match content. Stat format uses 'number' not 'currency' because Payslip.currency varies per record (EUR/USD) and a widget's format is static. No files/calendar/comms leaves: nothing in the schema models an attachable payslip document or appointment, and Payslip carries no x-openregister-lifecycle so there are no lifecycleActions. Audit history is a sidebar tab.",
+				"_note": "Financial-document archetype (x-schema-org: schema:Invoice), same family as Expense's amount-first design: three headline tiles (gross pay, net pay, Related-to-Employee) lead the page since that is what an employee or approver checks first, followed by the dense data widget carrying the full gross-to-net withholding breakdown (NL loonheffing/zvw/wkr, DE Lohnsteuer/Soli/Kirchensteuer, FR cotisations/PAS, US FICA/Medicare -- the schema is genuinely multi-jurisdiction: only one jurisdiction's fields populate per real record, but which one varies per payslip so a static manifest cannot cherry-pick per-instance; all fields surface via one widget, sized to its true field count and set to 4 columns full-width rather than clipped at 2). ADR-062 round-2: data widget now excludes employeeId (resolved via Related instead of raw uuid) and the height budget was corrected from the round-1 h7 (which clipped ~54 fields behind a scrollbar) to match content. Stat format uses 'number' not 'currency' because Payslip.currency varies per record (EUR/USD) and a widget's format is static. No files/calendar/comms leaves: nothing in the schema models an attachable payslip document or appointment, and Payslip carries no x-openregister-lifecycle so there are no lifecycleActions. Audit history is a sidebar tab. payslip-pdf-docudesk (2026-07-14): page-level action \"Genereer PDF\" mirrors EmploymentContractDetail's \"Genereer arbeidsovereenkomst\" shape -- POST /api/documents/generate with {payslipId: @objectId, documentType: loonstrook}, guarded server-side by DocumentController::authorizePayslip().",
 				"widgets": [
 					{ "id": "ps-gross", "type": "stat", "title": "Gross pay", "icon": "Cash", "content": { "label": "Gross pay", "caption": "this period", "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "Payslip", "metric": "sum", "field": "grossPay", "filter": { "id": "@objectId" } } } },
 					{ "id": "ps-net", "type": "stat", "title": "Net pay", "icon": "CurrencyEur", "content": { "label": "Net pay", "caption": "paid out", "icon": "CurrencyEur", "valueColor": "#46ba61", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "Payslip", "metric": "sum", "field": "nettoPay", "filter": { "id": "@objectId" } } } },
@@ -767,6 +787,40 @@
 					{ "id": "2", "widgetId": "ps-net", "gridX": 4, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
 					{ "id": "3", "widgetId": "ps-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
 					{ "id": "4", "widgetId": "ps-data", "gridX": 0, "gridY": 3, "gridWidth": 12, "gridHeight": 14 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
+			}
+		},
+		{
+			"id": "Jaaropgaven",
+			"route": "/jaaropgaven",
+			"type": "index",
+			"title": "Jaaropgaven",
+			"config": {
+				"register": "hrmq",
+				"schema": "Jaaropgaaf",
+				"description": "Jaarlijkse loonopgaven per medewerker, geaggregeerd uit de loonstroken van dat jaar (payslip-pdf-docudesk).",
+				"columns": ["employeeId", "year", "totalGrossPay", "totalLoonheffing", "payPeriodCount"],
+				"filters": ["year"],
+				"sort": { "field": "year", "order": "desc" }
+			}
+		},
+		{
+			"id": "JaaropgaafDetail",
+			"route": "/jaaropgaven/:id",
+			"type": "detail",
+			"title": "Jaaropgaaf",
+			"config": {
+				"register": "hrmq",
+				"schema": "Jaaropgaaf",
+				"_note": "payslip-pdf-docudesk (2026-07-14): the EmploymentContractDetail two-panel shape -- a leaf aggregate record with exactly one meaningful outbound ref (Employee), so jg-data (totals/payPeriodCount/verrekendeArbeidskorting/loonheffingennummer/aggregatedAt, excluding employeeId) sits at 8-wide and jg-related resolves+links the Employee at 4-wide. No lifecycleActions: Jaaropgaaf carries no x-openregister-lifecycle -- it is a pure data aggregate upserted server-side by HrDocumentService (design.md D2/D4), not a workflow. No files widget: the rendered PDF lives on the GeneratedDocument record that references this aggregate via jaaropgaafId (Related on GeneratedDocumentDetail resolves it), not here -- adding a files widget here would fabricate a second copy of the same document relationship. No child lists: nothing else in the schema references Jaaropgaaf by FK besides GeneratedDocument, which is reachable from the Documenten index instead. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "jg-data", "type": "data", "title": "Jaaropgaaf", "icon": "FileCertificateOutline", "content": { "columns": 2, "exclude": ["employeeId"] } },
+					{ "id": "jg-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "jg-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 7 },
+					{ "id": "2", "widgetId": "jg-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 7 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}

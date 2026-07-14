@@ -438,6 +438,30 @@ class HrDocumentServiceTest extends TestCase
 
 
     /**
+     * The seeded Payslip fixture (payslip-pdf-docudesk).
+     *
+     * @param array<string, mixed> $overrides Fields to override.
+     *
+     * @return array<string, mixed>
+     */
+    private function payslip(array $overrides=[]): array
+    {
+        return array_merge(
+            [
+                'id'          => 'payslip-1',
+                'employeeId'  => 'emp-1',
+                'period'      => '2026-05',
+                'grossPay'    => 3800.0,
+                'loonheffing' => 1102.0,
+                'nettoPay'    => 2698.0,
+            ],
+            $overrides
+        );
+
+    }//end payslip()
+
+
+    /**
      * Objects saved to a given schema, in save order.
      *
      * @param object $fake   The fake ObjectService.
@@ -818,6 +842,300 @@ class HrDocumentServiceTest extends TestCase
         $this->assertNull($results[0]['contractId']);
 
     }//end testGenerateBacklogGeneratesAnEmployeeLevelTypeWhenEmployeeIsGiven()
+
+
+    // -- payslip-pdf-docudesk: loonstrook -----------------------------------
+
+
+    /**
+     * @return void
+     */
+    public function testGenerateLoonstrookAssemblesEmployeeAndPayslipDataRefsAndRecordsThePayslipReference(): void
+    {
+        $documentService = $this->fakeDocumentService();
+        [$service, $fake] = $this->service(
+            ['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]],
+            documentService: $documentService,
+            configuredTemplateId: 'T1'
+        );
+
+        $result = $service->generateLoonstrook('payslip-1', 'admin');
+
+        $this->assertSame('generated', $result['status']);
+        $this->assertNull($result['contractId']);
+        $this->assertSame('emp-1', $result['employeeId']);
+
+        $call = $documentService->calls[0];
+        $this->assertSame(
+            [
+                ['register' => 'hrmq', 'schema' => 'Employee', 'id' => 'emp-1'],
+                ['register' => 'hrmq', 'schema' => 'Payslip', 'id' => 'payslip-1'],
+            ],
+            $call['dataRefs']
+        );
+        // No EmploymentContract ref, no Payslip field values copied into adHocData.
+        $this->assertArrayNotHasKey('grossPay', $call['options']['adHocData']);
+
+        $docSaves = $this->savedFor($fake, 'GeneratedDocument');
+        $final    = end($docSaves);
+        $this->assertSame('loonstrook', $final['documentType']);
+        $this->assertSame('payslip-1', $final['payslipId']);
+        $this->assertNull($final['contractId']);
+
+    }//end testGenerateLoonstrookAssemblesEmployeeAndPayslipDataRefsAndRecordsThePayslipReference()
+
+
+    /**
+     * @return void
+     */
+    public function testGenerateLoonstrookIsIdempotentPerPayslipNotPerEmployee(): void
+    {
+        $payslips = [
+            $this->payslip(['id' => 'payslip-1', 'period' => '2026-05']),
+            $this->payslip(['id' => 'payslip-2', 'period' => '2026-06']),
+        ];
+        [$service, , $fileService] = $this->service(
+            ['Employee' => [$this->employee()], 'Payslip' => $payslips],
+            configuredTemplateId: 'T1'
+        );
+
+        $first  = $service->generateLoonstrook('payslip-1');
+        $second = $service->generateLoonstrook('payslip-1');
+        $third  = $service->generateLoonstrook('payslip-2');
+
+        $this->assertSame('generated', $first['status']);
+        $this->assertSame('already-generated', $second['status']);
+        $this->assertSame('generated', $third['status']);
+        // The null-contractId employee-level fallback does NOT collapse two
+        // payslips of the same employee (design.md D4).
+        $this->assertCount(2, $fileService->calls);
+
+    }//end testGenerateLoonstrookIsIdempotentPerPayslipNotPerEmployee()
+
+
+    /**
+     * @return void
+     */
+    public function testGenerateLoonstrookFailsWhenPayslipIdIsBlank(): void
+    {
+        [$service] = $this->service();
+
+        $result = $service->generateLoonstrook('');
+
+        $this->assertSame('failed', $result['status']);
+
+    }//end testGenerateLoonstrookFailsWhenPayslipIdIsBlank()
+
+
+    /**
+     * @return void
+     */
+    public function testGenerateLoonstrookFailsWhenPayslipDoesNotExist(): void
+    {
+        [$service] = $this->service(['Employee' => [$this->employee()]]);
+
+        $result = $service->generateLoonstrook('missing-payslip');
+
+        $this->assertSame('failed', $result['status']);
+
+    }//end testGenerateLoonstrookFailsWhenPayslipDoesNotExist()
+
+
+    // -- payslip-pdf-docudesk: jaaropgaaf ------------------------------------
+
+
+    /**
+     * @return void
+     */
+    public function testGenerateJaaropgaafAggregatesMultiplePayslipsInTheYearWithZvwModeFilterAndYearBoundary(): void
+    {
+        $documentService = $this->fakeDocumentService();
+        $payslips        = [
+            $this->payslip(['id' => 'ps-1', 'period' => '2026-01', 'grossPay' => 3800.0, 'loonheffing' => 1102.0, 'nettoPay' => 2698.0, 'zvw' => 70.0, 'zvwMode' => 'werkgeversheffing']),
+            $this->payslip(['id' => 'ps-2', 'period' => '2026-02', 'grossPay' => 3800.0, 'loonheffing' => 1102.0, 'nettoPay' => 2698.0, 'zvw' => 65.0, 'zvwMode' => 'inhouding']),
+            $this->payslip(['id' => 'ps-3', 'period' => '2026-03', 'grossPay' => 4000.0, 'loonheffing' => 1180.0, 'nettoPay' => 2820.0]),
+            $this->payslip(['id' => 'ps-old', 'period' => '2025-12', 'grossPay' => 9999.0, 'loonheffing' => 9999.0, 'nettoPay' => 9999.0]),
+        ];
+        [$service, $fake] = $this->service(
+            ['Employee' => [$this->employee()], 'Payslip' => $payslips],
+            documentService: $documentService,
+            configuredTemplateId: 'T1'
+        );
+
+        $result = $service->generateJaaropgaaf('emp-1', 2026);
+
+        $this->assertSame('generated', $result['status']);
+
+        $jgSaves = $this->savedFor($fake, 'Jaaropgaaf');
+        $this->assertCount(1, $jgSaves);
+        $jaaropgaaf = $jgSaves[0];
+        $this->assertSame(11600.0, $jaaropgaaf['totalGrossPay']);
+        $this->assertSame(3384.0, $jaaropgaaf['totalLoonheffing']);
+        // werkgeversheffing (70.0) excluded; only inhouding (65.0) summed.
+        $this->assertSame(65.0, $jaaropgaaf['totalZvwWithheld']);
+        $this->assertSame(3, $jaaropgaaf['payPeriodCount']);
+        $this->assertNull($jaaropgaaf['verrekendeArbeidskorting']);
+
+        $call = $documentService->calls[0];
+        $this->assertSame(
+            [
+                ['register' => 'hrmq', 'schema' => 'Employee', 'id' => 'emp-1'],
+                ['register' => 'hrmq', 'schema' => 'Jaaropgaaf', 'id' => (string) $jaaropgaaf['id']],
+            ],
+            $call['dataRefs']
+        );
+
+    }//end testGenerateJaaropgaafAggregatesMultiplePayslipsInTheYearWithZvwModeFilterAndYearBoundary()
+
+
+    /**
+     * @return void
+     */
+    public function testGenerateJaaropgaafReaggregationUpdatesTheExistingObjectRatherThanDuplicating(): void
+    {
+        [$service, $fake] = $this->service(
+            ['Employee' => [$this->employee()], 'Payslip' => [$this->payslip(['id' => 'ps-1', 'period' => '2026-01'])]],
+            configuredTemplateId: 'T1'
+        );
+
+        $first = $service->generateJaaropgaaf('emp-1', 2026);
+        $this->assertSame('generated', $first['status']);
+
+        // A new 2026 payslip lands after the first jaaropgaaf was generated.
+        $fake->saveObject($this->payslip(['id' => 'ps-2', 'period' => '2026-02', 'grossPay' => 4000.0]), null, 'Payslip', 'ps-2');
+
+        $second = $service->generateJaaropgaaf('emp-1', 2026);
+        // The document itself no-ops (same jaaropgaafId, already generated,
+        // design.md Risks); the aggregate is still refreshed either way.
+        $this->assertSame('already-generated', $second['status']);
+
+        $jgSaves = $this->savedFor($fake, 'Jaaropgaaf');
+        $ids     = array_unique(array_column($jgSaves, 'id'));
+        $this->assertCount(1, $ids, 'exactly one Jaaropgaaf object exists for (employee, year)');
+
+        $final = end($jgSaves);
+        $this->assertSame(7800.0, $final['totalGrossPay']);
+        $this->assertSame(2, $final['payPeriodCount']);
+
+    }//end testGenerateJaaropgaafReaggregationUpdatesTheExistingObjectRatherThanDuplicating()
+
+
+    /**
+     * @return void
+     */
+    public function testGenerateJaaropgaafFailsClosedWhenEmployeeHasNoPayslipsInTheYear(): void
+    {
+        [$service, $fake] = $this->service(['Employee' => [$this->employee()]], configuredTemplateId: 'T1');
+
+        $result = $service->generateJaaropgaaf('emp-1', 2026);
+
+        $this->assertSame('failed', $result['status']);
+        $this->assertCount(0, $this->savedFor($fake, 'Jaaropgaaf'));
+        $this->assertCount(0, $this->savedFor($fake, 'GeneratedDocument'));
+
+    }//end testGenerateJaaropgaafFailsClosedWhenEmployeeHasNoPayslipsInTheYear()
+
+
+    // -- payslip-pdf-docudesk: occ backlog + usage guards --------------------
+
+
+    /**
+     * @return void
+     */
+    public function testGenerateBacklogLoonstrookProcessesPayslipsLackingAnActiveDocumentNarrowedByPeriod(): void
+    {
+        $rows = [
+            'Employee'          => [$this->employee()],
+            'Payslip'           => [
+                $this->payslip(['id' => 'ps-may-1', 'period' => '2026-05']),
+                $this->payslip(['id' => 'ps-may-2', 'period' => '2026-05']),
+                $this->payslip(['id' => 'ps-jun-1', 'period' => '2026-06']),
+            ],
+            'GeneratedDocument' => [
+                ['id' => 'gd-existing', 'documentType' => 'loonstrook', 'employeeId' => 'emp-1', 'payslipId' => 'ps-may-1', 'status' => 'generated'],
+            ],
+        ];
+        [$service] = $this->service($rows, configuredTemplateId: 'T1');
+
+        $results = $service->generateBacklog('loonstrook', null, '2026-05', null);
+
+        // Only the two 2026-05 payslips are in scope; 2026-06 is excluded.
+        $this->assertCount(2, $results);
+        $statuses = array_column($results, 'status');
+        $this->assertContains('already-generated', $statuses);
+        $this->assertContains('generated', $statuses);
+
+    }//end testGenerateBacklogLoonstrookProcessesPayslipsLackingAnActiveDocumentNarrowedByPeriod()
+
+
+    /**
+     * @return void
+     */
+    public function testGenerateBacklogJaaropgaafAggregatesAndRendersPerEmployeeWithPayslipsInTheYear(): void
+    {
+        $rows = [
+            'Employee' => [$this->employee(), $this->employee(['id' => 'emp-2', 'employeeNumber' => 'EMP-0002'])],
+            'Payslip'  => [
+                $this->payslip(['id' => 'ps-1', 'employeeId' => 'emp-1', 'period' => '2026-01']),
+                $this->payslip(['id' => 'ps-2', 'employeeId' => 'emp-2', 'period' => '2025-01']),
+            ],
+        ];
+        [$service, $fake] = $this->service($rows, configuredTemplateId: 'T1');
+
+        $results = $service->generateBacklog('jaaropgaaf', null, null, '2026');
+
+        // Only emp-1 has a 2026 payslip; emp-2's payslip is in 2025.
+        $this->assertCount(1, $results);
+        $this->assertSame('emp-1', $results[0]['employeeId']);
+        $this->assertSame('generated', $results[0]['status']);
+        $this->assertCount(1, $this->savedFor($fake, 'Jaaropgaaf'));
+
+    }//end testGenerateBacklogJaaropgaafAggregatesAndRendersPerEmployeeWithPayslipsInTheYear()
+
+
+    /**
+     * @return void
+     */
+    public function testGenerateBacklogRefusesJaaropgaafWithoutYear(): void
+    {
+        [$service] = $this->service();
+
+        $results = $service->generateBacklog('jaaropgaaf', null, null, null);
+
+        $this->assertCount(1, $results);
+        $this->assertSame('usage-error', $results[0]['status']);
+
+    }//end testGenerateBacklogRefusesJaaropgaafWithoutYear()
+
+
+    /**
+     * @return void
+     */
+    public function testGenerateBacklogRefusesPeriodWithANonLoonstrookType(): void
+    {
+        [$service] = $this->service();
+
+        $results = $service->generateBacklog('arbeidsovereenkomst', null, '2026-05', null);
+
+        $this->assertCount(1, $results);
+        $this->assertSame('usage-error', $results[0]['status']);
+
+    }//end testGenerateBacklogRefusesPeriodWithANonLoonstrookType()
+
+
+    /**
+     * @return void
+     */
+    public function testGenerateBacklogRefusesYearWithANonJaaropgaafType(): void
+    {
+        [$service] = $this->service();
+
+        $results = $service->generateBacklog('loonstrook', null, null, '2026');
+
+        $this->assertCount(1, $results);
+        $this->assertSame('usage-error', $results[0]['status']);
+
+    }//end testGenerateBacklogRefusesYearWithANonJaaropgaafType()
 
 
 }//end class

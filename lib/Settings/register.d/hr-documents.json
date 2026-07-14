@@ -5,9 +5,9 @@
             "GeneratedDocument": {
                 "slug": "GeneratedDocument",
                 "icon": "FileDocumentOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Generated document",
-                "description": "The hrmq-side record of one attempt to render a standard HR document (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift) via docudesk's template/rendering engine and store the returned PDF (hrmq-docudesk-documents). hrmq owns no template or PDF machinery of its own (design.md D1): this schema is a log of the handoff -- which template, for whom, the outcome, and where the file landed -- never the rendering itself. `skipped-no-docudesk` and `failed` are retryable outcomes: a later `occ hrmq:documents:generate` invocation (or the EmploymentContractDetail page action) can supersede them (design.md D6). At most one GeneratedDocument per (contractId|employeeId, documentType) may be `pending`/`generated` at a time -- enforced by HrDocumentService and audited by the nl-contract-schriftelijk corpus rule for arbeidsovereenkomst evidence.",
+                "description": "The hrmq-side record of one attempt to render a standard HR document (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift, loonstrook, jaaropgaaf) via docudesk's template/rendering engine and store the returned PDF (hrmq-docudesk-documents, extended by payslip-pdf-docudesk). hrmq owns no template or PDF machinery of its own (design.md D1): this schema is a log of the handoff -- which template, for whom, the outcome, and where the file landed -- never the rendering itself. `skipped-no-docudesk` and `failed` are retryable outcomes: a later `occ hrmq:documents:generate` invocation (or the EmploymentContractDetail/PayslipDetail page action) can supersede them (design.md D6). At most one GeneratedDocument per idempotency key may be `pending`/`generated` at a time: the four letter types key on (contractId|employeeId, documentType), loonstrook keys on (payslipId, documentType), jaaropgaaf keys on (jaaropgaafId, documentType) -- enforced by HrDocumentService and audited by the nl-contract-schriftelijk / nl-loonstrook-verplicht corpus rules.",
                 "type": "object",
                 "x-schema-org": "schema:DigitalDocument",
                 "required": [
@@ -22,10 +22,12 @@
                             "arbeidsovereenkomst",
                             "aanbiedingsbrief",
                             "werkgeversverklaring",
-                            "getuigschrift"
+                            "getuigschrift",
+                            "loonstrook",
+                            "jaaropgaaf"
                         ],
                         "title": "Document type",
-                        "description": "Which standard HR document this record represents. Enum append-only: renaming a value later is breaking, adding one is not."
+                        "description": "Which standard HR document this record represents. Enum append-only: renaming a value later is breaking, adding one is not. loonstrook/jaaropgaaf added by payslip-pdf-docudesk."
                     },
                     "employeeId": {
                         "type": "string",
@@ -40,7 +42,23 @@
                         "$ref": "EmploymentContract",
                         "nullable": true,
                         "title": "Contract",
-                        "description": "Reference to the EmploymentContract this document evidences -- required in practice for arbeidsovereenkomst; null for employee-level document types (aanbiedingsbrief/werkgeversverklaring/getuigschrift)."
+                        "description": "Reference to the EmploymentContract this document evidences -- required in practice for arbeidsovereenkomst; null for employee-level document types (aanbiedingsbrief/werkgeversverklaring/getuigschrift/loonstrook/jaaropgaaf)."
+                    },
+                    "payslipId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Payslip",
+                        "nullable": true,
+                        "title": "Payslip",
+                        "description": "Reference to the Payslip this loonstrook document renders (payslip-pdf-docudesk) -- set only on documentType: loonstrook; null on every other type."
+                    },
+                    "jaaropgaafId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Jaaropgaaf",
+                        "nullable": true,
+                        "title": "Jaaropgaaf",
+                        "description": "Reference to the Jaaropgaaf annual aggregate this document renders (payslip-pdf-docudesk) -- set only on documentType: jaaropgaaf; null on every other type."
                     },
                     "templateRef": {
                         "type": "string",
@@ -78,6 +96,89 @@
                         "nullable": true,
                         "title": "Generated at",
                         "description": "When the PDF was produced by docudesk and stored on this object's folder."
+                    }
+                }
+            },
+            "Jaaropgaaf": {
+                "slug": "Jaaropgaaf",
+                "icon": "FileCertificateOutline",
+                "version": "0.1.0",
+                "title": "Jaaropgaaf",
+                "description": "The per-employee-per-year annual-statement aggregate (payslip-pdf-docudesk design.md D2): totals derived exclusively from the employee's Payslips for the given year -- never fabricated, never containing figures no Payslip field carries. Created and updated exclusively by HrDocumentService's aggregation step, upserted per (employeeId, year): re-aggregating refreshes an existing object's totals and `aggregatedAt` rather than creating a duplicate. Carries no status/lifecycle -- render state lives on the GeneratedDocument that renders it (D1).",
+                "type": "object",
+                "x-schema-org": "schema:Report",
+                "required": [
+                    "employeeId",
+                    "year",
+                    "totalGrossPay",
+                    "totalLoonheffing"
+                ],
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Reference to the Employee this annual statement is for."
+                    },
+                    "year": {
+                        "type": "integer",
+                        "title": "Year",
+                        "description": "The kalenderjaar this annual statement aggregates."
+                    },
+                    "totalGrossPay": {
+                        "type": "number",
+                        "title": "Total gross pay",
+                        "description": "Sum of Payslip.grossPay across the year's payslips (the jaaropgaaf 'loon' column)."
+                    },
+                    "totalLoonheffing": {
+                        "type": "number",
+                        "title": "Total loonheffing",
+                        "description": "Sum of Payslip.loonheffing across the year's payslips."
+                    },
+                    "totalNettoPay": {
+                        "type": "number",
+                        "title": "Total net pay",
+                        "description": "Sum of Payslip.nettoPay across the year's payslips."
+                    },
+                    "totalZvwWithheld": {
+                        "type": "number",
+                        "title": "Total Zvw withheld",
+                        "description": "Sum of Payslip.zvw ONLY where zvwMode == 'inhouding' -- the employer levy (werkgeversheffing) is never a werknemersaandeel and is excluded from this sum."
+                    },
+                    "totalPensionContribution": {
+                        "type": "number",
+                        "title": "Total pension contribution",
+                        "description": "Sum of Payslip.pensionContribution across the year's payslips."
+                    },
+                    "totalVakantiegeldReserved": {
+                        "type": "number",
+                        "title": "Total vakantiegeld reserved",
+                        "description": "Sum of Payslip.vakantiegeldReserved across the year's payslips -- the reservation, not the payout."
+                    },
+                    "payPeriodCount": {
+                        "type": "integer",
+                        "title": "Pay period count",
+                        "description": "Number of payslips aggregated into this jaaropgaaf."
+                    },
+                    "verrekendeArbeidskorting": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Verrekende arbeidskorting",
+                        "description": "Statutory jaaropgaaf line for the applied arbeidskorting -- stays null because no Payslip field carries arbeidskorting today (a payroll-core follow-up); never a fabricated 0.00 presented as fact."
+                    },
+                    "loonheffingennummer": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Loonheffingennummer",
+                        "description": "Employer loonheffingennummer, snapshotted from configuration at aggregation time."
+                    },
+                    "aggregatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Aggregated at",
+                        "description": "When the aggregation last ran -- refreshed on every upsert."
                     }
                 }
             }
@@ -128,6 +229,42 @@
                 "filePath": null,
                 "errorMessage": "Docudesk was niet geïnstalleerd op het moment van deze poging; opnieuw proberen zodra docudesk beschikbaar is.",
                 "generatedAt": null
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Jaaropgaaf",
+                    "slug": "jaaropgaaf-jansen-2026"
+                },
+                "employeeId": "employee-jansen",
+                "year": 2026,
+                "totalGrossPay": 3800.0,
+                "totalLoonheffing": 1102.0,
+                "totalNettoPay": 2698.0,
+                "totalZvwWithheld": 0,
+                "totalPensionContribution": 0,
+                "totalVakantiegeldReserved": 0,
+                "payPeriodCount": 1,
+                "verrekendeArbeidskorting": null,
+                "loonheffingennummer": "0000.00.000.L00",
+                "aggregatedAt": "2026-07-01T08:00:00Z"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "GeneratedDocument",
+                    "slug": "gendoc-loonstrook-jansen-2026-05"
+                },
+                "documentType": "loonstrook",
+                "employeeId": "employee-jansen",
+                "contractId": null,
+                "payslipId": "payslip-jansen-2026-05",
+                "jaaropgaafId": null,
+                "templateRef": "docudesk-template-placeholder-uuid",
+                "status": "generated",
+                "filePath": "loonstrook-EMP-0001-2026-06-01.pdf",
+                "errorMessage": null,
+                "generatedAt": "2026-06-01T09:00:00Z"
             }
         ]
     }

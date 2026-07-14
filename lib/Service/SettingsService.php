@@ -262,19 +262,39 @@ class SettingsService
 
 
     /**
+     * The employer loonheffingennummer merged into every docudesk render's
+     * `adHocData.employer` block (payslip-pdf-docudesk design.md D3), and
+     * snapshotted onto a `Jaaropgaaf` at aggregation time, configurable via
+     * app config key `documents_employer_loonheffingennummer`.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
+     */
+    public function getDocumentsEmployerLoonheffingennummer(): string
+    {
+        return $this->documentsEmployerField('documents_employer_loonheffingennummer', '000000000L01');
+
+    }//end getDocumentsEmployerLoonheffingennummer()
+
+
+    /**
      * The full employer block passed as `adHocData.employer` on every docudesk
-     * render call (hrmq-docudesk-documents design.md D2).
+     * render call (hrmq-docudesk-documents design.md D2; `loonheffingennummer`
+     * added by payslip-pdf-docudesk design.md D3).
      *
      * @return array<string, string>
      *
      * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
+     * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
      */
     public function getDocumentsEmployerBlock(): array
     {
         return [
-            'name'      => $this->getDocumentsEmployerName(),
-            'address'   => $this->getDocumentsEmployerAddress(),
-            'kvkNumber' => $this->getDocumentsEmployerKvkNumber(),
+            'name'                => $this->getDocumentsEmployerName(),
+            'address'             => $this->getDocumentsEmployerAddress(),
+            'kvkNumber'           => $this->getDocumentsEmployerKvkNumber(),
+            'loonheffingennummer' => $this->getDocumentsEmployerLoonheffingennummer(),
         ];
 
     }//end getDocumentsEmployerBlock()

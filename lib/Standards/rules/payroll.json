@@ -323,6 +323,18 @@
       "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
     },
     {
+      "id": "nl-loonstrook-verplicht",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "BW 7:626",
+      "statement": "Every Payslip should have its loonstrook document on file -- an active GeneratedDocument of type loonstrook in status generated referencing the payslip -- the machine-checkable evidence companion of nl-loonstrook-verstrekken, so statementProvided is evidenced, not merely asserted.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    },
+    {
       "id": "nl-loonstrook-inhoud",
       "domain": "reporting",
       "jurisdiction": "NL",

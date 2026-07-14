@@ -4,12 +4,17 @@
  * Document Controller
  *
  * Backs the `EmploymentContractDetail` manifest page action "Genereer
- * arbeidsovereenkomst" (hrmq-docudesk-documents design.md D7): a single POST
- * endpoint that resolves the posted contract through OpenRegister's
+ * arbeidsovereenkomst" AND, since payslip-pdf-docudesk, the `PayslipDetail`
+ * page action "Genereer PDF" (hrmq-docudesk-documents design.md D7,
+ * payslip-pdf-docudesk design.md D6): a single POST endpoint that resolves
+ * the posted subject (contract OR payslip) through OpenRegister's
  * ObjectService under the caller's RBAC BEFORE any docudesk call (no-admin-idor
- * guard -- an unknown or unauthorized contractId never reaches docudesk and
- * never creates a GeneratedDocument), then delegates the actual render/store to
- * `HrDocumentService::generate()`.
+ * guard -- an unknown or unauthorized contractId/payslipId never reaches
+ * docudesk and never creates a GeneratedDocument), then delegates the actual
+ * render/store to `HrDocumentService::generate()` /
+ * `HrDocumentService::generateLoonstrook()`. `jaaropgaaf` is NOT accepted on
+ * this endpoint -- the aggregate-then-render flow is occ-only in MVP
+ * (design.md D6).
  *
  * @category Controller
  * @package  OCA\Hrmq\Controller
@@ -24,6 +29,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
+ * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
  */
 
 declare(strict_types=1);
@@ -71,21 +77,58 @@ class DocumentController extends Controller
 
 
     /**
-     * `POST /api/documents/generate` -- resolves the posted `contractId` under
-     * the caller's RBAC (unknown/unauthorized -> 404, no docudesk call), then
-     * triggers a single generation attempt for it.
+     * `POST /api/documents/generate` -- dispatches on `documentType`. The
+     * four letter types resolve the posted `contractId` under the caller's
+     * RBAC (unknown/unauthorized -> 404, no docudesk call) then trigger a
+     * single generation attempt for it (hrmq-docudesk-documents design.md
+     * D8). `loonstrook` resolves the posted `payslipId` the identical way via
+     * `authorizePayslip()` (payslip-pdf-docudesk design.md D6) -- the
+     * employeeId is taken from the resolved payslip, `contractId` stays
+     * null. A missing subject param for the requested type -> 400.
+     * `jaaropgaaf` is not accepted on this endpoint (occ-only in MVP).
      *
-     * @param string $contractId   The EmploymentContract id (row-scoped, `@objectId` from the manifest action).
-     * @param string $documentType The document type (defaults to arbeidsovereenkomst -- the only type this action drives).
+     * @param string|null $contractId   The EmploymentContract id (row-scoped, `@objectId` from the manifest action) -- required for the letter types.
+     * @param string      $documentType The document type (defaults to arbeidsovereenkomst).
+     * @param string|null $payslipId    The Payslip id (row-scoped, `@objectId` from the PayslipDetail action) -- required for `loonstrook`.
      *
-     * @return JSONResponse The generation outcome, or 404 when the contract does not resolve.
+     * @return JSONResponse The generation outcome, 400 on a missing subject param, or 404 when the subject does not resolve.
      *
      * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
+     * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
      */
     #[NoAdminRequired]
-    public function generate(string $contractId, string $documentType='arbeidsovereenkomst'): JSONResponse
+    public function generate(?string $contractId=null, string $documentType='arbeidsovereenkomst', ?string $payslipId=null): JSONResponse
     {
-        $contractId = trim($contractId);
+        $documentType = trim($documentType);
+        $userId       = $this->userSession->getUser()?->getUID();
+
+        if ($documentType === 'jaaropgaaf') {
+            return new JSONResponse(
+                ['error' => 'Jaaropgaaf genereren is niet beschikbaar via dit endpoint (alleen via occ hrmq:documents:generate).'],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
+
+        if ($documentType === 'loonstrook') {
+            $payslipId = trim((string) $payslipId);
+            if ($payslipId === '') {
+                return new JSONResponse(['error' => 'payslipId is verplicht.'], Http::STATUS_BAD_REQUEST);
+            }
+
+            // No-admin-idor guard (ADR-005 Rule 3): the payslip must resolve
+            // through OpenRegister's ObjectService under the caller's RBAC
+            // before any docudesk call -- an unresolvable/unauthorized id
+            // never reaches it.
+            $payslipArray = $this->authorizePayslip($payslipId);
+            if ($payslipArray === null) {
+                return new JSONResponse(['error' => 'Loonstrook niet gevonden.'], Http::STATUS_NOT_FOUND);
+            }
+
+            $result = $this->hrDocumentService->generateLoonstrook($payslipId, $userId);
+            return new JSONResponse($result);
+        }
+
+        $contractId = trim((string) $contractId);
         if ($contractId === '') {
             return new JSONResponse(['error' => 'contractId is verplicht.'], Http::STATUS_BAD_REQUEST);
         }
@@ -102,8 +145,6 @@ class DocumentController extends Controller
         if ($employeeId === '') {
             return new JSONResponse(['error' => 'Contract heeft geen gekoppelde medewerker.'], Http::STATUS_NOT_FOUND);
         }
-
-        $userId = $this->userSession->getUser()?->getUID();
 
         $result = $this->hrDocumentService->generate($employeeId, $contractId, $documentType, $userId);
 
@@ -145,6 +186,42 @@ class DocumentController extends Controller
         return $this->toArray($contract);
 
     }//end authorizeContract()
+
+
+    /**
+     * Resolve the posted payslipId through OpenRegister's ObjectService
+     * under the caller's ambient RBAC (default $_rbac=true) -- the
+     * no-admin-idor guard mirroring `authorizeContract()` for the loonstrook
+     * variant (payslip-pdf-docudesk design.md D6). Returns null when the
+     * payslip does not exist OR the caller's RBAC denies it (both collapse
+     * to the same 404 so existence is never leaked to an unauthorized caller).
+     *
+     * @param string $payslipId The Payslip id.
+     *
+     * @return array<string, mixed>|null
+     *
+     * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
+     */
+    private function authorizePayslip(string $payslipId): ?array
+    {
+        try {
+            $payslip = $this->objectService()->find(
+                id: $payslipId,
+                register: $this->settingsService->getRegisterSlug(),
+                schema: 'Payslip'
+            );
+        } catch (\Throwable $e) {
+            $this->logger->info('DocumentController: payslip '.$payslipId.' kon niet worden opgehaald: '.$e->getMessage());
+            return null;
+        }
+
+        if ($payslip === null) {
+            return null;
+        }
+
+        return $this->toArray($payslip);
+
+    }//end authorizePayslip()
 
 
     /**

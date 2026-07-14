@@ -3,14 +3,19 @@
 /**
  * Documents Generate Command
  *
- * `occ hrmq:documents:generate [--type <t>] [--employee <id>]` -- the MVP
- * trigger for hrmq-docudesk-documents (design.md D7): with no options,
- * processes the `nl-contract-schriftelijk` backlog (every permanent, written
- * EmploymentContract without an active arbeidsovereenkomst document). A
- * documentType other than arbeidsovereenkomst has no backlog semantics and
- * requires `--employee`. No automatic lifecycle hook exists yet -- this
- * command is run on operator demand (or via the EmploymentContractDetail page
- * action, for a single contract) until a lifecycle hook lands.
+ * `occ hrmq:documents:generate [--type <t>] [--employee <id>] [--period
+ * <YYYY-MM>] [--year <YYYY>]` -- the MVP trigger for hrmq-docudesk-documents
+ * (design.md D7), widened by payslip-pdf-docudesk (design.md D5): with no
+ * options, processes the `nl-contract-schriftelijk` backlog (every permanent,
+ * written EmploymentContract without an active arbeidsovereenkomst
+ * document). A letter documentType other than arbeidsovereenkomst has no
+ * backlog semantics and requires `--employee`. `--type loonstrook` has real
+ * backlog semantics -- every Payslip lacking an active loonstrook document,
+ * optionally narrowed by `--period`/`--employee`. `--type jaaropgaaf`
+ * REQUIRES `--year` and aggregates-then-renders per employee with payslips
+ * in that year. No automatic lifecycle hook exists yet -- this command is
+ * run on operator demand (or via the EmploymentContractDetail/PayslipDetail
+ * page action, for a single subject) until a lifecycle hook lands.
  *
  * @category Command
  * @package  OCA\Hrmq\Command
@@ -25,6 +30,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-007
+ * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-003
  */
 
 declare(strict_types=1);
@@ -48,7 +54,14 @@ class DocumentsGenerateCommand extends Command
      *
      * @var string[]
      */
-    private const DOCUMENT_TYPES = ['arbeidsovereenkomst', 'aanbiedingsbrief', 'werkgeversverklaring', 'getuigschrift'];
+    private const DOCUMENT_TYPES = [
+        'arbeidsovereenkomst',
+        'aanbiedingsbrief',
+        'werkgeversverklaring',
+        'getuigschrift',
+        'loonstrook',
+        'jaaropgaaf',
+    ];
 
     /**
      * Outcome statuses that count as a failure for the command's exit code.
@@ -76,8 +89,10 @@ class DocumentsGenerateCommand extends Command
     {
         $this->setName('hrmq:documents:generate')
             ->setDescription('Generate standard HR documents via docudesk (default: backlog of permanent written contracts missing an arbeidsovereenkomst).')
-            ->addOption('type', null, InputOption::VALUE_REQUIRED, 'Document type (arbeidsovereenkomst|aanbiedingsbrief|werkgeversverklaring|getuigschrift).')
-            ->addOption('employee', null, InputOption::VALUE_REQUIRED, 'Restrict to one Employee id (required for non-arbeidsovereenkomst types).');
+            ->addOption('type', null, InputOption::VALUE_REQUIRED, 'Document type (arbeidsovereenkomst|aanbiedingsbrief|werkgeversverklaring|getuigschrift|loonstrook|jaaropgaaf).')
+            ->addOption('employee', null, InputOption::VALUE_REQUIRED, 'Restrict to one Employee id (required for employee-level letter types).')
+            ->addOption('period', null, InputOption::VALUE_REQUIRED, 'Restrict the loonstrook backlog to one YYYY-MM period (--type loonstrook only).')
+            ->addOption('year', null, InputOption::VALUE_REQUIRED, 'The year to aggregate/render (--type jaaropgaaf only; required for that type).');
 
     }//end configure()
 
@@ -89,6 +104,7 @@ class DocumentsGenerateCommand extends Command
      * @return int 0 when every attempt ends generated/already-generated/skipped-no-docudesk, 1 when any ends failed/usage-error.
      *
      * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-007
+     * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-003
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -103,7 +119,13 @@ class DocumentsGenerateCommand extends Command
         $employeeOption = $input->getOption('employee');
         $employeeId     = (is_string($employeeOption) === true && trim($employeeOption) !== '') ? trim($employeeOption) : null;
 
-        $results = $this->service->generateBacklog($type, $employeeId);
+        $periodOption = $input->getOption('period');
+        $period       = (is_string($periodOption) === true && trim($periodOption) !== '') ? trim($periodOption) : null;
+
+        $yearOption = $input->getOption('year');
+        $year       = (is_string($yearOption) === true && trim($yearOption) !== '') ? trim($yearOption) : null;
+
+        $results = $this->service->generateBacklog($type, $employeeId, $period, $year);
 
         $output->writeln('<info>Hrmq documentgeneratie</info>');
 
