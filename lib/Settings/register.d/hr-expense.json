@@ -5,7 +5,7 @@
             "Expense": {
                 "slug": "Expense",
                 "icon": "Receipt",
-                "version": "0.4.0",
+                "version": "0.5.0",
                 "title": "Expense",
                 "description": "An employee expense-reimbursement claim (onkostendeclaratie / declaratie). An employee submits a claim (amount, category, date, receipt), a manager approves or rejects it, and once approved the amount is reimbursed to the employee. The submit → approve → reimburse lifecycle is owned here in hrmq, the HR/labour app — re-homing the Expenses feature that previously lived in pipelinq. The pipelinq-specific Shillinq accounts-payable sync coupling is intentionally NOT ported: reimbursement here is the HR-side claim workflow; any downstream AP/GL posting is a separate integration concern that OpenConnector/shillinq own.",
                 "type": "object",
@@ -168,6 +168,23 @@
                         "nullable": true,
                         "title": "Administration",
                         "description": "Denormalized administratie key this Expense is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun/managerUserId convention), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+                    },
+                    "travelType": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Type reis",
+                        "description": "Distinguishes zakelijke kilometers (business) from woon-werkverkeer (commute) for a category travel claim -- both are eligible for the onbelaste kilometervergoeding (mileage-rules, REQ-MILE-001). Meaningful only alongside distanceKm; absent on non-mileage expenses.",
+                        "enum": [
+                            "business",
+                            "commute"
+                        ]
+                    },
+                    "distanceKm": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Afstand (km)",
+                        "description": "Kilometers driven for this claim, used together with amount and travelType to compute the per-km reimbursement checked against the onbelaste kilometervergoeding by nl-reiskosten-onbelast-tarief (mileage-rules, REQ-MILE-001)."
                     }
                 }
             }

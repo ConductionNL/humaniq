@@ -1257,6 +1257,21 @@
       "machineCheckable": true,
       "effectiveDate": "2026-01-01",
       "sourceUrl": "https://download.belastingdienst.nl/belastingdienst/docs/rekenvoorschriften_voor_geautomatiseerde_loonadministratie_lh991z62fd.pdf"
+    },
+    {
+      "id": "nl-reiskosten-onbelast-tarief",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Wet LB 1964 art. 31a lid 2 (gerichte vrijstelling reiskosten)",
+      "statement": "An employer may reimburse zakelijke en woon-werk kilometers tax-free up to the onbelaste kilometervergoeding per kilometer; reimbursing more per km without additional withholding makes the excess (bovenmatige vergoeding) taxable wage.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/berichten/nieuws/verhoging-onbelaste-kilometervergoeding-hoe-verwerkt-u-dit-in-de-loonaangifte",
+      "parameters": {
+        "rateEurPerKm": 0.23
+      }
     }
   ]
 }

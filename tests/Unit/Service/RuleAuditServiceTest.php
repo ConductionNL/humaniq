@@ -1141,4 +1141,122 @@ class RuleAuditServiceTest extends TestCase
     }//end testSeededMssDataReportsBumpedCatalogueVersionAndRuleEnforceable()
 
 
+    // -- mileage-rules: Expense.travelType/distanceKm onbelast-tarief check --
+
+
+    /**
+     * Expense rows fed through audit() as if loaded from the register: one
+     * over-rate mileage claim (EUR 0,30/km) and the actual hr-seed.json
+     * compliant mileage fixture (EUR 0,23/km, at the onbelast rate) --
+     * matching mileage-rules design.md's Seed Data note.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededMileageRows(): array
+    {
+        return [
+            'Expense' => [
+                [
+                    'id'         => 'expense-devries-mileage',
+                    'category'   => 'travel',
+                    'travelType' => 'business',
+                    'distanceKm' => 150,
+                    'amount'     => 34.50,
+                ],
+                [
+                    'id'         => 'expense-over-rate-mileage',
+                    'category'   => 'travel',
+                    'travelType' => 'business',
+                    'distanceKm' => 100,
+                    'amount'     => 30.00,
+                ],
+                // The existing seed row is still travel-category but carries no
+                // travelType/distanceKm -- vacuous, must not be counted as
+                // checked-and-failed (design.md, "every previously stored
+                // Expense stays valid").
+                [
+                    'id'       => 'expense-devries-train',
+                    'category' => 'travel',
+                    'amount'   => 27.40,
+                ],
+            ],
+        ];
+
+    }//end seededMileageRows()
+
+
+    /**
+     * The seeded compliant mileage claim raises no violation; the over-rate
+     * fixture is flagged exactly once (REQ-MILE-003 "Over-rate mileage claim
+     * violates" / "At-or-under-rate mileage claim passes", through the real
+     * audit() aggregation rather than the raw predicate).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/mileage-rules/specs/mileage-rules/spec.md#REQ-MILE-003
+     */
+    public function testSeededMileageDataFlagsOnlyTheOverRateExpenseThroughAudit(): void
+    {
+        $service = $this->serviceWithRows($this->seededMileageRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-reiskosten-onbelast-tarief'] ?? 0));
+
+    }//end testSeededMileageDataFlagsOnlyTheOverRateExpenseThroughAudit()
+
+
+    /**
+     * occ hrmq:rules:audit reports the rule as enforced: it counts toward
+     * both machine-checkable and enforceable coverage, and the catalogue
+     * version is the bumped one (REQ-MILE-002 / REQ-MILE-003).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/mileage-rules/specs/mileage-rules/spec.md#REQ-MILE-002
+     * @spec openspec/changes/mileage-rules/specs/mileage-rules/spec.md#REQ-MILE-003
+     */
+    public function testSeededMileageDataReportsBumpedCatalogueVersionAndRuleEnforceable(): void
+    {
+        $service = $this->serviceWithRows($this->seededMileageRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+
+        $machineCheckable = array_column(\OCA\Hrmq\Standards\RuleCatalogue::machineCheckable(), 'id');
+        $this->assertContains('nl-reiskosten-onbelast-tarief', $machineCheckable);
+
+        $enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+        $this->assertContains('nl-reiskosten-onbelast-tarief', $enforceable);
+
+    }//end testSeededMileageDataReportsBumpedCatalogueVersionAndRuleEnforceable()
+
+
+    /**
+     * The vacuous pre-existing (travel, no travelType/distanceKm) row is
+     * checked (counted) but never counted as a violation of this rule --
+     * REQ-MILE-001 "Existing Expense stays valid without the new fields",
+     * companion at audit level.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/mileage-rules/specs/mileage-rules/spec.md#REQ-MILE-001
+     */
+    public function testPreExistingTravelExpenseWithNoMileageFieldsIsNeverFlagged(): void
+    {
+        $service = $this->serviceWithRows(['Expense' => [['id' => 'expense-devries-train', 'category' => 'travel', 'amount' => 27.40]]]);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $this->assertSame(1, $report['objectsChecked']);
+        $this->assertSame(1, $report['objectsCompliant']);
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-reiskosten-onbelast-tarief', $ruleIds);
+
+    }//end testPreExistingTravelExpenseWithNoMileageFieldsIsNeverFlagged()
+
+
 }//end class
