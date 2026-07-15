@@ -971,6 +971,94 @@
                 "overtimeMultiplier": 1.5,
                 "ftePartOfYearMinijob": false,
                 "dpaeFiledBeforeStart": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-jansen-vast"
+                },
+                "employeeId": "employee-jansen",
+                "type": "permanent",
+                "writtenContract": true,
+                "startDate": "2024-01-01",
+                "endDate": null,
+                "hoursPerWeek": 36,
+                "hourlyWage": 24.36,
+                "cao": null,
+                "awfTariff": "low",
+                "aanzegdOn": null,
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "SalaryBand",
+                    "slug": "salaryband-a"
+                },
+                "bandId": "A",
+                "title": "Schaal A — Medior",
+                "grade": "A",
+                "minSalary": 300000,
+                "referenceSalary": 360000,
+                "maxSalary": 420000,
+                "currency": "EUR",
+                "cao": "cao-generiek",
+                "caoSchaal": "generiek",
+                "effectiveFrom": "2026-01-01",
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "SalaryBand",
+                    "slug": "salaryband-b"
+                },
+                "bandId": "B",
+                "title": "Schaal B — Senior",
+                "grade": "B",
+                "minSalary": 420000,
+                "referenceSalary": 480000,
+                "maxSalary": 600000,
+                "currency": "EUR",
+                "cao": null,
+                "caoSchaal": null,
+                "effectiveFrom": "2026-01-01",
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "CompReviewCycle",
+                    "slug": "compcycle-2026"
+                },
+                "name": "Jaarlijkse beloningsronde 2026",
+                "period": "2026",
+                "effectiveDate": "2026-07-01",
+                "status": "open",
+                "description": "Jaarlijkse beloningsronde voor 2026 — per-medewerker aanpassingen tegen de interne salarisschalen."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "CompAdjustment",
+                    "slug": "compadjustment-jansen-2026"
+                },
+                "cycleId": "compcycle-2026",
+                "employeeId": "employee-jansen",
+                "contractId": "contract-jansen-vast",
+                "currentSalary": 380000,
+                "proposedSalary": 400000,
+                "targetBandId": "salaryband-a",
+                "effectiveDate": "2026-07-01",
+                "status": "draft",
+                "proposedBy": "admin",
+                "approvedBy": null,
+                "rationale": "Jaarlijkse aanpassing binnen schaal A op basis van functioneren.",
+                "appliedAt": null
             }
         ]
     }

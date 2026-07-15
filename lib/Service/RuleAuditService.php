@@ -146,6 +146,12 @@ class RuleAuditService
         // the buildAttendanceContext() precedent, mirrored onto planned data.
         $context['rostering'] = $this->buildRosterContext();
 
+        // comp-cycles: a SalaryBand-by-id index so CompChecks::checks()
+        // ['CompAdjustment']['comp-adjustment-within-band'] can resolve the
+        // targeted band's [minSalary, maxSalary] without re-querying the
+        // register — the `cao.employeesById` / `payroll.runsById` precedent.
+        $context['comp'] = $this->buildCompContext();
+
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
         $enforceable      = count(RuleEngine::checkedRuleIds());
@@ -671,6 +677,38 @@ class RuleAuditService
         ];
 
     }//end buildCaoContext()
+
+
+    /**
+     * Build the SalaryBand-by-id index consumed by
+     * `CompChecks::checks()['CompAdjustment']['comp-adjustment-within-band']`
+     * (comp-cycles design.md D7) — the `buildCaoContext()` employeesById
+     * precedent, mirrored onto SalaryBand.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
+     */
+    private function buildCompContext(): array
+    {
+        $salaryBandsById = [];
+        foreach ($this->loadAll('SalaryBand') as $band) {
+            $id = (string) ($band['id'] ?? $band['@self']['id'] ?? '');
+            if ($id === '') {
+                continue;
+            }
+
+            $salaryBandsById[$id] = [
+                'minSalary' => ($band['minSalary'] ?? null),
+                'maxSalary' => ($band['maxSalary'] ?? null),
+            ];
+        }
+
+        return [
+            'salaryBandsById' => $salaryBandsById,
+        ];
+
+    }//end buildCompContext()
 
 
     /**

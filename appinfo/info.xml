@@ -138,5 +138,10 @@ Vrij en open source onder de EUPL-1.2-licentie.
              (rostering MVP). Read-only; exits non-zero on any mandatory
              violation. -->
         <command>OCA\Hrmq\Command\RosterCheckCommand</command>
+        <!-- Batch-effectuate every approved, due CompAdjustment in one
+             compensation review cycle (comp-cycles MVP trigger): writes the
+             new grossMonthlySalary onto the Employee and drives the
+             effectuate transition. --dry-run evaluates without writing. -->
+        <command>OCA\Hrmq\Command\CompEffectuateCommand</command>
     </commands>
 </info>

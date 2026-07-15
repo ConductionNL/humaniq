@@ -1,0 +1,301 @@
+{
+    "x-hrmq-fragment": "hr-comp",
+    "components": {
+        "schemas": {
+            "SalaryBand": {
+                "slug": "SalaryBand",
+                "icon": "CurrencyEur",
+                "version": "0.1.0",
+                "title": "Salary band",
+                "description": "An internal salary band/scale (min/reference/max gross monthly salary, in integer cents) that compensation-review proposals are checked against (comp-cycles). Bands are the employer's own internal structure, not an external market benchmark (explicitly out of scope). A band MAY reference the maintained CAO corpus by caoId/caoSchaal so its minSalary can be anchored at or above the CAO's statutory minimum maandloon for that scale. Authored reference data: every SalaryBand manifest surface keeps allowCreate:false.",
+                "type": "object",
+                "x-schema-org": "schema:MonetaryAmountDistribution",
+                "required": [
+                    "bandId",
+                    "title",
+                    "minSalary",
+                    "maxSalary",
+                    "currency"
+                ],
+                "properties": {
+                    "bandId": {
+                        "type": "string",
+                        "title": "Band id",
+                        "description": "Stable natural key for the band (e.g. \"A\", \"schaal-4\"), distinct from the OpenRegister object id."
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title",
+                        "description": "Human-readable name of the band (e.g. \"Schaal A — Junior\")."
+                    },
+                    "grade": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Grade",
+                        "description": "Optional job-grade label the band corresponds to."
+                    },
+                    "minSalary": {
+                        "type": "integer",
+                        "title": "Minimum salary",
+                        "description": "Minimum gross monthly salary for this band, in integer cents (the same unit as CompAdjustment.currentSalary/proposedSalary)."
+                    },
+                    "referenceSalary": {
+                        "type": "integer",
+                        "nullable": true,
+                        "title": "Reference salary",
+                        "description": "The band's reference (midpoint) gross monthly salary, in integer cents. Optional; when present SHOULD sit between minSalary and maxSalary."
+                    },
+                    "maxSalary": {
+                        "type": "integer",
+                        "title": "Maximum salary",
+                        "description": "Maximum gross monthly salary for this band, in integer cents."
+                    },
+                    "currency": {
+                        "type": "string",
+                        "default": "EUR",
+                        "title": "Currency",
+                        "description": "ISO 4217 currency code the band's figures are denominated in."
+                    },
+                    "cao": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "CAO",
+                        "description": "Optional corpus caoId this band is anchored against (e.g. \"cao-generiek\") — a plain string link into the CAO corpus, mirroring EmploymentContract.cao, not a $ref relation."
+                    },
+                    "caoSchaal": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "CAO schaal",
+                        "description": "Optional CAO pay-scale key (Cao.payScales) this band corresponds to. Meaningful only alongside cao."
+                    },
+                    "effectiveFrom": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Effective from",
+                        "description": "ISO 8601 date this band's figures took effect."
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "default": true,
+                        "title": "Active",
+                        "description": "Whether this band is currently in use for new proposals."
+                    }
+                }
+            },
+            "CompReviewCycle": {
+                "slug": "CompReviewCycle",
+                "icon": "CalendarRange",
+                "version": "0.1.0",
+                "title": "Compensation review cycle",
+                "description": "A periodic compensation-review round (comp-cycles) grouping the per-employee CompAdjustment proposals raised during it. A light open/closed container only — approval happens per adjustment (CompAdjustment carries the draft→proposed→approved→effective lifecycle), so a cycle MAY close while still holding adjustments in any state.",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "name",
+                    "period",
+                    "effectiveDate",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "open",
+                        "terminal": [
+                            "closed"
+                        ],
+                        "transitions": {
+                            "sluiten": {
+                                "from": [
+                                    "open"
+                                ],
+                                "to": "closed",
+                                "description": "Close the review round. A closed cycle may still hold adjustments in any state (approval/effectuation is per-adjustment, not per-cycle); closing does not force-effectuate anything. No reopen edge — a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent)."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "Human-readable name of the review round (e.g. \"Jaarlijkse beloningsronde 2026\")."
+                    },
+                    "period": {
+                        "type": "string",
+                        "title": "Period",
+                        "description": "Free-text period label the round covers (e.g. \"2026\")."
+                    },
+                    "effectiveDate": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Effective date",
+                        "description": "Default date the round's approved adjustments take effect. Individual CompAdjustments carry their own effectiveDate, which may differ."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Governed by the x-openregister-lifecycle state machine (open → closed). Independent of any adjustment's own status.",
+                        "enum": [
+                            "open",
+                            "closed"
+                        ],
+                        "default": "open"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 2000,
+                        "title": "Description",
+                        "description": "Optional free-text context for the round."
+                    }
+                }
+            },
+            "CompAdjustment": {
+                "slug": "CompAdjustment",
+                "icon": "CashPlus",
+                "version": "0.1.0",
+                "title": "Compensation adjustment",
+                "description": "One manager-proposed compensation adjustment for one employee within one CompReviewCycle (comp-cycles), carrying the review-round lifecycle draft → proposed → approved → effective. Separation of duties on approve/reject is enforced by the reused NoSelfApprovalGuard; the approved→effective transition is gated by the read-only, fail-closed CompEffectiveDateGuard. The effective-dated write onto the employee's compensation is a separate imperative step (CompAdjustmentService), never performed by the declarative transition alone.",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "cycleId",
+                    "employeeId",
+                    "contractId",
+                    "proposedSalary",
+                    "effectiveDate",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "draft",
+                        "terminal": [
+                            "effective"
+                        ],
+                        "transitions": {
+                            "propose": {
+                                "from": [
+                                    "draft"
+                                ],
+                                "to": "proposed",
+                                "description": "The manager submits the proposed adjustment for approval."
+                            },
+                            "approve": {
+                                "from": [
+                                    "proposed"
+                                ],
+                                "to": "approved",
+                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "A different manager approves the proposal. NoSelfApprovalGuard rejects self-approval (the approver may not be the proposer)."
+                            },
+                            "reject": {
+                                "from": [
+                                    "proposed"
+                                ],
+                                "to": "draft",
+                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "The proposal is rejected and returns to draft for revision and re-proposal. NoSelfApprovalGuard rejects self-rejection."
+                            },
+                            "effectuate": {
+                                "from": [
+                                    "approved"
+                                ],
+                                "to": "effective",
+                                "requires": "OCA\\Hrmq\\Lifecycle\\CompEffectiveDateGuard",
+                                "description": "The approved adjustment takes effect. CompEffectiveDateGuard fail-closed denies unless effectiveDate is present and on or before today. Read-only guard: the actual grossMonthlySalary write happens imperatively in CompAdjustmentService, not in the guard."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "cycleId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "CompReviewCycle",
+                        "title": "Review cycle",
+                        "description": "UUID reference to the CompReviewCycle this proposal belongs to."
+                    },
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "UUID reference to the Employee this compensation adjustment is proposed for."
+                    },
+                    "contractId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "EmploymentContract",
+                        "title": "Employment contract",
+                        "description": "UUID reference to the active EmploymentContract term this change is bound to (audit + eligibility anchor). The effective-dated write itself lands on Employee.grossMonthlySalary — the field the payroll engine reads — not on this contract (verified: EmploymentContract carries only hourlyWage, no monthly-salary field)."
+                    },
+                    "currentSalary": {
+                        "type": "integer",
+                        "nullable": true,
+                        "title": "Current salary",
+                        "description": "Snapshot of the employee's gross monthly salary at proposal time, in integer cents."
+                    },
+                    "proposedSalary": {
+                        "type": "integer",
+                        "title": "Proposed salary",
+                        "description": "The proposed new gross monthly salary, in integer cents. Checked against targetBandId's [minSalary, maxSalary] by the comp-adjustment-within-band rule."
+                    },
+                    "targetBandId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "SalaryBand",
+                        "nullable": true,
+                        "title": "Target band",
+                        "description": "Optional UUID reference to the SalaryBand this proposal is positioned against. The within-band check is vacuous when null (a band-less proposal raises no mandatory violation, the payScalesVerified advisory-until-confirmed precedent)."
+                    },
+                    "effectiveDate": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Effective date",
+                        "description": "Date the adjustment takes effect once approved. CompEffectiveDateGuard fail-closed denies effectuate until this date has arrived."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Governed by the x-openregister-lifecycle state machine (draft → proposed → approved → effective).",
+                        "enum": [
+                            "draft",
+                            "proposed",
+                            "approved",
+                            "effective"
+                        ],
+                        "default": "draft"
+                    },
+                    "proposedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Proposed by",
+                        "description": "User id of the manager who proposed the adjustment. Drives the NoSelfApprovalGuard separation-of-duties check on approve/reject."
+                    },
+                    "approvedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Approved by",
+                        "description": "User id of the manager who approved (or rejected) the proposal. Must differ from proposedBy (no self-approval)."
+                    },
+                    "rationale": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 2000,
+                        "title": "Rationale",
+                        "description": "Free-text motivation for the proposed adjustment."
+                    },
+                    "appliedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Applied at",
+                        "description": "ISO 8601 UTC timestamp CompAdjustmentService stamped when it wrote the new grossMonthlySalary onto the Employee and drove the effectuate transition. Null until effectuated."
+                    }
+                }
+            }
+        }
+    }
+}

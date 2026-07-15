@@ -33,7 +33,10 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "Roster", "urlTemplate": "/apps/hrmq/rosters/{uuid}", "displayName": "Roster" },
 		{ "registerSlug": "hrmq", "schemaSlug": "RosterAssignment", "urlTemplate": "/apps/hrmq/roster-assignments/{uuid}", "displayName": "Roster Assignment" },
 		{ "registerSlug": "hrmq", "schemaSlug": "Objective", "urlTemplate": "/apps/hrmq/objectives/{uuid}", "displayName": "Objective" },
-		{ "registerSlug": "hrmq", "schemaSlug": "KeyResult", "urlTemplate": "/apps/hrmq/key-results/{uuid}", "displayName": "Key Result" }
+		{ "registerSlug": "hrmq", "schemaSlug": "KeyResult", "urlTemplate": "/apps/hrmq/key-results/{uuid}", "displayName": "Key Result" },
+		{ "registerSlug": "hrmq", "schemaSlug": "SalaryBand", "urlTemplate": "/apps/hrmq/salary-bands/{uuid}", "displayName": "Salary Band" },
+		{ "registerSlug": "hrmq", "schemaSlug": "CompReviewCycle", "urlTemplate": "/apps/hrmq/comp-review-cycles/{uuid}", "displayName": "Compensation Review Cycle" },
+		{ "registerSlug": "hrmq", "schemaSlug": "CompAdjustment", "urlTemplate": "/apps/hrmq/comp-adjustments/{uuid}", "displayName": "Compensation Adjustment" }
 	],
 	"menu": [
 		{
@@ -116,6 +119,18 @@
 					"label": "CAO's",
 					"icon": "FileDocumentMultipleOutline",
 					"route": "Caos"
+				},
+				{
+					"id": "SalaryBands",
+					"label": "Salarisschalen",
+					"icon": "CurrencyEur",
+					"route": "SalaryBands"
+				},
+				{
+					"id": "CompReviewCycles",
+					"label": "Beloningscycli",
+					"icon": "CalendarRange",
+					"route": "CompReviewCycles"
 				},
 				{
 					"id": "OrgUnits",
@@ -672,7 +687,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Employee",
-				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in hrmq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling/A1 posting/jurisdiction-specific onboarding flags — 18 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, before the personnel-file Files leaf, which shifts down. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab.",
+				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in hrmq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling/A1 posting/jurisdiction-specific onboarding flags — 18 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab.",
 				"widgets": [
 					{ "id": "emp-person", "type": "data", "title": "Person", "icon": "Account", "content": { "columns": 2, "include": ["employeeNumber", "firstName", "lastName", "dateOfBirth", "bsn"] } },
 					{ "id": "emp-stats-contracts", "type": "stats-block", "title": "Contracts", "icon": "ChartBar", "content": { "entries": [
@@ -695,6 +710,7 @@
 					{ "id": "emp-assignments", "type": "object-list", "title": "Assignments", "icon": "AccountArrowRightOutline", "content": { "register": "hrmq", "schema": "OrgAssignment", "filter": { "employeeId": "@objectId" }, "sort": { "field": "startDate", "dir": "desc" }, "columns": [ { "key": "orgUnitId", "label": "Unit" }, { "key": "role", "label": "Role" }, { "key": "startDate", "label": "Start" }, { "key": "endDate", "label": "End" } ], "limit": 25, "rowRoute": "OrgAssignmentDetail", "viewAllRoute": "OrgAssignments", "viewAllQuery": { "employeeId": "@objectId" }, "emptyText": "No placements yet" } },
 					{ "id": "emp-reviews", "type": "object-list", "title": "Beoordelingen", "icon": "ClipboardAccountOutline", "content": { "register": "hrmq", "schema": "PerformanceReview", "filter": { "employeeId": "@objectId" }, "sort": { "field": "besprokenOp", "dir": "desc" }, "columns": [ { "key": "cycleId", "label": "Cycle" }, { "key": "status", "label": "Status" }, { "key": "rating", "label": "Rating" }, { "key": "besprokenOp", "label": "Besproken op" } ], "limit": 25, "rowRoute": "PerformanceReviewDetail", "emptyText": "No reviews yet" } },
 					{ "id": "emp-objectives", "type": "object-list", "title": "Doelen & OKR's", "icon": "BullseyeArrow", "content": { "register": "hrmq", "schema": "Objective", "filter": { "employeeId": "@objectId" }, "sort": { "field": "title", "dir": "asc" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "status", "label": "Status" }, { "key": "progress", "label": "Progress" }, { "key": "cycleId", "label": "Cycle" } ], "limit": 25, "rowRoute": "ObjectiveDetail", "emptyText": "No objectives yet" } },
+					{ "id": "emp-comp-adjustments", "type": "object-list", "title": "Beloningsvoorstellen", "icon": "CashPlus", "content": { "register": "hrmq", "schema": "CompAdjustment", "filter": { "employeeId": "@objectId" }, "sort": { "field": "effectiveDate", "dir": "desc" }, "columns": [ { "key": "cycleId", "label": "Cycle" }, { "key": "proposedSalary", "label": "Proposed" }, { "key": "effectiveDate", "label": "Effective" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "CompAdjustmentDetail", "viewAllRoute": "CompReviewCycles", "emptyText": "No compensation adjustments yet" } },
 					{ "id": "emp-files", "type": "integration", "integrationId": "files", "title": "Personnel file", "icon": "FolderOutline" }
 				],
 				"layout": [
@@ -711,7 +727,8 @@
 					{ "id": "8", "widgetId": "emp-assignments", "gridX": 0, "gridY": 23, "gridWidth": 12, "gridHeight": 4 },
 					{ "id": "9", "widgetId": "emp-reviews", "gridX": 0, "gridY": 27, "gridWidth": 12, "gridHeight": 4 },
 					{ "id": "10", "widgetId": "emp-objectives", "gridX": 0, "gridY": 31, "gridWidth": 12, "gridHeight": 4 },
-					{ "id": "11", "widgetId": "emp-files", "gridX": 0, "gridY": 35, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "11", "widgetId": "emp-comp-adjustments", "gridX": 0, "gridY": 35, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "12", "widgetId": "emp-files", "gridX": 0, "gridY": 39, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
@@ -1294,6 +1311,130 @@
 					{ "id": "2", "widgetId": "cao-rules", "gridX": 6, "gridY": 0, "gridWidth": 6, "gridHeight": 7 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
+			}
+		},
+		{
+			"id": "SalaryBands",
+			"route": "/salary-bands",
+			"type": "index",
+			"title": "Salarisschalen",
+			"config": {
+				"register": "hrmq",
+				"schema": "SalaryBand",
+				"_note": "comp-cycles (2026-07-15): read-only internal salary-band reference index (ADR-001 Rule 6 sub-page under the existing Personeel menu, sibling of CAO's — the Caos allowCreate:false + actionToggles shape). Bands are the employer's own internal min/reference/max structure, not an external market benchmark (explicitly out of scope). Rows navigate to SalaryBandDetail.",
+				"description": "Interne salarisschalen (min/richt/max brutomaandsalaris in centen) waartegen beloningsvoorstellen worden getoetst. Alleen-lezen referentiedata.",
+				"allowCreate": false,
+				"columns": ["bandId", "title", "grade", "minSalary", "maxSalary", "currency", "active"],
+				"filters": ["active", "grade"],
+				"sort": { "field": "bandId", "order": "asc" },
+				"actionToggles": { "showAdd": false, "showFormDialog": false, "showEditAction": false, "showDeleteAction": false, "showCopyAction": false, "showMassImport": false, "showMassCopy": false, "showMassDelete": false }
+			}
+		},
+		{
+			"id": "SalaryBandDetail",
+			"route": "/salary-bands/:id",
+			"type": "detail",
+			"title": "Salarisschaal",
+			"config": {
+				"register": "hrmq",
+				"schema": "SalaryBand",
+				"allowCreate": false,
+				"_note": "comp-cycles (2026-07-15): read-only internal salary-band reference detail (the CaoDetail allowCreate:false shape). The 'Salarisschaal' data widget carries every field (bandId/title/grade/minSalary/referenceSalary/maxSalary/currency/cao/caoSchaal/effectiveFrom/active) — no Related widget, since cao/caoSchaal are plain string links into the CAO corpus (mirroring EmploymentContract.cao), not $ref relations. No lifecycleActions (SalaryBand has no x-openregister-lifecycle). No create/edit affordances — bands are authored reference data. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "sb-data", "type": "data", "title": "Salarisschaal", "icon": "CurrencyEur", "content": { "columns": 2 } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "sb-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 7 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
+			}
+		},
+		{
+			"id": "CompReviewCycles",
+			"route": "/comp-review-cycles",
+			"type": "index",
+			"title": "Beloningscycli",
+			"actions": [
+				{ "id": "create-comp-cycle", "label": "Beloningscyclus aanmaken", "type": "open-form", "icon": "PlusCircleOutline", "register": "hrmq", "schema": "CompReviewCycle", "onSuccessRoute": "CompReviewCycleDetail", "successMessage": "Beloningscyclus aangemaakt." }
+			],
+			"config": {
+				"register": "hrmq",
+				"schema": "CompReviewCycle",
+				"description": "Periodieke beloningsronden waaronder per-medewerker beloningsvoorstellen (CompAdjustment) worden verzameld.",
+				"columns": ["name", "period", "effectiveDate", "status"],
+				"filters": ["status"],
+				"sort": { "field": "period", "order": "desc" }
+			}
+		},
+		{
+			"id": "CompReviewCycleDetail",
+			"route": "/comp-review-cycles/:id",
+			"type": "detail",
+			"title": "Beloningscyclus",
+			"actions": [
+				{ "id": "propose-comp-adjustment", "label": "Aanpassing voorstellen", "type": "open-form", "icon": "PlusCircleOutline", "register": "hrmq", "schema": "CompAdjustment", "onSuccessRoute": "CompAdjustmentDetail", "successMessage": "Beloningsvoorstel aangemaakt." }
+			],
+			"config": {
+				"register": "hrmq",
+				"schema": "CompReviewCycle",
+				"_note": "comp-cycles (2026-07-15): the round-container half of the compensation-review MVP (ADR-001 Rule 6 sub-page under the existing Personeel menu, the ReviewCycleDetail precedent). The 'Cyclus' data widget carries every field (name/period/effectiveDate/status/description — no $ref to exclude). The 'Voorstellen in deze cyclus' object-list (CompAdjustment.cycleId = @objectId) is the round's in-progress roster, rowRoute to CompAdjustmentDetail. lifecycleActions expose exactly sluiten (open->closed, hr-comp.json) -- no reopen edge, a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent); approval/effectuation lives per-adjustment, not here. The 'Aanpassing voorstellen' open-form action opens a plain CompAdjustment create form -- verified: this manifest version has no declarative field-prefill primitive (no existing open-form action in the codebase carries default field values), so cycleId is entered on the created form rather than auto-seeded, a deliberate scope-down from design.md's aspirational 'scoped to the cycle' prose. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "crc-data", "type": "data", "title": "Cyclus", "icon": "CalendarRange", "content": { "columns": 2 } },
+					{ "id": "crc-adjustments", "type": "object-list", "title": "Voorstellen in deze cyclus", "icon": "CashPlus", "content": { "register": "hrmq", "schema": "CompAdjustment", "filter": { "cycleId": "@objectId" }, "sort": { "field": "effectiveDate", "dir": "asc" }, "columns": [ { "key": "employeeId", "label": "Employee" }, { "key": "proposedSalary", "label": "Proposed" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "CompAdjustmentDetail", "emptyText": "No adjustments in this cycle yet" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "crc-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "crc-adjustments", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 5 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "sluiten", "from": ["open"], "to": "closed", "label": "Sluiten" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "CompAdjustmentDetail",
+			"route": "/comp-adjustments/:id",
+			"type": "detail",
+			"title": "Beloningsvoorstel",
+			"actions": [
+				{
+					"id": "effectueren",
+					"label": "Effectueren",
+					"type": "api-call",
+					"icon": "CashCheck",
+					"url": "/api/comp/effectuate",
+					"method": "POST",
+					"params": { "adjustmentId": "@objectId" },
+					"confirm": true,
+					"successMessage": "Beloningsvoorstel geëffectueerd; het brutomaandsalaris is bijgewerkt.",
+					"errorMessage": "Effectueren van het beloningsvoorstel is mislukt."
+				}
+			],
+			"config": {
+				"register": "hrmq",
+				"schema": "CompAdjustment",
+				"_note": "comp-cycles (2026-07-15): the per-employee proposal half of the compensation-review MVP (ADR-001 Rule 6 — reached from EmployeeDetail's emp-comp-adjustments row, the cycle's adjustment list, or the deepLink; deliberately NOT a menu child, the PerformanceReviewDetail/TimesheetDetail convention). The 'Aanpassing' data widget carries currentSalary/proposedSalary/effectiveDate/status/rationale/proposedBy/approvedBy/appliedAt, excluding cycleId/employeeId/contractId/targetBandId (Related resolves and links all four by name). lifecycleActions expose ONLY propose/approve/reject (hr-comp.json) — approve/reject are guarded server-side by the reused NoSelfApprovalGuard (the proposer may not approve/reject their own proposal). effectuate is deliberately NOT exposed as a plain lifecycleActions button: D5/D7 gate the write (within-band + the Employee.grossMonthlySalary stamp) inside CompAdjustmentService, and CompEffectiveDateGuard alone is read-only, so a bare declarative transition would flip status to effective without ever writing the salary (the orphaned-capability trap) — the ONLY effectuate path is the guarded 'Effectueren' api-call action (POST /api/comp/effectuate, CompController::effectuate, the PayrollRunDetail '(Her)berekenen' precedent). Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "ca-data", "type": "data", "title": "Aanpassing", "icon": "CashPlus", "content": { "columns": 2, "exclude": ["cycleId", "employeeId", "contractId", "targetBandId"] } },
+					{ "id": "ca-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "ca-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 9 },
+					{ "id": "2", "widgetId": "ca-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 9 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "propose", "from": ["draft"], "to": "proposed", "label": "Voorstellen" },
+						{ "action": "approve", "from": ["proposed"], "to": "approved", "label": "Goedkeuren" },
+						{ "action": "reject", "from": ["proposed"], "to": "draft", "label": "Afwijzen" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
 			}
 		},
 		{
