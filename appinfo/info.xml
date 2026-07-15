@@ -129,5 +129,9 @@ Vrij en open source onder de EUPL-1.2-licentie.
              cents delta between two PayrollRuns (payroll-mutation-reports).
              Pure read over persisted payslips; never recomputes. -->
         <command>OCA\Hrmq\Command\PayrollMutationsCommand</command>
+        <!-- Support-facing mirror of POST /api/payroll/proforma — simulate a
+             gross-to-net breakdown from CLI flags (proforma-payslip MVP
+             trigger). Persists nothing. -->
+        <command>OCA\Hrmq\Command\ProformaPayslipCommand</command>
     </commands>
 </info>
