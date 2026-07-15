@@ -1,0 +1,11 @@
+{
+  "label": "HR",
+  "position": 4,
+  "collapsible": true,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "title": "HR",
+    "description": "Timesheets, expenses, leave & verzuim case management, employee self-service, and time & attendance."
+  }
+}
