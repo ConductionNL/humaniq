@@ -1296,6 +1296,18 @@
       "machineCheckable": true,
       "effectiveDate": "2026-01-01",
       "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/inkomstenbelasting/veranderingen-inkomstenbelasting-2026/bijtelling-privegebruik-auto-2026"
+    },
+    {
+      "id": "nl-gebruikelijkloon-norm",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "nl-gebruikelijkloonregeling",
+      "source": "Wet LB 1964 art. 12a (gebruikelijkloonregeling)",
+      "statement": "A DGA (director-major-shareholder, aanmerkelijkbelanghouder) employee's annualised loon shall be at least the gebruikelijkloon norm for the tax year, unless a lower amount is justified and recorded on file.",
+      "severity": "conditional",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/loon_en_aanmerkelijk_belang/loon_en_aanmerkelijk_belang"
     }
   ]
 }

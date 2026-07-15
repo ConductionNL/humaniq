@@ -31,6 +31,13 @@
  * premium is period-capped, not cumulative-year-capped, a documented
  * limitation for wages fluctuating around the maximum (README disclaimer).
  *
+ * dga-payroll-mode (design.md D1): step 9 gates on
+ * `CalculationInput::$verzekeringsplichtig` — `false` (a DGA) zeroes
+ * Awf/Aof/Wko/Whk (no rate lookup at all) while every other component
+ * (loonheffing/arbeidskorting/volksverzekeringen/Zvw/vakantiegeldReserved/
+ * nettoPay) is computed exactly as for `true` (the default): nothing
+ * upstream or downstream of step 9 reads this flag.
+ *
  * @category Payroll
  * @package  OCA\Hrmq\Payroll
  *
@@ -45,6 +52,8 @@
  *
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-002
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
  */
 
 declare(strict_types=1);
@@ -69,6 +78,8 @@ final class PayrollCalculator
      *
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-002
+     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
+     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
      */
     public function calculate(CalculationInput $in, TaxTables $t): CalculationResult
     {
@@ -145,16 +156,32 @@ final class PayrollCalculator
         $zvwBase   = min($tvl, $zvwParams['maximumBijdrageloonMaand']);
         $zvwCents  = self::round2Cents(($zvwBase * $zvwParams['werkgeversheffing']) / 100);
 
-        // Step 9: Awf/Aof/Wko/Whk employer charges over the capped premieloon.
-        $wnv     = $t->werknemersverzekeringen();
-        $pl      = min($tvl, $wnv['maximumPremieloonMaand']);
-        $awfRate = $in->awfTariff === 'high' ? $wnv['awfHoog'] : $wnv['awfLaag'];
-        $aofRate = $in->aofTariff === 'hoog' ? $wnv['aofHoog'] : $wnv['aofLaag'];
+        // Step 9: Awf/Aof/Wko/Whk employer charges over the capped premieloon
+        // -- skipped entirely for a DGA (dga-payroll-mode design.md D1): a
+        // director-major-shareholder is not verzekeringsplichtig for the
+        // werknemersverzekeringen (Wfsv art. 6 lid 1 sub d jo. Regeling
+        // aanwijzing directeur-grootaandeelhouder), so no rate is looked up
+        // and no premium is computed-then-discarded.
+        if ($in->verzekeringsplichtig === true) {
+            $wnv     = $t->werknemersverzekeringen();
+            $pl      = min($tvl, $wnv['maximumPremieloonMaand']);
+            $awfRate = $in->awfTariff === 'high' ? $wnv['awfHoog'] : $wnv['awfLaag'];
+            $aofRate = $in->aofTariff === 'hoog' ? $wnv['aofHoog'] : $wnv['aofLaag'];
 
-        $awfCents = self::round2Cents(($pl * $awfRate) / 100);
-        $aofCents = self::round2Cents(($pl * $aofRate) / 100);
-        $wkoCents = self::round2Cents(($pl * $wnv['wkoOpslag']) / 100);
-        $whkCents = self::round2Cents(($pl * $in->whkPercentage) / 100);
+            $awfCents = self::round2Cents(($pl * $awfRate) / 100);
+            $aofCents = self::round2Cents(($pl * $aofRate) / 100);
+            $wkoCents = self::round2Cents(($pl * $wnv['wkoOpslag']) / 100);
+            $whkCents = self::round2Cents(($pl * $in->whkPercentage) / 100);
+        } else {
+            // DGA / not verzekeringsplichtig: all four employer premium
+            // lines are zero -- they are drawn from the same
+            // werknemersverzekeringen() bucket and the same capped
+            // premieloon, so none is a partial subset.
+            $awfCents = 0;
+            $aofCents = 0;
+            $wkoCents = 0;
+            $whkCents = 0;
+        }
 
         $werknemersverzekeringenCents = ($awfCents + $aofCents + $wkoCents + $whkCents);
         $employerChargesCents         = ($werknemersverzekeringenCents + $zvwCents);

@@ -26,6 +26,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-009
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
  */
 
 declare(strict_types=1);
@@ -41,6 +42,7 @@ use PHPUnit\Framework\TestCase;
  * Cross-fixture balancing invariants + tables-vs-corpus cross-check.
  *
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-009
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
  */
 class BalancingInvariantTest extends TestCase
 {
@@ -210,7 +212,8 @@ class BalancingInvariantTest extends TestCase
             period: (string) $input['period'],
             awfTariff: (string) $input['awfTariff'],
             aofTariff: (string) $input['aofTariff'],
-            whkPercentage: (float) $input['whkPercentage']
+            whkPercentage: (float) $input['whkPercentage'],
+            verzekeringsplichtig: (bool) ($input['verzekeringsplichtig'] ?? true)
         );
 
     }//end inputFromFixture()
