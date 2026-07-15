@@ -35,6 +35,8 @@ use OCA\Hrmq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCA\Hrmq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Hrmq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Hrmq\Lifecycle\PayrollRunApprovedGuard;
+use OCA\Hrmq\Listener\TimesheetApprovalListener;
+use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -166,6 +168,17 @@ class Application extends App implements IBootstrap
         // compliance services resolve it lazily via $container->get('OCA\\OpenRegister
         // \\Service\\ObjectService'); no app-level alias is needed (a self-alias would
         // recurse). When OpenRegister is absent the lazy get() throws and fails soft.
+
+        // Time-entry capture (time-entry-capture): on a Timesheet crossing into
+        // `approved`, emit the `nl.conduction.hrmq.timeentry.approved` CloudEvent so a
+        // finance app (shillinq) can consume the approved hours for invoice-from-time /
+        // WBSO. The listener is a thin OR adapter over TimeEntryEventService; it filters
+        // to the Timesheet schema and the approval edge, and is fire-and-forget so a
+        // missing consumer never fails the approval write (REQ-TEC-002).
+        $context->registerEventListener(
+            ObjectUpdatedEvent::class,
+            TimesheetApprovalListener::class
+        );
 
     }//end register()
 
