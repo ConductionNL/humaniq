@@ -139,6 +139,34 @@ final class RuleEngine
     }//end providerSeedObjects()
 
     /**
+     * The natural-key field name to upsert seeded samples on, keyed by object
+     * type, declared by providers that implement `UpsertsObjects` (cao-library
+     * design.md D7). Only object types a provider declares here get
+     * upsert-by-key seeding in `RuleTestDataSeeder`; every other `SeedsObjects`
+     * sample keeps the default create-once-when-empty behaviour.
+     *
+     * @return array<string, string>
+     *
+     * @spec openspec/changes/cao-library/specs/cao-library/spec.md#REQ-CAO-006
+     */
+    public static function providerUpsertKeys(): array
+    {
+        $keys = [];
+        foreach (self::providers() as $provider) {
+            if (in_array(\OCA\Hrmq\Standards\Checks\UpsertsObjects::class, class_implements($provider), true) === false) {
+                continue;
+            }
+
+            foreach ($provider::upsertKeys() as $objectType => $field) {
+                $keys[$objectType] = $field;
+            }
+        }
+
+        return $keys;
+
+    }//end providerUpsertKeys()
+
+    /**
      * Discover the registered per-domain CheckProvider classes (memoised).
      *
      * @return array<int, class-string<\OCA\Hrmq\Standards\Checks\CheckProvider>>

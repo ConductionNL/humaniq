@@ -1,0 +1,53 @@
+{
+  "id": "cao-metaal-techniek",
+  "name": "CAO Metaal & Techniek",
+  "sector": "Metaal en Techniek",
+  "version": "2025-2026",
+  "effectiveDate": "2025-07-01",
+  "basedOn": [
+    {"doc": "CAO Metaal en Techniek (Metalektro/Techniek Nederland), cao-tekst 2025-2026", "url": "https://www.caometaalentechniek.nl/"}
+  ],
+  "payScales": {
+    "value": {
+      "A": 240000,
+      "B": 260000,
+      "C": 285000,
+      "D": 310000,
+      "E": 340000
+    },
+    "source": "Illustrative multi-scale loontabel shape (schaal A-E) pending confirmation against the official CAO Metaal & Techniek loontabel per 2026-01-01 — not yet transcribed from the primary document.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO Metaal & Techniek loontabel effective 2026-01-01 (caometaalentechniek.nl)"
+  },
+  "allowances": {
+    "value": {
+      "ploegentoeslag": {
+        "pct": 13.3
+      }
+    },
+    "source": "Illustrative shift-work allowance (ploegentoeslag) rate pending confirmation against the official CAO-tekst.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO Metaal & Techniek ploegentoeslag article (caometaalentechniek.nl)"
+  },
+  "leaveEntitlement": {
+    "value": {
+      "vakantiedagenWettelijk": 20,
+      "vakantiedagenBovenwettelijk": 5
+    },
+    "source": "Illustrative bovenwettelijk leave (25 days total at full-time) pending confirmation against the official CAO-tekst.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO Metaal & Techniek verlofartikel (caometaalentechniek.nl)"
+  },
+  "workingTime": {
+    "value": {
+      "fulltimeHoursPerWeek": 38
+    },
+    "source": "Illustrative full-time working week pending confirmation against the official CAO-tekst. Display-only — not read by any CaoRegistry resolver.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO Metaal & Techniek arbeidsduurartikel (caometaalentechniek.nl)"
+  }
+}

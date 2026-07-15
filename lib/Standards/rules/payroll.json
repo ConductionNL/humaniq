@@ -1233,6 +1233,18 @@
       "machineCheckable": true,
       "effectiveDate": "2026-01-01",
       "sourceUrl": "https://download.belastingdienst.nl/belastingdienst/docs/rekenvoorschriften_voor_geautomatiseerde_loonadministratie_lh991z62fd.pdf"
+    },
+    {
+      "id": "nl-cao-minimumloon-schaal",
+      "domain": "pay",
+      "jurisdiction": "NL",
+      "framework": "cao",
+      "source": "CAO-tekst loontabel (per the contract's referenced CAO in lib/Standards/cao/)",
+      "statement": "When an employment contract names a CAO and a pay scale within it, the employee's gross monthly salary shall be at least the CAO's minimum maandloon for that scale. Vacuous when the contract names no CAO/scale, or the CAO's payScales figure is not yet verified against the official CAO-tekst (a placeholder figure is advisory, never a false mandatory violation).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": null
     }
   ]
 }

@@ -101,6 +101,12 @@
 					"route": "EmploymentContracts"
 				},
 				{
+					"id": "Caos",
+					"label": "CAO's",
+					"icon": "FileDocumentMultipleOutline",
+					"route": "Caos"
+				},
+				{
 					"id": "OrgUnits",
 					"label": "Organisatie-eenheden",
 					"icon": "SitemapOutline",
@@ -706,7 +712,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "EmploymentContract",
-				"_note": "Leaf compliance record: no other schema in hrmq references EmploymentContract by FK, so the page is a simple two-panel layout -- the data widget (type/writtenContract/dates/hoursPerWeek/hourlyWage/cao/awfTariff plus the jurisdiction-specific fields: workingTimeDocumented, overtimeMultiplier, ftePartOfYearMinijob, dpaeFiledBeforeStart) at 8-wide, excluding employeeId since the Related panel already resolves and links the owning Employee by name -- and Related at 4-wide for that one meaningful outbound ref. No child lists (nothing points at a contract), no files/calendar/comms leaves (no linkedType or document field evidence on this schema), no lifecycleActions (EmploymentContract has no x-openregister-lifecycle). Audit history is a sidebar tab.",
+				"_note": "Leaf compliance record: no other schema in hrmq references EmploymentContract by FK, so the page is a simple two-panel layout -- the data widget (type/writtenContract/dates/hoursPerWeek/hourlyWage/cao/caoSchaal/awfTariff plus the jurisdiction-specific fields: workingTimeDocumented, overtimeMultiplier, ftePartOfYearMinijob, dpaeFiledBeforeStart) at 8-wide, excluding employeeId since the Related panel already resolves and links the owning Employee by name -- and Related at 4-wide for that one meaningful outbound ref. cao-library (2026-07-14): the ct-data widget excludes only employeeId, so the contract's cao (the referenced CAO library id) and caoSchaal (its pay scale) render here for free -- no widget change needed. No child lists (nothing points at a contract), no files/calendar/comms leaves (no linkedType or document field evidence on this schema), no lifecycleActions (EmploymentContract has no x-openregister-lifecycle). Audit history is a sidebar tab.",
 				"widgets": [
 					{ "id": "ct-data", "type": "data", "title": "Contract", "icon": "FileSign", "content": { "columns": 2, "exclude": ["employeeId"] } },
 					{ "id": "ct-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
@@ -1211,6 +1217,44 @@
 				"columns": ["employeeId", "year", "leaveType", "entitledHours", "bovenwettelijkHours", "usedHours", "remainingHours", "expiryDate"],
 				"filters": ["year", "leaveType"],
 				"sort": { "field": "year", "order": "desc" }
+			}
+		},
+		{
+			"id": "Caos",
+			"route": "/caos",
+			"type": "index",
+			"title": "CAO's",
+			"config": {
+				"register": "hrmq",
+				"schema": "Cao",
+				"_note": "cao-library (2026-07-14): read-only reference index over the maintained CAO corpus (lib/Standards/cao/), seeded from CaoRegistry via NlCaoChecks::seedObjects(). allowCreate:false plus actionToggles hiding Add/edit/delete/mass-actions -- the corpus is the single authoring source; these Cao objects are a derived display projection and MUST NOT be hand-authored. Rows navigate to CaoDetail.",
+				"description": "Beschikbare CAO's uit de onderhouden CAO-bibliotheek (referentie, alleen-lezen).",
+				"allowCreate": false,
+				"columns": ["caoId", "name", "sector", "version", "effectiveDate", "payScalesVerified"],
+				"filters": ["sector"],
+				"sort": { "field": "name", "order": "asc" },
+				"actionToggles": { "showAdd": false, "showFormDialog": false, "showEditAction": false, "showDeleteAction": false, "showCopyAction": false, "showMassImport": false, "showMassCopy": false, "showMassDelete": false }
+			}
+		},
+		{
+			"id": "CaoDetail",
+			"route": "/caos/:id",
+			"type": "detail",
+			"title": "CAO",
+			"config": {
+				"register": "hrmq",
+				"schema": "Cao",
+				"allowCreate": false,
+				"_note": "cao-library (2026-07-14): read-only reference detail for one CAO (derived projection of lib/Standards/cao/{caoId}.json). The 'CAO' data widget surfaces the identity + verification flags (caoId/name/sector/version/effectiveDate/payScalesVerified/leaveEntitlementVerified/source); the 'Loonschalen & verlof' widget surfaces the actual scales/allowances/leave/working-time maps -- the reference facts a maintainer checks a contract against. No lifecycleActions (Cao has no x-openregister-lifecycle), no create/edit affordances (corpus-authored). Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "cao-data", "type": "data", "title": "CAO", "icon": "FileDocumentMultipleOutline", "content": { "columns": 2, "include": ["caoId", "name", "sector", "version", "effectiveDate", "payScalesVerified", "leaveEntitlementVerified", "source"] } },
+					{ "id": "cao-rules", "type": "data", "title": "Loonschalen & verlof", "icon": "ScaleBalance", "content": { "columns": 2, "include": ["payScales", "allowances", "leaveEntitlement", "workingTime"] } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "cao-data", "gridX": 0, "gridY": 0, "gridWidth": 6, "gridHeight": 7 },
+					{ "id": "2", "widgetId": "cao-rules", "gridX": 6, "gridY": 0, "gridWidth": 6, "gridHeight": 7 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
 		},
 		{
