@@ -160,6 +160,13 @@ class RuleAuditService
         // register — the `cao.employeesById` / `payroll.runsById` precedent.
         $context['comp'] = $this->buildCompContext();
 
+        // wkr-administration: a per-(administrationId, year) fiscale-loonsom
+        // + vrije-ruimte-used aggregate so NlWkrChecks::checks()
+        // ['WkrAssessment']['nl-wkr-eindheffing-exposure'] can recompute the
+        // administration-level exposure without re-querying the register —
+        // the `buildPayrollContext()`/`buildGlPostContext()` precedent.
+        $context['wkr'] = $this->buildWkrContext();
+
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
         $enforceable      = count(RuleEngine::checkedRuleIds());
@@ -560,6 +567,7 @@ class RuleAuditService
         $context['payroll']    = $this->buildPayrollContext();
         $context['cao']        = $this->buildCaoContext();
         $context['retro']      = $this->buildRetroContext();
+        $context['wkr']        = $this->buildWkrContext();
 
         $runs   = [];
         $runIds = [];
@@ -734,6 +742,113 @@ class RuleAuditService
         ];
 
     }//end buildCompContext()
+
+
+    /**
+     * Build the per-(administrationId, year) fiscale-loonsom + vrije-ruimte-
+     * used aggregate consumed by NlWkrChecks'
+     * `nl-wkr-eindheffing-exposure` predicate (wkr-administration design.md
+     * D3, the `buildPayrollContext()` precedent): for every Payslip, resolves
+     * its effective administrationId (its own denormalized field when
+     * present, else its producing PayrollRun's administrationId via
+     * `payrollRunId` -- the NlAdministratieChecks parent-resolution idiom) and
+     * derives its year from `period` (`YYYY-MM`/`YYYY-Pnn` -> the `YYYY`
+     * prefix), then sums `grossPay` into `loonsom` and `wkrUsed` into
+     * `payslipWkrUsed` for that (administrationId, year) key. Every
+     * WkrDeclaration is summed by its own `administrationId`/`year` fields
+     * into `vrijeRuimteDeclared` (category `vrije-ruimte`) or
+     * `eindheffingDeclared` (category `eindheffing`) -- `gericht-vrijgesteld`
+     * declarations are recorded elsewhere but never summed here (design.md
+     * D1/D3). Degrades gracefully to an empty map when the Payslip/PayrollRun/
+     * WkrDeclaration schemas do not exist yet in the register.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     *
+     * @spec openspec/changes/wkr-administration/specs/wkr-administration/spec.md#REQ-WKR-004
+     */
+    private function buildWkrContext(): array
+    {
+        $runsById = [];
+        foreach ($this->loadAll('PayrollRun') as $run) {
+            $id = (string) ($run['id'] ?? $run['@self']['id'] ?? '');
+            if ($id !== '') {
+                $runsById[$id] = (string) ($run['administrationId'] ?? '');
+            }
+        }
+
+        $aggregate = [];
+
+        foreach ($this->loadAll('Payslip') as $payslip) {
+            $administrationId = trim((string) ($payslip['administrationId'] ?? ''));
+            if ($administrationId === '') {
+                $runId = (string) ($payslip['payrollRunId'] ?? '');
+                $administrationId = trim((string) ($runsById[$runId] ?? ''));
+            }
+
+            if ($administrationId === '') {
+                // Unresolvable administration — cannot be attributed to any
+                // (administrationId, year) key, so excluded from the aggregate.
+                continue;
+            }
+
+            $year = self::yearFromPeriod((string) ($payslip['period'] ?? ''));
+            if ($year === null) {
+                continue;
+            }
+
+            $bucket = &$aggregate[$administrationId][$year];
+            $bucket['loonsom']             = (($bucket['loonsom'] ?? 0.0) + ((float) ($payslip['grossPay'] ?? 0)));
+            $bucket['payslipWkrUsed']       = (($bucket['payslipWkrUsed'] ?? 0.0) + ((float) ($payslip['wkrUsed'] ?? 0)));
+            $bucket['vrijeRuimteDeclared']  = ($bucket['vrijeRuimteDeclared'] ?? 0.0);
+            $bucket['eindheffingDeclared']  = ($bucket['eindheffingDeclared'] ?? 0.0);
+            unset($bucket);
+        }//end foreach
+
+        foreach ($this->loadAll('WkrDeclaration') as $declaration) {
+            $administrationId = trim((string) ($declaration['administrationId'] ?? ''));
+            $year             = (int) ($declaration['year'] ?? 0);
+            $category         = (string) ($declaration['wkrCategory'] ?? '');
+            if ($administrationId === '' || $year === 0 || $category === 'gericht-vrijgesteld') {
+                continue;
+            }
+
+            $bucket = &$aggregate[$administrationId][$year];
+            $bucket['loonsom']            = ($bucket['loonsom'] ?? 0.0);
+            $bucket['payslipWkrUsed']     = ($bucket['payslipWkrUsed'] ?? 0.0);
+            $bucket['vrijeRuimteDeclared'] = ($bucket['vrijeRuimteDeclared'] ?? 0.0);
+            $bucket['eindheffingDeclared'] = ($bucket['eindheffingDeclared'] ?? 0.0);
+
+            if ($category === 'vrije-ruimte') {
+                $bucket['vrijeRuimteDeclared'] += ((float) ($declaration['amount'] ?? 0));
+            } elseif ($category === 'eindheffing') {
+                $bucket['eindheffingDeclared'] += ((float) ($declaration['amount'] ?? 0));
+            }
+
+            unset($bucket);
+        }//end foreach
+
+        return $aggregate;
+
+    }//end buildWkrContext()
+
+
+    /**
+     * Derive a calendar year from a wage period (`YYYY-MM` or `YYYY-Pnn`) —
+     * the leading four-digit year prefix. Returns null when unparseable.
+     *
+     * @param string $period Wage period string.
+     *
+     * @return int|null
+     */
+    private static function yearFromPeriod(string $period): ?int
+    {
+        if (preg_match('/^(\d{4})/', $period, $matches) !== 1) {
+            return null;
+        }
+
+        return (int) $matches[1];
+
+    }//end yearFromPeriod()
 
 
     /**

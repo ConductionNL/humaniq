@@ -373,6 +373,68 @@
                     },
                     "administrationId": {"type": "string", "nullable": true, "description": "Denormalized administratie key this filing is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun convention); an organisation-level filing has no employee/parent to derive it from, so nl-administratie-scope-consistency does not evaluate this schema."}
                 }
+            },
+            "WkrDeclaration": {
+                "slug": "WkrDeclaration",
+                "icon": "GiftOutline",
+                "version": "0.1.0",
+                "title": "WKR Declaration",
+                "description": "One recorded werkkostenregeling (WKR) vergoeding/verstrekking/terbeschikkingstelling for an administration (wkr-administration): a company-wide allowance/benefit (staff outing, Christmas hamper, fixed-cost allowance) or an employee-specific one, categorised so the administration-level vrije-ruimte roll-up (WkrService) knows whether it consumes the vrije ruimte, stays outside it as a gerichte vrijstelling, or was already designated eindheffingsloon.",
+                "type": "object",
+                "required": [
+                    "administrationId",
+                    "year",
+                    "date",
+                    "amount",
+                    "wkrCategory"
+                ],
+                "properties": {
+                    "administrationId": {"type": "string", "description": "The administration this declaration belongs to (wkr-administration REQ-WKR-001). Plain string, not a $ref (ADR-062 rule 7, the PayrollRun convention -- no Administration schema is modeled in hrmq)."},
+                    "year": {"type": "integer", "description": "Fiscal year this declaration counts toward -- the vrije ruimte is a whole-year budget (wkr-administration REQ-WKR-001)."},
+                    "date": {"type": "string", "format": "date", "description": "Date the allowance/benefit was granted, invoiced, or made available."},
+                    "description": {"type": "string", "nullable": true, "description": "Free-text description of the vergoeding/verstrekking (e.g. \"Personeelsuitje juni\")."},
+                    "amount": {"type": "number", "description": "Euro amount of the recorded vergoeding/verstrekking/terbeschikkingstelling."},
+                    "wkrCategory": {
+                        "type": "string",
+                        "enum": ["gericht-vrijgesteld", "vrije-ruimte", "eindheffing"],
+                        "description": "WKR classification (wkr-administration REQ-WKR-001, design.md D1): `vrije-ruimte` consumes the administration's vrije ruimte; `gericht-vrijgesteld` is a statutory gerichte vrijstelling that stays outside it (nl-wkr-gerichte-vrijstelling, judgemental, unchanged by this schema); `eindheffing` is loon the employer already designated as eindheffingsloon. Only `vrije-ruimte` amounts are summed into vrijeRuimteUsed."
+                    },
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "nullable": true, "description": "The employee this declaration concerns, or null for a collective/company-wide allowance (wkr-administration REQ-WKR-001)."},
+                    "sourceReference": {"type": "string", "nullable": true, "description": "Invoice/journal reference for the audit trail (e.g. \"INV-2026-0612\")."}
+                }
+            },
+            "WkrAssessment": {
+                "slug": "WkrAssessment",
+                "icon": "CalculatorVariantOutline",
+                "version": "0.1.0",
+                "title": "WKR Assessment",
+                "description": "The per-(administrationId, year) computed vrije-ruimte/eindheffing summary AND the reporting record (wkr-administration, the PayrollMutationReport precedent): produced ONLY by WkrService::assess(), rolling the cross-object fiscale loonsom (Σ Payslip.grossPay) and the administration's WkrDeclarations into the available vrije ruimte, the used amount, the excess and the 80% eindheffing exposure. Idempotently keyed on (administrationId, year): recomputing upserts this record in place, never duplicates. Persisting the assessment as a real object (rather than a transient calculation) is what makes nl-wkr-eindheffing-exposure RuleEngine-reachable -- the standing audit loads every WkrAssessment and checks it automatically.",
+                "type": "object",
+                "required": [
+                    "administrationId",
+                    "year",
+                    "status",
+                    "engineVersion",
+                    "assessedAt"
+                ],
+                "properties": {
+                    "administrationId": {"type": "string", "description": "The administration this assessment covers (wkr-administration REQ-WKR-003). Idempotent key together with year -- plain string, not a $ref (ADR-062 rule 7, the PayrollRun convention)."},
+                    "year": {"type": "integer", "description": "The fiscal year this assessment covers (wkr-administration REQ-WKR-003)."},
+                    "fiscaleLoonsom": {"type": "number", "description": "Σ Payslip.grossPay over this administration/year -- the fiscale-loonsom proxy WkrService reads (design.md Risks: an honest, auditable proxy for the exact kolom-14 loonsom, never a recomputed payroll figure)."},
+                    "vrijeRuimte": {"type": "number", "description": "Available vrije ruimte, computed from fiscaleLoonsom against the `wkr` group tranche percentages/grens in the active tax-year table (wkr-administration REQ-WKR-002)."},
+                    "vrijeRuimteUsed": {"type": "number", "description": "Σ Payslip.wkrUsed + Σ WkrDeclaration.amount where wkrCategory = 'vrije-ruimte', for this administration/year."},
+                    "vrijeRuimteRemaining": {"type": "number", "description": "vrijeRuimte minus vrijeRuimteUsed, floored at 0."},
+                    "excess": {"type": "number", "description": "vrijeRuimteUsed minus vrijeRuimte when positive, else 0 -- the amount subject to the 80% eindheffing."},
+                    "eindheffingRate": {"type": "number", "nullable": true, "description": "The eindheffing rate (80, from the `wkr` table group) applied to the excess; null when excess is 0 (nl-wkr-eindheffing-exposure)."},
+                    "eindheffingDue": {"type": "number", "description": "80% of excess, rounded to the cent -- the eindheffing the employer owes over the vrije-ruimte overrun (settlement itself is a named fast-follow, not automated by this schema)."},
+                    "status": {
+                        "type": "string",
+                        "enum": ["binnen-vrije-ruimte", "eindheffing-verschuldigd"],
+                        "description": "Whether the administration/year stayed within its vrije ruimte, or an eindheffing is owed over the excess (wkr-administration REQ-WKR-003/-WKR-004)."
+                    },
+                    "engineVersion": {"type": "string", "description": "The tables id (e.g. \"nl-2026\") this assessment's vrije-ruimte/eindheffing figures were computed against."},
+                    "assessedAt": {"type": "string", "format": "date-time", "description": "When this assessment was (re)computed by WkrService::assess()."}
+                }
             }
         }
     }

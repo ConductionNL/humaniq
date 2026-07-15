@@ -32,6 +32,10 @@ return [
         // retro-adjustments — guarded "Herrekenen" trigger for the
         // PayrollAdjustmentDetail manifest api-call action (design.md D8).
         ['name' => 'payroll#adjust', 'url' => '/api/payroll/adjust', 'verb' => 'POST'],
+        // wkr-administration — guarded, admin/HR-only trigger for the
+        // WkrAssessmentDetail "Beoordelen" manifest api-call action
+        // (design.md D6).
+        ['name' => 'payroll#wkrAssess', 'url' => '/api/payroll/wkr-assess', 'verb' => 'POST'],
         // rostering — guarded trigger for the RosterDetail "ATW-controle"
         // manifest api-call action (design.md D5).
         ['name' => 'roster#check', 'url' => '/api/roster/check', 'verb' => 'POST'],

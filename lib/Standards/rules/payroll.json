@@ -220,7 +220,7 @@
       "jurisdiction": "NL",
       "framework": "nl-loonheffingen",
       "source": "Wet LB 1964 art. 31a lid 3 (werkkostenregeling)",
-      "statement": "Under the werkkostenregeling the tax-free vrije ruimte for 2026 is 2,00% of the fiscal wage bill up to EUR 400.000 plus 1,18% of the excess. (verify percentage)",
+      "statement": "Under the werkkostenregeling the tax-free vrije ruimte is a percentage of the fiscal wage bill up to a euro grens, plus a lower percentage of the excess — the authoritative tranche percentages and grens are the `wkr` group of the active tax-year table (lib/Standards/tables/{jurisdiction}-{year}.json), never hardcoded here.",
       "severity": "conditional",
       "machineCheckable": true,
       "effectiveDate": "2026-01-01",
@@ -248,6 +248,18 @@
       "severity": "conditional",
       "machineCheckable": false,
       "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0002471"
+    },
+    {
+      "id": "nl-wkr-eindheffing-exposure",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Wet LB 1964 art. 31a (werkkostenregeling, administration-level)",
+      "statement": "Across the whole administration and fiscal year, where the designated allowances charged to the vrije ruimte (every payslip's wkrUsed plus every vrije-ruimte WkrDeclaration) exceed the available vrije ruimte computed from the wkr table group, the employer's WkrAssessment for that administration/year shall record the exposure: status eindheffing-verschuldigd, the excess, and the 80% eindheffing due.",
+      "severity": "conditional",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
       "sourceUrl": "https://wetten.overheid.nl/BWBR0002471"
     },
     {

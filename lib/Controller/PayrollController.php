@@ -38,6 +38,15 @@
  * original Payslip/PayrollRun the adjustment corrects are never written by
  * this endpoint.
  *
+ * wkr-administration (design.md D6) adds `wkrAssess()`, backing the
+ * `WkrAssessmentDetail` "Beoordelen" action: the SAME admin/HR gate as
+ * `mutations()` (payroll figures are sensitive), then the posted
+ * `assessmentId` must resolve through ObjectService under the caller's
+ * ambient RBAC (the `authorizeRun()` no-admin-idor pattern) before its
+ * `administrationId`/`year` are read and delegated to
+ * `WkrService::assess()` — the recompute upserts the SAME assessment in
+ * place (idempotent), it never creates a second one.
+ *
  * @category Controller
  * @package  OCA\Hrmq\Controller
  *
@@ -55,6 +64,7 @@
  * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-002
  * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-004
  * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-007
+ * @spec openspec/changes/wkr-administration/specs/wkr-administration/spec.md#REQ-WKR-005
  */
 
 declare(strict_types=1);
@@ -67,6 +77,7 @@ use OCA\Hrmq\Service\PayrollRunService;
 use OCA\Hrmq\Service\ProformaPayslipService;
 use OCA\Hrmq\Service\RetroAdjustmentService;
 use OCA\Hrmq\Service\SettingsService;
+use OCA\Hrmq\Service\WkrService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -92,6 +103,7 @@ class PayrollController extends Controller
      * @param PayrollMutationService  $payrollMutationService  The run-to-run diff service.
      * @param ProformaPayslipService  $proformaPayslipService  The persist-nothing pro-forma simulation service.
      * @param RetroAdjustmentService  $retroAdjustmentService  The TWK delta computation + settlement service.
+     * @param WkrService              $wkrService              The WKR vrije-ruimte assessment roll-up service.
      * @param SettingsService         $settingsService         The register-slug source.
      * @param IUserSession            $userSession             The current user session (admin/HR check).
      * @param IGroupManager           $groupManager            To check the caller's admin membership (admin/HR gate).
@@ -104,6 +116,7 @@ class PayrollController extends Controller
         private readonly PayrollMutationService $payrollMutationService,
         private readonly ProformaPayslipService $proformaPayslipService,
         private readonly RetroAdjustmentService $retroAdjustmentService,
+        private readonly WkrService $wkrService,
         private readonly SettingsService $settingsService,
         private readonly IUserSession $userSession,
         private readonly IGroupManager $groupManager,
@@ -424,6 +437,93 @@ class PayrollController extends Controller
         return $this->toArray($adjustment);
 
     }//end authorizeAdjustment()
+
+
+    /**
+     * `POST /api/payroll/wkr-assess` -- (re)compute the WKR vrije-ruimte
+     * assessment (the `WkrAssessmentDetail` "Beoordelen" action,
+     * wkr-administration design.md D6). Non-admin/HR callers are refused with
+     * 403 BEFORE any RBAC resolve (the `mutations()` precedent -- WKR figures
+     * are payroll-sensitive). The posted `assessmentId` must then resolve
+     * through ObjectService under the caller's ambient RBAC (unknown/
+     * unauthorized -> 404, the `calculate()`/`adjust()` no-admin-idor
+     * pattern) before its `administrationId`/`year` are read and delegated to
+     * `WkrService::assess()`, which upserts the SAME assessment in place.
+     *
+     * @param string|null $assessmentId The WkrAssessment id (row-scoped, `@objectId` from the manifest action).
+     *
+     * @return JSONResponse The recompute outcome, 400 on a missing assessmentId, 403 for a non-admin caller, 404 when it does not resolve.
+     *
+     * @spec openspec/changes/wkr-administration/specs/wkr-administration/spec.md#REQ-WKR-005
+     */
+    #[NoAdminRequired]
+    public function wkrAssess(?string $assessmentId=null): JSONResponse
+    {
+        if ($this->isAdminOrHr() === false) {
+            return new JSONResponse(['error' => 'Alleen beheerders/HR mogen WKR-beoordelingen (her)berekenen.'], Http::STATUS_FORBIDDEN);
+        }
+
+        $assessmentId = trim((string) $assessmentId);
+        if ($assessmentId === '') {
+            return new JSONResponse(['error' => 'assessmentId is verplicht.'], Http::STATUS_BAD_REQUEST);
+        }
+
+        // No-admin-idor guard (ADR-005 Rule 3): the assessment must resolve
+        // through OpenRegister's ObjectService under the caller's RBAC before
+        // any recompute -- an unresolvable/unauthorized id never reaches it.
+        $assessment = $this->authorizeAssessment($assessmentId);
+        if ($assessment === null) {
+            return new JSONResponse(['error' => 'WKR-beoordeling niet gevonden.'], Http::STATUS_NOT_FOUND);
+        }
+
+        $administrationId = (string) ($assessment['administrationId'] ?? '');
+        $year              = (int) ($assessment['year'] ?? 0);
+
+        $result = $this->wkrService->assess($administrationId, $year);
+
+        if ((string) $result['status'] === 'failed') {
+            return new JSONResponse($result, Http::STATUS_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JSONResponse($result);
+
+    }//end wkrAssess()
+
+
+    /**
+     * Resolve the posted assessmentId through OpenRegister's ObjectService
+     * under the caller's ambient RBAC (default $_rbac=true) -- the
+     * no-admin-idor guard for `wkrAssess()` (the `authorizeAdjustment()`
+     * precedent). Returns null when the assessment does not exist OR the
+     * caller's RBAC denies it (both collapse to the same 404 so existence is
+     * never leaked).
+     *
+     * @param string $assessmentId The WkrAssessment id.
+     *
+     * @return array<string, mixed>|null
+     *
+     * @spec openspec/changes/wkr-administration/specs/wkr-administration/spec.md#REQ-WKR-005
+     */
+    private function authorizeAssessment(string $assessmentId): ?array
+    {
+        try {
+            $assessment = $this->objectService()->find(
+                id: $assessmentId,
+                register: $this->settingsService->getRegisterSlug(),
+                schema: 'WkrAssessment'
+            );
+        } catch (\Throwable $e) {
+            $this->logger->info('PayrollController: WKR-beoordeling '.$assessmentId.' kon niet worden opgehaald: '.$e->getMessage());
+            return null;
+        }
+
+        if ($assessment === null) {
+            return null;
+        }
+
+        return $this->toArray($assessment);
+
+    }//end authorizeAssessment()
 
 
     /**
