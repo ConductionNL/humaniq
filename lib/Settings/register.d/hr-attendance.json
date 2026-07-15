@@ -5,7 +5,7 @@
             "AttendanceRecord": {
                 "slug": "AttendanceRecord",
                 "icon": "ClockOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Attendance record",
                 "description": "One clock day per employee (klokregistratie): raw clockIn/clockOut timestamps, a break duration, and the working day they belong to. Feeds the three Arbeidstijdenwet checks (nl-arbeidstijdenwet, lib/Standards/rules/labour.json) via NlAttendanceChecks and the RuleAuditService attendance context. AttendanceRecord is raw clock data; Timesheet (hr-timesheet.json) remains the per-period approved-hours record — aggregating attendance into a timesheet is a documented follow-up (time-attendance-mvp design D5), not automated here. No approval states on this schema; the open<->gesloten lifecycle only tracks whether the day is still being clocked or is complete.",
                 "type": "object",
@@ -43,7 +43,8 @@
                     "workedHours": {"type": "number", "nullable": true, "title": "Worked hours", "description": "Stored, writer-maintained number: (clockOut minus clockIn) in hours, minus breakMinutes/60, rounded to 2 decimals. NOT a declarative x-openregister-calculations field — that operator vocabulary is prop/+/- over numeric properties only and cannot express a date-time subtraction. Presentation/aggregation convenience only: the Arbeidstijdenwet compliance checks always compute from the raw clockIn/clockOut/breakMinutes fields, never from this value, so a stale or hand-edited workedHours can neither mask nor fabricate a violation."},
                     "location": {"type": "string", "nullable": true, "enum": ["kantoor", "thuis", "klant", "anders"], "title": "Location", "description": "Where the day was worked. Plain metadata — no GPS/geofence tracking (deferred, own AVG/consent spec)."},
                     "userId": {"type": "string", "nullable": true, "title": "User", "description": "Denormalized Nextcloud user id of the employee this record belongs to (mijn-hr-self-service pattern) — a plain NC-user-id string, a copy of the linked Employee's nextcloudUserId, never a $ref relation, mirroring the Timesheet.userId description verbatim. Drives the MijnAanwezigheid @me self-service page."},
-                    "status": {"type": "string", "enum": ["open", "gesloten"], "default": "open", "title": "Status", "description": "Clock-day lifecycle status. Governed by the x-openregister-lifecycle state machine (open <-> gesloten). No approval states here — approval of worked hours lives on Timesheet."}
+                    "status": {"type": "string", "enum": ["open", "gesloten"], "default": "open", "title": "Status", "description": "Clock-day lifecycle status. Governed by the x-openregister-lifecycle state machine (open <-> gesloten). No approval states here — approval of worked hours lives on Timesheet."},
+                    "administrationId": {"type": "string", "nullable": true, "title": "Administration", "description": "Denormalized administratie key this AttendanceRecord is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."}
                 }
             }
         }

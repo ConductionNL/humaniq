@@ -398,6 +398,20 @@
 			"icon": "Calculator",
 			"order": 125,
 			"route": "ProformaPayslip"
+		},
+		{
+			"id": "ConfiguratieGroup",
+			"label": "Configuratie",
+			"icon": "CogOutline",
+			"order": 200,
+			"children": [
+				{
+					"id": "Administraties",
+					"label": "Administraties",
+					"icon": "DomainOutline",
+					"route": "Administraties"
+				}
+			]
 		}
 	],
 	"pages": [
@@ -452,7 +466,7 @@
 				"register": "hrmq",
 				"schema": "Timesheet",
 				"description": "Jouw eigen urenregistraties.",
-				"filter": { "userId": "@me" },
+				"filter": { "userId": "@me", "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["period", "hours", "billable", "status"],
 				"sort": { "field": "period", "order": "desc" }
 			}
@@ -466,7 +480,7 @@
 				"register": "hrmq",
 				"schema": "Expense",
 				"description": "Jouw eigen declaraties.",
-				"filter": { "userId": "@me" },
+				"filter": { "userId": "@me", "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["title", "amount", "category", "expenseDate", "status"],
 				"sort": { "field": "expenseDate", "order": "desc" }
 			}
@@ -480,7 +494,7 @@
 				"register": "hrmq",
 				"schema": "LeaveRequest",
 				"description": "Jouw eigen verlofaanvragen.",
-				"filter": { "userId": "@me" },
+				"filter": { "userId": "@me", "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["leaveType", "startDate", "endDate", "status"],
 				"sort": { "field": "startDate", "order": "desc" }
 			}
@@ -494,7 +508,7 @@
 				"register": "hrmq",
 				"schema": "Payslip",
 				"description": "Jouw eigen loonstroken (alleen-lezen).",
-				"filter": { "userId": "@me" },
+				"filter": { "userId": "@me", "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["period", "jurisdiction", "grossPay", "nettoPay"],
 				"sort": { "field": "period", "order": "desc" },
 				"actionToggles": { "showAdd": false, "showEditAction": false, "showDeleteAction": false, "showCopyAction": false }
@@ -509,7 +523,7 @@
 				"register": "hrmq",
 				"schema": "AttendanceRecord",
 				"description": "Jouw eigen aanwezigheid.",
-				"filter": { "userId": "@me" },
+				"filter": { "userId": "@me", "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["date", "clockIn", "clockOut", "workedHours", "status"],
 				"sort": { "field": "date", "order": "desc" }
 			}
@@ -522,6 +536,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Timesheet",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "period", "hours", "billable", "status"],
 				"filters": ["status", "period", "billable"],
 				"sort": { "field": "period", "order": "desc" }
@@ -536,6 +551,7 @@
 				"register": "hrmq",
 				"schema": "Timesheet",
 				"description": "Ingediende urenstaten die wachten op goedkeuring of afkeuring.",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "period", "hours", "submittedAt", "status"],
 				"filters": ["status", "period"],
 				"defaultFilters": { "status": "submitted" },
@@ -551,7 +567,7 @@
 				"register": "hrmq",
 				"schema": "Timesheet",
 				"description": "Ingediende urenstaten van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door HR/back-office bijgehouden managerUserId-koppeling.",
-				"filter": { "managerUserId": "@me" },
+				"filter": { "managerUserId": "@me", "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "period", "hours", "submittedAt", "status"],
 				"filters": ["status", "period"],
 				"defaultFilters": { "status": "submitted" },
@@ -601,6 +617,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Expense",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "title", "amount", "category", "expenseDate", "status"],
 				"filters": ["status", "category"],
 				"sort": { "field": "expenseDate", "order": "desc" }
@@ -615,6 +632,7 @@
 				"register": "hrmq",
 				"schema": "Expense",
 				"description": "Ingediende declaraties die wachten op goedkeuring of afkeuring.",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "title", "amount", "category", "submittedAt", "status"],
 				"filters": ["status", "category"],
 				"defaultFilters": { "status": "submitted" },
@@ -630,7 +648,7 @@
 				"register": "hrmq",
 				"schema": "Expense",
 				"description": "Ingediende declaraties van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door HR/back-office bijgehouden managerUserId-koppeling.",
-				"filter": { "managerUserId": "@me" },
+				"filter": { "managerUserId": "@me", "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "title", "amount", "category", "submittedAt", "status"],
 				"filters": ["status", "category"],
 				"defaultFilters": { "status": "submitted" },
@@ -680,6 +698,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Employee",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeNumber", "firstName", "lastName", "startDate", "endDate", "taxTableColor"],
 				"filters": ["taxTableColor"],
 				"sort": { "field": "lastName", "order": "asc" }
@@ -747,6 +766,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "EmploymentContract",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "type", "startDate", "endDate", "hourlyWage", "awfTariff"],
 				"filters": ["type", "awfTariff"],
 				"sort": { "field": "startDate", "order": "desc" }
@@ -830,6 +850,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Payslip",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "period", "jurisdiction", "grossPay", "nettoPay"],
 				"filters": ["jurisdiction", "period"],
 				"sort": { "field": "period", "order": "desc" }
@@ -927,6 +948,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "PayrollRun",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["period", "administrationId", "jurisdiction", "status", "totalGross", "totalNet"],
 				"filters": ["status", "jurisdiction"],
 				"sort": { "field": "period", "order": "desc" }
@@ -1054,6 +1076,7 @@
 				"register": "hrmq",
 				"schema": "LoonaangifteFiling",
 				"description": "Wage-tax / social-security filings by period and statutory deadline.",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["period", "tijdvakcode", "status", "deadline", "submittedDate", "responseStatus"],
 				"filters": ["jurisdiction", "filingType", "status"],
 				"sort": { "field": "deadline", "order": "asc" }
@@ -1100,6 +1123,7 @@
 				"register": "hrmq",
 				"schema": "PensionFiling",
 				"description": "UPA (Uniforme Pensioenaangifte) deliveries by period and sector fund, gated on the referenced payroll run's approval.",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["period", "fund", "status", "deadline", "responseStatus"],
 				"filters": ["fund", "status"],
 				"sort": { "field": "deadline", "order": "asc" }
@@ -1145,6 +1169,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "PayrollMutationReport",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Run-to-run loonmutatie-rapporten: per periode wie is ingestroomd/uitgestroomd en de totale loonkostenverandering (payroll-mutation-reports). Admin/HR only -- gegenereerd via de \"Mutatieoverzicht\"-actie op een loonrun of via occ hrmq:payroll:mutations --persist.",
 				"columns": ["toPeriod", "fromPeriod", "administrationId", "changedCount", "totalWageCostDelta", "generatedAt"],
 				"filters": ["administrationId"],
@@ -1187,6 +1212,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "PayrollGLPost",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Payroll-to-GL posting attempts: one balanced loonjournaalpost handed off to shillinq per approved loonrun.",
 				"columns": ["period", "status", "journalEntryId", "postedAt"],
 				"filters": ["status"],
@@ -1223,6 +1249,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "PayrollPaymentBatch",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Netto-loon betaalbatches: per betaalbare loonrun een concept SEPA PaymentRun klaargezet in shillinq.",
 				"columns": ["period", "status", "totalAmount", "lineCount", "createdAt"],
 				"filters": ["status"],
@@ -1259,6 +1286,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "LeaveRequest",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "leaveType", "startDate", "endDate", "hours", "status"],
 				"filters": ["status", "leaveType"],
 				"sort": { "field": "startDate", "order": "desc" }
@@ -1273,6 +1301,7 @@
 				"register": "hrmq",
 				"schema": "LeaveRequest",
 				"description": "Ingediende verlofaanvragen die wachten op goedkeuring of afkeuring.",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "leaveType", "startDate", "endDate", "submittedAt", "status"],
 				"filters": ["status", "leaveType"],
 				"defaultFilters": { "status": "submitted" },
@@ -1288,7 +1317,7 @@
 				"register": "hrmq",
 				"schema": "LeaveRequest",
 				"description": "Ingediende verlofaanvragen van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door HR/back-office bijgehouden managerUserId-koppeling.",
-				"filter": { "managerUserId": "@me" },
+				"filter": { "managerUserId": "@me", "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "leaveType", "startDate", "endDate", "submittedAt", "status"],
 				"filters": ["status", "leaveType"],
 				"defaultFilters": { "status": "submitted" },
@@ -1335,6 +1364,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "LeaveBalance",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Verlofsaldi per medewerker, jaar en type: toegekende, bovenwettelijke en gebruikte uren, plus het berekende resterende saldo.",
 				"columns": ["employeeId", "year", "leaveType", "entitledHours", "bovenwettelijkHours", "usedHours", "remainingHours", "expiryDate"],
 				"filters": ["year", "leaveType"],
@@ -1512,6 +1542,7 @@
 				"register": "hrmq",
 				"schema": "SickLeaveCase",
 				"description": "Ziektegevallen en de Wet-verbetering-poortwachter-mijlpalen (administratieve gegevens, geen medische gegevens).",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "firstSickDay", "recoveredDate", "status"],
 				"filters": ["status"],
 				"sort": { "field": "firstSickDay", "order": "desc" }
@@ -1527,7 +1558,7 @@
 				"schema": "SickLeaveCase",
 				"_note": "verzuim-analytics-widgets (2026-07-13): pre-filtered werkvoorraad, not a replacement for the unfiltered SickLeaveCases index (TimesheetApproval-vs-Timesheets precedent) -- fixed base filter (the MijnUren mechanism, not a togglable UI filter), sorted uwv42WeekMeldingDue ascending (ZW art. 38 — the most consequential open-case deadline), mirroring the LoonaangifteFilings deadline-asc queue. Rows navigate to the existing SickLeaveCaseDetail; no new detail page.",
 				"description": "Open ziektegevallen gesorteerd op de UWV 42-wekenmelding-deadline (administratieve gegevens, geen medische gegevens).",
-				"filter": { "status": "gemeld" },
+				"filter": { "status": "gemeld", "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["employeeId", "firstSickDay", "probleemanalyseDue", "planVanAanpakDue", "uwv42WeekMeldingDue", "eerstejaarsevaluatieDue"],
 				"sort": { "field": "uwv42WeekMeldingDue", "order": "asc" }
 			}
@@ -1571,6 +1602,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "AttendanceRecord",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Klokregistraties per medewerker per werkdag, met de Arbeidstijdenwet-nalevingscontroles op rusttijd, maximale diensttijd en pauze.",
 				"columns": ["employeeId", "date", "clockIn", "clockOut", "workedHours", "status"],
 				"filters": ["status", "location"],
@@ -1612,6 +1644,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Onboarding",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Onboardingcases per nieuwe medewerker: contract, WID-check, BSN/IBAN, IT-provisioning en pensioenaanmelding, met de proeftijd- en startdatum als klok.",
 				"columns": ["employeeId", "status", "startDate", "proeftijdEndDate"],
 				"filters": ["status"],
@@ -1661,6 +1694,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Vacancy",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Vacatures (recruiting-ats-basic): concept -> gepubliceerd -> gesloten publish-lifecycle. Geen externe multiposting (werk.nl/LinkedIn) en geen publieke vacaturepagina in de MVP.",
 				"columns": ["title", "department", "status", "publishedDate", "closingDate"],
 				"filters": ["status", "department"],
@@ -1702,6 +1736,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Application",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Sollicitatiepipeline (recruiting-ats-basic): nieuw -> screening -> gesprek -> aanbod -> aangenomen/afgewezen. De status-filter is de MVP-pipeline-surface -- elke fase is een filterwaarde; een kanban-board is een nc-vue widget follow-up (design D7).",
 				"columns": ["candidateName", "vacancyId", "status", "talentPoolOptIn", "retentionExpiryDate"],
 				"filters": ["status"],
@@ -1799,6 +1834,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "OrgUnit",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Organisatiehiërarchie: afdelingen, teams en kostenplaatsen, elk optioneel onder een bovenliggende eenheid.",
 				"columns": ["name", "type", "costCenter", "managerId", "active"],
 				"filters": ["type", "active"],
@@ -1837,6 +1873,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "OrgAssignment",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Effectief-gedateerde plaatsingen van medewerkers in organisatie-eenheden.",
 				"columns": ["employeeId", "orgUnitId", "role", "startDate", "endDate"],
 				"filters": ["role"],
@@ -1871,6 +1908,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Asset",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Bedrijfseigendommen uitgegeven aan werknemers: laptops, telefoons, voertuigen, gereedschap, toegangspassen en kleding, met een bewaakte innamestatus.",
 				"columns": ["name", "category", "status", "serienummer"],
 				"filters": ["category", "status"],
@@ -1918,6 +1956,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "AssetAssignment",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Effectief-gedateerde uitgiftes van assets aan werknemers.",
 				"columns": ["assetId", "employeeId", "uitgifteDatum", "innameDatum", "uitgifteBonSigned"],
 				"sort": { "field": "uitgifteDatum", "order": "desc" }
@@ -1951,6 +1990,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "ReviewCycle",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 				"description": "Beoordelingscycli (jaargesprekken, beoordelingen, tussentijdse gesprekken) waaronder PerformanceReview-dossiers per medewerker worden verzameld.",
 				"columns": ["name", "year", "type", "status", "startDate", "endDate"],
 				"filters": ["status", "type"],
@@ -2024,7 +2064,7 @@
 				"register": "hrmq",
 				"schema": "PerformanceReview",
 				"description": "Jouw eigen beoordelingen.",
-				"filter": { "userId": "@me" },
+				"filter": { "userId": "@me", "administrationId": "@workspace.activeAdministrationId?" },
 				"columns": ["cycleId", "status", "rating", "besprokenOp"],
 				"sort": { "field": "besprokenOp", "order": "desc" }
 			}
@@ -2101,6 +2141,14 @@
 			"_note": "proforma-payslip design.md D6: manifest v2 has no declarative primitive for a persist-nothing interactive compute-form. open-form is bound to a register/schema and PERSISTS the created object -- exactly what a pro-forma simulation must not do. api-call only interpolates fixed/@token params against a form-less trigger and surfaces a toast + page refresh -- it cannot gather a bespoke set of hypothetical inputs (bruto, tabel, geboortedatum, deeltijdfactor, bijzondere beloning, periode) nor render the returned JSON breakdown. So this page is a host-app SFC (ProformaPayslip.vue, registered in src/registry.js) that renders the input form and calls POST /api/payroll/proforma directly, showing the full gross-to-net breakdown. No register/schema is referenced and no object is ever created -- the stable, test-covered contract is the endpoint (PayrollController::proforma) + the hrmq:payroll:proforma occ command."
 			},
 			{
+				"id": "Administraties",
+				"route": "/configuratie/administraties",
+				"type": "custom",
+				"title": "Administraties",
+				"component": "AdministrationSwitcher",
+				"_note": "multi-administratie design.md D4/D5 (REQ-MULTI-006): the ADR-001 Rule 3 active-administratie indicator + switch, homed under Configuratie as a SETTING surface (never a per-tenant menu duplication). The manifest v2 renderer chrome exposes no topbar-switcher slot (the known v2 renderer chrome gap), and no declarative primitive can gather the caller's accessible administraties, POST a guarded switch, and re-scope sibling pages -- open-form persists a register object (wrong: the active pointer is a per-user IConfig value, not domain data) and api-call cannot render the returned accessible-administration list. So this page is a host-app SFC (AdministrationSwitcher.vue, registered in src/registry.js) calling GET/POST /api/administration/* (AdministrationController, no-admin-idor guarded server-side). The true topbar chrome slot is a named upstream nc-vue fast-follow; the sibling hrmq-ia-navigation-alignment change owns the Configuratie menu-9 drawer -- this page lands under it as a clean union (neither re-declares the group)."
+			},
+			{
 				"id": "Shifts",
 				"route": "/shifts",
 				"type": "index",
@@ -2148,6 +2196,7 @@
 				"config": {
 					"register": "hrmq",
 					"schema": "Roster",
+					"filter": { "administrationId": "@workspace.activeAdministrationId?" },
 					"description": "Publiceerbare roosters per planningsperiode: een concept -> gepubliceerd levenscyclus, met per rooster de Arbeidstijdenwet-controle over de geplande roosterindelingen.",
 					"columns": ["period", "orgUnitId", "administrationId", "status"],
 					"filters": ["status"],

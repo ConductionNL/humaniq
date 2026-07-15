@@ -134,3 +134,42 @@ compliance view, not the WFM optimiser. A drag-and-drop planbord,
 availability/preferences, skills-matching, open-shift bidding/shift-swap and
 coverage alerts are named fast-follows. There is no automation between a
 published roster and realised `AttendanceRecord`/`Timesheet` hours.
+
+## Multi-administratie (accountant multi-client)
+
+hrmq supports multiple administraties (companies/clients) in one instance — the
+NL accountant channel where one office runs payroll for many SMBs:
+
+- **Tenant model** — an `Administration` (name, KvK, loonheffingennummer) plus
+  an `AdministrationAccess` membership (userId → administratie, role
+  accountant/hr/employee). Every core HR/payroll object carries an optional
+  plain-string `administrationId` (the `PayrollRun` convention, never a
+  `$ref` — there is deliberately no `Administration` `$ref` graph).
+- **Active administratie per user** — `GET/POST /api/administration/*` set and
+  read a per-user active-administratie pointer, guard-first: the setter refuses
+  any administratie the caller has no `AdministrationAccess` row for (unknown or
+  inaccessible → 404). The `Configuratie › Administraties` switcher drives it.
+- **Consistency** — `nl-administratie-scope-consistency` (recommended severity)
+  flags a child object whose `administrationId` disagrees with its parent;
+  vacuous when the field is absent, so single-administratie installs are
+  unaffected.
+
+> **Scoping is NOT a security boundary.** The active-administratie pointer and
+> the per-page filtering it will drive are a *convenience* scoping layer, not an
+> isolation guarantee: OpenRegister still serves objects by the app's own RBAC,
+> and a user with register access can read across administraties via the API.
+> Hard tenant isolation (per-administratie OpenRegister organisation ownership)
+> is a named security fast-follow, tracked separately. Do not rely on
+> administratie scoping to keep one client's data from another's.
+
+> **Upstream dependency (MVP boundary):** automatic per-page filtering by the
+> active administratie needs an `@administration` filter token in the shared
+> nextcloud-vue manifest vocabulary (a closed, schema-validated set — it cannot
+> be invented app-side without failing `check:manifest`). This build ships the
+> full hrmq side (schemas, service, guarded endpoints, switcher UI, consistency
+> rule, seeds); wiring `@administration` into `sentinelTokens.js` /
+> `resolveFilterTokens.js` + stamping `runtime.user.activeAdministrationId` into
+> the served manifest + adding `filter: { administrationId: "@administration?" }`
+> to each page is a named nextcloud-vue follow-up. Until it lands, all
+> administraties a user can access are shown together (the safe `?`-optional
+> default).

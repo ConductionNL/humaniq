@@ -5,7 +5,7 @@
             "Timesheet": {
                 "slug": "Timesheet",
                 "icon": "ClockCheckOutline",
-                "version": "0.4.0",
+                "version": "0.5.0",
                 "title": "Timesheet",
                 "description": "A per-employee, per-period record of worked hours submitted for approval (urenregistratie / time sheet). An employee logs hours against a period (and optionally a project/cost centre), submits the timesheet, and a manager approves or rejects it. The approval lifecycle (submitted → approved/rejected, with approver and timestamp) is the genuinely new, correctly-homed HR/labour surface that pipelinq's \"Timesheet approval\" deep-link previously pointed at shillinq for — shillinq's UrenRegistratie is an append-only billing time-log with no approval state, so this Timesheet schema owns the approval workflow in hrmq, the HR/labour app.",
                 "type": "object",
@@ -156,6 +156,12 @@
                         "title": "Rejection reason",
                         "description": "Reason the manager rejected the timesheet, shown to the employee so it can be corrected and re-submitted.",
                         "maxLength": 2000
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this Timesheet is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun/managerUserId convention), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
             }

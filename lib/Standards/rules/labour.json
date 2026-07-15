@@ -371,6 +371,18 @@
       "machineCheckable": true,
       "effectiveDate": null,
       "sourceUrl": null
+    },
+    {
+      "id": "nl-administratie-scope-consistency",
+      "domain": "labour",
+      "jurisdiction": "global",
+      "framework": "hr-administratie-core",
+      "source": "HR-administration control (multi-administratie tenant-scope integrity)",
+      "statement": "A Payslip's administrationId SHOULD equal its payrollRunId's PayrollRun.administrationId; an Employee-anchored record's (EmploymentContract/Timesheet/Expense/LeaveRequest/LeaveBalance/SickLeaveCase/Onboarding/OrgAssignment/AttendanceRecord/AssetAssignment/PerformanceReview) administrationId SHOULD equal its employeeId's Employee.administrationId. Vacuous when either side is absent/unresolvable (an un-backfilled record, a dangling parent, or a parent with no administrationId of its own) -- it reports provable inconsistency, never punishes un-backfilled data (the nl-mss-manager-consistency posture applied to the tenant axis).",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": null
     }
   ]
 }

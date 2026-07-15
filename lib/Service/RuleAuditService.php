@@ -248,6 +248,14 @@ class RuleAuditService
      * NlOrgChecks::checks()['Timesheet'/'Expense'/'LeaveRequest']
      * ['nl-mss-manager-consistency'] to resolve a record's employee's active
      * placement's unit manager without re-querying the register.
+     * multi-administratie further extends the Employee index with
+     * `administrationId` (the denormalized tenant key, REQ-MULTI-001),
+     * consumed by NlAdministratieChecks::checks()
+     * ['nl-administratie-scope-consistency'] to resolve the expected
+     * administratie for every Employee-anchored schema this change scopes;
+     * the Payslip variant of that same check reuses the existing
+     * `payroll.runsById` index (buildPayrollContext()) instead, since a
+     * Payslip's parent is its PayrollRun, not its Employee.
      * Loads independently of the main per-type loop (a small, side-effect-free
      * reload) so the index is ready before any object of either type is
      * evaluated. Degrades gracefully to empty sets when a schema does not
@@ -258,6 +266,7 @@ class RuleAuditService
      * @spec openspec/changes/offboarding-wizard-mvp/specs/offboarding-wizard/spec.md#REQ-OFB-004
      * @spec openspec/changes/asset-management-mvp/specs/asset-management/spec.md#REQ-AST-005
      * @spec openspec/changes/mss-team-scope/specs/mss-team-scope/spec.md#REQ-MSS-005
+     * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-007
      */
     private function buildRelatedContext(): array
     {
@@ -311,6 +320,13 @@ class RuleAuditService
                 // Employee's account for comparison against a record's
                 // stamped managerUserId.
                 'nextcloudUserId'               => (string) ($employee['nextcloudUserId'] ?? ''),
+                // multi-administratie: the employee's own denormalized
+                // administratie key, consumed by
+                // NlAdministratieChecks::checks() (every Employee-anchored
+                // schema this change denormalizes onto)
+                // ['nl-administratie-scope-consistency'] to resolve the
+                // parent employee's expected administrationId.
+                'administrationId'              => (string) ($employee['administrationId'] ?? ''),
             ];
         }
 

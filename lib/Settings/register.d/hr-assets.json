@@ -5,7 +5,7 @@
             "Asset": {
                 "slug": "Asset",
                 "icon": "PackageVariantClosed",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Asset",
                 "description": "A company-owned item issued to employees (laptop, telefoon, voertuig, gereedschap, toegangspas, kleding, overig): identity fields (serienummer, kenteken for vehicles), acquisition fields, and a guarded custody state machine (asset-management-mvp). A voertuig Asset carries its kenteken and nothing fiscal -- bijtelling automation is explicitly out of scope (engine-blocked per Spectr hrmq-canon-fleet-bijtelling; follow-up spec fleet-bijtelling). No AssetHistoryEntry: OpenRegister's object audit trail already records every mutation.",
                 "type": "object",
@@ -117,13 +117,19 @@
                         "default": true,
                         "title": "Active",
                         "description": "Administrative visibility toggle (the OrgUnit convention), distinct from the custody lifecycle."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this Asset is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); an Asset has no single owning employee, so nl-administratie-scope-consistency does not evaluate this schema. Maintained by HR/back-office; the implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
             },
             "AssetAssignment": {
                 "slug": "AssetAssignment",
                 "icon": "HandshakeOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Asset assignment",
                 "description": "An effective-dated uitgifte of one Asset to one Employee (the OrgAssignment pattern, hr-org.json): uitgifteDatum required, innameDatum nullable = the asset is still out. No x-openregister-lifecycle: a plain effective-dated record, no workflow. Consistency (coherent dates, the asset in status uitgegeven while the uitgifte is open) is enforced by nl-asset-assignment-consistency (lib/Standards/rules/labour.json / lib/Standards/Checks/NlAssetChecks.php), not by a write-time guard.",
                 "type": "object",
@@ -172,6 +178,12 @@
                         "nullable": true,
                         "title": "Notities",
                         "description": "Free-form notes (condition at handout/return)."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this AssetAssignment is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring the receiving employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
             }

@@ -5,7 +5,7 @@
             "PayrollPaymentBatch": {
                 "slug": "PayrollPaymentBatch",
                 "icon": "BankTransferOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Payroll payment batch",
                 "description": "The hrmq-side record of one attempt to hand a payable PayrollRun's net-pay off to shillinq as a draft SEPA PaymentRun (payroll-sepa-netpay-shillinq). hrmq owns no SEPA/bank-file machinery: this schema is a log of the handoff -- what was sent, when, and the outcome -- never the payment batch itself, which stays a shillinq PaymentRun created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays payable so a later `occ hrmq:netpay:run` invocation can supersede them (design.md D6). At most one PayrollPaymentBatch per run may be `pending`/`created` at a time -- enforced by PayrollNetPayService. `created` means the draft PaymentRun was klaargezet in shillinq -- NOT paid: money only moves after shillinq's controller approves and exports it (design.md D4).",
                 "type": "object",
@@ -76,6 +76,12 @@
                         "nullable": true,
                         "title": "Created at",
                         "description": "When the PaymentRun was created (or adopted) in shillinq."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this net-pay batch belongs to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7). The design.md premise that this payroll aggregate already carried administrationId was inaccurate at HEAD (the runNumber key HRMQ-NETPAY-{period}-{administrationId} referenced it, but the schema field was absent); added here so the Loonadministratie pages scope coherently and nl-administratie-scope-consistency could audit it against the run in a follow-up. Copied from the referenced PayrollRun.administrationId when the batch is created."
                     }
                 }
             }
@@ -95,7 +101,8 @@
                 "totalAmount": 2698.00,
                 "lineCount": 1,
                 "errorMessage": null,
-                "createdAt": "2026-06-24T09:00:00Z"
+                "createdAt": "2026-06-24T09:00:00Z",
+                "administrationId": "ADM-001"
             }
         ]
     }
