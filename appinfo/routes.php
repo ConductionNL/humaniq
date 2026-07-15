@@ -43,6 +43,11 @@ return [
         // SPA catch-all per REQ-MULTI-003.
         ['name' => 'administration#setActive', 'url' => '/api/administration/active', 'verb' => 'POST'],
         ['name' => 'administration#context', 'url' => '/api/administration/context', 'verb' => 'GET'],
+        // leave-buy-sell — guarded "Verrekenen" trigger for the
+        // LeaveTransactionDetail manifest api-call action (design.md D4/D6):
+        // settle is deliberately NOT a bare lifecycleActions button. BEFORE
+        // the SPA catch-all per REQ-BUYSELL-004.
+        ['name' => 'leave#settle', 'url' => '/api/leave/settle', 'verb' => 'POST'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],

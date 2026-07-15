@@ -31,6 +31,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/leave-verzuim-mvp/specs/leave-management/spec.md
+ * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-003
  */
 
 declare(strict_types=1);
@@ -60,6 +61,8 @@ final class NlLeaveChecks implements CheckProvider
                 'nl-verlof-saldo-niet-negatief' => static fn(array $o): bool => self::saldoNietNegatiefSatisfied($o),
                 // BW art. 7:640a — statutory hours lapse 1 July of the following year.
                 'nl-verlof-vervaltermijn' => static fn(array $o): bool => self::vervaltermijnSatisfied($o),
+                // leave-buy-sell — audit-time backstop: bovenwettelijkHours may never go negative.
+                'nl-verlof-bovenwettelijk-niet-negatief' => static fn(array $o): bool => self::bovenwettelijkNietNegatiefSatisfied($o),
             ],
         ];
 
@@ -146,6 +149,25 @@ final class NlLeaveChecks implements CheckProvider
         return (string) ($o['expiryDate'] ?? '') === $expected;
 
     }//end vervaltermijnSatisfied()
+
+
+    /**
+     * True when the balance's bovenwettelijkHours is not negative
+     * (leave-buy-sell design.md D3) — the audit-time backstop alongside the
+     * write-time LeaveBuySellApprovalGuard/LeaveBuySellSettlementService
+     * checks that keep a sell from ever drawing the balance below zero.
+     *
+     * @param array<string, mixed> $o The LeaveBalance.
+     *
+     * @return bool
+     *
+     * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-003
+     */
+    private static function bovenwettelijkNietNegatiefSatisfied(array $o): bool
+    {
+        return (float) ($o['bovenwettelijkHours'] ?? 0) >= 0.0;
+
+    }//end bovenwettelijkNietNegatiefSatisfied()
 
 
 }//end class

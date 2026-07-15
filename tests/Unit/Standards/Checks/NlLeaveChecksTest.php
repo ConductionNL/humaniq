@@ -3,11 +3,15 @@
 /**
  * Unit tests for the NL statutory-leave (verlofsaldo) checks.
  *
- * Pins the three leave-verzuim-mvp predicates on LeaveBalance: statutory
- * minimum (4x contractual weekly hours, vacuous pass when the
- * contractHoursPerWeek snapshot is null), non-negative balance (used hours
- * never exceed the total entitlement), and the 1-July-following-year
- * vervaltermijn.
+ * Pins the four leave predicates on LeaveBalance: statutory minimum (4x
+ * contractual weekly hours, vacuous pass when the contractHoursPerWeek
+ * snapshot is null), non-negative balance (used hours never exceed the total
+ * entitlement), the 1-July-following-year vervaltermijn (leave-verzuim-mvp),
+ * and the leave-buy-sell audit-time backstop (bovenwettelijkHours never
+ * negative) -- the last one driven through the REAL
+ * `RuleEngine::evaluate('LeaveBalance', ...)` too (not just the raw
+ * callable), so the auto-discovery + rule-index wiring is exercised
+ * end-to-end.
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
@@ -22,6 +26,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/leave-verzuim-mvp/specs/leave-management/spec.md
+ * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-003
  */
 
 declare(strict_types=1);
@@ -29,12 +34,15 @@ declare(strict_types=1);
 namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
 
 use OCA\Hrmq\Standards\Checks\NlLeaveChecks;
+use OCA\Hrmq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for NlLeaveChecks.
+ * Tests for NlLeaveChecks (raw predicates + the leave-buy-sell backstop
+ * through RuleEngine::evaluate).
  *
  * @spec openspec/changes/leave-verzuim-mvp/specs/leave-management/spec.md
+ * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-003
  */
 class NlLeaveChecksTest extends TestCase
 {
@@ -88,14 +96,14 @@ class NlLeaveChecksTest extends TestCase
     /**
      * @return void
      */
-    public function testCompliantBalancePassesAllThreeChecks(): void
+    public function testCompliantBalancePassesAllFourChecks(): void
     {
         $balance = $this->balance();
         foreach ($this->checks as $ruleId => $predicate) {
             $this->assertTrue((bool) $predicate($balance), sprintf('compliant balance violates %s', $ruleId));
         }
 
-    }//end testCompliantBalancePassesAllThreeChecks()
+    }//end testCompliantBalancePassesAllFourChecks()
 
 
     /**
@@ -204,13 +212,85 @@ class NlLeaveChecksTest extends TestCase
     /**
      * @return void
      */
-    public function testAllThreeRuleIdsAreRegistered(): void
+    public function testAllFourRuleIdsAreRegistered(): void
     {
         $this->assertArrayHasKey('nl-verlof-wettelijk-minimum', $this->checks);
         $this->assertArrayHasKey('nl-verlof-saldo-niet-negatief', $this->checks);
         $this->assertArrayHasKey('nl-verlof-vervaltermijn', $this->checks);
+        $this->assertArrayHasKey('nl-verlof-bovenwettelijk-niet-negatief', $this->checks);
 
-    }//end testAllThreeRuleIdsAreRegistered()
+    }//end testAllFourRuleIdsAreRegistered()
+
+
+    /**
+     * leave-buy-sell REQ-BUYSELL-003 (raw predicate): a negative
+     * bovenwettelijkHours violates the backstop.
+     *
+     * @return void
+     */
+    public function testBovenwettelijkNietNegatiefViolatedWhenNegative(): void
+    {
+        $balance = $this->balance(['bovenwettelijkHours' => -4]);
+        $this->assertFalse(($this->checks['nl-verlof-bovenwettelijk-niet-negatief'])($balance));
+
+    }//end testBovenwettelijkNietNegatiefViolatedWhenNegative()
+
+
+    /**
+     * leave-buy-sell REQ-BUYSELL-003 (raw predicate): zero or positive
+     * bovenwettelijkHours satisfies the backstop.
+     *
+     * @return void
+     */
+    public function testBovenwettelijkNietNegatiefSatisfiedWhenZeroOrPositive(): void
+    {
+        $this->assertTrue(($this->checks['nl-verlof-bovenwettelijk-niet-negatief'])($this->balance(['bovenwettelijkHours' => 0])));
+        $this->assertTrue(($this->checks['nl-verlof-bovenwettelijk-niet-negatief'])($this->balance(['bovenwettelijkHours' => 40])));
+
+    }//end testBovenwettelijkNietNegatiefSatisfiedWhenZeroOrPositive()
+
+
+    /**
+     * leave-buy-sell REQ-BUYSELL-003: a negative bovenwettelijkHours produces
+     * the `nl-verlof-bovenwettelijk-niet-negatief` Violation at `mandatory`
+     * severity, driven through the REAL `RuleEngine::evaluate()` -- exercising
+     * the auto-discovery + rule-index wiring, not just the raw callable.
+     *
+     * @return void
+     */
+    public function testNegativeBovenwettelijkProducesViolationThroughRuleEngine(): void
+    {
+        $balance    = $this->balance(['bovenwettelijkHours' => -4]);
+        $violations = RuleEngine::evaluate('LeaveBalance', $balance, ['jurisdiction' => 'NL']);
+
+        $ruleIds = array_map(static fn($v) => $v->ruleId, $violations);
+        $this->assertContains('nl-verlof-bovenwettelijk-niet-negatief', $ruleIds);
+
+        foreach ($violations as $violation) {
+            if ($violation->ruleId === 'nl-verlof-bovenwettelijk-niet-negatief') {
+                $this->assertSame('mandatory', $violation->severity);
+            }
+        }
+
+    }//end testNegativeBovenwettelijkProducesViolationThroughRuleEngine()
+
+
+    /**
+     * leave-buy-sell REQ-BUYSELL-003: a compliant balance produces no
+     * `nl-verlof-bovenwettelijk-niet-negatief` violation through
+     * RuleEngine::evaluate().
+     *
+     * @return void
+     */
+    public function testCompliantBalanceProducesNoBovenwettelijkViolationThroughRuleEngine(): void
+    {
+        $balance    = $this->balance();
+        $violations = RuleEngine::evaluate('LeaveBalance', $balance, ['jurisdiction' => 'NL']);
+
+        $ruleIds = array_map(static fn($v) => $v->ruleId, $violations);
+        $this->assertNotContains('nl-verlof-bovenwettelijk-niet-negatief', $ruleIds);
+
+    }//end testCompliantBalanceProducesNoBovenwettelijkViolationThroughRuleEngine()
 
 
 }//end class

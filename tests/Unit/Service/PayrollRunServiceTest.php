@@ -628,6 +628,107 @@ class PayrollRunServiceTest extends TestCase
 
 
     /**
+     * leave-buy-sell REQ-BUYSELL-005: a settled `sell` LeaveTransaction whose
+     * settlementPeriod equals the draft run's period adds its settledAmount
+     * as a positive `leaveBuySell` component, folded into nettoPay.
+     *
+     * @return void
+     */
+    public function testSettledSellLeaveTransactionAddsToNettoPay(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+                'LeaveTransaction'   => [
+                    ['id' => 'txn-1', 'employeeId' => 'emp-1', 'transactionType' => 'sell', 'status' => 'settled', 'settlementPeriod' => '2026-02', 'settledAmount' => 200.00],
+                ],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $this->assertSame('calculated', $result['status']);
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+
+        // Anchor net 3081.17 + settled sell 200.00 = 3281.17.
+        $this->assertSame(200.00, $payslips[0]['leaveBuySell'], 'The settled sell surfaces as a leaveBuySell component.');
+        $this->assertSame(3281.17, $payslips[0]['nettoPay'], 'nettoPay includes the leaveBuySell delta.');
+        $this->assertSame(3281.17, $result['totals']['totalNet']);
+
+    }//end testSettledSellLeaveTransactionAddsToNettoPay()
+
+
+    /**
+     * leave-buy-sell REQ-BUYSELL-005: a settled `buy` LeaveTransaction
+     * deducts its settledAmount from nettoPay (negative leaveBuySell).
+     *
+     * @return void
+     */
+    public function testSettledBuyLeaveTransactionDeductsFromNettoPay(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+                'LeaveTransaction'   => [
+                    ['id' => 'txn-1', 'employeeId' => 'emp-1', 'transactionType' => 'buy', 'status' => 'settled', 'settlementPeriod' => '2026-02', 'settledAmount' => 150.00],
+                ],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+
+        // Anchor net 3081.17 - settled buy 150.00 = 2931.17.
+        $this->assertSame(-150.00, $payslips[0]['leaveBuySell']);
+        $this->assertSame(2931.17, $payslips[0]['nettoPay']);
+
+    }//end testSettledBuyLeaveTransactionDeductsFromNettoPay()
+
+
+    /**
+     * leave-buy-sell REQ-BUYSELL-005: an unsettled (approved) or
+     * wrong-period LeaveTransaction does not fold -- the payslip carries no
+     * leaveBuySell component and nettoPay is the plain engine figure
+     * (byte-identical to before this change).
+     *
+     * @return void
+     */
+    public function testUnsettledOrWrongPeriodLeaveTransactionDoesNotFold(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+                'LeaveTransaction'   => [
+                    ['id' => 'txn-1', 'employeeId' => 'emp-1', 'transactionType' => 'sell', 'status' => 'approved', 'settlementPeriod' => '2026-02', 'settledAmount' => null],
+                    ['id' => 'txn-2', 'employeeId' => 'emp-1', 'transactionType' => 'sell', 'status' => 'settled', 'settlementPeriod' => '2026-01', 'settledAmount' => 200.00],
+                ],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+        $this->assertNull($payslips[0]['leaveBuySell']);
+        $this->assertSame(3081.17, $payslips[0]['nettoPay']);
+
+    }//end testUnsettledOrWrongPeriodLeaveTransactionDoesNotFold()
+
+
+    /**
      * Objects saved to a given schema, in save order.
      *
      * @param object $fake   The fake ObjectService.
