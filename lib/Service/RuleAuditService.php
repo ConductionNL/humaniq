@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Hrmq\Service;
 
 use OCA\Hrmq\AppInfo\Application;
+use OCA\Hrmq\Standards\CaoRegistry;
 use OCA\Hrmq\Standards\RuleCatalogue;
 use OCA\Hrmq\Standards\RuleEngine;
 use OCP\IAppConfig;
@@ -127,6 +128,13 @@ class RuleAuditService
         // existing `related.PayrollRun.byId` index deliberately projects only
         // {id, period, status} and is left untouched (design.md D7).
         $context['payroll'] = $this->buildPayrollContext();
+
+        // cao-library: an Employee-by-id index (for the pay-scale check's
+        // grossMonthlySalary resolution) plus each employee's active-contract
+        // CAO id (for the leave check), and the corpus keyed by id -- the
+        // `payroll.runsById` precedent. NlCaoChecks reads `cao.employeesById`
+        // and `cao.caoByEmployeeId` cross-object without re-querying siblings.
+        $context['cao'] = $this->buildCaoContext();
 
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
@@ -510,6 +518,7 @@ class RuleAuditService
         $context['documents']  = $this->buildDocumentsContext();
         $context['signals']    = $this->buildSignalsContext();
         $context['payroll']    = $this->buildPayrollContext();
+        $context['cao']        = $this->buildCaoContext();
 
         $runs   = [];
         $runIds = [];
@@ -594,6 +603,64 @@ class RuleAuditService
         return ['runsById' => $runsById];
 
     }//end buildPayrollContext()
+
+
+    /**
+     * Build the CAO cross-object context consumed by NlCaoChecks
+     * (cao-library design.md D4, the `payroll.runsById` precedent):
+     *
+     * - `caosById`: the CAO corpus keyed by id (`CaoRegistry`), so the
+     *   reference data is available to the predicates without re-reading the
+     *   corpus per object.
+     * - `employeesById`: each Employee's `{id, grossMonthlySalary}`, keyed by
+     *   id, so `nl-cao-minimumloon-schaal` can resolve the owning employee's
+     *   salary for an EmploymentContract without re-querying siblings.
+     * - `caoByEmployeeId`: each employee's active-contract CAO id (last-loaded
+     *   contract wins when more than one resolves -- the same MVP
+     *   simplification as `related.EmploymentContract.byEmployeeId`), so
+     *   `nl-cao-verlof-minimum` can resolve a LeaveBalance's employee's CAO.
+     *
+     * Degrades gracefully to empty maps when the Employee/EmploymentContract
+     * schemas do not exist yet in the register.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/cao-library/specs/cao-library/spec.md#REQ-CAO-003
+     * @spec openspec/changes/cao-library/specs/cao-library/spec.md#REQ-CAO-004
+     */
+    private function buildCaoContext(): array
+    {
+        $employeesById = [];
+        foreach ($this->loadAll('Employee') as $employee) {
+            $id = (string) ($employee['id'] ?? $employee['@self']['id'] ?? '');
+            if ($id === '') {
+                continue;
+            }
+
+            $employeesById[$id] = [
+                'id'                 => $id,
+                'grossMonthlySalary' => ($employee['grossMonthlySalary'] ?? null),
+            ];
+        }
+
+        $caoByEmployeeId = [];
+        foreach ($this->loadAll('EmploymentContract') as $contract) {
+            $employeeId = trim((string) ($contract['employeeId'] ?? ''));
+            $caoId      = trim((string) ($contract['cao'] ?? ''));
+            if ($employeeId === '' || $caoId === '') {
+                continue;
+            }
+
+            $caoByEmployeeId[$employeeId] = $caoId;
+        }
+
+        return [
+            'caosById'        => CaoRegistry::availableCaos(),
+            'employeesById'   => $employeesById,
+            'caoByEmployeeId' => $caoByEmployeeId,
+        ];
+
+    }//end buildCaoContext()
 
 
     /**

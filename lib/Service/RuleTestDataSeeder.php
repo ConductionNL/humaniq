@@ -81,9 +81,22 @@ class RuleTestDataSeeder
         // Provider object seeding: create compliant sample objects for new object
         // types that have no rows yet, so the provider's checks actually evaluate
         // (RuleEngine::providerSeedObjects, from the SeedsObjects capability).
+        //
+        // A type whose provider ALSO implements UpsertsObjects (cao-library) is
+        // upserted on its declared natural key instead: create when no row
+        // carries that key value, update the matching row in place otherwise, so
+        // re-seeding after a corpus edit converges the display objects rather
+        // than either duplicating them or skipping because the type is non-empty
+        // (REQ-CAO-006).
+        $upsertKeys             = RuleEngine::providerUpsertKeys();
         $providerObjectsCreated = 0;
         foreach (RuleEngine::providerSeedObjects() as $objectType => $samples) {
             if ($samples === []) {
+                continue;
+            }
+
+            if (isset($upsertKeys[$objectType]) === true) {
+                $providerObjectsCreated += $this->upsertSamples($os, $register, $admin, $objectType, $samples, $upsertKeys[$objectType]);
                 continue;
             }
 
@@ -158,6 +171,69 @@ class RuleTestDataSeeder
         ];
 
     }//end seed()
+
+    /**
+     * Upsert provider samples on a natural key (cao-library, REQ-CAO-006):
+     * for each sample, find the existing row whose `$keyField` equals the
+     * sample's key value and update it in place (preserving its object id);
+     * create a new object when none matches. Idempotent: re-running creates no
+     * duplicate and converges each row's fields to the sample. Returns the
+     * number of objects written (created or updated).
+     *
+     * @param mixed                                   $os         The ObjectService.
+     * @param string                                  $register   Register slug.
+     * @param IUser|null                              $admin      Admin user for the write.
+     * @param string                                  $objectType Schema name.
+     * @param array<int, array<string, mixed>>        $samples    The provider's samples.
+     * @param string                                  $keyField   The natural-key field name.
+     *
+     * @return int
+     */
+    private function upsertSamples(mixed $os, string $register, ?IUser $admin, string $objectType, array $samples, string $keyField): int
+    {
+        try {
+            $rows = $os->setRegister($register)->setSchema($objectType)->findAll(['limit' => 10000]);
+        } catch (\Throwable $e) {
+            $this->logger->warning('RuleTestDataSeeder: cannot load '.$objectType.' for upsert seeding: '.$e->getMessage());
+            return 0;
+        }
+
+        $idByKey = [];
+        foreach ((is_array($rows) === true ? $rows : []) as $row) {
+            $obj      = is_array($row) === true ? $row : $row->jsonSerialize();
+            $keyValue = trim((string) ($obj[$keyField] ?? ''));
+            if ($keyValue === '') {
+                continue;
+            }
+
+            $idByKey[$keyValue] = (string) ($obj['id'] ?? $obj['@self']['id'] ?? '');
+        }
+
+        $written = 0;
+        foreach ($samples as $sample) {
+            $keyValue = trim((string) ($sample[$keyField] ?? ''));
+            if ($keyValue === '') {
+                continue;
+            }
+
+            $existingId = ($idByKey[$keyValue] ?? '');
+            try {
+                if ($existingId !== '') {
+                    $os->saveObject(object: $sample, register: $register, schema: $objectType, uuid: $existingId, _rbac: false, _multitenancy: false, currentUser: $admin);
+                } else {
+                    $os->saveObject(object: $sample, register: $register, schema: $objectType, _rbac: false, _multitenancy: false, currentUser: $admin);
+                }
+
+                $written++;
+            } catch (\Throwable $e) {
+                $this->logger->warning('RuleTestDataSeeder: upsert '.$objectType.' '.$keyValue.' failed: '.$e->getMessage());
+            }
+        }//end foreach
+
+        return $written;
+
+    }//end upsertSamples()
+
 
     /**
      * Resolve an admin user (needed to update seeded objects' folders), or null.

@@ -47,7 +47,7 @@
             "EmploymentContract": {
                 "slug": "EmploymentContract",
                 "icon": "FileSignOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Employment Contract",
                 "description": "An employment agreement between the organisation and an employee. Carries the contract attributes the payroll checks read (permanent/temporary type that drives the Awf low/high premium, contracted hours, CAO, minimum-wage hourly basis).",
                 "type": "object",
@@ -65,7 +65,8 @@
                     "endDate": {"type": "string", "format": "date", "nullable": true, "description": "Contract end date, or null for indefinite."},
                     "hoursPerWeek": {"type": "number", "description": "Contracted hours per week. Used with the statutory hourly minimum to derive period minimums (nl-minimumuurloon-wet)."},
                     "hourlyWage": {"type": "number", "description": "Gross hourly wage. Must meet the statutory minimum hourly wage (nl-minimumloon-2026 / nl-minimumuurloon-wet / de-mindestlohn-2026 / fr-smic-2026 / us-flsa-minimum-wage)."},
-                    "cao": {"type": "string", "nullable": true, "description": "Applicable collective labour agreement (CAO / convention collective), when any."},
+                    "cao": {"type": "string", "nullable": true, "description": "Applicable collective labour agreement: the id of a CAO in the maintained library (lib/Standards/cao/{cao}.json, e.g. cao-generiek / cao-metaal-techniek / cao-horeca), resolvable through CaoRegistry. Null when the contract follows no CAO. Drives the below-CAO-minimum audit checks (nl-cao-minimumloon-schaal on this contract's salary, nl-cao-verlof-minimum on the employee's leave)."},
+                    "caoSchaal": {"type": "string", "nullable": true, "description": "The pay scale (schaal) within the referenced CAO's loontabel (e.g. 'A', 'B', 'II') that this contract is paid on. Null when no scale is set — the pay-scale check (nl-cao-minimumloon-schaal) is then vacuous. Only meaningful together with a non-null cao."},
                     "awfTariff": {"type": "string", "enum": ["low", "high"], "description": "Applied Awf (unemployment fund) tariff — low for permanent written contracts, high otherwise (nl-awf-laag-hoog-tarief)."},
                     "workingTimeDocumented": {"type": "boolean", "description": "DE: whether daily working time is recorded within 7 days and retained ≥2 years for §17 MiLoG sectors/Minijobs (de-mindestlohn-arbeitszeit-doku)."},
                     "overtimeMultiplier": {"type": "number", "nullable": true, "description": "US: overtime pay multiplier for hours over 40/week for non-exempt employees — must be ≥1.5 (us-flsa-overtime)."},

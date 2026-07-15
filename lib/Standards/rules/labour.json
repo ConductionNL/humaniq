@@ -329,6 +329,18 @@
         "minContractMonths": 6,
         "noticeMonths": 1
       }
+    },
+    {
+      "id": "nl-cao-verlof-minimum",
+      "domain": "leave",
+      "jurisdiction": "NL",
+      "framework": "cao",
+      "source": "CAO-tekst verlofartikel (per the employee's active-contract CAO in lib/Standards/cao/)",
+      "statement": "For a statutory annual (holiday) leave balance whose employee's active contract names a CAO, the granted entitlement (entitledHours + bovenwettelijkHours) shall be at least the CAO's minimum leave for the contract's weekly hours. Vacuous for non-annual leave types, when no CAO resolves for the employee, or when the CAO's leaveEntitlement figure is not yet verified against the official CAO-tekst (a placeholder figure is advisory, never a false mandatory violation).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": null
     }
   ]
 }

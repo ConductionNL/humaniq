@@ -1,0 +1,52 @@
+{
+  "id": "cao-horeca",
+  "name": "CAO Horeca NL",
+  "sector": "Horeca (hotel, restaurant, café, catering)",
+  "version": "2025-2026",
+  "effectiveDate": "2025-04-01",
+  "basedOn": [
+    {"doc": "CAO Horeca NL, cao-tekst 2025-2026", "url": "https://www.khn.nl/cao-horeca"}
+  ],
+  "payScales": {
+    "value": {
+      "I": 210000,
+      "II": 225000,
+      "III": 245000,
+      "IV": 270000
+    },
+    "source": "Illustrative multi-scale loontabel shape (schaal I-IV) pending confirmation against the official CAO Horeca NL loontabel per 2026-01-01 — not yet transcribed from the primary document.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO Horeca NL loontabel effective 2026-01-01 (khn.nl/cao-horeca)"
+  },
+  "allowances": {
+    "value": {
+      "toeslagOnregelmatigheid": {
+        "pct": 15
+      }
+    },
+    "source": "Illustrative onregelmatigheidstoeslag (irregular-hours allowance) rate pending confirmation against the official CAO-tekst.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO Horeca NL toeslagenartikel (khn.nl/cao-horeca)"
+  },
+  "leaveEntitlement": {
+    "value": {
+      "vakantiedagenWettelijk": 20,
+      "vakantiedagenBovenwettelijk": 4
+    },
+    "source": "Illustrative bovenwettelijk leave (24 days total at full-time) pending confirmation against the official CAO-tekst.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO Horeca NL verlofartikel (khn.nl/cao-horeca)"
+  },
+  "workingTime": {
+    "value": {
+      "fulltimeHoursPerWeek": 38
+    },
+    "source": "Illustrative full-time working week pending confirmation against the official CAO-tekst. Display-only — not read by any CaoRegistry resolver.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO Horeca NL arbeidsduurartikel (khn.nl/cao-horeca)"
+  }
+}

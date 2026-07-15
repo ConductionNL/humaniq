@@ -1,0 +1,38 @@
+{
+  "id": "cao-generiek",
+  "name": "Generiek (wettelijk minimum)",
+  "sector": "Alle sectoren zonder eigen CAO (wettelijke bodem)",
+  "version": "2026-1",
+  "effectiveDate": "2026-01-01",
+  "basedOn": [
+    {"doc": "Wet minimumloon en minimumvakantiebijslag (WML)", "url": "https://wetten.overheid.nl/BWBR0002638"},
+    {"doc": "BW art. 7:634 (wettelijke vakantiedagen)", "url": "https://wetten.overheid.nl/BWBR0005290"}
+  ],
+  "payScales": {
+    "value": {
+      "generiek": 229440
+    },
+    "source": "lib/Standards/tables/nl-2026.json parameters.wml.referentiemaandloon (RPP2026 bijlage 3) — the statutory minimum-wage reference monthly wage. Already verified:true in the engine's own tax-table corpus; re-cited here (not re-derived) so cao-generiek is the verified anchor that proves the below-CAO-minimum check path end-to-end (design.md Seed Data).",
+    "verified": true
+  },
+  "allowances": {
+    "value": {},
+    "source": "No statutory allowance floor beyond the minimum wage itself; sector CAOs (cao-metaal-techniek, cao-horeca) name their own.",
+    "verified": true
+  },
+  "leaveEntitlement": {
+    "value": {
+      "vakantiedagenWettelijk": 20,
+      "vakantiedagenBovenwettelijk": 0
+    },
+    "source": "BW art. 7:634 — statutory annual leave is at least 4x the contractual weekly working time; 20 days is the reference count at an 8-hour day, 5-day, 40-hour full-time week (4 x 40 / 8 = 20). CaoRegistry::minLeaveHours() prorates this by the contract's actual weekly hours (documented 5-day-week assumption, design.md D2/Risks) rather than assuming a 40-hour week.",
+    "verified": true
+  },
+  "workingTime": {
+    "value": {
+      "fulltimeHoursPerWeek": 40
+    },
+    "source": "Informational reference full-time week; no statutory maximum norm week is fixed by NL law. Display-only — not read by any CaoRegistry resolver.",
+    "verified": true
+  }
+}

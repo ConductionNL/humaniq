@@ -1,0 +1,35 @@
+{
+    "x-hrmq-fragment": "hr-cao",
+    "components": {
+        "schemas": {
+            "Cao": {
+                "slug": "Cao",
+                "icon": "FileDocumentMultipleOutline",
+                "version": "0.1.0",
+                "title": "CAO",
+                "description": "A read-only reference projection of one collective labour agreement (collectieve arbeidsovereenkomst) from the maintained CAO corpus (lib/Standards/cao/{caoId}.json), seeded idempotently from CaoRegistry by NlCaoChecks::seedObjects() (cao-library). The corpus is the single authoring source; these objects are a derived display surface for the read-only Caos reference page and MUST NOT be hand-edited (allowCreate:false on the manifest pages). An EmploymentContract references a CAO by its caoId, not by this object's UUID.",
+                "type": "object",
+                "x-schema-org": "schema:Legislation",
+                "required": [
+                    "caoId",
+                    "name",
+                    "sector"
+                ],
+                "properties": {
+                    "caoId": {"type": "string", "title": "CAO id", "description": "The stable corpus id (e.g. cao-metaal-techniek). The natural key the seed upserts on and the value an EmploymentContract.cao references."},
+                    "name": {"type": "string", "title": "Name", "description": "Human CAO name (e.g. 'CAO Metaal & Techniek')."},
+                    "sector": {"type": "string", "title": "Sector", "description": "The sector/branch the CAO covers."},
+                    "version": {"type": "string", "nullable": true, "title": "Version", "description": "The CAO revision this projection captures (e.g. '2025-2026')."},
+                    "effectiveDate": {"type": "string", "format": "date", "nullable": true, "title": "Effective date", "description": "ISO date the revision took effect."},
+                    "payScales": {"type": "object", "nullable": true, "title": "Pay scales", "description": "Map of schaal -> minimum maandloon in integer cents. Enforced by nl-cao-minimumloon-schaal only when payScalesVerified is true."},
+                    "payScalesVerified": {"type": "boolean", "default": false, "title": "Pay scales verified", "description": "Whether the payScales figures are confirmed against the official CAO-tekst. When false the scales are advisory (placeholder) and raise no mandatory violation."},
+                    "allowances": {"type": "object", "nullable": true, "title": "Allowances", "description": "Map of standard CAO allowances (e.g. ploegentoeslag). Display-only in this MVP; not yet computed into net pay."},
+                    "leaveEntitlement": {"type": "object", "nullable": true, "title": "Leave entitlement", "description": "Map of vakantiedagenWettelijk + vakantiedagenBovenwettelijk (full-time day counts). Enforced by nl-cao-verlof-minimum only when leaveEntitlementVerified is true."},
+                    "leaveEntitlementVerified": {"type": "boolean", "default": false, "title": "Leave entitlement verified", "description": "Whether the leaveEntitlement figures are confirmed against the official CAO-tekst. When false the entitlement is advisory (placeholder) and raises no mandatory violation."},
+                    "workingTime": {"type": "object", "nullable": true, "title": "Working time", "description": "Map of working-time norms (e.g. fulltimeHoursPerWeek). Informational/display-only — not read by any check."},
+                    "source": {"type": "string", "nullable": true, "title": "Source", "description": "Human-readable summary of the CAO's primary-source citations (basedOn)."}
+                }
+            }
+        }
+    }
+}
