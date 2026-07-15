@@ -405,6 +405,47 @@ class SettingsService
 
 
     /**
+     * Whether `LeaveAccrualJob` may run (leave-accrual-job design.md D6) — an
+     * operator off-switch, configurable via app config key
+     * `leave_accrual_enabled`. Defaults to `true`; the job returns immediately
+     * with zero writes when this is `false`.
+     *
+     * @return bool
+     *
+     * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-005
+     */
+    public function isLeaveAccrualEnabled(): bool
+    {
+        return $this->appConfig->getValueBool(Application::APP_ID, 'leave_accrual_enabled', true);
+
+    }//end isLeaveAccrualEnabled()
+
+
+    /**
+     * The annual bovenwettelijk (above-statutory) leave hours LeaveAccrualJob
+     * accrues 1/12 of per month (leave-accrual-job design.md D3), configurable
+     * via app config key `leave_bovenwettelijk_annual_hours`. Defaults to `0`
+     * — statutory-only until an employer configures it; CAO-derived
+     * bovenwettelijk is a named fast-follow.
+     *
+     * @return float
+     *
+     * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-003
+     */
+    public function getLeaveBovenwettelijkAnnualHours(): float
+    {
+        $value = trim($this->appConfig->getValueString(Application::APP_ID, 'leave_bovenwettelijk_annual_hours', '0'));
+        if ($value === '' || is_numeric($value) === false) {
+            return 0.0;
+        }
+
+        $hours = (float) $value;
+        return $hours >= 0.0 ? $hours : 0.0;
+
+    }//end getLeaveBovenwettelijkAnnualHours()
+
+
+    /**
      * Import the register idempotently (skips when the version is unchanged).
      *
      * @return array<string, mixed> Result with success flag, message, and version.
