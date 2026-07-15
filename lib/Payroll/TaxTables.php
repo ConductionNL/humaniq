@@ -434,6 +434,28 @@ final class TaxTables
 
 
     /**
+     * The gebruikelijkloonregeling 2026 norm (dga-payroll-mode design.md D4):
+     * the minimum annual customary salary a DGA (director-major-shareholder)
+     * must be paid (Wet LB 1964 art. 12a), cents-converted. Not read by
+     * `PayrollCalculator` — this exists solely for `NlDgaChecks` and any
+     * future gebruikelijkloon-facing UI, the `wml()`/`referentiemaandloonCents`
+     * precedent (consumed only by `SickPayCalculator`, never
+     * `PayrollCalculator`).
+     *
+     * @return array{jaarnormCents: int}
+     *
+     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-003
+     */
+    public function gebruikelijkloon(): array
+    {
+        return [
+            'jaarnormCents' => self::euroToCents((float) $this->leaf(['gebruikelijkloon', 'jaarnorm', 'value'])),
+        ];
+
+    }//end gebruikelijkloon()
+
+
+    /**
      * The werkkostenregeling (WKR) vrije-ruimte tranche + eindheffing
      * parameters from the `wkr` table group (wkr-administration design.md
      * D2/D4): `tranche1Percent`/`tranche2Percent`/`eindheffingPercent` stay on

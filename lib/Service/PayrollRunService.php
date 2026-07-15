@@ -98,6 +98,18 @@
  * it came from. No covering CarAssignment -> both stay null and the gross is
  * unchanged (byte-identical to before this change).
  *
+ * dga-payroll-mode (design.md D3): `CalculationInput.verzekeringsplichtig`
+ * is derived from `!($employee['isDga'] ?? false)` right at construction --
+ * `false` for a DGA (director-major-shareholder), zeroing
+ * `PayrollCalculator`'s Awf/Aof/Wko/Whk while every other component stays
+ * computed exactly as for a regular employee (loonheffing/Zvw/nettoPay
+ * unaffected -- werknemersverzekeringen never reduced net in this engine).
+ * `Payslip.isDga` stamps a denormalized copy of `Employee.isDga` alongside
+ * the other computed fields, so downstream consumers (glpost/UPA/
+ * loonaangifte) see WHY werknemersverzekeringen reads zero instead of
+ * assuming an engine bug. No `isDga` on the Employee -> `verzekeringsplichtig`
+ * defaults `true` and the payslip is byte-identical to before this change.
+ *
  * @category Service
  * @package  OCA\Hrmq\Service
  *
@@ -120,6 +132,7 @@
  * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-004
  * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
  * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
  */
 
 declare(strict_types=1);
@@ -334,6 +347,8 @@ class PayrollRunService
      * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
      * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-004
      * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
+     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
      */
     private function generate(array $run): array
     {
@@ -444,7 +459,8 @@ class PayrollRunService
                 period: $period,
                 awfTariff: $this->awfTariffFor($contract),
                 aofTariff: $aofTariff,
-                whkPercentage: $whkPercentage
+                whkPercentage: $whkPercentage,
+                verzekeringsplichtig: (($employee['isDga'] ?? false) !== true)
             );
 
             $result = $this->calculator->calculate($input, $tables);
@@ -571,7 +587,9 @@ class PayrollRunService
      * loonstrook-content booleans (the record carries the BW 7:626 facts —
      * rendering stays payslip-pdf-docudesk's concern), WKR fields 0 (no WKR
      * administration in the engine MVP), `anoniementariefApplied` false
-     * (precondition employees are skipped, never computed at 52%).
+     * (precondition employees are skipped, never computed at 52%). `isDga`
+     * is a denormalized copy of `Employee.isDga` (dga-payroll-mode), so a
+     * payslip records WHY werknemersverzekeringen reads zero.
      *
      * @param string               $runId    The PayrollRun id.
      * @param array<string, mixed> $employee The Employee.
@@ -582,6 +600,7 @@ class PayrollRunService
      * @return array<string, mixed>
      *
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
+     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
      */
     private function payslipPayload(string $runId, array $employee, array $contract, string $period, CalculationResult $result): array
     {
@@ -599,6 +618,7 @@ class PayrollRunService
             'arbeidskorting'           => $this->euros($result->arbeidskortingCents),
             'volksverzekeringen'       => $this->euros($result->volksverzekeringenCents),
             'werknemersverzekeringen'  => $this->euros($result->werknemersverzekeringenCents),
+            'isDga'                    => (($employee['isDga'] ?? false) === true),
             'zvw'                      => $this->euros($result->zvwCents),
             'zvwMode'                  => $result->zvwMode,
             'zvwRate'                  => $result->zvwRate,

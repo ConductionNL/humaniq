@@ -8,6 +8,14 @@
  * period, and the employer-level settings the tables file cannot know
  * (Aof classification, Whk percentage). Zero Nextcloud dependencies.
  *
+ * `$verzekeringsplichtig` (dga-payroll-mode design.md D1) is additive and
+ * defaults to `true`, so every pre-existing named-argument call site is
+ * unaffected: `false` (a DGA — director-major-shareholder, not
+ * verzekeringsplichtig for the werknemersverzekeringen, Wfsv art. 6 lid 1
+ * sub d) gates `PayrollCalculator::calculate()` step 9 to zero
+ * Awf/Aof/Wko/Whk while every other component stays computed exactly as
+ * for `true`.
+ *
  * @category Payroll
  * @package  OCA\Hrmq\Payroll
  *
@@ -21,6 +29,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
  */
 
 declare(strict_types=1);
@@ -43,8 +52,10 @@ final class CalculationInput
      * @param string      $awfTariff                     `low` or `high` (from the covering EmploymentContract).
      * @param string      $aofTariff                     `laag` or `hoog` (employer-level config).
      * @param float       $whkPercentage                 The employer's Whk percentage (percentage scale, e.g. `1.52`).
+     * @param bool        $verzekeringsplichtig          Whether the employee is verzekeringsplichtig for the werknemersverzekeringen (dga-payroll-mode). `false` for a DGA — zeroes Awf/Aof/Wko/Whk; every other component is unaffected.
      *
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
+     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
      */
     public function __construct(
         public readonly int $grossMonthlySalaryCents,
@@ -55,6 +66,7 @@ final class CalculationInput
         public readonly string $awfTariff,
         public readonly string $aofTariff,
         public readonly float $whkPercentage,
+        public readonly bool $verzekeringsplichtig=true,
     ) {
 
     }//end __construct()

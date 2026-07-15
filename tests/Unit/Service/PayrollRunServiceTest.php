@@ -33,6 +33,8 @@
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-004
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
  * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
  */
 
 declare(strict_types=1);
@@ -51,6 +53,7 @@ use Psr\Log\LoggerInterface;
  * Tests for PayrollRunService.
  *
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-003
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
  */
 class PayrollRunServiceTest extends TestCase
 {
@@ -1209,6 +1212,105 @@ class PayrollRunServiceTest extends TestCase
         return $out;
 
     }//end savedFor()
+
+
+    /**
+     * dga-payroll-mode REQ-DGA-001/REQ-DGA-002: an Employee with `isDga: true`
+     * produces a Payslip with `werknemersverzekeringen: 0.00`, `isDga: true`,
+     * and a `nettoPay` UNCHANGED from the same-gross non-DGA anchor
+     * (design.md D2 grounding correction — werknemersverzekeringen never
+     * reduced net). The run's `totalEmployerCharges` roll-up reflects the
+     * zeroed premiums (Zvw only).
+     *
+     * @return void
+     */
+    public function testDgaEmployeeProducesZeroWerknemersverzekeringenAndUnchangedNetto(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee(['isDga' => true])],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $this->assertSame('calculated', $result['status']);
+        $this->assertCount(1, $result['computed']);
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+        $payslip = $payslips[0];
+
+        $this->assertTrue($payslip['isDga']);
+        $this->assertSame(0.00, $payslip['werknemersverzekeringen']);
+        // Unchanged: loonheffing/zvw/vakantiegeldReserved/nettoPay stay the
+        // design.md D2 anchor figures.
+        $this->assertSame(718.83, $payslip['loonheffing']);
+        $this->assertSame(231.80, $payslip['zvw']);
+        $this->assertSame(304.00, $payslip['vakantiegeldReserved']);
+        $this->assertSame(3081.17, $payslip['nettoPay']);
+
+        $final = $this->savedFor($fake, 'PayrollRun')[1];
+        $this->assertSame(231.80, $final['totalEmployerCharges'], 'DGA: totalEmployerCharges must reduce to zvw only');
+        $this->assertSame(3081.17, $final['totalNet']);
+
+    }//end testDgaEmployeeProducesZeroWerknemersverzekeringenAndUnchangedNetto()
+
+
+    /**
+     * dga-payroll-mode REQ-DGA-002 scenario: a run mixing a DGA employee and
+     * a regular employee (both €3.800,00 gross) totals correctly --
+     * `totalEmployerCharges` = €231,80 (DGA) + €650,94 (regular) = €882,74 --
+     * and neither payslip's `nettoPay` differs from the other's per-employee
+     * equivalent gross-only calculation (both €3.081,17 at the same gross).
+     *
+     * @return void
+     */
+    public function testMixedDgaAndRegularEmployeeRunTotalsCorrectly(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [
+                    $this->employee(['isDga' => true]),
+                    $this->employee(['id' => 'emp-2', 'employeeNumber' => 'EMP-NL-0002', 'firstName' => 'Piet', 'lastName' => 'Regulier', 'nextcloudUserId' => 'piet']),
+                ],
+                'EmploymentContract' => [
+                    $this->contract(),
+                    $this->contract(['id' => 'ct-2', 'employeeId' => 'emp-2']),
+                ],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $this->assertSame('calculated', $result['status']);
+        $this->assertCount(2, $result['computed']);
+
+        $totals = $result['totals'];
+        $this->assertSame(882.74, $totals['totalEmployerCharges']);
+        $this->assertSame(6162.34, $totals['totalNet']);
+
+        $payslips     = $this->savedFor($fake, 'Payslip');
+        $byEmployeeId = [];
+        foreach ($payslips as $payslip) {
+            $byEmployeeId[$payslip['employeeId']] = $payslip;
+        }
+
+        $this->assertTrue($byEmployeeId['emp-1']['isDga']);
+        $this->assertFalse($byEmployeeId['emp-2']['isDga']);
+        $this->assertSame(0.00, $byEmployeeId['emp-1']['werknemersverzekeringen']);
+        $this->assertSame(419.14, $byEmployeeId['emp-2']['werknemersverzekeringen']);
+        // Same gross -> same nettoPay, DGA or not (werknemersverzekeringen
+        // never reduce net).
+        $this->assertSame($byEmployeeId['emp-2']['nettoPay'], $byEmployeeId['emp-1']['nettoPay']);
+        $this->assertSame(3081.17, $byEmployeeId['emp-1']['nettoPay']);
+
+    }//end testMixedDgaAndRegularEmployeeRunTotalsCorrectly()
 
 
 }//end class
