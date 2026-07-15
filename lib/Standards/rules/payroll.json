@@ -1245,6 +1245,18 @@
       "machineCheckable": true,
       "effectiveDate": "2026-01-01",
       "sourceUrl": null
+    },
+    {
+      "id": "nl-retro-adjustment-consistency",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "payroll-core",
+      "source": "Rekenvoorschriften geautomatiseerde loonadministratie 2026 (traceability + gross-to-net arithmetic, applied to a terugwerkende kracht correction)",
+      "statement": "A PayrollAdjustment that carries engineVersion (i.e. its delta was computed by the recompute engine) shall have every deltaGross/deltaLoonheffing/deltaNet/deltaWerknemersverzekeringen/deltaZvw/deltaVolksverzekeringen/deltaVakantiegeldReserved field equal to recomputed minus stored, cents-exact, where recomputed is PayrollCalculator's output for the recorded correctedGrossMonthlySalary against the engineVersion tax-year table and stored is the referenced original Payslip. Vacuous when engineVersion is null (not yet computed).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://download.belastingdienst.nl/belastingdienst/docs/rekenvoorschriften_voor_geautomatiseerde_loonadministratie_lh991z62fd.pdf"
     }
   ]
 }

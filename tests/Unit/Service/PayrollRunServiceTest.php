@@ -547,6 +547,87 @@ class PayrollRunServiceTest extends TestCase
 
 
     /**
+     * retro-adjustments REQ-RETRO-004: an APPLIED PayrollAdjustment whose
+     * settlementPeriod equals the draft run's period folds its deltaNet into
+     * that employee's payslip retroAdjustment + nettoPay -- and the sealed
+     * historical payslip it corrects is never written by run generation.
+     *
+     * @return void
+     */
+    public function testAppliedAdjustmentFoldsIntoCurrentRunPayslip(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [
+                    // The SEALED original this adjustment corrects (a Jan run) --
+                    // run generation for Feb must never touch it.
+                    ['id' => 'ps-sealed', 'payrollRunId' => 'run-jan-sealed', 'employeeId' => 'emp-1', 'period' => '2026-01', 'nettoPay' => 2880.00],
+                ],
+                'PayrollAdjustment'  => [
+                    ['id' => 'adj-1', 'employeeId' => 'emp-1', 'originalPeriod' => '2026-01', 'originalPayslipId' => 'ps-sealed', 'correctionRef' => 't1', 'status' => 'applied', 'settlementPeriod' => '2026-02', 'settlementLine' => 'nabetaling', 'engineVersion' => 'nl-2026', 'deltaNet' => 201.17],
+                ],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $this->assertSame('calculated', $result['status']);
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips, 'Only the new Feb payslip is written -- the sealed Jan payslip is untouched.');
+        $payslip = $payslips[0];
+
+        // Anchor net 3081.17 + applied delta 201.17 = 3282.34.
+        $this->assertSame(201.17, $payslip['retroAdjustment'], 'The applied delta surfaces as a retroAdjustment component.');
+        $this->assertSame(3282.34, $payslip['nettoPay'], 'nettoPay includes the retro delta.');
+
+        // The sealed original (ps-sealed) is never saved or deleted.
+        foreach ($fake->saved as $entry) {
+            $this->assertNotSame('ps-sealed', (string) ($entry['object']['id'] ?? ''), 'The sealed historical payslip is never written.');
+        }
+        $this->assertSame([], $fake->deleted);
+
+        // The run total net reflects the folded delta.
+        $this->assertSame(3282.34, $result['totals']['totalNet']);
+
+    }//end testAppliedAdjustmentFoldsIntoCurrentRunPayslip()
+
+
+    /**
+     * retro-adjustments REQ-RETRO-004: a DRAFT (unsettled) adjustment does not
+     * affect any run -- the payslip carries no retroAdjustment and nettoPay is
+     * the plain engine figure.
+     *
+     * @return void
+     */
+    public function testDraftAdjustmentDoesNotAffectTheRun(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+                'PayrollAdjustment'  => [
+                    ['id' => 'adj-1', 'employeeId' => 'emp-1', 'originalPeriod' => '2026-01', 'correctionRef' => 't1', 'status' => 'draft', 'settlementPeriod' => '2026-02', 'deltaNet' => 201.17],
+                ],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+        $this->assertNull($payslips[0]['retroAdjustment'], 'A draft adjustment adds no retroAdjustment component.');
+        $this->assertSame(3081.17, $payslips[0]['nettoPay'], 'nettoPay is the plain engine figure.');
+
+    }//end testDraftAdjustmentDoesNotAffectTheRun()
+
+
+    /**
      * Objects saved to a given schema, in save order.
      *
      * @param object $fake   The fake ObjectService.

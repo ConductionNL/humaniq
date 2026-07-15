@@ -136,6 +136,15 @@ class RuleAuditService
         // and `cao.caoByEmployeeId` cross-object without re-querying siblings.
         $context['cao'] = $this->buildCaoContext();
 
+        // retro-adjustments: the original-Payslip-by-id / Employee-by-id /
+        // EmploymentContract-by-employeeId indexes plus the two employer
+        // config values (aofTariff, an optional whk override) so
+        // NlRetroChecks::checks()['PayrollAdjustment']
+        // ['nl-retro-adjustment-consistency'] can independently recompute a
+        // correction's delta (the `payroll.runsById` precedent) without
+        // re-querying siblings or gaining a new service dependency.
+        $context['retro'] = $this->buildRetroContext();
+
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
         $enforceable      = count(RuleEngine::checkedRuleIds());
@@ -519,6 +528,7 @@ class RuleAuditService
         $context['signals']    = $this->buildSignalsContext();
         $context['payroll']    = $this->buildPayrollContext();
         $context['cao']        = $this->buildCaoContext();
+        $context['retro']      = $this->buildRetroContext();
 
         $runs   = [];
         $runIds = [];
@@ -661,6 +671,88 @@ class RuleAuditService
         ];
 
     }//end buildCaoContext()
+
+
+    /**
+     * Build the cross-object context consumed by NlRetroChecks'
+     * `nl-retro-adjustment-consistency` predicate (retro-adjustments
+     * design.md D7, the `payroll.runsById` precedent):
+     *
+     * - `payslipsById`: every Payslip keyed by id, so the predicate can
+     *   resolve a PayrollAdjustment's `originalPayslipId` (the sealed
+     *   "stored" side of the recomputed-minus-stored diff) without
+     *   re-querying the register.
+     * - `employeesById`: each Employee's `{dateOfBirth, taxTableColor,
+     *   loonheffingskortingToegepast}`, keyed by id -- the CalculationInput
+     *   fields the predicate cannot get from the PayrollAdjustment itself.
+     * - `contractsByEmployeeId`: each employee's `{type, writtenContract,
+     *   awfTariff}` (last-loaded contract wins per employee -- the
+     *   `related.EmploymentContract.byEmployeeId` MVP simplification).
+     * - `aofTariff` / `whkPercentageOverride`: the SAME config keys and
+     *   fallback semantics as `SettingsService::getPayrollAofTariff()` /
+     *   `getPayrollWhkPercentage()` (payroll-core-engine), read directly via
+     *   the already-injected `IAppConfig` so this context builder needs no
+     *   new service dependency -- NlRetroChecks itself stays a pure predicate
+     *   over `$context` (design.md D-static-severity).
+     *
+     * Degrades gracefully to empty maps when the Payslip/Employee/
+     * EmploymentContract/PayrollAdjustment schemas do not exist yet in the
+     * register.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-001
+     */
+    private function buildRetroContext(): array
+    {
+        $payslipsById = [];
+        foreach ($this->loadAll('Payslip') as $payslip) {
+            $id = (string) ($payslip['id'] ?? $payslip['@self']['id'] ?? '');
+            if ($id !== '') {
+                $payslipsById[$id] = $payslip;
+            }
+        }
+
+        $employeesById = [];
+        foreach ($this->loadAll('Employee') as $employee) {
+            $id = (string) ($employee['id'] ?? $employee['@self']['id'] ?? '');
+            if ($id === '') {
+                continue;
+            }
+
+            $employeesById[$id] = [
+                'dateOfBirth'                  => ($employee['dateOfBirth'] ?? null),
+                'taxTableColor'                => (string) ($employee['taxTableColor'] ?? ''),
+                'loonheffingskortingToegepast' => (($employee['loonheffingskortingToegepast'] ?? true) === true),
+            ];
+        }
+
+        $contractsByEmployeeId = [];
+        foreach ($this->loadAll('EmploymentContract') as $contract) {
+            $employeeId = trim((string) ($contract['employeeId'] ?? ''));
+            if ($employeeId === '') {
+                continue;
+            }
+
+            $contractsByEmployeeId[$employeeId] = [
+                'type'            => (string) ($contract['type'] ?? ''),
+                'writtenContract' => (($contract['writtenContract'] ?? false) === true),
+                'awfTariff'       => (string) ($contract['awfTariff'] ?? ''),
+            ];
+        }
+
+        $aofValue = strtolower(trim($this->appConfig->getValueString(Application::APP_ID, 'payroll_aof_tariff', 'laag')));
+        $whkRaw   = trim($this->appConfig->getValueString(Application::APP_ID, 'payroll_whk_percentage', ''));
+
+        return [
+            'payslipsById'          => $payslipsById,
+            'employeesById'         => $employeesById,
+            'contractsByEmployeeId' => $contractsByEmployeeId,
+            'aofTariff'             => ($aofValue === 'hoog' ? 'hoog' : 'laag'),
+            'whkPercentageOverride' => ($whkRaw !== '' && is_numeric($whkRaw) === true && ((float) $whkRaw) >= 0.0) ? (float) $whkRaw : null,
+        ];
+
+    }//end buildRetroContext()
 
 
     /**
