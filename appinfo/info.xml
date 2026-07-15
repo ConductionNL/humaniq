@@ -124,5 +124,10 @@ Vrij en open source onder de EUPL-1.2-licentie.
              payslips (payroll-core-engine); exits non-zero on any mandatory
              violation. -->
         <command>OCA\Hrmq\Command\PayrollVerifyCommand</command>
+        <!-- Print (and optionally persist) the run-to-run payroll mutation
+             report -- who joined/left and each shared employee's per-component
+             cents delta between two PayrollRuns (payroll-mutation-reports).
+             Pure read over persisted payslips; never recomputes. -->
+        <command>OCA\Hrmq\Command\PayrollMutationsCommand</command>
     </commands>
 </info>

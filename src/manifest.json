@@ -11,6 +11,7 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "EmploymentContract", "urlTemplate": "/apps/hrmq/contracts/{uuid}", "displayName": "Employment Contract" },
 		{ "registerSlug": "hrmq", "schemaSlug": "Payslip", "urlTemplate": "/apps/hrmq/payslips/{uuid}", "displayName": "Payslip" },
 		{ "registerSlug": "hrmq", "schemaSlug": "PayrollRun", "urlTemplate": "/apps/hrmq/payroll-runs/{uuid}", "displayName": "Payroll Run" },
+		{ "registerSlug": "hrmq", "schemaSlug": "PayrollMutationReport", "urlTemplate": "/apps/hrmq/payroll-mutations/{uuid}", "displayName": "Payroll Mutation Report" },
 		{ "registerSlug": "hrmq", "schemaSlug": "LoonaangifteFiling", "urlTemplate": "/apps/hrmq/filings/{uuid}", "displayName": "Wage Tax Filing" },
 		{ "registerSlug": "hrmq", "schemaSlug": "PensionFiling", "urlTemplate": "/apps/hrmq/pension-filings/{uuid}", "displayName": "Pension Filing" },
 		{ "registerSlug": "hrmq", "schemaSlug": "PayrollGLPost", "urlTemplate": "/apps/hrmq/gl-posts/{uuid}", "displayName": "Payroll GL Post" },
@@ -306,6 +307,12 @@
 					"label": "Pensioenaangiftes",
 					"icon": "PiggyBankOutline",
 					"route": "PensionFilings"
+				},
+				{
+					"id": "PayrollMutations",
+					"label": "Mutatieoverzichten",
+					"icon": "SwapHorizontal",
+					"route": "PayrollMutations"
 				},
 				{
 					"id": "PayrollGLPosts",
@@ -867,6 +874,19 @@
 					"confirm": true,
 					"successMessage": "Loonrun (her)berekend — loonstroken en totalen zijn bijgewerkt.",
 					"errorMessage": "(Her)berekenen van de loonrun is mislukt."
+				},
+				{
+					"id": "mutations",
+					"label": "Mutatieoverzicht",
+					"type": "api-call",
+					"icon": "SwapHorizontal",
+					"url": "/api/payroll/mutations",
+					"method": "POST",
+					"params": { "toRunId": "@objectId" },
+					"confirm": true,
+					"onSuccessRoute": "PayrollMutationReportDetail",
+					"successMessage": "Mutatierapport gegenereerd — vergeleken met de vorige periode.",
+					"errorMessage": "Genereren van het mutatierapport is mislukt."
 				}
 			],
 			"config": {
@@ -979,6 +999,48 @@
 						{ "action": "corrigeren", "from": ["verzonden"], "to": "concept", "label": "Corrigeren" }
 					]
 				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
+			}
+		},
+		{
+			"id": "PayrollMutations",
+			"route": "/payroll-mutations",
+			"type": "index",
+			"title": "Mutatieoverzichten",
+			"config": {
+				"register": "hrmq",
+				"schema": "PayrollMutationReport",
+				"description": "Run-to-run loonmutatie-rapporten: per periode wie is ingestroomd/uitgestroomd en de totale loonkostenverandering (payroll-mutation-reports). Admin/HR only -- gegenereerd via de \"Mutatieoverzicht\"-actie op een loonrun of via occ hrmq:payroll:mutations --persist.",
+				"columns": ["toPeriod", "fromPeriod", "administrationId", "changedCount", "totalWageCostDelta", "generatedAt"],
+				"filters": ["administrationId"],
+				"sort": { "field": "generatedAt", "order": "desc" }
+			}
+		},
+		{
+			"id": "PayrollMutationReportDetail",
+			"route": "/payroll-mutations/:id",
+			"type": "detail",
+			"title": "Mutatieoverzicht",
+			"config": {
+				"register": "hrmq",
+				"schema": "PayrollMutationReport",
+				"_note": "payroll-mutation-reports (2026-07-14): a PayrollMutationReport is a PURE, read-only diff snapshot -- never recomputed, never written outside PayrollMutationService (design.md D3) -- so the page leads with the accountant's headline (totalWageCostDelta) plus the entered/left/changed counts as stat KPIs (the PayrollRunDetail stat-tile precedent), then the full record (header fromRunId/toRunId/fromPeriod/toPeriod/administrationId/generatedAt, the four component deltas, the four counts, and the embedded per-employee `lines` array) in the pmr-data widget below -- the PayrollGLPostDetail precedent for an embedded array snapshot rendered inside a plain data widget (its own `lines` field, same shape: a system-generated audit-style record, not user-editable). No lifecycleActions: the schema carries no x-openregister-lifecycle -- a report is either regenerated (superseding this one in place, design.md D7) or not; there is no user-facing status transition to guard. No Files/calendar/comms leaves -- not a document or event. Admin/HR only, mirroring the Payroll nav group.",
+				"widgets": [
+					{ "id": "pmr-wagecost", "type": "stat", "title": "Total wage-cost delta", "icon": "CashMultiple", "content": { "label": "Total wage-cost delta", "caption": "vs. prior period", "icon": "CashMultiple", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "PayrollMutationReport", "metric": "sum", "field": "totalWageCostDelta", "filter": { "id": "@objectId" } } } },
+					{ "id": "pmr-entered", "type": "stat", "title": "Entered", "icon": "AccountPlusOutline", "content": { "label": "Entered", "caption": "new this run", "icon": "AccountPlusOutline", "valueColor": "#46ba61", "format": { "style": "number", "decimals": 0 }, "source": { "register": "hrmq", "schema": "PayrollMutationReport", "metric": "sum", "field": "enteredCount", "filter": { "id": "@objectId" } } } },
+					{ "id": "pmr-left", "type": "stat", "title": "Left", "icon": "AccountMinusOutline", "content": { "label": "Left", "caption": "not in this run", "icon": "AccountMinusOutline", "valueColor": "#e9322d", "format": { "style": "number", "decimals": 0 }, "source": { "register": "hrmq", "schema": "PayrollMutationReport", "metric": "sum", "field": "leftCount", "filter": { "id": "@objectId" } } } },
+					{ "id": "pmr-changed", "type": "stat", "title": "Changed", "icon": "SwapHorizontal", "content": { "label": "Changed", "caption": "component delta", "icon": "SwapHorizontal", "valueColor": "#f4a742", "format": { "style": "number", "decimals": 0 }, "source": { "register": "hrmq", "schema": "PayrollMutationReport", "metric": "sum", "field": "changedCount", "filter": { "id": "@objectId" } } } },
+					{ "id": "pmr-data", "type": "data", "title": "Mutatieoverzicht", "icon": "TableColumn", "content": { "columns": 2 } },
+					{ "id": "pmr-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "pmr-wagecost", "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 3 },
+					{ "id": "2", "widgetId": "pmr-entered", "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 3 },
+					{ "id": "3", "widgetId": "pmr-left", "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 3 },
+					{ "id": "4", "widgetId": "pmr-changed", "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 3 },
+					{ "id": "5", "widgetId": "pmr-data", "gridX": 0, "gridY": 3, "gridWidth": 8, "gridHeight": 10 },
+					{ "id": "6", "widgetId": "pmr-related", "gridX": 8, "gridY": 3, "gridWidth": 4, "gridHeight": 10 }
+				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
 		},
