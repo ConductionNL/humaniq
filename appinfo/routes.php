@@ -29,6 +29,9 @@ return [
         // proforma-payslip — persist-nothing "Simuleer loonstrook" pro-forma
         // simulation, RBAC-gated capability probe (design.md D4).
         ['name' => 'payroll#proforma', 'url' => '/api/payroll/proforma', 'verb' => 'POST'],
+        // rostering — guarded trigger for the RosterDetail "ATW-controle"
+        // manifest api-call action (design.md D5).
+        ['name' => 'roster#check', 'url' => '/api/roster/check', 'verb' => 'POST'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],

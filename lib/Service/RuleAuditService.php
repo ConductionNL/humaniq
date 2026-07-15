@@ -136,6 +136,16 @@ class RuleAuditService
         // and `cao.caoByEmployeeId` cross-object without re-querying siblings.
         $context['cao'] = $this->buildCaoContext();
 
+        // rostering: a per-employee date-indexed PLANNED clock index, built
+        // ONLY from gepubliceerd-roster RosterAssignments (design D4's scope
+        // discipline — a concept roster is work-in-progress and must not
+        // raise mandatory violations app-wide; it is checked on demand via
+        // RosterCheckService instead), so NlRosterChecks::checks()
+        // ['RosterAssignment']['nl-atw-dagelijkse-rust'] can resolve the
+        // previous planned working day's plannedEnd for the same employee —
+        // the buildAttendanceContext() precedent, mirrored onto planned data.
+        $context['rostering'] = $this->buildRosterContext();
+
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
         $enforceable      = count(RuleEngine::checkedRuleIds());
@@ -694,6 +704,63 @@ class RuleAuditService
         return ['clockByEmployeeDate' => $clockByEmployeeDate];
 
     }//end buildAttendanceContext()
+
+
+    /**
+     * Build the per-employee date-indexed PLANNED clock index consumed by
+     * NlRosterChecks' `nl-atw-dagelijkse-rust` predicate (rostering MVP,
+     * design D4): `plannedClockByEmployeeDate` maps
+     * `employeeId => [date => ['clockIn' => plannedStart, 'clockOut' => plannedEnd]]`
+     * from every `RosterAssignment` whose `Roster` is `gepubliceerd` — the
+     * `buildAttendanceContext()` precedent, mirrored onto planned instead of
+     * realised clock data. A `concept` roster's assignments are deliberately
+     * excluded so the standing `occ hrmq:rules:audit` never raises a
+     * mandatory violation for a work-in-progress plan (design D4's scope
+     * discipline; on-demand checking of a concept roster is
+     * `RosterCheckService`'s job). Degrades gracefully to an empty index
+     * when the Roster/RosterAssignment schemas do not exist yet in the
+     * register.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-004
+     */
+    private function buildRosterContext(): array
+    {
+        $publishedRosterIds = [];
+        foreach ($this->loadAll('Roster') as $roster) {
+            if ((string) ($roster['status'] ?? '') !== 'gepubliceerd') {
+                continue;
+            }
+
+            $id = (string) ($roster['id'] ?? $roster['@self']['id'] ?? '');
+            if ($id !== '') {
+                $publishedRosterIds[$id] = true;
+            }
+        }
+
+        $plannedClockByEmployeeDate = [];
+        foreach ($this->loadAll('RosterAssignment') as $assignment) {
+            $rosterId = (string) ($assignment['rosterId'] ?? '');
+            if ($rosterId === '' || isset($publishedRosterIds[$rosterId]) === false) {
+                continue;
+            }
+
+            $employeeId = (string) ($assignment['employeeId'] ?? '');
+            $date       = (string) ($assignment['date'] ?? '');
+            if ($employeeId === '' || $date === '') {
+                continue;
+            }
+
+            $plannedClockByEmployeeDate[$employeeId][$date] = [
+                'clockIn'  => ($assignment['plannedStart'] ?? null),
+                'clockOut' => ($assignment['plannedEnd'] ?? null),
+            ];
+        }
+
+        return ['plannedClockByEmployeeDate' => $plannedClockByEmployeeDate];
+
+    }//end buildRosterContext()
 
 
     /**
