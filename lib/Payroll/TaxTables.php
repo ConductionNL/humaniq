@@ -434,6 +434,29 @@ final class TaxTables
 
 
     /**
+     * The werkkostenregeling (WKR) vrije-ruimte tranche + eindheffing
+     * parameters from the `wkr` table group (wkr-administration design.md
+     * D2/D4): `tranche1Percent`/`tranche2Percent`/`eindheffingPercent` stay on
+     * the percentage scale (0-100), `tranche1GrensCents` is cents-converted —
+     * the vakantiebijslagRate()/zvw() precedent.
+     *
+     * @return array{tranche1Percent: float, tranche1GrensCents: int, tranche2Percent: float, eindheffingPercent: float}
+     *
+     * @spec openspec/changes/wkr-administration/specs/wkr-administration/spec.md#REQ-WKR-002
+     */
+    public function wkr(): array
+    {
+        return [
+            'tranche1Percent'    => (float) $this->leaf(['wkr', 'vrijeRuimteTranche1Percent', 'value']),
+            'tranche1GrensCents' => self::euroToCents((float) $this->leaf(['wkr', 'vrijeRuimteTranche1Grens', 'value'])),
+            'tranche2Percent'    => (float) $this->leaf(['wkr', 'vrijeRuimteTranche2Percent', 'value']),
+            'eindheffingPercent' => (float) $this->leaf(['wkr', 'eindheffingPercent', 'value']),
+        ];
+
+    }//end wkr()
+
+
+    /**
      * Read a nested leaf from `parameters` by path, throwing when absent —
      * a malformed/incomplete table file must never silently compute a wrong
      * amount.

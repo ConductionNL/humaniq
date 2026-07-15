@@ -37,7 +37,9 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "SalaryBand", "urlTemplate": "/apps/hrmq/salary-bands/{uuid}", "displayName": "Salary Band" },
 		{ "registerSlug": "hrmq", "schemaSlug": "CompReviewCycle", "urlTemplate": "/apps/hrmq/comp-review-cycles/{uuid}", "displayName": "Compensation Review Cycle" },
 		{ "registerSlug": "hrmq", "schemaSlug": "CompAdjustment", "urlTemplate": "/apps/hrmq/comp-adjustments/{uuid}", "displayName": "Compensation Adjustment" },
-		{ "registerSlug": "hrmq", "schemaSlug": "LeaveTransaction", "urlTemplate": "/apps/hrmq/leave-transactions/{uuid}", "displayName": "Leave Transaction" }
+		{ "registerSlug": "hrmq", "schemaSlug": "LeaveTransaction", "urlTemplate": "/apps/hrmq/leave-transactions/{uuid}", "displayName": "Leave Transaction" },
+		{ "registerSlug": "hrmq", "schemaSlug": "WkrDeclaration", "urlTemplate": "/apps/hrmq/wkr-declarations/{uuid}", "displayName": "WKR Declaration" },
+		{ "registerSlug": "hrmq", "schemaSlug": "WkrAssessment", "urlTemplate": "/apps/hrmq/wkr-assessments/{uuid}", "displayName": "WKR Assessment" }
 	],
 	"menu": [
 		{
@@ -370,6 +372,18 @@
 					"label": "Betaalbatches",
 					"icon": "BankTransferOutline",
 					"route": "PayrollPaymentBatches"
+				},
+				{
+					"id": "WkrDeclarations",
+					"label": "WKR-verstrekkingen",
+					"icon": "GiftOutline",
+					"route": "WkrDeclarations"
+				},
+				{
+					"id": "WkrAssessments",
+					"label": "WKR-beoordelingen",
+					"icon": "CalculatorVariantOutline",
+					"route": "WkrAssessments"
 				}
 			]
 		},
@@ -1209,6 +1223,111 @@
 					{ "id": "4", "widgetId": "pmr-changed", "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 3 },
 					{ "id": "5", "widgetId": "pmr-data", "gridX": 0, "gridY": 3, "gridWidth": 8, "gridHeight": 10 },
 					{ "id": "6", "widgetId": "pmr-related", "gridX": 8, "gridY": 3, "gridWidth": 4, "gridHeight": 10 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
+			}
+		},
+		{
+			"id": "WkrDeclarations",
+			"route": "/wkr-declarations",
+			"type": "index",
+			"title": "WKR-verstrekkingen",
+			"actions": [
+				{
+					"id": "create-wkr-declaration",
+					"label": "Verstrekking registreren",
+					"type": "open-form",
+					"icon": "PlusCircleOutline",
+					"register": "hrmq",
+					"schema": "WkrDeclaration",
+					"onSuccessRoute": "WkrDeclarationDetail",
+					"successMessage": "WKR-verstrekking geregistreerd."
+				}
+			],
+			"config": {
+				"register": "hrmq",
+				"schema": "WkrDeclaration",
+				"description": "De ledger van vergoedingen/verstrekkingen/terbeschikkingstellingen voor de werkkostenregeling (wkr-administration). Alleen de categorie vrije-ruimte telt mee in de vrije-ruimte-berekening.",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
+				"columns": ["administrationId", "year", "date", "description", "amount", "wkrCategory"],
+				"filters": ["wkrCategory", "year"],
+				"sort": { "field": "date", "order": "desc" },
+				"allowCreate": true
+			}
+		},
+		{
+			"id": "WkrDeclarationDetail",
+			"route": "/wkr-declarations/:id",
+			"type": "detail",
+			"title": "WKR-verstrekking",
+			"config": {
+				"register": "hrmq",
+				"schema": "WkrDeclaration",
+				"_note": "wkr-administration (2026-07-15): the Jaaropgaaf/EmploymentContract two-panel leaf shape -- one hand-entered ledger row with exactly one optional outbound ref (employeeId, null for a collective allowance), so wd-data (administrationId/year/date/description/amount/wkrCategory/sourceReference, excluding employeeId) sits at 8-wide and wd-related resolves+links the Employee at 4-wide. No lifecycleActions: WkrDeclaration carries no x-openregister-lifecycle -- a declaration is either recorded or corrected/deleted, there is no status workflow. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "wd-data", "type": "data", "title": "WKR-verstrekking", "icon": "GiftOutline", "content": { "columns": 2, "exclude": ["employeeId"] } },
+					{ "id": "wd-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "wd-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 7 },
+					{ "id": "2", "widgetId": "wd-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 7 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
+			}
+		},
+		{
+			"id": "WkrAssessments",
+			"route": "/wkr-assessments",
+			"type": "index",
+			"title": "WKR-beoordelingen",
+			"config": {
+				"register": "hrmq",
+				"schema": "WkrAssessment",
+				"description": "Per administratie/jaar berekende werkkostenregeling-beoordelingen: fiscale loonsom, vrije ruimte, gebruikt, en de 80%-eindheffing bij overschrijding (wkr-administration). Gegenereerd via occ hrmq:wkr:assess of de Beoordelen-actie.",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
+				"columns": ["administrationId", "year", "fiscaleLoonsom", "vrijeRuimteUsed", "eindheffingDue", "status"],
+				"filters": ["status", "year"],
+				"sort": { "field": "year", "order": "desc" }
+			}
+		},
+		{
+			"id": "WkrAssessmentDetail",
+			"route": "/wkr-assessments/:id",
+			"type": "detail",
+			"title": "WKR-beoordeling",
+			"actions": [
+				{
+					"id": "wkr-assess",
+					"label": "Beoordelen",
+					"type": "api-call",
+					"icon": "Calculator",
+					"url": "/api/payroll/wkr-assess",
+					"method": "POST",
+					"params": { "assessmentId": "@objectId" },
+					"confirm": true,
+					"successMessage": "WKR-beoordeling herberekend.",
+					"errorMessage": "Herberekenen van de WKR-beoordeling is mislukt."
+				}
+			],
+			"config": {
+				"register": "hrmq",
+				"schema": "WkrAssessment",
+				"_note": "wkr-administration (2026-07-15): a WkrAssessment is the persisted computed summary AND reporting record (design.md D1) -- the PayrollMutationReportDetail stat-tile precedent: four headline KPIs (fiscale loonsom, vrije ruimte, vrije-ruimte used, eindheffing due) lead the page since that is the exposure question an accountant checks first, then the full record (status/engineVersion/assessedAt/excess/eindheffingRate) in the wa-data widget below. No lifecycleActions: the schema carries no x-openregister-lifecycle -- an assessment is either (re)computed (upserting in place, design.md D5) or not; there is no user-facing status transition to guard, only the Beoordelen recompute action (backed by PayrollController::wkrAssess(), the mutations()/adjust() no-admin-idor + admin/HR-gate precedent). No Files/calendar/comms leaves -- not a document or event. Admin/HR only, mirroring the Payroll nav group. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "wa-loonsom", "type": "stat", "title": "Fiscale loonsom", "icon": "CashMultiple", "content": { "label": "Fiscale loonsom", "caption": "dit jaar", "icon": "CashMultiple", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "WkrAssessment", "metric": "sum", "field": "fiscaleLoonsom", "filter": { "id": "@objectId" } } } },
+					{ "id": "wa-vrijeruimte", "type": "stat", "title": "Vrije ruimte", "icon": "GiftOutline", "content": { "label": "Vrije ruimte", "caption": "beschikbaar", "icon": "GiftOutline", "valueColor": "#46ba61", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "WkrAssessment", "metric": "sum", "field": "vrijeRuimte", "filter": { "id": "@objectId" } } } },
+					{ "id": "wa-used", "type": "stat", "title": "Vrije ruimte gebruikt", "icon": "CashRemove", "content": { "label": "Vrije ruimte gebruikt", "caption": "toegewezen", "icon": "CashRemove", "valueColor": "#f4a742", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "WkrAssessment", "metric": "sum", "field": "vrijeRuimteUsed", "filter": { "id": "@objectId" } } } },
+					{ "id": "wa-eindheffing", "type": "stat", "title": "Eindheffing verschuldigd", "icon": "AlertOutline", "content": { "label": "Eindheffing verschuldigd", "caption": "80% over overschrijding", "icon": "AlertOutline", "valueColor": "#e9322d", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "WkrAssessment", "metric": "sum", "field": "eindheffingDue", "filter": { "id": "@objectId" } } } },
+					{ "id": "wa-data", "type": "data", "title": "WKR-beoordeling", "icon": "TableColumn", "content": { "columns": 2 } },
+					{ "id": "wa-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "wa-loonsom", "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 3 },
+					{ "id": "2", "widgetId": "wa-vrijeruimte", "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 3 },
+					{ "id": "3", "widgetId": "wa-used", "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 3 },
+					{ "id": "4", "widgetId": "wa-eindheffing", "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 3 },
+					{ "id": "5", "widgetId": "wa-data", "gridX": 0, "gridY": 3, "gridWidth": 8, "gridHeight": 10 },
+					{ "id": "6", "widgetId": "wa-related", "gridX": 8, "gridY": 3, "gridWidth": 4, "gridHeight": 10 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}

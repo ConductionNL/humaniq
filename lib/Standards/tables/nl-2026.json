@@ -6,7 +6,8 @@
   "basedOn": [
     {"doc": "Rekenvoorschriften geautomatiseerde loonadministratie 2026, uitgave januari 2026 versie 2 (LH 991-Z62FD)", "url": "https://download.belastingdienst.nl/belastingdienst/docs/rekenvoorschriften_voor_geautomatiseerde_loonadministratie_lh991z62fd.pdf"},
     {"doc": "Regeling premiepercentages en maximumpremieloon werknemers- en volksverzekeringen 2026 (bijlagen)", "url": "https://open.overheid.nl/documenten/916b30f3-eafd-4acf-bd5a-f58319dae544/file"},
-    {"doc": "Rijksoverheid — Bedragen minimumloon 2026", "url": "https://www.rijksoverheid.nl/onderwerpen/minimumloon/bedragen-minimumloon/bedragen-minimumloon-2026"}
+    {"doc": "Rijksoverheid — Bedragen minimumloon 2026", "url": "https://www.rijksoverheid.nl/onderwerpen/minimumloon/bedragen-minimumloon/bedragen-minimumloon-2026"},
+    {"doc": "Belastingdienst — Werkkostenregeling (vrije ruimte en eindheffing)", "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/personeel-en-loon/content/werkkostenregeling"}
   ],
   "parameters": {
     "loonheffing": {
@@ -125,6 +126,32 @@
         "source": "WML art. 15",
         "verified": true,
         "note": "Existing corpus rule nl-vakantiebijslag-8procent."
+      }
+    },
+    "wkr": {
+      "vrijeRuimteTranche1Percent": {
+        "value": 2.00,
+        "source": "Belastingdienst — Werkkostenregeling (vrije ruimte 2026)",
+        "verified": true,
+        "note": "Percentage of the fiscal wage bill up to vrijeRuimteTranche1Grens (wkr-administration)."
+      },
+      "vrijeRuimteTranche1Grens": {
+        "value": 400000,
+        "source": "Belastingdienst — Werkkostenregeling (vrije ruimte 2026)",
+        "verified": true,
+        "note": "Euro grens of the first tranche of the fiscale loonsom (wkr-administration)."
+      },
+      "vrijeRuimteTranche2Percent": {
+        "value": 1.18,
+        "source": "Belastingdienst — Werkkostenregeling (vrije ruimte 2026)",
+        "verified": true,
+        "note": "Percentage applied to the fiscale loonsom in excess of vrijeRuimteTranche1Grens (wkr-administration)."
+      },
+      "eindheffingPercent": {
+        "value": 80,
+        "source": "Belastingdienst — Werkkostenregeling (eindheffing)",
+        "verified": true,
+        "note": "Eindheffing rate over the excess of designated allowances above the available vrije ruimte (wkr-administration)."
       }
     }
   },

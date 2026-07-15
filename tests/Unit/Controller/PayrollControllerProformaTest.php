@@ -42,6 +42,7 @@ use OCA\Hrmq\Service\PayrollRunService;
 use OCA\Hrmq\Service\ProformaPayslipService;
 use OCA\Hrmq\Service\RetroAdjustmentService;
 use OCA\Hrmq\Service\SettingsService;
+use OCA\Hrmq\Service\WkrService;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -188,16 +189,17 @@ class PayrollControllerProformaTest extends TestCase
         $proformaService = new ProformaPayslipService(new PayrollCalculator(), $settings);
 
         // Not exercised by proforma(); present only to satisfy the merged
-        // constructor (payroll-mutation-reports/retro-adjustments coexist on
-        // this controller).
+        // constructor (payroll-mutation-reports/retro-adjustments/
+        // wkr-administration coexist on this controller).
         $payrollMutationService = $this->createMock(PayrollMutationService::class);
         $retroAdjustmentService = $this->createMock(RetroAdjustmentService::class);
+        $wkrService             = $this->createMock(WkrService::class);
         $userSession            = $this->createMock(IUserSession::class);
         $groupManager           = $this->createMock(IGroupManager::class);
 
         $logger = $this->createMock(LoggerInterface::class);
 
-        return new PayrollController($request, $container, $payrollRunService, $payrollMutationService, $proformaService, $retroAdjustmentService, $settings, $userSession, $groupManager, $logger);
+        return new PayrollController($request, $container, $payrollRunService, $payrollMutationService, $proformaService, $retroAdjustmentService, $wkrService, $settings, $userSession, $groupManager, $logger);
 
     }//end buildController()
 

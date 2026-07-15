@@ -165,5 +165,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
              LeaveBalance.bovenwettelijkHours and stamps the transaction
              settled -- entitledHours/usedHours are never touched. -->
         <command>OCA\Hrmq\Command\LeaveBuySellSettleCommand</command>
+        <!-- Compute/persist the idempotent per-(administration, year)
+             werkkostenregeling vrije-ruimte assessment (wkr-administration
+             MVP trigger): rolls the cross-object fiscale loonsom + WKR
+             declarations into WkrAssessment. The all option iterates every
+             distinct (administration, year) pair found across the payslips. -->
+        <command>OCA\Hrmq\Command\WkrAssessCommand</command>
     </commands>
 </info>
