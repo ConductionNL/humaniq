@@ -635,9 +635,20 @@ class RuleAuditService
      * runs). Degrades gracefully to an empty map when the PayrollRun schema
      * does not exist yet in the register.
      *
+     * loonbeslag (design.md D6): also builds `loonbeslagenById`, the FULL
+     * Loonbeslag row keyed by id -- the SAME `runsById` shape, consumed by
+     * `NlLoonbeslagChecks::checks()['Payslip']
+     * ['nl-loonbeslag-beslagvrije-voet-floor']` (resolving a payslip's
+     * `loonbeslagId` reference) and `['Loonbeslag']
+     * ['nl-loonbeslag-single-active']` (scanning every OTHER Loonbeslag for
+     * the same employee's overlapping effective range) without either
+     * predicate re-querying the register. Degrades gracefully to an empty map
+     * when the Loonbeslag schema does not exist yet in the register.
+     *
      * @return array<string, mixed>
      *
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-007
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-007
      */
     private function buildPayrollContext(): array
     {
@@ -649,7 +660,18 @@ class RuleAuditService
             }
         }
 
-        return ['runsById' => $runsById];
+        $loonbeslagenById = [];
+        foreach ($this->loadAll('Loonbeslag') as $loonbeslag) {
+            $id = (string) ($loonbeslag['id'] ?? $loonbeslag['@self']['id'] ?? '');
+            if ($id !== '') {
+                $loonbeslagenById[$id] = $loonbeslag;
+            }
+        }
+
+        return [
+            'runsById'         => $runsById,
+            'loonbeslagenById' => $loonbeslagenById,
+        ];
 
     }//end buildPayrollContext()
 

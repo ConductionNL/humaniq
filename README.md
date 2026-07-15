@@ -173,3 +173,49 @@ NL accountant channel where one office runs payroll for many SMBs:
 > to each page is a named nextcloud-vue follow-up. Until it lands, all
 > administraties a user can access are shown together (the safe `?`-optional
 > default).
+
+## Loonbeslag (wage garnishment)
+
+hrmq models a court/deurwaarder-ordered wage garnishment (loonbeslag) as a
+`Loonbeslag` record: a fourth current-run, post-tax component folded into
+`Payslip.nettoPay` by `PayrollRunService::generate()` (the exact
+sick-pay/retro-adjustment/leave-buy-sell shape — the deduction is computed
+entirely against the already-decided net figure, `PayrollCalculator` is never
+re-invoked). Be aware of the following:
+
+- **The beslagvrije voet is a stored INPUT, not a computed figure.**
+  `Loonbeslag.beslagvrijeVoet` is a required, HR-entered field trusted as the
+  authoritative figure the deurwaarder is legally required to state on the
+  garnishment order. This build does **not** compute the protected minimum
+  from income and household composition per the *Wet vereenvoudiging
+  beslagvrije voet* (partner income, co-residents, housing costs,
+  health-insurance premium) — that computation is a named fast-follow.
+  `beslagvrijeVoet` would simply gain a second, computed source feeding the
+  same field the floor formula already reads; the fold mechanics do not
+  change.
+- **The floor itself IS a hard, machine-checked rule.** The deduction is
+  computed as `min(orderedAmount, max(0, nettoPay − beslagvrijeVoet))` — by
+  construction it can never push `nettoPay` below the voet — and
+  `nl-loonbeslag-beslagvrije-voet-floor` (auto-discovered `CheckProvider`,
+  reachable via `occ hrmq:rules:audit`) flags any Payslip where a tampered or
+  otherwise inconsistent `nettoPay` falls below its referenced Loonbeslag's
+  `beslagvrijeVoet`.
+- **Single-active-beslag is the MVP scope**, not a corner case glossed over:
+  hrmq selects at most ONE `actief` Loonbeslag per employee per period.
+  Priority/preferente-vordering ordering across multiple simultaneous
+  garnishments for the same employee (e.g. alimony arriving mid-order on top
+  of an existing tax-debt beslag — BW art. 475d governs the ordering) is a
+  named fast-follow, not implemented here. The assumption is enforced, not a
+  silent doc note: `nl-loonbeslag-single-active` flags any employee with more
+  than one `actief` Loonbeslag whose effective ranges overlap. Should the
+  selection ever encounter more than one active match despite the check, the
+  earliest `effectiveFrom` wins deterministically — never a silent drop, never
+  a double deduction.
+- **Admin/HR-only, guarded transitions, never a bare lifecycle button.**
+  `Loonbeslag.status` carries no `x-openregister-lifecycle` map — activating,
+  settling, and withdrawing a garnishment are sensitive, caller-role-gated
+  writes (`LoonbeslagController`, the `PayrollController::mutations()`/
+  `wkrAssess()` two-gate shape: admin/HR 403 BEFORE any RBAC resolve, then
+  RBAC-resolve-first 404). A dedicated Nextcloud "HR" group (vs. reusing the
+  admin group) is a shared fast-follow across every admin/HR-gated endpoint in
+  this app, not specific to loonbeslag.
