@@ -31,6 +31,8 @@ namespace OCA\Hrmq\AppInfo;
 use OCA\Hrmq\Command\RulesAuditCommand;
 use OCA\Hrmq\Command\RulesSeedTestDataCommand;
 use OCA\Hrmq\Lifecycle\CompEffectiveDateGuard;
+use OCA\Hrmq\Lifecycle\LeaveBuySellApprovalGuard;
+use OCA\Hrmq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Hrmq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Hrmq\Lifecycle\PayrollRunApprovedGuard;
 use OCP\AppFramework\App;
@@ -128,6 +130,35 @@ class Application extends App implements IBootstrap
             CompEffectiveDateGuard::class,
             static function ($c): CompEffectiveDateGuard {
                 return new CompEffectiveDateGuard();
+            }
+        );
+
+        // OpenRegister lifecycle guard for the LeaveTransaction `approve` transition
+        // (leave-buy-sell) — delegates to NoSelfApprovalGuard, then for a sell
+        // resolves the referenced LeaveBalance and denies on insufficient
+        // bovenwettelijkHours. Loads a cross-object balance, so it needs the
+        // container (lazy ObjectService resolution) and IAppConfig (register slug),
+        // the same shape as PayrollRunApprovedGuard.
+        $context->registerService(
+            LeaveBuySellApprovalGuard::class,
+            static function ($c): LeaveBuySellApprovalGuard {
+                return new LeaveBuySellApprovalGuard(
+                    container: $c,
+                    appConfig: $c->get(\OCP\IAppConfig::class)
+                );
+            }
+        );
+
+        // OpenRegister lifecycle guard for the LeaveTransaction `settle` transition
+        // (leave-buy-sell) — fail-closed on the transaction's own settlementPeriod.
+        // Stateless (reads only the payload passed to check()), constructed exactly
+        // like CompEffectiveDateGuard, keyed by its FQCN so OpenRegister's
+        // LifecycleGuardRegistry resolves the `requires` tag declared on the
+        // `settle` transition.
+        $context->registerService(
+            LeaveSettlementPeriodGuard::class,
+            static function ($c): LeaveSettlementPeriodGuard {
+                return new LeaveSettlementPeriodGuard();
             }
         );
 

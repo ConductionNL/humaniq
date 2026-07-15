@@ -39,6 +39,18 @@
       "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
     },
     {
+      "id": "nl-verlof-bovenwettelijk-niet-negatief",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-leave-core",
+      "source": "HR-administration control (bovenwettelijk-verlofkoop/-verkoop balance integrity)",
+      "statement": "A LeaveBalance's bovenwettelijkHours shall never be negative (bovenwettelijkHours >= 0) — the audit-time backstop alongside the leave-buy-sell write-time guard/service checks that keep a sell from ever drawing the balance below zero.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": null
+    },
+    {
       "id": "nl-wvp-milestone-derivation",
       "domain": "labour",
       "jurisdiction": "NL",

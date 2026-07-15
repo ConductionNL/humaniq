@@ -53,6 +53,17 @@
  * employee -> `retroAdjustment` stays null and `nettoPay` is unchanged
  * (byte-identical to before this change).
  *
+ * leave-buy-sell (design.md D6): after folding retro-adjustments, every
+ * `settled` `LeaveTransaction` whose `settlementPeriod` equals this run's
+ * period is summed (by `settledAmount`, cents-exact, signed: sold = payment,
+ * bought = deduction) into that employee's `leaveBuySell` component and
+ * folded into `nettoPay` on top of any retro-adjustment delta. The engine
+ * (`PayrollCalculator`) is never invoked to (re)compute `settledAmount` --
+ * `LeaveBuySellSettlementService` already computed and stored it; this
+ * service only reads and folds the already-settled figure. No settled
+ * transaction for an employee/period -> `leaveBuySell` stays null and
+ * `nettoPay` is unchanged (byte-identical to before this change).
+ *
  * @category Service
  * @package  OCA\Hrmq\Service
  *
@@ -70,6 +81,7 @@
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-004
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
  * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-004
+ * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
  */
 
 declare(strict_types=1);
@@ -280,6 +292,7 @@ class PayrollRunService
      * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-005
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-003
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
+     * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
      */
     private function generate(array $run): array
     {
@@ -301,6 +314,7 @@ class PayrollRunService
         $sickCasesByEmployeeKey       = $this->openSickCasesByEmployeeKey();
         $existingByEmployeeId         = $this->enginePayslipsByEmployeeId($runId);
         $retroAdjustmentsByEmployeeId = $this->appliedRetroAdjustmentsByEmployeeId($period);
+        $leaveBuySellByEmployeeId     = $this->settledLeaveTransactionsByEmployeeId($period);
 
         $computed = [];
         $skipped  = [];
@@ -381,9 +395,18 @@ class PayrollRunService
             // stays byte-identical to before this change.
             $retroAdjustmentCents = ($retroAdjustmentsByEmployeeId[$employeeId] ?? 0);
 
+            // leave-buy-sell (design.md D6): fold every SETTLED LeaveTransaction
+            // whose settlementPeriod equals THIS period for this employee into
+            // the payslip's leaveBuySell component + nettoPay -- on top of any
+            // retro-adjustment delta, never in place of it. No settled
+            // transaction -> leaveBuySellCents is 0 and the payload stays
+            // byte-identical to before this change.
+            $leaveBuySellCents = ($leaveBuySellByEmployeeId[$employeeId] ?? 0);
+
             $payload = $this->payslipPayload($runId, $employee, $contract, $period, $result);
             $payload = array_merge($payload, $this->sickPayFields($sickCase, $sickResult));
             $payload = array_merge($payload, $this->retroAdjustmentFields($retroAdjustmentCents, $result->nettoPayCents));
+            $payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents, ($result->nettoPayCents + $retroAdjustmentCents)));
 
             try {
                 $existingPayslip = ($existingByEmployeeId[$employeeId] ?? null);
@@ -400,7 +423,7 @@ class PayrollRunService
             $totals['loonheffing']     += $result->loonheffingCents;
             $totals['employerCharges'] += $result->employerChargesCents;
             $totals['withholdings']    += $result->loonheffingCents;
-            $totals['net']             += ($result->nettoPayCents + $retroAdjustmentCents);
+            $totals['net']             += ($result->nettoPayCents + $retroAdjustmentCents + $leaveBuySellCents);
         }//end foreach
 
         // Orphan cleanup (design.md D4): engine payslips of THIS run whose
@@ -925,6 +948,82 @@ class PayrollRunService
         ];
 
     }//end retroAdjustmentFields()
+
+
+    /**
+     * Every employee's summed signed settled LeaveTransaction amount (cents)
+     * whose settlementPeriod equals this run's period (leave-buy-sell
+     * design.md D6) -- the current-run-only folding index. A `sell`
+     * contributes a POSITIVE amount (a payment, increases net); a `buy`
+     * contributes a NEGATIVE amount (a deduction, decreases net). Draft/
+     * submitted/approved/rejected transactions and transactions settling a
+     * different period are excluded. Degrades gracefully to an empty map
+     * when the LeaveTransaction schema does not exist yet in the register
+     * (the retro-adjustments cross-change-ordering precedent).
+     *
+     * @param string $period Wage period (YYYY-MM).
+     *
+     * @return array<string, int>
+     *
+     * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
+     */
+    private function settledLeaveTransactionsByEmployeeId(string $period): array
+    {
+        $out = [];
+        foreach ($this->loadAll('LeaveTransaction') as $transaction) {
+            if ((string) ($transaction['status'] ?? '') !== 'settled') {
+                continue;
+            }
+
+            if ((string) ($transaction['settlementPeriod'] ?? '') !== $period) {
+                continue;
+            }
+
+            $employeeId = trim((string) ($transaction['employeeId'] ?? ''));
+            if ($employeeId === '') {
+                continue;
+            }
+
+            $settledAmount = ($transaction['settledAmount'] ?? 0);
+            $cents         = is_numeric($settledAmount) === true ? (int) round(((float) $settledAmount) * 100) : 0;
+            $sign          = ((string) ($transaction['transactionType'] ?? '')) === 'sell' ? 1 : -1;
+
+            $out[$employeeId] = (($out[$employeeId] ?? 0) + ($sign * $cents));
+        }
+
+        return $out;
+
+    }//end settledLeaveTransactionsByEmployeeId()
+
+
+    /**
+     * The leaveBuySell + (adjusted) nettoPay Payslip fields to merge onto the
+     * payload (leave-buy-sell design.md D6): null/unchanged when no settled
+     * transaction folds into this period for this employee -- a normal
+     * payslip stays byte-identical to the pre-change shape. `PayrollCalculator`
+     * is never invoked to (re)compute this figure -- `settledAmount` is a
+     * fact `LeaveBuySellSettlementService` already computed and stored; this
+     * merely reads and folds it.
+     *
+     * @param int $leaveBuySellCents The summed settled amount for this employee/period, in cents.
+     * @param int $nettoPayCents     The nettoPay-so-far (engine output, already folded with any retro-adjustment), in cents.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
+     */
+    private function leaveBuySellFields(int $leaveBuySellCents, int $nettoPayCents): array
+    {
+        if ($leaveBuySellCents === 0) {
+            return ['leaveBuySell' => null];
+        }
+
+        return [
+            'leaveBuySell' => $this->euros($leaveBuySellCents),
+            'nettoPay'     => $this->euros($nettoPayCents + $leaveBuySellCents),
+        ];
+
+    }//end leaveBuySellFields()
 
 
     /**

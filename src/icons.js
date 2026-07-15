@@ -32,6 +32,7 @@ import StarCheckOutline from 'vue-material-design-icons/StarCheckOutline.vue'
 import Calculator from 'vue-material-design-icons/Calculator.vue'
 import BullseyeArrow from 'vue-material-design-icons/BullseyeArrow.vue'
 import TargetVariant from 'vue-material-design-icons/TargetVariant.vue'
+import SwapHorizontal from 'vue-material-design-icons/SwapHorizontal.vue'
 
 export default {
 	AccountOutline,
@@ -59,4 +60,5 @@ export default {
 	Calculator,
 	BullseyeArrow,
 	TargetVariant,
+	SwapHorizontal,
 }

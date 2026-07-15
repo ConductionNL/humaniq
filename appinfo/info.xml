@@ -160,5 +160,10 @@ Vrij en open source onder de EUPL-1.2-licentie.
              new grossMonthlySalary onto the Employee and drives the
              effectuate transition. --dry-run evaluates without writing. -->
         <command>OCA\Hrmq\Command\CompEffectuateCommand</command>
+        <!-- Settle one approved LeaveTransaction (buy/sell leave hours,
+             leave-buy-sell MVP trigger): idempotent, adjusts only
+             LeaveBalance.bovenwettelijkHours and stamps the transaction
+             settled -- entitledHours/usedHours are never touched. -->
+        <command>OCA\Hrmq\Command\LeaveBuySellSettleCommand</command>
     </commands>
 </info>

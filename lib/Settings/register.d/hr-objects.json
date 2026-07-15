@@ -80,7 +80,7 @@
             "Payslip": {
                 "slug": "Payslip",
                 "icon": "ReceiptTextOutline",
-                "version": "0.6.0",
+                "version": "0.7.0",
                 "title": "Payslip",
                 "description": "A per-employee, per-period wage statement (loonstrook / Lohnabrechnung / bulletin de paie / pay stub). Carries the gross-to-net composition the payroll-withholding, social-security, and statutory-content checks read.",
                 "type": "object",
@@ -157,6 +157,7 @@
                     "sickPayMinimumWageFloor": {"type": "number", "nullable": true, "description": "NL: the WML monthly floor (M) this sick payslip's year-1 floor was computed against, part-time scaled. Null on a normal payslip (sick-pay-calc)."},
                     "sickPayYearOne": {"type": "boolean", "nullable": true, "description": "NL: whether the run period fell within the first 52 weeks of the case's firstSickDay — the year-1 WML floor is in scope only when true. Null on a normal payslip (sick-pay-calc)."},
                     "retroAdjustment": {"type": "number", "nullable": true, "description": "Summed net TWK (terugwerkende kracht) retro-adjustment delta settled into THIS payslip's period -- a nabetaling (positive) or terugvordering (negative) rolled up from every applied PayrollAdjustment whose settlementPeriod equals this payslip's period (retro-adjustments). Included in nettoPay. Null when no adjustment settles this period; the sealed historical payslip this delta was diffed against is never touched."},
+                    "leaveBuySell": {"type": "number", "nullable": true, "description": "Summed net leave buy/sell effect settled into THIS payslip's period -- a payment (positive, sold hours) or a deduction (negative, bought hours) rolled up from every settled LeaveTransaction whose settlementPeriod equals this payslip's period (leave-buy-sell). Included in nettoPay, folded on top of any retroAdjustment. Null when no transaction settles this period. Computed once by LeaveBuySellSettlementService at settle time -- PayrollCalculator never (re)computes this figure."},
                     "administrationId": {"type": "string", "nullable": true, "description": "Denormalized administratie key this Payslip is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); maintained by payroll alongside employeeId. nl-administratie-scope-consistency (REQ-MULTI-007) audits it against the producing payrollRunId's PayrollRun.administrationId (the parent, not the employee -- design.md D6)."}
                 }
             },

@@ -258,6 +258,187 @@
                         "description": "Denormalized administratie key this LeaveBalance is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
+            },
+            "LeaveTransaction": {
+                "slug": "LeaveTransaction",
+                "icon": "SwapHorizontal",
+                "version": "0.1.0",
+                "title": "Leave transaction",
+                "description": "An employee request to buy or sell leave hours (IKB-style flexibility, individueel keuzebudget): a declarative draft -> submitted -> approved/rejected -> settled lifecycle (leave-buy-sell), guarded by the reused NoSelfApprovalGuard for separation of duties. A sell may only ever draw down bovenwettelijkHours on the matching LeaveBalance -- never entitledHours/usedHours, so it can never threaten the nl-verlof-wettelijk-minimum statutory floor. Settlement (LeaveBuySellSettlementService) writes the balance exactly once and stamps settledAmount, which PayrollRunService.generate() folds into the current run's Payslip.leaveBuySell as an already-computed payroll input, never an engine recompute.",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "employeeId",
+                    "transactionType",
+                    "year",
+                    "leaveType",
+                    "hours",
+                    "hourlyRate",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "draft",
+                        "terminal": [
+                            "settled"
+                        ],
+                        "transitions": {
+                            "submit": {
+                                "from": [
+                                    "draft",
+                                    "rejected"
+                                ],
+                                "to": "submitted",
+                                "description": "The employee submits the buy/sell request for manager approval. A rejected request may be corrected and re-submitted."
+                            },
+                            "approve": {
+                                "from": [
+                                    "submitted"
+                                ],
+                                "to": "approved",
+                                "requires": "OCA\\Hrmq\\Lifecycle\\LeaveBuySellApprovalGuard",
+                                "description": "A manager approves the submitted transaction. LeaveBuySellApprovalGuard delegates to NoSelfApprovalGuard first, then for a sell denies unless the referenced LeaveBalance has sufficient bovenwettelijkHours."
+                            },
+                            "reject": {
+                                "from": [
+                                    "submitted"
+                                ],
+                                "to": "rejected",
+                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "description": "A manager rejects the submitted transaction (with a rejectionReason). Only the separation-of-duties check applies -- the statutory check is irrelevant to a rejection."
+                            },
+                            "settle": {
+                                "from": [
+                                    "approved"
+                                ],
+                                "to": "settled",
+                                "requires": "OCA\\Hrmq\\Lifecycle\\LeaveSettlementPeriodGuard",
+                                "description": "Settlement adjusts LeaveBalance.bovenwettelijkHours and stamps settledAmount. Fail-closed unless settlementPeriod is present and YYYY-MM-shaped; the actual balance write happens in LeaveBuySellSettlementService, never as a bare declarative transition (the CompAdjustmentDetail orphaned-capability precedent)."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "UUID reference to the Employee domain object requesting the buy/sell — a domain-object reference, never a Nextcloud user id."
+                    },
+                    "transactionType": {
+                        "type": "string",
+                        "title": "Transaction type",
+                        "description": "Whether the employee is buying (adding, a payroll deduction) or selling (drawing down, a payroll payment) leave hours.",
+                        "enum": [
+                            "buy",
+                            "sell"
+                        ]
+                    },
+                    "year": {
+                        "type": "integer",
+                        "title": "Year",
+                        "description": "Calendar year identifying the target LeaveBalance.year this transaction settles against."
+                    },
+                    "leaveType": {
+                        "type": "string",
+                        "title": "Leave type",
+                        "description": "The kind of leave this transaction concerns, identical to the LeaveBalance.leaveType value set — identifies the target LeaveBalance.leaveType. In practice only holiday balances carry meaningful bovenwettelijkHours.",
+                        "enum": [
+                            "holiday",
+                            "sick",
+                            "unpaid",
+                            "special",
+                            "care",
+                            "parental"
+                        ]
+                    },
+                    "hours": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Hours",
+                        "description": "Number of hours to buy or sell (exclusive of zero in practice)."
+                    },
+                    "hourlyRate": {
+                        "type": "number",
+                        "title": "Hourly rate",
+                        "description": "The quoted euro rate per hour agreed for this transaction — an MVP caller-supplied input, not derived from the payroll engine (leave-buysell-derived-rate is a named follow-up). Visible on the request before approval so an HR reviewer can catch an obviously wrong rate."
+                    },
+                    "settledAmount": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Settled amount",
+                        "description": "round(hours x hourlyRate, 2), computed once by LeaveBuySellSettlementService at settle time (a stored fact, never recomputed by the payroll engine). Null until settled."
+                    },
+                    "settlementPeriod": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Settlement period",
+                        "description": "The wage period (YYYY-MM) this transaction settles into. Required (and YYYY-MM-shaped) before the settle transition (LeaveSettlementPeriodGuard); PayrollRunService.generate() folds every settled transaction whose settlementPeriod equals the draft run's period into that employee's Payslip.leaveBuySell."
+                    },
+                    "settlementPayrollRunId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "PayrollRun",
+                        "nullable": true,
+                        "title": "Settlement payroll run",
+                        "description": "The PayrollRun of settlementPeriod, stamped once this transaction is settled (the retro-adjustments PayrollAdjustment.settlementPayrollRunId convention). Not required to exist -- best-effort, never blocks settlement."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Lifecycle status. Governed by the x-openregister-lifecycle state machine (draft -> submitted -> approved/rejected -> settled, terminal: settled).",
+                        "enum": [
+                            "draft",
+                            "submitted",
+                            "approved",
+                            "rejected",
+                            "settled"
+                        ],
+                        "default": "draft"
+                    },
+                    "submittedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Submitted at",
+                        "description": "ISO 8601 UTC timestamp the employee submitted the transaction for approval."
+                    },
+                    "approvedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Approved by",
+                        "description": "User ID of the manager who approved (or rejected) the transaction. Must differ from the requesting employee (no self-approval)."
+                    },
+                    "approvedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Approved at",
+                        "description": "ISO 8601 UTC timestamp of approval or rejection."
+                    },
+                    "rejectionReason": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 2000,
+                        "title": "Rejection reason",
+                        "description": "Reason the manager rejected the transaction, shown to the employee so it can be corrected and re-submitted."
+                    },
+                    "settledAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Settled at",
+                        "description": "ISO 8601 UTC timestamp LeaveBuySellSettlementService settled this transaction. Null until settled."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "User",
+                        "description": "Denormalized Nextcloud user id of the employee this transaction belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the LeaveRequest.userId convention, never a $ref relation. The MijnVerlofKopenVerkopen self-service page filters on it with the @me token."
+                    }
+                }
             }
         }
     }
