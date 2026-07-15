@@ -238,6 +238,12 @@
                         "nullable": true,
                         "title": "Expiry date",
                         "description": "Date the statutory leave hours of this year lapse — 1 July of the following year (BW art. 7:640a). Checked by nl-verlof-vervaltermijn."
+                    },
+                    "lastAccruedPeriod": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Last accrued period",
+                        "description": "The last wage period (YYYY-MM) LeaveAccrualJob accrued onto this balance — the idempotency marker (leave-accrual-job). Null on every hand-seeded/legacy row (never touched by the job until its next monthly run). A run whose current period already equals this value is a no-op for this balance, so accrual happens at most once per (employee, year, month) regardless of the TimedJob's fire cadence."
                     }
                 }
             }

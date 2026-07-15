@@ -89,6 +89,14 @@ Vrij en open source onder de EUPL-1.2-licentie.
         </post-migration>
     </repair-steps>
 
+    <background-jobs>
+        <!-- Monthly statutory + bovenwettelijk leave accrual onto every active
+             employee's holiday LeaveBalance (leave-accrual-job). Fires ~daily;
+             the per-balance lastAccruedPeriod marker — not the interval —
+             defines "once a month". Gated by the leave_accrual_enabled toggle. -->
+        <job>OCA\Hrmq\BackgroundJob\LeaveAccrualJob</job>
+    </background-jobs>
+
     <commands>
         <!-- Audit the register's HR/labour objects against the machine-checkable
              rule corpus (lib/Standards/RuleCatalogue + RuleEngine). Read-only. -->
