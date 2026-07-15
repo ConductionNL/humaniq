@@ -27,10 +27,16 @@
 
 			<div class="proforma-payslip__radio-group">
 				<span class="proforma-payslip__radio-label">{{ t('hrmq', 'Tax table') }}</span>
-				<NcCheckboxRadioSwitch :checked.sync="form.table" value="wit" name="table" type="radio">
+				<NcCheckboxRadioSwitch :checked.sync="form.table"
+					value="wit"
+					name="table"
+					type="radio">
 					{{ t('hrmq', 'White table (wit)') }}
 				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch :checked.sync="form.table" value="groen" name="table" type="radio">
+				<NcCheckboxRadioSwitch :checked.sync="form.table"
+					value="groen"
+					name="table"
+					type="radio">
 					{{ t('hrmq', 'Green table (groen)') }}
 				</NcCheckboxRadioSwitch>
 			</div>

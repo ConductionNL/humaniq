@@ -1,0 +1,45 @@
+{
+    "x-hrmq-fragment": "hr-retro",
+    "components": {
+        "schemas": {
+            "PayrollAdjustment": {
+                "slug": "PayrollAdjustment",
+                "icon": "CashSync",
+                "version": "0.1.0",
+                "title": "Payroll Adjustment",
+                "description": "A terugwerkende kracht (TWK) correction for a SEALED prior-period payslip, modeled as a DELTA -- never a mutation of the original Payslip/PayrollRun (retro-adjustments design.md D1). RetroAdjustmentService recomputes the original period against ITS OWN tax year (same-tax-year MVP -- design.md D2) with the corrected input, diffs recomputed minus stored into the delta* fields, and -- once applied -- the delta is settled as a nabetaling/terugvordering component of the CURRENT run's payslip (Payslip.retroAdjustment), never by reopening the sealed original. Idempotently keyed on (originalPeriod, employeeId, correctionRef) -- re-running the same correction updates this same object in place.",
+                "type": "object",
+                "x-schema-org": "schema:MonetaryAmount",
+                "required": [
+                    "employeeId",
+                    "originalPayrollRunId",
+                    "originalPeriod",
+                    "correctionRef",
+                    "status"
+                ],
+                "properties": {
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "description": "The employee this correction concerns."},
+                    "originalPayrollRunId": {"type": "string", "format": "uuid", "$ref": "PayrollRun", "description": "The SEALED PayrollRun (approved/posted/paid) whose payslip is being corrected. This run and its payslip are never recomputed or rewritten by this change."},
+                    "originalPayslipId": {"type": "string", "format": "uuid", "$ref": "Payslip", "nullable": true, "description": "The SEALED original Payslip the delta was diffed against (recomputed - stored). Read-only reference, resolved by RetroAdjustmentService; feeds the corpus self-check (nl-retro-adjustment-consistency). Never rewritten."},
+                    "originalPeriod": {"type": "string", "description": "The wage period being corrected, YYYY-MM. The tax year for the recompute is ALWAYS derived from THIS period (nl-{year of originalPeriod}), never the settlement period's or the current year's (same-tax-year MVP)."},
+                    "correctionType": {"type": "string", "nullable": true, "description": "Free-text classification of the correction (e.g. backdated-raise, contract-correction, sick-day-correction). Informational only."},
+                    "correctedGrossMonthlySalary": {"type": "number", "nullable": true, "description": "The corrected gross monthly salary the recompute uses in place of the originally-stored figure."},
+                    "correctionRef": {"type": "string", "description": "Caller-supplied stable idempotency key for one correction event. Re-running the same (originalPeriod, employeeId, correctionRef) updates this SAME PayrollAdjustment in place rather than creating a duplicate (REQ-RETRO-003)."},
+                    "deltaGross": {"type": "number", "nullable": true, "description": "recomputed.grossPay - stored.grossPay, cents-exact."},
+                    "deltaLoonheffing": {"type": "number", "nullable": true, "description": "recomputed.loonheffing - stored.loonheffing, cents-exact."},
+                    "deltaNet": {"type": "number", "nullable": true, "description": "recomputed.nettoPay - stored.nettoPay, cents-exact -- the amount settled as a nabetaling (positive) or terugvordering (negative) into the current run's Payslip.nettoPay once applied."},
+                    "deltaWerknemersverzekeringen": {"type": "number", "nullable": true, "description": "recomputed.werknemersverzekeringen - stored.werknemersverzekeringen, cents-exact."},
+                    "deltaZvw": {"type": "number", "nullable": true, "description": "recomputed.zvw - stored.zvw, cents-exact."},
+                    "deltaVolksverzekeringen": {"type": "number", "nullable": true, "description": "recomputed.volksverzekeringen - stored.volksverzekeringen, cents-exact."},
+                    "deltaVakantiegeldReserved": {"type": "number", "nullable": true, "description": "recomputed.vakantiegeldReserved - stored.vakantiegeldReserved, cents-exact."},
+                    "engineVersion": {"type": "string", "nullable": true, "description": "The versioned tax-year table (e.g. nl-2026) the recompute used -- always derived from originalPeriod's year, never the current year (nl-retro-adjustment-consistency; same-tax-year MVP -- design.md D2). Null until first computed."},
+                    "settlementPeriod": {"type": "string", "nullable": true, "description": "The CURRENT open period this delta is settled into. Defaults to the most recent open draft PayrollRun's period when not given explicitly."},
+                    "settlementPayrollRunId": {"type": "string", "format": "uuid", "$ref": "PayrollRun", "nullable": true, "description": "The PayrollRun of settlementPeriod, stamped once this adjustment is applied. Null while draft."},
+                    "settlementLine": {"type": "string", "enum": ["nabetaling", "terugvordering"], "nullable": true, "description": "Whether the delta is a nabetaling (positive net delta, paid out to the employee) or a terugvordering (negative net delta, clawed back)."},
+                    "status": {"type": "string", "enum": ["draft", "applied"], "default": "draft", "description": "draft = computed but not yet settled into any run (affects no payslip); applied = settled -- surfaces in the settlementPeriod run's Payslip.retroAdjustment. Plain enum, deliberately no x-openregister-lifecycle map (the PayrollRunDetail precedent -- retro-adjustments design.md D8): driving lifecycleActions here would invent a transition the backend does not guard."},
+                    "calculatedAt": {"type": "string", "format": "date-time", "nullable": true, "description": "When the delta was last (re)computed."}
+                }
+            }
+        }
+    }
+}

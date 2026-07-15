@@ -347,6 +347,12 @@
 					"route": "PayrollMutations"
 				},
 				{
+					"id": "PayrollAdjustments",
+					"label": "Correcties (TWK)",
+					"icon": "CashSync",
+					"route": "PayrollAdjustments"
+				},
+				{
 					"id": "PayrollGLPosts",
 					"label": "Loonjournaalposten",
 					"icon": "BookEditOutline",
@@ -956,6 +962,16 @@
 					"onSuccessRoute": "PayrollMutationReportDetail",
 					"successMessage": "Mutatierapport gegenereerd — vergeleken met de vorige periode.",
 					"errorMessage": "Genereren van het mutatierapport is mislukt."
+				},
+				{
+					"id": "book-correction",
+					"label": "Correctie boeken (TWK)",
+					"type": "open-form",
+					"icon": "CashSync",
+					"register": "hrmq",
+					"schema": "PayrollAdjustment",
+					"onSuccessRoute": "PayrollAdjustmentDetail",
+					"successMessage": "Concept-correctie aangemaakt — gebruik Herrekenen om de delta te berekenen."
 				}
 			],
 			"config": {
@@ -975,6 +991,56 @@
 					{ "id": "3", "widgetId": "pr-liability", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
 					{ "id": "4", "widgetId": "pr-data", "gridX": 0, "gridY": 3, "gridWidth": 12, "gridHeight": 7 },
 					{ "id": "5", "widgetId": "pr-payslips", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 5 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
+			}
+		},
+		{
+			"id": "PayrollAdjustments",
+			"route": "/payroll-adjustments",
+			"type": "index",
+			"title": "Correcties (TWK)",
+			"config": {
+				"register": "hrmq",
+				"schema": "PayrollAdjustment",
+				"description": "Terugwerkende kracht (TWK) correcties op gesealde loonstroken -- elke rij is een berekende delta, nooit een wijziging van de oorspronkelijke loonstrook (retro-adjustments).",
+				"columns": ["employeeId", "originalPeriod", "settlementPeriod", "settlementLine", "deltaNet", "status"],
+				"filters": ["status", "settlementLine"],
+				"sort": { "field": "originalPeriod", "order": "desc" }
+			}
+		},
+		{
+			"id": "PayrollAdjustmentDetail",
+			"route": "/payroll-adjustments/:id",
+			"type": "detail",
+			"title": "Correctie (TWK)",
+			"actions": [
+				{
+					"id": "recompute",
+					"label": "Herrekenen",
+					"type": "api-call",
+					"icon": "Calculator",
+					"url": "/api/payroll/adjust",
+					"method": "POST",
+					"params": { "adjustmentId": "@objectId" },
+					"confirm": true,
+					"successMessage": "Correctie herrekend — de delta is bijgewerkt.",
+					"errorMessage": "Herrekenen van de correctie is mislukt."
+				}
+			],
+			"config": {
+				"register": "hrmq",
+				"schema": "PayrollAdjustment",
+				"_note": "retro-adjustments (2026-07-15): a PayrollAdjustment is a DELTA against a sealed original -- pa-delta leads top-left as the stat KPI an accountant reviews (the net nabetaling/terugvordering amount actually settling into the current run), pa-related sits top-right to resolve the four $ref fields (employeeId, originalPayrollRunId, originalPayslipId, settlementPayrollRunId) at matching height, and pa-data runs full-width below with the remaining record fields (excluding those four $refs, already resolved by Related). No lifecycleActions: status is a plain draft/applied enum with no x-openregister-lifecycle map (the PayrollRunDetail precedent -- design.md D8); the page-level 'Herrekenen' api-call is the only action, guarded server-side by PayrollController::adjust() (404 unresolvable/unauthorized, 400 already-applied). Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "pa-delta", "type": "stat", "title": "Delta net", "icon": "CashSync", "content": { "label": "Delta net", "caption": "nabetaling / terugvordering", "icon": "CashSync", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "PayrollAdjustment", "metric": "sum", "field": "deltaNet", "filter": { "id": "@objectId" } } } },
+					{ "id": "pa-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "pa-data", "type": "data", "title": "Correctie", "icon": "CashSync", "content": { "columns": 2, "exclude": ["employeeId", "originalPayrollRunId", "originalPayslipId", "settlementPayrollRunId"] } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "pa-delta", "gridX": 0, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "2", "widgetId": "pa-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 12 },
+					{ "id": "3", "widgetId": "pa-data", "gridX": 0, "gridY": 3, "gridWidth": 8, "gridHeight": 9 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}

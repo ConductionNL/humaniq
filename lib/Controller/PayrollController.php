@@ -29,6 +29,15 @@
  * `ProformaPayslipService::simulate()` — unauthorized/unavailable collapse
  * to the same 404, and nothing is ever persisted.
  *
+ * retro-adjustments (design.md D8) adds `adjust()`, backing the
+ * `PayrollAdjustmentDetail` "Herrekenen" action: the SAME no-admin-idor
+ * RBAC-resolve-first pattern as `calculate()` (an unresolvable/unauthorized
+ * `adjustmentId` never reaches the recompute), refuses recompute of an
+ * already-`applied` adjustment (400 — settled deltas are sealed), then
+ * delegates to `RetroAdjustmentService::recomputeAdjustment()`. The sealed
+ * original Payslip/PayrollRun the adjustment corrects are never written by
+ * this endpoint.
+ *
  * @category Controller
  * @package  OCA\Hrmq\Controller
  *
@@ -45,6 +54,7 @@
  * @spec openspec/changes/payroll-mutation-reports/specs/payroll-mutation-reports/spec.md#REQ-MUT-008
  * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-002
  * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-004
+ * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-007
  */
 
 declare(strict_types=1);
@@ -55,6 +65,7 @@ use OCA\Hrmq\AppInfo\Application;
 use OCA\Hrmq\Service\PayrollMutationService;
 use OCA\Hrmq\Service\PayrollRunService;
 use OCA\Hrmq\Service\ProformaPayslipService;
+use OCA\Hrmq\Service\RetroAdjustmentService;
 use OCA\Hrmq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -80,6 +91,7 @@ class PayrollController extends Controller
      * @param PayrollRunService       $payrollRunService       The draft-run generation service.
      * @param PayrollMutationService  $payrollMutationService  The run-to-run diff service.
      * @param ProformaPayslipService  $proformaPayslipService  The persist-nothing pro-forma simulation service.
+     * @param RetroAdjustmentService  $retroAdjustmentService  The TWK delta computation + settlement service.
      * @param SettingsService         $settingsService         The register-slug source.
      * @param IUserSession            $userSession             The current user session (admin/HR check).
      * @param IGroupManager           $groupManager            To check the caller's admin membership (admin/HR gate).
@@ -91,6 +103,7 @@ class PayrollController extends Controller
         private readonly PayrollRunService $payrollRunService,
         private readonly PayrollMutationService $payrollMutationService,
         private readonly ProformaPayslipService $proformaPayslipService,
+        private readonly RetroAdjustmentService $retroAdjustmentService,
         private readonly SettingsService $settingsService,
         private readonly IUserSession $userSession,
         private readonly IGroupManager $groupManager,
@@ -325,6 +338,92 @@ class PayrollController extends Controller
         return true;
 
     }//end authorizeProformaAccess()
+
+
+    /**
+     * `POST /api/payroll/adjust` -- recompute one PayrollAdjustment (the
+     * `PayrollAdjustmentDetail` "Herrekenen" action, retro-adjustments
+     * design.md D8). The posted `adjustmentId` must resolve through
+     * ObjectService under the caller's RBAC before anything recomputes
+     * (unknown/unauthorized -> 404, the `calculate()` no-admin-idor
+     * precedent); an already-`applied` adjustment is refused (400 -- its
+     * settled delta is sealed). Never writes the sealed original Payslip/
+     * PayrollRun the adjustment corrects.
+     *
+     * @param string|null $adjustmentId The PayrollAdjustment id (row-scoped, `@objectId` from the manifest action).
+     *
+     * @return JSONResponse The recompute outcome, 400 on a missing adjustmentId or an already-applied adjustment, 404 when it does not resolve.
+     *
+     * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-007
+     */
+    #[NoAdminRequired]
+    public function adjust(?string $adjustmentId=null): JSONResponse
+    {
+        $adjustmentId = trim((string) $adjustmentId);
+        if ($adjustmentId === '') {
+            return new JSONResponse(['error' => 'adjustmentId is verplicht.'], Http::STATUS_BAD_REQUEST);
+        }
+
+        // No-admin-idor guard (ADR-005 Rule 3): the adjustment must resolve
+        // through OpenRegister's ObjectService under the caller's RBAC before
+        // any recompute -- an unresolvable/unauthorized id never reaches it.
+        $adjustment = $this->authorizeAdjustment($adjustmentId);
+        if ($adjustment === null) {
+            return new JSONResponse(['error' => 'Correctie niet gevonden.'], Http::STATUS_NOT_FOUND);
+        }
+
+        if ((string) ($adjustment['status'] ?? '') === 'applied') {
+            return new JSONResponse(
+                ['error' => 'Correctie is al toegepast — herrekenen is niet meer mogelijk.'],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
+
+        $result = $this->retroAdjustmentService->recomputeAdjustment($adjustmentId);
+
+        if ((string) $result['status'] === 'failed') {
+            return new JSONResponse($result, Http::STATUS_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JSONResponse($result);
+
+    }//end adjust()
+
+
+    /**
+     * Resolve the posted adjustmentId through OpenRegister's ObjectService
+     * under the caller's ambient RBAC (default $_rbac=true) -- the
+     * no-admin-idor guard for `adjust()` (the `authorizeRun()` precedent).
+     * Returns null when the adjustment does not exist OR the caller's RBAC
+     * denies it (both collapse to the same 404 so existence is never
+     * leaked).
+     *
+     * @param string $adjustmentId The PayrollAdjustment id.
+     *
+     * @return array<string, mixed>|null
+     *
+     * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-007
+     */
+    private function authorizeAdjustment(string $adjustmentId): ?array
+    {
+        try {
+            $adjustment = $this->objectService()->find(
+                id: $adjustmentId,
+                register: $this->settingsService->getRegisterSlug(),
+                schema: 'PayrollAdjustment'
+            );
+        } catch (\Throwable $e) {
+            $this->logger->info('PayrollController: correctie '.$adjustmentId.' kon niet worden opgehaald: '.$e->getMessage());
+            return null;
+        }
+
+        if ($adjustment === null) {
+            return null;
+        }
+
+        return $this->toArray($adjustment);
+
+    }//end authorizeAdjustment()
 
 
     /**
