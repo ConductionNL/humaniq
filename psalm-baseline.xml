@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="5.26.1@d747f6500b38ac4f7dfc5edbcae6e4b637d7add0">
+  <file src="lib/AppInfo/Application.php">
+    <MissingDependency>
+      <code><![CDATA[CompEffectiveDateGuard]]></code>
+      <code><![CDATA[CompEffectiveDateGuard]]></code>
+      <code><![CDATA[CompEffectiveDateGuard]]></code>
+      <code><![CDATA[LeaveBuySellApprovalGuard]]></code>
+      <code><![CDATA[LeaveBuySellApprovalGuard]]></code>
+      <code><![CDATA[LeaveBuySellApprovalGuard]]></code>
+      <code><![CDATA[LeaveSettlementPeriodGuard]]></code>
+      <code><![CDATA[LeaveSettlementPeriodGuard]]></code>
+      <code><![CDATA[LeaveSettlementPeriodGuard]]></code>
+      <code><![CDATA[NoSelfApprovalGuard]]></code>
+      <code><![CDATA[NoSelfApprovalGuard]]></code>
+      <code><![CDATA[NoSelfApprovalGuard]]></code>
+      <code><![CDATA[PayrollRunApprovedGuard]]></code>
+      <code><![CDATA[PayrollRunApprovedGuard]]></code>
+      <code><![CDATA[PayrollRunApprovedGuard]]></code>
+    </MissingDependency>
+    <UndefinedClass>
+      <code><![CDATA[ObjectUpdatedEvent]]></code>
+    </UndefinedClass>
+  </file>
+  <file src="lib/Listener/TimesheetApprovalListener.php">
+    <UndefinedClass>
+      <code><![CDATA[ObjectUpdatedEvent]]></code>
+    </UndefinedClass>
+  </file>
+  <file src="lib/Service/RuleAuditService.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$aggregate[$administrationId]]]></code>
+      <code><![CDATA[$aggregate[$administrationId]]]></code>
+    </EmptyArrayAccess>
+  </file>
+  <file src="lib/Service/WkrService.php">
+    <EmptyArrayAccess>
+      <code><![CDATA[$aggregate[$administrationId]]]></code>
+      <code><![CDATA[$aggregate[$administrationId]]]></code>
+    </EmptyArrayAccess>
+  </file>
+</files>

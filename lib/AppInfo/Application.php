@@ -168,7 +168,7 @@ class Application extends App implements IBootstrap
         // compliance services resolve it lazily via $container->get('OCA\\OpenRegister
         // \\Service\\ObjectService'); no app-level alias is needed (a self-alias would
         // recurse). When OpenRegister is absent the lazy get() throws and fails soft.
-
+        //
         // Time-entry capture (time-entry-capture): on a Timesheet crossing into
         // `approved`, emit the `nl.conduction.hrmq.timeentry.approved` CloudEvent so a
         // finance app (shillinq) can consume the approved hours for invoice-from-time /

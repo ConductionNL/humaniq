@@ -890,7 +890,7 @@ class RuleAuditService
 
             if ($category === 'vrije-ruimte') {
                 $bucket['vrijeRuimteDeclared'] += ((float) ($declaration['amount'] ?? 0));
-            } elseif ($category === 'eindheffing') {
+            } else if ($category === 'eindheffing') {
                 $bucket['eindheffingDeclared'] += ((float) ($declaration['amount'] ?? 0));
             }
 

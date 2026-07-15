@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="6"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    findUnusedBaselineEntry="true"
+    findUnusedCode="false"
+    errorBaseline="psalm-baseline.xml"
+>
+    <projectFiles>
+        <directory name="lib" />
+        <ignoreFiles>
+            <directory name="vendor" />
+        </ignoreFiles>
+    </projectFiles>
+    <stubs>
+        <file name="vendor/nextcloud/ocp/OCP/Capabilities/ICapability.php" preloadClasses="true" />
+    </stubs>
+    <issueHandlers>
+        <UndefinedDocblockClass errorLevel="suppress"/>
+        <UndefinedClass>
+            <errorLevel type="suppress">
+                <!-- Nextcloud OCP classes hrmq depends on (resolved at runtime by the
+                     Nextcloud server; nextcloud/ocp ships them unautoloaded on purpose) -->
+                <referencedClass name="OCP\AppFramework\App"/>
+                <referencedClass name="OCP\AppFramework\Bootstrap\IBootstrap"/>
+                <referencedClass name="OCP\AppFramework\Bootstrap\IBootContext"/>
+                <referencedClass name="OCP\AppFramework\Bootstrap\IRegistrationContext"/>
+                <referencedClass name="OCP\AppFramework\Controller"/>
+                <referencedClass name="OCP\AppFramework\Http"/>
+                <referencedClass name="OCP\AppFramework\Http\Attribute\NoAdminRequired"/>
+                <referencedClass name="OCP\AppFramework\Http\Attribute\NoCSRFRequired"/>
+                <referencedClass name="OCP\AppFramework\Http\JSONResponse"/>
+                <referencedClass name="OCP\AppFramework\Http\TemplateResponse"/>
+                <referencedClass name="OCP\AppFramework\Utility\ITimeFactory"/>
+                <referencedClass name="OCP\App\IAppManager"/>
+                <referencedClass name="OCP\BackgroundJob\IJob"/>
+                <referencedClass name="OCP\BackgroundJob\TimedJob"/>
+                <referencedClass name="OCP\Calendar\ICreateFromString"/>
+                <referencedClass name="OCP\IAppConfig"/>
+                <referencedClass name="OCP\IConfig"/>
+                <referencedClass name="OCP\IGroupManager"/>
+                <referencedClass name="OCP\IRequest"/>
+                <referencedClass name="OCP\IUser"/>
+                <referencedClass name="OCP\IUserManager"/>
+                <referencedClass name="OCP\IUserSession"/>
+                <referencedClass name="OCP\Migration\IOutput"/>
+                <referencedClass name="OCP\Migration\IRepairStep"/>
+                <!-- Nextcloud server internals (not shipped in nextcloud/ocp stubs) -->
+                <referencedClass name="OCA\DAV\CalDAV\CalDavBackend"/>
+                <!-- Cross-app classes: OpenRegister and DocuDesk are only available
+                     at runtime once those apps are installed alongside hrmq -->
+                <referencedClass name="OCA\OpenRegister\Lifecycle\GuardResult"/>
+                <referencedClass name="OCA\OpenRegister\Lifecycle\LifecycleGuardInterface"/>
+                <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
+                <referencedClass name="OCA\OpenRegister\Service\FileService"/>
+                <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
+                <referencedClass name="OCA\DocuDesk\Service\DocumentService"/>
+                <referencedClass name="OCA\DocuDesk\Service\TemplateService"/>
+            </errorLevel>
+        </UndefinedClass>
+        <!-- UndefinedMethod: suppress false positives from interface types where the
+             concrete runtime class (or cross-app class not statically resolvable)
+             has the method — same pattern as fleet-wide psalm.xml configs. -->
+        <UndefinedMethod errorLevel="suppress"/>
+        <UndefinedInterfaceMethod errorLevel="suppress"/>
+    </issueHandlers>
+    <extraFiles>
+        <directory name="vendor/nextcloud/ocp" />
+    </extraFiles>
+</psalm>
