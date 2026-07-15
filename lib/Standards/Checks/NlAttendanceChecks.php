@@ -62,16 +62,24 @@ final class NlAttendanceChecks implements CheckProvider
      * (ATW art. 5:3 lid 2). The lawful once-per-7-days reduction to 8 hours
      * is not modeled here.
      *
+     * Public (rostering MVP, design D4): `NlRosterChecks` reuses this exact
+     * constant for its planned-clock daily-rest predicate over
+     * `RosterAssignment` rather than re-declaring the norm — a change to the
+     * statutory value updates both call sites at once.
+     *
      * @var float
      */
-    private const MIN_REST_HOURS = 11.0;
+    public const MIN_REST_HOURS = 11.0;
 
     /**
      * Maximum length of a single dienst, in hours (ATW art. 5:7 lid 1).
      *
+     * Public (rostering MVP, design D4): reused verbatim by `NlRosterChecks`
+     * for the planned max-werkdag predicate — see MIN_REST_HOURS.
+     *
      * @var float
      */
-    private const MAX_SHIFT_HOURS = 12.0;
+    public const MAX_SHIFT_HOURS = 12.0;
 
 
     /**

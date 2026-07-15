@@ -101,3 +101,36 @@ original (`lib/Service/RetroAdjustmentService.php`,
   manual route). The `nl-retro-adjustment-consistency` corpus rule recomputes
   every adjustment's delta during `occ hrmq:rules:audit`, so a tampered delta
   is a mandatory audit violation.
+
+## Rostering (MVP)
+
+hrmq ships a forward-looking shift-planning MVP that plans *and* pre-checks a
+roster against the same Arbeidstijdenwet (working-time law) rules the app
+already enforces on realised clock data:
+
+- **Define shifts** — reusable `Shift` definitions (name, start/end time,
+  break, optional org-unit scope). A shift whose end time is not after its
+  start time denotes a night shift crossing midnight.
+- **Assign employees per period** — a `RosterAssignment` places one employee
+  on one shift on one date within a `Roster`, projecting the shift's times
+  onto the date (`plannedStart`/`plannedEnd`/`plannedBreakMinutes`).
+- **Publish a roster** — the `Roster` header carries a real
+  `concept → gepubliceerd` lifecycle (`publiceren`/`intrekken`); publishing
+  freezes the plan and makes it the team's roster.
+- **Check against the Arbeidstijdenwet** — the roster ATW cross-check
+  **reuses the three existing corpus rules** (`nl-atw-dagelijkse-rust`,
+  `nl-atw-max-werkdag`, `nl-atw-pauze`) over the *planned* assignments — no
+  new working-time rule is invented. Run it on demand with
+  `occ hrmq:roster:check --roster ID | --period YYYY-Www [--administration ADM]`
+  (exits non-zero on any mandatory violation) or from the `RosterDetail`
+  "ATW-controle" action; published assignments also join the standing
+  `occ hrmq:rules:audit`.
+
+**Non-goals (deeper workforce management is a future integration, not this
+change):** auto-optimisation, demand forecasting and rule-based
+auto-scheduling are deferred to a dedicated workforce-management tool
+integrated via **openconnector** — hrmq owns the plan of record and the ATW
+compliance view, not the WFM optimiser. A drag-and-drop planbord,
+availability/preferences, skills-matching, open-shift bidding/shift-swap and
+coverage alerts are named fast-follows. There is no automation between a
+published roster and realised `AttendanceRecord`/`Timesheet` hours.

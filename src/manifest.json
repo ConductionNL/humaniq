@@ -28,7 +28,12 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "Asset", "urlTemplate": "/apps/hrmq/assets/{uuid}", "displayName": "Asset" },
 		{ "registerSlug": "hrmq", "schemaSlug": "AssetAssignment", "urlTemplate": "/apps/hrmq/asset-assignments/{uuid}", "displayName": "Asset Assignment" },
 		{ "registerSlug": "hrmq", "schemaSlug": "ReviewCycle", "urlTemplate": "/apps/hrmq/review-cycles/{uuid}", "displayName": "Review Cycle" },
-		{ "registerSlug": "hrmq", "schemaSlug": "PerformanceReview", "urlTemplate": "/apps/hrmq/reviews/{uuid}", "displayName": "Performance Review" }
+		{ "registerSlug": "hrmq", "schemaSlug": "PerformanceReview", "urlTemplate": "/apps/hrmq/reviews/{uuid}", "displayName": "Performance Review" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Shift", "urlTemplate": "/apps/hrmq/shifts/{uuid}", "displayName": "Shift" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Roster", "urlTemplate": "/apps/hrmq/rosters/{uuid}", "displayName": "Roster" },
+		{ "registerSlug": "hrmq", "schemaSlug": "RosterAssignment", "urlTemplate": "/apps/hrmq/roster-assignments/{uuid}", "displayName": "Roster Assignment" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Objective", "urlTemplate": "/apps/hrmq/objectives/{uuid}", "displayName": "Objective" },
+		{ "registerSlug": "hrmq", "schemaSlug": "KeyResult", "urlTemplate": "/apps/hrmq/key-results/{uuid}", "displayName": "Key Result" }
 	],
 	"menu": [
 		{
@@ -79,6 +84,12 @@
 					"label": "Mijn beoordelingen",
 					"icon": "StarCheckOutline",
 					"route": "MijnBeoordelingen"
+				},
+				{
+					"id": "MijnDoelen",
+					"label": "Mijn doelen",
+					"icon": "BullseyeArrow",
+					"route": "MijnDoelen"
 				}
 			]
 		},
@@ -337,6 +348,32 @@
 					"label": "Betaalbatches",
 					"icon": "BankTransferOutline",
 					"route": "PayrollPaymentBatches"
+				}
+			]
+		},
+		{
+			"id": "PlanningGroup",
+			"label": "Planning",
+			"icon": "CalendarMonthOutline",
+			"order": 107,
+			"children": [
+				{
+					"id": "Rosters",
+					"label": "Roosters",
+					"icon": "CalendarMonthOutline",
+					"route": "Rosters"
+				},
+				{
+					"id": "RosterAssignments",
+					"label": "Roosterindelingen",
+					"icon": "AccountClockOutline",
+					"route": "RosterAssignments"
+				},
+				{
+					"id": "Shifts",
+					"label": "Diensten",
+					"icon": "TimelineClockOutline",
+					"route": "Shifts"
 				}
 			]
 		},
@@ -641,7 +678,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Employee",
-				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in hrmq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling/A1 posting/jurisdiction-specific onboarding flags — 18 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, before the personnel-file Files leaf, which shifts down. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab.",
+				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in hrmq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling/A1 posting/jurisdiction-specific onboarding flags — 18 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, before the personnel-file Files leaf, which shifts down. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab.",
 				"widgets": [
 					{ "id": "emp-person", "type": "data", "title": "Person", "icon": "Account", "content": { "columns": 2, "include": ["employeeNumber", "firstName", "lastName", "dateOfBirth", "bsn"] } },
 					{ "id": "emp-stats-contracts", "type": "stats-block", "title": "Contracts", "icon": "ChartBar", "content": { "entries": [
@@ -663,6 +700,7 @@
 					{ "id": "emp-expenses", "type": "object-list", "title": "Expenses", "icon": "CashMultiple", "content": { "register": "hrmq", "schema": "Expense", "filter": { "employeeId": "@objectId" }, "sort": { "field": "expenseDate", "dir": "desc" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "amount", "label": "Amount" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ExpenseDetail", "viewAllRoute": "Expenses", "viewAllQuery": { "employeeId": "@objectId" }, "emptyText": "No expense claims yet" } },
 					{ "id": "emp-assignments", "type": "object-list", "title": "Assignments", "icon": "AccountArrowRightOutline", "content": { "register": "hrmq", "schema": "OrgAssignment", "filter": { "employeeId": "@objectId" }, "sort": { "field": "startDate", "dir": "desc" }, "columns": [ { "key": "orgUnitId", "label": "Unit" }, { "key": "role", "label": "Role" }, { "key": "startDate", "label": "Start" }, { "key": "endDate", "label": "End" } ], "limit": 25, "rowRoute": "OrgAssignmentDetail", "viewAllRoute": "OrgAssignments", "viewAllQuery": { "employeeId": "@objectId" }, "emptyText": "No placements yet" } },
 					{ "id": "emp-reviews", "type": "object-list", "title": "Beoordelingen", "icon": "ClipboardAccountOutline", "content": { "register": "hrmq", "schema": "PerformanceReview", "filter": { "employeeId": "@objectId" }, "sort": { "field": "besprokenOp", "dir": "desc" }, "columns": [ { "key": "cycleId", "label": "Cycle" }, { "key": "status", "label": "Status" }, { "key": "rating", "label": "Rating" }, { "key": "besprokenOp", "label": "Besproken op" } ], "limit": 25, "rowRoute": "PerformanceReviewDetail", "emptyText": "No reviews yet" } },
+					{ "id": "emp-objectives", "type": "object-list", "title": "Doelen & OKR's", "icon": "BullseyeArrow", "content": { "register": "hrmq", "schema": "Objective", "filter": { "employeeId": "@objectId" }, "sort": { "field": "title", "dir": "asc" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "status", "label": "Status" }, { "key": "progress", "label": "Progress" }, { "key": "cycleId", "label": "Cycle" } ], "limit": 25, "rowRoute": "ObjectiveDetail", "emptyText": "No objectives yet" } },
 					{ "id": "emp-files", "type": "integration", "integrationId": "files", "title": "Personnel file", "icon": "FolderOutline" }
 				],
 				"layout": [
@@ -678,7 +716,8 @@
 					{ "id": "7", "widgetId": "emp-expenses", "gridX": 6, "gridY": 19, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "8", "widgetId": "emp-assignments", "gridX": 0, "gridY": 23, "gridWidth": 12, "gridHeight": 4 },
 					{ "id": "9", "widgetId": "emp-reviews", "gridX": 0, "gridY": 27, "gridWidth": 12, "gridHeight": 4 },
-					{ "id": "10", "widgetId": "emp-files", "gridX": 0, "gridY": 31, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "10", "widgetId": "emp-objectives", "gridX": 0, "gridY": 31, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "11", "widgetId": "emp-files", "gridX": 0, "gridY": 35, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
@@ -1785,14 +1824,16 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "ReviewCycle",
-				"_note": "performance-reviews-mvp (2026-07-13): the orchestration half of the performance-review MVP (ADR-001 Rule 6 — sub-pages under the EXISTING Personeel/EmployeesGroup, no new top-level menu). The 'Cycle' data widget carries every field (name/year/type/status/startDate/endDate — no $ref to exclude, ReviewCycle has no outbound relations). The 'Beoordelingen in deze cyclus' object-list (PerformanceReview.cycleId = @objectId) is the cycle's in-progress roster, rowRoute to PerformanceReviewDetail. lifecycleActions expose exactly openen/sluiten (concept->open->gesloten, hr-performance.json) -- no re-open edge, a closed cycle is history (the Vacancy no-resurrection precedent). Audit history is a sidebar tab.",
+				"_note": "performance-reviews-mvp (2026-07-13): the orchestration half of the performance-review MVP (ADR-001 Rule 6 — sub-pages under the EXISTING Personeel/EmployeesGroup, no new top-level menu). The 'Cycle' data widget carries every field (name/year/type/status/startDate/endDate — no $ref to exclude, ReviewCycle has no outbound relations). The 'Beoordelingen in deze cyclus' object-list (PerformanceReview.cycleId = @objectId) is the cycle's in-progress roster, rowRoute to PerformanceReviewDetail. lifecycleActions expose exactly openen/sluiten (concept->open->gesloten, hr-performance.json) -- no re-open edge, a closed cycle is history (the Vacancy no-resurrection precedent). Audit history is a sidebar tab. goals-okr (2026-07-15) adds the 'OKR's in deze cyclus' object-list (Objective.cycleId = @objectId) — the review-period tie: an OKR set can optionally be tied to a beoordelingscyclus.",
 				"widgets": [
 					{ "id": "rc-data", "type": "data", "title": "Cycle", "icon": "CalendarSyncOutline", "content": { "columns": 2 } },
-					{ "id": "rc-reviews", "type": "object-list", "title": "Beoordelingen in deze cyclus", "icon": "ClipboardAccountOutline", "content": { "register": "hrmq", "schema": "PerformanceReview", "filter": { "cycleId": "@objectId" }, "sort": { "field": "besprokenOp", "dir": "desc" }, "columns": [ { "key": "employeeId", "label": "Employee" }, { "key": "status", "label": "Status" }, { "key": "rating", "label": "Rating" } ], "limit": 25, "rowRoute": "PerformanceReviewDetail", "emptyText": "No reviews in this cycle yet" } }
+					{ "id": "rc-reviews", "type": "object-list", "title": "Beoordelingen in deze cyclus", "icon": "ClipboardAccountOutline", "content": { "register": "hrmq", "schema": "PerformanceReview", "filter": { "cycleId": "@objectId" }, "sort": { "field": "besprokenOp", "dir": "desc" }, "columns": [ { "key": "employeeId", "label": "Employee" }, { "key": "status", "label": "Status" }, { "key": "rating", "label": "Rating" } ], "limit": 25, "rowRoute": "PerformanceReviewDetail", "emptyText": "No reviews in this cycle yet" } },
+					{ "id": "rc-objectives", "type": "object-list", "title": "OKR's in deze cyclus", "icon": "BullseyeArrow", "content": { "register": "hrmq", "schema": "Objective", "filter": { "cycleId": "@objectId" }, "sort": { "field": "title", "dir": "asc" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "status", "label": "Status" }, { "key": "progress", "label": "Progress" }, { "key": "employeeId", "label": "Employee" } ], "limit": 25, "rowRoute": "ObjectiveDetail", "emptyText": "No OKRs in this cycle yet" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "rc-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 6 },
-					{ "id": "2", "widgetId": "rc-reviews", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 5 }
+					{ "id": "2", "widgetId": "rc-reviews", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 5 },
+					{ "id": "3", "widgetId": "rc-objectives", "gridX": 0, "gridY": 11, "gridWidth": 12, "gridHeight": 5 }
 				],
 				"lifecycleActions": {
 					"field": "status",
@@ -1848,12 +1889,195 @@
 			}
 		},
 		{
+			"id": "ObjectiveDetail",
+			"route": "/objectives/:id",
+			"type": "detail",
+			"title": "Objective",
+			"config": {
+				"register": "hrmq",
+				"schema": "Objective",
+				"_note": "goals-okr (2026-07-15): the measurable, cross-review sibling of PerformanceReviewDetail (ADR-001 Rule 6 — the primary surface is the EmployeeDetail emp-objectives row / ReviewCycleDetail rc-objectives row; this page is a routed detail, reached from those rows or the deepLink, and is deliberately NOT a menu child, the PerformanceReviewDetail/TimesheetDetail convention). The 'Objective' data widget carries title/ownerType/period/status/uitkomst/progress, excluding employeeId/orgUnitId/cycleId (Related resolves and links all three by name) and userId (the internal @me self-service field, not a display fact). The 'Key results' object-list (KeyResult.objectiveId = @objectId) lists this objective's measurable children, rowRoute to KeyResultDetail. lifecycleActions expose exactly activeren/afsluiten (concept->actief->afgesloten, hr-okr.json) -- no guard, no re-open edge, a closed objective is history (the ReviewCycle no-resurrection precedent). Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "obj-data", "type": "data", "title": "Objective", "icon": "BullseyeArrow", "content": { "columns": 2, "exclude": ["employeeId", "orgUnitId", "cycleId", "userId"] } },
+					{ "id": "obj-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "obj-keyresults", "type": "object-list", "title": "Key results", "icon": "TargetVariant", "content": { "register": "hrmq", "schema": "KeyResult", "filter": { "objectiveId": "@objectId" }, "sort": { "field": "title", "dir": "asc" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "currentValue", "label": "Current" }, { "key": "targetValue", "label": "Target" }, { "key": "unit", "label": "Unit" }, { "key": "progress", "label": "Progress" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "KeyResultDetail", "emptyText": "No key results yet" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "obj-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 9 },
+					{ "id": "2", "widgetId": "obj-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 9 },
+					{ "id": "3", "widgetId": "obj-keyresults", "gridX": 0, "gridY": 9, "gridWidth": 12, "gridHeight": 5 }
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{ "action": "activeren", "from": ["concept"], "to": "actief", "label": "Activeren" },
+						{ "action": "afsluiten", "from": ["actief"], "to": "afgesloten", "label": "Afsluiten" }
+					]
+				},
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "KeyResultDetail",
+			"route": "/key-results/:id",
+			"type": "detail",
+			"title": "Key Result",
+			"config": {
+				"register": "hrmq",
+				"schema": "KeyResult",
+				"_note": "goals-okr (2026-07-15): a leaf under ObjectiveDetail's 'Key results' list (routed detail, reached from that row or the deepLink, deliberately NOT a menu child). The 'Key result' data widget carries title/unit/startValue/targetValue/currentValue/progress/status, excluding objectiveId and userId (Related resolves and links the parent Objective by name; userId is the internal @me-adjacent denorm field, not a display fact). No lifecycleActions -- KeyResult carries only a plain status enum, no x-openregister-lifecycle. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "kr-data", "type": "data", "title": "Key result", "icon": "TargetVariant", "content": { "columns": 2, "exclude": ["objectiveId", "userId"] } },
+					{ "id": "kr-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "kr-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "2", "widgetId": "kr-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 8 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "MijnDoelen",
+			"route": "/mijn/doelen",
+			"type": "index",
+			"title": "Mijn doelen",
+			"config": {
+				"register": "hrmq",
+				"schema": "Objective",
+				"description": "Jouw eigen doelen en OKR's.",
+				"filter": { "userId": "@me" },
+				"columns": ["title", "status", "progress", "cycleId"],
+				"sort": { "field": "title", "order": "asc" }
+			}
+		},
+		{
 			"id": "ProformaPayslip",
 			"route": "/payroll/proforma",
 			"type": "custom",
 			"title": "Simuleer loonstrook",
 			"component": "ProformaPayslip",
 			"_note": "proforma-payslip design.md D6: manifest v2 has no declarative primitive for a persist-nothing interactive compute-form. open-form is bound to a register/schema and PERSISTS the created object -- exactly what a pro-forma simulation must not do. api-call only interpolates fixed/@token params against a form-less trigger and surfaces a toast + page refresh -- it cannot gather a bespoke set of hypothetical inputs (bruto, tabel, geboortedatum, deeltijdfactor, bijzondere beloning, periode) nor render the returned JSON breakdown. So this page is a host-app SFC (ProformaPayslip.vue, registered in src/registry.js) that renders the input form and calls POST /api/payroll/proforma directly, showing the full gross-to-net breakdown. No register/schema is referenced and no object is ever created -- the stable, test-covered contract is the endpoint (PayrollController::proforma) + the hrmq:payroll:proforma occ command."
-		}
-	]
-}
+			},
+			{
+				"id": "Shifts",
+				"route": "/shifts",
+				"type": "index",
+				"title": "Diensten",
+				"actions": [
+					{ "id": "create-shift", "label": "Dienst aanmaken", "type": "open-form", "icon": "PlusCircleOutline", "register": "hrmq", "schema": "Shift", "onSuccessRoute": "ShiftDetail", "successMessage": "Dienst aangemaakt." }
+				],
+				"config": {
+					"register": "hrmq",
+					"schema": "Shift",
+					"description": "Herbruikbare dienstdefinities (klok-vorm): naam, begin- en eindtijd (HH:MM), pauze en optionele organisatie-eenheid. Een eindtijd niet later dan de begintijd duidt een nachtdienst over middernacht aan.",
+					"columns": ["name", "startTime", "endTime", "breakMinutes", "active"],
+					"filters": ["active"],
+					"sort": { "field": "name", "order": "asc" }
+				}
+			},
+			{
+				"id": "ShiftDetail",
+				"route": "/shifts/:id",
+				"type": "detail",
+				"title": "Dienst",
+				"config": {
+					"register": "hrmq",
+					"schema": "Shift",
+					"_note": "rostering (2026-07-14): a reusable shift definition (klok-vorm template), authored once and reused across many RosterAssignments. The 'Dienst' data widget carries name/startTime/endTime/breakMinutes/active; the 'Related' panel resolves and links the optional orgUnitId scope (excluded from the data widget, the EmployeeDetail exclude convention). No lifecycleActions: Shift carries no x-openregister-lifecycle -- a plain record toggled active/inactive, not a workflow (OrgUnitDetail precedent). No stat/files/comms leaves -- a template definition has no numeric headline aggregate or document. Audit history is a sidebar tab.",
+					"widgets": [
+						{ "id": "sh-data", "type": "data", "title": "Dienst", "icon": "TimelineClockOutline", "content": { "columns": 2, "exclude": ["orgUnitId"] } },
+						{ "id": "sh-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+					],
+					"layout": [
+						{ "id": "1", "widgetId": "sh-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+						{ "id": "2", "widgetId": "sh-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 }
+					],
+					"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+				}
+			},
+			{
+				"id": "Rosters",
+				"route": "/rosters",
+				"type": "index",
+				"title": "Roosters",
+				"actions": [
+					{ "id": "create-roster", "label": "Rooster aanmaken", "type": "open-form", "icon": "PlusCircleOutline", "register": "hrmq", "schema": "Roster", "onSuccessRoute": "RosterDetail", "successMessage": "Concept-rooster aangemaakt. Voeg roosterindelingen toe en gebruik ATW-controle voordat je publiceert." }
+				],
+				"config": {
+					"register": "hrmq",
+					"schema": "Roster",
+					"description": "Publiceerbare roosters per planningsperiode: een concept -> gepubliceerd levenscyclus, met per rooster de Arbeidstijdenwet-controle over de geplande roosterindelingen.",
+					"columns": ["period", "orgUnitId", "administrationId", "status"],
+					"filters": ["status"],
+					"sort": { "field": "period", "order": "desc" }
+				}
+			},
+			{
+				"id": "RosterDetail",
+				"route": "/rosters/:id",
+				"type": "detail",
+				"title": "Rooster",
+				"actions": [
+					{ "id": "atw-controle", "label": "ATW-controle", "type": "api-call", "icon": "ClipboardCheckOutline", "url": "/api/roster/check", "method": "POST", "params": { "rosterId": "@objectId" }, "confirm": true, "successMessage": "ATW-controle uitgevoerd — bekijk de uitkomst per roosterindeling.", "errorMessage": "ATW-controle van het rooster is mislukt." }
+				],
+				"config": {
+					"register": "hrmq",
+					"schema": "Roster",
+					"_note": "rostering (2026-07-14): the publishable roster header. Unlike PayrollRun, Roster carries a REAL x-openregister-lifecycle (concept <-> gepubliceerd via publiceren/intrekken), so RosterDetail legitimately renders a lifecycleActions widget for exactly those two transitions -- no invented edge (the AttendanceRecordDetail sluiten/heropenen precedent). The 'Rooster' data widget carries period/administrationId/status; Related resolves and links the optional orgUnitId scope (excluded from data). The page-level 'ATW-controle' api-call action posts {rosterId: @objectId} to POST /api/roster/check (guarded server-side by RosterController::authorizeRoster()) and surfaces the Arbeidstijdenwet verdict over the roster's assignments regardless of publish status -- publishing itself is NOT hard-blocked on a violation (guard wiring is hrmq-rule-compliance-enforcement's scope, design.md Non-Goal). The FK-scoped 'Roosterindelingen' child object-list (RosterAssignment.rosterId = @objectId) is the plan itself. No stat KPI -- a header has no numeric headline. Audit history is a sidebar tab.",
+					"widgets": [
+						{ "id": "ro-data", "type": "data", "title": "Rooster", "icon": "CalendarMonthOutline", "content": { "columns": 2, "exclude": ["orgUnitId"] } },
+						{ "id": "ro-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+						{ "id": "ro-assignments", "type": "object-list", "title": "Roosterindelingen", "icon": "AccountClockOutline", "content": { "register": "hrmq", "schema": "RosterAssignment", "filter": { "rosterId": "@objectId" }, "sort": { "field": "date", "dir": "asc" }, "columns": [ { "key": "date", "label": "Date" }, { "key": "employeeId", "label": "Employee" }, { "key": "shiftId", "label": "Shift" }, { "key": "plannedStart", "label": "Planned start" }, { "key": "plannedEnd", "label": "Planned end" } ], "limit": 50, "rowRoute": "RosterAssignmentDetail", "viewAllRoute": "RosterAssignments", "viewAllQuery": { "rosterId": "@objectId" }, "emptyText": "Nog geen roosterindelingen" } }
+					],
+					"layout": [
+						{ "id": "1", "widgetId": "ro-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+						{ "id": "2", "widgetId": "ro-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 },
+						{ "id": "3", "widgetId": "ro-assignments", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 6 }
+					],
+					"lifecycleActions": {
+						"field": "status",
+						"transitions": [
+							{ "action": "publiceren", "from": ["concept"], "to": "gepubliceerd", "label": "Publiceren" },
+							{ "action": "intrekken", "from": ["gepubliceerd"], "to": "concept", "label": "Intrekken" }
+						]
+					},
+					"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+				}
+			},
+			{
+				"id": "RosterAssignments",
+				"route": "/roster-assignments",
+				"type": "index",
+				"title": "Roosterindelingen",
+				"config": {
+					"register": "hrmq",
+					"schema": "RosterAssignment",
+					"description": "Geplande roosterindelingen: een medewerker op een dienst op een datum binnen een rooster, met de geprojecteerde plannedStart/plannedEnd voor de Arbeidstijdenwet-controle. Datum-gesorteerd (de MVP-planningsweergave; een visueel planbord is een Non-Goal).",
+					"columns": ["date", "employeeId", "shiftId", "plannedStart", "plannedEnd"],
+					"filters": ["rosterId", "employeeId"],
+					"sort": { "field": "date", "order": "asc" }
+				}
+			},
+			{
+				"id": "RosterAssignmentDetail",
+				"route": "/roster-assignments/:id",
+				"type": "detail",
+				"title": "Roosterindeling",
+				"config": {
+					"register": "hrmq",
+					"schema": "RosterAssignment",
+					"_note": "rostering (2026-07-14): one employee x one shift x one date within a Roster. The 'Roosterindeling' data widget carries date/plannedStart/plannedEnd/plannedBreakMinutes -- the projected planned-clock fields the ATW check reads -- excluding rosterId/employeeId/shiftId (Related resolves and links all three by name, the EmployeeDetail exclude convention) and userId (the internal @me self-service copy). No lifecycleActions: the assignment carries no approval status of its own -- the plan's only lifecycle lives on the Roster header (design D1). No stat/files/comms leaves. Audit history is a sidebar tab.",
+					"widgets": [
+						{ "id": "ra2-data", "type": "data", "title": "Roosterindeling", "icon": "AccountClockOutline", "content": { "columns": 2, "exclude": ["rosterId", "employeeId", "shiftId", "userId"] } },
+						{ "id": "ra2-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+					],
+					"layout": [
+						{ "id": "1", "widgetId": "ra2-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+						{ "id": "2", "widgetId": "ra2-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 }
+					],
+					"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+				}
+			}
+		]
+	}

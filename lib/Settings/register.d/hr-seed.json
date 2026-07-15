@@ -889,6 +889,71 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "Objective",
+                    "slug": "objective-jansen-klanttevredenheid"
+                },
+                "title": "Verbeter klanttevredenheid in Q3",
+                "ownerType": "employee",
+                "employeeId": "employee-jansen",
+                "orgUnitId": null,
+                "cycleId": "review-cycle-2026",
+                "period": null,
+                "status": "actief",
+                "uitkomst": null,
+                "progress": 73,
+                "userId": "admin"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "KeyResult",
+                    "slug": "keyresult-jansen-nps"
+                },
+                "objectiveId": "objective-jansen-klanttevredenheid",
+                "title": "NPS-score naar 100%",
+                "unit": "percentage",
+                "startValue": 0,
+                "targetValue": 100,
+                "currentValue": 60,
+                "progress": 60,
+                "status": "open",
+                "userId": "admin"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "KeyResult",
+                    "slug": "keyresult-jansen-klantbezoeken"
+                },
+                "objectiveId": "objective-jansen-klanttevredenheid",
+                "title": "12 klantbezoeken afronden",
+                "unit": "aantal",
+                "startValue": 0,
+                "targetValue": 12,
+                "currentValue": 7,
+                "progress": 58,
+                "status": "open",
+                "userId": "admin"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "KeyResult",
+                    "slug": "keyresult-jansen-nps-dashboard"
+                },
+                "objectiveId": "objective-jansen-klanttevredenheid",
+                "title": "NPS-dashboard live",
+                "unit": "boolean",
+                "startValue": 0,
+                "targetValue": 1,
+                "currentValue": 1,
+                "progress": 100,
+                "status": "behaald",
+                "userId": "admin"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "EmploymentContract",
                     "slug": "contract-devries-tijdelijk"
                 },
