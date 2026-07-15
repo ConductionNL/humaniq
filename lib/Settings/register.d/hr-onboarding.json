@@ -5,7 +5,7 @@
             "Onboarding": {
                 "slug": "Onboarding",
                 "icon": "AccountPlus",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Onboarding case",
                 "description": "A deterministic onboarding case (one per hire): the concrete legal gates for a new employee's first week — contract signed, WID identity check, BSN/IBAN validated, IT provisioned, pensioen aangemeld — as checklist boolean/date fields, governed by a simplified six-state declarative lifecycle (onboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/onboarding-wizard draft's 13-state machine and 15-step wizard stepper: no OnboardingStep/WIDCheck/BSNValidatie/Reminder side entities, no wizard stepper UI (follow-up nc-vue widget, design.md D6), no BSN elfproef/IBAN modulus-97 validation services, no IT auto-provisioning, no reminder/escalation engine. The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOnboardingChecks.php), NOT by write-time guard classes — guard wiring for compliance-checked schemas is owned by the active hrmq-rule-compliance-enforcement change (design.md D2).",
                 "type": "object",
@@ -157,6 +157,12 @@
                         "nullable": true,
                         "title": "Notes",
                         "description": "Free-text case notes."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this Onboarding case is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
             },

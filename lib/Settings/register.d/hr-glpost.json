@@ -5,7 +5,7 @@
             "PayrollGLPost": {
                 "slug": "PayrollGLPost",
                 "icon": "BookEditOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Payroll GL post",
                 "description": "The hrmq-side record of one attempt to post an approved PayrollRun's balanced loonjournaalpost into shillinq's JournalEntry register (payroll-glpost-shillinq). hrmq owns no bookkeeping machinery: this schema is a log of the handoff -- what was sent, when, and the outcome -- never the journal itself, which stays a shillinq JournalEntry created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays approved so a later `occ hrmq:glpost:run` invocation can supersede them (design.md D6). At most one PayrollGLPost per run may be `pending`/`posted` at a time -- enforced by PayrollGLPostService and audited by the nl-glpost-idempotent-per-run corpus rule.",
                 "type": "object",
@@ -98,6 +98,12 @@
                                 }
                             }
                         }
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this GL-post belongs to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7). The design.md premise that this payroll aggregate already carried administrationId was inaccurate at HEAD (the journalNumber key HRMQ-LOON-{period}-{administrationId} referenced it, but the schema field was absent); added here so the Loonadministratie pages scope coherently. Copied from the referenced PayrollRun.administrationId when the post is created."
                     }
                 }
             }
@@ -121,7 +127,8 @@
                     { "accountNumber": "4002", "side": "debit", "amount": 649.80, "description": "Werkgeverslasten sociale premies" },
                     { "accountNumber": "1701", "side": "credit", "amount": 1102.00, "description": "Loonheffing-schuld" },
                     { "accountNumber": "1702", "side": "credit", "amount": 3347.80, "description": "Netto-loonschuld" }
-                ]
+                ],
+                "administrationId": "ADM-001"
             }
         ]
     }

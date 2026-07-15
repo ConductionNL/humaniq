@@ -19,7 +19,8 @@
                 "loonheffingenVerklaringOnFile": true,
                 "nextcloudUserId": "admin",
                 "iban": "NL00BANK0123456789",
-                "tenaamstelling": "S. Jansen"
+                "tenaamstelling": "S. Jansen",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -37,7 +38,8 @@
                 "status": "submitted",
                 "submittedAt": "2026-06-01T08:15:00Z",
                 "userId": "admin",
-                "managerUserId": "admin"
+                "managerUserId": "admin",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -55,7 +57,8 @@
                 "status": "approved",
                 "submittedAt": "2026-06-01T09:00:00Z",
                 "approvedBy": "manager-pietersen",
-                "approvedAt": "2026-06-02T10:30:00Z"
+                "approvedAt": "2026-06-02T10:30:00Z",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -72,7 +75,8 @@
                 "submittedAt": "2026-06-01T11:45:00Z",
                 "approvedBy": "manager-pietersen",
                 "approvedAt": "2026-06-02T14:00:00Z",
-                "rejectionReason": "Aantal uren komt niet overeen met de geregistreerde aanwezigheid; graag corrigeren en opnieuw indienen."
+                "rejectionReason": "Aantal uren komt niet overeen met de geregistreerde aanwezigheid; graag corrigeren en opnieuw indienen.",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -90,7 +94,8 @@
                 "status": "submitted",
                 "submittedAt": "2026-05-15T07:30:00Z",
                 "userId": "admin",
-                "managerUserId": "admin"
+                "managerUserId": "admin",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -108,7 +113,8 @@
                 "status": "approved",
                 "submittedAt": "2026-05-20T18:00:00Z",
                 "approvedBy": "manager-pietersen",
-                "approvedAt": "2026-05-21T09:15:00Z"
+                "approvedAt": "2026-05-21T09:15:00Z",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -127,7 +133,8 @@
                 "submittedAt": "2026-05-01T08:00:00Z",
                 "approvedBy": "manager-pietersen",
                 "approvedAt": "2026-05-02T11:00:00Z",
-                "reimbursedAt": "2026-05-05T12:00:00Z"
+                "reimbursedAt": "2026-05-05T12:00:00Z",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -150,7 +157,8 @@
                 "responseStatus": "ontvangen-ok",
                 "responseMessage": "Aangifte ontvangen en akkoord bevonden.",
                 "verzondenDoor": "Sanne de Vries",
-                "retainedUntil": "2033-12-31"
+                "retainedUntil": "2033-12-31",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -172,7 +180,8 @@
                 "betalingskenmerk": "1234000000006050",
                 "responseStatus": "geen",
                 "verzondenDoor": "Sanne de Vries",
-                "retainedUntil": "2033-12-31"
+                "retainedUntil": "2033-12-31",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -190,7 +199,8 @@
                 "aangiftenummer": "000000000L016060",
                 "betalingskenmerk": "1234000000006060",
                 "responseStatus": "geen",
-                "retainedUntil": "2033-12-31"
+                "retainedUntil": "2033-12-31",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -206,7 +216,8 @@
                 "deadline": "2026-04-30",
                 "status": "concept",
                 "responseStatus": "geen",
-                "retainedUntil": "2033-12-31"
+                "retainedUntil": "2033-12-31",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -263,7 +274,8 @@
                 "loonheffing": 1102.00,
                 "nettoPay": 2698.00,
                 "statementProvided": true,
-                "userId": "admin"
+                "userId": "admin",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -280,7 +292,8 @@
                 "submittedDate": "2026-06-20",
                 "verzondenDoor": "manager-pietersen",
                 "responseStatus": "ontvangen-ok",
-                "responseMessage": "Aanlevering ontvangen en verwerkt."
+                "responseMessage": "Aanlevering ontvangen en verwerkt.",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -293,7 +306,8 @@
                 "fund": "abp",
                 "deadline": "2026-07-31",
                 "status": "concept",
-                "responseStatus": "geen"
+                "responseStatus": "geen",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -306,7 +320,8 @@
                 "fund": "spw",
                 "deadline": "2026-06-30",
                 "status": "bevestigd",
-                "responseStatus": "geen"
+                "responseStatus": "geen",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -323,7 +338,8 @@
                 "status": "submitted",
                 "submittedAt": "2026-07-10T09:00:00Z",
                 "userId": "admin",
-                "managerUserId": "admin"
+                "managerUserId": "admin",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -341,7 +357,8 @@
                 "submittedAt": "2026-07-01T09:00:00Z",
                 "approvedBy": "manager-pietersen",
                 "approvedAt": "2026-07-02T10:00:00Z",
-                "userId": "admin"
+                "userId": "admin",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -356,7 +373,8 @@
                 "entitledHours": 160,
                 "bovenwettelijkHours": 40,
                 "usedHours": 56,
-                "expiryDate": "2027-07-01"
+                "expiryDate": "2027-07-01",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -371,7 +389,8 @@
                 "entitledHours": 128,
                 "bovenwettelijkHours": 0,
                 "usedHours": 140,
-                "expiryDate": "2027-07-01"
+                "expiryDate": "2027-07-01",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -386,7 +405,8 @@
                 "entitledHours": 120,
                 "bovenwettelijkHours": 0,
                 "usedHours": 16,
-                "expiryDate": "2027-07-01"
+                "expiryDate": "2027-07-01",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -407,7 +427,8 @@
                 "uwv42WeekMeldingDue": null,
                 "uwv42WeekMeldingDone": null,
                 "eerstejaarsevaluatieDue": null,
-                "eerstejaarsevaluatieDone": null
+                "eerstejaarsevaluatieDone": null,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -423,7 +444,8 @@
                 "probleemanalyseDue": "2026-07-06",
                 "planVanAanpakDue": "2026-07-20",
                 "uwv42WeekMeldingDue": "2027-03-15",
-                "eerstejaarsevaluatieDue": "2027-05-24"
+                "eerstejaarsevaluatieDue": "2027-05-24",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -441,7 +463,8 @@
                 "planVanAanpakDue": "2025-11-24",
                 "planVanAanpakDone": "2025-11-20",
                 "uwv42WeekMeldingDue": "2026-07-20",
-                "eerstejaarsevaluatieDue": "2026-09-28"
+                "eerstejaarsevaluatieDue": "2026-09-28",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -461,7 +484,8 @@
                 "uwv42WeekMeldingDue": "2026-03-23",
                 "uwv42WeekMeldingDone": "2026-03-19",
                 "eerstejaarsevaluatieDue": "2026-06-01",
-                "eerstejaarsevaluatieDone": "2026-05-28"
+                "eerstejaarsevaluatieDone": "2026-05-28",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -475,7 +499,8 @@
                 "startDate": "2026-07-01",
                 "taxTableColor": "wit",
                 "identityDocumentVerified": false,
-                "loonheffingenVerklaringOnFile": false
+                "loonheffingenVerklaringOnFile": false,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -492,7 +517,8 @@
                 "bsnValidated": true,
                 "ibanVerified": true,
                 "itProvisioned": false,
-                "pensioenAangemeld": false
+                "pensioenAangemeld": false,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -511,7 +537,8 @@
                 "ibanVerified": true,
                 "itProvisioned": true,
                 "pensioenAangemeld": true,
-                "notes": "Volledig doorlopen onboarding, afgerond zonder bijzonderheden."
+                "notes": "Volledig doorlopen onboarding, afgerond zonder bijzonderheden.",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -524,7 +551,8 @@
                 "department": "Engineering",
                 "status": "gepubliceerd",
                 "publishedDate": "2026-06-15",
-                "closingDate": "2026-08-31"
+                "closingDate": "2026-08-31",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -539,7 +567,8 @@
                 "cvFile": "00000000-0000-0000-0000-000000000000",
                 "motivation": "Placeholder motivatiebrief (recruiting-ats-basic seed).",
                 "status": "nieuw",
-                "talentPoolOptIn": false
+                "talentPoolOptIn": false,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -556,7 +585,8 @@
                 "status": "afgewezen",
                 "rejectedDate": "2026-06-01",
                 "talentPoolOptIn": false,
-                "retentionExpiryDate": "2026-06-29"
+                "retentionExpiryDate": "2026-06-29",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -571,7 +601,8 @@
                 "cvFile": "00000000-0000-0000-0000-000000000000",
                 "motivation": "Placeholder motivatiebrief (recruiting-ats-basic seed).",
                 "status": "aangenomen",
-                "talentPoolOptIn": false
+                "talentPoolOptIn": false,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -582,7 +613,8 @@
                 "name": "Directie",
                 "type": "afdeling",
                 "managerId": "employee-jansen",
-                "active": true
+                "active": true,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -595,7 +627,8 @@
                 "parentUnitId": "orgunit-directie",
                 "costCenter": "CC-100",
                 "managerId": "employee-jansen",
-                "active": true
+                "active": true,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -607,7 +640,8 @@
                 "type": "afdeling",
                 "parentUnitId": "orgunit-directie",
                 "costCenter": "CC-200",
-                "active": true
+                "active": true,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -618,7 +652,8 @@
                 "employeeId": "employee-jansen",
                 "orgUnitId": "orgunit-consultancy",
                 "role": "Consultant",
-                "startDate": "2024-01-01"
+                "startDate": "2024-01-01",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -629,7 +664,8 @@
                 "employeeId": "employee-devries",
                 "orgUnitId": "orgunit-backoffice",
                 "role": "Officemanager",
-                "startDate": "2025-03-01"
+                "startDate": "2025-03-01",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -641,7 +677,8 @@
                 "orgUnitId": "orgunit-consultancy",
                 "role": "Junior consultant",
                 "startDate": "2026-06-01",
-                "endDate": "2026-05-01"
+                "endDate": "2026-05-01",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -657,7 +694,8 @@
                 "workedHours": 8.0,
                 "location": "kantoor",
                 "status": "gesloten",
-                "userId": "admin"
+                "userId": "admin",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -672,7 +710,8 @@
                 "breakMinutes": 30,
                 "workedHours": 8.5,
                 "location": "klant",
-                "status": "gesloten"
+                "status": "gesloten",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -687,7 +726,8 @@
                 "breakMinutes": 30,
                 "workedHours": 8.0,
                 "location": "kantoor",
-                "status": "gesloten"
+                "status": "gesloten",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -702,7 +742,8 @@
                 "breakMinutes": 0,
                 "workedHours": 8.0,
                 "location": "thuis",
-                "status": "gesloten"
+                "status": "gesloten",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -718,7 +759,8 @@
                 "taxTableColor": "wit",
                 "identityDocumentVerified": true,
                 "identityDocumentRetainedUntil": "2031-12-31",
-                "loonheffingenVerklaringOnFile": true
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -770,7 +812,8 @@
                 "aanschafdatum": "2025-09-01",
                 "aanschafwaarde": 1249.00,
                 "status": "uitgegeven",
-                "active": true
+                "active": true,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -782,7 +825,8 @@
                 "category": "telefoon",
                 "serienummer": "SN-PLACEHOLDER-0002",
                 "status": "beschikbaar",
-                "active": true
+                "active": true,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -796,7 +840,8 @@
                 "aanschafdatum": "2024-02-15",
                 "aanschafwaarde": 38500.00,
                 "status": "uitgegeven",
-                "active": true
+                "active": true,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -809,7 +854,8 @@
                 "uitgifteDatum": "2025-01-06",
                 "innameDatum": "2025-12-19",
                 "uitgifteBonSigned": true,
-                "notes": "Winterperiode buitendienst."
+                "notes": "Winterperiode buitendienst.",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -822,7 +868,8 @@
                 "uitgifteDatum": "2026-06-15",
                 "innameDatum": null,
                 "uitgifteBonSigned": false,
-                "notes": "Openstaande uitgifte op een asset dat als beschikbaar geregistreerd staat -- opzettelijke seed-inconsistentie voor nl-asset-assignment-consistency."
+                "notes": "Openstaande uitgifte op een asset dat als beschikbaar geregistreerd staat -- opzettelijke seed-inconsistentie voor nl-asset-assignment-consistency.",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -835,7 +882,8 @@
                 "type": "jaargesprek",
                 "status": "open",
                 "startDate": "2026-01-01",
-                "endDate": "2026-12-31"
+                "endDate": "2026-12-31",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -865,7 +913,8 @@
                 ],
                 "besprokenOp": "2026-06-15",
                 "vastgesteldDoor": "manager-pietersen",
-                "userId": "admin"
+                "userId": "admin",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -884,7 +933,8 @@
                 "goals": [],
                 "besprokenOp": "2026-06-20",
                 "vastgesteldDoor": "manager-pietersen",
-                "userId": null
+                "userId": null,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -970,7 +1020,8 @@
                 "workingTimeDocumented": true,
                 "overtimeMultiplier": 1.5,
                 "ftePartOfYearMinijob": false,
-                "dpaeFiledBeforeStart": true
+                "dpaeFiledBeforeStart": true,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -991,7 +1042,8 @@
                 "workingTimeDocumented": true,
                 "overtimeMultiplier": 1.5,
                 "ftePartOfYearMinijob": false,
-                "dpaeFiledBeforeStart": true
+                "dpaeFiledBeforeStart": true,
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
@@ -1059,6 +1111,114 @@
                 "approvedBy": null,
                 "rationale": "Jaarlijkse aanpassing binnen schaal A op basis van functioneren.",
                 "appliedAt": null
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Administration",
+                    "slug": "example-adm-001"
+                },
+                "administrationId": "ADM-001",
+                "name": "Example: Conduction Demo B.V.",
+                "kvkNumber": "12345678",
+                "loonheffingennummer": "000000000L01",
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Administration",
+                    "slug": "example-adm-002"
+                },
+                "administrationId": "ADM-002",
+                "name": "Example: Tweede Klant B.V.",
+                "kvkNumber": "87654321",
+                "loonheffingennummer": "000000000L02",
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AdministrationAccess",
+                    "slug": "example-admaccess-admin-adm001"
+                },
+                "userId": "admin",
+                "administrationId": "ADM-001",
+                "role": "accountant"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AdministrationAccess",
+                    "slug": "example-admaccess-admin-adm002"
+                },
+                "userId": "admin",
+                "administrationId": "ADM-002",
+                "role": "accountant"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AdministrationAccess",
+                    "slug": "example-admaccess-hr-adm001"
+                },
+                "userId": "hr-devries",
+                "administrationId": "ADM-001",
+                "role": "hr",
+                "_note": "Example — seed data: the single-administratie shape a company HR user carries (design.md Seed Data), contrasted with the admin account's multi-client accountant book above. hr-devries is not a real Nextcloud account -- a shape example only, never resolved by the setter/switcher for the dev admin login."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "example-employee-adm002"
+                },
+                "employeeNumber": "EMP-ADM002-0001",
+                "firstName": "Klaas",
+                "lastName": "Tweede",
+                "startDate": "2026-02-01",
+                "grossMonthlySalary": 3200.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "nextcloudUserId": "admin",
+                "administrationId": "ADM-002"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Timesheet",
+                    "slug": "example-timesheet-adm002-2026-05"
+                },
+                "employeeId": "example-employee-adm002",
+                "period": "2026-05",
+                "hours": 160,
+                "description": "Example — seed data: reguliere uren mei 2026 onder de tweede administratie (ADM-002), zodat het wisselen van actieve administratie een echt geïsoleerde wereld toont (design.md Seed Data).",
+                "billable": true,
+                "status": "approved",
+                "submittedAt": "2026-06-01T08:00:00Z",
+                "approvedBy": "admin",
+                "approvedAt": "2026-06-02T09:00:00Z",
+                "userId": "admin",
+                "administrationId": "ADM-002"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Payslip",
+                    "slug": "example-payslip-adm002-2026-05"
+                },
+                "employeeId": "example-employee-adm002",
+                "period": "2026-05",
+                "jurisdiction": "NL",
+                "currency": "EUR",
+                "grossPay": 3200.00,
+                "hoursWorked": 160,
+                "loonheffing": 920.00,
+                "nettoPay": 2280.00,
+                "statementProvided": true,
+                "userId": "admin",
+                "administrationId": "ADM-002"
             }
         ]
     }

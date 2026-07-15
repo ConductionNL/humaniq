@@ -5,7 +5,7 @@
             "Vacancy": {
                 "slug": "Vacancy",
                 "icon": "BriefcaseSearchOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Vacancy",
                 "description": "A job vacancy (vacature) published by the employer. Models the ADR-001 menu-6 'Onboarding & ATS' recruiting surface (recruiting-ats-basic): a declarative concept -> gepubliceerd -> gesloten publish lifecycle, no external multiposting (werk.nl/LinkedIn is an OpenConnector follow-up) and no public career page (portaliq per ADR-046). Applications reference this Vacancy via Application.vacancyId.",
                 "type": "object",
@@ -81,13 +81,19 @@
                         "nullable": true,
                         "title": "Closing date",
                         "description": "Application deadline. Informational only in the MVP — it does not drive the sluiten transition."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this Vacancy is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); a vacancy has no employee to derive it from, so nl-administratie-scope-consistency does not evaluate this schema."
                     }
                 }
             },
             "Application": {
                 "slug": "Application",
                 "icon": "FileAccountOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Application",
                 "description": "A candidate's application (sollicitatie) against a Vacancy. Candidate PII (name/email/phone/CV/motivation) lives DIRECTLY on this object — there is deliberately no separate Candidate entity in the MVP (AVG data-minimisation, design D2): one object carries one retention clock (retentionExpiryDate) and one deletion (deleting the Application deletes the candidate's data atomically). The declarative pipeline lifecycle runs nieuw -> screening -> gesprek -> aanbod -> aangenomen, with afwijzen reachable from every active stage. Rejecting an application stamps rejectedDate and derives retentionExpiryDate per the Autoriteit Persoonsgegevens sollicitatie-richtlijn (4 weeks, or 1 year with explicit talentPoolOptIn consent) — enforced by the nl-ats-retentie-derivatie and nl-ats-retentie-verlopen checks (lib/Standards/Checks/NlAtsChecks.php, lib/Standards/rules/privacy.json). aannemen documents a MANUAL onboarding hand-off (creating the Employee from this data is a manual follow-up action in the MVP — no cross-object write hook).",
                 "type": "object",
@@ -218,6 +224,12 @@
                         "nullable": true,
                         "title": "Retention expiry date",
                         "description": "Stored-but-rule-checked AVG retention deadline (design D4): rejectedDate + 4 weeks without talentPoolOptIn, or + 1 year with it (Autoriteit Persoonsgegevens sollicitatie-richtlijn, AVG art. 5 lid 1 sub e). Checked by nl-ats-retentie-derivatie / nl-ats-retentie-verlopen. Null on every non-afgewezen status."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this Application is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); an Application has no employee (the candidate is not yet hired), so this is set from the vacancy's administratie when known, and nl-administratie-scope-consistency does not evaluate this schema."
                     }
                 }
             }

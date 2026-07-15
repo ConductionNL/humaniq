@@ -5,7 +5,7 @@
             "ReviewCycle": {
                 "slug": "ReviewCycle",
                 "icon": "CalendarSyncOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Review Cycle",
                 "description": "The orchestration container for a performance-review round (jaargesprekken, beoordelingscyclus, or a tussentijds check-in). A cycle walks concept -> open -> gesloten; PerformanceReview objects reference an open cycle via cycleId. Deliberately generic (jaargesprek/beoordeling/tussentijds) so a future comp-planning cycle can reference cycles rather than reinvent them (ADR-001 Rule 6).",
                 "type": "object",
@@ -86,13 +86,19 @@
                         "nullable": true,
                         "title": "End date",
                         "description": "Planned end date of the review cycle."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this ReviewCycle is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); a cycle has no single employee to derive it from, so nl-administratie-scope-consistency does not evaluate this schema. Maintained by HR/back-office; the implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
             },
             "PerformanceReview": {
                 "slug": "PerformanceReview",
                 "icon": "ClipboardAccountOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Performance Review",
                 "description": "A single employee's beoordelingsdossier for one review cycle: rating, sterktes/ontwikkelpunten/afspraken and goals, on a concept -> ingediend -> besproken -> vastgesteld lifecycle with a heropenen correction edge. Under BW 7:669 lid 3 sub d a documented, vastgestelde beoordeling with a rating and concrete afspraken is the precondition for any underperformance dismissal -- this object is that dossier. Goals are recorded INSIDE the review (no separate Goal entity, design D2): they freeze with the dossier under one lifecycle, one audit trail and one retention context.",
                 "type": "object",
@@ -263,6 +269,12 @@
                         "nullable": true,
                         "title": "User",
                         "description": "Denormalized Nextcloud user id of the employee this review belongs to (mijn-hr-self-service) -- a plain NC-user-id string, mirroring the Timesheet convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnBeoordelingen self-service page filters on it with the @me token."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this PerformanceReview is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring the reviewed employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
             }

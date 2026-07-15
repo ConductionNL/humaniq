@@ -38,6 +38,11 @@ return [
         // comp-cycles — guarded trigger for the CompAdjustmentDetail
         // "Effectueren" manifest api-call action (design.md D6).
         ['name' => 'comp#effectuate', 'url' => '/api/comp/effectuate', 'verb' => 'POST'],
+        // multi-administratie — guarded per-user active-administration
+        // selection + context for the switcher (design.md D4/D5). BEFORE the
+        // SPA catch-all per REQ-MULTI-003.
+        ['name' => 'administration#setActive', 'url' => '/api/administration/active', 'verb' => 'POST'],
+        ['name' => 'administration#context', 'url' => '/api/administration/context', 'verb' => 'GET'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],

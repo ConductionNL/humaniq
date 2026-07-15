@@ -5,7 +5,7 @@
             "Employee": {
                 "slug": "Employee",
                 "icon": "AccountOutline",
-                "version": "0.4.0",
+                "version": "0.5.0",
                 "title": "Employee",
                 "description": "A natural person employed by the organisation. Carries the identity, payroll, and wage-tax attributes the payroll/wage-tax compliance checks read (BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting, minimum-wage basis).",
                 "type": "object",
@@ -41,13 +41,14 @@
                     "nextcloudUserId": {"type": "string", "nullable": true, "description": "The Nextcloud user id of this employee's own account, when they have one (mijn-hr-self-service). HR-maintained on the employee record; stays null for portal-only external employees, who keep using the UUID-claim-based portaliq scoping (ADR-046 A4). The durable Employee<->account link; per-record `userId` on Timesheet/Expense/LeaveRequest/Payslip is a denormalized copy of it."},
                     "iban": {"type": "string", "nullable": true, "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$", "description": "Bank account IBAN for net-pay SEPA credit transfers (payroll-sepa-netpay-shillinq). Shape check only — mod-97 checksum is a non-goal. Missing IBAN on a payable payroll run's payslip fails the net-pay batch closed (nl-netpay-iban-present)."},
                     "tenaamstelling": {"type": "string", "nullable": true, "description": "Account-holder name as the bank knows it (payroll-sepa-netpay-shillinq) — printed as Cdtr/Nm on the SEPA credit transfer. Falls back to firstName + lastName when absent."},
-                    "loonheffingskortingToegepast": {"type": "boolean", "default": true, "description": "Whether the employee elected on the loonbelastingverklaring to have the loonheffingskorting (heffingskortingen) applied by this employer (Rekenvoorschriften 2026 §2.2.3; drives the AHK/ARK application in the payroll engine — payroll-core-engine). Apply with at most one employer at a time; loonheffingenVerklaringOnFile records that the statement itself is archived."}
+                    "loonheffingskortingToegepast": {"type": "boolean", "default": true, "description": "Whether the employee elected on the loonbelastingverklaring to have the loonheffingskorting (heffingskortingen) applied by this employer (Rekenvoorschriften 2026 §2.2.3; drives the AHK/ARK application in the payroll engine — payroll-core-engine). Apply with at most one employer at a time; loonheffingenVerklaringOnFile records that the statement itself is archived."},
+                    "administrationId": {"type": "string", "nullable": true, "description": "Denormalized administratie key this Employee is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun convention): the manifest filter grammar cannot reach cross-schema relations, so this is maintained by HR/back-office when the record is created; the implicit page scoping (REQ-MULTI-004) filters on it and nl-administratie-scope-consistency (REQ-MULTI-007) audits every Employee-anchored child record against it."}
                 }
             },
             "EmploymentContract": {
                 "slug": "EmploymentContract",
                 "icon": "FileSignOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Employment Contract",
                 "description": "An employment agreement between the organisation and an employee. Carries the contract attributes the payroll checks read (permanent/temporary type that drives the Awf low/high premium, contracted hours, CAO, minimum-wage hourly basis).",
                 "type": "object",
@@ -72,13 +73,14 @@
                     "overtimeMultiplier": {"type": "number", "nullable": true, "description": "US: overtime pay multiplier for hours over 40/week for non-exempt employees — must be ≥1.5 (us-flsa-overtime)."},
                     "ftePartOfYearMinijob": {"type": "boolean", "description": "DE: whether the contract is a Minijob within the geringfügige Beschäftigung threshold using flat-rate contributions (de-minijob-pauschale)."},
                     "dpaeFiledBeforeStart": {"type": "boolean", "description": "FR: whether the Déclaration Préalable À l'Embauche (DPAE) was filed in the 8 days before the hire (fr-dpae)."},
-                    "aanzegdOn": {"type": "string", "format": "date", "nullable": true, "title": "Aanzegd on", "description": "NL: date the written aanzegging (BW 7:668 lid 1) was sent to the employee, informing whether a fixed-term contract of six months or longer will be continued. Must be on or before endDate minus one month to satisfy nl-aanzegtermijn-bewaking."}
+                    "aanzegdOn": {"type": "string", "format": "date", "nullable": true, "title": "Aanzegd on", "description": "NL: date the written aanzegging (BW 7:668 lid 1) was sent to the employee, informing whether a fixed-term contract of six months or longer will be continued. Must be on or before endDate minus one month to satisfy nl-aanzegtermijn-bewaking."},
+                    "administrationId": {"type": "string", "nullable": true, "description": "Denormalized administratie key this EmploymentContract is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun convention), mirroring its owning Employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007)."}
                 }
             },
             "Payslip": {
                 "slug": "Payslip",
                 "icon": "ReceiptTextOutline",
-                "version": "0.5.0",
+                "version": "0.6.0",
                 "title": "Payslip",
                 "description": "A per-employee, per-period wage statement (loonstrook / Lohnabrechnung / bulletin de paie / pay stub). Carries the gross-to-net composition the payroll-withholding, social-security, and statutory-content checks read.",
                 "type": "object",
@@ -154,7 +156,8 @@
                     "sickPayPercentage": {"type": "number", "nullable": true, "description": "NL: the applied loondoorbetalingPercentage (statutory minimum 70, CAOs may set higher). Null on a normal payslip (sick-pay-calc)."},
                     "sickPayMinimumWageFloor": {"type": "number", "nullable": true, "description": "NL: the WML monthly floor (M) this sick payslip's year-1 floor was computed against, part-time scaled. Null on a normal payslip (sick-pay-calc)."},
                     "sickPayYearOne": {"type": "boolean", "nullable": true, "description": "NL: whether the run period fell within the first 52 weeks of the case's firstSickDay — the year-1 WML floor is in scope only when true. Null on a normal payslip (sick-pay-calc)."},
-                    "retroAdjustment": {"type": "number", "nullable": true, "description": "Summed net TWK (terugwerkende kracht) retro-adjustment delta settled into THIS payslip's period -- a nabetaling (positive) or terugvordering (negative) rolled up from every applied PayrollAdjustment whose settlementPeriod equals this payslip's period (retro-adjustments). Included in nettoPay. Null when no adjustment settles this period; the sealed historical payslip this delta was diffed against is never touched."}
+                    "retroAdjustment": {"type": "number", "nullable": true, "description": "Summed net TWK (terugwerkende kracht) retro-adjustment delta settled into THIS payslip's period -- a nabetaling (positive) or terugvordering (negative) rolled up from every applied PayrollAdjustment whose settlementPeriod equals this payslip's period (retro-adjustments). Included in nettoPay. Null when no adjustment settles this period; the sealed historical payslip this delta was diffed against is never touched."},
+                    "administrationId": {"type": "string", "nullable": true, "description": "Denormalized administratie key this Payslip is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); maintained by payroll alongside employeeId. nl-administratie-scope-consistency (REQ-MULTI-007) audits it against the producing payrollRunId's PayrollRun.administrationId (the parent, not the employee -- design.md D6)."}
                 }
             },
             "PayrollRun": {
@@ -250,7 +253,7 @@
             "LoonaangifteFiling": {
                 "slug": "LoonaangifteFiling",
                 "icon": "FileSendOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Wage Tax Filing",
                 "description": "A wage-tax / social-security filing for one wage period (NL loonaangifte / DE Lohnsteuer-Anmeldung & Beitragsnachweis / FR DSN / US Form 941 & deposits). Carries the period, deadline, submission, and tijdvak attributes the filing-window checks read. For NL, the filing also carries a declarative create->review->confirm->send lifecycle (concept -> klaargezet -> bevestigd -> verzonden) plus tijdvakcode/response-capture fields (loonaangifte-filing-lifecycle).",
                 "type": "object",
@@ -366,7 +369,8 @@
                         "nullable": true,
                         "title": "Verzonden door",
                         "description": "Display name of the person who sent the filing, stamped on the verzenden carrying write (the Timesheet approvedBy pattern)."
-                    }
+                    },
+                    "administrationId": {"type": "string", "nullable": true, "description": "Denormalized administratie key this filing is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun convention); an organisation-level filing has no employee/parent to derive it from, so nl-administratie-scope-consistency does not evaluate this schema."}
                 }
             }
         }

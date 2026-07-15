@@ -5,7 +5,7 @@
             "PensionFiling": {
                 "slug": "PensionFiling",
                 "icon": "PiggyBankOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Pension filing",
                 "description": "A UPA (Uniforme Pensioenaangifte) delivery to one sector pension fund for one wage period, reporting an approved PayrollRun (pension-filing-upa-mvp). The APG-administered funds are gated on the referenced payroll run being approved before the filing can progress past review — the verified Loket.nl/APG gating rule — via a declarative create->review->confirm->send lifecycle (concept -> gecontroleerd -> bevestigd -> verzonden) mirroring the loonaangifte filing flow.",
                 "type": "object",
@@ -142,6 +142,12 @@
                         "nullable": true,
                         "title": "Verzonden door",
                         "description": "Display name of the person who sent the delivery, stamped on the verzenden carrying write (the Timesheet approvedBy pattern)."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this PensionFiling is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); nl-administratie-scope-consistency (REQ-MULTI-007) audits it against the referenced payrollRunId's PayrollRun.administrationId (the parent, the Payslip precedent)."
                     }
                 }
             }

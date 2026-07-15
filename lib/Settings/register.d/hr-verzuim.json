@@ -5,7 +5,7 @@
             "SickLeaveCase": {
                 "slug": "SickLeaveCase",
                 "icon": "EmoticonSickOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Sick leave case",
                 "description": "An administrative sickness case (ziekmelding) tracking the Wet verbetering poortwachter (WVP) re-integration process and statutory loondoorbetaling — NEVER medical data. Per the AVG and the Autoriteit Persoonsgegevens beleidsregels \"De zieke werknemer\", an employer may record that and how long an employee is sick and the re-integration process facts, but never the nature or cause of the illness: this schema declares no diagnosis, symptom, cause, or medical-note field of any kind (leave-verzuim-mvp REQ-VWP-002). The gemeld<->hersteld lifecycle is fully declarative per ADR-031; a relapse within 4 weeks of recovery reopens the same case rather than starting a new one (samengesteld ziektegeval, BW 7:629 lid 10). The four WVP milestone Due dates (probleemanalyse week 6, plan van aanpak week 8, UWV 42-wekenmelding week 42, eerstejaarsevaluatie week 52) are derived from firstSickDay but stored, not computed on the fly — the loonaangifte-filing-lifecycle deadline precedent — so the dossier shows the clock actually worked against and a UWV-granted deferral stays editable; derivation correctness is enforced by the nl-wvp-milestone-derivation rule check (lib/Standards/rules/labour.json), not recomputed away.",
                 "type": "object",
@@ -141,6 +141,12 @@
                         "nullable": true,
                         "title": "Eerstejaarsevaluatie done",
                         "description": "Date the eerstejaarsevaluatie was actually completed."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this SickLeaveCase is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
             }
