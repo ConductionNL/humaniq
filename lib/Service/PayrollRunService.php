@@ -42,6 +42,17 @@
  * `sickPayMinimumWageFloor`, `sickPayYearOne`). No open case -> the
  * full-salary path and the Payslip shape are byte-identical to before.
  *
+ * retro-adjustments (design.md D4): after computing each employee's payslip,
+ * every `applied` `PayrollAdjustment` whose `settlementPeriod` equals this
+ * run's period is summed (by `deltaNet`, cents-exact) into that employee's
+ * `retroAdjustment` component and folded into `nettoPay` -- a nabetaling or
+ * terugvordering line that lands in the CURRENT run only. `draft`
+ * adjustments and adjustments settling a different period never surface
+ * here; the sealed historical payslip each adjustment was diffed against is
+ * never read or written by this service. No open/applied adjustment for an
+ * employee -> `retroAdjustment` stays null and `nettoPay` is unchanged
+ * (byte-identical to before this change).
+ *
  * @category Service
  * @package  OCA\Hrmq\Service
  *
@@ -58,6 +69,7 @@
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-003
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-004
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
+ * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-004
  */
 
 declare(strict_types=1);
@@ -285,9 +297,10 @@ class PayrollRunService
         $aofTariff     = $this->settingsService->getPayrollAofTariff();
         $whkPercentage = $this->settingsService->getPayrollWhkPercentage($tables->werknemersverzekeringen()['whkDefault']);
 
-        $contractsByEmployeeKey = $this->contractsByEmployeeKey();
-        $sickCasesByEmployeeKey = $this->openSickCasesByEmployeeKey();
-        $existingByEmployeeId   = $this->enginePayslipsByEmployeeId($runId);
+        $contractsByEmployeeKey       = $this->contractsByEmployeeKey();
+        $sickCasesByEmployeeKey       = $this->openSickCasesByEmployeeKey();
+        $existingByEmployeeId         = $this->enginePayslipsByEmployeeId($runId);
+        $retroAdjustmentsByEmployeeId = $this->appliedRetroAdjustmentsByEmployeeId($period);
 
         $computed = [];
         $skipped  = [];
@@ -361,8 +374,16 @@ class PayrollRunService
 
             $result = $this->calculator->calculate($input, $tables);
 
+            // retro-adjustments (design.md D4): fold every APPLIED
+            // PayrollAdjustment settling into THIS period for this employee
+            // into the payslip's retroAdjustment component + nettoPay. No
+            // applied adjustment -> retroAdjustmentCents is 0 and the payload
+            // stays byte-identical to before this change.
+            $retroAdjustmentCents = ($retroAdjustmentsByEmployeeId[$employeeId] ?? 0);
+
             $payload = $this->payslipPayload($runId, $employee, $contract, $period, $result);
             $payload = array_merge($payload, $this->sickPayFields($sickCase, $sickResult));
+            $payload = array_merge($payload, $this->retroAdjustmentFields($retroAdjustmentCents, $result->nettoPayCents));
 
             try {
                 $existingPayslip = ($existingByEmployeeId[$employeeId] ?? null);
@@ -379,7 +400,7 @@ class PayrollRunService
             $totals['loonheffing']     += $result->loonheffingCents;
             $totals['employerCharges'] += $result->employerChargesCents;
             $totals['withholdings']    += $result->loonheffingCents;
-            $totals['net']             += $result->nettoPayCents;
+            $totals['net']             += ($result->nettoPayCents + $retroAdjustmentCents);
         }//end foreach
 
         // Orphan cleanup (design.md D4): engine payslips of THIS run whose
@@ -834,6 +855,76 @@ class PayrollRunService
         ];
 
     }//end sickPayFields()
+
+
+    /**
+     * Every employee's summed `deltaNet` (cents) across `applied`
+     * PayrollAdjustments whose `settlementPeriod` equals this run's period
+     * (retro-adjustments design.md D4) -- the current-run-only folding index.
+     * `draft` adjustments and adjustments settling a different period are
+     * excluded (a draft adjustment affects no run). Degrades gracefully to an
+     * empty map when the PayrollAdjustment schema does not exist yet in the
+     * register (the two changes may land in either order).
+     *
+     * @param string $period Wage period (YYYY-MM).
+     *
+     * @return array<string, int>
+     *
+     * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-004
+     */
+    private function appliedRetroAdjustmentsByEmployeeId(string $period): array
+    {
+        $out = [];
+        foreach ($this->loadAll('PayrollAdjustment') as $adjustment) {
+            if ((string) ($adjustment['status'] ?? '') !== 'applied') {
+                continue;
+            }
+
+            if ((string) ($adjustment['settlementPeriod'] ?? '') !== $period) {
+                continue;
+            }
+
+            $employeeId = trim((string) ($adjustment['employeeId'] ?? ''));
+            if ($employeeId === '') {
+                continue;
+            }
+
+            $deltaNet = ($adjustment['deltaNet'] ?? 0);
+            $cents    = is_numeric($deltaNet) === true ? (int) round(((float) $deltaNet) * 100) : 0;
+
+            $out[$employeeId] = (($out[$employeeId] ?? 0) + $cents);
+        }
+
+        return $out;
+
+    }//end appliedRetroAdjustmentsByEmployeeId()
+
+
+    /**
+     * The retroAdjustment + (adjusted) nettoPay Payslip fields to merge onto
+     * the payload (retro-adjustments design.md D4): null/unchanged when no
+     * applied adjustment settles this period for this employee -- a normal
+     * payslip stays byte-identical to the pre-change shape.
+     *
+     * @param int $retroAdjustmentCents The summed applied delta for this employee/period, in cents.
+     * @param int $nettoPayCents        The engine-computed nettoPay before folding the adjustment, in cents.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-004
+     */
+    private function retroAdjustmentFields(int $retroAdjustmentCents, int $nettoPayCents): array
+    {
+        if ($retroAdjustmentCents === 0) {
+            return ['retroAdjustment' => null];
+        }
+
+        return [
+            'retroAdjustment' => $this->euros($retroAdjustmentCents),
+            'nettoPay'        => $this->euros($nettoPayCents + $retroAdjustmentCents),
+        ];
+
+    }//end retroAdjustmentFields()
 
 
     /**

@@ -51,6 +51,57 @@ its output:
 Honesty is a feature: this disclaimer is a requirement of the
 `payroll-core-engine` spec, not a footnote.
 
+## Retroactive corrections (TWK) — terugwerkende kracht herrekening
+
+Real payroll inputs change *after* a period is sealed (a backdated raise, a
+late-corrected sick day, a retroactive contract fix). hrmq settles these the
+Dutch way — **terugwerkende kracht herrekening (TWK)** — via a
+`PayrollAdjustment` that models a **delta**, never a rewrite of the sealed
+original (`lib/Service/RetroAdjustmentService.php`,
+`occ hrmq:payroll:adjust`). Be aware of the following:
+
+- **The sealed original is never mutated.** A correction reads the stored,
+  already-approved/posted/paid `Payslip` only to diff against it; it writes a
+  new `PayrollAdjustment` carrying the cents-exact `delta*` fields. The
+  historical payslip (filed in a loonaangifte, posted to the GL) stays
+  byte-untouched — an adjustment can exist against a run the engine itself
+  refuses to recompute.
+- **The recompute uses the ORIGINAL period's tax year.** A 2025 correction
+  must use the 2025 schijven/kortingen/premiepercentages, not 2026 —
+  `RetroAdjustmentService` derives `nl-{year of the original period}` and
+  recomputes against that table. **Same-tax-year MVP boundary**: only
+  `nl-2026.json` ships today, so a correction whose original period falls in a
+  year for which no table exists is **refused** with a clear
+  `historical-tables-missing` message rather than recomputed against the wrong
+  year. Seeding historical `nl-YYYY.json` corpora is a named follow-up
+  (`retro-multi-year-tables`); the recompute code is already year-generic, so
+  that follow-up is data, not logic.
+- **The delta surfaces in the CURRENT run, never in history.** An `applied`
+  adjustment folds its net delta into the current period's `Payslip`
+  (`retroAdjustment` component + `nettoPay`) as a nabetaling (positive) or
+  terugvordering (negative). A `draft` adjustment is computed-but-unsettled and
+  affects no run. Adjustments are idempotent by
+  `(originalPeriod, employeeId, correctionRef)` — re-running the same
+  correction updates one object and never double-counts.
+- **The tax year is period-derived and immutable once stamped.** There is
+  deliberately no mutable "active tax year" global: each run derives its table
+  from its own period, and a generated run's `engineVersion`/`calculatedAt`
+  stamp plus the non-`draft` recompute refusal make that stamp immutable. The
+  annual roll is therefore **data-only** — ship `lib/Standards/tables/nl-YYYY.json`
+  and runs for `YYYY-MM` periods pick it up automatically;
+  `occ hrmq:payroll:year-transition --year YYYY` is the preflight that asserts
+  the new table exists and confirms the immutable-stamp guard, changing no
+  engine state.
+- **Known MVP limitations**: no bijzonder tarief on the nabetaling (a
+  nabetaling is often taxed at bijzonder tarief; the MVP settles the delta at
+  the tabel result and names bijzonder tarief as a follow-up — it inherits the
+  engine's own bijzonder-tarief non-goal); no cumulative/VCR reconciliation
+  (the delta is a period-vs-period recompute); no automated loonaangifte
+  correctie-berichten (the filing lifecycle's `corrigeren` transition is the
+  manual route). The `nl-retro-adjustment-consistency` corpus rule recomputes
+  every adjustment's delta during `occ hrmq:rules:audit`, so a tampered delta
+  is a mandatory audit violation.
+
 ## Rostering (MVP)
 
 hrmq ships a forward-looking shift-planning MVP that plans *and* pre-checks a

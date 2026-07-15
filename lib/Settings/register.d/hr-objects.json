@@ -78,7 +78,7 @@
             "Payslip": {
                 "slug": "Payslip",
                 "icon": "ReceiptTextOutline",
-                "version": "0.4.0",
+                "version": "0.5.0",
                 "title": "Payslip",
                 "description": "A per-employee, per-period wage statement (loonstrook / Lohnabrechnung / bulletin de paie / pay stub). Carries the gross-to-net composition the payroll-withholding, social-security, and statutory-content checks read.",
                 "type": "object",
@@ -153,7 +153,8 @@
                     "sickPayReferenceWage": {"type": "number", "nullable": true, "description": "NL: the reference wage (W) the sick-pay calculation was run against — the employee's full grossMonthlySalary. Null on a normal payslip (sick-pay-calc)."},
                     "sickPayPercentage": {"type": "number", "nullable": true, "description": "NL: the applied loondoorbetalingPercentage (statutory minimum 70, CAOs may set higher). Null on a normal payslip (sick-pay-calc)."},
                     "sickPayMinimumWageFloor": {"type": "number", "nullable": true, "description": "NL: the WML monthly floor (M) this sick payslip's year-1 floor was computed against, part-time scaled. Null on a normal payslip (sick-pay-calc)."},
-                    "sickPayYearOne": {"type": "boolean", "nullable": true, "description": "NL: whether the run period fell within the first 52 weeks of the case's firstSickDay — the year-1 WML floor is in scope only when true. Null on a normal payslip (sick-pay-calc)."}
+                    "sickPayYearOne": {"type": "boolean", "nullable": true, "description": "NL: whether the run period fell within the first 52 weeks of the case's firstSickDay — the year-1 WML floor is in scope only when true. Null on a normal payslip (sick-pay-calc)."},
+                    "retroAdjustment": {"type": "number", "nullable": true, "description": "Summed net TWK (terugwerkende kracht) retro-adjustment delta settled into THIS payslip's period -- a nabetaling (positive) or terugvordering (negative) rolled up from every applied PayrollAdjustment whose settlementPeriod equals this payslip's period (retro-adjustments). Included in nettoPay. Null when no adjustment settles this period; the sealed historical payslip this delta was diffed against is never touched."}
                 }
             },
             "PayrollRun": {
