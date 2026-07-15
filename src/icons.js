@@ -30,6 +30,8 @@ import CalendarSyncOutline from 'vue-material-design-icons/CalendarSyncOutline.v
 import ClipboardAccountOutline from 'vue-material-design-icons/ClipboardAccountOutline.vue'
 import StarCheckOutline from 'vue-material-design-icons/StarCheckOutline.vue'
 import Calculator from 'vue-material-design-icons/Calculator.vue'
+import BullseyeArrow from 'vue-material-design-icons/BullseyeArrow.vue'
+import TargetVariant from 'vue-material-design-icons/TargetVariant.vue'
 
 export default {
 	AccountOutline,
@@ -55,4 +57,6 @@ export default {
 	ClipboardAccountOutline,
 	StarCheckOutline,
 	Calculator,
+	BullseyeArrow,
+	TargetVariant,
 }
