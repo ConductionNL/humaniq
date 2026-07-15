@@ -37,11 +37,14 @@ namespace OCA\Hrmq\Tests\Unit\Controller;
 
 use OCA\Hrmq\Controller\PayrollController;
 use OCA\Hrmq\Payroll\PayrollCalculator;
+use OCA\Hrmq\Service\PayrollMutationService;
 use OCA\Hrmq\Service\PayrollRunService;
 use OCA\Hrmq\Service\ProformaPayslipService;
 use OCA\Hrmq\Service\SettingsService;
 use OCP\AppFramework\Http;
+use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -183,9 +186,15 @@ class PayrollControllerProformaTest extends TestCase
 
         $proformaService = new ProformaPayslipService(new PayrollCalculator(), $settings);
 
+        // Not exercised by proforma(); present only to satisfy the merged
+        // constructor (payroll-mutation-reports coexists on this controller).
+        $payrollMutationService = $this->createMock(PayrollMutationService::class);
+        $userSession            = $this->createMock(IUserSession::class);
+        $groupManager           = $this->createMock(IGroupManager::class);
+
         $logger = $this->createMock(LoggerInterface::class);
 
-        return new PayrollController($request, $container, $payrollRunService, $proformaService, $settings, $logger);
+        return new PayrollController($request, $container, $payrollRunService, $payrollMutationService, $proformaService, $settings, $userSession, $groupManager, $logger);
 
     }//end buildController()
 
