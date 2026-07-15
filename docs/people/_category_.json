@@ -1,0 +1,11 @@
+{
+  "label": "People",
+  "position": 5,
+  "collapsible": true,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "title": "People",
+    "description": "Onboarding & offboarding, recruiting, performance reviews, the org chart, generated HR documents, and the asset register."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "label": "Payroll",
+  "position": 3,
+  "collapsible": true,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "title": "Payroll",
+    "description": "The open-source Dutch payroll calculation engine, wage-tax filing, pension UPA filing, payslips and jaaropgaven, and the GL/SEPA handoff to shillinq."
+  }
+}
