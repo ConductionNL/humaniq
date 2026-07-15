@@ -414,6 +414,26 @@ final class TaxTables
 
 
     /**
+     * The WML (Wet minimumloon) parameters: `referentiemaandloon`, the
+     * verified full-time statutory reference monthly wage, cents-converted
+     * (sick-pay-calc design.md D3 — the year-1 loondoorbetaling floor is
+     * scaled from this single verified table value, never a hard-coded
+     * number).
+     *
+     * @return array{referentiemaandloonCents: int}
+     *
+     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-002
+     */
+    public function wml(): array
+    {
+        return [
+            'referentiemaandloonCents' => self::euroToCents((float) $this->leaf(['wml', 'referentiemaandloon', 'value'])),
+        ];
+
+    }//end wml()
+
+
+    /**
      * Read a nested leaf from `parameters` by path, throwing when absent —
      * a malformed/incomplete table file must never silently compute a wrong
      * amount.

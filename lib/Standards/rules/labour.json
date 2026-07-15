@@ -83,6 +83,24 @@
       "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
     },
     {
+      "id": "nl-loondoorbetaling-floor",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "bw7-10",
+      "source": "BW art. 7:629 lid 1 jo. WML art. 12",
+      "statement": "A sick employee's doorbetaald loon shall be at least the statutory 70% of the reference wage, and, in the first 104 weeks, at least the statutory minimum wage (WML art. 12) capped at the reference wage.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290",
+      "parameters": {
+        "statutoryPercentage": 70,
+        "year1MinimumWageFloor": true,
+        "workingDaysPerMonth": 21.75,
+        "maxWeeks": 104
+      }
+    },
+    {
       "id": "nl-onboarding-wid-check",
       "domain": "labour",
       "jurisdiction": "NL",

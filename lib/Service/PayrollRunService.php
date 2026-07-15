@@ -32,6 +32,16 @@
  * service-side write is legitimate and generation remains the only Payslip
  * create path (the manifest keeps every Payslip surface create-less).
  *
+ * sick-pay-calc (design.md D4): before building the `CalculationInput`, an
+ * open (gemeld) `SickLeaveCase` covering the period is looked up per
+ * employee; when present, the pure `SickPayCalculator` computes the
+ * doorbetaald loon and its `payableGrossCents` replaces the full salary as
+ * the gross fed to `PayrollCalculator`, and the Payslip is additionally
+ * stamped with the sick-pay fields (`sickLeaveCaseId`, `doorbetaaldLoon`,
+ * `wachtdagDeduction`, `sickPayReferenceWage`, `sickPayPercentage`,
+ * `sickPayMinimumWageFloor`, `sickPayYearOne`). No open case -> the
+ * full-salary path and the Payslip shape are byte-identical to before.
+ *
  * @category Service
  * @package  OCA\Hrmq\Service
  *
@@ -44,6 +54,7 @@
  *
  * @link https://conduction.nl
  *
+ * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-005
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-003
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-004
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
@@ -56,6 +67,9 @@ namespace OCA\Hrmq\Service;
 use OCA\Hrmq\Payroll\CalculationInput;
 use OCA\Hrmq\Payroll\CalculationResult;
 use OCA\Hrmq\Payroll\PayrollCalculator;
+use OCA\Hrmq\Payroll\SickPayCalculator;
+use OCA\Hrmq\Payroll\SickPayInput;
+use OCA\Hrmq\Payroll\SickPayResult;
 use OCA\Hrmq\Payroll\TaxTables;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -82,17 +96,37 @@ class PayrollRunService
      */
     private const LIMIT = 10000;
 
+    /**
+     * The full-time hours-per-week basis the sick-pay WML floor's part-time
+     * factor is scaled against (design.md D3 — the same 36/36 full-time
+     * convention already used elsewhere in the seed data).
+     *
+     * @var float
+     */
+    private const FULLTIME_HOURS_PER_WEEK = 36.0;
 
     /**
-     * @param ContainerInterface $container       DI container for lazy ObjectService resolution.
-     * @param SettingsService    $settingsService Register slug + employer-level payroll config.
-     * @param PayrollCalculator  $calculator      The pure gross-to-net calculator.
-     * @param LoggerInterface    $logger          Logger.
+     * The first 52 weeks of a SickLeaveCase's firstSickDay, past which the
+     * year-1 WML floor no longer applies (design.md D3, the
+     * nl-loondoorbetaling-floor rule's maxWeeks/2 boundary).
+     *
+     * @var int
+     */
+    private const YEAR_ONE_WEEKS = 52;
+
+
+    /**
+     * @param ContainerInterface $container         DI container for lazy ObjectService resolution.
+     * @param SettingsService    $settingsService   Register slug + employer-level payroll config.
+     * @param PayrollCalculator  $calculator        The pure gross-to-net calculator.
+     * @param SickPayCalculator  $sickPayCalculator The pure loondoorbetaling-bij-ziekte calculator (sick-pay-calc).
+     * @param LoggerInterface    $logger            Logger.
      */
     public function __construct(
         private readonly ContainerInterface $container,
         private readonly SettingsService $settingsService,
         private readonly PayrollCalculator $calculator,
+        private readonly SickPayCalculator $sickPayCalculator,
         private readonly LoggerInterface $logger,
     ) {
 
@@ -222,12 +256,16 @@ class PayrollRunService
      * Generate (or regenerate) the payslips + totals for a draft run
      * (design.md D4): per-employee calculate, upsert keyed
      * (payrollRunId, employeeId), orphan cleanup, cents-exact roll-up,
-     * engineVersion/calculatedAt stamps. Never writes `status`.
+     * engineVersion/calculatedAt stamps. Never writes `status`. An open
+     * (gemeld) SickLeaveCase covering the period substitutes the doorbetaald
+     * loon for the full salary before the gross-to-net calculation
+     * (sick-pay-calc design.md D4); absent a case the path is unchanged.
      *
      * @param array<string, mixed> $run The draft PayrollRun.
      *
      * @return array<string, mixed> Outcome (see runFor()).
      *
+     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-005
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-003
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
      */
@@ -248,6 +286,7 @@ class PayrollRunService
         $whkPercentage = $this->settingsService->getPayrollWhkPercentage($tables->werknemersverzekeringen()['whkDefault']);
 
         $contractsByEmployeeKey = $this->contractsByEmployeeKey();
+        $sickCasesByEmployeeKey = $this->openSickCasesByEmployeeKey();
         $existingByEmployeeId   = $this->enginePayslipsByEmployeeId($runId);
 
         $computed = [];
@@ -294,8 +333,23 @@ class PayrollRunService
                 continue;
             }
 
+            $grossMonthlySalaryCents = (int) round(((float) $grossMonthly) * 100);
+
+            // sick-pay-calc (design.md D4): an open (gemeld) SickLeaveCase
+            // covering the period substitutes the doorbetaald loon for the
+            // full salary as the gross fed into PayrollCalculator. No open
+            // case -> the full-salary path below is completely unchanged.
+            $sickCase   = $this->openSickCaseFor($employee, $sickCasesByEmployeeKey, $period);
+            $sickResult = null;
+            if ($sickCase !== null) {
+                $sickInput  = $this->sickPayInputFor($sickCase, $contract, $grossMonthlySalaryCents, $period);
+                $sickResult = $this->sickPayCalculator->compute($sickInput, $tables);
+
+                $grossMonthlySalaryCents = $sickResult->payableGrossCents;
+            }
+
             $input = new CalculationInput(
-                grossMonthlySalaryCents: (int) round(((float) $grossMonthly) * 100),
+                grossMonthlySalaryCents: $grossMonthlySalaryCents,
                 taxTableColor: $taxTableColor,
                 loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true),
                 dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string) $employee['dateOfBirth'] : null),
@@ -308,6 +362,7 @@ class PayrollRunService
             $result = $this->calculator->calculate($input, $tables);
 
             $payload = $this->payslipPayload($runId, $employee, $contract, $period, $result);
+            $payload = array_merge($payload, $this->sickPayFields($sickCase, $sickResult));
 
             try {
                 $existingPayslip = ($existingByEmployeeId[$employeeId] ?? null);
@@ -600,6 +655,185 @@ class PayrollRunService
         return null;
 
     }//end coveringContract()
+
+
+    /**
+     * All open (gemeld) SickLeaveCases, indexed by every employee-reference
+     * key (sick-pay-calc design.md D4, the same id/slug/employeeNumber
+     * convention as `contractsByEmployeeKey()`). Each key maps to the LIST of
+     * that employee's open cases.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     *
+     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-005
+     */
+    private function openSickCasesByEmployeeKey(): array
+    {
+        $out = [];
+        foreach ($this->loadAll('SickLeaveCase') as $case) {
+            if ((string) ($case['status'] ?? 'gemeld') !== 'gemeld') {
+                continue;
+            }
+
+            $key = trim((string) ($case['employeeId'] ?? ''));
+            if ($key !== '') {
+                $out[$key][] = $case;
+            }
+        }
+
+        return $out;
+
+    }//end openSickCasesByEmployeeKey()
+
+
+    /**
+     * The employee's open SickLeaveCase covering the period — firstSickDay
+     * on or before the period's last day (sick-pay-calc design.md D4) —
+     * resolved via the id/slug/employeeNumber keys, or null when none
+     * applies (the full-salary path stays unchanged).
+     *
+     * @param array<string, mixed>                             $employee               The Employee.
+     * @param array<string, array<int, array<string, mixed>>> $sickCasesByEmployeeKey The open-case index.
+     * @param string                                            $period                 Wage period (YYYY-MM).
+     *
+     * @return array<string, mixed>|null
+     *
+     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-005
+     */
+    private function openSickCaseFor(array $employee, array $sickCasesByEmployeeKey, string $period): ?array
+    {
+        $keys = array_filter(
+            [
+                $this->idOf($employee),
+                (string) ($employee['@self']['slug'] ?? ''),
+                trim((string) ($employee['employeeNumber'] ?? '')),
+            ],
+            static fn(string $key): bool => $key !== ''
+        );
+
+        foreach ($keys as $key) {
+            foreach (($sickCasesByEmployeeKey[$key] ?? []) as $case) {
+                // A still-open case has no end date; it "covers" the period
+                // once its firstSickDay is on or before the period's last day.
+                if ($this->coversPeriod((string) ($case['firstSickDay'] ?? ''), '', $period) === true) {
+                    return $case;
+                }
+            }
+        }
+
+        return null;
+
+    }//end openSickCaseFor()
+
+
+    /**
+     * Build the SickPayInput for one open case + covering contract
+     * (sick-pay-calc design.md D2/D3/D4): reference = the employee's full
+     * grossMonthlySalary (pre-substitution), aangepastLoon from the case,
+     * percentage from the case, yearOne/firstSickDayInPeriod derived from
+     * firstSickDay vs the period, wachtdag from the case, contract hours for
+     * the WML floor's part-time factor.
+     *
+     * @param array<string, mixed> $case                     The open SickLeaveCase.
+     * @param array<string, mixed> $contract                 The covering EmploymentContract.
+     * @param int                   $grossMonthlySalaryCents The employee's full grossMonthlySalary, in cents (the reference wage).
+     * @param string                $period                   Wage period (YYYY-MM).
+     *
+     * @return SickPayInput
+     *
+     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-005
+     */
+    private function sickPayInputFor(array $case, array $contract, int $grossMonthlySalaryCents, string $period): SickPayInput
+    {
+        $firstSickDay  = trim((string) ($case['firstSickDay'] ?? ''));
+        $aangepastLoon = ($case['aangepastLoon'] ?? null);
+        $hoursPerWeek  = ($contract['hoursPerWeek'] ?? null);
+
+        return new SickPayInput(
+            referenceWageCents: $grossMonthlySalaryCents,
+            aangepastLoonCents: (is_numeric($aangepastLoon) === true ? (int) round(((float) $aangepastLoon) * 100) : 0),
+            loondoorbetalingPercentage: (float) ($case['loondoorbetalingPercentage'] ?? 70),
+            yearOne: $this->isYearOne($firstSickDay, $period),
+            wachtdag: (($case['wachtdag'] ?? false) === true),
+            firstSickDayInPeriod: $this->coversPeriod($firstSickDay, $firstSickDay, $period),
+            contractHoursPerWeek: (is_numeric($hoursPerWeek) === true ? (float) $hoursPerWeek : self::FULLTIME_HOURS_PER_WEEK),
+            fulltimeHoursPerWeek: self::FULLTIME_HOURS_PER_WEEK
+        );
+
+    }//end sickPayInputFor()
+
+
+    /**
+     * Whether the run period falls within the first 52 weeks of firstSickDay
+     * (sick-pay-calc design.md D3) — weeks elapsed between firstSickDay and
+     * the period's first day, floored. An unparseable firstSickDay
+     * defensively yields false (no WML floor rather than a guessed one).
+     *
+     * @param string $firstSickDay ISO-8601 firstSickDay.
+     * @param string $period       Wage period (YYYY-MM).
+     *
+     * @return bool
+     *
+     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-002
+     */
+    private function isYearOne(string $firstSickDay, string $period): bool
+    {
+        try {
+            $periodStart = new \DateTimeImmutable($period.'-01');
+            $day         = new \DateTimeImmutable($firstSickDay);
+        } catch (\Throwable $e) {
+            return false;
+        }
+
+        if ($periodStart < $day) {
+            // The employee fell sick within (or after) this very period.
+            return true;
+        }
+
+        $weeksElapsed = intdiv($periodStart->diff($day)->days, 7);
+
+        return $weeksElapsed < self::YEAR_ONE_WEEKS;
+
+    }//end isYearOne()
+
+
+    /**
+     * The sick-pay Payslip fields to merge onto the payload (sick-pay-calc
+     * design.md D4): all null when no open case applies (a normal payslip
+     * stays byte-identical to the pre-change shape).
+     *
+     * @param array<string, mixed>|null $case   The open SickLeaveCase, or null.
+     * @param SickPayResult|null        $result The calculator output, or null.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-005
+     */
+    private function sickPayFields(?array $case, ?SickPayResult $result): array
+    {
+        if ($case === null || $result === null) {
+            return [
+                'sickLeaveCaseId'         => null,
+                'doorbetaaldLoon'         => null,
+                'wachtdagDeduction'       => null,
+                'sickPayReferenceWage'    => null,
+                'sickPayPercentage'       => null,
+                'sickPayMinimumWageFloor' => null,
+                'sickPayYearOne'          => null,
+            ];
+        }
+
+        return [
+            'sickLeaveCaseId'         => $this->idOf($case),
+            'doorbetaaldLoon'         => $this->euros($result->doorbetaaldLoonCents),
+            'wachtdagDeduction'       => $this->euros($result->wachtdagDeductionCents),
+            'sickPayReferenceWage'    => $this->euros($result->referenceWageCents),
+            'sickPayPercentage'       => $result->appliedPercentage,
+            'sickPayMinimumWageFloor' => $this->euros($result->minimumWageFloorCents),
+            'sickPayYearOne'          => $result->yearOne,
+        ];
+
+    }//end sickPayFields()
 
 
     /**
