@@ -52,6 +52,13 @@ return [
         // settle is deliberately NOT a bare lifecycleActions button. BEFORE
         // the SPA catch-all per REQ-BUYSELL-004.
         ['name' => 'leave#settle', 'url' => '/api/leave/settle', 'verb' => 'POST'],
+        // loonbeslag — guarded, admin/HR-only activate/settle/withdraw
+        // triggers for the LoonbeslagDetail manifest api-call actions
+        // (design.md D5/D6): Loonbeslag.status carries no
+        // x-openregister-lifecycle map. BEFORE the SPA catch-all.
+        ['name' => 'loonbeslag#activate', 'url' => '/api/loonbeslag/activate', 'verb' => 'POST'],
+        ['name' => 'loonbeslag#settle', 'url' => '/api/loonbeslag/settle', 'verb' => 'POST'],
+        ['name' => 'loonbeslag#withdraw', 'url' => '/api/loonbeslag/withdraw', 'verb' => 'POST'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],

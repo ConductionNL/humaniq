@@ -7,7 +7,9 @@
     {"doc": "Rekenvoorschriften geautomatiseerde loonadministratie 2026, uitgave januari 2026 versie 2 (LH 991-Z62FD)", "url": "https://download.belastingdienst.nl/belastingdienst/docs/rekenvoorschriften_voor_geautomatiseerde_loonadministratie_lh991z62fd.pdf"},
     {"doc": "Regeling premiepercentages en maximumpremieloon werknemers- en volksverzekeringen 2026 (bijlagen)", "url": "https://open.overheid.nl/documenten/916b30f3-eafd-4acf-bd5a-f58319dae544/file"},
     {"doc": "Rijksoverheid — Bedragen minimumloon 2026", "url": "https://www.rijksoverheid.nl/onderwerpen/minimumloon/bedragen-minimumloon/bedragen-minimumloon-2026"},
-    {"doc": "Belastingdienst — Werkkostenregeling (vrije ruimte en eindheffing)", "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/personeel-en-loon/content/werkkostenregeling"}
+    {"doc": "Belastingdienst — Werkkostenregeling (vrije ruimte en eindheffing)", "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/personeel-en-loon/content/werkkostenregeling"},
+    {"doc": "Belastingdienst — Bijtelling privégebruik auto 2026", "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/inkomstenbelasting/veranderingen-inkomstenbelasting-2026/bijtelling-privegebruik-auto-2026"},
+    {"doc": "Belastingdienst — Loon en aanmerkelijk belang (gebruikelijkloonregeling, Wet LB 1964 art. 12a)", "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/loon_en_aanmerkelijk_belang/loon_en_aanmerkelijk_belang"}
   ],
   "parameters": {
     "loonheffing": {
@@ -152,6 +154,35 @@
         "source": "Belastingdienst — Werkkostenregeling (eindheffing)",
         "verified": true,
         "note": "Eindheffing rate over the excess of designated allowances above the available vrije ruimte (wkr-administration)."
+      }
+    },
+    "bijtellingPrivegebruikAuto": {
+      "standardPercent": {
+        "value": 22,
+        "source": "Belastingdienst — Bijtelling privégebruik auto 2026",
+        "verified": true,
+        "note": "Standard bijtelling rate over the full cataloguswaarde (bijtellingCategorie standaard, fleet-bijtelling)."
+      },
+      "evReducedPercent": {
+        "value": 18,
+        "source": "Belastingdienst — Bijtelling privégebruik auto 2026",
+        "verified": true,
+        "note": "Reduced bijtelling rate for zero-emission cars up to and including evReducedCataloguswaardeCap (bijtellingCategorie elektrischGeplafonneerd); standardPercent applies to the excess above the cap. Excludes hydrogen/fully-solar-powered cars' uncapped 18% -- a named MVP non-goal (fleet-bijtelling)."
+      },
+      "evReducedCataloguswaardeCap": {
+        "value": 30000,
+        "source": "Belastingdienst — Bijtelling privégebruik auto 2026",
+        "verified": true,
+        "note": "The cataloguswaarde ceiling up to which evReducedPercent applies; standardPercent applies to any excess (bijtellingCategorie elektrischGeplafonneerd, fleet-bijtelling)."
+      }
+    },
+    "gebruikelijkloon": {
+      "jaarnorm": {
+        "value": 58000,
+        "source": "Belastingdienst — Loon en aanmerkelijk belang (gebruikelijkloonregeling, Wet LB 1964 art. 12a)",
+        "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/loon_en_aanmerkelijk_belang/loon_en_aanmerkelijk_belang",
+        "verified": true,
+        "note": "Minimum gebruikelijk loon per jaar for a DGA/aanmerkelijkbelanghouder in 2026 (2024/2025: EUR 56.000). The statutory norm is the HIGHEST of: comparable-employment salary, highest-paid-employee salary at the BV/related BV, or this floor -- the engine checks only the floor (dga-payroll-mode MVP, non-goal: comparable-salary benchmarking)."
       }
     }
   },

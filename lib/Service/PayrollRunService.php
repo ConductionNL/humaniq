@@ -64,6 +64,52 @@
  * transaction for an employee/period -> `leaveBuySell` stays null and
  * `nettoPay` is unchanged (byte-identical to before this change).
  *
+ * loonbeslag (design.md D2/D3/D4): after folding retro-adjustments AND
+ * leave-buy-sell -- against the fully-folded `nettoPay` (engine net +
+ * retroAdjustment + leaveBuySell), never an intermediate figure -- the one
+ * `actief` Loonbeslag covering an employee's period (resolved via the same
+ * id/slug/employeeNumber key convention as `coveringContract()`/
+ * `openSickCaseFor()`, deterministic earliest-`effectiveFrom` tie-break when
+ * more than one match) contributes a floor-clamped deduction: `deduction =
+ * min(orderedAmount, max(0, nettoPaySoFar - beslagvrijeVoet))`, folded into
+ * `nettoPay` as the FOURTH and final current-run post-tax component
+ * (`Payslip.loonbeslag`/`loonbeslagId`). `PayrollCalculator` is never invoked
+ * for this figure -- entirely post-tax arithmetic here. No active Loonbeslag
+ * for an employee/period -> `loonbeslag`/`loonbeslagId` stay null and
+ * `nettoPay` is unchanged (byte-identical to before this change). Idempotent
+ * per (loonbeslagId, period): recalculating a draft run re-derives the same
+ * deduction from scratch every time -- no accumulator anywhere on
+ * `Loonbeslag`.
+ *
+ * fleet-bijtelling (design.md D3/D4): UNLIKE the three post-tax folds above,
+ * this is a genuine engine-INPUT change. Immediately after the sick-pay
+ * substitution (`$grossMonthlySalaryCents = $sickResult->payableGrossCents`)
+ * and immediately before `CalculationInput` is constructed, the employee's
+ * open `CarAssignment` covering the period (resolved via the same
+ * id/slug/employeeNumber key convention as `coveringContract()`/
+ * `openSickCaseFor()`, first match wins -- no overlap guard in the MVP)
+ * contributes `monthlyBijtelling = max(0, round(base_cents / 12) -
+ * eigenBijdrageCents)`, where `base` is the referenced `Vehicle`'s
+ * cataloguswaarde times the applicable `nl-{year}.json`
+ * `bijtellingPrivegebruikAuto` percentage (a two-tier blend for
+ * `elektrischGeplafonneerd`), ADDED to `grossMonthlySalaryCents` -- so
+ * `PayrollCalculator` receives a larger `tvl` and is otherwise never touched.
+ * `Payslip.bijtelling`/`carAssignmentId` record the amount and the assignment
+ * it came from. No covering CarAssignment -> both stay null and the gross is
+ * unchanged (byte-identical to before this change).
+ *
+ * dga-payroll-mode (design.md D3): `CalculationInput.verzekeringsplichtig`
+ * is derived from `!($employee['isDga'] ?? false)` right at construction --
+ * `false` for a DGA (director-major-shareholder), zeroing
+ * `PayrollCalculator`'s Awf/Aof/Wko/Whk while every other component stays
+ * computed exactly as for a regular employee (loonheffing/Zvw/nettoPay
+ * unaffected -- werknemersverzekeringen never reduced net in this engine).
+ * `Payslip.isDga` stamps a denormalized copy of `Employee.isDga` alongside
+ * the other computed fields, so downstream consumers (glpost/UPA/
+ * loonaangifte) see WHY werknemersverzekeringen reads zero instead of
+ * assuming an engine bug. No `isDga` on the Employee -> `verzekeringsplichtig`
+ * defaults `true` and the payslip is byte-identical to before this change.
+ *
  * @category Service
  * @package  OCA\Hrmq\Service
  *
@@ -82,6 +128,11 @@
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
  * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-004
  * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
+ * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
+ * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-004
+ * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
+ * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
  */
 
 declare(strict_types=1);
@@ -293,6 +344,11 @@ class PayrollRunService
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-003
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
      * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-004
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
+     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
      */
     private function generate(array $run): array
     {
@@ -315,6 +371,9 @@ class PayrollRunService
         $existingByEmployeeId         = $this->enginePayslipsByEmployeeId($runId);
         $retroAdjustmentsByEmployeeId = $this->appliedRetroAdjustmentsByEmployeeId($period);
         $leaveBuySellByEmployeeId     = $this->settledLeaveTransactionsByEmployeeId($period);
+        $loonbeslagenByEmployeeKey    = $this->activeLoonbeslagenByEmployeeKey();
+        $carAssignmentsByEmployeeKey  = $this->openCarAssignmentsByEmployeeKey();
+        $vehiclesById                 = $this->vehiclesById();
 
         $computed = [];
         $skipped  = [];
@@ -375,6 +434,23 @@ class PayrollRunService
                 $grossMonthlySalaryCents = $sickResult->payableGrossCents;
             }
 
+            // fleet-bijtelling (design.md D3/D4): a genuine engine-INPUT
+            // change -- unlike sick-pay-calc's substitution above (which
+            // still lands here as the "gross fed to the calculator"), this
+            // ADDS to that gross rather than replacing it. An open
+            // CarAssignment covering the period contributes its monthly
+            // bijtelling; PayrollCalculator is never touched -- it only ever
+            // sees the (possibly larger) tvl. No covering assignment ->
+            // $bijtellingCents stays 0 and the gross is unchanged.
+            $carAssignment   = $this->openCarAssignmentFor($employee, $carAssignmentsByEmployeeKey, $period);
+            $bijtellingCents = 0;
+            if ($carAssignment !== null) {
+                $vehicle         = ($vehiclesById[(string) ($carAssignment['vehicleId'] ?? '')] ?? null);
+                $bijtellingCents = $this->bijtellingCentsFor($vehicle, $carAssignment, $tables);
+
+                $grossMonthlySalaryCents += $bijtellingCents;
+            }
+
             $input = new CalculationInput(
                 grossMonthlySalaryCents: $grossMonthlySalaryCents,
                 taxTableColor: $taxTableColor,
@@ -383,7 +459,8 @@ class PayrollRunService
                 period: $period,
                 awfTariff: $this->awfTariffFor($contract),
                 aofTariff: $aofTariff,
-                whkPercentage: $whkPercentage
+                whkPercentage: $whkPercentage,
+                verzekeringsplichtig: (($employee['isDga'] ?? false) !== true)
             );
 
             $result = $this->calculator->calculate($input, $tables);
@@ -403,10 +480,22 @@ class PayrollRunService
             // byte-identical to before this change.
             $leaveBuySellCents = ($leaveBuySellByEmployeeId[$employeeId] ?? 0);
 
+            // loonbeslag (design.md D3): computed against the FULLY-folded
+            // nettoPay-so-far (engine net + retroAdjustment + leaveBuySell) --
+            // the fourth and final fold, so the beslagvrije voet protects the
+            // employee's actual take-home this period, never an intermediate
+            // figure a same-period nabetaling/leave-payout would still
+            // inflate past.
+            $nettoPaySoFarCents       = ($result->nettoPayCents + $retroAdjustmentCents + $leaveBuySellCents);
+            $loonbeslag               = $this->activeLoonbeslagFor($employee, $loonbeslagenByEmployeeKey, $period);
+            $loonbeslagDeductionCents = ($loonbeslag !== null) ? $this->loonbeslagDeductionCents($loonbeslag, $nettoPaySoFarCents) : 0;
+
             $payload = $this->payslipPayload($runId, $employee, $contract, $period, $result);
             $payload = array_merge($payload, $this->sickPayFields($sickCase, $sickResult));
+            $payload = array_merge($payload, $this->bijtellingFields($carAssignment, $bijtellingCents));
             $payload = array_merge($payload, $this->retroAdjustmentFields($retroAdjustmentCents, $result->nettoPayCents));
             $payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents, ($result->nettoPayCents + $retroAdjustmentCents)));
+            $payload = array_merge($payload, $this->loonbeslagFields($loonbeslag, $loonbeslagDeductionCents, $nettoPaySoFarCents));
 
             try {
                 $existingPayslip = ($existingByEmployeeId[$employeeId] ?? null);
@@ -423,7 +512,7 @@ class PayrollRunService
             $totals['loonheffing']     += $result->loonheffingCents;
             $totals['employerCharges'] += $result->employerChargesCents;
             $totals['withholdings']    += $result->loonheffingCents;
-            $totals['net']             += ($result->nettoPayCents + $retroAdjustmentCents + $leaveBuySellCents);
+            $totals['net']             += ($nettoPaySoFarCents - $loonbeslagDeductionCents);
         }//end foreach
 
         // Orphan cleanup (design.md D4): engine payslips of THIS run whose
@@ -498,7 +587,9 @@ class PayrollRunService
      * loonstrook-content booleans (the record carries the BW 7:626 facts —
      * rendering stays payslip-pdf-docudesk's concern), WKR fields 0 (no WKR
      * administration in the engine MVP), `anoniementariefApplied` false
-     * (precondition employees are skipped, never computed at 52%).
+     * (precondition employees are skipped, never computed at 52%). `isDga`
+     * is a denormalized copy of `Employee.isDga` (dga-payroll-mode), so a
+     * payslip records WHY werknemersverzekeringen reads zero.
      *
      * @param string               $runId    The PayrollRun id.
      * @param array<string, mixed> $employee The Employee.
@@ -509,6 +600,7 @@ class PayrollRunService
      * @return array<string, mixed>
      *
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
+     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
      */
     private function payslipPayload(string $runId, array $employee, array $contract, string $period, CalculationResult $result): array
     {
@@ -526,6 +618,7 @@ class PayrollRunService
             'arbeidskorting'           => $this->euros($result->arbeidskortingCents),
             'volksverzekeringen'       => $this->euros($result->volksverzekeringenCents),
             'werknemersverzekeringen'  => $this->euros($result->werknemersverzekeringenCents),
+            'isDga'                    => (($employee['isDga'] ?? false) === true),
             'zvw'                      => $this->euros($result->zvwCents),
             'zvwMode'                  => $result->zvwMode,
             'zvwRate'                  => $result->zvwRate,
@@ -881,6 +974,178 @@ class PayrollRunService
 
 
     /**
+     * All open (no `effectiveTo`, or `effectiveTo` in the future -- resolved
+     * per-period by `coversPeriod()`) CarAssignments, indexed by every
+     * employee-reference key (fleet-bijtelling, the
+     * `contractsByEmployeeKey()`/`openSickCasesByEmployeeKey()` precedent).
+     * Each key maps to the LIST of that employee's CarAssignments; period
+     * coverage itself is resolved by `openCarAssignmentFor()`, not here.
+     * Degrades gracefully to an empty map when the CarAssignment schema does
+     * not exist yet in the register.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     *
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+     */
+    private function openCarAssignmentsByEmployeeKey(): array
+    {
+        $out = [];
+        foreach ($this->loadAll('CarAssignment') as $assignment) {
+            $key = trim((string) ($assignment['employeeId'] ?? ''));
+            if ($key !== '') {
+                $out[$key][] = $assignment;
+            }
+        }
+
+        return $out;
+
+    }//end openCarAssignmentsByEmployeeKey()
+
+
+    /**
+     * The employee's CarAssignment covering the period, resolved via the
+     * id/slug/employeeNumber keys (the `coveringContract()`/
+     * `openSickCaseFor()` precedent) -- first match wins; no overlap guard in
+     * the MVP (design.md Non-goals). Null when none covers it -- the
+     * bijtelling fold stays a no-op.
+     *
+     * @param array<string, mixed>                              $employee                    The Employee.
+     * @param array<string, array<int, array<string, mixed>>> $carAssignmentsByEmployeeKey The open-assignment index.
+     * @param string                                             $period                      Wage period (YYYY-MM).
+     *
+     * @return array<string, mixed>|null
+     *
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+     */
+    private function openCarAssignmentFor(array $employee, array $carAssignmentsByEmployeeKey, string $period): ?array
+    {
+        $keys = array_filter(
+            [
+                $this->idOf($employee),
+                (string) ($employee['@self']['slug'] ?? ''),
+                trim((string) ($employee['employeeNumber'] ?? '')),
+            ],
+            static fn(string $key): bool => $key !== ''
+        );
+
+        foreach ($keys as $key) {
+            foreach (($carAssignmentsByEmployeeKey[$key] ?? []) as $assignment) {
+                if ($this->coversPeriod((string) ($assignment['effectiveFrom'] ?? ''), (string) ($assignment['effectiveTo'] ?? ''), $period) === true) {
+                    return $assignment;
+                }
+            }
+        }
+
+        return null;
+
+    }//end openCarAssignmentFor()
+
+
+    /**
+     * Every Vehicle, keyed by id (the `enginePayslipsByEmployeeId()`-adjacent
+     * simple by-id index precedent). Degrades gracefully to an empty map when
+     * the Vehicle schema does not exist yet in the register.
+     *
+     * @return array<string, array<string, mixed>>
+     *
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+     */
+    private function vehiclesById(): array
+    {
+        $out = [];
+        foreach ($this->loadAll('Vehicle') as $vehicle) {
+            $id = $this->idOf($vehicle);
+            if ($id !== '') {
+                $out[$id] = $vehicle;
+            }
+        }
+
+        return $out;
+
+    }//end vehiclesById()
+
+
+    /**
+     * The monthly bijtelling for one covering CarAssignment + its referenced
+     * Vehicle (design.md D3): `base = cataloguswaarde x standardPercent/100`
+     * for `bijtellingCategorie: standaard`, or the two-tier blend
+     * `min(cataloguswaarde, evReducedCataloguswaardeCap) x
+     * evReducedPercent/100 + max(0, cataloguswaarde -
+     * evReducedCataloguswaardeCap) x standardPercent/100` for
+     * `elektrischGeplafonneerd`; `monthlyBijtellingCents = max(0,
+     * round(base_cents / 12) - eigenBijdrageCents)` -- floored at zero, never
+     * negative. A dangling/missing Vehicle reference defensively yields 0
+     * (never a guessed figure).
+     *
+     * @param array<string, mixed>|null $vehicle    The referenced Vehicle, or null when dangling.
+     * @param array<string, mixed>       $assignment The covering CarAssignment.
+     * @param TaxTables                  $tables     The tax-year parameter set.
+     *
+     * @return int The monthly bijtelling, in cents (0 when there is no Vehicle or no headroom above eigenBijdrage).
+     *
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+     */
+    private function bijtellingCentsFor(?array $vehicle, array $assignment, TaxTables $tables): int
+    {
+        if ($vehicle === null) {
+            return 0;
+        }
+
+        $cataloguswaarde = ($vehicle['cataloguswaarde'] ?? null);
+        if (is_numeric($cataloguswaarde) === false) {
+            return 0;
+        }
+
+        $cataloguswaardeCents = (int) round(((float) $cataloguswaarde) * 100);
+        $params               = $tables->bijtellingPrivegebruikAuto();
+
+        if ((string) ($vehicle['bijtellingCategorie'] ?? '') === 'elektrischGeplafonneerd') {
+            $cap        = $params['evReducedCataloguswaardeCapCents'];
+            $baseCents  = ((min($cataloguswaardeCents, $cap) * $params['evReducedPercent']) / 100);
+            $baseCents += ((max(0, ($cataloguswaardeCents - $cap)) * $params['standardPercent']) / 100);
+        } else {
+            $baseCents = (($cataloguswaardeCents * $params['standardPercent']) / 100);
+        }
+
+        $eigenBijdrage      = ($assignment['eigenBijdrage'] ?? 0);
+        $eigenBijdrageCents = is_numeric($eigenBijdrage) === true ? (int) round(((float) $eigenBijdrage) * 100) : 0;
+
+        return max(0, ((int) round($baseCents / 12)) - $eigenBijdrageCents);
+
+    }//end bijtellingCentsFor()
+
+
+    /**
+     * The bijtelling + carAssignmentId Payslip fields to merge onto the
+     * payload (design.md D3): both null when no CarAssignment covers this
+     * period -- a normal payslip stays byte-identical to the pre-change
+     * shape. `grossPay` already carries the bijtelling (it was folded into
+     * `grossMonthlySalaryCents` before the calculator ran, design.md D3) --
+     * this only records the amount and its source, it does not fold anything
+     * further into `nettoPay`.
+     *
+     * @param array<string, mixed>|null $carAssignment   The covering CarAssignment, or null.
+     * @param int                        $bijtellingCents The computed monthly bijtelling, in cents.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+     */
+    private function bijtellingFields(?array $carAssignment, int $bijtellingCents): array
+    {
+        if ($carAssignment === null) {
+            return ['bijtelling' => null, 'carAssignmentId' => null];
+        }
+
+        return [
+            'bijtelling'      => $this->euros($bijtellingCents),
+            'carAssignmentId' => $this->idOf($carAssignment),
+        ];
+
+    }//end bijtellingFields()
+
+
+    /**
      * Every employee's summed `deltaNet` (cents) across `applied`
      * PayrollAdjustments whose `settlementPeriod` equals this run's period
      * (retro-adjustments design.md D4) -- the current-run-only folding index.
@@ -1024,6 +1289,178 @@ class PayrollRunService
         ];
 
     }//end leaveBuySellFields()
+
+
+    /**
+     * Every `actief` Loonbeslag, indexed by every employee-reference key
+     * (loonbeslag design.md D4, the `contractsByEmployeeKey()`/
+     * `openSickCasesByEmployeeKey()` precedent: a Loonbeslag's `employeeId`
+     * may be a literal id, slug, or employeeNumber string). Each key maps to
+     * the LIST of that employee's `actief` Loonbeslag records; period
+     * coverage and the earliest-`effectiveFrom` tie-break are resolved by
+     * `activeLoonbeslagFor()`, not here.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     *
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
+     */
+    private function activeLoonbeslagenByEmployeeKey(): array
+    {
+        $out = [];
+        foreach ($this->loadAll('Loonbeslag') as $loonbeslag) {
+            if ((string) ($loonbeslag['status'] ?? '') !== 'actief') {
+                continue;
+            }
+
+            $key = trim((string) ($loonbeslag['employeeId'] ?? ''));
+            if ($key !== '') {
+                $out[$key][] = $loonbeslag;
+            }
+        }
+
+        return $out;
+
+    }//end activeLoonbeslagenByEmployeeKey()
+
+
+    /**
+     * The employee's one `actief` Loonbeslag covering the period, resolved
+     * via the id/slug/employeeNumber keys (the `coveringContract()`/
+     * `openSickCaseFor()` precedent), or null when none covers it. When more
+     * than one match resolves across the keys (design.md D4's MVP-scope
+     * exception, machine-checked separately by `nl-loonbeslag-single-active`),
+     * the earliest `effectiveFrom` wins deterministically -- never a silent
+     * drop, never a double deduction.
+     *
+     * @param array<string, mixed>                              $employee                  The Employee.
+     * @param array<string, array<int, array<string, mixed>>> $loonbeslagenByEmployeeKey The active-Loonbeslag index.
+     * @param string                                             $period                    Wage period (YYYY-MM).
+     *
+     * @return array<string, mixed>|null
+     *
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
+     */
+    private function activeLoonbeslagFor(array $employee, array $loonbeslagenByEmployeeKey, string $period): ?array
+    {
+        $keys = array_filter(
+            [
+                $this->idOf($employee),
+                (string) ($employee['@self']['slug'] ?? ''),
+                trim((string) ($employee['employeeNumber'] ?? '')),
+            ],
+            static fn(string $key): bool => $key !== ''
+        );
+
+        $matches = [];
+        $seenIds = [];
+        foreach ($keys as $key) {
+            foreach (($loonbeslagenByEmployeeKey[$key] ?? []) as $loonbeslag) {
+                if ($this->coversPeriod((string) ($loonbeslag['effectiveFrom'] ?? ''), (string) ($loonbeslag['effectiveTo'] ?? ''), $period) === false) {
+                    continue;
+                }
+
+                $id = $this->idOf($loonbeslag);
+                if ($id !== '' && isset($seenIds[$id]) === true) {
+                    // Already matched via a different key (e.g. both id AND
+                    // employeeNumber resolved the same record) -- never
+                    // double-count the same Loonbeslag.
+                    continue;
+                }
+
+                if ($id !== '') {
+                    $seenIds[$id] = true;
+                }
+
+                $matches[] = $loonbeslag;
+            }
+        }
+
+        if ($matches === []) {
+            return null;
+        }
+
+        usort(
+            $matches,
+            static function (array $a, array $b): int {
+                $aFrom = strtotime((string) ($a['effectiveFrom'] ?? ''));
+                $bFrom = strtotime((string) ($b['effectiveFrom'] ?? ''));
+                return (($aFrom === false ? PHP_INT_MAX : $aFrom) <=> ($bFrom === false ? PHP_INT_MAX : $bFrom));
+            }
+        );
+
+        return $matches[0];
+
+    }//end activeLoonbeslagFor()
+
+
+    /**
+     * The floor-clamped garnishment deduction (design.md D2, REQ-BESLAG-002):
+     * `min(orderedAmount, max(0, nettoPaySoFar - beslagvrijeVoet))`, cents-
+     * exact. This is the hard rule by construction -- `max(0, ...)` clamps a
+     * would-be-negative headroom to zero (nothing deducted once the employee
+     * has no headroom above the voet from other components) and
+     * `min(orderedAmount, ...)` never deducts more than the order specifies
+     * even when headroom exceeds it, so the result can never push `nettoPay`
+     * below `beslagvrijeVoet`.
+     *
+     * @param array<string, mixed> $loonbeslag         The covering `actief` Loonbeslag.
+     * @param int                   $nettoPaySoFarCents nettoPay after retroAdjustment + leaveBuySell are already folded, in cents.
+     *
+     * @return int The deduction, in cents (0 when there is no headroom).
+     *
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
+     */
+    private function loonbeslagDeductionCents(array $loonbeslag, int $nettoPaySoFarCents): int
+    {
+        $orderedAmount = ($loonbeslag['orderedAmount'] ?? 0);
+        $orderedCents  = is_numeric($orderedAmount) === true ? (int) round(((float) $orderedAmount) * 100) : 0;
+
+        $beslagvrijeVoet = ($loonbeslag['beslagvrijeVoet'] ?? 0);
+        $voetCents       = is_numeric($beslagvrijeVoet) === true ? (int) round(((float) $beslagvrijeVoet) * 100) : 0;
+
+        return min($orderedCents, max(0, ($nettoPaySoFarCents - $voetCents)));
+
+    }//end loonbeslagDeductionCents()
+
+
+    /**
+     * The loonbeslag + (adjusted) nettoPay Payslip fields to merge onto the
+     * payload (design.md D2/D4): both `loonbeslag`/`loonbeslagId` null when no
+     * `actief` Loonbeslag covers this period -- a normal payslip stays
+     * byte-identical to the pre-change shape. When a Loonbeslag covers the
+     * period but the deduction is zero (no headroom), `loonbeslagId` is still
+     * stamped (the floor check resolves it -- trivially satisfied since
+     * `nettoPay` already sits at or below the voet from other components) but
+     * `loonbeslag`/`nettoPay` are left unchanged, matching the
+     * present-but-zero-is-null convention `retroAdjustment`/`leaveBuySell`
+     * already use.
+     *
+     * @param array<string, mixed>|null $loonbeslag         The covering `actief` Loonbeslag, or null.
+     * @param int                        $deductionCents     The floor-clamped deduction, in cents.
+     * @param int                        $nettoPaySoFarCents nettoPay after retroAdjustment + leaveBuySell are already folded, in cents.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-004
+     */
+    private function loonbeslagFields(?array $loonbeslag, int $deductionCents, int $nettoPaySoFarCents): array
+    {
+        if ($loonbeslag === null) {
+            return ['loonbeslag' => null, 'loonbeslagId' => null];
+        }
+
+        if ($deductionCents === 0) {
+            return ['loonbeslag' => null, 'loonbeslagId' => $this->idOf($loonbeslag)];
+        }
+
+        return [
+            'loonbeslag'   => $this->euros($deductionCents),
+            'loonbeslagId' => $this->idOf($loonbeslag),
+            'nettoPay'     => $this->euros($nettoPaySoFarCents - $deductionCents),
+        ];
+
+    }//end loonbeslagFields()
 
 
     /**

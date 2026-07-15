@@ -1,0 +1,28 @@
+{
+  "name": "dga-anchor — €3.800,00 wit, korting toegepast, below AOW, isDga:true (dga-payroll-mode design.md D2)",
+  "input": {
+    "grossMonthly": 3800.00,
+    "taxTableColor": "wit",
+    "dateOfBirth": "1990-04-12",
+    "loonheffingskortingToegepast": true,
+    "awfTariff": "low",
+    "aofTariff": "laag",
+    "whkPercentage": 1.52,
+    "period": "2026-02",
+    "verzekeringsplichtig": false
+  },
+  "expected": {
+    "loonheffing": 718.83,
+    "arbeidskorting": 473.75,
+    "volksverzekeringen": 470.86,
+    "zvw": 231.80,
+    "awf": 0.00,
+    "aof": 0.00,
+    "wko": 0.00,
+    "whk": 0.00,
+    "werknemersverzekeringen": 0.00,
+    "employerCharges": 231.80,
+    "vakantiegeldReserved": 304.00,
+    "nettoPay": 3081.17
+  }
+}

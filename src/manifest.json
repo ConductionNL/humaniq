@@ -39,7 +39,10 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "CompAdjustment", "urlTemplate": "/apps/hrmq/comp-adjustments/{uuid}", "displayName": "Compensation Adjustment" },
 		{ "registerSlug": "hrmq", "schemaSlug": "LeaveTransaction", "urlTemplate": "/apps/hrmq/leave-transactions/{uuid}", "displayName": "Leave Transaction" },
 		{ "registerSlug": "hrmq", "schemaSlug": "WkrDeclaration", "urlTemplate": "/apps/hrmq/wkr-declarations/{uuid}", "displayName": "WKR Declaration" },
-		{ "registerSlug": "hrmq", "schemaSlug": "WkrAssessment", "urlTemplate": "/apps/hrmq/wkr-assessments/{uuid}", "displayName": "WKR Assessment" }
+		{ "registerSlug": "hrmq", "schemaSlug": "WkrAssessment", "urlTemplate": "/apps/hrmq/wkr-assessments/{uuid}", "displayName": "WKR Assessment" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Loonbeslag", "urlTemplate": "/apps/hrmq/loonbeslagen/{uuid}", "displayName": "Loonbeslag" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Vehicle", "urlTemplate": "/apps/hrmq/vehicles/{uuid}", "displayName": "Vehicle" },
+		{ "registerSlug": "hrmq", "schemaSlug": "CarAssignment", "urlTemplate": "/apps/hrmq/car-assignments/{uuid}", "displayName": "Car Assignment" }
 	],
 	"menu": [
 		{
@@ -310,6 +313,18 @@
 					"label": "Uitgiftes",
 					"icon": "HandshakeOutline",
 					"route": "AssetAssignments"
+				},
+				{
+					"id": "Vehicles",
+					"label": "Wagenpark",
+					"icon": "CarSide",
+					"route": "Vehicles"
+				},
+				{
+					"id": "CarAssignments",
+					"label": "Autotoewijzingen",
+					"icon": "CarKey",
+					"route": "CarAssignments"
 				}
 			]
 		},
@@ -384,6 +399,12 @@
 					"label": "WKR-beoordelingen",
 					"icon": "CalculatorVariantOutline",
 					"route": "WkrAssessments"
+				},
+				{
+					"id": "Loonbeslagen",
+					"label": "Loonbeslagen",
+					"icon": "Gavel",
+					"route": "Loonbeslagen"
 				}
 			]
 		},
@@ -906,7 +927,7 @@
 					{ "id": "ps-gross", "type": "stat", "title": "Gross pay", "icon": "Cash", "content": { "label": "Gross pay", "caption": "this period", "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "Payslip", "metric": "sum", "field": "grossPay", "filter": { "id": "@objectId" } } } },
 					{ "id": "ps-net", "type": "stat", "title": "Net pay", "icon": "CurrencyEur", "content": { "label": "Net pay", "caption": "paid out", "icon": "CurrencyEur", "valueColor": "#46ba61", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "Payslip", "metric": "sum", "field": "nettoPay", "filter": { "id": "@objectId" } } } },
 					{ "id": "ps-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
-					{ "id": "ps-data", "type": "data", "title": "Payslip breakdown", "icon": "TableColumn", "content": { "columns": 4, "exclude": ["employeeId"] } }
+					{ "id": "ps-data", "type": "data", "title": "Payslip breakdown", "icon": "TableColumn", "content": { "columns": 4, "exclude": ["employeeId", "loonbeslagId"] } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "ps-gross", "gridX": 0, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
@@ -1328,6 +1349,96 @@
 					{ "id": "4", "widgetId": "wa-eindheffing", "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 3 },
 					{ "id": "5", "widgetId": "wa-data", "gridX": 0, "gridY": 3, "gridWidth": 8, "gridHeight": 10 },
 					{ "id": "6", "widgetId": "wa-related", "gridX": 8, "gridY": 3, "gridWidth": 4, "gridHeight": 10 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
+			}
+		},
+		{
+			"id": "Loonbeslagen",
+			"route": "/loonbeslagen",
+			"type": "index",
+			"title": "Loonbeslagen",
+			"actions": [
+				{
+					"id": "create-loonbeslag",
+					"label": "Loonbeslag registreren",
+					"type": "open-form",
+					"icon": "PlusCircleOutline",
+					"register": "hrmq",
+					"schema": "Loonbeslag",
+					"onSuccessRoute": "LoonbeslagDetail",
+					"successMessage": "Loonbeslag geregistreerd (status concept -- gebruik Verifiëren en activeren om deducties te starten)."
+				}
+			],
+			"config": {
+				"register": "hrmq",
+				"schema": "Loonbeslag",
+				"description": "Court/deurwaarder-ordered wage garnishments (loonbeslag): de floor-clamped periodieke deductie op nettoPay -- nooit onder de beslagvrije voet -- gevouwen in de lopende loonrun na verrekening en verlofkoop-verkoop. Admin/HR-only; activeren/voldaan-markeren/intrekken via de gegroeide acties, nooit een kaal lifecycle-transitieknop.",
+				"columns": ["employeeId", "creditor", "dossierRef", "orderedAmount", "beslagvrijeVoet", "status", "effectiveFrom"],
+				"filters": ["status"],
+				"sort": { "field": "effectiveFrom", "order": "desc" }
+			}
+		},
+		{
+			"id": "LoonbeslagDetail",
+			"route": "/loonbeslagen/:id",
+			"type": "detail",
+			"title": "Loonbeslag",
+			"actions": [
+				{
+					"id": "loonbeslag-activate",
+					"label": "Verifiëren en activeren",
+					"type": "api-call",
+					"icon": "CheckCircleOutline",
+					"url": "/api/loonbeslag/activate",
+					"method": "POST",
+					"params": { "loonbeslagId": "@objectId" },
+					"confirm": true,
+					"successMessage": "Loonbeslag geverifieerd en geactiveerd.",
+					"errorMessage": "Activeren van het loonbeslag is mislukt."
+				},
+				{
+					"id": "loonbeslag-settle",
+					"label": "Markeer voldaan",
+					"type": "api-call",
+					"icon": "CashCheck",
+					"url": "/api/loonbeslag/settle",
+					"method": "POST",
+					"params": { "loonbeslagId": "@objectId" },
+					"confirm": true,
+					"successMessage": "Loonbeslag gemarkeerd als voldaan.",
+					"errorMessage": "Markeren als voldaan is mislukt."
+				},
+				{
+					"id": "loonbeslag-withdraw",
+					"label": "Intrekken",
+					"type": "api-call",
+					"icon": "CloseCircleOutline",
+					"url": "/api/loonbeslag/withdraw",
+					"method": "POST",
+					"params": { "loonbeslagId": "@objectId", "reason": "Ingetrokken door beheerder/HR via het beheerpaneel." },
+					"confirm": true,
+					"successMessage": "Loonbeslag ingetrokken.",
+					"errorMessage": "Intrekken van het loonbeslag is mislukt."
+				}
+			],
+			"config": {
+				"register": "hrmq",
+				"schema": "Loonbeslag",
+				"_note": "loonbeslag (2026-07-15): the WkrAssessmentDetail stat-tile precedent -- three headline KPIs (ordered amount, beslagvrije voet, total claim) lead the page since that is the exposure question HR checks first, then the full record (creditor/dossierRef/status/effectiveFrom/effectiveTo/activated*/settled*/withdrawn*) in the lb-data widget below. No lifecycleActions: Loonbeslag.status carries no x-openregister-lifecycle (design.md D5) -- the admin/HR-gate-before-resolve check a lifecycle guard's (object, action, userId) contract cannot express, so all three transitions are guarded api-call actions against LoonbeslagController instead. The withdraw action's `reason` param is currently a fixed default string (the manifest v2 api-call action type has no free-text prompt collection) -- a prompt-collecting modal is a named fast-follow (README). Admin/HR only, mirroring the Payroll nav group. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "lb-ordered", "type": "stat", "title": "Ordered amount", "icon": "CashMinus", "content": { "label": "Ordered amount", "caption": "per periode", "icon": "CashMinus", "valueColor": "#e9322d", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "Loonbeslag", "metric": "sum", "field": "orderedAmount", "filter": { "id": "@objectId" } } } },
+					{ "id": "lb-voet", "type": "stat", "title": "Beslagvrije voet", "icon": "ShieldCheckOutline", "content": { "label": "Beslagvrije voet", "caption": "beschermd minimum", "icon": "ShieldCheckOutline", "valueColor": "#46ba61", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "Loonbeslag", "metric": "sum", "field": "beslagvrijeVoet", "filter": { "id": "@objectId" } } } },
+					{ "id": "lb-total", "type": "stat", "title": "Totale vordering", "icon": "CashMultiple", "content": { "label": "Totale vordering", "caption": "totaal beslag", "icon": "CashMultiple", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 2 }, "source": { "register": "hrmq", "schema": "Loonbeslag", "metric": "sum", "field": "totalClaim", "filter": { "id": "@objectId" } } } },
+					{ "id": "lb-data", "type": "data", "title": "Loonbeslag", "icon": "Gavel", "content": { "columns": 2, "exclude": ["employeeId"] } },
+					{ "id": "lb-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "lb-ordered", "gridX": 0, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "2", "widgetId": "lb-voet", "gridX": 4, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "3", "widgetId": "lb-total", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "4", "widgetId": "lb-data", "gridX": 0, "gridY": 3, "gridWidth": 8, "gridHeight": 12 },
+					{ "id": "5", "widgetId": "lb-related", "gridX": 8, "gridY": 3, "gridWidth": 4, "gridHeight": 12 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] }
 			}
@@ -2148,6 +2259,77 @@
 				"layout": [
 					{ "id": "1", "widgetId": "aa-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
 					{ "id": "2", "widgetId": "aa-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 5 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "Vehicles",
+			"route": "/vehicles",
+			"type": "index",
+			"title": "Wagenpark",
+			"config": {
+				"register": "hrmq",
+				"schema": "Vehicle",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
+				"description": "Bedrijfsauto's met hun fiscale gegevens (cataloguswaarde, brandstoftype, bijtellingcategorie) -- fleet-bijtelling.",
+				"columns": ["name", "kenteken", "cataloguswaarde", "fuelType", "bijtellingCategorie", "active"],
+				"filters": ["fuelType", "bijtellingCategorie", "active"],
+				"sort": { "field": "name", "order": "asc" }
+			}
+		},
+		{
+			"id": "VehicleDetail",
+			"route": "/vehicles/:id",
+			"type": "detail",
+			"title": "Vehicle",
+			"config": {
+				"register": "hrmq",
+				"schema": "Vehicle",
+				"_note": "fleet-bijtelling (2026-07-15): a company car's fiscal facts, deliberately decoupled from the custody-tracking Asset (hr-assets.json) -- the AssetDetail precedent, minus the custody lifecycle (no x-openregister-lifecycle on Vehicle). The data widget shows all fields (no $ref to exclude -- Vehicle has no outbound relations). An FK-scoped 'Toewijzingen' object-list (CarAssignment.vehicleId = @objectId) is the inbound-relation direction, ordered most-recent-first, rowRoute to CarAssignmentDetail. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "veh-data", "type": "data", "title": "Vehicle", "icon": "CarSide", "content": { "columns": 2, "include": ["name", "kenteken", "cataloguswaarde", "fuelType", "bijtellingCategorie", "active"] } },
+					{ "id": "veh-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "veh-assignments", "type": "object-list", "title": "Toewijzingen", "icon": "CarKey", "content": { "register": "hrmq", "schema": "CarAssignment", "filter": { "vehicleId": "@objectId" }, "sort": { "field": "effectiveFrom", "dir": "desc" }, "columns": [ { "key": "employeeId", "label": "Employee" }, { "key": "effectiveFrom", "label": "Vanaf" }, { "key": "effectiveTo", "label": "Tot" }, { "key": "eigenBijdrage", "label": "Eigen bijdrage" } ], "limit": 25, "rowRoute": "CarAssignmentDetail", "viewAllRoute": "CarAssignments", "viewAllQuery": { "vehicleId": "@objectId" }, "emptyText": "No toewijzingen yet" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "veh-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "veh-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 },
+					{ "id": "3", "widgetId": "veh-assignments", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 5 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "CarAssignments",
+			"route": "/car-assignments",
+			"type": "index",
+			"title": "Autotoewijzingen",
+			"config": {
+				"register": "hrmq",
+				"schema": "CarAssignment",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
+				"description": "Effectief-gedateerde toewijzingen van bedrijfsauto's aan werknemers voor privegebruik (fleet-bijtelling).",
+				"columns": ["vehicleId", "employeeId", "effectiveFrom", "effectiveTo", "eigenBijdrage"],
+				"sort": { "field": "effectiveFrom", "order": "desc" }
+			}
+		},
+		{
+			"id": "CarAssignmentDetail",
+			"route": "/car-assignments/:id",
+			"type": "detail",
+			"title": "Autotoewijzing",
+			"config": {
+				"register": "hrmq",
+				"schema": "CarAssignment",
+				"_note": "fleet-bijtelling (2026-07-15): a simple two-panel leaf like AssetAssignmentDetail/OrgAssignmentDetail -- the data widget (effectiveFrom/effectiveTo/eigenBijdrage) excludes vehicleId/employeeId since Related already resolves and links both the assigned Vehicle and the receiving Employee by name. No child lists. No lifecycleActions: CarAssignment carries no x-openregister-lifecycle -- effective-dating lives on effectiveFrom/effectiveTo, not a workflow status (design.md D1). Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "ca-data", "type": "data", "title": "Toewijzing", "icon": "CarKey", "content": { "columns": 2, "exclude": ["vehicleId", "employeeId"] } },
+					{ "id": "ca-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "ca-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "2", "widgetId": "ca-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 5 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
 			}

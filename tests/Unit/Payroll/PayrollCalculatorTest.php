@@ -24,6 +24,9 @@
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-002
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-009
+ * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
  */
 
 declare(strict_types=1);
@@ -39,6 +42,7 @@ use PHPUnit\Framework\TestCase;
  * Golden-fixture tests for PayrollCalculator.
  *
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
  */
 class PayrollCalculatorTest extends TestCase
 {
@@ -112,6 +116,147 @@ class PayrollCalculatorTest extends TestCase
         $this->assertSame(18.92, $result->appliedTaxRate);
 
     }//end testAnchorCaseReproducesTheHandComputedFigures()
+
+
+    /**
+     * The dga-payroll-mode golden anchor (design.md D2): the same €3.800,00
+     * anchor input with `verzekeringsplichtig: false` (a DGA). Pins that
+     * Awf/Aof/Wko/Whk/werknemersverzekeringen are ALL zero, employerCharges
+     * reduces to Zvw only (€231,80), and every other component --
+     * loonheffing/arbeidskorting/zvw/vakantiegeldReserved/nettoPay -- is
+     * byte-identical to the non-DGA anchor (REQ-DGA-001/REQ-DGA-002): netto
+     * does NOT rise for a DGA, because werknemersverzekeringen never reduced
+     * it in the first place (design.md D2 grounding correction).
+     *
+     * @return void
+     */
+    public function testDgaAnchorZeroesWerknemersverzekeringenAndLeavesNettoUnchanged(): void
+    {
+        $calculator = new PayrollCalculator();
+        $tables     = TaxTables::load('nl-2026');
+
+        $input = new CalculationInput(
+            grossMonthlySalaryCents: 380000,
+            taxTableColor: 'wit',
+            loonheffingskortingToegepast: true,
+            dateOfBirth: '1990-04-12',
+            period: '2026-02',
+            awfTariff: 'low',
+            aofTariff: 'laag',
+            whkPercentage: 1.52,
+            verzekeringsplichtig: false
+        );
+
+        $result = $calculator->calculate($input, $tables);
+
+        $this->assertSame(0, $result->awfCents, 'DGA: awf must be zero');
+        $this->assertSame(0, $result->aofCents, 'DGA: aof must be zero');
+        $this->assertSame(0, $result->wkoCents, 'DGA: wko must be zero');
+        $this->assertSame(0, $result->whkCents, 'DGA: whk must be zero');
+        $this->assertSame(0, $result->werknemersverzekeringenCents, 'DGA: werknemersverzekeringen must be zero');
+        $this->assertSame(23180, $result->employerChargesCents, 'DGA: employerCharges must reduce to zvw only');
+
+        // Byte-identical to the non-DGA anchor.
+        $this->assertSame(71883, $result->loonheffingCents);
+        $this->assertSame(47375, $result->arbeidskortingCents);
+        $this->assertSame(47086, $result->volksverzekeringenCents);
+        $this->assertSame(23180, $result->zvwCents);
+        $this->assertSame(30400, $result->vakantiegeldReservedCents);
+        $this->assertSame(308117, $result->nettoPayCents, 'DGA: nettoPay must be UNCHANGED from the non-DGA anchor (werknemersverzekeringen never reduce net)');
+        $this->assertSame(18.92, $result->appliedTaxRate);
+
+    }//end testDgaAnchorZeroesWerknemersverzekeringenAndLeavesNettoUnchanged()
+
+
+    /**
+     * Regression guard for design.md D1: `verzekeringsplichtig: true` (the
+     * default, omitted) on the exact same anchor input must reproduce the
+     * pre-existing non-DGA anchor figures unchanged -- proving the default
+     * path is byte-identical after adding the DGA gate (REQ-DGA-001).
+     *
+     * @return void
+     */
+    public function testVerzekeringsplichtigTrueReproducesThePreExistingAnchorUnchanged(): void
+    {
+        $calculator = new PayrollCalculator();
+        $tables     = TaxTables::load('nl-2026');
+
+        $input = new CalculationInput(
+            grossMonthlySalaryCents: 380000,
+            taxTableColor: 'wit',
+            loonheffingskortingToegepast: true,
+            dateOfBirth: '1990-04-12',
+            period: '2026-02',
+            awfTariff: 'low',
+            aofTariff: 'laag',
+            whkPercentage: 1.52,
+            verzekeringsplichtig: true
+        );
+
+        $result = $calculator->calculate($input, $tables);
+
+        $this->assertSame(71883, $result->loonheffingCents);
+        $this->assertSame(47375, $result->arbeidskortingCents);
+        $this->assertSame(47086, $result->volksverzekeringenCents);
+        $this->assertSame(23180, $result->zvwCents);
+        $this->assertSame(10412, $result->awfCents);
+        $this->assertSame(23826, $result->aofCents);
+        $this->assertSame(1900, $result->wkoCents);
+        $this->assertSame(5776, $result->whkCents);
+        $this->assertSame(41914, $result->werknemersverzekeringenCents);
+        $this->assertSame(65094, $result->employerChargesCents);
+        $this->assertSame(30400, $result->vakantiegeldReservedCents);
+        $this->assertSame(308117, $result->nettoPayCents);
+        $this->assertSame(18.92, $result->appliedTaxRate);
+
+    }//end testVerzekeringsplichtigTrueReproducesThePreExistingAnchorUnchanged()
+
+
+    /**
+     * The fleet-bijtelling golden anchor (design.md D4): the D2 anchor input
+     * (€3.800,00) plus €500,00 bijtelling (cataloguswaarde €45.000,00 x 22% /
+     * 12 = €825,00 - eigenBijdrage €325,00 = €500,00) folded into the taxable
+     * gross BEFORE this calculator runs (`PayrollRunService`'s job, never
+     * this class's) -> `tvl` = €4.300,00. Pins every D4 figure digit-for-digit
+     * -- proving `PayrollCalculator` needs zero changes to correctly derive
+     * every downstream component from a larger `tvl`.
+     *
+     * @return void
+     */
+    public function testBijtellingAnchorCaseReproducesTheHandComputedFigures(): void
+    {
+        $calculator = new PayrollCalculator();
+        $tables     = TaxTables::load('nl-2026');
+
+        $input = new CalculationInput(
+            grossMonthlySalaryCents: 430000,
+            taxTableColor: 'wit',
+            loonheffingskortingToegepast: true,
+            dateOfBirth: '1990-04-12',
+            period: '2026-02',
+            awfTariff: 'low',
+            aofTariff: 'laag',
+            whkPercentage: 1.52
+        );
+
+        $result = $calculator->calculate($input, $tables);
+
+        $this->assertSame(430000, $result->grossPayCents);
+        $this->assertSame(97083, $result->loonheffingCents);
+        $this->assertSame(44133, $result->arbeidskortingCents);
+        $this->assertSame(55920, $result->volksverzekeringenCents);
+        $this->assertSame(26230, $result->zvwCents);
+        $this->assertSame(11782, $result->awfCents);
+        $this->assertSame(26961, $result->aofCents);
+        $this->assertSame(2150, $result->wkoCents);
+        $this->assertSame(6536, $result->whkCents);
+        $this->assertSame(47429, $result->werknemersverzekeringenCents);
+        $this->assertSame(73659, $result->employerChargesCents);
+        $this->assertSame(34400, $result->vakantiegeldReservedCents);
+        $this->assertSame(332917, $result->nettoPayCents);
+        $this->assertSame(22.58, $result->appliedTaxRate);
+
+    }//end testBijtellingAnchorCaseReproducesTheHandComputedFigures()
 
 
     /**
@@ -216,7 +361,8 @@ class PayrollCalculatorTest extends TestCase
             period: (string) $input['period'],
             awfTariff: (string) $input['awfTariff'],
             aofTariff: (string) $input['aofTariff'],
-            whkPercentage: (float) $input['whkPercentage']
+            whkPercentage: (float) $input['whkPercentage'],
+            verzekeringsplichtig: (bool) ($input['verzekeringsplichtig'] ?? true)
         );
 
     }//end inputFromFixture()
