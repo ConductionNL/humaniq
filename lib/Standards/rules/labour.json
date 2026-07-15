@@ -359,6 +359,18 @@
       "machineCheckable": true,
       "effectiveDate": "2026-01-01",
       "sourceUrl": null
+    },
+    {
+      "id": "comp-adjustment-within-band",
+      "domain": "labour",
+      "jurisdiction": "global",
+      "framework": "hr-comp-core",
+      "source": "HR-administration control (compensation-review band integrity)",
+      "statement": "A proposed, approved, or effective CompAdjustment's proposedSalary shall fall within its target SalaryBand's [minSalary, maxSalary] range. Vacuous when the adjustment is still draft, or when it targets no SalaryBand (a band-less proposal is advisory, mirroring the payScalesVerified precedent).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": null
     }
   ]
 }

@@ -30,6 +30,7 @@ namespace OCA\Hrmq\AppInfo;
 
 use OCA\Hrmq\Command\RulesAuditCommand;
 use OCA\Hrmq\Command\RulesSeedTestDataCommand;
+use OCA\Hrmq\Lifecycle\CompEffectiveDateGuard;
 use OCA\Hrmq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Hrmq\Lifecycle\PayrollRunApprovedGuard;
 use OCP\AppFramework\App;
@@ -114,6 +115,19 @@ class Application extends App implements IBootstrap
                     container: $c,
                     appConfig: $c->get(\OCP\IAppConfig::class)
                 );
+            }
+        );
+
+        // OpenRegister lifecycle guard for the CompAdjustment `effectuate` transition
+        // (comp-cycles) — fail-closed on the adjustment's own effectiveDate. Stateless
+        // (reads only the payload passed to check()), so it is constructed exactly
+        // like NoSelfApprovalGuard, keyed by its FQCN so OpenRegister's
+        // LifecycleGuardRegistry resolves the `requires` tag declared on the
+        // `effectuate` transition.
+        $context->registerService(
+            CompEffectiveDateGuard::class,
+            static function ($c): CompEffectiveDateGuard {
+                return new CompEffectiveDateGuard();
             }
         );
 

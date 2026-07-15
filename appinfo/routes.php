@@ -35,6 +35,9 @@ return [
         // rostering — guarded trigger for the RosterDetail "ATW-controle"
         // manifest api-call action (design.md D5).
         ['name' => 'roster#check', 'url' => '/api/roster/check', 'verb' => 'POST'],
+        // comp-cycles — guarded trigger for the CompAdjustmentDetail
+        // "Effectueren" manifest api-call action (design.md D6).
+        ['name' => 'comp#effectuate', 'url' => '/api/comp/effectuate', 'verb' => 'POST'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],
