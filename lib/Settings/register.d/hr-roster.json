@@ -1,0 +1,89 @@
+{
+    "x-hrmq-fragment": "hr-roster",
+    "components": {
+        "schemas": {
+            "Shift": {
+                "slug": "Shift",
+                "icon": "TimelineClockOutline",
+                "version": "0.1.0",
+                "title": "Shift",
+                "description": "A reusable shift definition (klok-vorm template): a name, wall-clock startTime/endTime, a break duration and an optional org-unit scope. Shifts are authored once and reused across many RosterAssignments — the schema carries no dated instance data of its own. A shift whose endTime is not after its startTime denotes a night shift crossing midnight (the AttendanceRecord night-shift convention): an assignment referencing it composes a plannedEnd on the following calendar day (rostering MVP, design D1/D2).",
+                "type": "object",
+                "required": [
+                    "name",
+                    "startTime",
+                    "endTime"
+                ],
+                "properties": {
+                    "name": {"type": "string", "title": "Name", "description": "Shift name (e.g. \"Vroege dienst\", \"Nachtdienst\")."},
+                    "startTime": {"type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$", "title": "Start time", "description": "Wall-clock time (HH:MM) the shift starts."},
+                    "endTime": {"type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$", "title": "End time", "description": "Wall-clock time (HH:MM) the shift ends. A value not after startTime denotes a dienst crossing midnight — RosterAssignment composes plannedEnd on the following calendar day for such a shift."},
+                    "breakMinutes": {"type": "number", "minimum": 0, "default": 0, "title": "Break minutes", "description": "Unpaid break minutes built into this shift. Copied onto plannedBreakMinutes for every assignment referencing this shift (design D2)."},
+                    "orgUnitId": {"type": "string", "format": "uuid", "$ref": "OrgUnit", "nullable": true, "title": "Org unit", "description": "UUID reference to the OrgUnit this shift is scoped to; null when the shift is usable org-wide."},
+                    "active": {"type": "boolean", "default": true, "title": "Active", "description": "Whether this shift definition is currently offered for new assignments."}
+                }
+            },
+            "Roster": {
+                "slug": "Roster",
+                "icon": "CalendarMonthOutline",
+                "version": "0.1.0",
+                "title": "Roster",
+                "description": "The publishable header for one planning period + scope: the unit of publication for a set of RosterAssignments. Publishing (status concept -> gepubliceerd) freezes the plan and makes it the team's roster; intrekken returns it to concept for edits, with the change visible in the audit trail. A Roster carries no hours of its own — it groups its RosterAssignments (rostering MVP, design D1/D3).",
+                "type": "object",
+                "required": [
+                    "period",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "concept",
+                        "terminal": [],
+                        "transitions": {
+                            "publiceren": {
+                                "from": ["concept"],
+                                "to": "gepubliceerd",
+                                "description": "Freeze the plan and make it the team's roster. Its RosterAssignments join the standing occ hrmq:rules:audit ATW cross-check once published (design D4)."
+                            },
+                            "intrekken": {
+                                "from": ["gepubliceerd"],
+                                "to": "concept",
+                                "description": "Return a published roster to concept for correction (the AttendanceRecord heropenen precedent). The change stays visible in the audit trail."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "period": {"type": "string", "title": "Period", "description": "The planning period this roster covers: an ISO week (YYYY-Www) or an ISO month (YYYY-MM)."},
+                    "orgUnitId": {"type": "string", "format": "uuid", "$ref": "OrgUnit", "nullable": true, "title": "Org unit", "description": "UUID reference to the OrgUnit this roster is scoped to; null for an org-wide roster."},
+                    "administrationId": {"type": "string", "nullable": true, "title": "Administration", "description": "Optional administration/entity code this roster belongs to, matching the PayrollRun.administrationId vocabulary."},
+                    "status": {"type": "string", "enum": ["concept", "gepubliceerd"], "default": "concept", "title": "Status", "description": "Roster lifecycle status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd via publiceren, gepubliceerd -> concept via intrekken)."}
+                }
+            },
+            "RosterAssignment": {
+                "slug": "RosterAssignment",
+                "icon": "AccountClockOutline",
+                "version": "0.1.0",
+                "title": "Roster assignment",
+                "description": "One employee on one shift on one date within a Roster. Carries the projected planned-clock fields plannedStart/plannedEnd/plannedBreakMinutes, composed from the assignment's date and the referenced Shift's startTime/endTime/breakMinutes at write time (never a live Shift join — design D2), so the Arbeidstijdenwet cross-check (NlRosterChecks) is decidable from the assignment alone, exactly as AttendanceRecord's raw clockIn/clockOut/breakMinutes decide the realised-day checks. A published plan stays stable against a later Shift edit: the projected fields are re-derived only when the assignment itself is re-written. No approval status of its own — the plan's only lifecycle lives on the Roster header.",
+                "type": "object",
+                "required": [
+                    "rosterId",
+                    "employeeId",
+                    "shiftId",
+                    "date"
+                ],
+                "properties": {
+                    "rosterId": {"type": "string", "format": "uuid", "$ref": "Roster", "title": "Roster", "description": "UUID reference to the Roster this assignment belongs to."},
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "title": "Employee", "description": "UUID reference to the assigned Employee."},
+                    "shiftId": {"type": "string", "format": "uuid", "$ref": "Shift", "title": "Shift", "description": "UUID reference to the Shift this assignment projects onto its date."},
+                    "date": {"type": "string", "format": "date", "title": "Date", "description": "The working day this assignment covers (ISO 8601 date) — the working-day key even for a night shift whose plannedEnd falls after midnight, mirroring AttendanceRecord.date."},
+                    "plannedStart": {"type": "string", "format": "date-time", "nullable": true, "title": "Planned start", "description": "Composed from date + the referenced Shift's startTime at write time. Read raw by the ATW checks, never re-derived from a live Shift join (design D2)."},
+                    "plannedEnd": {"type": "string", "format": "date-time", "nullable": true, "title": "Planned end", "description": "Composed from date + the referenced Shift's endTime at write time, rolled to the following calendar day when the shift's endTime is not after its startTime (night shift). Null passes nl-atw-max-werkdag/nl-atw-pauze vacuously — shift length not decidable (the AttendanceRecord open-day precedent)."},
+                    "plannedBreakMinutes": {"type": "number", "minimum": 0, "nullable": true, "title": "Planned break minutes", "description": "Copied from the referenced Shift's breakMinutes at write time. Input to the nl-atw-pauze check."},
+                    "userId": {"type": "string", "nullable": true, "title": "User", "description": "Denormalized Nextcloud user id of the assigned employee (mijn-hr-self-service pattern) — a plain NC-user-id string, a copy of the linked Employee's nextcloudUserId, never a $ref relation, mirroring AttendanceRecord.userId / Timesheet.userId verbatim."}
+                }
+            }
+        }
+    }
+}

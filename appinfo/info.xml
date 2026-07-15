@@ -133,5 +133,10 @@ Vrij en open source onder de EUPL-1.2-licentie.
              gross-to-net breakdown from CLI flags (proforma-payslip MVP
              trigger). Persists nothing. -->
         <command>OCA\Hrmq\Command\ProformaPayslipCommand</command>
+        <!-- On-demand Arbeidstijdenwet cross-check over one Roster (by id or
+             period) and its RosterAssignments, regardless of publish status
+             (rostering MVP). Read-only; exits non-zero on any mandatory
+             violation. -->
+        <command>OCA\Hrmq\Command\RosterCheckCommand</command>
     </commands>
 </info>
