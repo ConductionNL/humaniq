@@ -178,6 +178,66 @@
                     "engineVersion": {"type": "string", "nullable": true, "description": "Versioned tax-year table file that produced this run (e.g. nl-2026 -> lib/Standards/tables/nl-2026.json) (nl-engine-table-version). Null for hand-entered runs."}
                 }
             },
+            "PayrollMutationReport": {
+                "slug": "PayrollMutationReport",
+                "icon": "SwapHorizontal",
+                "version": "0.1.0",
+                "title": "Payroll Mutation Report",
+                "description": "The persisted per-run payroll diff an accountant reviews before approving a run (payroll-mutation-reports): who joined/left and each shared employee's per-component cents delta between two PayrollRuns, plus the run-level roll-up totals. Produced ONLY by PayrollMutationService — a pure, read-only subtraction over the two runs' already-persisted Payslips, never a recomputation. Idempotently keyed on (fromRunId, toRunId): regenerating the same pair upserts this record in place.",
+                "type": "object",
+                "x-schema-org": "schema:Report",
+                "required": [
+                    "toRunId",
+                    "toPeriod",
+                    "administrationId",
+                    "generatedAt"
+                ],
+                "properties": {
+                    "fromRunId": {"type": "string", "format": "uuid", "$ref": "PayrollRun", "nullable": true, "description": "The baseline PayrollRun this report diffs from. Null on a first run — no prior period exists (design.md D5)."},
+                    "toRunId": {"type": "string", "format": "uuid", "$ref": "PayrollRun", "description": "The PayrollRun being reviewed."},
+                    "fromPeriod": {"type": "string", "nullable": true, "description": "Baseline wage period, YYYY-MM. Empty/null on a first run."},
+                    "toPeriod": {"type": "string", "description": "Reviewed wage period, YYYY-MM."},
+                    "administrationId": {"type": "string", "description": "The administration both runs belong to (a cross-administration pair is refused, never diffed)."},
+                    "generatedAt": {"type": "string", "format": "date-time", "description": "When this report was (re)generated."},
+                    "enteredCount": {"type": "integer", "description": "Employees present only in the `to` run."},
+                    "leftCount": {"type": "integer", "description": "Employees present only in the `from` run."},
+                    "changedCount": {"type": "integer", "description": "Shared employees with any headline-component delta (= changedEmployeeCount)."},
+                    "unchangedCount": {"type": "integer", "description": "Shared employees with all four headline components equal."},
+                    "grossDelta": {"type": "number", "description": "Sum of to.grossPay minus sum of from.grossPay, over the union of employees."},
+                    "netDelta": {"type": "number", "description": "Sum of to.nettoPay minus sum of from.nettoPay, over the union of employees."},
+                    "loonheffingDelta": {"type": "number", "description": "Sum of to.loonheffing minus sum of from.loonheffing, over the union of employees."},
+                    "employerCostDelta": {"type": "number", "description": "Sum of to.(werknemersverzekeringen+zvw) minus sum of from, over the union of employees."},
+                    "totalWageCostDelta": {"type": "number", "description": "grossDelta + employerCostDelta — the accountant's headline total wage-cost change."},
+                    "lines": {
+                        "type": "array",
+                        "title": "Mutation lines",
+                        "description": "Per-employee mutation rows: classification (entered/left/changed/unchanged) plus the four headline components' before/after/delta.",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "employeeId",
+                                "classification"
+                            ],
+                            "properties": {
+                                "employeeId": {"type": "string", "description": "The employee this mutation line concerns."},
+                                "classification": {"type": "string", "enum": ["entered", "left", "changed", "unchanged"]},
+                                "grossPayBefore": {"type": "number"},
+                                "grossPayAfter": {"type": "number"},
+                                "grossPayDelta": {"type": "number"},
+                                "nettoPayBefore": {"type": "number"},
+                                "nettoPayAfter": {"type": "number"},
+                                "nettoPayDelta": {"type": "number"},
+                                "loonheffingBefore": {"type": "number"},
+                                "loonheffingAfter": {"type": "number"},
+                                "loonheffingDelta": {"type": "number"},
+                                "employerCostBefore": {"type": "number"},
+                                "employerCostAfter": {"type": "number"},
+                                "employerCostDelta": {"type": "number"}
+                            }
+                        }
+                    }
+                }
+            },
             "LoonaangifteFiling": {
                 "slug": "LoonaangifteFiling",
                 "icon": "FileSendOutline",

@@ -22,6 +22,10 @@ return [
         // payroll-core-engine — guarded trigger for the PayrollRunDetail
         // "(Her)berekenen" manifest api-call action (design.md D6).
         ['name' => 'payroll#calculate', 'url' => '/api/payroll/calculate', 'verb' => 'POST'],
+        // payroll-mutation-reports — guarded, admin/HR-only trigger for the
+        // PayrollRunDetail "Mutatieoverzicht" manifest api-call action
+        // (design.md D6).
+        ['name' => 'payroll#mutations', 'url' => '/api/payroll/mutations', 'verb' => 'POST'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],
