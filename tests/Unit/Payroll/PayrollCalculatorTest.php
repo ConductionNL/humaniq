@@ -24,6 +24,7 @@
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-002
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-009
+ * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
  */
 
 declare(strict_types=1);
@@ -112,6 +113,53 @@ class PayrollCalculatorTest extends TestCase
         $this->assertSame(18.92, $result->appliedTaxRate);
 
     }//end testAnchorCaseReproducesTheHandComputedFigures()
+
+
+    /**
+     * The fleet-bijtelling golden anchor (design.md D4): the D2 anchor input
+     * (€3.800,00) plus €500,00 bijtelling (cataloguswaarde €45.000,00 x 22% /
+     * 12 = €825,00 - eigenBijdrage €325,00 = €500,00) folded into the taxable
+     * gross BEFORE this calculator runs (`PayrollRunService`'s job, never
+     * this class's) -> `tvl` = €4.300,00. Pins every D4 figure digit-for-digit
+     * -- proving `PayrollCalculator` needs zero changes to correctly derive
+     * every downstream component from a larger `tvl`.
+     *
+     * @return void
+     */
+    public function testBijtellingAnchorCaseReproducesTheHandComputedFigures(): void
+    {
+        $calculator = new PayrollCalculator();
+        $tables     = TaxTables::load('nl-2026');
+
+        $input = new CalculationInput(
+            grossMonthlySalaryCents: 430000,
+            taxTableColor: 'wit',
+            loonheffingskortingToegepast: true,
+            dateOfBirth: '1990-04-12',
+            period: '2026-02',
+            awfTariff: 'low',
+            aofTariff: 'laag',
+            whkPercentage: 1.52
+        );
+
+        $result = $calculator->calculate($input, $tables);
+
+        $this->assertSame(430000, $result->grossPayCents);
+        $this->assertSame(97083, $result->loonheffingCents);
+        $this->assertSame(44133, $result->arbeidskortingCents);
+        $this->assertSame(55920, $result->volksverzekeringenCents);
+        $this->assertSame(26230, $result->zvwCents);
+        $this->assertSame(11782, $result->awfCents);
+        $this->assertSame(26961, $result->aofCents);
+        $this->assertSame(2150, $result->wkoCents);
+        $this->assertSame(6536, $result->whkCents);
+        $this->assertSame(47429, $result->werknemersverzekeringenCents);
+        $this->assertSame(73659, $result->employerChargesCents);
+        $this->assertSame(34400, $result->vakantiegeldReservedCents);
+        $this->assertSame(332917, $result->nettoPayCents);
+        $this->assertSame(22.58, $result->appliedTaxRate);
+
+    }//end testBijtellingAnchorCaseReproducesTheHandComputedFigures()
 
 
     /**

@@ -457,6 +457,28 @@ final class TaxTables
 
 
     /**
+     * The bijtelling privegebruik auto rate/cap parameters (fleet-bijtelling
+     * design.md D2): `standardPercent`/`evReducedPercent` stay on the
+     * percentage scale (0-100) -- the vakantiebijslagRate()/zvw() precedent --
+     * `evReducedCataloguswaardeCapCents` is cents-converted since it is
+     * compared directly against a Vehicle's cataloguswaarde in cents.
+     *
+     * @return array{standardPercent: float, evReducedPercent: float, evReducedCataloguswaardeCapCents: int}
+     *
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-002
+     */
+    public function bijtellingPrivegebruikAuto(): array
+    {
+        return [
+            'standardPercent'                  => (float) $this->leaf(['bijtellingPrivegebruikAuto', 'standardPercent', 'value']),
+            'evReducedPercent'                 => (float) $this->leaf(['bijtellingPrivegebruikAuto', 'evReducedPercent', 'value']),
+            'evReducedCataloguswaardeCapCents'  => self::euroToCents((float) $this->leaf(['bijtellingPrivegebruikAuto', 'evReducedCataloguswaardeCap', 'value'])),
+        ];
+
+    }//end bijtellingPrivegebruikAuto()
+
+
+    /**
      * Read a nested leaf from `parameters` by path, throwing when absent —
      * a malformed/incomplete table file must never silently compute a wrong
      * amount.

@@ -167,6 +167,13 @@ class RuleAuditService
         // the `buildPayrollContext()`/`buildGlPostContext()` precedent.
         $context['wkr'] = $this->buildWkrContext();
 
+        // fleet-bijtelling: a Vehicle-by-id + CarAssignment-by-id index so
+        // NlFleetChecks::checks()['Payslip']['nl-bijtelling-auto-privegebruik']
+        // can re-derive a payslip's recorded bijtelling from its referenced
+        // CarAssignment/Vehicle without re-querying the register — the
+        // `buildPayrollContext()` `runsById`/`loonbeslagenById` precedent.
+        $context['fleet'] = $this->buildFleetContext();
+
         $corpusTotal      = RuleCatalogue::count();
         $machineCheckable = count(RuleCatalogue::machineCheckable());
         $enforceable      = count(RuleEngine::checkedRuleIds());
@@ -568,6 +575,7 @@ class RuleAuditService
         $context['cao']        = $this->buildCaoContext();
         $context['retro']      = $this->buildRetroContext();
         $context['wkr']        = $this->buildWkrContext();
+        $context['fleet']      = $this->buildFleetContext();
 
         $runs   = [];
         $runIds = [];
@@ -674,6 +682,46 @@ class RuleAuditService
         ];
 
     }//end buildPayrollContext()
+
+
+    /**
+     * Build the Vehicle-by-id + CarAssignment-by-id indexes consumed by
+     * NlFleetChecks' `nl-bijtelling-auto-privegebruik` predicate
+     * (fleet-bijtelling design.md D5, the `buildPayrollContext()`
+     * `runsById`/`loonbeslagenById` precedent): the FULL row keyed by id for
+     * each, so the predicate can resolve a Payslip's `carAssignmentId` ->
+     * CarAssignment -> `vehicleId` -> Vehicle chain without re-querying the
+     * register. Degrades gracefully to empty maps when the Vehicle/
+     * CarAssignment schemas do not exist yet in the register.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
+     */
+    private function buildFleetContext(): array
+    {
+        $vehiclesById = [];
+        foreach ($this->loadAll('Vehicle') as $vehicle) {
+            $id = (string) ($vehicle['id'] ?? $vehicle['@self']['id'] ?? '');
+            if ($id !== '') {
+                $vehiclesById[$id] = $vehicle;
+            }
+        }
+
+        $carAssignmentsById = [];
+        foreach ($this->loadAll('CarAssignment') as $assignment) {
+            $id = (string) ($assignment['id'] ?? $assignment['@self']['id'] ?? '');
+            if ($id !== '') {
+                $carAssignmentsById[$id] = $assignment;
+            }
+        }
+
+        return [
+            'vehiclesById'       => $vehiclesById,
+            'carAssignmentsById' => $carAssignmentsById,
+        ];
+
+    }//end buildFleetContext()
 
 
     /**

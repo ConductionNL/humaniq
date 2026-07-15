@@ -1284,6 +1284,18 @@
       "parameters": {
         "rateEurPerKm": 0.23
       }
+    },
+    {
+      "id": "nl-bijtelling-auto-privegebruik",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "nl-bijtelling-auto",
+      "source": "Wet LB 1964 art. 13bis",
+      "statement": "Where an employee has a company car available for private use, the employer shall add the monthly bijtelling privegebruik auto to the taxable wage BEFORE loonheffing/premies are computed -- a percentage of the car's cataloguswaarde (standard rate, or a reduced rate up to a cataloguswaarde cap for zero-emission cars) less any eigen bijdrage the employee pays for private use, floored at zero.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/inkomstenbelasting/veranderingen-inkomstenbelasting-2026/bijtelling-privegebruik-auto-2026"
     }
   ]
 }
