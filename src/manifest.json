@@ -40,7 +40,9 @@
 		{ "registerSlug": "hrmq", "schemaSlug": "LeaveTransaction", "urlTemplate": "/apps/hrmq/leave-transactions/{uuid}", "displayName": "Leave Transaction" },
 		{ "registerSlug": "hrmq", "schemaSlug": "WkrDeclaration", "urlTemplate": "/apps/hrmq/wkr-declarations/{uuid}", "displayName": "WKR Declaration" },
 		{ "registerSlug": "hrmq", "schemaSlug": "WkrAssessment", "urlTemplate": "/apps/hrmq/wkr-assessments/{uuid}", "displayName": "WKR Assessment" },
-		{ "registerSlug": "hrmq", "schemaSlug": "Loonbeslag", "urlTemplate": "/apps/hrmq/loonbeslagen/{uuid}", "displayName": "Loonbeslag" }
+		{ "registerSlug": "hrmq", "schemaSlug": "Loonbeslag", "urlTemplate": "/apps/hrmq/loonbeslagen/{uuid}", "displayName": "Loonbeslag" },
+		{ "registerSlug": "hrmq", "schemaSlug": "Vehicle", "urlTemplate": "/apps/hrmq/vehicles/{uuid}", "displayName": "Vehicle" },
+		{ "registerSlug": "hrmq", "schemaSlug": "CarAssignment", "urlTemplate": "/apps/hrmq/car-assignments/{uuid}", "displayName": "Car Assignment" }
 	],
 	"menu": [
 		{
@@ -311,6 +313,18 @@
 					"label": "Uitgiftes",
 					"icon": "HandshakeOutline",
 					"route": "AssetAssignments"
+				},
+				{
+					"id": "Vehicles",
+					"label": "Wagenpark",
+					"icon": "CarSide",
+					"route": "Vehicles"
+				},
+				{
+					"id": "CarAssignments",
+					"label": "Autotoewijzingen",
+					"icon": "CarKey",
+					"route": "CarAssignments"
 				}
 			]
 		},
@@ -2245,6 +2259,77 @@
 				"layout": [
 					{ "id": "1", "widgetId": "aa-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
 					{ "id": "2", "widgetId": "aa-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 5 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "Vehicles",
+			"route": "/vehicles",
+			"type": "index",
+			"title": "Wagenpark",
+			"config": {
+				"register": "hrmq",
+				"schema": "Vehicle",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
+				"description": "Bedrijfsauto's met hun fiscale gegevens (cataloguswaarde, brandstoftype, bijtellingcategorie) -- fleet-bijtelling.",
+				"columns": ["name", "kenteken", "cataloguswaarde", "fuelType", "bijtellingCategorie", "active"],
+				"filters": ["fuelType", "bijtellingCategorie", "active"],
+				"sort": { "field": "name", "order": "asc" }
+			}
+		},
+		{
+			"id": "VehicleDetail",
+			"route": "/vehicles/:id",
+			"type": "detail",
+			"title": "Vehicle",
+			"config": {
+				"register": "hrmq",
+				"schema": "Vehicle",
+				"_note": "fleet-bijtelling (2026-07-15): a company car's fiscal facts, deliberately decoupled from the custody-tracking Asset (hr-assets.json) -- the AssetDetail precedent, minus the custody lifecycle (no x-openregister-lifecycle on Vehicle). The data widget shows all fields (no $ref to exclude -- Vehicle has no outbound relations). An FK-scoped 'Toewijzingen' object-list (CarAssignment.vehicleId = @objectId) is the inbound-relation direction, ordered most-recent-first, rowRoute to CarAssignmentDetail. Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "veh-data", "type": "data", "title": "Vehicle", "icon": "CarSide", "content": { "columns": 2, "include": ["name", "kenteken", "cataloguswaarde", "fuelType", "bijtellingCategorie", "active"] } },
+					{ "id": "veh-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "veh-assignments", "type": "object-list", "title": "Toewijzingen", "icon": "CarKey", "content": { "register": "hrmq", "schema": "CarAssignment", "filter": { "vehicleId": "@objectId" }, "sort": { "field": "effectiveFrom", "dir": "desc" }, "columns": [ { "key": "employeeId", "label": "Employee" }, { "key": "effectiveFrom", "label": "Vanaf" }, { "key": "effectiveTo", "label": "Tot" }, { "key": "eigenBijdrage", "label": "Eigen bijdrage" } ], "limit": 25, "rowRoute": "CarAssignmentDetail", "viewAllRoute": "CarAssignments", "viewAllQuery": { "vehicleId": "@objectId" }, "emptyText": "No toewijzingen yet" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "veh-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "veh-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 },
+					{ "id": "3", "widgetId": "veh-assignments", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 5 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
+			}
+		},
+		{
+			"id": "CarAssignments",
+			"route": "/car-assignments",
+			"type": "index",
+			"title": "Autotoewijzingen",
+			"config": {
+				"register": "hrmq",
+				"schema": "CarAssignment",
+				"filter": { "administrationId": "@workspace.activeAdministrationId?" },
+				"description": "Effectief-gedateerde toewijzingen van bedrijfsauto's aan werknemers voor privegebruik (fleet-bijtelling).",
+				"columns": ["vehicleId", "employeeId", "effectiveFrom", "effectiveTo", "eigenBijdrage"],
+				"sort": { "field": "effectiveFrom", "order": "desc" }
+			}
+		},
+		{
+			"id": "CarAssignmentDetail",
+			"route": "/car-assignments/:id",
+			"type": "detail",
+			"title": "Autotoewijzing",
+			"config": {
+				"register": "hrmq",
+				"schema": "CarAssignment",
+				"_note": "fleet-bijtelling (2026-07-15): a simple two-panel leaf like AssetAssignmentDetail/OrgAssignmentDetail -- the data widget (effectiveFrom/effectiveTo/eigenBijdrage) excludes vehicleId/employeeId since Related already resolves and links both the assigned Vehicle and the receiving Employee by name. No child lists. No lifecycleActions: CarAssignment carries no x-openregister-lifecycle -- effective-dating lives on effectiveFrom/effectiveTo, not a workflow status (design.md D1). Audit history is a sidebar tab.",
+				"widgets": [
+					{ "id": "ca-data", "type": "data", "title": "Toewijzing", "icon": "CarKey", "content": { "columns": 2, "exclude": ["vehicleId", "employeeId"] } },
+					{ "id": "ca-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "ca-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "2", "widgetId": "ca-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 5 }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "config": { "linkedType": "audit-trail" } } ] }
 			}

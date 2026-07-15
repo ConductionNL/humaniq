@@ -1,0 +1,27 @@
+{
+  "name": "bijtelling-anchor — €3.800,00 wit anchor + €500,00 bijtelling (fleet-bijtelling design.md D4: cataloguswaarde €45.000,00 x 22% / 12 = €825,00 - eigenBijdrage €325,00 = €500,00) -> taxable gross €4.300,00",
+  "input": {
+    "grossMonthly": 4300.00,
+    "taxTableColor": "wit",
+    "dateOfBirth": "1990-04-12",
+    "loonheffingskortingToegepast": true,
+    "awfTariff": "low",
+    "aofTariff": "laag",
+    "whkPercentage": 1.52,
+    "period": "2026-02"
+  },
+  "expected": {
+    "loonheffing": 970.83,
+    "arbeidskorting": 441.33,
+    "volksverzekeringen": 559.20,
+    "zvw": 262.30,
+    "awf": 117.82,
+    "aof": 269.61,
+    "wko": 21.50,
+    "whk": 65.36,
+    "werknemersverzekeringen": 474.29,
+    "employerCharges": 736.59,
+    "vakantiegeldReserved": 344.00,
+    "nettoPay": 3329.17
+  }
+}

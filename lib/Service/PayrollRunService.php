@@ -81,6 +81,23 @@
  * deduction from scratch every time -- no accumulator anywhere on
  * `Loonbeslag`.
  *
+ * fleet-bijtelling (design.md D3/D4): UNLIKE the three post-tax folds above,
+ * this is a genuine engine-INPUT change. Immediately after the sick-pay
+ * substitution (`$grossMonthlySalaryCents = $sickResult->payableGrossCents`)
+ * and immediately before `CalculationInput` is constructed, the employee's
+ * open `CarAssignment` covering the period (resolved via the same
+ * id/slug/employeeNumber key convention as `coveringContract()`/
+ * `openSickCaseFor()`, first match wins -- no overlap guard in the MVP)
+ * contributes `monthlyBijtelling = max(0, round(base_cents / 12) -
+ * eigenBijdrageCents)`, where `base` is the referenced `Vehicle`'s
+ * cataloguswaarde times the applicable `nl-{year}.json`
+ * `bijtellingPrivegebruikAuto` percentage (a two-tier blend for
+ * `elektrischGeplafonneerd`), ADDED to `grossMonthlySalaryCents` -- so
+ * `PayrollCalculator` receives a larger `tvl` and is otherwise never touched.
+ * `Payslip.bijtelling`/`carAssignmentId` record the amount and the assignment
+ * it came from. No covering CarAssignment -> both stay null and the gross is
+ * unchanged (byte-identical to before this change).
+ *
  * @category Service
  * @package  OCA\Hrmq\Service
  *
@@ -102,6 +119,7 @@
  * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
  * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-004
  * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
+ * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
  */
 
 declare(strict_types=1);
@@ -315,6 +333,7 @@ class PayrollRunService
      * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
      * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
      * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-004
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
      */
     private function generate(array $run): array
     {
@@ -338,6 +357,8 @@ class PayrollRunService
         $retroAdjustmentsByEmployeeId = $this->appliedRetroAdjustmentsByEmployeeId($period);
         $leaveBuySellByEmployeeId     = $this->settledLeaveTransactionsByEmployeeId($period);
         $loonbeslagenByEmployeeKey    = $this->activeLoonbeslagenByEmployeeKey();
+        $carAssignmentsByEmployeeKey  = $this->openCarAssignmentsByEmployeeKey();
+        $vehiclesById                 = $this->vehiclesById();
 
         $computed = [];
         $skipped  = [];
@@ -398,6 +419,23 @@ class PayrollRunService
                 $grossMonthlySalaryCents = $sickResult->payableGrossCents;
             }
 
+            // fleet-bijtelling (design.md D3/D4): a genuine engine-INPUT
+            // change -- unlike sick-pay-calc's substitution above (which
+            // still lands here as the "gross fed to the calculator"), this
+            // ADDS to that gross rather than replacing it. An open
+            // CarAssignment covering the period contributes its monthly
+            // bijtelling; PayrollCalculator is never touched -- it only ever
+            // sees the (possibly larger) tvl. No covering assignment ->
+            // $bijtellingCents stays 0 and the gross is unchanged.
+            $carAssignment   = $this->openCarAssignmentFor($employee, $carAssignmentsByEmployeeKey, $period);
+            $bijtellingCents = 0;
+            if ($carAssignment !== null) {
+                $vehicle         = ($vehiclesById[(string) ($carAssignment['vehicleId'] ?? '')] ?? null);
+                $bijtellingCents = $this->bijtellingCentsFor($vehicle, $carAssignment, $tables);
+
+                $grossMonthlySalaryCents += $bijtellingCents;
+            }
+
             $input = new CalculationInput(
                 grossMonthlySalaryCents: $grossMonthlySalaryCents,
                 taxTableColor: $taxTableColor,
@@ -438,6 +476,7 @@ class PayrollRunService
 
             $payload = $this->payslipPayload($runId, $employee, $contract, $period, $result);
             $payload = array_merge($payload, $this->sickPayFields($sickCase, $sickResult));
+            $payload = array_merge($payload, $this->bijtellingFields($carAssignment, $bijtellingCents));
             $payload = array_merge($payload, $this->retroAdjustmentFields($retroAdjustmentCents, $result->nettoPayCents));
             $payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents, ($result->nettoPayCents + $retroAdjustmentCents)));
             $payload = array_merge($payload, $this->loonbeslagFields($loonbeslag, $loonbeslagDeductionCents, $nettoPaySoFarCents));
@@ -912,6 +951,178 @@ class PayrollRunService
         ];
 
     }//end sickPayFields()
+
+
+    /**
+     * All open (no `effectiveTo`, or `effectiveTo` in the future -- resolved
+     * per-period by `coversPeriod()`) CarAssignments, indexed by every
+     * employee-reference key (fleet-bijtelling, the
+     * `contractsByEmployeeKey()`/`openSickCasesByEmployeeKey()` precedent).
+     * Each key maps to the LIST of that employee's CarAssignments; period
+     * coverage itself is resolved by `openCarAssignmentFor()`, not here.
+     * Degrades gracefully to an empty map when the CarAssignment schema does
+     * not exist yet in the register.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     *
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+     */
+    private function openCarAssignmentsByEmployeeKey(): array
+    {
+        $out = [];
+        foreach ($this->loadAll('CarAssignment') as $assignment) {
+            $key = trim((string) ($assignment['employeeId'] ?? ''));
+            if ($key !== '') {
+                $out[$key][] = $assignment;
+            }
+        }
+
+        return $out;
+
+    }//end openCarAssignmentsByEmployeeKey()
+
+
+    /**
+     * The employee's CarAssignment covering the period, resolved via the
+     * id/slug/employeeNumber keys (the `coveringContract()`/
+     * `openSickCaseFor()` precedent) -- first match wins; no overlap guard in
+     * the MVP (design.md Non-goals). Null when none covers it -- the
+     * bijtelling fold stays a no-op.
+     *
+     * @param array<string, mixed>                              $employee                    The Employee.
+     * @param array<string, array<int, array<string, mixed>>> $carAssignmentsByEmployeeKey The open-assignment index.
+     * @param string                                             $period                      Wage period (YYYY-MM).
+     *
+     * @return array<string, mixed>|null
+     *
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+     */
+    private function openCarAssignmentFor(array $employee, array $carAssignmentsByEmployeeKey, string $period): ?array
+    {
+        $keys = array_filter(
+            [
+                $this->idOf($employee),
+                (string) ($employee['@self']['slug'] ?? ''),
+                trim((string) ($employee['employeeNumber'] ?? '')),
+            ],
+            static fn(string $key): bool => $key !== ''
+        );
+
+        foreach ($keys as $key) {
+            foreach (($carAssignmentsByEmployeeKey[$key] ?? []) as $assignment) {
+                if ($this->coversPeriod((string) ($assignment['effectiveFrom'] ?? ''), (string) ($assignment['effectiveTo'] ?? ''), $period) === true) {
+                    return $assignment;
+                }
+            }
+        }
+
+        return null;
+
+    }//end openCarAssignmentFor()
+
+
+    /**
+     * Every Vehicle, keyed by id (the `enginePayslipsByEmployeeId()`-adjacent
+     * simple by-id index precedent). Degrades gracefully to an empty map when
+     * the Vehicle schema does not exist yet in the register.
+     *
+     * @return array<string, array<string, mixed>>
+     *
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+     */
+    private function vehiclesById(): array
+    {
+        $out = [];
+        foreach ($this->loadAll('Vehicle') as $vehicle) {
+            $id = $this->idOf($vehicle);
+            if ($id !== '') {
+                $out[$id] = $vehicle;
+            }
+        }
+
+        return $out;
+
+    }//end vehiclesById()
+
+
+    /**
+     * The monthly bijtelling for one covering CarAssignment + its referenced
+     * Vehicle (design.md D3): `base = cataloguswaarde x standardPercent/100`
+     * for `bijtellingCategorie: standaard`, or the two-tier blend
+     * `min(cataloguswaarde, evReducedCataloguswaardeCap) x
+     * evReducedPercent/100 + max(0, cataloguswaarde -
+     * evReducedCataloguswaardeCap) x standardPercent/100` for
+     * `elektrischGeplafonneerd`; `monthlyBijtellingCents = max(0,
+     * round(base_cents / 12) - eigenBijdrageCents)` -- floored at zero, never
+     * negative. A dangling/missing Vehicle reference defensively yields 0
+     * (never a guessed figure).
+     *
+     * @param array<string, mixed>|null $vehicle    The referenced Vehicle, or null when dangling.
+     * @param array<string, mixed>       $assignment The covering CarAssignment.
+     * @param TaxTables                  $tables     The tax-year parameter set.
+     *
+     * @return int The monthly bijtelling, in cents (0 when there is no Vehicle or no headroom above eigenBijdrage).
+     *
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+     */
+    private function bijtellingCentsFor(?array $vehicle, array $assignment, TaxTables $tables): int
+    {
+        if ($vehicle === null) {
+            return 0;
+        }
+
+        $cataloguswaarde = ($vehicle['cataloguswaarde'] ?? null);
+        if (is_numeric($cataloguswaarde) === false) {
+            return 0;
+        }
+
+        $cataloguswaardeCents = (int) round(((float) $cataloguswaarde) * 100);
+        $params               = $tables->bijtellingPrivegebruikAuto();
+
+        if ((string) ($vehicle['bijtellingCategorie'] ?? '') === 'elektrischGeplafonneerd') {
+            $cap        = $params['evReducedCataloguswaardeCapCents'];
+            $baseCents  = ((min($cataloguswaardeCents, $cap) * $params['evReducedPercent']) / 100);
+            $baseCents += ((max(0, ($cataloguswaardeCents - $cap)) * $params['standardPercent']) / 100);
+        } else {
+            $baseCents = (($cataloguswaardeCents * $params['standardPercent']) / 100);
+        }
+
+        $eigenBijdrage      = ($assignment['eigenBijdrage'] ?? 0);
+        $eigenBijdrageCents = is_numeric($eigenBijdrage) === true ? (int) round(((float) $eigenBijdrage) * 100) : 0;
+
+        return max(0, ((int) round($baseCents / 12)) - $eigenBijdrageCents);
+
+    }//end bijtellingCentsFor()
+
+
+    /**
+     * The bijtelling + carAssignmentId Payslip fields to merge onto the
+     * payload (design.md D3): both null when no CarAssignment covers this
+     * period -- a normal payslip stays byte-identical to the pre-change
+     * shape. `grossPay` already carries the bijtelling (it was folded into
+     * `grossMonthlySalaryCents` before the calculator ran, design.md D3) --
+     * this only records the amount and its source, it does not fold anything
+     * further into `nettoPay`.
+     *
+     * @param array<string, mixed>|null $carAssignment   The covering CarAssignment, or null.
+     * @param int                        $bijtellingCents The computed monthly bijtelling, in cents.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+     */
+    private function bijtellingFields(?array $carAssignment, int $bijtellingCents): array
+    {
+        if ($carAssignment === null) {
+            return ['bijtelling' => null, 'carAssignmentId' => null];
+        }
+
+        return [
+            'bijtelling'      => $this->euros($bijtellingCents),
+            'carAssignmentId' => $this->idOf($carAssignment),
+        ];
+
+    }//end bijtellingFields()
 
 
     /**

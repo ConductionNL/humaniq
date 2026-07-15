@@ -32,6 +32,7 @@
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-003
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-004
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
+ * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
  */
 
 declare(strict_types=1);
@@ -988,6 +989,204 @@ class PayrollRunServiceTest extends TestCase
         $this->assertSame(2950.00, $secondPayslips[1]['nettoPay']);
 
     }//end testRecalculatingALoonbeslagAffectedRunIsIdempotent()
+
+
+    /**
+     * The Vehicle fixture (fleet-bijtelling design.md D4 anchor:
+     * cataloguswaarde €45.000,00, bijtellingCategorie standaard/22%),
+     * overridable per test.
+     *
+     * @param array<string, mixed> $overrides Fields to override.
+     *
+     * @return array<string, mixed>
+     */
+    private function vehicle(array $overrides=[]): array
+    {
+        return array_merge(
+            [
+                'id'                  => 'veh-1',
+                'name'                => 'Tesla Model Y',
+                'kenteken'            => '1-ABC-23',
+                'cataloguswaarde'     => 45000.00,
+                'fuelType'            => 'volledigElektrisch',
+                'bijtellingCategorie' => 'standaard',
+                'active'              => true,
+            ],
+            $overrides
+        );
+
+    }//end vehicle()
+
+
+    /**
+     * The CarAssignment fixture covering 2026-02 for the anchor employee
+     * (fleet-bijtelling design.md D4 anchor: eigenBijdrage €325,00),
+     * overridable per test.
+     *
+     * @param array<string, mixed> $overrides Fields to override.
+     *
+     * @return array<string, mixed>
+     */
+    private function carAssignment(array $overrides=[]): array
+    {
+        return array_merge(
+            [
+                'id'            => 'ca-1',
+                'vehicleId'     => 'veh-1',
+                'employeeId'    => 'emp-1',
+                'effectiveFrom' => '2026-01-01',
+                'effectiveTo'   => null,
+                'eigenBijdrage' => 325.00,
+            ],
+            $overrides
+        );
+
+    }//end carAssignment()
+
+
+    /**
+     * fleet-bijtelling REQ-FLEET-003 Scenario 1 — the design.md D4
+     * bijtelling-anchor case: the €3.800,00 anchor employee with a covering
+     * CarAssignment (cataloguswaarde €45.000,00 standaard 22%, eigenBijdrage
+     * €325,00) reproduces every hand-computed D4 figure digit-for-digit.
+     *
+     * @return void
+     */
+    public function testBijtellingFoldsIntoTaxableGrossBeforeTheCalculatorRuns(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+                'Vehicle'            => [$this->vehicle()],
+                'CarAssignment'      => [$this->carAssignment()],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $this->assertSame('calculated', $result['status']);
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+        $payslip = $payslips[0];
+
+        // The design.md D4 anchor figures, euro-denominated, digit-for-digit.
+        $this->assertSame(500.00, $payslip['bijtelling']);
+        $this->assertSame('ca-1', $payslip['carAssignmentId']);
+        $this->assertSame(4300.00, $payslip['grossPay'], 'grossPay already includes the bijtelling -- the calculator received the larger tvl.');
+        $this->assertSame(970.83, $payslip['loonheffing']);
+        $this->assertSame(441.33, $payslip['arbeidskorting']);
+        $this->assertSame(262.30, $payslip['zvw']);
+        $this->assertSame(474.29, $payslip['werknemersverzekeringen']);
+        $this->assertSame(344.00, $payslip['vakantiegeldReserved']);
+        $this->assertSame(3329.17, $payslip['nettoPay']);
+
+    }//end testBijtellingFoldsIntoTaxableGrossBeforeTheCalculatorRuns()
+
+
+    /**
+     * fleet-bijtelling REQ-FLEET-003 Scenario 2 — no covering CarAssignment
+     * leaves the payslip byte-identical to the pre-change (no company car)
+     * shape: `bijtelling`/`carAssignmentId` both null, `grossPay`/`nettoPay`
+     * the plain D2 anchor figures.
+     *
+     * @return void
+     */
+    public function testNoCoveringCarAssignmentLeavesThePayslipUnchanged(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+                'Vehicle'            => [$this->vehicle()],
+                'CarAssignment'      => [],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+
+        $this->assertNull($payslips[0]['bijtelling']);
+        $this->assertNull($payslips[0]['carAssignmentId']);
+        $this->assertSame(3800.00, $payslips[0]['grossPay']);
+        $this->assertSame(3081.17, $payslips[0]['nettoPay']);
+
+    }//end testNoCoveringCarAssignmentLeavesThePayslipUnchanged()
+
+
+    /**
+     * fleet-bijtelling REQ-FLEET-003 Scenario 3 — a large eigen bijdrage
+     * floors the bijtelling at zero, never negative: `bijtelling` is €0,00
+     * (not null -- the CarAssignment genuinely covers the period, only the
+     * amount is zero) and the taxable gross is unchanged from the plain
+     * salary.
+     *
+     * @return void
+     */
+    public function testLargeEigenBijdrageFloorsTheBijtellingAtZero(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+                'Vehicle'            => [$this->vehicle()],
+                // base/12 = €825,00; an eigenBijdrage of €900,00 exceeds it.
+                'CarAssignment'      => [$this->carAssignment(['eigenBijdrage' => 900.00])],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+
+        $this->assertSame(0.00, $payslips[0]['bijtelling'], 'Floored at zero, never negative.');
+        $this->assertSame('ca-1', $payslips[0]['carAssignmentId'], 'The covering assignment is still stamped even though the amount is zero.');
+        $this->assertSame(3800.00, $payslips[0]['grossPay'], 'The taxable gross is unchanged from the plain salary.');
+        $this->assertSame(3081.17, $payslips[0]['nettoPay']);
+
+    }//end testLargeEigenBijdrageFloorsTheBijtellingAtZero()
+
+
+    /**
+     * fleet-bijtelling design.md D3 — the two-tier `elektrischGeplafonneerd`
+     * blend: cataloguswaarde €45.000,00 with an evReducedCataloguswaardeCap
+     * of €30.000,00 (nl-2026) -> base = 30.000 x 18% + 15.000 x 22% =
+     * 5.400,00 + 3.300,00 = 8.700,00; monthly = 8.700,00 / 12 = 725,00,
+     * eigenBijdrage 0 -> bijtelling €725,00.
+     *
+     * @return void
+     */
+    public function testElektrischGeplafonneerdAppliesTheTwoTierBlend(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+                'Vehicle'            => [$this->vehicle(['bijtellingCategorie' => 'elektrischGeplafonneerd'])],
+                'CarAssignment'      => [$this->carAssignment(['eigenBijdrage' => 0.00])],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+
+        $this->assertSame(725.00, $payslips[0]['bijtelling']);
+
+    }//end testElektrischGeplafonneerdAppliesTheTwoTierBlend()
 
 
     /**
