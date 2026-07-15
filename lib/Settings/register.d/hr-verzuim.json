@@ -5,7 +5,7 @@
             "SickLeaveCase": {
                 "slug": "SickLeaveCase",
                 "icon": "EmoticonSickOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Sick leave case",
                 "description": "An administrative sickness case (ziekmelding) tracking the Wet verbetering poortwachter (WVP) re-integration process and statutory loondoorbetaling — NEVER medical data. Per the AVG and the Autoriteit Persoonsgegevens beleidsregels \"De zieke werknemer\", an employer may record that and how long an employee is sick and the re-integration process facts, but never the nature or cause of the illness: this schema declares no diagnosis, symptom, cause, or medical-note field of any kind (leave-verzuim-mvp REQ-VWP-002). The gemeld<->hersteld lifecycle is fully declarative per ADR-031; a relapse within 4 weeks of recovery reopens the same case rather than starting a new one (samengesteld ziektegeval, BW 7:629 lid 10). The four WVP milestone Due dates (probleemanalyse week 6, plan van aanpak week 8, UWV 42-wekenmelding week 42, eerstejaarsevaluatie week 52) are derived from firstSickDay but stored, not computed on the fly — the loonaangifte-filing-lifecycle deadline precedent — so the dossier shows the clock actually worked against and a UWV-granted deferral stays editable; derivation correctness is enforced by the nl-wvp-milestone-derivation rule check (lib/Standards/rules/labour.json), not recomputed away.",
                 "type": "object",
@@ -79,6 +79,12 @@
                         "default": 70,
                         "title": "Loondoorbetaling percentage",
                         "description": "Percentage of wages continued during sickness. Statutory minimum is 70% for the first 104 weeks (BW art. 7:629 lid 1), with a first-year floor at the statutory minimum wage. Checked on open cases by nl-loondoorbetaling-minimum."
+                    },
+                    "aangepastLoon": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Aangepast loon",
+                        "description": "The wage still earned from partial work during this sickness period (samengesteld/aangepast loon) — composed with the continuation on the remainder by the sick-pay calculator (BW art. 7:629 lid 1). Null/absent means fully sick (treated as 0)."
                     },
                     "probleemanalyseDue": {
                         "type": "string",

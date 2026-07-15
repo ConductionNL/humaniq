@@ -31,6 +31,16 @@
  * 14-day window and not Done — both the "overdue" and "approaching" cases in
  * the design's seed narrative surface via this one check.
  *
+ * sick-pay-calc adds a fourth predicate, `nl-loondoorbetaling-floor`, keyed
+ * under `Payslip` (not `SickLeaveCase`) — the below-floor invariant is a fact
+ * about the generated Payslip's own recorded doorbetaald loon, not the case.
+ * Vacuous on a normal payslip (null `sickLeaveCaseId`); on a sick-pay payslip
+ * it independently recomputes the 70%/WML floor from the payslip's own
+ * `sickPayReferenceWage`/`sickPayYearOne`/`sickPayMinimumWageFloor` fields and
+ * the corpus rule's `parameters` (never a stored answer echoed back), so it
+ * catches both an engine regression and a hand-edit that drops the paid
+ * amount below the floor (design.md D5).
+ *
  * @category Standards
  * @package  OCA\Hrmq\Standards\Checks
  *
@@ -44,6 +54,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/leave-verzuim-mvp/specs/verzuim-wvp/spec.md
+ * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-006
  */
 
 declare(strict_types=1);
@@ -100,6 +111,12 @@ final class NlVerzuimChecks implements CheckProvider
                 'nl-wvp-milestone-overdue' => static fn(array $o): bool => self::overdueSatisfied($o),
                 // BW art. 7:629 lid 1 — at least 70% loondoorbetaling on open cases.
                 'nl-loondoorbetaling-minimum' => static fn(array $o): bool => self::loondoorbetalingSatisfied($o),
+            ],
+            'Payslip'       => [
+                // BW art. 7:629 lid 1 jo. WML art. 12 — a sick-pay payslip's
+                // doorbetaald loon is at least the independently recomputed
+                // 70%/year-1-WML floor (sick-pay-calc design.md D5).
+                'nl-loondoorbetaling-floor' => static fn(array $o): bool => self::loondoorbetalingFloorSatisfied($o),
             ],
         ];
 
@@ -260,6 +277,93 @@ final class NlVerzuimChecks implements CheckProvider
         return null;
 
     }//end milestoneWeeks()
+
+
+    /**
+     * True when a Payslip is out of scope (no `sickLeaveCaseId` — a normal
+     * payslip), or when its `doorbetaaldLoon` is at least the independently
+     * recomputed 70%/year-1-WML floor: `max(round(sickPayReferenceWage x
+     * statutoryPercentage/100), sickPayYearOne ? sickPayMinimumWageFloor : 0)`
+     * — read from the payslip's own recorded fields and the
+     * nl-loondoorbetaling-floor corpus rule's `parameters` (never a stored
+     * answer echoed back). Passes vacuously when the corpus rule/parameters
+     * are missing (not decidable).
+     *
+     * @param array<string, mixed> $o The Payslip.
+     *
+     * @return bool
+     *
+     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-006
+     */
+    private static function loondoorbetalingFloorSatisfied(array $o): bool
+    {
+        $sickLeaveCaseId = trim((string) ($o['sickLeaveCaseId'] ?? ''));
+        if ($sickLeaveCaseId === '') {
+            return true;
+        }
+
+        $parameters = self::loondoorbetalingFloorParameters();
+        if ($parameters === null) {
+            return true;
+        }
+
+        $referenceWage = ($o['sickPayReferenceWage'] ?? null);
+        $doorbetaald   = ($o['doorbetaaldLoon'] ?? null);
+        if (is_numeric($referenceWage) === false || is_numeric($doorbetaald) === false) {
+            return false;
+        }
+
+        $statutoryPercentage = (float) ($parameters['statutoryPercentage'] ?? 70);
+        $statutoryFloorCents = (int) round((self::euroToCents((float) $referenceWage) * $statutoryPercentage) / 100);
+
+        $yearOneFloorCents = 0;
+        if (($o['sickPayYearOne'] ?? false) === true) {
+            $minimumWageFloor  = ($o['sickPayMinimumWageFloor'] ?? null);
+            $yearOneFloorCents = (is_numeric($minimumWageFloor) === true ? self::euroToCents((float) $minimumWageFloor) : 0);
+        }
+
+        $floorCents = max($statutoryFloorCents, $yearOneFloorCents);
+
+        return self::euroToCents((float) $doorbetaald) >= $floorCents;
+
+    }//end loondoorbetalingFloorSatisfied()
+
+
+    /**
+     * The `parameters` of the nl-loondoorbetaling-floor corpus rule, or null
+     * when the rule/parameters are missing from the catalogue.
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function loondoorbetalingFloorParameters(): ?array
+    {
+        foreach (RuleCatalogue::all() as $rule) {
+            if ((string) ($rule['id'] ?? '') !== 'nl-loondoorbetaling-floor') {
+                continue;
+            }
+
+            $parameters = ($rule['parameters'] ?? null);
+            return is_array($parameters) === true ? $parameters : null;
+        }
+
+        return null;
+
+    }//end loondoorbetalingFloorParameters()
+
+
+    /**
+     * Convert a euro amount to integer cents (round-half-away-from-zero) —
+     * the payslip's number fields are euro-denominated.
+     *
+     * @param float $euro The euro amount.
+     *
+     * @return int
+     */
+    private static function euroToCents(float $euro): int
+    {
+        return (int) round($euro * 100);
+
+    }//end euroToCents()
 
 
 }//end class

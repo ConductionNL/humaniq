@@ -1,21 +1,15 @@
 <?php
 
 /**
- * Unit tests for PayrollRunService.
+ * Unit tests for PayrollRunService's sick-pay integration.
  *
- * Pins the payroll-core-engine service contract (design.md D4/D5): the
- * probe-before-create idempotency per (period, administrationId), the
- * draft-only recalculation guard (approved runs refuse and change nothing),
- * the (payrollRunId, employeeId)-keyed upsert + orphan cleanup that never
- * touches hand-entered payslips, per-employee skip reasons (no contract /
- * no monthly salary / anoniementarief preconditions / non-NL), payslip
- * stamping (payrollRunId, userId, arbeidskorting, zvwMode) and the
- * cents-exact totals roll-up + engineVersion/calculatedAt stamps. Drives the
- * service through a fake ObjectService double (a fake collaborator, not a
- * fake of the service logic under test) since the real OpenRegister
- * ObjectService is a sibling-app dependency not available in this standalone
- * suite; the anchor-case euro amounts asserted here are the design.md D2
- * hand-computed figures.
+ * Pins the sick-pay-calc service contract (design.md D4): an open (gemeld)
+ * SickLeaveCase covering the run period substitutes the doorbetaald loon for
+ * the full salary as PayrollCalculator's gross input, the generated Payslip
+ * is stamped with the sick-pay fields, and a second run without
+ * `--recalculate` is an idempotent no-op (the existing probe-before-create
+ * path, re-exercised through the sick branch). Drives the service through
+ * the same fake ObjectService double idiom as `PayrollRunServiceTest`.
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Service
@@ -29,17 +23,18 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-003
- * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-004
- * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
+ * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-005
+ * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-007
  */
 
 declare(strict_types=1);
 
 namespace OCA\Hrmq\Tests\Unit\Service;
 
+use OCA\Hrmq\Payroll\CalculationInput;
 use OCA\Hrmq\Payroll\PayrollCalculator;
 use OCA\Hrmq\Payroll\SickPayCalculator;
+use OCA\Hrmq\Payroll\TaxTables;
 use OCA\Hrmq\Service\PayrollRunService;
 use OCA\Hrmq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
@@ -47,19 +42,17 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Tests for PayrollRunService.
+ * Tests for PayrollRunService's sick-pay integration.
  *
- * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-003
+ * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-005
  */
-class PayrollRunServiceTest extends TestCase
+class PayrollRunServiceSickPayTest extends TestCase
 {
 
 
     /**
-     * Build a fake ObjectService double: `findAll()` returns the seeded rows
-     * for the current schema, `saveObject()` records every write (assigning a
-     * generated id when no uuid is given) and reflects it back into the
-     * seeded rows, `deleteObject()` records + removes the row.
+     * Build a fake ObjectService double — identical idiom to
+     * `PayrollRunServiceTest::fakeObjectService()`.
      *
      * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
      *
@@ -80,15 +73,11 @@ class PayrollRunServiceTest extends TestCase
             private int $nextId = 1;
 
             /**
-             * Every saveObject() call, as `['schema' => ..., 'object' => ...]`.
-             *
              * @var array<int, array<string, mixed>>
              */
             public array $saved = [];
 
             /**
-             * Every deleteObject() uuid, in delete order.
-             *
              * @var array<int, string>
              */
             public array $deleted = [];
@@ -311,14 +300,40 @@ class PayrollRunServiceTest extends TestCase
 
 
     /**
+     * An open (gemeld) SickLeaveCase fixture covering the anchor employee,
+     * inside the run period, year 1, no wachtdag, 70%.
+     *
+     * @param array<string, mixed> $overrides Fields to override.
+     *
+     * @return array<string, mixed>
+     */
+    private function sickCase(array $overrides=[]): array
+    {
+        return array_merge(
+            [
+                'id'                          => 'case-1',
+                'employeeId'                  => 'emp-1',
+                'firstSickDay'                => '2026-02-10',
+                'status'                      => 'gemeld',
+                'wachtdag'                    => false,
+                'loondoorbetalingPercentage'  => 70,
+            ],
+            $overrides
+        );
+
+    }//end sickCase()
+
+
+    /**
      * @return void
      */
-    public function testCreatesDraftRunAndAnchorPayslip(): void
+    public function testOpenCaseEmployeePayslipReflectsDoorbetaaldLoonNotFullSalary(): void
     {
         [$service, $fake] = $this->service(
             [
                 'Employee'           => [$this->employee()],
                 'EmploymentContract' => [$this->contract()],
+                'SickLeaveCase'      => [$this->sickCase()],
                 'PayrollRun'         => [],
                 'Payslip'            => [],
             ]
@@ -334,49 +349,93 @@ class PayrollRunServiceTest extends TestCase
         $this->assertCount(1, $payslips);
         $payslip = $payslips[0];
 
-        $this->assertSame((string) $result['runId'], (string) $payslip['payrollRunId']);
-        $this->assertSame('sanne', $payslip['userId']);
-        $this->assertSame('emp-1', $payslip['employeeId']);
-        $this->assertSame('2026-02', $payslip['period']);
-        $this->assertSame('NL', $payslip['jurisdiction']);
-        $this->assertSame('werkgeversheffing', $payslip['zvwMode']);
-        // The design.md D2 anchor figures, euro-denominated.
-        $this->assertSame(3800.00, $payslip['grossPay']);
-        $this->assertSame(718.83, $payslip['loonheffing']);
-        $this->assertSame(473.75, $payslip['arbeidskorting']);
-        $this->assertSame(231.80, $payslip['zvw']);
-        $this->assertSame(419.14, $payslip['werknemersverzekeringen']);
-        $this->assertSame(304.00, $payslip['vakantiegeldReserved']);
-        $this->assertSame(3081.17, $payslip['nettoPay']);
-        $this->assertFalse($payslip['anoniementariefApplied']);
+        // The design.md D2 anchor sick-pay figures — doorbetaald loon
+        // (€2.660,00), not the full €3.800,00 salary.
+        $this->assertSame(2660.00, $payslip['grossPay'], 'grossPay must be the doorbetaald loon, not the full salary.');
+        $this->assertSame('case-1', $payslip['sickLeaveCaseId']);
+        $this->assertSame(2660.00, $payslip['doorbetaaldLoon']);
+        $this->assertSame(0.00, $payslip['wachtdagDeduction']);
+        $this->assertSame(3800.00, $payslip['sickPayReferenceWage']);
+        $this->assertSame(70.0, $payslip['sickPayPercentage']);
+        $this->assertSame(2294.40, $payslip['sickPayMinimumWageFloor']);
+        $this->assertTrue($payslip['sickPayYearOne']);
 
-        // The run: created draft once, then updated with totals + stamps.
-        $runs = $this->savedFor($fake, 'PayrollRun');
-        $this->assertCount(2, $runs);
-        $this->assertSame('draft', $runs[0]['status']);
-        $final = $runs[1];
-        $this->assertSame('draft', $final['status']);
-        $this->assertSame(3800.00, $final['totalGross']);
-        $this->assertSame(718.83, $final['totalLoonheffing']);
-        $this->assertSame(650.94, $final['totalEmployerCharges']);
-        $this->assertSame(718.83, $final['totalWithholdings']);
-        $this->assertSame(3081.17, $final['totalNet']);
-        $this->assertSame('nl-2026', $final['engineVersion']);
-        $this->assertNotSame('', trim((string) $final['calculatedAt']));
-        $this->assertArrayNotHasKey('glExpensePosted', $final);
+        // loonheffing/net are computed on the doorbetaald loon, not the full
+        // salary (REQ-SICK-005 scenario) — cross-checked against a direct
+        // PayrollCalculator call on the same gross.
+        $tables            = TaxTables::load('nl-2026');
+        $expectedOnDoorbetaald = (new PayrollCalculator())->calculate(
+            new CalculationInput(
+                grossMonthlySalaryCents: 266000,
+                taxTableColor: 'wit',
+                loonheffingskortingToegepast: true,
+                dateOfBirth: '1990-04-12',
+                period: '2026-02',
+                awfTariff: 'low',
+                aofTariff: 'laag',
+                whkPercentage: 1.52
+            ),
+            $tables
+        );
+        $this->assertSame(round(($expectedOnDoorbetaald->nettoPayCents / 100), 2), $payslip['nettoPay']);
+        $this->assertNotSame(3081.17, $payslip['nettoPay'], 'The anchor full-salary nettoPay must NOT be reused for a sick employee.');
 
-    }//end testCreatesDraftRunAndAnchorPayslip()
+    }//end testOpenCaseEmployeePayslipReflectsDoorbetaaldLoonNotFullSalary()
 
 
     /**
+     * A normal employee (no open SickLeaveCase) is completely unaffected —
+     * the full-salary path stays byte-identical, and every sick-pay field is
+     * null (REQ-SICK-001 scenario: "The reference wage is untouched when no
+     * sick case applies").
+     *
      * @return void
      */
-    public function testSecondRunWithoutRecalculateIsAnIdempotentNoOp(): void
+    public function testNoOpenCaseLeavesTheFullSalaryPathUnchanged(): void
     {
         [$service, $fake] = $this->service(
             [
                 'Employee'           => [$this->employee()],
                 'EmploymentContract' => [$this->contract()],
+                'SickLeaveCase'      => [],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+        $payslip = $payslips[0];
+
+        $this->assertSame(3800.00, $payslip['grossPay']);
+        $this->assertSame(3081.17, $payslip['nettoPay']);
+        $this->assertNull($payslip['sickLeaveCaseId']);
+        $this->assertNull($payslip['doorbetaaldLoon']);
+        $this->assertNull($payslip['wachtdagDeduction']);
+        $this->assertNull($payslip['sickPayReferenceWage']);
+        $this->assertNull($payslip['sickPayPercentage']);
+        $this->assertNull($payslip['sickPayMinimumWageFloor']);
+        $this->assertNull($payslip['sickPayYearOne']);
+
+    }//end testNoOpenCaseLeavesTheFullSalaryPathUnchanged()
+
+
+    /**
+     * A second run for the same (period, administrationId) without
+     * `--recalculate` is an idempotent no-op, even with an open sick case in
+     * play (REQ-SICK-007).
+     *
+     * @return void
+     */
+    public function testSecondSickPayRunWithoutRecalculateIsAnIdempotentNoOp(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'SickLeaveCase'      => [$this->sickCase()],
                 'PayrollRun'         => [
                     ['id' => 'run-1', 'period' => '2026-02', 'administrationId' => 'ADM-001', 'jurisdiction' => 'NL', 'status' => 'draft'],
                 ],
@@ -391,59 +450,28 @@ class PayrollRunServiceTest extends TestCase
         $this->assertSame([], $fake->saved, 'An idempotent no-op must write nothing.');
         $this->assertSame([], $fake->deleted);
 
-    }//end testSecondRunWithoutRecalculateIsAnIdempotentNoOp()
+    }//end testSecondSickPayRunWithoutRecalculateIsAnIdempotentNoOp()
 
 
     /**
+     * Recalculating an already-computed sick-pay run in place changes
+     * nothing else and does not duplicate the payslip (REQ-SICK-007
+     * idempotency).
+     *
      * @return void
      */
-    public function testApprovedRunRefusesRecalculationAndChangesNothing(): void
-    {
-        $rows = [
-            'Employee'           => [$this->employee()],
-            'EmploymentContract' => [$this->contract()],
-            'PayrollRun'         => [
-                ['id' => 'run-1', 'period' => '2026-02', 'administrationId' => 'ADM-001', 'jurisdiction' => 'NL', 'status' => 'approved', 'totalNet' => 3081.17],
-            ],
-            'Payslip'            => [],
-        ];
-
-        [$service, $fake] = $this->service($rows);
-        $viaPeriod        = $service->runFor('2026-02', null, true);
-        $this->assertSame('refused-not-draft', $viaPeriod['status']);
-        $this->assertSame([], $fake->saved);
-        $this->assertSame([], $fake->deleted);
-
-        [$service2, $fake2] = $this->service($rows);
-        $viaRunId           = $service2->recalculateRun('run-1');
-        $this->assertSame('refused-not-draft', $viaRunId['status']);
-        $this->assertSame([], $fake2->saved);
-        $this->assertSame([], $fake2->deleted);
-
-    }//end testApprovedRunRefusesRecalculationAndChangesNothing()
-
-
-    /**
-     * @return void
-     */
-    public function testRecalculationUpsertsInPlaceAndDeletesOrphans(): void
+    public function testRecalculatingASickPayRunUpsertsInPlaceWithoutDuplicating(): void
     {
         [$service, $fake] = $this->service(
             [
                 'Employee'           => [$this->employee()],
                 'EmploymentContract' => [$this->contract()],
+                'SickLeaveCase'      => [$this->sickCase()],
                 'PayrollRun'         => [
                     ['id' => 'run-1', 'period' => '2026-02', 'administrationId' => 'ADM-001', 'jurisdiction' => 'NL', 'status' => 'draft'],
                 ],
                 'Payslip'            => [
-                    // The existing engine payslip for emp-1 (stale figures) — must be updated IN PLACE.
-                    ['id' => 'ps-emp1', 'payrollRunId' => 'run-1', 'employeeId' => 'emp-1', 'period' => '2026-02', 'nettoPay' => 1.00],
-                    // An orphaned engine payslip of THIS run (its employee is gone) — must be deleted.
-                    ['id' => 'ps-orphan', 'payrollRunId' => 'run-1', 'employeeId' => 'emp-gone', 'period' => '2026-02', 'nettoPay' => 2.00],
-                    // A hand-entered payslip (null payrollRunId) — must never be touched.
-                    ['id' => 'ps-hand', 'payrollRunId' => null, 'employeeId' => 'emp-1', 'period' => '2026-02', 'nettoPay' => 3.00],
-                    // Another run's engine payslip — must never be touched.
-                    ['id' => 'ps-other-run', 'payrollRunId' => 'run-2', 'employeeId' => 'emp-1', 'period' => '2026-01', 'nettoPay' => 4.00],
+                    ['id' => 'ps-emp1', 'payrollRunId' => 'run-1', 'employeeId' => 'emp-1', 'period' => '2026-02', 'grossPay' => 1.00, 'nettoPay' => 1.00],
                 ],
             ]
         );
@@ -453,97 +481,12 @@ class PayrollRunServiceTest extends TestCase
         $this->assertSame('calculated', $result['status']);
 
         $payslips = $this->savedFor($fake, 'Payslip');
-        $this->assertCount(1, $payslips);
-        $this->assertSame('ps-emp1', $payslips[0]['id'], 'The (payrollRunId, employeeId)-keyed payslip must be updated in place.');
-        $this->assertSame(3081.17, $payslips[0]['nettoPay']);
+        $this->assertCount(1, $payslips, 'The sick-case employee\'s payslip must be updated in place, never duplicated.');
+        $this->assertSame('ps-emp1', $payslips[0]['id']);
+        $this->assertSame(2660.00, $payslips[0]['grossPay']);
+        $this->assertSame('case-1', $payslips[0]['sickLeaveCaseId']);
 
-        $this->assertSame(['ps-orphan'], $fake->deleted, 'Exactly the orphaned engine payslip of this run is deleted.');
-
-    }//end testRecalculationUpsertsInPlaceAndDeletesOrphans()
-
-
-    /**
-     * @return void
-     */
-    public function testEmployeesAreSkippedWithPerEmployeeReasons(): void
-    {
-        [$service, $fake] = $this->service(
-            [
-                'Employee'           => [
-                    $this->employee(),
-                    $this->employee(['id' => 'emp-2', 'employeeNumber' => 'EMP-NL-0002', 'firstName' => 'Geen', 'lastName' => 'Salaris', 'grossMonthlySalary' => null]),
-                    $this->employee(['id' => 'emp-3', 'employeeNumber' => 'EMP-NL-0003', 'firstName' => 'Geen', 'lastName' => 'Contract']),
-                    $this->employee(['id' => 'emp-4', 'employeeNumber' => 'EMP-NL-0004', 'firstName' => 'Geen', 'lastName' => 'Bsn', 'bsn' => '']),
-                    $this->employee(['id' => 'emp-5', 'employeeNumber' => 'EMP-NL-0005', 'firstName' => 'Niet', 'lastName' => 'NL', 'taxTableColor' => null]),
-                    $this->employee(['id' => 'emp-6', 'employeeNumber' => 'EMP-NL-0006', 'firstName' => 'Al', 'lastName' => 'Weg', 'endDate' => '2025-12-31']),
-                ],
-                'EmploymentContract' => [
-                    $this->contract(),
-                    $this->contract(['id' => 'ct-2', 'employeeId' => 'emp-2']),
-                    $this->contract(['id' => 'ct-4', 'employeeId' => 'emp-4']),
-                    $this->contract(['id' => 'ct-5', 'employeeId' => 'emp-5']),
-                ],
-                'PayrollRun'         => [],
-                'Payslip'            => [],
-            ]
-        );
-
-        $result = $service->runFor('2026-02');
-
-        $this->assertSame('calculated', $result['status']);
-        $this->assertCount(1, $result['computed'], 'Only the fully-computable employee gets a payslip.');
-        $this->assertCount(1, $this->savedFor($fake, 'Payslip'));
-
-        $reasonsByEmployee = [];
-        foreach ($result['skipped'] as $skip) {
-            $reasonsByEmployee[(string) $skip['employee']] = (string) $skip['reason'];
-        }
-
-        $this->assertCount(4, $reasonsByEmployee, 'Every selected-but-uncomputable employee is reported; the inactive one is not selected at all.');
-        $this->assertStringContainsString('no-monthly-salary', $reasonsByEmployee['Geen Salaris']);
-        $this->assertStringContainsString('no-contract', $reasonsByEmployee['Geen Contract']);
-        $this->assertStringContainsString('anoniementarief-precondition', $reasonsByEmployee['Geen Bsn']);
-        $this->assertStringContainsString('non-nl', $reasonsByEmployee['Niet NL']);
-        $this->assertArrayNotHasKey('Al Weg', $reasonsByEmployee);
-
-    }//end testEmployeesAreSkippedWithPerEmployeeReasons()
-
-
-    /**
-     * @return void
-     */
-    public function testTotalsAreCentsExactSumsAcrossMultipleEmployees(): void
-    {
-        [$service, $fake] = $this->service(
-            [
-                'Employee'           => [
-                    $this->employee(),
-                    $this->employee(['id' => 'emp-2', 'employeeNumber' => 'EMP-NL-0002', 'firstName' => 'Piet', 'lastName' => 'Deeltijd', 'grossMonthlySalary' => 2280.00, 'nextcloudUserId' => 'piet']),
-                ],
-                'EmploymentContract' => [
-                    $this->contract(),
-                    $this->contract(['id' => 'ct-2', 'employeeId' => 'emp-2', 'hoursPerWeek' => 21.6]),
-                ],
-                'PayrollRun'         => [],
-                'Payslip'            => [],
-            ]
-        );
-
-        $result = $service->runFor('2026-02');
-
-        $this->assertSame('calculated', $result['status']);
-        $this->assertCount(2, $result['computed']);
-
-        // Anchor (3800: lh 718.83, net 3081.17, charges 650.94) + part-time
-        // fixture (2280: lh 110.33, net 2169.67, charges 390.57).
-        $totals = $result['totals'];
-        $this->assertSame(6080.00, $totals['totalGross']);
-        $this->assertSame(829.16, $totals['totalLoonheffing']);
-        $this->assertSame(1041.51, $totals['totalEmployerCharges']);
-        $this->assertSame(829.16, $totals['totalWithholdings']);
-        $this->assertSame(5250.84, $totals['totalNet']);
-
-    }//end testTotalsAreCentsExactSumsAcrossMultipleEmployees()
+    }//end testRecalculatingASickPayRunUpsertsInPlaceWithoutDuplicating()
 
 
     /**

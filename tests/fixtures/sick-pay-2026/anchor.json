@@ -1,0 +1,20 @@
+{
+  "name": "anchor — €3.800,00 fully sick, 70%, year 1, full-time, no wachtdag (design.md D2 worked example)",
+  "input": {
+    "referenceWage": 3800.00,
+    "aangepastLoon": 0.00,
+    "percentage": 70,
+    "yearOne": true,
+    "wachtdag": false,
+    "firstSickDayInPeriod": false,
+    "contractHoursPerWeek": 36,
+    "fulltimeHoursPerWeek": 36
+  },
+  "expected": {
+    "doorbetaaldLoon": 2660.00,
+    "wachtdagDeduction": 0.00,
+    "payableGross": 2660.00,
+    "minimumWageFloor": 2294.40,
+    "floorApplied": false
+  }
+}

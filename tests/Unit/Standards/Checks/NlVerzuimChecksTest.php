@@ -8,7 +8,10 @@
  * Due on an open case), milestone overdue/approaching (evaluated against the
  * audit run date, the nl-loonaangifte-deadline-alert pattern), and the 70%
  * loondoorbetaling floor on open cases. Also pins the week-7 and week-41 seed
- * fixtures' exact derivation math (REQ-VWP-006).
+ * fixtures' exact derivation math (REQ-VWP-006), plus sick-pay-calc's
+ * `nl-loondoorbetaling-floor` predicate on Payslip (REQ-SICK-006) — including
+ * an end-to-end `RuleEngine::evaluate()` assertion proving the predicate is
+ * actually auto-discovered and reachable, not just callable in isolation.
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
@@ -23,6 +26,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/leave-verzuim-mvp/specs/verzuim-wvp/spec.md
+ * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-006
  */
 
 declare(strict_types=1);
@@ -30,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
 
 use OCA\Hrmq\Standards\Checks\NlVerzuimChecks;
+use OCA\Hrmq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -48,13 +53,21 @@ class NlVerzuimChecksTest extends TestCase
      */
     private array $checks;
 
+    /**
+     * The registered Payslip predicates, keyed by rule id (sick-pay-calc).
+     *
+     * @var array<string, callable>
+     */
+    private array $payslipChecks;
+
 
     /**
      * @return void
      */
     protected function setUp(): void
     {
-        $this->checks = NlVerzuimChecks::checks()['SickLeaveCase'];
+        $this->checks        = NlVerzuimChecks::checks()['SickLeaveCase'];
+        $this->payslipChecks = NlVerzuimChecks::checks()['Payslip'];
 
     }//end setUp()
 
@@ -304,6 +317,159 @@ class NlVerzuimChecksTest extends TestCase
         $this->assertArrayHasKey('nl-loondoorbetaling-minimum', $this->checks);
 
     }//end testAllThreeRuleIdsAreRegistered()
+
+
+    /**
+     * A minimal sick-pay Payslip fixture; each test overrides the fields it
+     * exercises (sick-pay-calc REQ-SICK-006).
+     *
+     * @param array<string, mixed> $overrides Fields to override.
+     *
+     * @return array<string, mixed>
+     */
+    private function sickPayslip(array $overrides=[]): array
+    {
+        return array_merge(
+            [
+                'sickLeaveCaseId'         => 'case-1',
+                'doorbetaaldLoon'         => 2660.00,
+                'sickPayReferenceWage'    => 3800.00,
+                'sickPayPercentage'       => 70.0,
+                'sickPayMinimumWageFloor' => 2294.40,
+                'sickPayYearOne'          => true,
+            ],
+            $overrides
+        );
+
+    }//end sickPayslip()
+
+
+    /**
+     * The nl-loondoorbetaling-floor rule id is registered under Payslip
+     * (sick-pay-calc REQ-SICK-006).
+     *
+     * @return void
+     */
+    public function testLoondoorbetalingFloorRuleIdIsRegisteredUnderPayslip(): void
+    {
+        $this->assertArrayHasKey('nl-loondoorbetaling-floor', $this->payslipChecks);
+
+    }//end testLoondoorbetalingFloorRuleIdIsRegisteredUnderPayslip()
+
+
+    /**
+     * Vacuous on a normal payslip (null sickLeaveCaseId).
+     *
+     * @return void
+     */
+    public function testLoondoorbetalingFloorVacuousOnNormalPayslip(): void
+    {
+        $payslip = ['sickLeaveCaseId' => null, 'doorbetaaldLoon' => 100.00];
+        $this->assertTrue(($this->payslipChecks['nl-loondoorbetaling-floor'])($payslip));
+
+    }//end testLoondoorbetalingFloorVacuousOnNormalPayslip()
+
+
+    /**
+     * A correctly-floored sick-pay payslip (design.md D2 anchor) satisfies
+     * the check.
+     *
+     * @return void
+     */
+    public function testLoondoorbetalingFloorSatisfiedAtTheAnchorFigures(): void
+    {
+        $payslip = $this->sickPayslip();
+        $this->assertTrue(($this->payslipChecks['nl-loondoorbetaling-floor'])($payslip));
+
+    }//end testLoondoorbetalingFloorSatisfiedAtTheAnchorFigures()
+
+
+    /**
+     * The year-1 floor-binding case (€3.000,00 -> €2.294,40) satisfies the
+     * check exactly at the floor (design.md D2 cross-check row).
+     *
+     * @return void
+     */
+    public function testLoondoorbetalingFloorSatisfiedExactlyAtTheYearOneFloor(): void
+    {
+        $payslip = $this->sickPayslip(
+            [
+                'doorbetaaldLoon'         => 2294.40,
+                'sickPayReferenceWage'    => 3000.00,
+                'sickPayMinimumWageFloor' => 2294.40,
+                'sickPayYearOne'          => true,
+            ]
+        );
+        $this->assertTrue(($this->payslipChecks['nl-loondoorbetaling-floor'])($payslip));
+
+    }//end testLoondoorbetalingFloorSatisfiedExactlyAtTheYearOneFloor()
+
+
+    /**
+     * A sub-floor payslip (REQ-SICK-006 scenario: doorbetaaldLoon hand-edited
+     * to €2.000,00 while sickPayReferenceWage €3.800,00 / 70% floor
+     * €2.660,00 still stands) violates the check.
+     *
+     * @return void
+     */
+    public function testLoondoorbetalingFloorViolatedWhenHandEditedBelowTheFloor(): void
+    {
+        $payslip = $this->sickPayslip(['doorbetaaldLoon' => 2000.00]);
+        $this->assertFalse(($this->payslipChecks['nl-loondoorbetaling-floor'])($payslip));
+
+    }//end testLoondoorbetalingFloorViolatedWhenHandEditedBelowTheFloor()
+
+
+    /**
+     * A year-2 payslip is checked against the bare 70% floor only (no WML
+     * term) — a doorbetaaldLoon below the WML but at/above 70% still passes.
+     *
+     * @return void
+     */
+    public function testLoondoorbetalingFloorYearTwoDropsTheWmlTerm(): void
+    {
+        $payslip = $this->sickPayslip(
+            [
+                'doorbetaaldLoon'         => 2100.00,
+                'sickPayReferenceWage'    => 3000.00,
+                'sickPayMinimumWageFloor' => 2294.40,
+                'sickPayYearOne'          => false,
+            ]
+        );
+        $this->assertTrue(($this->payslipChecks['nl-loondoorbetaling-floor'])($payslip));
+
+    }//end testLoondoorbetalingFloorYearTwoDropsTheWmlTerm()
+
+
+    /**
+     * End-to-end via RuleEngine::evaluate() — proves the predicate is
+     * actually auto-discovered (RuleEngine::providers() globs
+     * lib/Standards/Checks/*.php) and reachable under the real
+     * nl-loondoorbetaling-floor catalogue rule, not merely callable in
+     * isolation (no orphaned capability).
+     *
+     * @return void
+     */
+    public function testLoondoorbetalingFloorFiresThroughTheRealRuleEngine(): void
+    {
+        RuleEngine::reset();
+
+        $violations = RuleEngine::evaluate('Payslip', $this->sickPayslip(['doorbetaaldLoon' => 2000.00]));
+
+        $ruleIds = array_map(static fn($v) => $v->ruleId, $violations);
+        $this->assertContains('nl-loondoorbetaling-floor', $ruleIds, 'The predicate must fire through the real, auto-discovered RuleEngine.');
+
+        foreach ($violations as $violation) {
+            if ($violation->ruleId === 'nl-loondoorbetaling-floor') {
+                $this->assertSame('mandatory', $violation->severity);
+            }
+        }
+
+        $compliant = RuleEngine::evaluate('Payslip', $this->sickPayslip());
+        $compliantRuleIds = array_map(static fn($v) => $v->ruleId, $compliant);
+        $this->assertNotContains('nl-loondoorbetaling-floor', $compliantRuleIds, 'A correctly-floored payslip must report zero violations.');
+
+    }//end testLoondoorbetalingFloorFiresThroughTheRealRuleEngine()
 
 
 }//end class

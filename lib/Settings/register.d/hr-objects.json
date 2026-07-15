@@ -78,7 +78,7 @@
             "Payslip": {
                 "slug": "Payslip",
                 "icon": "ReceiptTextOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Payslip",
                 "description": "A per-employee, per-period wage statement (loonstrook / Lohnabrechnung / bulletin de paie / pay stub). Carries the gross-to-net composition the payroll-withholding, social-security, and statutory-content checks read.",
                 "type": "object",
@@ -146,7 +146,14 @@
                     "conventionCollective": {"type": "string", "nullable": true, "description": "FR: applicable convention collective shown on the bulletin (fr-bulletin-de-paie-mentions)."},
                     "retainedUntil": {"type": "string", "format": "date", "nullable": true, "description": "Date until which the payslip duplicate is retained — 5 years FR (fr-bulletin-conservation) / 4-year IRC + 3-year FLSA US."},
                     "arbeidskorting": {"type": "number", "nullable": true, "description": "NL: applied arbeidskorting for the period (tijdvakbedrag) — the witte-tabel column the Rekenvoorschriften §2.2.3.4 require the loonadministratie to record. Set by the payroll engine; null on hand-entered payslips (nl-engine-output-consistency context)."},
-                    "payrollRunId": {"type": "string", "format": "uuid", "$ref": "PayrollRun", "nullable": true, "description": "The PayrollRun that generated this payslip (payroll-core-engine). Null for hand-entered payslips. Drives idempotent recalculation and the run-scoped compliance verify (nl-engine-output-consistency scoping)."}
+                    "payrollRunId": {"type": "string", "format": "uuid", "$ref": "PayrollRun", "nullable": true, "description": "The PayrollRun that generated this payslip (payroll-core-engine). Null for hand-entered payslips. Drives idempotent recalculation and the run-scoped compliance verify (nl-engine-output-consistency scoping)."},
+                    "sickLeaveCaseId": {"type": "string", "format": "uuid", "$ref": "SickLeaveCase", "nullable": true, "description": "NL: the open SickLeaveCase this payslip's doorbetaald loon was computed for (sick-pay-calc). Null on a normal (non-sick) payslip — marks the sick-pay fields and the nl-loondoorbetaling-floor check as in scope."},
+                    "doorbetaaldLoon": {"type": "number", "nullable": true, "description": "NL: the floored loondoorbetaling-bij-ziekte continued wage before the wachtdag deduction (SickPayCalculator L). Null on a normal payslip (sick-pay-calc)."},
+                    "wachtdagDeduction": {"type": "number", "nullable": true, "description": "NL: the once-per-case wachtdag (waiting day) deduction, valued at the doorbetaald daily rate. 0 when no wachtdag applies; null on a normal payslip (sick-pay-calc)."},
+                    "sickPayReferenceWage": {"type": "number", "nullable": true, "description": "NL: the reference wage (W) the sick-pay calculation was run against — the employee's full grossMonthlySalary. Null on a normal payslip (sick-pay-calc)."},
+                    "sickPayPercentage": {"type": "number", "nullable": true, "description": "NL: the applied loondoorbetalingPercentage (statutory minimum 70, CAOs may set higher). Null on a normal payslip (sick-pay-calc)."},
+                    "sickPayMinimumWageFloor": {"type": "number", "nullable": true, "description": "NL: the WML monthly floor (M) this sick payslip's year-1 floor was computed against, part-time scaled. Null on a normal payslip (sick-pay-calc)."},
+                    "sickPayYearOne": {"type": "boolean", "nullable": true, "description": "NL: whether the run period fell within the first 52 weeks of the case's firstSickDay — the year-1 WML floor is in scope only when true. Null on a normal payslip (sick-pay-calc)."}
                 }
             },
             "PayrollRun": {
