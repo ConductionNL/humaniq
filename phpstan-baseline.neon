@@ -1,0 +1,21 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Offset non\\-empty\\-string does not exist on array\\{\\}\\.$#"
+			count: 2
+			path: lib/Service/RuleAuditService.php
+
+		-
+			message: "#^Offset non\\-empty\\-string does not exist on array\\{\\}\\.$#"
+			count: 2
+			path: lib/Service/WkrService.php
+
+		-
+			message: "#^Call to an undefined static method OCA\\\\Hrmq\\\\Standards\\\\Checks\\\\CheckProvider\\:\\:seedObjects\\(\\)\\.$#"
+			count: 1
+			path: lib/Standards/RuleEngine.php
+
+		-
+			message: "#^Call to an undefined static method OCA\\\\Hrmq\\\\Standards\\\\Checks\\\\CheckProvider\\:\\:upsertKeys\\(\\)\\.$#"
+			count: 1
+			path: lib/Standards/RuleEngine.php

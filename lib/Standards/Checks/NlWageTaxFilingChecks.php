@@ -259,7 +259,7 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects
 
         if ($tijdvak === 'maand' && preg_match('/^(\d{4})-(\d{2})$/', $period, $m) === 1) {
             $expected = self::expectedDeadline((int) $m[1], (int) $m[2]);
-        } elseif ($tijdvak === 'jaar' && preg_match('/^(\d{4})/', $period, $m) === 1) {
+        } else if ($tijdvak === 'jaar' && preg_match('/^(\d{4})/', $period, $m) === 1) {
             $expected = self::expectedDeadline((int) $m[1], 12);
         } else {
             return true;

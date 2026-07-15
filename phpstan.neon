@@ -1,0 +1,50 @@
+includes:
+    # Tracked lint debt in the current tree (auto-generated via `phpstan --generate-baseline`).
+    # New code is NOT covered by the baseline, so new violations of level 5 rules fail CI.
+    - phpstan-baseline.neon
+
+parameters:
+    level: 5
+    paths:
+        - lib
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+    excludePaths:
+        - vendor
+        - vendor-bin
+        # These guards implement OCA\OpenRegister\Lifecycle\LifecycleGuardInterface,
+        # which is only available at runtime once OpenRegister is installed
+        # alongside hrmq. PHPStan cannot baseline "implements unknown interface"
+        # errors — exclusion is required (same pattern used fleet-wide, e.g.
+        # openconnector/phpstan.neon for its own OpenRegister-dependent classes).
+        - lib/Lifecycle/CompEffectiveDateGuard.php
+        - lib/Lifecycle/LeaveBuySellApprovalGuard.php
+        - lib/Lifecycle/LeaveSettlementPeriodGuard.php
+        - lib/Lifecycle/NoSelfApprovalGuard.php
+        - lib/Lifecycle/PayrollRunApprovedGuard.php
+    scanDirectories:
+        - vendor/nextcloud/ocp
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # Nextcloud server internals (\OC, OC\) not stubbed in nextcloud/ocp
+        - '#Call to an undefined method OC::#'
+        - '#Class OC not found#'
+        - '#Access to static property \$server on an unknown class OC#'
+        - '#unknown class OC\\#'
+        - '#Caught class OC\\#'
+        # OCA\DAV is server-internal and not in nextcloud/ocp stubs (CalDavBackend used by
+        # PortalCalendarService's ICreateFromString bridge)
+        - '#unknown class OCA\\DAV\\#'
+        - '#Class OCA\\DAV\\#'
+        # OCA classes from other apps (OpenRegister, DocuDesk) are only available at runtime
+        # once those apps are installed alongside hrmq — not resolvable during static analysis.
+        - '#unknown class OCA\\OpenRegister\\#'
+        - '#OCA\\OpenRegister\\[a-zA-Z\\]+.*not found#'
+        - '#on an unknown class OCA\\OpenRegister\\#'
+        - '#has invalid return type OCA\\OpenRegister\\#'
+        - '#has invalid type OCA\\OpenRegister\\#'
+        - '#implements unknown interface OCA\\OpenRegister\\#'
+        - '#unknown class OCA\\DocuDesk\\#'
+        - '#OCA\\DocuDesk\\[a-zA-Z\\]+.*not found#'
+        - '#on an unknown class OCA\\DocuDesk\\#'

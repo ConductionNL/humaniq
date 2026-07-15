@@ -806,7 +806,7 @@ class HrDocumentService
                 if (trim((string) ($row['payslipId'] ?? '')) !== $payslipId) {
                     continue;
                 }
-            } elseif ($jaaropgaafId !== null) {
+            } else if ($jaaropgaafId !== null) {
                 if (trim((string) ($row['jaaropgaafId'] ?? '')) !== $jaaropgaafId) {
                     continue;
                 }
@@ -816,7 +816,7 @@ class HrDocumentService
                     if ($rowContractId !== $contractId) {
                         continue;
                     }
-                } elseif ($rowContractId !== '' || trim((string) ($row['employeeId'] ?? '')) !== $employeeId) {
+                } else if ($rowContractId !== '' || trim((string) ($row['employeeId'] ?? '')) !== $employeeId) {
                     continue;
                 }
             }//end if
