@@ -139,6 +139,25 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "Expense",
+                    "slug": "expense-devries-mileage"
+                },
+                "employeeId": "employee-devries",
+                "title": "Kilometervergoeding klantbezoek Rotterdam",
+                "description": "Eigen auto, zakelijke kilometers naar klantlocatie.",
+                "amount": 34.50,
+                "currency": "EUR",
+                "category": "travel",
+                "travelType": "business",
+                "distanceKm": 150,
+                "expenseDate": "2026-06-10",
+                "status": "submitted",
+                "submittedAt": "2026-06-11T08:00:00Z",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "LoonaangifteFiling",
                     "slug": "loonaangifte-2026-04"
                 },
