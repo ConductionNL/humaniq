@@ -1,0 +1,44 @@
+{
+    "x-hrmq-fragment": "hr-loonbeslag",
+    "components": {
+        "schemas": {
+            "Loonbeslag": {
+                "slug": "Loonbeslag",
+                "icon": "Gavel",
+                "version": "0.1.0",
+                "title": "Loonbeslag",
+                "description": "A court/deurwaarder-ordered wage garnishment (derdenbeslag): an ongoing order spanning many periods until the claim is satisfied or the order is withdrawn -- a fundamentally different lifecycle from a PayrollAdjustment's one-shot correction (design.md D1). PayrollRunService folds the floor-clamped periodic deduction into Payslip.nettoPay as a fourth current-run post-tax component (loonbeslag), never re-invoking PayrollCalculator. beslagvrijeVoet is a required, HR-entered stored input for the MVP -- computing it per the Wet vereenvoudiging beslagvrije voet is a named fast-follow (design.md D7). status is a plain enum, deliberately no x-openregister-lifecycle map (design.md D5): the sensitive activate/settle/withdraw transitions require a caller-role (admin/HR) check a lifecycle guard's (object, action, userId) contract cannot express, so LoonbeslagController owns every transition instead.",
+                "type": "object",
+                "x-schema-org": "schema:MonetaryAmount",
+                "required": [
+                    "employeeId",
+                    "creditor",
+                    "dossierRef",
+                    "totalClaim",
+                    "orderedAmount",
+                    "beslagvrijeVoet",
+                    "status",
+                    "effectiveFrom"
+                ],
+                "properties": {
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "description": "The garnished employee."},
+                    "creditor": {"type": "string", "description": "The creditor/deurwaarder name named on the garnishment order."},
+                    "dossierRef": {"type": "string", "description": "The deurwaarder's dossier/case reference -- the human key an HR user matches against the court order."},
+                    "totalClaim": {"type": "number", "minimum": 0, "description": "The total ordered claim, euro."},
+                    "orderedAmount": {"type": "number", "minimum": 0, "description": "The periodic deduction amount the order specifies, euro -- the un-clamped figure before the beslagvrije-voet floor is applied (design.md D2)."},
+                    "beslagvrijeVoet": {"type": "number", "minimum": 0, "description": "The protected minimum, euro -- a stored HR-entered input for the MVP, trusted as the authoritative figure the deurwaarder is legally required to state on the order (design.md D7). Computing it from income/household composition per the Wet vereenvoudiging beslagvrije voet is a named fast-follow, not implemented here."},
+                    "status": {"type": "string", "enum": ["concept", "actief", "voldaan", "ingetrokken"], "default": "concept", "description": "Plain enum, deliberately no x-openregister-lifecycle map (design.md D5): activate (concept -> actief), settle (actief -> voldaan), and withdraw (concept/actief -> ingetrokken) are each a guarded LoonbeslagController endpoint (admin/HR gate BEFORE any RBAC resolve), never a bare lifecycleActions transition."},
+                    "effectiveFrom": {"type": "string", "format": "date", "description": "First period the deduction may apply."},
+                    "effectiveTo": {"type": "string", "format": "date", "nullable": true, "description": "Last period the deduction may apply, or null while open-ended."},
+                    "activatedBy": {"type": "string", "nullable": true, "description": "Nextcloud user id of the admin/HR principal who verified and activated this garnishment (LoonbeslagController::activate())."},
+                    "activatedAt": {"type": "string", "format": "date-time", "nullable": true, "description": "When this garnishment was activated."},
+                    "settledBy": {"type": "string", "nullable": true, "description": "Nextcloud user id of the admin/HR principal who marked this garnishment settled (LoonbeslagController::settle())."},
+                    "settledAt": {"type": "string", "format": "date-time", "nullable": true, "description": "When this garnishment was marked settled (the claim satisfied)."},
+                    "withdrawnBy": {"type": "string", "nullable": true, "description": "Nextcloud user id of the admin/HR principal who withdrew this garnishment (LoonbeslagController::withdraw())."},
+                    "withdrawnAt": {"type": "string", "format": "date-time", "nullable": true, "description": "When this garnishment was withdrawn."},
+                    "withdrawnReason": {"type": "string", "nullable": true, "description": "Free-text reason the garnishment was withdrawn, stamped by LoonbeslagController::withdraw()."}
+                }
+            }
+        }
+    }
+}

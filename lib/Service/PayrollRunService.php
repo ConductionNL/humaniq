@@ -64,6 +64,23 @@
  * transaction for an employee/period -> `leaveBuySell` stays null and
  * `nettoPay` is unchanged (byte-identical to before this change).
  *
+ * loonbeslag (design.md D2/D3/D4): after folding retro-adjustments AND
+ * leave-buy-sell -- against the fully-folded `nettoPay` (engine net +
+ * retroAdjustment + leaveBuySell), never an intermediate figure -- the one
+ * `actief` Loonbeslag covering an employee's period (resolved via the same
+ * id/slug/employeeNumber key convention as `coveringContract()`/
+ * `openSickCaseFor()`, deterministic earliest-`effectiveFrom` tie-break when
+ * more than one match) contributes a floor-clamped deduction: `deduction =
+ * min(orderedAmount, max(0, nettoPaySoFar - beslagvrijeVoet))`, folded into
+ * `nettoPay` as the FOURTH and final current-run post-tax component
+ * (`Payslip.loonbeslag`/`loonbeslagId`). `PayrollCalculator` is never invoked
+ * for this figure -- entirely post-tax arithmetic here. No active Loonbeslag
+ * for an employee/period -> `loonbeslag`/`loonbeslagId` stay null and
+ * `nettoPay` is unchanged (byte-identical to before this change). Idempotent
+ * per (loonbeslagId, period): recalculating a draft run re-derives the same
+ * deduction from scratch every time -- no accumulator anywhere on
+ * `Loonbeslag`.
+ *
  * @category Service
  * @package  OCA\Hrmq\Service
  *
@@ -82,6 +99,9 @@
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
  * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-004
  * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
+ * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
+ * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-004
+ * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
  */
 
 declare(strict_types=1);
@@ -293,6 +313,8 @@ class PayrollRunService
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-003
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-005
      * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-004
      */
     private function generate(array $run): array
     {
@@ -315,6 +337,7 @@ class PayrollRunService
         $existingByEmployeeId         = $this->enginePayslipsByEmployeeId($runId);
         $retroAdjustmentsByEmployeeId = $this->appliedRetroAdjustmentsByEmployeeId($period);
         $leaveBuySellByEmployeeId     = $this->settledLeaveTransactionsByEmployeeId($period);
+        $loonbeslagenByEmployeeKey    = $this->activeLoonbeslagenByEmployeeKey();
 
         $computed = [];
         $skipped  = [];
@@ -403,10 +426,21 @@ class PayrollRunService
             // byte-identical to before this change.
             $leaveBuySellCents = ($leaveBuySellByEmployeeId[$employeeId] ?? 0);
 
+            // loonbeslag (design.md D3): computed against the FULLY-folded
+            // nettoPay-so-far (engine net + retroAdjustment + leaveBuySell) --
+            // the fourth and final fold, so the beslagvrije voet protects the
+            // employee's actual take-home this period, never an intermediate
+            // figure a same-period nabetaling/leave-payout would still
+            // inflate past.
+            $nettoPaySoFarCents       = ($result->nettoPayCents + $retroAdjustmentCents + $leaveBuySellCents);
+            $loonbeslag               = $this->activeLoonbeslagFor($employee, $loonbeslagenByEmployeeKey, $period);
+            $loonbeslagDeductionCents = ($loonbeslag !== null) ? $this->loonbeslagDeductionCents($loonbeslag, $nettoPaySoFarCents) : 0;
+
             $payload = $this->payslipPayload($runId, $employee, $contract, $period, $result);
             $payload = array_merge($payload, $this->sickPayFields($sickCase, $sickResult));
             $payload = array_merge($payload, $this->retroAdjustmentFields($retroAdjustmentCents, $result->nettoPayCents));
             $payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents, ($result->nettoPayCents + $retroAdjustmentCents)));
+            $payload = array_merge($payload, $this->loonbeslagFields($loonbeslag, $loonbeslagDeductionCents, $nettoPaySoFarCents));
 
             try {
                 $existingPayslip = ($existingByEmployeeId[$employeeId] ?? null);
@@ -423,7 +457,7 @@ class PayrollRunService
             $totals['loonheffing']     += $result->loonheffingCents;
             $totals['employerCharges'] += $result->employerChargesCents;
             $totals['withholdings']    += $result->loonheffingCents;
-            $totals['net']             += ($result->nettoPayCents + $retroAdjustmentCents + $leaveBuySellCents);
+            $totals['net']             += ($nettoPaySoFarCents - $loonbeslagDeductionCents);
         }//end foreach
 
         // Orphan cleanup (design.md D4): engine payslips of THIS run whose
@@ -1024,6 +1058,178 @@ class PayrollRunService
         ];
 
     }//end leaveBuySellFields()
+
+
+    /**
+     * Every `actief` Loonbeslag, indexed by every employee-reference key
+     * (loonbeslag design.md D4, the `contractsByEmployeeKey()`/
+     * `openSickCasesByEmployeeKey()` precedent: a Loonbeslag's `employeeId`
+     * may be a literal id, slug, or employeeNumber string). Each key maps to
+     * the LIST of that employee's `actief` Loonbeslag records; period
+     * coverage and the earliest-`effectiveFrom` tie-break are resolved by
+     * `activeLoonbeslagFor()`, not here.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     *
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
+     */
+    private function activeLoonbeslagenByEmployeeKey(): array
+    {
+        $out = [];
+        foreach ($this->loadAll('Loonbeslag') as $loonbeslag) {
+            if ((string) ($loonbeslag['status'] ?? '') !== 'actief') {
+                continue;
+            }
+
+            $key = trim((string) ($loonbeslag['employeeId'] ?? ''));
+            if ($key !== '') {
+                $out[$key][] = $loonbeslag;
+            }
+        }
+
+        return $out;
+
+    }//end activeLoonbeslagenByEmployeeKey()
+
+
+    /**
+     * The employee's one `actief` Loonbeslag covering the period, resolved
+     * via the id/slug/employeeNumber keys (the `coveringContract()`/
+     * `openSickCaseFor()` precedent), or null when none covers it. When more
+     * than one match resolves across the keys (design.md D4's MVP-scope
+     * exception, machine-checked separately by `nl-loonbeslag-single-active`),
+     * the earliest `effectiveFrom` wins deterministically -- never a silent
+     * drop, never a double deduction.
+     *
+     * @param array<string, mixed>                              $employee                  The Employee.
+     * @param array<string, array<int, array<string, mixed>>> $loonbeslagenByEmployeeKey The active-Loonbeslag index.
+     * @param string                                             $period                    Wage period (YYYY-MM).
+     *
+     * @return array<string, mixed>|null
+     *
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
+     */
+    private function activeLoonbeslagFor(array $employee, array $loonbeslagenByEmployeeKey, string $period): ?array
+    {
+        $keys = array_filter(
+            [
+                $this->idOf($employee),
+                (string) ($employee['@self']['slug'] ?? ''),
+                trim((string) ($employee['employeeNumber'] ?? '')),
+            ],
+            static fn(string $key): bool => $key !== ''
+        );
+
+        $matches = [];
+        $seenIds = [];
+        foreach ($keys as $key) {
+            foreach (($loonbeslagenByEmployeeKey[$key] ?? []) as $loonbeslag) {
+                if ($this->coversPeriod((string) ($loonbeslag['effectiveFrom'] ?? ''), (string) ($loonbeslag['effectiveTo'] ?? ''), $period) === false) {
+                    continue;
+                }
+
+                $id = $this->idOf($loonbeslag);
+                if ($id !== '' && isset($seenIds[$id]) === true) {
+                    // Already matched via a different key (e.g. both id AND
+                    // employeeNumber resolved the same record) -- never
+                    // double-count the same Loonbeslag.
+                    continue;
+                }
+
+                if ($id !== '') {
+                    $seenIds[$id] = true;
+                }
+
+                $matches[] = $loonbeslag;
+            }
+        }
+
+        if ($matches === []) {
+            return null;
+        }
+
+        usort(
+            $matches,
+            static function (array $a, array $b): int {
+                $aFrom = strtotime((string) ($a['effectiveFrom'] ?? ''));
+                $bFrom = strtotime((string) ($b['effectiveFrom'] ?? ''));
+                return (($aFrom === false ? PHP_INT_MAX : $aFrom) <=> ($bFrom === false ? PHP_INT_MAX : $bFrom));
+            }
+        );
+
+        return $matches[0];
+
+    }//end activeLoonbeslagFor()
+
+
+    /**
+     * The floor-clamped garnishment deduction (design.md D2, REQ-BESLAG-002):
+     * `min(orderedAmount, max(0, nettoPaySoFar - beslagvrijeVoet))`, cents-
+     * exact. This is the hard rule by construction -- `max(0, ...)` clamps a
+     * would-be-negative headroom to zero (nothing deducted once the employee
+     * has no headroom above the voet from other components) and
+     * `min(orderedAmount, ...)` never deducts more than the order specifies
+     * even when headroom exceeds it, so the result can never push `nettoPay`
+     * below `beslagvrijeVoet`.
+     *
+     * @param array<string, mixed> $loonbeslag         The covering `actief` Loonbeslag.
+     * @param int                   $nettoPaySoFarCents nettoPay after retroAdjustment + leaveBuySell are already folded, in cents.
+     *
+     * @return int The deduction, in cents (0 when there is no headroom).
+     *
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
+     */
+    private function loonbeslagDeductionCents(array $loonbeslag, int $nettoPaySoFarCents): int
+    {
+        $orderedAmount = ($loonbeslag['orderedAmount'] ?? 0);
+        $orderedCents  = is_numeric($orderedAmount) === true ? (int) round(((float) $orderedAmount) * 100) : 0;
+
+        $beslagvrijeVoet = ($loonbeslag['beslagvrijeVoet'] ?? 0);
+        $voetCents       = is_numeric($beslagvrijeVoet) === true ? (int) round(((float) $beslagvrijeVoet) * 100) : 0;
+
+        return min($orderedCents, max(0, ($nettoPaySoFarCents - $voetCents)));
+
+    }//end loonbeslagDeductionCents()
+
+
+    /**
+     * The loonbeslag + (adjusted) nettoPay Payslip fields to merge onto the
+     * payload (design.md D2/D4): both `loonbeslag`/`loonbeslagId` null when no
+     * `actief` Loonbeslag covers this period -- a normal payslip stays
+     * byte-identical to the pre-change shape. When a Loonbeslag covers the
+     * period but the deduction is zero (no headroom), `loonbeslagId` is still
+     * stamped (the floor check resolves it -- trivially satisfied since
+     * `nettoPay` already sits at or below the voet from other components) but
+     * `loonbeslag`/`nettoPay` are left unchanged, matching the
+     * present-but-zero-is-null convention `retroAdjustment`/`leaveBuySell`
+     * already use.
+     *
+     * @param array<string, mixed>|null $loonbeslag         The covering `actief` Loonbeslag, or null.
+     * @param int                        $deductionCents     The floor-clamped deduction, in cents.
+     * @param int                        $nettoPaySoFarCents nettoPay after retroAdjustment + leaveBuySell are already folded, in cents.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
+     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-004
+     */
+    private function loonbeslagFields(?array $loonbeslag, int $deductionCents, int $nettoPaySoFarCents): array
+    {
+        if ($loonbeslag === null) {
+            return ['loonbeslag' => null, 'loonbeslagId' => null];
+        }
+
+        if ($deductionCents === 0) {
+            return ['loonbeslag' => null, 'loonbeslagId' => $this->idOf($loonbeslag)];
+        }
+
+        return [
+            'loonbeslag'   => $this->euros($deductionCents),
+            'loonbeslagId' => $this->idOf($loonbeslag),
+            'nettoPay'     => $this->euros($nettoPaySoFarCents - $deductionCents),
+        ];
+
+    }//end loonbeslagFields()
 
 
     /**

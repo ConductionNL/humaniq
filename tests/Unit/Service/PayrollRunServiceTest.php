@@ -729,6 +729,268 @@ class PayrollRunServiceTest extends TestCase
 
 
     /**
+     * The loonbeslag fixture: an `actief` Loonbeslag covering 2026-02 for the
+     * anchor employee, overridable per test.
+     *
+     * @param array<string, mixed> $overrides Fields to override.
+     *
+     * @return array<string, mixed>
+     */
+    private function loonbeslag(array $overrides=[]): array
+    {
+        return array_merge(
+            [
+                'id'              => 'lb-1',
+                'employeeId'      => 'emp-1',
+                'creditor'        => 'Gerechtsdeurwaarderskantoor Van Dijk',
+                'dossierRef'      => 'GDW-2026-00123',
+                'totalClaim'      => 4200.00,
+                'orderedAmount'   => 800.00,
+                'beslagvrijeVoet' => 2950.00,
+                'status'          => 'actief',
+                'effectiveFrom'   => '2026-01-01',
+                'effectiveTo'     => null,
+            ],
+            $overrides
+        );
+
+    }//end loonbeslag()
+
+
+    /**
+     * loonbeslag REQ-BESLAG-002 Scenario 1 — a large ordered deduction is
+     * clamped at the beslagvrije voet: anchor nettoPay €3.081,17,
+     * orderedAmount €800,00, beslagvrijeVoet €2.950,00 -> loonbeslag
+     * €131,17 (not €800,00), nettoPay exactly €2.950,00.
+     *
+     * @return void
+     */
+    public function testLargeOrderedDeductionIsClampedAtBeslagvrijeVoet(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+                'Loonbeslag'         => [$this->loonbeslag()],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $this->assertSame('calculated', $result['status']);
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+
+        $this->assertSame(131.17, $payslips[0]['loonbeslag'], 'The deduction is clamped at the headroom above the beslagvrije voet, not the full orderedAmount.');
+        $this->assertSame(2950.00, $payslips[0]['nettoPay'], 'nettoPay lands EXACTLY on the beslagvrije voet — never below it.');
+        $this->assertSame('lb-1', $payslips[0]['loonbeslagId']);
+        $this->assertSame(2950.00, $result['totals']['totalNet']);
+
+    }//end testLargeOrderedDeductionIsClampedAtBeslagvrijeVoet()
+
+
+    /**
+     * loonbeslag REQ-BESLAG-002 Scenario 2 — a small ordered deduction is
+     * never clamped: the same employee/Loonbeslag but orderedAmount €50,00 ->
+     * the full €50,00 is deducted, nettoPay €3.031,17.
+     *
+     * @return void
+     */
+    public function testSmallOrderedDeductionIsNeverClamped(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+                'Loonbeslag'         => [$this->loonbeslag(['orderedAmount' => 50.00])],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+
+        $this->assertSame(50.00, $payslips[0]['loonbeslag'], 'Headroom exceeds orderedAmount, so the full ordered amount is deducted.');
+        $this->assertSame(3031.17, $payslips[0]['nettoPay']);
+
+    }//end testSmallOrderedDeductionIsNeverClamped()
+
+
+    /**
+     * loonbeslag REQ-BESLAG-002 Scenario 3 — zero headroom deducts nothing:
+     * beslagvrijeVoet set to the anchor's exact folded nettoPay (as if a
+     * large terugvordering retro-adjustment already ate the headroom) ->
+     * `loonbeslag` is null and `nettoPay` is unchanged by the garnishment.
+     * `loonbeslagId` is still stamped -- the Loonbeslag genuinely covers the
+     * period, only the deduction itself is zero.
+     *
+     * @return void
+     */
+    public function testZeroHeadroomDeductsNothing(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+                'Loonbeslag'         => [$this->loonbeslag(['beslagvrijeVoet' => 3081.17])],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+
+        $this->assertNull($payslips[0]['loonbeslag'], 'Zero headroom -- no deduction, represented as null (not 0.00).');
+        $this->assertSame(3081.17, $payslips[0]['nettoPay'], 'nettoPay is unchanged by the garnishment.');
+        $this->assertSame('lb-1', $payslips[0]['loonbeslagId'], 'The covering Loonbeslag is still stamped even though the deduction is zero.');
+
+    }//end testZeroHeadroomDeductsNothing()
+
+
+    /**
+     * loonbeslag REQ-BESLAG-004 Scenario 1 — an unaffected payslip stays
+     * byte-identical: no `actief` Loonbeslag covers the period -> both
+     * `loonbeslag`/`loonbeslagId` are null and nettoPay is the plain engine
+     * figure.
+     *
+     * @return void
+     */
+    public function testNoActiveLoonbeslagLeavesThePayslipByteIdentical(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+                'Loonbeslag'         => [
+                    // A concept (not yet activated) Loonbeslag -- must not fold.
+                    $this->loonbeslag(['id' => 'lb-concept', 'status' => 'concept']),
+                    // An actief Loonbeslag but for a DIFFERENT employee.
+                    $this->loonbeslag(['id' => 'lb-other-emp', 'employeeId' => 'emp-2']),
+                    // An actief Loonbeslag whose effective range does not cover this period.
+                    $this->loonbeslag(['id' => 'lb-future', 'effectiveFrom' => '2027-01-01']),
+                ],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+
+        $this->assertNull($payslips[0]['loonbeslag']);
+        $this->assertNull($payslips[0]['loonbeslagId']);
+        $this->assertSame(3081.17, $payslips[0]['nettoPay']);
+
+    }//end testNoActiveLoonbeslagLeavesThePayslipByteIdentical()
+
+
+    /**
+     * loonbeslag REQ-BESLAG-004 Scenario 2 — loonbeslag folds AFTER
+     * retro-adjustment and leave-buy-sell, not before: the floor-clamp
+     * arithmetic uses nettoPay after those two folds, so a same-period
+     * nabetaling widens the garnishable headroom instead of the bare
+     * engine-computed nettoPay being clamped in isolation.
+     *
+     * Anchor net €3.081,17 + retro nabetaling €100,00 + leave-buy-sell sell
+     * €50,00 = €3.231,17 folded-so-far; beslagvrijeVoet €2.950,00 and
+     * orderedAmount €800,00 -> headroom €281,17 (< orderedAmount) so the
+     * deduction is clamped at €281,17, landing nettoPay EXACTLY on the voet.
+     *
+     * @return void
+     */
+    public function testLoonbeslagFoldsAfterRetroAdjustmentAndLeaveBuySell(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [
+                    ['id' => 'ps-sealed', 'payrollRunId' => 'run-jan-sealed', 'employeeId' => 'emp-1', 'period' => '2026-01', 'nettoPay' => 2880.00],
+                ],
+                'PayrollAdjustment'  => [
+                    ['id' => 'adj-1', 'employeeId' => 'emp-1', 'originalPeriod' => '2026-01', 'originalPayslipId' => 'ps-sealed', 'correctionRef' => 't1', 'status' => 'applied', 'settlementPeriod' => '2026-02', 'settlementLine' => 'nabetaling', 'engineVersion' => 'nl-2026', 'deltaNet' => 100.00],
+                ],
+                'LeaveTransaction'   => [
+                    ['id' => 'txn-1', 'employeeId' => 'emp-1', 'transactionType' => 'sell', 'status' => 'settled', 'settlementPeriod' => '2026-02', 'settledAmount' => 50.00],
+                ],
+                'Loonbeslag'         => [$this->loonbeslag()],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $this->assertSame('calculated', $result['status']);
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips, 'Only the new Feb payslip is written -- the sealed Jan payslip is untouched.');
+        $payslip = $payslips[0];
+
+        $this->assertSame(100.00, $payslip['retroAdjustment']);
+        $this->assertSame(50.00, $payslip['leaveBuySell']);
+        // 3081.17 + 100.00 + 50.00 = 3231.17 folded-so-far; headroom above
+        // 2950.00 is 281.17 (< 800.00 ordered) -> clamped deduction 281.17.
+        $this->assertSame(281.17, $payslip['loonbeslag'], 'The floor-clamp arithmetic uses nettoPay AFTER retroAdjustment/leaveBuySell, not the bare engine figure.');
+        $this->assertSame(2950.00, $payslip['nettoPay'], 'nettoPay lands exactly on the beslagvrije voet.');
+        $this->assertSame(2950.00, $result['totals']['totalNet']);
+
+    }//end testLoonbeslagFoldsAfterRetroAdjustmentAndLeaveBuySell()
+
+
+    /**
+     * loonbeslag REQ-BESLAG-005 — recalculating a draft run reproduces the
+     * IDENTICAL deduction (no accumulator, no drift across repeated
+     * `--recalculate`).
+     *
+     * @return void
+     */
+    public function testRecalculatingALoonbeslagAffectedRunIsIdempotent(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [
+                    ['id' => 'run-1', 'period' => '2026-02', 'administrationId' => 'ADM-001', 'jurisdiction' => 'NL', 'status' => 'draft'],
+                ],
+                'Payslip'            => [],
+                'Loonbeslag'         => [$this->loonbeslag()],
+            ]
+        );
+
+        $first = $service->runFor('2026-02', 'ADM-001', true);
+        $this->assertSame('calculated', $first['status']);
+
+        $firstPayslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $firstPayslips);
+        $this->assertSame(131.17, $firstPayslips[0]['loonbeslag']);
+        $this->assertSame(2950.00, $firstPayslips[0]['nettoPay']);
+
+        $second = $service->runFor('2026-02', 'ADM-001', true);
+        $this->assertSame('calculated', $second['status']);
+
+        $secondPayslips = $this->savedFor($fake, 'Payslip');
+        // Both saves target the SAME upserted (payrollRunId, employeeId) row.
+        $this->assertCount(2, $secondPayslips, 'Recalculation upserts the same row in place -- both saves are recorded, both against the same id.');
+        $this->assertSame($secondPayslips[0]['id'], $secondPayslips[1]['id']);
+        $this->assertSame(131.17, $secondPayslips[1]['loonbeslag'], 'Recalculating reproduces the IDENTICAL deduction -- no accumulator, no drift.');
+        $this->assertSame(2950.00, $secondPayslips[1]['nettoPay']);
+
+    }//end testRecalculatingALoonbeslagAffectedRunIsIdempotent()
+
+
+    /**
      * Objects saved to a given schema, in save order.
      *
      * @param object $fake   The fake ObjectService.

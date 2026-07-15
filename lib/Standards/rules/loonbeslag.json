@@ -1,0 +1,30 @@
+{
+  "domain": "payroll",
+  "version": "2026-07",
+  "rules": [
+    {
+      "id": "nl-loonbeslag-beslagvrije-voet-floor",
+      "domain": "payroll",
+      "jurisdiction": "NL",
+      "framework": "nl-loonbeslag",
+      "source": "Wetboek van Burgerlijke Rechtsvordering art. 475b-475e; Wet vereenvoudiging beslagvrije voet (2021)",
+      "statement": "A court/deurwaarder-ordered wage garnishment (loonbeslag) deducted from an employee's net pay shall never push that net pay below the employee's beslagvrije voet (the protected minimum): deduction = min(orderedAmount, max(0, nettoPay - beslagvrijeVoet)).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2021-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0001827"
+    },
+    {
+      "id": "nl-loonbeslag-single-active",
+      "domain": "payroll",
+      "jurisdiction": "NL",
+      "framework": "nl-loonbeslag",
+      "source": "hrmq loonbeslag MVP scope (design.md D4) -- BW art. 475d governs priority ordering across simultaneous garnishments, not yet implemented",
+      "statement": "Until priority/preferente-vordering ordering across simultaneous garnishments is implemented, an employer's payroll administration shall carry at most one actief Loonbeslag per employee per effective period.",
+      "severity": "conditional",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0001827"
+    }
+  ]
+}
