@@ -327,6 +327,13 @@
 					"route": "PayrollPaymentBatches"
 				}
 			]
+		},
+		{
+			"id": "ProformaPayslipMenu",
+			"label": "Simuleer loonstrook",
+			"icon": "Calculator",
+			"order": 125,
+			"route": "ProformaPayslip"
 		}
 	],
 	"pages": [
@@ -1729,6 +1736,14 @@
 				"columns": ["cycleId", "status", "rating", "besprokenOp"],
 				"sort": { "field": "besprokenOp", "order": "desc" }
 			}
+		},
+		{
+			"id": "ProformaPayslip",
+			"route": "/payroll/proforma",
+			"type": "custom",
+			"title": "Simuleer loonstrook",
+			"component": "ProformaPayslip",
+			"_note": "proforma-payslip design.md D6: manifest v2 has no declarative primitive for a persist-nothing interactive compute-form. open-form is bound to a register/schema and PERSISTS the created object -- exactly what a pro-forma simulation must not do. api-call only interpolates fixed/@token params against a form-less trigger and surfaces a toast + page refresh -- it cannot gather a bespoke set of hypothetical inputs (bruto, tabel, geboortedatum, deeltijdfactor, bijzondere beloning, periode) nor render the returned JSON breakdown. So this page is a host-app SFC (ProformaPayslip.vue, registered in src/registry.js) that renders the input form and calls POST /api/payroll/proforma directly, showing the full gross-to-net breakdown. No register/schema is referenced and no object is ever created -- the stable, test-covered contract is the endpoint (PayrollController::proforma) + the hrmq:payroll:proforma occ command."
 		}
 	]
 }

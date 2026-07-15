@@ -29,6 +29,7 @@ import AccountMinusOutline from 'vue-material-design-icons/AccountMinusOutline.v
 import CalendarSyncOutline from 'vue-material-design-icons/CalendarSyncOutline.vue'
 import ClipboardAccountOutline from 'vue-material-design-icons/ClipboardAccountOutline.vue'
 import StarCheckOutline from 'vue-material-design-icons/StarCheckOutline.vue'
+import Calculator from 'vue-material-design-icons/Calculator.vue'
 
 export default {
 	AccountOutline,
@@ -53,4 +54,5 @@ export default {
 	CalendarSyncOutline,
 	ClipboardAccountOutline,
 	StarCheckOutline,
+	Calculator,
 }

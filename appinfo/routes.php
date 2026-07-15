@@ -26,6 +26,9 @@ return [
         // PayrollRunDetail "Mutatieoverzicht" manifest api-call action
         // (design.md D6).
         ['name' => 'payroll#mutations', 'url' => '/api/payroll/mutations', 'verb' => 'POST'],
+        // proforma-payslip — persist-nothing "Simuleer loonstrook" pro-forma
+        // simulation, RBAC-gated capability probe (design.md D4).
+        ['name' => 'payroll#proforma', 'url' => '/api/payroll/proforma', 'verb' => 'POST'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],

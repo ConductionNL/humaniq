@@ -22,6 +22,13 @@
  * principal cannot even probe for run existence), then delegates to
  * `PayrollMutationService::diff()` + `persist()`.
  *
+ * Also backs the "Simuleer loonstrook" pro-forma surface (proforma-payslip
+ * design.md D4): `proforma()` resolves the caller's access to the hrmq
+ * payroll register/schema (a capability probe, not a row) through the same
+ * ObjectService + ambient-RBAC idiom BEFORE delegating to the stateless
+ * `ProformaPayslipService::simulate()` — unauthorized/unavailable collapse
+ * to the same 404, and nothing is ever persisted.
+ *
  * @category Controller
  * @package  OCA\Hrmq\Controller
  *
@@ -36,6 +43,8 @@
  *
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-008
  * @spec openspec/changes/payroll-mutation-reports/specs/payroll-mutation-reports/spec.md#REQ-MUT-008
+ * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-002
+ * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-004
  */
 
 declare(strict_types=1);
@@ -45,6 +54,7 @@ namespace OCA\Hrmq\Controller;
 use OCA\Hrmq\AppInfo\Application;
 use OCA\Hrmq\Service\PayrollMutationService;
 use OCA\Hrmq\Service\PayrollRunService;
+use OCA\Hrmq\Service\ProformaPayslipService;
 use OCA\Hrmq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -57,7 +67,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Guarded endpoint that (re)calculates one draft payroll run.
+ * Guarded endpoint that (re)calculates one draft payroll run, and the
+ * persist-nothing pro-forma simulation endpoint.
  */
 class PayrollController extends Controller
 {
@@ -68,6 +79,7 @@ class PayrollController extends Controller
      * @param ContainerInterface      $container              DI container for the RBAC-guarded ObjectService resolve.
      * @param PayrollRunService       $payrollRunService       The draft-run generation service.
      * @param PayrollMutationService  $payrollMutationService  The run-to-run diff service.
+     * @param ProformaPayslipService  $proformaPayslipService  The persist-nothing pro-forma simulation service.
      * @param SettingsService         $settingsService         The register-slug source.
      * @param IUserSession            $userSession             The current user session (admin/HR check).
      * @param IGroupManager           $groupManager            To check the caller's admin membership (admin/HR gate).
@@ -78,6 +90,7 @@ class PayrollController extends Controller
         private readonly ContainerInterface $container,
         private readonly PayrollRunService $payrollRunService,
         private readonly PayrollMutationService $payrollMutationService,
+        private readonly ProformaPayslipService $proformaPayslipService,
         private readonly SettingsService $settingsService,
         private readonly IUserSession $userSession,
         private readonly IGroupManager $groupManager,
@@ -215,6 +228,103 @@ class PayrollController extends Controller
         return $this->groupManager->isAdmin($uid);
 
     }//end isAdminOrHr()
+
+
+    /**
+     * `POST /api/payroll/proforma` — the persist-nothing "Simuleer
+     * loonstrook" pro-forma simulation (proforma-payslip design.md D4). The
+     * caller's access to the hrmq payroll register/schema is resolved
+     * through ObjectService under ambient RBAC BEFORE any computation (a
+     * capability probe, not a row lookup — there is no `runId`); a caller who
+     * could not see a real Payslip gets a 404, so unauthorized/unavailable
+     * collapse to the same status. Only then is the hypothetical input
+     * delegated to `ProformaPayslipService::simulate()`. No object is ever
+     * read for its data or written.
+     *
+     * @param mixed       $gross               Bruto maandsalaris (euro), required, numeric.
+     * @param string|null $table               Loonheffingstabel `wit`/`groen` (default `wit`).
+     * @param mixed       $loonheffingskorting Whether the loonheffingskorting applies (default true).
+     * @param string|null $dateOfBirth         ISO-8601 date of birth, or null (below-AOW).
+     * @param string|null $period              Wage period `YYYY-MM` (default the current month).
+     * @param mixed       $parttime            Part-time factor (default 1.0).
+     * @param mixed       $bijzonder           One-off bijzondere beloning, euro (default 0).
+     * @param string|null $aof                 Aof-tariefklasse override `laag`/`hoog`.
+     * @param mixed       $whk                 Whk-percentage override.
+     *
+     * @return JSONResponse The full breakdown, 400 on malformed input, 404 when the caller cannot resolve the payroll register.
+     *
+     * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-002
+     * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-004
+     */
+    #[NoAdminRequired]
+    public function proforma(
+        mixed $gross=null,
+        ?string $table=null,
+        mixed $loonheffingskorting=null,
+        ?string $dateOfBirth=null,
+        ?string $period=null,
+        mixed $parttime=null,
+        mixed $bijzonder=null,
+        ?string $aof=null,
+        mixed $whk=null,
+    ): JSONResponse {
+        // No-admin-idor guard applied to a capability rather than a row
+        // (design.md D4): unresolvable/unauthorized register access never
+        // reaches the engine, and both collapse to the same 404.
+        if ($this->authorizeProformaAccess() === false) {
+            return new JSONResponse(['error' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
+        }
+
+        try {
+            $breakdown = $this->proformaPayslipService->simulate(
+                [
+                    'gross'               => $gross,
+                    'table'               => $table,
+                    'loonheffingskorting' => $loonheffingskorting,
+                    'dateOfBirth'         => $dateOfBirth,
+                    'period'              => $period,
+                    'parttime'            => $parttime,
+                    'bijzonder'           => $bijzonder,
+                    'aof'                 => $aof,
+                    'whk'                 => $whk,
+                ]
+            );
+        } catch (\InvalidArgumentException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+        }
+
+        return new JSONResponse($breakdown);
+
+    }//end proforma()
+
+
+    /**
+     * Resolve-first capability probe (design.md D4): whether the caller's
+     * ambient RBAC can reach the hrmq payroll register/schema at all — the
+     * same "anyone who can see a real Payslip" boundary as `authorizeRun()`,
+     * applied to a capability instead of an id. Reads `limit=1` and never
+     * inspects the returned row's content — this is a probe, not a data
+     * read, and it never writes.
+     *
+     * @return bool True when the caller's RBAC can resolve the payroll register/schema.
+     *
+     * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-004
+     */
+    private function authorizeProformaAccess(): bool
+    {
+        try {
+            $this->objectService()
+                ->setRegister($this->settingsService->getRegisterSlug())
+                ->setSchema('PayrollRun')
+                ->findAll(['limit' => 1]);
+        } catch (\Throwable $e) {
+            $this->logger->info('PayrollController: proforma-toegang kon niet worden geresolved: '.$e->getMessage());
+            return false;
+        }
+
+        return true;
+
+    }//end authorizeProformaAccess()
 
 
     /**
