@@ -1382,50 +1382,60 @@
 				"register": "hrmq",
 				"schema": "Timesheet",
 				"_note": "HR/labour approval record (urenstaat). A single Timesheet captures the hours an employee logged for one period plus a submit -> approve/reject -> reopen approval workflow (x-openregister-lifecycle on `status`). ADR-062 round-2 rework: (1) total-hours KPI stat top-left so the approver sees the claimed volume at a glance; (2) the data widget SPLIT into 'Time entry' (period/description/project/cost centre/billable -- what was worked) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason -- the workflow trail), each excluding employeeId since the Related panel already resolves and links the claiming Employee by name; (3) related alongside both, matching their combined height. Files sits full-width below for approval evidence and signed timesheets (approval documents matter, so they are on the body, not a tab). NO email/calendar/talk widgets -- the Timesheet schema declares no comms linkedTypes and a labour record does not correspond; any communication is with the person (Employee), not the record. lifecycleActions expose the schema's own submit/approve/reject/reopen transitions (guarded server-side by NoSelfApprovalGuard). Audit history is pushed to a sidebar tab as a rarely-scanned surface.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "submit",
-							"from": [
-								"draft",
-								"rejected"
-							],
-							"to": "submitted",
-							"label": "Submit"
-						},
-						{
-							"action": "approve",
-							"from": [
-								"submitted"
-							],
-							"to": "approved",
-							"label": "Approve"
-						},
-						{
-							"action": "reject",
-							"from": [
-								"submitted"
-							],
-							"to": "rejected",
-							"label": "Reject"
-						},
-						{
-							"action": "reopen",
-							"from": [
-								"approved"
-							],
-							"to": "draft",
-							"label": "Reopen"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "submit",
+									"from": [
+										"draft",
+										"rejected"
+									],
+									"to": "submitted",
+									"label": "Submit"
+								},
+								{
+									"action": "approve",
+									"from": [
+										"submitted"
+									],
+									"to": "approved",
+									"label": "Approve"
+								},
+								{
+									"action": "reject",
+									"from": [
+										"submitted"
+									],
+									"to": "rejected",
+									"label": "Reject"
+								},
+								{
+									"action": "reopen",
+									"from": [
+										"approved"
+									],
+									"to": "draft",
+									"label": "Reopen"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "stat",
 					"slot": "body",
@@ -1518,12 +1528,12 @@
 					"gridHeight": 4,
 					"props": {
 						"title": "Approval documents",
-						"integrationId": "files",
+						"only": "files",
 						"icon": "FolderOutline"
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -1638,50 +1648,60 @@
 				"register": "hrmq",
 				"schema": "Expense",
 				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab. receipt-ocr (2026-07-16): page-level action \"Extract receipt data\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/expenses/extract-receipt with {expenseId: @objectId}, guarded server-side by ExpenseController::authorizeExpense() (resolve-first RBAC) then an admin-or-owner ownership check.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "submit",
-							"from": [
-								"draft",
-								"rejected"
-							],
-							"to": "submitted",
-							"label": "Submit"
-						},
-						{
-							"action": "approve",
-							"from": [
-								"submitted"
-							],
-							"to": "approved",
-							"label": "Approve"
-						},
-						{
-							"action": "reject",
-							"from": [
-								"submitted"
-							],
-							"to": "rejected",
-							"label": "Reject"
-						},
-						{
-							"action": "reimburse",
-							"from": [
-								"approved"
-							],
-							"to": "reimbursed",
-							"label": "Reimburse"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 4,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "submit",
+									"from": [
+										"draft",
+										"rejected"
+									],
+									"to": "submitted",
+									"label": "Submit"
+								},
+								{
+									"action": "approve",
+									"from": [
+										"submitted"
+									],
+									"to": "approved",
+									"label": "Approve"
+								},
+								{
+									"action": "reject",
+									"from": [
+										"submitted"
+									],
+									"to": "rejected",
+									"label": "Reject"
+								},
+								{
+									"action": "reimburse",
+									"from": [
+										"approved"
+									],
+									"to": "reimbursed",
+									"label": "Reimburse"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "actions",
 					"slot": "header-actions",
@@ -1749,7 +1769,7 @@
 					"gridHeight": 4,
 					"props": {
 						"title": "Receipt / bon",
-						"integrationId": "files",
+						"only": "files",
 						"icon": "FolderOutline"
 					}
 				},
@@ -1815,7 +1835,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -2441,12 +2461,12 @@
 					"gridHeight": 4,
 					"props": {
 						"title": "Personnel file",
-						"integrationId": "files",
+						"only": "files",
 						"icon": "FolderOutline"
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -2558,7 +2578,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -2832,7 +2852,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -2913,7 +2933,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -3188,7 +3208,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -3331,7 +3351,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -3381,58 +3401,68 @@
 				"register": "hrmq",
 				"schema": "LoonaangifteFiling",
 				"_note": "Statutory-deadline archetype: a filing's whole purpose is 'was it filed on time and is proof retained'. loonaangifte-filing-lifecycle (2026-07-12) gave NL filings a real create->review->confirm->send workflow, so the page now leads with a compact status/tijdvakcode/deadline/response widget (fi-status) before the full filing data widget, and exposes the klaarzetten/bevestigen/verzenden/heropenen/corrigeren transitions via lifecycleActions (Timesheet pattern). No stats-block KPI tile is used for Status/Deadline: the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports count/sum aggregation, which cannot echo a non-numeric field (enum/date) of the current object, so fi-status is a `data` widget instead -- schema-valid and functionally equivalent (prominent, top-of-page). No related panel (the schema carries no employeeId/administrationId or any other object-FK -- a filing is an organisation-level record, not scoped to a person). Files is included full-width for the filed submission/deposit proof, justified by the schema's own retainedUntil/furnishedToRecipientDate/filedWithAuthorityDate retention-evidence fields (NL 7yr / DE 6yr / US 4yr retention obligations). No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "klaarzetten",
-							"from": [
-								"concept"
-							],
-							"to": "klaargezet",
-							"label": "Klaarzetten"
-						},
-						{
-							"action": "bevestigen",
-							"from": [
-								"klaargezet"
-							],
-							"to": "bevestigd",
-							"label": "Bevestigen"
-						},
-						{
-							"action": "verzenden",
-							"from": [
-								"bevestigd"
-							],
-							"to": "verzonden",
-							"label": "Verzenden"
-						},
-						{
-							"action": "heropenen",
-							"from": [
-								"klaargezet",
-								"bevestigd"
-							],
-							"to": "concept",
-							"label": "Heropenen"
-						},
-						{
-							"action": "corrigeren",
-							"from": [
-								"verzonden"
-							],
-							"to": "concept",
-							"label": "Corrigeren"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "klaarzetten",
+									"from": [
+										"concept"
+									],
+									"to": "klaargezet",
+									"label": "Klaarzetten"
+								},
+								{
+									"action": "bevestigen",
+									"from": [
+										"klaargezet"
+									],
+									"to": "bevestigd",
+									"label": "Bevestigen"
+								},
+								{
+									"action": "verzenden",
+									"from": [
+										"bevestigd"
+									],
+									"to": "verzonden",
+									"label": "Verzenden"
+								},
+								{
+									"action": "heropenen",
+									"from": [
+										"klaargezet",
+										"bevestigd"
+									],
+									"to": "concept",
+									"label": "Heropenen"
+								},
+								{
+									"action": "corrigeren",
+									"from": [
+										"verzonden"
+									],
+									"to": "concept",
+									"label": "Corrigeren"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -3480,12 +3510,12 @@
 					"gridHeight": 4,
 					"props": {
 						"title": "Filing proof / deposit confirmation",
-						"integrationId": "files",
+						"only": "files",
 						"icon": "FolderOutline"
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -3533,58 +3563,68 @@
 				"register": "hrmq",
 				"schema": "PensionFiling",
 				"_note": "pension-filing-upa-mvp (2026-07-12): same statutory-filing shape as LoonaangifteFilingDetail (create->review->confirm->send, gated on an external precondition), but this schema ALSO carries a real FK (payrollRunId -> PayrollRun, the run the delivery reports on), so the layout follows the TimesheetDetail split instead: pf-status leads top-left with the prominent status/deadline/response facts, pf-related sits top-right at matching height to resolve and link the referenced PayrollRun, then pf-data runs below with the remaining record fields (period/fund/aanleverkenmerk/verzondenDoor), excluding payrollRunId since Related already resolves it. Same reasoning as loonaangifte for NOT using a stats-block: the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports count/sum aggregation over a collection, which cannot echo a non-numeric field (enum/date) of the current object, so pf-status is a `data` widget instead -- schema-valid and functionally equivalent (prominent, top-of-page). No Files leaf: unlike LoonaangifteFiling, PensionFiling carries no retention/proof-of-filing fields (no retainedUntil/furnishedToRecipientDate equivalent) -- the response is captured in-record (responseStatus/responseMessage), not as an attached document. No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. lifecycleActions expose controleren/bevestigen/verzenden/heropenen/corrigeren, controleren guarded server-side by PayrollRunApprovedGuard. Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "controleren",
-							"from": [
-								"concept"
-							],
-							"to": "gecontroleerd",
-							"label": "Controleren"
-						},
-						{
-							"action": "bevestigen",
-							"from": [
-								"gecontroleerd"
-							],
-							"to": "bevestigd",
-							"label": "Bevestigen"
-						},
-						{
-							"action": "verzenden",
-							"from": [
-								"bevestigd"
-							],
-							"to": "verzonden",
-							"label": "Verzenden"
-						},
-						{
-							"action": "heropenen",
-							"from": [
-								"gecontroleerd",
-								"bevestigd"
-							],
-							"to": "concept",
-							"label": "Heropenen"
-						},
-						{
-							"action": "corrigeren",
-							"from": [
-								"verzonden"
-							],
-							"to": "concept",
-							"label": "Corrigeren"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "controleren",
+									"from": [
+										"concept"
+									],
+									"to": "gecontroleerd",
+									"label": "Controleren"
+								},
+								{
+									"action": "bevestigen",
+									"from": [
+										"gecontroleerd"
+									],
+									"to": "bevestigd",
+									"label": "Bevestigen"
+								},
+								{
+									"action": "verzenden",
+									"from": [
+										"bevestigd"
+									],
+									"to": "verzonden",
+									"label": "Verzenden"
+								},
+								{
+									"action": "heropenen",
+									"from": [
+										"gecontroleerd",
+										"bevestigd"
+									],
+									"to": "concept",
+									"label": "Heropenen"
+								},
+								{
+									"action": "corrigeren",
+									"from": [
+										"verzonden"
+									],
+									"to": "concept",
+									"label": "Corrigeren"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -3638,7 +3678,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -3844,7 +3884,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -3943,7 +3983,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -4176,7 +4216,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -4419,7 +4459,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -4522,7 +4562,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -4626,7 +4666,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -4741,42 +4781,52 @@
 				"register": "hrmq",
 				"schema": "LeaveRequest",
 				"_note": "leave-verzuim-mvp (2026-07-12): drives the EXISTING LeaveRequest lifecycle from portal-schemas (submit -> approve/reject, guarded server-side by NoSelfApprovalGuard) -- nothing on the schema changes here, only its UI. TimesheetDetail pattern: the data widget is SPLIT into 'Request' (leaveType/startDate/endDate/hours/reason -- what is being requested) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason -- the workflow trail), both excluding employeeId since Related already resolves and links the requesting Employee by name. Files sits full-width below for supporting documents (e.g. a bijzonder-verlof invitation). NO stat KPI tile: unlike Timesheet's hours-sum or Expense's amount-sum, a leave request has no single numeric headline worth a dedicated stat (hours is optional and nullable). lifecycleActions expose exactly submit/approve/reject -- no invented cancel/withdraw edge (PayrollRunDetail _note precedent: never claim a transition the backend does not guard). Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "submit",
-							"from": [
-								"draft",
-								"rejected"
-							],
-							"to": "submitted",
-							"label": "Submit"
-						},
-						{
-							"action": "approve",
-							"from": [
-								"submitted"
-							],
-							"to": "approved",
-							"label": "Approve"
-						},
-						{
-							"action": "reject",
-							"from": [
-								"submitted"
-							],
-							"to": "rejected",
-							"label": "Reject"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "submit",
+									"from": [
+										"draft",
+										"rejected"
+									],
+									"to": "submitted",
+									"label": "Submit"
+								},
+								{
+									"action": "approve",
+									"from": [
+										"submitted"
+									],
+									"to": "approved",
+									"label": "Approve"
+								},
+								{
+									"action": "reject",
+									"from": [
+										"submitted"
+									],
+									"to": "rejected",
+									"label": "Reject"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -4838,12 +4888,12 @@
 					"gridHeight": 4,
 					"props": {
 						"title": "Supporting documents",
-						"integrationId": "files",
+						"only": "files",
 						"icon": "FolderOutline"
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -4986,7 +5036,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -5068,7 +5118,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -5123,25 +5173,35 @@
 				"register": "hrmq",
 				"schema": "CompReviewCycle",
 				"_note": "comp-cycles (2026-07-15): the round-container half of the compensation-review MVP (ADR-001 Rule 6 sub-page under the existing Personeel menu, the ReviewCycleDetail precedent). The 'Cyclus' data widget carries every field (name/period/effectiveDate/status/description — no $ref to exclude). The 'Voorstellen in deze cyclus' object-list (CompAdjustment.cycleId = @objectId) is the round's in-progress roster, rowRoute to CompAdjustmentDetail. lifecycleActions expose exactly sluiten (open->closed, hr-comp.json) -- no reopen edge, a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent); approval/effectuation lives per-adjustment, not here. The 'Aanpassing voorstellen' open-form action opens a plain CompAdjustment create form -- verified: this manifest version has no declarative field-prefill primitive (no existing open-form action in the codebase carries default field values), so cycleId is entered on the created form rather than auto-seeded, a deliberate scope-down from design.md's aspirational 'scoped to the cycle' prose. Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "sluiten",
-							"from": [
-								"open"
-							],
-							"to": "closed",
-							"label": "Sluiten"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 4,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "sluiten",
+									"from": [
+										"open"
+									],
+									"to": "closed",
+									"label": "Sluiten"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "actions",
 					"slot": "header-actions",
@@ -5220,7 +5280,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -5239,41 +5299,51 @@
 				"register": "hrmq",
 				"schema": "CompAdjustment",
 				"_note": "comp-cycles (2026-07-15): the per-employee proposal half of the compensation-review MVP (ADR-001 Rule 6 — reached from EmployeeDetail's emp-comp-adjustments row, the cycle's adjustment list, or the deepLink; deliberately NOT a menu child, the PerformanceReviewDetail/TimesheetDetail convention). The 'Aanpassing' data widget carries currentSalary/proposedSalary/effectiveDate/status/rationale/proposedBy/approvedBy/appliedAt, excluding cycleId/employeeId/contractId/targetBandId (Related resolves and links all four by name). lifecycleActions expose ONLY propose/approve/reject (hr-comp.json) — approve/reject are guarded server-side by the reused NoSelfApprovalGuard (the proposer may not approve/reject their own proposal). effectuate is deliberately NOT exposed as a plain lifecycleActions button: D5/D7 gate the write (within-band + the Employee.grossMonthlySalary stamp) inside CompAdjustmentService, and CompEffectiveDateGuard alone is read-only, so a bare declarative transition would flip status to effective without ever writing the salary (the orphaned-capability trap) — the ONLY effectuate path is the guarded 'Effectueren' api-call action (POST /api/comp/effectuate, CompController::effectuate, the PayrollRunDetail '(Her)berekenen' precedent). Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "propose",
-							"from": [
-								"draft"
-							],
-							"to": "proposed",
-							"label": "Voorstellen"
-						},
-						{
-							"action": "approve",
-							"from": [
-								"proposed"
-							],
-							"to": "approved",
-							"label": "Goedkeuren"
-						},
-						{
-							"action": "reject",
-							"from": [
-								"proposed"
-							],
-							"to": "draft",
-							"label": "Afwijzen"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 4,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "propose",
+									"from": [
+										"draft"
+									],
+									"to": "proposed",
+									"label": "Voorstellen"
+								},
+								{
+									"action": "approve",
+									"from": [
+										"proposed"
+									],
+									"to": "approved",
+									"label": "Goedkeuren"
+								},
+								{
+									"action": "reject",
+									"from": [
+										"proposed"
+									],
+									"to": "draft",
+									"label": "Afwijzen"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "actions",
 					"slot": "header-actions",
@@ -5334,7 +5404,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -5353,42 +5423,52 @@
 				"register": "hrmq",
 				"schema": "LeaveTransaction",
 				"_note": "leave-buy-sell (2026-07-15): the IKB-style buy/sell request (ADR-001 Rule 6 — reached from EmployeeDetail's emp-leave-transactions row, MijnVerlofKopenVerkopen, or the deepLink; deliberately NOT a menu child, the CompAdjustmentDetail/PerformanceReviewDetail/TimesheetDetail convention). The 'Transactie' data widget carries transactionType/year/leaveType/hours/hourlyRate/settledAmount/settlementPeriod/status/rejectionReason/settledAt, excluding employeeId/settlementPayrollRunId (Related resolves and links both by name). lifecycleActions expose ONLY submit/approve/reject (hr-leave.json) — approve is guarded server-side by LeaveBuySellApprovalGuard (delegates to the reused NoSelfApprovalGuard, then for a sell denies unless the referenced LeaveBalance has sufficient bovenwettelijkHours); reject is guarded by NoSelfApprovalGuard directly. settle is deliberately NOT exposed as a plain lifecycleActions button: the balance write (LeaveBalance.bovenwettelijkHours -- never entitledHours/usedHours) lives inside LeaveBuySellSettlementService, and LeaveSettlementPeriodGuard alone is read-only, so a bare declarative transition would flip status to settled without ever adjusting the balance (the CompAdjustmentDetail orphaned-capability trap, verbatim) — the ONLY settle path is the guarded 'Verrekenen' api-call action (POST /api/leave/settle, LeaveController::settle). Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "submit",
-							"from": [
-								"draft",
-								"rejected"
-							],
-							"to": "submitted",
-							"label": "Indienen"
-						},
-						{
-							"action": "approve",
-							"from": [
-								"submitted"
-							],
-							"to": "approved",
-							"label": "Goedkeuren"
-						},
-						{
-							"action": "reject",
-							"from": [
-								"submitted"
-							],
-							"to": "rejected",
-							"label": "Afwijzen"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 4,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "submit",
+									"from": [
+										"draft",
+										"rejected"
+									],
+									"to": "submitted",
+									"label": "Indienen"
+								},
+								{
+									"action": "approve",
+									"from": [
+										"submitted"
+									],
+									"to": "approved",
+									"label": "Goedkeuren"
+								},
+								{
+									"action": "reject",
+									"from": [
+										"submitted"
+									],
+									"to": "rejected",
+									"label": "Afwijzen"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "actions",
 					"slot": "header-actions",
@@ -5447,7 +5527,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -5521,33 +5601,43 @@
 				"register": "hrmq",
 				"schema": "SickLeaveCase",
 				"_note": "leave-verzuim-mvp (2026-07-12): administrative-only sickness case -- NO medical/diagnosis data exists on this schema or its widgets (REQ-VWP-002). The 'Case' data widget (firstSickDay/recoveredDate/status/wachtdag/loondoorbetalingPercentage) excludes employeeId since Related already resolves and links the sick Employee by name; the 'Poortwachter milestones' widget surfaces all eight Due/Done WVP dates (probleemanalyse/plan van aanpak/UWV 42-wekenmelding/eerstejaarsevaluatie) so the re-integration clock is the page's second headline fact. Files is labeled and described for gespreksverslagen & plan-van-aanpak process documents ONLY -- repeating the no-medical-data warning, matching the schema's own privacy stance. lifecycleActions expose exactly herstellen/heropenen (gemeld<->hersteld) -- no invented edges. Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "herstellen",
-							"from": [
-								"gemeld"
-							],
-							"to": "hersteld",
-							"label": "Herstellen"
-						},
-						{
-							"action": "heropenen",
-							"from": [
-								"hersteld"
-							],
-							"to": "gemeld",
-							"label": "Heropenen"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "herstellen",
+									"from": [
+										"gemeld"
+									],
+									"to": "hersteld",
+									"label": "Herstellen"
+								},
+								{
+									"action": "heropenen",
+									"from": [
+										"hersteld"
+									],
+									"to": "gemeld",
+									"label": "Heropenen"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -5620,12 +5710,12 @@
 					"gridHeight": 4,
 					"props": {
 						"title": "Gespreksverslagen & plan van aanpak",
-						"integrationId": "files",
+						"only": "files",
 						"icon": "FolderOutline"
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -5674,33 +5764,43 @@
 				"register": "hrmq",
 				"schema": "AttendanceRecord",
 				"_note": "time-attendance-mvp (2026-07-13): raw per-day clock record (klokregistratie) -- AttendanceRecord is raw clock data, Timesheet stays the per-period approved-hours record (design D5, no automation between them). The 'Attendance' data widget excludes employeeId since Related already resolves and links the Employee by name. lifecycleActions expose exactly sluiten/heropenen (open<->gesloten, design D4) -- no invented approval edges (approval lives on Timesheet, not here). No files widget -- the schema carries no document/retention field (the EmploymentContractDetail no-fabricated-leaves reasoning). No stat KPI -- a single day's hours is not a headline aggregate (the LeaveRequestDetail precedent). No comms/calendar leaves. Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "sluiten",
-							"from": [
-								"open"
-							],
-							"to": "gesloten",
-							"label": "Sluiten"
-						},
-						{
-							"action": "heropenen",
-							"from": [
-								"gesloten"
-							],
-							"to": "open",
-							"label": "Heropenen"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "sluiten",
+									"from": [
+										"open"
+									],
+									"to": "gesloten",
+									"label": "Sluiten"
+								},
+								{
+									"action": "heropenen",
+									"from": [
+										"gesloten"
+									],
+									"to": "open",
+									"label": "Heropenen"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -5732,7 +5832,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -5778,69 +5878,79 @@
 				"register": "hrmq",
 				"schema": "Onboarding",
 				"_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), NOT write-time guards: no transition here blocks on an unmet checklist field -- guard wiring for compliance-checked schemas is owned by the active hrmq-rule-compliance-enforcement change (design.md D2). Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "contract_bevestigen",
-							"from": [
-								"aangenomen"
-							],
-							"to": "contract_getekend",
-							"label": "Contract bevestigen"
-						},
-						{
-							"action": "gegevens_valideren",
-							"from": [
-								"contract_getekend"
-							],
-							"to": "gegevens_gevalideerd",
-							"label": "Gegevens valideren"
-						},
-						{
-							"action": "gereed_melden",
-							"from": [
-								"gegevens_gevalideerd"
-							],
-							"to": "gereed_eerste_werkdag",
-							"label": "Gereed melden"
-						},
-						{
-							"action": "starten",
-							"from": [
-								"gereed_eerste_werkdag"
-							],
-							"to": "proeftijd_lopend",
-							"label": "Starten"
-						},
-						{
-							"action": "afronden",
-							"from": [
-								"proeftijd_lopend"
-							],
-							"to": "afgerond",
-							"label": "Afronden"
-						},
-						{
-							"action": "annuleren",
-							"from": [
-								"aangenomen",
-								"contract_getekend",
-								"gegevens_gevalideerd",
-								"gereed_eerste_werkdag",
-								"proeftijd_lopend"
-							],
-							"to": "geannuleerd",
-							"label": "Annuleren"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "contract_bevestigen",
+									"from": [
+										"aangenomen"
+									],
+									"to": "contract_getekend",
+									"label": "Contract bevestigen"
+								},
+								{
+									"action": "gegevens_valideren",
+									"from": [
+										"contract_getekend"
+									],
+									"to": "gegevens_gevalideerd",
+									"label": "Gegevens valideren"
+								},
+								{
+									"action": "gereed_melden",
+									"from": [
+										"gegevens_gevalideerd"
+									],
+									"to": "gereed_eerste_werkdag",
+									"label": "Gereed melden"
+								},
+								{
+									"action": "starten",
+									"from": [
+										"gereed_eerste_werkdag"
+									],
+									"to": "proeftijd_lopend",
+									"label": "Starten"
+								},
+								{
+									"action": "afronden",
+									"from": [
+										"proeftijd_lopend"
+									],
+									"to": "afgerond",
+									"label": "Afronden"
+								},
+								{
+									"action": "annuleren",
+									"from": [
+										"aangenomen",
+										"contract_getekend",
+										"gegevens_gevalideerd",
+										"gereed_eerste_werkdag",
+										"proeftijd_lopend"
+									],
+									"to": "geannuleerd",
+									"label": "Annuleren"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -5913,12 +6023,12 @@
 					"gridHeight": 4,
 					"props": {
 						"title": "Contract & WID-documenten",
-						"integrationId": "files",
+						"only": "files",
 						"icon": "FolderOutline"
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -5966,33 +6076,43 @@
 				"register": "hrmq",
 				"schema": "Vacancy",
 				"_note": "recruiting-ats-basic (2026-07-13): the 'Vacancy' widget carries every field (title/description/department/status/publishedDate/closingDate). The 'Sollicitaties' related widget resolves the incoming Application.vacancyId references -- the candidate list per vacancy. lifecycleActions expose exactly publiceren/sluiten (design D3) -- no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected. Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "publiceren",
-							"from": [
-								"concept"
-							],
-							"to": "gepubliceerd",
-							"label": "Publiceren"
-						},
-						{
-							"action": "sluiten",
-							"from": [
-								"gepubliceerd"
-							],
-							"to": "gesloten",
-							"label": "Sluiten"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "publiceren",
+									"from": [
+										"concept"
+									],
+									"to": "gepubliceerd",
+									"label": "Publiceren"
+								},
+								{
+									"action": "sluiten",
+									"from": [
+										"gepubliceerd"
+									],
+									"to": "gesloten",
+									"label": "Sluiten"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -6029,7 +6149,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -6076,60 +6196,70 @@
 				"register": "hrmq",
 				"schema": "Application",
 				"_note": "recruiting-ats-basic (2026-07-13): candidate PII (candidateName/email/phone/cvFile/motivation) lives DIRECTLY on this Application -- there is deliberately no separate Candidate entity (AVG data-minimisation, design D2): one object = one retention clock = one delete. The 'Application' widget excludes vacancyId (Related resolves the Vacancy) and the three privacy fields (talentPoolOptIn/rejectedDate/retentionExpiryDate), which instead surface on the dedicated 'Privacy & retention' widget so the AVG retention clock is never buried among ordinary fields. lifecycleActions expose exactly screenen/uitnodigen/aanbieden/aannemen/afwijzen (design D3) -- no invented edges; aannemen's onboarding hand-off (creating the Employee from this data) is a MANUAL follow-up action in the MVP, no cross-object write hook fires here. Audit history is a sidebar tab. offer-esign (2026-07-16): page-level action \"request-offer-signature\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/offer/request-signature with {applicationId: @objectId}, guarded server-side by OfferController::authorizeApplication() (resolve-first RBAC) + isAdminOrHr() + the aanbod-stage guard. The 'Application' data widget's exclude list additionally hides offerLetterFileId/offerSigningRequestId (internal correlation ids) -- offerSigningStatus stays visible as the human-readable state.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "screenen",
-							"from": [
-								"nieuw"
-							],
-							"to": "screening",
-							"label": "Screenen"
-						},
-						{
-							"action": "uitnodigen",
-							"from": [
-								"screening"
-							],
-							"to": "gesprek",
-							"label": "Uitnodigen"
-						},
-						{
-							"action": "aanbieden",
-							"from": [
-								"gesprek"
-							],
-							"to": "aanbod",
-							"label": "Aanbieden"
-						},
-						{
-							"action": "aannemen",
-							"from": [
-								"aanbod"
-							],
-							"to": "aangenomen",
-							"label": "Aannemen"
-						},
-						{
-							"action": "afwijzen",
-							"from": [
-								"nieuw",
-								"screening",
-								"gesprek",
-								"aanbod"
-							],
-							"to": "afgewezen",
-							"label": "Afwijzen"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 4,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "screenen",
+									"from": [
+										"nieuw"
+									],
+									"to": "screening",
+									"label": "Screenen"
+								},
+								{
+									"action": "uitnodigen",
+									"from": [
+										"screening"
+									],
+									"to": "gesprek",
+									"label": "Uitnodigen"
+								},
+								{
+									"action": "aanbieden",
+									"from": [
+										"gesprek"
+									],
+									"to": "aanbod",
+									"label": "Aanbieden"
+								},
+								{
+									"action": "aannemen",
+									"from": [
+										"aanbod"
+									],
+									"to": "aangenomen",
+									"label": "Aannemen"
+								},
+								{
+									"action": "afwijzen",
+									"from": [
+										"nieuw",
+										"screening",
+										"gesprek",
+										"aanbod"
+									],
+									"to": "afgewezen",
+									"label": "Afwijzen"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "actions",
 					"slot": "header-actions",
@@ -6220,7 +6350,7 @@
 					"gridHeight": 4,
 					"props": {
 						"title": "CV & motivatiebrief",
-						"integrationId": "files",
+						"only": "files",
 						"icon": "FolderOutline"
 					}
 				},
@@ -6273,7 +6403,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -6318,33 +6448,43 @@
 				"register": "hrmq",
 				"schema": "Interview",
 				"_note": "interview-scheduling (2026-07-16): one interview round (gesprek) for an Application -- a SEPARATE schema, not fields on Application, because one Application can have multiple interview rounds each with its own lifecycle/calendarEventUid (design.md D2). The 'Interview' data widget excludes applicationId (Related resolves the Application) and calendarEventUid stays visible as the system-managed idempotency marker (design.md D3) -- an inspectable 'has this ever reached the calendar' signal, never user-editable. lifecycleActions expose exactly voltooien/annuleren (design D2) -- no invented edges; rescheduling is a plain field update to scheduledStart/scheduledEnd, not a status transition. The page-level 'Sync naar agenda' api-call action mirrors ApplicationDetail's 'request-offer-signature' shape -- POST /api/interviews/sync with {interviewId: @objectId}, guarded server-side by InterviewController::authorizeInterview() (resolve-first RBAC) + isAdminOrHr(). No files widget -- the schema carries no document/retention field. Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "voltooien",
-							"from": [
-								"scheduled"
-							],
-							"to": "completed",
-							"label": "Voltooien"
-						},
-						{
-							"action": "annuleren",
-							"from": [
-								"scheduled"
-							],
-							"to": "cancelled",
-							"label": "Annuleren"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 4,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "voltooien",
+									"from": [
+										"scheduled"
+									],
+									"to": "completed",
+									"label": "Voltooien"
+								},
+								{
+									"action": "annuleren",
+									"from": [
+										"scheduled"
+									],
+									"to": "cancelled",
+									"label": "Annuleren"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "actions",
 					"slot": "header-actions",
@@ -6402,7 +6542,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -6446,51 +6586,61 @@
 				"register": "hrmq",
 				"schema": "Offboarding",
 				"_note": "offboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the departing Employee), the checklist/eindafrekening fields and notes, leaving reason/status/lastWorkingDay; the 'Checklist' widget groups exitGesprekDone/assetsIngeleverd/toegangIngetrokken; the 'Eindafrekening' widget groups verlofsaldoUitbetaald/vakantiegeldAfgerekend/transitievergoedingBedrag/getuigschriftVerstrekt/notes -- the OnboardingDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OFB-002 edges (afronding_plannen/eindafrekening_gereedmelden/afronden/annuleren) -- no invented edges. Checklist/eindafrekening gates are audit-enforced (lib/Standards/Checks/NlOffboardingChecks.php), NOT write-time guards: no transition here blocks on an unmet gate field -- guard wiring for compliance-checked schemas is owned by the active hrmq-rule-compliance-enforcement change (design.md D2). Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "afronding_plannen",
-							"from": [
-								"aangekondigd"
-							],
-							"to": "afronding_gepland",
-							"label": "Afronding plannen"
-						},
-						{
-							"action": "eindafrekening_gereedmelden",
-							"from": [
-								"afronding_gepland"
-							],
-							"to": "eindafrekening_gereed",
-							"label": "Eindafrekening gereedmelden"
-						},
-						{
-							"action": "afronden",
-							"from": [
-								"eindafrekening_gereed"
-							],
-							"to": "afgerond",
-							"label": "Afronden"
-						},
-						{
-							"action": "annuleren",
-							"from": [
-								"aangekondigd",
-								"afronding_gepland",
-								"eindafrekening_gereed"
-							],
-							"to": "geannuleerd",
-							"label": "Annuleren"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "afronding_plannen",
+									"from": [
+										"aangekondigd"
+									],
+									"to": "afronding_gepland",
+									"label": "Afronding plannen"
+								},
+								{
+									"action": "eindafrekening_gereedmelden",
+									"from": [
+										"afronding_gepland"
+									],
+									"to": "eindafrekening_gereed",
+									"label": "Eindafrekening gereedmelden"
+								},
+								{
+									"action": "afronden",
+									"from": [
+										"eindafrekening_gereed"
+									],
+									"to": "afgerond",
+									"label": "Afronden"
+								},
+								{
+									"action": "annuleren",
+									"from": [
+										"aangekondigd",
+										"afronding_gepland",
+										"eindafrekening_gereed"
+									],
+									"to": "geannuleerd",
+									"label": "Annuleren"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -6580,12 +6730,12 @@
 					"gridHeight": 4,
 					"props": {
 						"title": "VSO & getuigschrift-documenten",
-						"integrationId": "files",
+						"only": "files",
 						"icon": "FolderOutline"
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -6767,7 +6917,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -6852,7 +7002,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -6899,50 +7049,60 @@
 				"register": "hrmq",
 				"schema": "Asset",
 				"_note": "asset-management-mvp (2026-07-13): a company-owned item with a guarded custody lifecycle (beschikbaar -> uitgegeven -> ingenomen -> beschikbaar, or beschikbaar/ingenomen -> afgeschreven, terminal -- the Expense precedent). The data widget shows all fields (no $ref to exclude -- Asset has no outbound relations); lifecycleActions expose exactly the four fragment transitions (uitgeven/innemen/vrijgeven/afschrijven), never invented. An FK-scoped 'Uitgiftes' object-list (AssetAssignment.assetId = @objectId) is the inbound-relation direction (D2) -- who has held this asset, ordered most-recent-first, rowRoute to AssetAssignmentDetail. The Files widget (signed uitgiftebonnen) runs full-width after the domain cards, the ExpenseDetail receipt placement. Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "uitgeven",
-							"from": [
-								"beschikbaar"
-							],
-							"to": "uitgegeven",
-							"label": "Uitgeven"
-						},
-						{
-							"action": "innemen",
-							"from": [
-								"uitgegeven"
-							],
-							"to": "ingenomen",
-							"label": "Innemen"
-						},
-						{
-							"action": "vrijgeven",
-							"from": [
-								"ingenomen"
-							],
-							"to": "beschikbaar",
-							"label": "Vrijgeven"
-						},
-						{
-							"action": "afschrijven",
-							"from": [
-								"beschikbaar",
-								"ingenomen"
-							],
-							"to": "afgeschreven",
-							"label": "Afschrijven"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "uitgeven",
+									"from": [
+										"beschikbaar"
+									],
+									"to": "uitgegeven",
+									"label": "Uitgeven"
+								},
+								{
+									"action": "innemen",
+									"from": [
+										"uitgegeven"
+									],
+									"to": "ingenomen",
+									"label": "Innemen"
+								},
+								{
+									"action": "vrijgeven",
+									"from": [
+										"ingenomen"
+									],
+									"to": "beschikbaar",
+									"label": "Vrijgeven"
+								},
+								{
+									"action": "afschrijven",
+									"from": [
+										"beschikbaar",
+										"ingenomen"
+									],
+									"to": "afgeschreven",
+									"label": "Afschrijven"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -7037,12 +7197,12 @@
 					"gridHeight": 4,
 					"props": {
 						"title": "Uitgiftebonnen",
-						"integrationId": "files",
+						"only": "files",
 						"icon": "FolderOutline"
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -7124,7 +7284,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -7264,7 +7424,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -7346,7 +7506,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -7395,33 +7555,43 @@
 				"register": "hrmq",
 				"schema": "ReviewCycle",
 				"_note": "performance-reviews-mvp (2026-07-13): the orchestration half of the performance-review MVP (ADR-001 Rule 6 — sub-pages under the EXISTING Personeel/EmployeesGroup, no new top-level menu). The 'Cycle' data widget carries every field (name/year/type/status/startDate/endDate — no $ref to exclude, ReviewCycle has no outbound relations). The 'Beoordelingen in deze cyclus' object-list (PerformanceReview.cycleId = @objectId) is the cycle's in-progress roster, rowRoute to PerformanceReviewDetail. lifecycleActions expose exactly openen/sluiten (concept->open->gesloten, hr-performance.json) -- no re-open edge, a closed cycle is history (the Vacancy no-resurrection precedent). Audit history is a sidebar tab. goals-okr (2026-07-15) adds the 'OKR's in deze cyclus' object-list (Objective.cycleId = @objectId) — the review-period tie: an OKR set can optionally be tied to a beoordelingscyclus.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "openen",
-							"from": [
-								"concept"
-							],
-							"to": "open",
-							"label": "Openen"
-						},
-						{
-							"action": "sluiten",
-							"from": [
-								"open"
-							],
-							"to": "gesloten",
-							"label": "Sluiten"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "openen",
+									"from": [
+										"concept"
+									],
+									"to": "open",
+									"label": "Openen"
+								},
+								{
+									"action": "sluiten",
+									"from": [
+										"open"
+									],
+									"to": "gesloten",
+									"label": "Sluiten"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -7522,7 +7692,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -7541,49 +7711,59 @@
 				"register": "hrmq",
 				"schema": "PerformanceReview",
 				"_note": "performance-reviews-mvp (2026-07-13): the dossier half of the performance-review MVP (ADR-001 Rule 6 — the primary surface is actually the EmployeeDetail emp-reviews row; this page is a routed detail, reached from that row, the cycle's review list, or the deepLink, and is deliberately NOT a menu child, the TimesheetDetail convention). The 'Beoordeling' data widget carries rating/sterktes/ontwikkelpunten/afspraken/goals/besprokenOp/vastgesteldDoor, excluding employeeId/cycleId/reviewerId (Related resolves and links all three by name) and userId (the internal @me self-service field, not a display fact). Goals are recorded INSIDE this review (design D2 — no separate Goal entity anywhere in the register); besprokenOp/vastgesteldDoor are stamped on the carrying writes of bespreken/vaststellen. lifecycleActions expose exactly indienen/bespreken/vaststellen/heropenen (hr-performance.json) -- vaststellen is guarded server-side by the existing NoSelfApprovalGuard (the employee under review may not vaststellen their own beoordeling); heropenen is the correction edge back to besproken. Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "indienen",
-							"from": [
-								"concept"
-							],
-							"to": "ingediend",
-							"label": "Indienen"
-						},
-						{
-							"action": "bespreken",
-							"from": [
-								"ingediend"
-							],
-							"to": "besproken",
-							"label": "Bespreken"
-						},
-						{
-							"action": "vaststellen",
-							"from": [
-								"besproken"
-							],
-							"to": "vastgesteld",
-							"label": "Vaststellen"
-						},
-						{
-							"action": "heropenen",
-							"from": [
-								"vastgesteld"
-							],
-							"to": "besproken",
-							"label": "Heropenen"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "indienen",
+									"from": [
+										"concept"
+									],
+									"to": "ingediend",
+									"label": "Indienen"
+								},
+								{
+									"action": "bespreken",
+									"from": [
+										"ingediend"
+									],
+									"to": "besproken",
+									"label": "Bespreken"
+								},
+								{
+									"action": "vaststellen",
+									"from": [
+										"besproken"
+									],
+									"to": "vastgesteld",
+									"label": "Vaststellen"
+								},
+								{
+									"action": "heropenen",
+									"from": [
+										"vastgesteld"
+									],
+									"to": "besproken",
+									"label": "Heropenen"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -7618,7 +7798,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -7662,33 +7842,43 @@
 				"register": "hrmq",
 				"schema": "Objective",
 				"_note": "goals-okr (2026-07-15): the measurable, cross-review sibling of PerformanceReviewDetail (ADR-001 Rule 6 — the primary surface is the EmployeeDetail emp-objectives row / ReviewCycleDetail rc-objectives row; this page is a routed detail, reached from those rows or the deepLink, and is deliberately NOT a menu child, the PerformanceReviewDetail/TimesheetDetail convention). The 'Objective' data widget carries title/ownerType/period/status/uitkomst/progress, excluding employeeId/orgUnitId/cycleId (Related resolves and links all three by name) and userId (the internal @me self-service field, not a display fact). The 'Key results' object-list (KeyResult.objectiveId = @objectId) lists this objective's measurable children, rowRoute to KeyResultDetail. lifecycleActions expose exactly activeren/afsluiten (concept->actief->afgesloten, hr-okr.json) -- no guard, no re-open edge, a closed objective is history (the ReviewCycle no-resurrection precedent). Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "activeren",
-							"from": [
-								"concept"
-							],
-							"to": "actief",
-							"label": "Activeren"
-						},
-						{
-							"action": "afsluiten",
-							"from": [
-								"actief"
-							],
-							"to": "afgesloten",
-							"label": "Afsluiten"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "activeren",
+									"from": [
+										"concept"
+									],
+									"to": "actief",
+									"label": "Activeren"
+								},
+								{
+									"action": "afsluiten",
+									"from": [
+										"actief"
+									],
+									"to": "afgesloten",
+									"label": "Afsluiten"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -7775,7 +7965,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -7832,7 +8022,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -7989,7 +8179,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -8047,33 +8237,43 @@
 				"register": "hrmq",
 				"schema": "Roster",
 				"_note": "rostering (2026-07-14): the publishable roster header. Unlike PayrollRun, Roster carries a REAL x-openregister-lifecycle (concept <-> gepubliceerd via publiceren/intrekken), so RosterDetail legitimately renders a lifecycleActions widget for exactly those two transitions -- no invented edge (the AttendanceRecordDetail sluiten/heropenen precedent). The 'Rooster' data widget carries period/administrationId/status; Related resolves and links the optional orgUnitId scope (excluded from data). The page-level 'ATW-controle' api-call action posts {rosterId: @objectId} to POST /api/roster/check (guarded server-side by RosterController::authorizeRoster()) and surfaces the Arbeidstijdenwet verdict over the roster's assignments regardless of publish status -- publishing itself is NOT hard-blocked on a violation (guard wiring is hrmq-rule-compliance-enforcement's scope, design.md Non-Goal). The FK-scoped 'Roosterindelingen' child object-list (RosterAssignment.rosterId = @objectId) is the plan itself. No stat KPI -- a header has no numeric headline. Audit history is a sidebar tab.",
-				"lifecycleActions": {
-					"field": "status",
-					"transitions": [
-						{
-							"action": "publiceren",
-							"from": [
-								"concept"
-							],
-							"to": "gepubliceerd",
-							"label": "Publiceren"
-						},
-						{
-							"action": "intrekken",
-							"from": [
-								"gepubliceerd"
-							],
-							"to": "concept",
-							"label": "Intrekken"
-						}
-					]
-				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 4,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "publiceren",
+									"from": [
+										"concept"
+									],
+									"to": "gepubliceerd",
+									"label": "Publiceren"
+								},
+								{
+									"action": "intrekken",
+									"from": [
+										"gepubliceerd"
+									],
+									"to": "concept",
+									"label": "Intrekken"
+								}
+							]
+						}
+					}
+				},
 				{
 					"widgetKey": "actions",
 					"slot": "header-actions",
@@ -8183,7 +8383,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -8268,7 +8468,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
@@ -8423,7 +8623,7 @@
 					}
 				},
 				{
-					"widgetKey": "audit",
+					"widgetKey": "audit-trail",
 					"slot": "sidebar",
 					"tabGroup": "audit",
 					"gridX": 0,
