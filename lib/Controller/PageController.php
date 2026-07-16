@@ -10,6 +10,14 @@
  * OpenRegister register directly via the library's object store; this
  * controller is pure SPA-shell glue.
  *
+ * `index()` also stamps the caller's active administratie id (multi-
+ * administratie, REQ-MULTI-004) as initial state so the frontend can seed the
+ * page-level `cnWorkspaceContext` it provides at the SPA root BEFORE the
+ * first paint — the Nextcloud-idiomatic `IInitialState`/`loadState()` pattern
+ * (never a DOM data-attribute). This is what makes `@workspace.
+ * activeAdministrationId?` filters in the manifest resolve on first load,
+ * not only after a switch.
+ *
  * @category Controller
  * @package  OCA\Hrmq\Controller
  *
@@ -23,6 +31,7 @@
  * @link https://conduction.nl
  *
  * @spec exclude framework glue — SPA shell + bundled-manifest passthrough; no business behaviour
+ * @spec openspec/specs/multi-administratie/spec.md#REQ-MULTI-004
  */
 
 declare(strict_types=1);
@@ -30,12 +39,14 @@ declare(strict_types=1);
 namespace OCA\Hrmq\Controller;
 
 use OCA\Hrmq\AppInfo\Application;
+use OCA\Hrmq\Service\AdministrationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\IRequest;
 use OCP\IUserSession;
 
@@ -51,14 +62,18 @@ class PageController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest     $request     The request object.
-     * @param IUserSession $userSession The user session.
+     * @param IRequest              $request               The request object.
+     * @param IUserSession          $userSession           The user session.
+     * @param IInitialState         $initialState          The initial-state service.
+     * @param AdministrationService $administrationService The active-administration pointer service.
      *
      * @return void
      */
     public function __construct(
         IRequest $request,
         private readonly IUserSession $userSession,
+        private readonly IInitialState $initialState,
+        private readonly AdministrationService $administrationService,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -68,14 +83,32 @@ class PageController extends Controller
     /**
      * Render the main SPA page.
      *
+     * Stamps the caller's active administratie id (when set) as initial
+     * state under the `activeAdministrationId` key BEFORE the template
+     * renders, so the frontend's `loadState('hrmq', 'activeAdministrationId',
+     * '')` seeds the `cnWorkspaceContext` it provides at the SPA root with
+     * the right value on first paint (REQ-MULTI-004). Unset (never switched)
+     * intentionally stamps nothing — `loadState()` then falls back to `''`
+     * and the `@workspace.activeAdministrationId?` manifest filters drop the
+     * clause, matching the documented no-regression default for
+     * single-administratie installs.
+     *
      * @return TemplateResponse
      *
-     * @spec exclude framework glue — returns the static index TemplateResponse that boots the Vue SPA
+     * @spec openspec/specs/multi-administratie/spec.md#REQ-MULTI-004
      */
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function index(): TemplateResponse
     {
+        $user = $this->userSession->getUser();
+        if ($user !== null) {
+            $administrationId = $this->administrationService->getActiveAdministrationId($user->getUID());
+            if ($administrationId !== null) {
+                $this->initialState->provideInitialState('activeAdministrationId', $administrationId);
+            }
+        }
+
         return new TemplateResponse(Application::APP_ID, 'index');
 
     }//end index()
