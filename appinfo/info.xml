@@ -185,5 +185,17 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <command>OCA\Hrmq\Command\AvgDsrExportCommand</command>
         <command>OCA\Hrmq\Command\AvgDsrEraseCommand</command>
         <command>OCA\Hrmq\Command\AvgDsrRectifyCommand</command>
+        <!-- offer-esign: generate the offer-letter (aanbiedingsbrief) PDF and
+             raise a docudesk e-signature request for one Application in
+             status "aanbod". KNOWN LIMITATION: docudesk's
+             SigningService::createRequest() throws "No authenticated user"
+             from a genuine occ CLI process; the ApplicationDetail manifest
+             action is the primary, actually-working write trigger. -->
+        <command>OCA\Hrmq\Command\OfferRequestSignatureCommand</command>
+        <!-- offer-esign: read-only poll of docudesk signing-request status
+             onto Application.offerSigningStatus (getRequest() carries no
+             session guard, so this genuinely works from CLI). Never writes
+             Application.status or invokes the aannemen transition. -->
+        <command>OCA\Hrmq\Command\OfferSyncSignatureCommand</command>
     </commands>
 </info>

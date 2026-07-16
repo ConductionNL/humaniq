@@ -93,7 +93,7 @@
             "Application": {
                 "slug": "Application",
                 "icon": "FileAccountOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Application",
                 "description": "A candidate's application (sollicitatie) against a Vacancy. Candidate PII (name/email/phone/CV/motivation) lives DIRECTLY on this object — there is deliberately no separate Candidate entity in the MVP (AVG data-minimisation, design D2): one object carries one retention clock (retentionExpiryDate) and one deletion (deleting the Application deletes the candidate's data atomically). The declarative pipeline lifecycle runs nieuw -> screening -> gesprek -> aanbod -> aangenomen, with afwijzen reachable from every active stage. Rejecting an application stamps rejectedDate and derives retentionExpiryDate per the Autoriteit Persoonsgegevens sollicitatie-richtlijn (4 weeks, or 1 year with explicit talentPoolOptIn consent) — enforced by the nl-ats-retentie-derivatie and nl-ats-retentie-verlopen checks (lib/Standards/Checks/NlAtsChecks.php, lib/Standards/rules/privacy.json). aannemen documents a MANUAL onboarding hand-off (creating the Employee from this data is a manual follow-up action in the MVP — no cross-object write hook).",
                 "type": "object",
@@ -230,6 +230,34 @@
                         "nullable": true,
                         "title": "Administration",
                         "description": "Denormalized administratie key this Application is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); an Application has no employee (the candidate is not yet hired), so this is set from the vacancy's administratie when known, and nl-administratie-scope-consistency does not evaluate this schema."
+                    },
+                    "offerLetterFileId": {
+                        "type": "integer",
+                        "nullable": true,
+                        "title": "Offer letter file id",
+                        "description": "offer-esign (0.3.0): the Nextcloud file id (File::getId()) of the generated aanbiedingsbrief PDF, stored via OpenRegister's FileService::addFile(). Null until OfferEsignService::requestSignature() successfully stores one."
+                    },
+                    "offerSigningRequestId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Offer signing request id",
+                        "description": "offer-esign (0.3.0): the docudesk signing-request id returned by SigningService::createRequest(). A plain string, NOT a $ref -- docudesk owns a different register/app than the in-register $ref targets ADR-062 rule 7 governs (the GeneratedDocument.templateRef precedent). Null until a signing request has been created."
+                    },
+                    "offerSigningStatus": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Offer signing status",
+                        "description": "offer-esign (0.3.0): the offer letter's e-signature lifecycle state. The first six values are verbatim docudesk SigningService::STATUS_TRANSITIONS states (PENDING/IN_PROGRESS/COMPLETED/DECLINED/CANCELLED/EXPIRED); skipped-no-docudesk and failed are this leaf's own duck-typed/failure outcomes. Null means no offer-esign attempt has been made yet. Orthogonal to Application.status -- observing COMPLETED here never advances the pipeline status (REQ-OFFR-006).",
+                        "enum": [
+                            "PENDING",
+                            "IN_PROGRESS",
+                            "COMPLETED",
+                            "DECLINED",
+                            "CANCELLED",
+                            "EXPIRED",
+                            "skipped-no-docudesk",
+                            "failed"
+                        ]
                     }
                 }
             }

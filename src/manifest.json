@@ -5966,10 +5966,26 @@
 			"route": "/applications/:id",
 			"type": "detail",
 			"title": "Sollicitatie",
+			"actions": [
+				{
+					"id": "request-offer-signature",
+					"label": "Aanbiedingsbrief + e-handtekening aanvragen",
+					"type": "api-call",
+					"icon": "FileDocumentPlusOutline",
+					"url": "/api/offer/request-signature",
+					"method": "POST",
+					"params": {
+						"applicationId": "@objectId"
+					},
+					"confirm": true,
+					"successMessage": "Aanbiedingsbrief wordt gegenereerd en e-handtekening aangevraagd.",
+					"errorMessage": "Aanvragen van de aanbiedingsbrief/e-handtekening is mislukt."
+				}
+			],
 			"config": {
 				"register": "hrmq",
 				"schema": "Application",
-				"_note": "recruiting-ats-basic (2026-07-13): candidate PII (candidateName/email/phone/cvFile/motivation) lives DIRECTLY on this Application -- there is deliberately no separate Candidate entity (AVG data-minimisation, design D2): one object = one retention clock = one delete. The 'Application' widget excludes vacancyId (Related resolves the Vacancy) and the three privacy fields (talentPoolOptIn/rejectedDate/retentionExpiryDate), which instead surface on the dedicated 'Privacy & retention' widget so the AVG retention clock is never buried among ordinary fields. lifecycleActions expose exactly screenen/uitnodigen/aanbieden/aannemen/afwijzen (design D3) -- no invented edges; aannemen's onboarding hand-off (creating the Employee from this data) is a MANUAL follow-up action in the MVP, no cross-object write hook fires here. Audit history is a sidebar tab.",
+				"_note": "recruiting-ats-basic (2026-07-13): candidate PII (candidateName/email/phone/cvFile/motivation) lives DIRECTLY on this Application -- there is deliberately no separate Candidate entity (AVG data-minimisation, design D2): one object = one retention clock = one delete. The 'Application' widget excludes vacancyId (Related resolves the Vacancy) and the three privacy fields (talentPoolOptIn/rejectedDate/retentionExpiryDate), which instead surface on the dedicated 'Privacy & retention' widget so the AVG retention clock is never buried among ordinary fields. lifecycleActions expose exactly screenen/uitnodigen/aanbieden/aannemen/afwijzen (design D3) -- no invented edges; aannemen's onboarding hand-off (creating the Employee from this data) is a MANUAL follow-up action in the MVP, no cross-object write hook fires here. Audit history is a sidebar tab. offer-esign (2026-07-16): page-level action \"request-offer-signature\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/offer/request-signature with {applicationId: @objectId}, guarded server-side by OfferController::authorizeApplication() (resolve-first RBAC) + isAdminOrHr() + the aanbod-stage guard. The 'Application' data widget's exclude list additionally hides offerLetterFileId/offerSigningRequestId (internal correlation ids) -- offerSigningStatus stays visible as the human-readable state.",
 				"lifecycleActions": {
 					"field": "status",
 					"transitions": [
@@ -6040,7 +6056,9 @@
 								"vacancyId",
 								"talentPoolOptIn",
 								"rejectedDate",
-								"retentionExpiryDate"
+								"retentionExpiryDate",
+								"offerLetterFileId",
+								"offerSigningRequestId"
 							]
 						}
 					}

@@ -626,6 +626,25 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "Application",
+                    "slug": "application-voorbeeld-aanbod"
+                },
+                "vacancyId": "vacancy-vue-developer",
+                "candidateName": "Sanne Voorbeeld",
+                "email": "sanne.voorbeeld@example.org",
+                "phone": "+31 6 00000003",
+                "cvFile": "00000000-0000-0000-0000-000000000000",
+                "motivation": "Placeholder motivatiebrief (offer-esign seed).",
+                "status": "aanbod",
+                "talentPoolOptIn": false,
+                "offerLetterFileId": null,
+                "offerSigningRequestId": null,
+                "offerSigningStatus": null,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "OrgUnit",
                     "slug": "orgunit-directie"
                 },
