@@ -3,11 +3,24 @@
 /**
  * Expense Extract Receipt Command
  *
- * `occ hrmq:expense:extract-receipt [--expense <id>]` -- the MVP trigger for
- * receipt-ocr (design.md D7): with no options, processes the backlog of every
- * Expense with a non-empty `receiptFile` and no active (`pending`/`extracted`)
- * `ReceiptExtraction`; `--expense <id>` narrows processing to that one
- * Expense (a receiptFile-less Expense yields a single `failed` outcome).
+ * `occ hrmq:expense:extract-receipt --as-user <admin-uid> [--expense <id>]`
+ * -- the MVP trigger for receipt-ocr (design.md D7): with no `--expense`,
+ * processes the backlog of every Expense with a non-empty `receiptFile` and
+ * no active (`pending`/`extracted`) `ReceiptExtraction`; `--expense <id>`
+ * narrows processing to that one Expense (a receiptFile-less Expense yields
+ * a single `failed` outcome).
+ *
+ * Live-verified 2026-07-16 (docudesk 0.0.37): this command established NO
+ * Nextcloud user session, but docudesk's `DocumentService::resolveFile()`
+ * (the collaborator `runExtraction()` calls) reads
+ * `IUserSession::getUser()` -- null on a genuine `occ` CLI process -- and
+ * OpenRegister's `saveObject()` RBAC then rejects the resulting `Anonymous`
+ * actor, so the command could never work regardless of `receiptFile`
+ * content. `--as-user` establishes the SAME privileged-session mechanism
+ * the three `hrmq:avg:*` commands already use (`PrivilegedSessionResolver`,
+ * avg-dsr design.md D3) BEFORE any docudesk/OR call: an unknown or
+ * non-admin uid is refused with a one-line controlled message and
+ * `ReceiptExtractionService::backlog()` is never invoked.
  *
  * @category Command
  * @package  OCA\Hrmq\Command
@@ -50,10 +63,12 @@ class ExpenseExtractReceiptCommand extends Command
 
 
     /**
-     * @param ReceiptExtractionService $service The receipt-extraction service.
+     * @param ReceiptExtractionService  $service         The receipt-extraction service.
+     * @param PrivilegedSessionResolver $sessionResolver The shared --as-user session establishment mechanism (the hrmq:avg:* precedent).
      */
     public function __construct(
         private readonly ReceiptExtractionService $service,
+        private readonly PrivilegedSessionResolver $sessionResolver,
     ) {
         parent::__construct();
 
@@ -70,7 +85,8 @@ class ExpenseExtractReceiptCommand extends Command
                 'Extract receipt fields via docudesk and prefill empty Expense fields '
                 .'(default: backlog of Expenses with a receipt and no active extraction).'
             )
-            ->addOption('expense', null, InputOption::VALUE_REQUIRED, 'Restrict to one Expense id.');
+            ->addOption('expense', null, InputOption::VALUE_REQUIRED, 'Restrict to one Expense id.')
+            ->addOption('as-user', null, InputOption::VALUE_REQUIRED, 'The Nextcloud administrator uid establishing the privileged session docudesk/OpenRegister require.');
 
     }//end configure()
 
@@ -79,16 +95,27 @@ class ExpenseExtractReceiptCommand extends Command
      * @param InputInterface  $input  Console input.
      * @param OutputInterface $output Console output.
      *
-     * @return int 0 when every attempt ends extracted/already-extracted/skipped-no-docudesk, 1 when any ends failed.
+     * @return int 0 when every attempt ends extracted/already-extracted/skipped-no-docudesk, 1 when any ends failed or --as-user is refused.
      *
      * @spec openspec/changes/receipt-ocr/specs/receipt-ocr/spec.md#REQ-RCPT-006
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        // Privileged-session establishment BEFORE any ReceiptExtractionService/
+        // docudesk/OpenRegister call (the hrmq:avg:* precedent, avg-dsr
+        // design.md D3-D4): an unknown/non-admin --as-user is refused here,
+        // with the service never invoked.
+        $asUser       = trim((string) $input->getOption('as-user'));
+        $sessionError = $this->sessionResolver->establish($asUser);
+        if ($sessionError !== null) {
+            $output->writeln('<error>'.$sessionError.'</error>');
+            return 1;
+        }
+
         $expenseOption = $input->getOption('expense');
         $expenseId     = (is_string($expenseOption) === true && trim($expenseOption) !== '') ? trim($expenseOption) : null;
 
-        $results = $this->service->backlog($expenseId, null);
+        $results = $this->service->backlog($expenseId, $asUser);
 
         $output->writeln('<info>Hrmq receipt-extractie</info>');
 

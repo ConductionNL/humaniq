@@ -44,8 +44,11 @@ namespace OCA\Hrmq\Tests\Unit\Service;
 use OCA\Hrmq\Service\OfferApplicationRepository;
 use OCA\Hrmq\Service\OfferEsignService;
 use OCA\Hrmq\Service\OfferLetterService;
+use OCA\Hrmq\Service\OfferSigningRecoveryService;
 use OCA\Hrmq\Service\SettingsService;
 use OCP\App\IAppManager;
+use OCP\IUser;
+use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -393,12 +396,15 @@ class OfferEsignServiceTest extends TestCase
      * Build a fake docudesk SigningService double -- the VERIFIED real
      * contract (design.md Context): `createRequest()` and `cancelRequest()`
      * can simulate the D5 "No authenticated user" CLI-session gap;
-     * `getRequest()` never has that guard, mirroring the real service.
+     * `getRequest()`/`listRequests()` never have that guard, mirroring the
+     * real service.
      *
      * @param bool                       $createThrows   Whether createRequest() throws RuntimeException('No authenticated user').
      * @param array<string, mixed>       $createResponse The array createRequest() returns on success.
      * @param bool                       $cancelThrows   Whether cancelRequest() throws.
      * @param array<string, array<string, mixed>> $requestsById Records getRequest() can resolve, keyed by id.
+     * @param array<int, array<string, mixed>>    $listRequestsResult The array listRequests() returns (defect-3 orphan-recovery lookup).
+     * @param bool                       $listRequestsThrows Whether listRequests() throws.
      *
      * @return object
      */
@@ -406,9 +412,11 @@ class OfferEsignServiceTest extends TestCase
         bool $createThrows=false,
         array $createResponse=['id' => 'req-1', 'status' => 'PENDING'],
         bool $cancelThrows=false,
-        array $requestsById=[]
+        array $requestsById=[],
+        array $listRequestsResult=[],
+        bool $listRequestsThrows=false
     ): object {
-        return new class ($createThrows, $createResponse, $cancelThrows, $requestsById) {
+        return new class ($createThrows, $createResponse, $cancelThrows, $requestsById, $listRequestsResult, $listRequestsThrows) {
 
             /**
              * Every createRequest() call's $data argument.
@@ -425,19 +433,51 @@ class OfferEsignServiceTest extends TestCase
             public array $cancelCalls = [];
 
             /**
-             * @param bool                                 $createThrows   Whether createRequest() throws.
-             * @param array<string, mixed>                 $createResponse The success return value.
-             * @param bool                                 $cancelThrows   Whether cancelRequest() throws.
-             * @param array<string, array<string, mixed>>  $requestsById   getRequest() lookup table.
+             * Every listRequests() call's [callerUserId, isAdmin] argument pair.
+             *
+             * @var array<int, array{0: string, 1: bool}>
+             */
+            public array $listRequestsCalls = [];
+
+            /**
+             * @param bool                                 $createThrows       Whether createRequest() throws.
+             * @param array<string, mixed>                 $createResponse     The success return value.
+             * @param bool                                 $cancelThrows       Whether cancelRequest() throws.
+             * @param array<string, array<string, mixed>>  $requestsById       getRequest() lookup table.
+             * @param array<int, array<string, mixed>>     $listRequestsResult listRequests() return value.
+             * @param bool                                 $listRequestsThrows Whether listRequests() throws.
              */
             public function __construct(
                 private readonly bool $createThrows,
                 private readonly array $createResponse,
                 private readonly bool $cancelThrows,
                 private readonly array $requestsById,
+                private readonly array $listRequestsResult,
+                private readonly bool $listRequestsThrows,
             ) {
 
             }//end __construct()
+
+
+            /**
+             * @param string $callerUserId UID of the calling user ('' = skip check).
+             * @param bool   $isAdmin      True when the caller is an NC admin.
+             *
+             * @return array<int, array<string, mixed>>
+             *
+             * @throws \RuntimeException Simulating a listRequests() failure.
+             */
+            public function listRequests(string $callerUserId='', bool $isAdmin=false): array
+            {
+                $this->listRequestsCalls[] = [$callerUserId, $isAdmin];
+
+                if ($this->listRequestsThrows === true) {
+                    throw new \RuntimeException('listRequests unavailable');
+                }
+
+                return $this->listRequestsResult;
+
+            }//end listRequests()
 
 
             /**
@@ -506,6 +546,36 @@ class OfferEsignServiceTest extends TestCase
 
 
     /**
+     * Build a fake `IUserManager` double whose `getByEmail()` resolves the
+     * given email->uid map -- the defect-2 fix's resolution collaborator.
+     * Any email not in the map resolves to an empty array (no user found).
+     *
+     * @param array<string, string> $emailToUid Known email -> Nextcloud uid pairs.
+     *
+     * @return IUserManager&\PHPUnit\Framework\MockObject\MockObject
+     */
+    private function fakeUserManager(array $emailToUid=['sanne.voorbeeld@example.org' => 'sanne-nc']): IUserManager
+    {
+        $userManager = $this->createMock(IUserManager::class);
+        $userManager->method('getByEmail')->willReturnCallback(
+            function (string $email) use ($emailToUid): array {
+                if (isset($emailToUid[$email]) === false) {
+                    return [];
+                }
+
+                $user = $this->createMock(IUser::class);
+                $user->method('getUID')->willReturn($emailToUid[$email]);
+
+                return [$user];
+            }
+        );
+
+        return $userManager;
+
+    }//end fakeUserManager()
+
+
+    /**
      * Build a fully-wired OfferEsignService plus its fake collaborators.
      *
      * @param array<string, array<int, array<string, mixed>>> $rowsBySchema      Seed rows keyed by schema.
@@ -515,6 +585,7 @@ class OfferEsignServiceTest extends TestCase
      * @param object|null                                      $fileService       A fake FileService, or null for the default success double.
      * @param object|null                                      $signingService    A fake SigningService, or null for the default success double.
      * @param string                                           $configuredTemplateId Value returned by getDocumentsTemplateId() (empty means discovery).
+     * @param IUserManager|null                                $userManager       A fake IUserManager, or null for the default double resolving the standard candidate fixture email.
      *
      * @return array{0: OfferEsignService, 1: object, 2: object, 3: object}
      */
@@ -525,13 +596,15 @@ class OfferEsignServiceTest extends TestCase
         ?object $templateService=null,
         ?object $fileService=null,
         ?object $signingService=null,
-        string $configuredTemplateId='T1'
+        string $configuredTemplateId='T1',
+        ?IUserManager $userManager=null
     ): array {
         $fakeObjects = $this->fakeObjectService($rowsBySchema);
         $documentSvc = $documentService ?? $this->fakeDocumentService();
         $templateSvc = $templateService ?? $this->fakeTemplateService();
         $fileSvc     = $fileService ?? $this->fakeFileService();
         $signingSvc  = $signingService ?? $this->fakeSigningService();
+        $userMgr     = $userManager ?? $this->fakeUserManager();
 
         $container = $this->createMock(ContainerInterface::class);
         $container->method('get')->willReturnMap(
@@ -557,10 +630,11 @@ class OfferEsignServiceTest extends TestCase
 
         $logger = $this->createMock(LoggerInterface::class);
 
-        $letterService  = new OfferLetterService($container, $settings);
-        $applications   = new OfferApplicationRepository($container, $settings, $logger);
+        $letterService   = new OfferLetterService($container, $settings);
+        $applications    = new OfferApplicationRepository($container, $settings, $logger);
+        $signingRecovery = new OfferSigningRecoveryService($userMgr, $logger);
 
-        $service = new OfferEsignService($container, $appManager, $settings, $letterService, $applications, $logger);
+        $service = new OfferEsignService($container, $appManager, $settings, $letterService, $applications, $signingRecovery, $logger);
 
         return [$service, $fakeObjects, $signingSvc, $fileSvc];
 
@@ -759,9 +833,10 @@ class OfferEsignServiceTest extends TestCase
         $this->assertArrayNotHasKey('signerIds', $data, 'createRequest() never receives a fabricated signerIds field.');
         $this->assertSame(
             [
-                ['userId' => '', 'displayName' => 'Sanne Voorbeeld', 'email' => 'sanne.voorbeeld@example.org', 'order' => 0],
+                ['userId' => 'sanne-nc', 'displayName' => 'Sanne Voorbeeld', 'email' => 'sanne.voorbeeld@example.org', 'order' => 0],
             ],
-            $data['signers']
+            $data['signers'],
+            'The candidate email resolves to a real Nextcloud user id (defect-2 fix) -- never an empty userId.'
         );
 
     }//end testRealSignersPayloadNotSignerIds()
@@ -811,6 +886,112 @@ class OfferEsignServiceTest extends TestCase
         $this->assertSame('failed', $result['offerSigningStatus']);
 
     }//end testCliSessionGapSurfacesAsFailedOutcomeNeverUncaughtException()
+
+
+    /**
+     * Defect-2 fix: a candidate email with no matching Nextcloud user fails
+     * CLEANLY -- BEFORE createRequest() is ever called -- rather than
+     * sending `signers[0].userId = ''` through to docudesk (which used to
+     * crash the whole request on the signerRecord's NOT NULL `user_id`
+     * column, live-verified against docudesk 0.0.37).
+     *
+     * @return void
+     */
+    public function testNoNextcloudUserForCandidateFailsCleanlyWithoutCallingDocudesk(): void
+    {
+        $signingService = $this->fakeSigningService();
+        [$service, $fake] = $this->service(
+            ['Application' => [$this->application()]],
+            signingService: $signingService,
+            userManager: $this->fakeUserManager([])
+        );
+
+        $result = $service->requestSignature('app-1');
+
+        $this->assertSame('failed', $result['status']);
+        $this->assertStringContainsString('no-nextcloud-user-for-candidate', $result['message']);
+        $this->assertStringContainsString('sanne.voorbeeld@example.org', $result['message']);
+        $this->assertSame('failed', $result['offerSigningStatus']);
+        $this->assertCount(0, $signingService->createCalls, 'createRequest() is never reached when the candidate cannot be resolved to a Nextcloud user.');
+
+        $saves = $this->savedFor($fake, 'Application');
+        $final = end($saves);
+        $this->assertSame('failed', $final['offerSigningStatus']);
+
+    }//end testNoNextcloudUserForCandidateFailsCleanlyWithoutCallingDocudesk()
+
+
+    /**
+     * Defect-3 fix: when createRequest() throws AFTER docudesk already
+     * wrote the signing-request row (e.g. an unrelated docudesk-side
+     * failure in the signer-record loop), the orphaned request is
+     * recovered via listRequests() -- keyed on BOTH correlationId and
+     * documentFileId -- when EXACTLY one candidate matches, so the orphan
+     * stays reachable via syncSignatureStatus()/cancelRequest() instead of
+     * being silently stranded.
+     *
+     * @return void
+     */
+    public function testOrphanedSigningRequestRecoveredWhenExactlyOneMatch(): void
+    {
+        $signingService = $this->fakeSigningService(
+            createThrows: true,
+            listRequestsResult: [
+                ['id' => 'req-orphan', 'correlationId' => 'app-1', 'documentFileId' => '42', 'status' => 'PENDING'],
+                ['id' => 'req-unrelated', 'correlationId' => 'app-99', 'documentFileId' => '7', 'status' => 'PENDING'],
+            ]
+        );
+        [$service, $fake] = $this->service(
+            ['Application' => [$this->application()]],
+            signingService: $signingService,
+            fileService: $this->fakeFileService(fileId: 42)
+        );
+
+        $result = $service->requestSignature('app-1');
+
+        $this->assertSame('failed', $result['status']);
+        $this->assertSame('req-orphan', $result['offerSigningRequestId'], 'The recovered orphan id is persisted onto the Application -- reachable, not stranded.');
+        $this->assertStringContainsString('req-orphan', $result['message']);
+
+        $saves = $this->savedFor($fake, 'Application');
+        $final = end($saves);
+        $this->assertSame('req-orphan', $final['offerSigningRequestId']);
+        $this->assertSame('failed', $final['offerSigningStatus']);
+
+    }//end testOrphanedSigningRequestRecoveredWhenExactlyOneMatch()
+
+
+    /**
+     * Defect-3 fix, the honest converse: when the orphan-recovery lookup
+     * cannot determine a SINGLE unambiguous match (none found, or docudesk's
+     * listRequests() itself fails), `offerSigningRequestId` is left null
+     * rather than guessing -- but the failure message still documents the
+     * correlationId so a human can search for it manually (never silently
+     * "nothing happened").
+     *
+     * @return void
+     */
+    public function testOrphanedSigningRequestNotGuessedWhenNoMatch(): void
+    {
+        $signingService = $this->fakeSigningService(createThrows: true, listRequestsResult: []);
+        [$service, $fake] = $this->service(
+            ['Application' => [$this->application()]],
+            signingService: $signingService,
+            fileService: $this->fakeFileService(fileId: 42)
+        );
+
+        $result = $service->requestSignature('app-1');
+
+        $this->assertSame('failed', $result['status']);
+        $this->assertNull($result['offerSigningRequestId']);
+        $this->assertStringContainsString('correlationId="app-1"', $result['message'], 'The failure message documents how to find it manually.');
+
+        $saves = $this->savedFor($fake, 'Application');
+        $final = end($saves);
+        $this->assertNull($final['offerSigningRequestId'] ?? null);
+        $this->assertSame('failed', $final['offerSigningStatus']);
+
+    }//end testOrphanedSigningRequestNotGuessedWhenNoMatch()
 
 
     /**
