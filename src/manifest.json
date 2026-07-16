@@ -595,6 +595,12 @@
 					"label": "Loonbeslagen",
 					"icon": "Gavel",
 					"route": "Loonbeslagen"
+				},
+				{
+					"id": "DsrRequests",
+					"label": "AVG-verzoeken",
+					"icon": "ShieldAccountOutline",
+					"route": "DsrRequests"
 				}
 			]
 		},
@@ -7906,6 +7912,151 @@
 								"employeeId",
 								"shiftId",
 								"userId"
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "related",
+					"slot": "body",
+					"gridX": 8,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 6,
+					"props": {
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
+				},
+				{
+					"widgetKey": "audit",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
+		},
+		{
+			"id": "DsrRequests",
+			"route": "/dsr-requests",
+			"type": "index",
+			"title": "AVG-verzoeken",
+			"config": {
+				"register": "hrmq",
+				"schema": "DsrRequest",
+				"description": "AVG (GDPR) data-subject-rights verzoeken: inzage/portabiliteit, verwijdering (retention-guarded via de statutaire bewaarplicht) en rectificatie, uitgevoerd via OpenRegister's DsarService onder een expliciet vastgestelde beheerderssessie (avg-dsr). Alleen-beheerder surface.",
+				"columns": [
+					"employeeId",
+					"right",
+					"status",
+					"receivedDate",
+					"deadlineDate"
+				],
+				"filters": [
+					"status",
+					"right"
+				],
+				"sort": {
+					"field": "receivedDate",
+					"order": "desc"
+				}
+			}
+		},
+		{
+			"id": "DsrRequestDetail",
+			"route": "/dsr-requests/:id",
+			"type": "detail",
+			"title": "AVG-verzoek",
+			"actions": [
+				{
+					"id": "dsr-export",
+					"label": "Exporteer",
+					"type": "api-call",
+					"icon": "DownloadOutline",
+					"url": "/api/dsr/export",
+					"method": "POST",
+					"params": {
+						"employeeId": "@object.employeeId",
+						"right": "@object.right",
+						"dsrRequestId": "@objectId"
+					},
+					"confirm": false,
+					"successMessage": "AVG-export uitgevoerd.",
+					"errorMessage": "Exporteren is mislukt."
+				},
+				{
+					"id": "dsr-erase-preview",
+					"label": "Voorbeeld verwijdering",
+					"type": "api-call",
+					"icon": "EyeOutline",
+					"url": "/api/dsr/erase-preview",
+					"method": "POST",
+					"params": {
+						"employeeId": "@object.employeeId",
+						"dsrRequestId": "@objectId"
+					},
+					"confirm": false,
+					"successMessage": "Voorbeeld verwijdering opgehaald (geen schrijfacties).",
+					"errorMessage": "Voorbeeld verwijdering kon niet worden opgehaald."
+				},
+				{
+					"id": "dsr-erase-confirm",
+					"label": "Bevestig verwijdering",
+					"type": "api-call",
+					"icon": "DeleteAlertOutline",
+					"url": "/api/dsr/erase-confirm",
+					"method": "POST",
+					"params": {
+						"employeeId": "@object.employeeId",
+						"dsrRequestId": "@objectId"
+					},
+					"confirm": true,
+					"successMessage": "Verwijdering uitgevoerd (retained objecten uitgesloten, wettelijke bewaarplicht).",
+					"errorMessage": "Verwijdering is mislukt of geweigerd — voer eerst Voorbeeld verwijdering uit."
+				},
+				{
+					"id": "dsr-rectify",
+					"label": "Rectificeer",
+					"type": "api-call",
+					"icon": "PencilOutline",
+					"url": "/api/dsr/rectify",
+					"method": "POST",
+					"params": {
+						"employeeId": "@object.employeeId",
+						"dsrRequestId": "@objectId"
+					},
+					"confirm": true,
+					"successMessage": "Rectificatie toegepast.",
+					"errorMessage": "Rectificatie is mislukt."
+				}
+			],
+			"config": {
+				"register": "hrmq",
+				"schema": "DsrRequest",
+				"_note": "avg-dsr (2026-07-16): guarded api-call actions, NOT lifecycleActions -- DsrRequest.status carries no x-openregister-lifecycle map (design.md D3/D5): every transition requires a caller-role check (admin-ONLY, deliberately never widened to isAdminOrHr -- DsarService::assertPrivileged() hard-requires actual IGroupManager::isAdmin()) plus an explicitly-established DsarService-privileged session plus, for verwijdering, the statutory-retention guard (REQ-DSR-005) -- a retention-locked object (e.g. a Payslip inside its AWR 7-year window) is NEVER erased, always reported labelled 'retained (wettelijke bewaarplicht)'. Bevestig verwijdering REQUIRES a prior Voorbeeld verwijdering recorded on the SAME request (REQ-DSR-006). The Rectificeer action's `changes` payload is not yet collected via a prompt (the manifest v2 api-call action type has no free-text field-map prompt) -- the LoonbeslagDetail withdraw `reason` precedent; a prompt-collecting modal is a named fast-follow (README). Admin-only surface -- one notch stricter than the Payroll group's admin/HR posture. Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 6,
+					"props": {
+						"title": "AVG-verzoek",
+						"icon": "ShieldAccountOutline",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId"
 							]
 						}
 					}

@@ -286,3 +286,70 @@ re-invoked). Be aware of the following:
   RBAC-resolve-first 404). A dedicated Nextcloud "HR" group (vs. reusing the
   admin group) is a shared fast-follow across every admin/HR-gated endpoint in
   this app, not specific to loonbeslag.
+
+## AVG data-subject rights (inzage/portabiliteit, vergetelheid, rectificatie)
+
+hrmq orchestrates the four AVG (GDPR) data-subject rights — Art 15 inzage,
+Art 20 portabiliteit, Art 17 vergetelheid, and Art 16 rectificatie — as a thin
+layer (`AvgDsrService`) over OpenRegister's `DsarService`. hrmq owns no
+entity-matching, soft-delete, or anonymisation logic of its own (ADR-022);
+`DsarService` has zero new call sites beyond its three existing public
+methods. Be aware of the following:
+
+- **The erase is structurally two-path, not a single call.**
+  `DsarService::eraseObjectsForSubject()` is a wholesale, subject-wide sweep
+  with **no per-object exclusion parameter** — it cannot skip a retained
+  object while erasing the rest in one call. `AvgDsrService::classifyForErasure()`
+  therefore splits every matched object into `retained` (a populated
+  `retainedUntil`/`identityDocumentRetainedUntil` dated on or after today, or
+  — when unpopulated — the AWR art. 52 lid 4 7-year fallback derivation for
+  the payroll/loonadministratie schema family) and `eligible`. When nothing
+  is retained, ONE wholesale `eraseObjectsForSubject()` call runs (efficient,
+  fast path). The moment **anything** is retained, `eraseObjectsForSubject()`
+  is **never called** for that subject — instead a per-object
+  `rectifyObjectForSubject()` anonymisation loop runs over `eligible` ONLY.
+  A retention-locked object is never referenced in either DsarService write
+  call; it is always reported in the outcome's `retained` list, labelled
+  `"retained (wettelijke bewaarplicht)"`, with its retention date — excluded
+  AND visibly reported, never silently skipped. This two-path design is a
+  named workaround for a primitive `DsarService` does not (yet) provide, not
+  a permanent architecture choice — a future selective per-object erase
+  capability in OpenRegister could collapse this to one call, without
+  changing the erase's requirements.
+- **The retention predicate only covers the payroll/loonadministratie
+  family** (`Payslip`, `PayrollRun`, `LoonaangifteFiling`,
+  `PayrollMutationReport`, `WkrDeclaration`, `WkrAssessment`) plus any schema
+  carrying a populated `retainedUntil`/`identityDocumentRetainedUntil` field.
+  A schema outside that family with a real (but currently unmodelled) legal
+  retention duty would not be protected — a named scope boundary (design.md
+  Non-Goals), not a silent gap. `retainedUntil`/`identityDocumentRetainedUntil`
+  are today unpopulated on real objects until `PayrollRunService`/onboarding
+  flows start setting them at write time (out of this feature's scope).
+- **Dry-run always precedes execute, structurally.**
+  `AvgDsrService::previewErasure()` performs zero writes to any subject's
+  data object; `eraseSubject()` refuses (a controlled, non-write refusal) any
+  `DsrRequest` whose preview was not first recorded onto it. `occ
+  hrmq:avg:erase` defaults to preview-only; `--confirm` requires
+  `--dsr-request-id` naming a request whose preview already ran.
+- **`AvgDsrController`'s admin gate is admin-ONLY, deliberately never
+  `isAdminOrHr()`, and must stay that way.** Unlike `LoonbeslagController`/
+  `PayrollController::mutations()`/`wkrAssess()`, which may correctly widen
+  to admit a future dedicated Nextcloud "HR" group,
+  `DsarService::assertPrivileged()` hard-requires actual
+  `IGroupManager::isAdmin()` — widening `AvgDsrController`'s gate to
+  `isAdminOrHr()` after that fast-follow ships would let a non-admin HR
+  caller pass hrmq's gate and then hit the `RuntimeException`-to-403
+  translation instead of succeeding (a behaviour regression, not a security
+  hole, but a named trap for that future change to avoid — design.md D3).
+- **The special-category `bsn` value is never persisted by this feature.**
+  `DsrRequest.employeeId` (a `$ref` to `Employee`) is the only persisted
+  subject-identifying field; `AvgDsrService::resolveSubject()` reads
+  `Employee.bsn` transiently, in memory, at call time, and never writes it
+  back onto `DsrRequest`, `retainedObjectRefs`, `outcomeSummary`, or any log
+  line (Wet BSN).
+- **The Rectificeer manifest action's `changes` payload is not yet
+  prompt-collected**, the same `LoonbeslagDetail` withdraw-`reason` gap: the
+  manifest v2 `api-call` action type has no free-text field-map prompt. A
+  prompt-collecting modal is a named fast-follow; `occ hrmq:avg:rectify
+  --changes '{"field":"value"}'` and the `POST /api/dsr/rectify` endpoint
+  are both fully functional today.

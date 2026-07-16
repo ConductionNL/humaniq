@@ -171,5 +171,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
              declarations into WkrAssessment. The all option iterates every
              distinct (administration, year) pair found across the payslips. -->
         <command>OCA\Hrmq\Command\WkrAssessCommand</command>
+        <!-- AVG data-subject-rights orchestration over OpenRegister's DsarService
+             (avg-dsr MVP trigger): export (Art 15 inzage / Art 20 portabiliteit),
+             retention-guarded erase preview/execute (Art 17 vergetelheid), and
+             rectify (Art 16). Each requires the as-user option to establish the
+             privileged session DsarService::assertPrivileged() demands. -->
+        <command>OCA\Hrmq\Command\AvgDsrExportCommand</command>
+        <command>OCA\Hrmq\Command\AvgDsrEraseCommand</command>
+        <command>OCA\Hrmq\Command\AvgDsrRectifyCommand</command>
     </commands>
 </info>

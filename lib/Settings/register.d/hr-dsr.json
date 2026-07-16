@@ -1,0 +1,60 @@
+{
+    "x-hrmq-fragment": "hr-dsr",
+    "components": {
+        "schemas": {
+            "DsrRequest": {
+                "slug": "DsrRequest",
+                "icon": "ShieldAccountOutline",
+                "version": "0.1.0",
+                "title": "DsrRequest",
+                "description": "One AVG (GDPR) data-subject-rights request lifecycle record (avg-dsr design.md D7): the requesting subject (employeeId $ref Employee -- the ONLY persisted subject-identifying field, design.md D1 -- the raw bsn value AvgDsrService resolves to call OpenRegister's DsarService is never written here), the right invoked, and the statutory deadline (receivedDate + 1 calendar month, AVG art. 12 lid 3, no extension in this MVP). status is a plain enum, deliberately no x-openregister-lifecycle map (design.md D3/D5): every transition requires a caller-role (admin) check plus an explicitly-established DsarService-privileged session plus, for verwijdering, the statutory-retention guard -- none of which a lifecycle guard's (object, action, userId) contract can express, so AvgDsrService/AvgDsrController/the occ hrmq:avg:* commands own every transition instead. retainedObjectRefs never carries a raw PII value -- only uuid/schema/register/retainedUntil references (design.md D5).",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "employeeId",
+                    "right",
+                    "receivedDate",
+                    "deadlineDate"
+                ],
+                "properties": {
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "description": "The requesting data subject (design.md D1) -- the only persisted subject-identifying field; the raw bsn value is resolved transiently, in memory, by AvgDsrService and never written here."},
+                    "right": {"type": "string", "enum": ["inzage", "verwijdering", "rectificatie", "portabiliteit"], "description": "The AVG right invoked: inzage (Art 15) / verwijdering (Art 17, vergetelheid) / rectificatie (Art 16) / portabiliteit (Art 20)."},
+                    "status": {"type": "string", "enum": ["ontvangen", "in_behandeling", "voldaan", "afgewezen"], "default": "ontvangen", "description": "Plain enum, deliberately no x-openregister-lifecycle map (design.md D3/D5). ontvangen -> in_behandeling on a recorded erase preview or a valid export/rectify call; in_behandeling -> voldaan on a successful export, a rectify with a non-null result, or an erase execute whose failed list is empty; in_behandeling -> afgewezen on a rectify failure or an erase execute with a non-empty failed list."},
+                    "receivedDate": {"type": "string", "format": "date", "description": "When the request was received."},
+                    "deadlineDate": {"type": "string", "format": "date", "description": "receivedDate + 1 calendar month (AVG art. 12 lid 3); no multi-month extension in this MVP (named fast-follow)."},
+                    "handledBy": {"type": "string", "nullable": true, "description": "Nextcloud uid of the admin who processed this request -- the --as-user/session uid (design.md D3)."},
+                    "completedDate": {"type": "string", "format": "date-time", "nullable": true, "description": "When status became voldaan/afgewezen."},
+                    "outcomeSummary": {"type": "string", "nullable": true, "description": "Human-readable outcome -- export confirmation, or erase's erased/retained/failed counts, or rectify's changed field NAMES only, never before/after PII values (design.md D6)."},
+                    "retainedObjectRefs": {"type": "string", "nullable": true, "description": "JSON-encoded list of {uuid, schema, register, retainedUntil} for objects excluded from erasure under the statutory-retention guard (design.md D5) -- never a raw PII value. Also doubles as the erase-preview-recorded marker: previewErasure() always sets this field (even to an empty JSON array) before eraseSubject() will execute."},
+                    "rejectionReason": {"type": "string", "nullable": true, "description": "Populated only when status becomes afgewezen -- which objects failed and why, or why a rectification could not be applied."}
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "DsrRequest",
+                    "slug": "dsr-visser-clean-erase"
+                },
+                "employeeId": "employee-visser",
+                "right": "verwijdering",
+                "status": "ontvangen",
+                "receivedDate": "2026-07-10",
+                "deadlineDate": "2026-08-10"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "DsrRequest",
+                    "slug": "dsr-jansen-retention-guarded"
+                },
+                "employeeId": "employee-jansen",
+                "right": "verwijdering",
+                "status": "ontvangen",
+                "receivedDate": "2026-07-10",
+                "deadlineDate": "2026-08-10"
+            }
+        ]
+    }
+}
