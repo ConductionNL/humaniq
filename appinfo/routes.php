@@ -63,6 +63,11 @@ return [
         ['name' => 'loonbeslag#activate', 'url' => '/api/loonbeslag/activate', 'verb' => 'POST'],
         ['name' => 'loonbeslag#settle', 'url' => '/api/loonbeslag/settle', 'verb' => 'POST'],
         ['name' => 'loonbeslag#withdraw', 'url' => '/api/loonbeslag/withdraw', 'verb' => 'POST'],
+        // receipt-ocr — guarded trigger for the ExpenseDetail "Extract
+        // receipt data" manifest api-call action (design.md D7): resolve-first
+        // RBAC (ObjectService::find under ambient RBAC) then an explicit
+        // admin-or-owner ownership check.
+        ['name' => 'expense#extractReceipt', 'url' => '/api/expenses/extract-receipt', 'verb' => 'POST'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],

@@ -5,7 +5,7 @@
             "Expense": {
                 "slug": "Expense",
                 "icon": "Receipt",
-                "version": "0.5.0",
+                "version": "0.6.0",
                 "title": "Expense",
                 "description": "An employee expense-reimbursement claim (onkostendeclaratie / declaratie). An employee submits a claim (amount, category, date, receipt), a manager approves or rejects it, and once approved the amount is reimbursed to the employee. The submit → approve → reimburse lifecycle is owned here in hrmq, the HR/labour app — re-homing the Expenses feature that previously lived in pipelinq. The pipelinq-specific Shillinq accounts-payable sync coupling is intentionally NOT ported: reimbursement here is the HR-side claim workflow; any downstream AP/GL posting is a separate integration concern that OpenConnector/shillinq own.",
                 "type": "object",
@@ -111,6 +111,17 @@
                         "nullable": true,
                         "description": "Reference (Nextcloud Files path or OpenRegister file id) to the attached receipt / bon."
                     },
+                    "vendor": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Vendor / leverancier name, either typed by the employee or prefilled by receipt-OCR extraction (receipt-ocr, REQ-RCPT-001)."
+                    },
+                    "vatAmount": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "description": "VAT / BTW amount on the receipt, either typed by the employee or prefilled by receipt-OCR extraction (receipt-ocr, REQ-RCPT-001)."
+                    },
                     "status": {
                         "type": "string",
                         "description": "Reimbursement workflow status. Governed by the x-openregister-lifecycle state machine.",
@@ -187,7 +198,126 @@
                         "description": "Kilometers driven for this claim, used together with amount and travelType to compute the per-km reimbursement checked against the onbelaste kilometervergoeding by nl-reiskosten-onbelast-tarief (mileage-rules, REQ-MILE-001)."
                     }
                 }
+            },
+            "ReceiptExtraction": {
+                "slug": "ReceiptExtraction",
+                "icon": "TextRecognition",
+                "version": "0.1.0",
+                "title": "ReceiptExtraction",
+                "description": "The hrmq-side record of one receipt-OCR extraction attempt against an Expense (receipt-ocr, REQ-RCPT-001): the raw extracted values and confidence docudesk's FinancialExtractionService returned, and which Expense fields this attempt actually wrote (appliedFields) -- the provenance trail a reviewer reads to see a value was machine-suggested rather than hand-entered. hrmq performs no OCR/extraction of its own; docudesk owns that surface entirely.",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "expenseId",
+                    "status"
+                ],
+                "properties": {
+                    "expenseId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Expense",
+                        "description": "Reference to the Expense this extraction attempt is for."
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "The outcome of this extraction attempt.",
+                        "enum": [
+                            "pending",
+                            "extracted",
+                            "failed",
+                            "skipped-no-docudesk"
+                        ]
+                    },
+                    "overallConfidence": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "docudesk's overall confidence score for this extraction; null until an attempt completes."
+                    },
+                    "extractedAmount": {
+                        "type": "number",
+                        "nullable": true,
+                        "description": "The raw amount docudesk extracted (VAT-inclusive total), recorded even when NOT applied because Expense.amount was already set."
+                    },
+                    "extractedDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "description": "The raw receipt/invoice date docudesk extracted, recorded even when NOT applied."
+                    },
+                    "extractedVendor": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The raw vendor/leverancier name docudesk extracted, recorded even when NOT applied."
+                    },
+                    "extractedVatAmount": {
+                        "type": "number",
+                        "nullable": true,
+                        "description": "The raw VAT amount docudesk extracted, recorded even when NOT applied."
+                    },
+                    "appliedFields": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Comma-separated Expense field names this attempt actually wrote (a field extracted-but-skipped-because-already-filled does not appear here, even though its raw value is still recorded)."
+                    },
+                    "requestedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Nextcloud user ID that requested this extraction, plain string per ADR-046 (mirrors Expense.approvedBy), or null for 'system' (occ context)."
+                    },
+                    "errorMessage": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Set on failed/skipped-no-docudesk; the diagnostic shown to the requester."
+                    },
+                    "extractedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "ISO 8601 UTC timestamp the extraction attempt completed."
+                    }
+                }
             }
-        }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Expense",
+                    "slug": "expense-devries-lunch-receipt"
+                },
+                "employeeId": "employee-devries",
+                "title": "Werklunch klantbezoek Rotterdam",
+                "description": "Lunch met klant, kassabon bijgevoegd voor automatische receipt-extractie (receipt-ocr voorbeeld).",
+                "amount": 32.75,
+                "currency": "EUR",
+                "category": "meals",
+                "expenseDate": "2026-06-12",
+                "receiptFile": "receipt-devries-lunch-placeholder.pdf",
+                "vendor": "Grand Café De Kroon",
+                "vatAmount": 5.68,
+                "status": "draft",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "ReceiptExtraction",
+                    "slug": "receiptextraction-devries-lunch"
+                },
+                "expenseId": "expense-devries-lunch-receipt",
+                "status": "extracted",
+                "overallConfidence": 0.92,
+                "extractedAmount": 32.75,
+                "extractedDate": "2026-06-11",
+                "extractedVendor": "Grand Café De Kroon",
+                "extractedVatAmount": 6.02,
+                "appliedFields": "amount,vendor",
+                "requestedBy": "admin",
+                "errorMessage": null,
+                "extractedAt": "2026-06-12T08:15:00Z"
+            }
+        ]
     }
 }
