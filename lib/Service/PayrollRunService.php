@@ -141,6 +141,7 @@ namespace OCA\Hrmq\Service;
 
 use OCA\Hrmq\Payroll\CalculationInput;
 use OCA\Hrmq\Payroll\CalculationResult;
+use OCA\Hrmq\Payroll\PackRepository;
 use OCA\Hrmq\Payroll\PayrollCalculator;
 use OCA\Hrmq\Payroll\SickPayCalculator;
 use OCA\Hrmq\Payroll\SickPayInput;
@@ -196,6 +197,7 @@ class PayrollRunService
      * @param PayrollCalculator  $calculator        The pure gross-to-net calculator.
      * @param SickPayCalculator  $sickPayCalculator The pure loondoorbetaling-bij-ziekte calculator (sick-pay-calc).
      * @param LoggerInterface    $logger            Logger.
+     * @param PackRepository     $packs             The jurisdiction-pack resolver (jurisdiction-packs design.md D7).
      */
     public function __construct(
         private readonly ContainerInterface $container,
@@ -203,6 +205,7 @@ class PayrollRunService
         private readonly PayrollCalculator $calculator,
         private readonly SickPayCalculator $sickPayCalculator,
         private readonly LoggerInterface $logger,
+        private readonly PackRepository $packs=new PackRepository(),
     ) {
 
     }//end __construct()
@@ -356,11 +359,22 @@ class PayrollRunService
         $period           = (string) ($run['period'] ?? '');
         $administrationId = (string) ($run['administrationId'] ?? '');
 
-        $tableId = 'nl-'.substr($period, 0, 4);
+        // jurisdiction-packs design.md D7: the country is no longer hardcoded
+        // in the resolver (this was `'nl-'.substr($period, 0, 4)`). The pack is
+        // a lookup on (run.jurisdiction, year-of(period)) against the packs'
+        // own DECLARED jurisdiction/taxYear fields, and the pack in turn
+        // declares which tables corpus its @table.* refs resolve against — so
+        // no code path parses a country out of an id or a period any more.
+        $jurisdiction = strtoupper(trim((string) ($run['jurisdiction'] ?? '')));
+        if ($jurisdiction === '') {
+            $jurisdiction = 'NL';
+        }
+
         try {
-            $tables = TaxTables::load($tableId);
+            $pack   = $this->packs->resolve($jurisdiction, $period);
+            $tables = TaxTables::load($pack->tablesId());
         } catch (\Throwable $e) {
-            return $this->outcome($runId, $period, $administrationId, 'failed', 'Geen belastingtabellen voor deze periode ('.$tableId.'): '.$e->getMessage());
+            return $this->outcome($runId, $period, $administrationId, 'failed', 'Geen jurisdictiepack of belastingtabellen voor '.$jurisdiction.' '.$period.': '.$e->getMessage());
         }
 
         $aofTariff     = $this->settingsService->getPayrollAofTariff();
@@ -460,7 +474,8 @@ class PayrollRunService
                 awfTariff: $this->awfTariffFor($contract),
                 aofTariff: $aofTariff,
                 whkPercentage: $whkPercentage,
-                verzekeringsplichtig: (($employee['isDga'] ?? false) !== true)
+                verzekeringsplichtig: (($employee['isDga'] ?? false) !== true),
+                jurisdiction: $jurisdiction
             );
 
             $result = $this->calculator->calculate($input, $tables);
@@ -533,9 +548,11 @@ class PayrollRunService
             }
         }
 
-        // Roll-up + stamps (design.md D4): totals cents-exact, engineVersion =
-        // tables id, calculatedAt = now. Status and GL/clearing fields are
-        // deliberately NOT written.
+        // Roll-up + stamps (design.md D4): totals cents-exact, calculatedAt =
+        // now. Status and GL/clearing fields are deliberately NOT written.
+        // engineVersion is now `{packId}@{packVersion}` (jurisdiction-packs
+        // design.md D7) — strictly more information than the bare tables id it
+        // stamped before, since it names the CHAIN as well as the parameters.
         $runUpdate = array_merge(
             $run,
             [
@@ -544,7 +561,7 @@ class PayrollRunService
                 'totalEmployerCharges' => $this->euros($totals['employerCharges']),
                 'totalWithholdings'    => $this->euros($totals['withholdings']),
                 'totalNet'             => $this->euros($totals['net']),
-                'engineVersion'        => $tables->id(),
+                'engineVersion'        => $pack->engineVersion(),
                 'calculatedAt'         => gmdate('Y-m-d\TH:i:s\Z'),
             ]
         );

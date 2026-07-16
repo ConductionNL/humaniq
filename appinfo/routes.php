@@ -36,6 +36,10 @@ return [
         // WkrAssessmentDetail "Beoordelen" manifest api-call action
         // (design.md D6).
         ['name' => 'payroll#wkrAssess', 'url' => '/api/payroll/wkr-assess', 'verb' => 'POST'],
+        // jurisdiction-packs — admin-only pack upload. ONE endpoint, no CRUD
+        // (ADR-022). Every blocking gate lives in PackValidator (design.md
+        // D11); this route adds only the admin check.
+        ['name' => 'jurisdictionPack#upload', 'url' => '/api/payroll/packs', 'verb' => 'POST'],
         // rostering — guarded trigger for the RosterDetail "ATW-controle"
         // manifest api-call action (design.md D5).
         ['name' => 'roster#check', 'url' => '/api/roster/check', 'verb' => 'POST'],
