@@ -461,6 +461,12 @@
 					"route": "Applications"
 				},
 				{
+					"id": "Interviews",
+					"label": "Gesprekken",
+					"icon": "CalendarAccountOutline",
+					"route": "Interviews"
+				},
+				{
 					"id": "Offboardings",
 					"label": "Offboardings",
 					"icon": "AccountMinusOutline",
@@ -6106,6 +6112,173 @@
 						"title": "CV & motivatiebrief",
 						"integrationId": "files",
 						"icon": "FolderOutline"
+					}
+				},
+				{
+					"widgetKey": "object-list",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 13,
+					"gridWidth": 12,
+					"gridHeight": 4,
+					"props": {
+						"title": "Gesprekken",
+						"icon": "CalendarAccountOutline",
+						"content": {
+							"register": "hrmq",
+							"schema": "Interview",
+							"filter": {
+								"applicationId": "@objectId"
+							},
+							"sort": {
+								"field": "scheduledStart",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "scheduledStart",
+									"label": "Start"
+								},
+								{
+									"key": "mode",
+									"label": "Mode"
+								},
+								{
+									"key": "location",
+									"label": "Location"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "InterviewDetail",
+							"viewAllRoute": "Interviews",
+							"viewAllQuery": {
+								"applicationId": "@objectId"
+							},
+							"emptyText": "Nog geen gesprekken gepland"
+						}
+					}
+				},
+				{
+					"widgetKey": "audit",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
+		},
+		{
+			"id": "Interviews",
+			"route": "/interviews",
+			"type": "index",
+			"title": "Gesprekken",
+			"config": {
+				"register": "hrmq",
+				"schema": "Interview",
+				"description": "interview-scheduling: geplande, voltooide en geannuleerde sollicitatiegesprekken. Een gesprek wordt via de InterviewDetail-pagina of 'occ hrmq:interview:sync' naar de gedeelde agenda gesynchroniseerd (design D1/D6).",
+				"columns": [
+					"applicationId",
+					"scheduledStart",
+					"scheduledEnd",
+					"mode",
+					"status"
+				],
+				"filters": [
+					"status",
+					"mode"
+				],
+				"sort": {
+					"field": "scheduledStart",
+					"order": "desc"
+				}
+			}
+		},
+		{
+			"id": "InterviewDetail",
+			"route": "/interviews/:id",
+			"type": "detail",
+			"title": "Interview",
+			"actions": [
+				{
+					"id": "sync-to-calendar",
+					"label": "Sync naar agenda",
+					"type": "api-call",
+					"icon": "CalendarSyncOutline",
+					"url": "/api/interviews/sync",
+					"method": "POST",
+					"params": {
+						"interviewId": "@objectId"
+					},
+					"confirm": true,
+					"successMessage": "Gesprek gesynchroniseerd naar de gedeelde agenda.",
+					"errorMessage": "Synchroniseren naar de agenda is mislukt."
+				}
+			],
+			"config": {
+				"register": "hrmq",
+				"schema": "Interview",
+				"_note": "interview-scheduling (2026-07-16): one interview round (gesprek) for an Application -- a SEPARATE schema, not fields on Application, because one Application can have multiple interview rounds each with its own lifecycle/calendarEventUid (design.md D2). The 'Interview' data widget excludes applicationId (Related resolves the Application) and calendarEventUid stays visible as the system-managed idempotency marker (design.md D3) -- an inspectable 'has this ever reached the calendar' signal, never user-editable. lifecycleActions expose exactly voltooien/annuleren (design D2) -- no invented edges; rescheduling is a plain field update to scheduledStart/scheduledEnd, not a status transition. The page-level 'Sync naar agenda' api-call action mirrors ApplicationDetail's 'request-offer-signature' shape -- POST /api/interviews/sync with {interviewId: @objectId}, guarded server-side by InterviewController::authorizeInterview() (resolve-first RBAC) + isAdminOrHr(). No files widget -- the schema carries no document/retention field. Audit history is a sidebar tab.",
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "voltooien",
+							"from": [
+								"scheduled"
+							],
+							"to": "completed",
+							"label": "Voltooien"
+						},
+						{
+							"action": "annuleren",
+							"from": [
+								"scheduled"
+							],
+							"to": "cancelled",
+							"label": "Annuleren"
+						}
+					]
+				},
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 6,
+					"props": {
+						"title": "Interview",
+						"icon": "CalendarAccountOutline",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"applicationId"
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "related",
+					"slot": "body",
+					"gridX": 8,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 6,
+					"props": {
+						"title": "Related",
+						"icon": "LinkVariant"
 					}
 				},
 				{

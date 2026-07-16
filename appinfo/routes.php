@@ -81,6 +81,11 @@ return [
         // action (design.md D8): resolve-first RBAC (ObjectService::find
         // under ambient RBAC) + aanbod-stage guard BEFORE any docudesk call.
         ['name' => 'offer#requestSignature', 'url' => '/api/offer/request-signature', 'verb' => 'POST'],
+        // interview-scheduling — guarded, admin/HR-only trigger for the
+        // InterviewDetail "Sync naar agenda" manifest api-call action
+        // (design.md D6): resolve-first RBAC (ObjectService::find under
+        // ambient RBAC) BEFORE any calendar write.
+        ['name' => 'interview#sync', 'url' => '/api/interviews/sync', 'verb' => 'POST'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],

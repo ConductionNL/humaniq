@@ -197,5 +197,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
              session guard, so this genuinely works from CLI). Never writes
              Application.status or invokes the aannemen transition. -->
         <command>OCA\Hrmq\Command\OfferSyncSignatureCommand</command>
+        <!-- interview-scheduling: sync scheduled recruiting Interviews onto
+             the configured shared Nextcloud calendar (fork of
+             CalendarSyncCommand for a second, separately-configured shared
+             calendar). Duck-typed no-op (skipped-no-calendar) when the
+             calendar is not configured or cannot be resolved. -->
+        <command>OCA\Hrmq\Command\InterviewCalendarSyncCommand</command>
     </commands>
 </info>
