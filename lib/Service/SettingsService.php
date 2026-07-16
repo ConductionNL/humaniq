@@ -318,6 +318,29 @@ class SettingsService
 
 
     /**
+     * The offer-acceptance window, in days, added to "now" to compute the
+     * `deadline` passed into docudesk's `SigningService::createRequest()` for
+     * an offer-letter signing request (offer-esign design.md "Config delta").
+     * Distinct from docudesk's own generic `signing_request_expiry_days`
+     * (30-day default) — this is hrmq's own business rule for how long a
+     * candidate has to accept an offer. Configurable via app config key
+     * `offer_signing_deadline_days`.
+     *
+     * @return int
+     *
+     * @spec openspec/changes/offer-esign/specs/offer-esign/spec.md#REQ-OFFR-003
+     */
+    public function getOfferSigningDeadlineDays(): int
+    {
+        $value = $this->appConfig->getValueString(Application::APP_ID, 'offer_signing_deadline_days', '14');
+        $days  = (int) $value;
+
+        return $days > 0 ? $days : 14;
+
+    }//end getOfferSigningDeadlineDays()
+
+
+    /**
      * The employer's Aof (arbeidsongeschiktheidsfonds) tariff classification
      * (payroll-core-engine design.md D2 step 9): `laag` for small employers,
      * `hoog` for other employers — a per-employer fact the tax-year tables

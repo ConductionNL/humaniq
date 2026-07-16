@@ -10,6 +10,7 @@ built_by: openspec/changes/archive/2026-07-13-recruiting-ats-basic
 **Scope**: hrmq
 **OpenSpec changes**:
 - [recruiting-ats-basic](../../changes/archive/2026-07-13-recruiting-ats-basic/) _(archived 2026-07-13)_ — new `Application` schema (fragment hr-ats.json; candidate PII inside the application, no Candidate entity) with declarative pipeline lifecycle nieuw→screening→gesprek→aanbod→aangenomen/afgewezen, stored-but-rule-checked `retentionExpiryDate` (AP sollicitatie-richtlijn: 4 weken, 1 jaar met talent-pool-toestemming), 2 machine-checkable AVG rules in a new privacy corpus + `NlAtsChecks`, Applications/ApplicationDetail pages, seeded expired-retention violation (kind: config)
+- [offer-esign](../../changes/archive/2026-07-15-offer-esign/) _(archived 2026-07-15)_ — amends this leaf: `Application` v0.3.0 gains additive `offerLetterFileId`/`offerSigningRequestId`/`offerSigningStatus` and one new `aanbod`-stage seed; supersedes the `aanbieden` transition's own docblock claim ("No offer-letter generation/e-signature in the MVP.") for the generation/request half via the new `offer-esign` capability — see `openspec/specs/offer-esign/spec.md`. Signing COMPLETION and auto-hire remain explicitly out of scope; the `aanbieden`/`aannemen` transitions and their descriptions below are otherwise unchanged.
 
 ## Purpose
 
