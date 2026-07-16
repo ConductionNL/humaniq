@@ -9,6 +9,22 @@ const buildMode = process.env.NODE_ENV
 const isDev = buildMode === 'development'
 webpackConfig.devtool = isDev ? 'cheap-source-map' : 'source-map'
 
+// The base @nextcloud/webpack-vue-config hardcodes
+//   output.publicPath = '/apps/<appName>/js/'
+// which is wrong when the app lives in `apps-extra/`. The main entry script is
+// injected by PHP (Util::addScript) with the correct `/custom_apps/hrmq/js/`
+// webroot, but webpack's runtime loader uses output.publicPath for dynamically
+// imported chunks (CnIndexPage, CnAdvancedFormDialog, CnMapWidget), so those get
+// requested from `/apps/hrmq/js/...` instead - a path NC's PHP router intercepts
+// and answers with the SPA shell HTML instead of JS, leaving every index page's
+// <main> empty. 'auto' makes webpack derive the public path from the URL of the
+// executing entry script at runtime, so lazy chunks load from wherever the app
+// is actually mounted. Mirrors openregister and pipelinq.
+webpackConfig.output = {
+	...webpackConfig.output,
+	publicPath: 'auto',
+}
+
 webpackConfig.stats = {
 	colors: true,
 	modules: false,

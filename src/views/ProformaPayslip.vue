@@ -52,7 +52,7 @@
 			<NcTextField :value.sync="form.parttime"
 				:label="t('hrmq', 'Part-time factor')"
 				type="number"
-				step="0.05"
+				step="0.01"
 				min="0.01" />
 
 			<NcTextField :value.sync="form.bijzonder"

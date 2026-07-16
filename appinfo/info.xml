@@ -158,12 +158,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <!-- Batch-effectuate every approved, due CompAdjustment in one
              compensation review cycle (comp-cycles MVP trigger): writes the
              new grossMonthlySalary onto the Employee and drives the
-             effectuate transition. --dry-run evaluates without writing. -->
+             effectuate transition. The dry-run option evaluates without writing. -->
         <command>OCA\Hrmq\Command\CompEffectuateCommand</command>
         <!-- Settle one approved LeaveTransaction (buy/sell leave hours,
              leave-buy-sell MVP trigger): idempotent, adjusts only
              LeaveBalance.bovenwettelijkHours and stamps the transaction
-             settled -- entitledHours/usedHours are never touched. -->
+             settled, entitledHours/usedHours are never touched. -->
         <command>OCA\Hrmq\Command\LeaveBuySellSettleCommand</command>
         <!-- Compute/persist the idempotent per-(administration, year)
              werkkostenregeling vrije-ruimte assessment (wkr-administration

@@ -90,36 +90,41 @@ class RuleTestDataSeeder
         // (REQ-CAO-006).
         $upsertKeys             = RuleEngine::providerUpsertKeys();
         $providerObjectsCreated = 0;
-        foreach (RuleEngine::providerSeedObjects() as $objectType => $samples) {
+        $providerSeedObjects    = RuleEngine::providerSeedObjects();
+
+        // 'Employee' is created FIRST, out of provider-declaration order: several
+        // other providers' samples (NlPayrollChecks' EmploymentContract/Payslip,
+        // NlLoonbeslagChecks' Loonbeslag, ...) reference an employee via a
+        // synthetic `employeeNumber`-shaped `employeeId` placeholder (e.g.
+        // 'EMP-NL-0001') -- but the Employee schema types `employeeId` as
+        // `format: 'uuid'` on every referencing schema, so writing that literal
+        // placeholder always fails create. Resolving 'Employee' first means the
+        // real employee row (and its generated UUID) exists before
+        // resolveEmployeeIdPlaceholder() below tries to substitute it into the
+        // samples that reference it.
+        if (isset($providerSeedObjects['Employee']) === true) {
+            $providerObjectsCreated += $this->createMissingSamples($os, $register, $admin, 'Employee', $providerSeedObjects['Employee'], $alreadyCompliant);
+            unset($providerSeedObjects['Employee']);
+        }
+
+        $employeeUuidsByNumber = $this->employeeUuidsByNumber($os, $register);
+
+        foreach ($providerSeedObjects as $objectType => $samples) {
             if ($samples === []) {
                 continue;
             }
+
+            $samples = array_map(
+                fn (array $sample): array => $this->resolveEmployeeIdPlaceholder($sample, $employeeUuidsByNumber),
+                $samples
+            );
 
             if (isset($upsertKeys[$objectType]) === true) {
                 $providerObjectsCreated += $this->upsertSamples($os, $register, $admin, $objectType, $samples, $upsertKeys[$objectType]);
                 continue;
             }
 
-            try {
-                $existing = $os->setRegister($register)->setSchema($objectType)->findAll(['limit' => 1]);
-            } catch (\Throwable $e) {
-                $this->logger->warning('RuleTestDataSeeder: cannot probe '.$objectType.' for object seeding: '.$e->getMessage());
-                continue;
-            }
-
-            if (is_array($existing) === true && $existing !== []) {
-                $alreadyCompliant++;
-                continue;
-            }
-
-            foreach ($samples as $sample) {
-                try {
-                    $os->saveObject(object: $sample, register: $register, schema: $objectType, _rbac: false, _multitenancy: false, currentUser: $admin);
-                    $providerObjectsCreated++;
-                } catch (\Throwable $e) {
-                    $this->logger->warning('RuleTestDataSeeder: sample '.$objectType.' create failed: '.$e->getMessage());
-                }
-            }
+            $providerObjectsCreated += $this->createMissingSamples($os, $register, $admin, $objectType, $samples, $alreadyCompliant);
         }//end foreach
 
         // Generic per-domain provider seeding: each CheckProvider may declare the
@@ -233,6 +238,115 @@ class RuleTestDataSeeder
         return $written;
 
     }//end upsertSamples()
+
+
+    /**
+     * Create the provider's sample objects for one object type when the type
+     * currently has no rows (create-once-when-empty, the default SeedsObjects
+     * behaviour for providers not also implementing UpsertsObjects).
+     *
+     * @param mixed                             $os               The ObjectService.
+     * @param string                            $register         Register slug.
+     * @param IUser|null                        $admin            Admin user for the write.
+     * @param string                            $objectType       Schema name.
+     * @param array<int, array<string, mixed>>  $samples          The provider's samples.
+     * @param int                               $alreadyCompliant Incremented (by reference) when the type already has rows.
+     *
+     * @return int The number of objects created.
+     */
+    private function createMissingSamples(mixed $os, string $register, ?IUser $admin, string $objectType, array $samples, int &$alreadyCompliant): int
+    {
+        try {
+            $existing = $os->setRegister($register)->setSchema($objectType)->findAll(['limit' => 1]);
+        } catch (\Throwable $e) {
+            $this->logger->warning('RuleTestDataSeeder: cannot probe '.$objectType.' for object seeding: '.$e->getMessage());
+            return 0;
+        }
+
+        if (is_array($existing) === true && $existing !== []) {
+            $alreadyCompliant++;
+            return 0;
+        }
+
+        $created = 0;
+        foreach ($samples as $sample) {
+            try {
+                $os->saveObject(object: $sample, register: $register, schema: $objectType, _rbac: false, _multitenancy: false, currentUser: $admin);
+                $created++;
+            } catch (\Throwable $e) {
+                $this->logger->warning('RuleTestDataSeeder: sample '.$objectType.' create failed: '.$e->getMessage());
+            }
+        }
+
+        return $created;
+
+    }//end createMissingSamples()
+
+
+    /**
+     * Map every seeded Employee's `employeeNumber` to its real generated UUID.
+     *
+     * Several providers' seed samples reference an employee via that synthetic
+     * natural key in an `employeeId` field (e.g. 'EMP-NL-0001'), but every
+     * schema typing `employeeId` also requires `format: 'uuid'` -- writing the
+     * natural key literally always fails create. This map lets
+     * resolveEmployeeIdPlaceholder() substitute the real value.
+     *
+     * @param mixed  $os       The ObjectService.
+     * @param string $register Register slug.
+     *
+     * @return array<string, string> employeeNumber => uuid.
+     */
+    private function employeeUuidsByNumber(mixed $os, string $register): array
+    {
+        try {
+            $rows = $os->setRegister($register)->setSchema('Employee')->findAll(['limit' => 10000]);
+        } catch (\Throwable $e) {
+            $this->logger->warning('RuleTestDataSeeder: cannot load Employee for employeeId resolution: '.$e->getMessage());
+            return [];
+        }
+
+        $map = [];
+        foreach ((is_array($rows) === true ? $rows : []) as $row) {
+            $obj            = is_array($row) === true ? $row : $row->jsonSerialize();
+            $employeeNumber = trim((string) ($obj['employeeNumber'] ?? ''));
+            $uuid           = (string) ($obj['id'] ?? $obj['@self']['id'] ?? '');
+            if ($employeeNumber !== '' && $uuid !== '') {
+                $map[$employeeNumber] = $uuid;
+            }
+        }
+
+        return $map;
+
+    }//end employeeUuidsByNumber()
+
+
+    /**
+     * Substitute a sample's `employeeId` field when it carries a synthetic
+     * employeeNumber-shaped placeholder (e.g. 'EMP-NL-0001') matching a real
+     * seeded Employee, with that Employee's actual UUID.
+     *
+     * A sample with no `employeeId`, or one that does not match a known
+     * placeholder (e.g. the EuUsPayrollChecks DE/FR/US samples, which
+     * reference employees this seeder never creates), passes through
+     * unchanged -- the create attempt then fails exactly as it did before this
+     * resolution step existed.
+     *
+     * @param array<string, mixed>  $sample                The seed sample.
+     * @param array<string, string> $employeeUuidsByNumber employeeNumber => uuid map.
+     *
+     * @return array<string, mixed> The sample, with `employeeId` resolved when possible.
+     */
+    private function resolveEmployeeIdPlaceholder(array $sample, array $employeeUuidsByNumber): array
+    {
+        $employeeId = ($sample['employeeId'] ?? null);
+        if (is_string($employeeId) === true && isset($employeeUuidsByNumber[$employeeId]) === true) {
+            $sample['employeeId'] = $employeeUuidsByNumber[$employeeId];
+        }
+
+        return $sample;
+
+    }//end resolveEmployeeIdPlaceholder()
 
 
     /**
