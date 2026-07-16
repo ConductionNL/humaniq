@@ -63,6 +63,14 @@ return [
         ['name' => 'loonbeslag#activate', 'url' => '/api/loonbeslag/activate', 'verb' => 'POST'],
         ['name' => 'loonbeslag#settle', 'url' => '/api/loonbeslag/settle', 'verb' => 'POST'],
         ['name' => 'loonbeslag#withdraw', 'url' => '/api/loonbeslag/withdraw', 'verb' => 'POST'],
+        // avg-dsr — guarded, admin-only AVG data-subject-rights endpoints
+        // (design.md D3): export (Art 15/20), erase preview (mandatory,
+        // zero-write) + confirm (retention-guarded, REQ-DSR-005/-006), and
+        // rectify (Art 16, no retention guard). BEFORE the SPA catch-all.
+        ['name' => 'avgDsr#export', 'url' => '/api/dsr/export', 'verb' => 'POST'],
+        ['name' => 'avgDsr#erasePreview', 'url' => '/api/dsr/erase-preview', 'verb' => 'POST'],
+        ['name' => 'avgDsr#eraseConfirm', 'url' => '/api/dsr/erase-confirm', 'verb' => 'POST'],
+        ['name' => 'avgDsr#rectify', 'url' => '/api/dsr/rectify', 'verb' => 'POST'],
         // receipt-ocr — guarded trigger for the ExpenseDetail "Extract
         // receipt data" manifest api-call action (design.md D7): resolve-first
         // RBAC (ObjectService::find under ambient RBAC) then an explicit
