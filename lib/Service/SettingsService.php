@@ -428,6 +428,51 @@ class SettingsService
 
 
     /**
+     * The CalDAV principal that owns the target shared calendar interview
+     * events are projected onto (interview-scheduling design.md D6), e.g.
+     * `principals/users/recruiting`, configurable via app config key
+     * `interview_calendar_principal`. Empty (the default) means the sync is
+     * not configured and every run ends `skipped-no-calendar`. Deliberately
+     * a SEPARATE key from `leave_calendar_principal` — an org may want
+     * interviews on the recruiting team's own shared calendar, distinct from
+     * the company-wide absence calendar. The configured calendar SHOULD be
+     * one the owning account shares with the interview panel — the sync is
+     * a one-way projection, so events manually edited on the calendar are
+     * overwritten by the next `occ hrmq:interview:sync`.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-002
+     */
+    public function getInterviewCalendarPrincipal(): string
+    {
+        return $this->appConfig->getValueString(Application::APP_ID, 'interview_calendar_principal', '');
+
+    }//end getInterviewCalendarPrincipal()
+
+
+    /**
+     * The CalDAV calendar URI (on the principal above) the interview sync
+     * writes VEVENTs into (interview-scheduling design.md D6), as shown in
+     * the Calendar app's link/edit dialog, configurable via app config key
+     * `interview_calendar_uri`. Empty (the default) means the sync is not
+     * configured and every run ends `skipped-no-calendar`. Deliberately a
+     * SEPARATE key from `leave_calendar_uri` (design.md D6). One-way
+     * projection caveat: manual edits to events on this calendar are
+     * overwritten by the next sync.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-002
+     */
+    public function getInterviewCalendarUri(): string
+    {
+        return $this->appConfig->getValueString(Application::APP_ID, 'interview_calendar_uri', '');
+
+    }//end getInterviewCalendarUri()
+
+
+    /**
      * Whether `LeaveAccrualJob` may run (leave-accrual-job design.md D6) — an
      * operator off-switch, configurable via app config key
      * `leave_accrual_enabled`. Defaults to `true`; the job returns immediately

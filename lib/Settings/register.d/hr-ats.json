@@ -260,6 +260,108 @@
                         ]
                     }
                 }
+            },
+            "Interview": {
+                "slug": "Interview",
+                "icon": "CalendarAccountOutline",
+                "version": "0.1.0",
+                "title": "Interview",
+                "description": "One interview round (gesprek) scheduled for an Application (interview-scheduling design.md D2). A separate schema, not fields on Application, because a single Application can go through more than one interview round, each with its own lifecycle and calendar identity. InterviewCalendarService projects every scheduled Interview onto one configured shared Nextcloud calendar as a VEVENT (design.md D1/D3); calendarEventUid is the system-managed, stored idempotency marker set on first sync.",
+                "type": "object",
+                "x-schema-org": "schema:Event",
+                "required": [
+                    "applicationId",
+                    "scheduledStart",
+                    "scheduledEnd",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "scheduled",
+                        "terminal": [
+                            "completed",
+                            "cancelled"
+                        ],
+                        "transitions": {
+                            "voltooien": {
+                                "from": [
+                                    "scheduled"
+                                ],
+                                "to": "completed",
+                                "description": "The interview round has taken place. Terminal — the calendar event is kept as history and is no longer touched by the sync (design.md D4)."
+                            },
+                            "annuleren": {
+                                "from": [
+                                    "scheduled"
+                                ],
+                                "to": "cancelled",
+                                "description": "The interview round is cancelled. Terminal — the next sync removes the calendar event (design.md D4); the Interview object itself is retained, not deleted."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "applicationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Application",
+                        "title": "Application",
+                        "description": "UUID reference to the Application this interview round belongs to."
+                    },
+                    "scheduledStart": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Scheduled start",
+                        "description": "Start of the interview slot. Rendered as the VEVENT DTSTART by InterviewCalendarService."
+                    },
+                    "scheduledEnd": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Scheduled end",
+                        "description": "End of the interview slot. Rendered as the VEVENT DTEND by InterviewCalendarService."
+                    },
+                    "interviewers": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Interviewers",
+                        "description": "Free-text interviewer name(s). Rendered as plain DESCRIPTION text only — never as an ATTENDEE/ORGANIZER property, so no iMIP scheduling mail is ever triggered (design.md D5)."
+                    },
+                    "mode": {
+                        "type": "string",
+                        "title": "Mode",
+                        "description": "How the interview is conducted. Drives how 'location' is interpreted (a room for onsite, a phone number for phone, a call URL for video).",
+                        "enum": [
+                            "onsite",
+                            "phone",
+                            "video"
+                        ],
+                        "default": "onsite"
+                    },
+                    "location": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Location",
+                        "description": "Physical location/room, or a video-call URL when mode is 'video'. Rendered as the VEVENT LOCATION property."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Interview lifecycle status. Governed by the x-openregister-lifecycle state machine (scheduled -> completed/cancelled). Rescheduling is a plain field update to scheduledStart/scheduledEnd, not a status transition.",
+                        "enum": [
+                            "scheduled",
+                            "completed",
+                            "cancelled"
+                        ],
+                        "default": "scheduled"
+                    },
+                    "calendarEventUid": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Calendar event UID",
+                        "description": "System-managed, never user-editable. Set by InterviewCalendarService on first successful sync (deterministic value hrmq-interview-{uuid}) and used on every later sync to look up and diff the existing calendar event, so a no-op resync writes nothing (design.md D3). Null means this Interview has never reached the calendar."
+                    }
+                }
             }
         }
     }
