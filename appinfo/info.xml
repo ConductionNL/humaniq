@@ -118,6 +118,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
              engine (hrmq-docudesk-documents MVP trigger). Duck-typed no-op
              (skipped-no-docudesk) when docudesk is absent. -->
         <command>OCA\Hrmq\Command\DocumentsGenerateCommand</command>
+        <!-- Extract receipt fields via docudesk's FinancialExtractionService
+             and prefill still-empty Expense amount/expenseDate/vendor/
+             vatAmount fields (receipt-ocr MVP trigger). Duck-typed no-op
+             (skipped-no-docudesk) when docudesk is absent; never overwrites a
+             human-entered value or changes Expense.status. -->
+        <command>OCA\Hrmq\Command\ExpenseExtractReceiptCommand</command>
         <!-- Sync approved leave and sickness absence onto the configured
              shared Nextcloud calendar (leave-calendar-nc MVP trigger).
              Duck-typed no-op (skipped-no-calendar) when the calendar is not

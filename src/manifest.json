@@ -1628,10 +1628,26 @@
 			"route": "/expenses/:id",
 			"type": "detail",
 			"title": "Declaratie",
+			"actions": [
+				{
+					"id": "extract-receipt",
+					"label": "Extract receipt data",
+					"type": "api-call",
+					"icon": "TextRecognition",
+					"url": "/api/expenses/extract-receipt",
+					"method": "POST",
+					"params": {
+						"expenseId": "@objectId"
+					},
+					"confirm": true,
+					"successMessage": "Extraction started.",
+					"errorMessage": "Extraction failed."
+				}
+			],
 			"config": {
 				"register": "hrmq",
 				"schema": "Expense",
-				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab.",
+				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab. receipt-ocr (2026-07-16): page-level action \"Extract receipt data\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/expenses/extract-receipt with {expenseId: @objectId}, guarded server-side by ExpenseController::authorizeExpense() (resolve-first RBAC) then an admin-or-owner ownership check.",
 				"lifecycleActions": {
 					"field": "status",
 					"transitions": [
@@ -1712,7 +1728,7 @@
 					"widgetKey": "integration",
 					"slot": "body",
 					"gridX": 0,
-					"gridY": 9,
+					"gridY": 10,
 					"gridWidth": 12,
 					"gridHeight": 4,
 					"props": {
@@ -1727,7 +1743,7 @@
 					"gridX": 0,
 					"gridY": 0,
 					"gridWidth": 8,
-					"gridHeight": 5,
+					"gridHeight": 6,
 					"props": {
 						"title": "Claim",
 						"icon": "ClipboardList",
@@ -1740,7 +1756,9 @@
 								"currency",
 								"category",
 								"expenseDate",
-								"receiptFile"
+								"receiptFile",
+								"vendor",
+								"vatAmount"
 							]
 						}
 					}
@@ -1749,7 +1767,7 @@
 					"widgetKey": "data",
 					"slot": "body",
 					"gridX": 0,
-					"gridY": 5,
+					"gridY": 6,
 					"gridWidth": 8,
 					"gridHeight": 4,
 					"props": {
@@ -1774,7 +1792,7 @@
 					"gridX": 8,
 					"gridY": 2,
 					"gridWidth": 4,
-					"gridHeight": 7,
+					"gridHeight": 8,
 					"props": {
 						"title": "Related",
 						"icon": "LinkVariant"

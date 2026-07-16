@@ -71,6 +71,11 @@ return [
         ['name' => 'avgDsr#erasePreview', 'url' => '/api/dsr/erase-preview', 'verb' => 'POST'],
         ['name' => 'avgDsr#eraseConfirm', 'url' => '/api/dsr/erase-confirm', 'verb' => 'POST'],
         ['name' => 'avgDsr#rectify', 'url' => '/api/dsr/rectify', 'verb' => 'POST'],
+        // receipt-ocr — guarded trigger for the ExpenseDetail "Extract
+        // receipt data" manifest api-call action (design.md D7): resolve-first
+        // RBAC (ObjectService::find under ambient RBAC) then an explicit
+        // admin-or-owner ownership check.
+        ['name' => 'expense#extractReceipt', 'url' => '/api/expenses/extract-receipt', 'verb' => 'POST'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],
