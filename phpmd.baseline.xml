@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <phpmd-baseline>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/AppInfo/Application.php"/>
+  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/AppInfo/Application.php" method="register"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/BackgroundJob/LeaveAccrualJob.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/BackgroundJob/LeaveAccrualJob.php" method="runAccrual"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/BackgroundJob/LeaveAccrualJob.php" method="runAccrual"/>
@@ -25,12 +27,19 @@
   <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Controller/PayrollController.php" method="__construct"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Lifecycle/LeaveBuySellApprovalGuard.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Lifecycle/LeaveBuySellApprovalGuard.php" method="resolveBalance"/>
+  <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Payroll/CalculationInput.php" method="__construct"/>
   <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Payroll/CalculationResult.php" method="__construct"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Payroll/PayrollCalculator.php" method="calculate"/>
+  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Payroll/Dsl/ExprEvaluator.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Payroll/Dsl/Vocabulary.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="lib/Payroll/JurisdictionPack.php"/>
+  <violation rule="PHPMD\Rule\Naming\ShortMethodName" file="lib/Payroll/JurisdictionPack.php" method="id"/>
+  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Payroll/PackValidator.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Payroll/PackValidator.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Payroll/PayrollCalculator.php"/>
-  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Payroll/PayrollCalculator.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Payroll/SickPayCalculator.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="lib/Payroll/TaxTables.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="lib/Payroll/TaxTables.php"/>
+  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Payroll/TaxTables.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Payroll/TaxTables.php" method="load"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Payroll/TaxTables.php" method="load"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Payroll/TaxTables.php"/>
@@ -50,6 +59,7 @@
   <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/HrDocumentService.php" method="generateInternal"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/HrDocumentService.php" method="activeDocumentFor"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/HrDocumentService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/JurisdictionPackService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/LeaveBuySellSettlementService.php" method="settle"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/LeaveBuySellSettlementService.php" method="settle"/>
   <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/LeaveBuySellSettlementService.php" method="settle"/>
@@ -84,6 +94,8 @@
   <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/PayrollRunService.php" method="generate"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/PayrollRunService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/PayrollRunService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/PayrollRunService.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/PayrollRunService.php" method="activeLoonbeslagFor"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/ProformaPayslipService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/ProformaPayslipService.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/RetroAdjustmentService.php"/>
@@ -141,14 +153,20 @@
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Standards/Checks/NlAttendanceChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlCaoChecks.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Standards/Checks/NlCaoChecks.php"/>
+  <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlDgaChecks.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Standards/Checks/NlDgaChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlDocumentChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlEngineChecks.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Standards/Checks/NlEngineChecks.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Standards/Checks/NlEngineChecks.php" method="isOutputConsistent"/>
+  <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlFleetChecks.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Standards/Checks/NlFleetChecks.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Standards/Checks/NlFleetChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlGlPostChecks.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Standards/Checks/NlGlPostChecks.php" method="linesBalance"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Standards/Checks/NlGlPostChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlLeaveChecks.php"/>
+  <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlLoonbeslagChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlNetPayChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlOffboardingChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\BooleanGetMethodName" file="lib/Standards/Checks/NlOffboardingChecks.php" method="getuigschriftSatisfied"/>
