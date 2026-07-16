@@ -11,6 +11,7 @@
 
 /node_modules/
 /js/
+/.widget-probe-tmp-*/
 /custom_apps/
 /config/
 
