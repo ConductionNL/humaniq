@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-description: Vacancies and the candidate application pipeline, with an AVG-driven retention clock.
+description: Vacancies and the candidate application pipeline, offer letters with e-signature, and an AVG-driven retention clock.
 ---
 
 # Recruiting
@@ -73,6 +73,40 @@ sollicitatiegegevens) enforce the clock:
 occ hrmq:rules:audit
 ```
 
+## Offer letters and e-signature
+
+For an Application at the `aanbod` stage, HRMQ can generate a real
+offer-letter PDF from the Application/Vacancy data and raise a real
+signing request, both through [docudesk](https://docudesk.conduction.nl)
+— tracked directly on the Application
+(`offerLetterFileId`/`offerSigningRequestId`/`offerSigningStatus`).
+
+**Requesting a signature does not hire the candidate.** Neither
+requesting a signature nor syncing its status ever writes
+`Application.status` or advances the pipeline — not even when the
+signature reaches `COMPLETED`. Hiring stays an explicit, separate HR
+action; syncing is a read-only poll of the signing status only.
+
+```bash
+occ hrmq:offer:request-signature --application <id>
+occ hrmq:offer:sync-signature
+```
+
+When docudesk is not installed, requesting a signature degrades to
+`skipped-no-docudesk` rather than throwing. Re-requesting for an
+Application whose signature is already `COMPLETED` is a no-op
+(`already-signed`); a stale pending request is superseded, never
+duplicated, before a fresh one is raised.
+
+Candidate self-service signing completion and webhook-driven status
+updates are both out of scope for this MVP — status changes are
+observed by polling, not pushed.
+
+Scheduling an actual interview round for a candidate at the `gesprek`
+stage is a separate capability — see [Interview
+scheduling](/docs/people/interview-scheduling) — reachable from an
+Application's own detail page.
+
 ## Pages
 
 `Applications` lists `candidateName`, `vacancyId`, `status`,
@@ -82,5 +116,5 @@ follow-up. `ApplicationDetail` separates the application data from a
 dedicated "Privacy & retention" widget, resolves the related vacancy, and
 exposes exactly the pipeline's lifecycle actions with Dutch labels.
 
-Interviews, offers/e-signature, and automatic Employee creation on hire
-are explicitly out of scope for this MVP.
+Automatic Employee creation on hire remains a manual hand-off, not
+automatic, and is explicitly out of scope for this MVP.

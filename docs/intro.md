@@ -5,24 +5,48 @@ description: What HRMQ is, who it's for, and how it's built.
 
 # HRMQ
 
-HRMQ is open-source HR and payroll administration for Dutch and EU
-employers, built on the [OpenRegister](https://openregister.conduction.nl)
-data layer. It runs inside your own Nextcloud — no external SaaS, no vendor
-lock-in, your employee data never leaves your instance.
+HRMQ is open-source HR and payroll administration on Nextcloud, built on
+the [OpenRegister](https://openregister.conduction.nl) data layer. It
+runs inside your own Nextcloud — no external SaaS, no vendor lock-in,
+your employee data never leaves your instance.
+
+Three things define what HRMQ now is:
+
+- A **country-pluggable payroll engine** — the gross-to-net chain is
+  declarative configuration (a jurisdiction pack) run by a pure
+  interpreter, not hardcoded PHP per country. The Netherlands ships as
+  the first bundled pack.
+- **Multi-administratie** for accountants — one instance can run payroll
+  for many client companies, with a per-user active-administratie
+  switch.
+- A **machine-checkable compliance corpus** that grows with every
+  capability — not narrative documentation, but a versioned rule set an
+  executable engine audits your actual data against.
 
 ## Who it's for
 
-HRMQ targets Dutch and EU small and medium-sized employers who need HR and
-payroll administration without the enterprise price tag of an AFAS or the
-per-seat SaaS billing of a Personio or BambooHR. If you already run
+HRMQ targets Dutch and EU small and medium-sized employers — and the
+accountant offices that run payroll on their behalf — who need HR and
+payroll administration without the enterprise price tag of an AFAS or
+the per-seat SaaS billing of a Personio or BambooHR. If you already run
 Nextcloud, HRMQ adds:
 
-- Timesheets, expense claims, leave & absence (verzuim) case management
-- Onboarding and offboarding wizards, recruiting (ATS), performance
-  reviews, an organisation chart, and an asset register
-- The only open-source Dutch payroll calculation engine
-- A versioned, machine-checkable corpus of Dutch labour-law, EU-directive
-  and wage-tax compliance rules
+- Timesheets, expense claims (with receipt-OCR prefill and mileage-rate
+  compliance), leave & absence (verzuim) case management, automatic
+  leave accrual, buy/sell of bovenwettelijk hours, and shift rostering
+  with a working-time-law pre-check
+- Onboarding and offboarding wizards, recruiting (ATS) with offer
+  e-signature and interview scheduling, compensation review cycles,
+  goals & OKRs, performance reviews, an organisation chart, and an
+  asset register
+- A country-pluggable payroll engine — retroactive corrections, sick
+  pay, company-car bijtelling, DGA payroll mode, wage garnishment,
+  werkkostenregeling, and run-to-run mutation reporting all on top of
+  it
+- **Multi-administratie**, so one instance serves many client companies
+- A versioned, machine-checkable corpus of Dutch labour-law,
+  EU-directive, wage-tax, and AVG/GDPR compliance rules — including a
+  statutory-retention guard on data-subject erasure requests
 
 ## The OpenRegister foundation
 
@@ -53,15 +77,18 @@ engine](/docs/compliance/rule-engine) for how it works and how to run it.
 
 ## Honesty as a feature: the payroll disclaimer
 
-HRMQ's payroll calculation engine is **not a certified payroll product**.
-It implements the Belastingdienst *Rekenvoorschriften voor de
-geautomatiseerde loonadministratie 2026* formula chain over a verified,
-versioned tax-year parameter file, but the official Belastingdienst test
-sets have not yet been run against it. Every computed run carries an
-`engineVersion` so its provenance is always traceable. Read the full
-disclaimer in [The payroll engine](/docs/payroll/payroll-engine) before
-relying on its output — production use requires verification by a
-qualified loonadministrateur.
+HRMQ's payroll calculation engine is **not a certified payroll product**,
+for any jurisdiction pack it runs. The bundled NL pack implements the
+Belastingdienst *Rekenvoorschriften voor de geautomatiseerde
+loonadministratie 2026* formula chain over a verified, versioned
+tax-year parameter file, but the official Belastingdienst test sets
+have not yet been run against it. Every computed run carries an
+`engineVersion` (naming the exact pack and version that produced it) so
+its provenance is always traceable. Read the full disclaimer, the
+jurisdiction-pack trust model, and the engine's honestly-stated limits
+in [The payroll engine](/docs/payroll/payroll-engine) before relying on
+its output — production use requires verification by a qualified
+loonadministrateur.
 
 ## License
 
