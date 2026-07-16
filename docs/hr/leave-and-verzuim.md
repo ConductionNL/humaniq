@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-description: Leave requests and balances, sickness (verzuim) case management, and the Wet verbetering Poortwachter milestone clock.
+description: Leave requests and balances, automatic accrual, buy/sell of bovenwettelijk hours, sickness (verzuim) case management, and the Wet verbetering Poortwachter milestone clock.
 ---
 
 # Leave & verzuim
@@ -30,9 +30,6 @@ hand-updated:
 - `expiryDate` — statutory hours lapse 1 July of the following year (BW
   art. 7:640a)
 
-Automatic accrual and CAO bovenwettelijk rules are explicitly out of
-scope — balances are entered and maintained directly.
-
 Three machine-checkable rules audit every `LeaveBalance` (domain
 `labour`, framework `bw7-10`, source BW art. 7:634/7:638/7:640a):
 
@@ -46,6 +43,72 @@ Three machine-checkable rules audit every `LeaveBalance` (domain
 ```bash
 occ hrmq:rules:audit
 ```
+
+## Automatic accrual
+
+A monthly background job (`LeaveAccrualJob`) provisions and grows every
+active employee's holiday `LeaveBalance` — balances are no longer
+hand-typed test data.
+
+- **Statutory entitlement is granted in full up front**, not built up in
+  monthly slices. On the first accrual of a calendar year, an employee
+  is provisioned at `4 × hoursPerWeek` immediately — because building it
+  up gradually would violate the mandatory minimum from January through
+  November, the job grants the whole statutory year at once and only
+  ever grows or holds it, never lowers an already-granted year's
+  entitlement.
+- **Bovenwettelijk hours accrue 1/12 per month worked**, driven by a
+  configurable annual figure (default 0 — statutory-only until an
+  employer configures it).
+- **Idempotent per `(employee, year, month)`** via a stored
+  `lastAccruedPeriod` marker — the job can fire any number of times a
+  month and only ever accrues once.
+- **Operator-toggleable** (`leave_accrual_enabled`, default on) and
+  skips — with a counted, logged reason — any employee it cannot
+  resolve honestly (no covering contract, no `hoursPerWeek`), never
+  computing wrong and never silently dropping someone.
+
+## Buying and selling leave
+
+Employees can convert bovenwettelijk (above-statutory) leave hours into
+money, or money into hours — a small IKB-style flexibility standard in
+many Dutch CAOs. A `LeaveTransaction` runs a declarative
+`draft → submitted → approved/rejected → settled` request/approve
+lifecycle with the same separation-of-duties guard used everywhere else
+in HRMQ (`NoSelfApprovalGuard`): the approver may never be the
+requesting employee.
+
+**Only bovenwettelijk hours are sellable — the statutory floor is
+structurally protected, not just checked at runtime.** A sell request
+can never draw down `LeaveBalance.entitledHours`: no code path in this
+capability ever writes that field, only `bovenwettelijkHours`. Because
+the statutory-minimum rule is evaluated solely against `entitledHours`,
+a sell settled through this flow cannot breach BW art. 7:634 by
+construction — there is no writable path to the field the rule
+protects, though a runtime sufficiency check (selling more
+bovenwettelijk hours than are available is refused at approval) exists
+too, belt-and-braces. A negative `bovenwettelijkHours` is additionally
+an audit-time backstop violation if it ever arose some other way.
+
+Settling a transaction — a guarded action, deliberately never a bare
+lifecycle button — is idempotent (settling twice is a no-op) and writes
+`bovenwettelijkHours` as the only balance field changed. The settled
+euro amount then surfaces as a **current-run payroll input**: a
+`settle`d transaction whose settlement period matches the next draft
+run's period folds into that employee's `Payslip.leaveBuySell` and
+`nettoPay` — a sold balance pays out, a bought balance deducts —
+mirroring exactly how [retroactive
+adjustments](/docs/payroll/retro-adjustments) fold into a run.
+`PayrollCalculator` is never invoked to compute or verify the settled
+amount.
+
+```bash
+occ hrmq:leave:settle --id <transactionId>
+```
+
+Employees see their own buy/sell requests on a self-service page (no
+new top-level menu); an employee's transaction history also appears as
+a row on their personnel-dossier detail page.
 
 ## Sickness case management (Wet verbetering Poortwachter)
 

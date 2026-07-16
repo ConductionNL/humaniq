@@ -72,7 +72,17 @@ provider referenced throughout this documentation —
 `NlLeaveChecks`, `NlVerzuimChecks`, `NlAttendanceChecks`,
 `NlOnboardingChecks`, `NlOffboardingChecks`, `NlAtsChecks`,
 `NlPerformanceChecks`, `NlOrgChecks`, `NlAssetChecks`,
-`NlDocumentChecks`, `NlSignalChecks` — is one of these providers.
+`NlDocumentChecks`, `NlSignalChecks`, `NlFleetChecks`, `NlDgaChecks`,
+`NlWkrChecks`, `NlLoonbeslagChecks`, `NlReiskostenChecks`,
+`NlRosterChecks`, `CompChecks` — is one of these providers.
+
+The corpus has grown well past its original payroll/labour/privacy
+scope: it now also covers company-car bijtelling, DGA
+gebruikelijkloon, werkkostenregeling eindheffing exposure, wage
+garnishment (loonbeslag), mileage-rate reimbursement, retroactive
+adjustment consistency, roster ATW pre-checks, and within-band
+compensation proposals — each backed by one of the providers above,
+each documented on its own capability page.
 
 Applicability is jurisdiction-scoped: a rule applies to its own country,
 plus EU-wide rules for EU members and `global` rules everywhere, so the
@@ -122,13 +132,25 @@ defaults, applied by `RuleTestDataSeeder` from each provider's
 
 Nearly every capability documented elsewhere in this site is backed by
 one or more corpus rules — see
+[The payroll engine](/docs/payroll/payroll-engine),
+[Retroactive adjustments](/docs/payroll/retro-adjustments),
+[Sick pay](/docs/payroll/sick-pay-calc),
+[Company car bijtelling](/docs/payroll/fleet-bijtelling),
+[DGA payroll mode](/docs/payroll/dga-payroll-mode),
+[Loonbeslag](/docs/payroll/loonbeslag),
+[Werkkostenregeling](/docs/payroll/wkr-administration),
 [Loonaangifte filing](/docs/payroll/loonaangifte),
 [Pension filing](/docs/payroll/pension-upa),
 [Leave & verzuim](/docs/hr/leave-and-verzuim),
 [Time & attendance](/docs/hr/time-attendance),
+[Rostering](/docs/hr/rostering),
+[Expense claims](/docs/hr/expenses),
 [Onboarding & offboarding](/docs/people/onboarding-offboarding),
 [Recruiting](/docs/people/recruiting),
+[Compensation cycles](/docs/people/comp-cycles),
 [Performance reviews](/docs/people/performance),
 [Org chart](/docs/people/org-chart),
-[Documents](/docs/people/documents), and
-[Assets](/docs/people/assets) — for the specific rules each one adds.
+[Documents](/docs/people/documents),
+[Assets](/docs/people/assets), and
+[AVG data-subject rights](/docs/compliance/avg-dsr) — for the specific
+rules each one adds.
