@@ -501,6 +501,130 @@ final class TaxTables
 
 
     /**
+     * Convert a euro amount to integer cents using this class's own rule
+     * (jurisdiction-packs design.md D4: the euro-to-cents conversion stays
+     * exactly where it is today rather than being reimplemented in the
+     * interpreter). Used by the DSL's `bracket` op, whose declared rows carry
+     * euro-denominated `tot`/`a`/`c` fields.
+     *
+     * @param float $euro The euro amount.
+     *
+     * @return int
+     *
+     * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-002
+     */
+    public function toCents(float $euro): int
+    {
+        return self::euroToCents($euro);
+
+    }//end toCents()
+
+
+    /**
+     * Resolve a jurisdiction-pack `@table.*` reference path against this
+     * table's `parameters` object (jurisdiction-packs design.md D4: the pack
+     * REFERENCES the verified corpus, it never copies it).
+     *
+     * Walking rule: each path segment descends one level; whenever the node
+     * reached is a `{value, source, verified}` provenance leaf, it is
+     * unwrapped to its `value` and any remaining segments continue into that
+     * value. This handles every shape the corpus uses uniformly --
+     * `loonheffing.Lv` (scalar leaf), `loonheffing.tijdvakFactoren.maand`
+     * (leaf holding a map), `loonheffing.schijven.belowAow` (a group of
+     * leaves), and `heffingskortingen.ahkm1.belowAow` (leaf holding a column
+     * map).
+     *
+     * `$toCents` applies this class's own euro-to-cents conversion, so the
+     * conversion stays exactly where it is today (design.md D4) rather than
+     * being reimplemented in the interpreter. The corpus carries no unit
+     * marker on its leaves (`Lv: 54` is euro, `zvw.werkgeversheffing: 6.1` is
+     * a percentage), so the unit is DECLARED by the referencing pack via the
+     * `:cents` ref suffix -- unit knowledge lives in config, not in the
+     * interpreter.
+     *
+     * @param array<int, string> $segments The `@table.` path segments (already index-resolved).
+     * @param bool               $toCents  Whether to convert the resolved euro value to integer cents.
+     *
+     * @return array{value: mixed, provenance: array{path: string, source: string, verified: bool, placeholder: bool}|null}
+     *
+     * @throws \RuntimeException When any path segment is missing.
+     *
+     * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-001
+     * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-006
+     */
+    public function resolveLeaf(array $segments, bool $toCents=false): array
+    {
+        $node       = $this->parameters;
+        $walked     = [];
+        $provenance = null;
+
+        foreach ($segments as $segment) {
+            $unwrapped = $this->unwrapLeaf($node, $walked);
+            if ($unwrapped !== null) {
+                $node       = $unwrapped['value'];
+                $provenance = $unwrapped['provenance'];
+            }
+
+            $walked[] = $segment;
+            if (is_array($node) === false || array_key_exists($segment, $node) === false) {
+                throw new \RuntimeException('TaxTables ('.$this->id.'): ontbrekende parameter "'.implode('.', $walked).'".');
+            }
+
+            $node = $node[$segment];
+        }
+
+        $unwrapped = $this->unwrapLeaf($node, $walked);
+        if ($unwrapped !== null) {
+            $node       = $unwrapped['value'];
+            $provenance = $unwrapped['provenance'];
+        }
+
+        if ($toCents === true) {
+            if (is_int($node) === false && is_float($node) === false) {
+                throw new \RuntimeException('TaxTables ('.$this->id.'): parameter "'.implode('.', $walked).'" is geen bedrag en kan niet naar centen worden omgezet.');
+            }
+
+            $node = self::euroToCents((float) $node);
+        }
+
+        return [
+            'value'      => $node,
+            'provenance' => $provenance,
+        ];
+
+    }//end resolveLeaf()
+
+
+    /**
+     * Unwrap a `{value, source, verified}` provenance leaf, returning its
+     * `value` plus the leaf's provenance, or null when the node is not a
+     * provenance leaf.
+     *
+     * @param mixed              $node   The current node.
+     * @param array<int, string> $walked The path walked so far (for the provenance stamp).
+     *
+     * @return array{value: mixed, provenance: array{path: string, source: string, verified: bool, placeholder: bool}}|null
+     */
+    private function unwrapLeaf(mixed $node, array $walked): ?array
+    {
+        if (is_array($node) === false || array_key_exists('value', $node) === false) {
+            return null;
+        }
+
+        return [
+            'value'      => $node['value'],
+            'provenance' => [
+                'path'        => implode('.', $walked),
+                'source'      => (string) ($node['source'] ?? ''),
+                'verified'    => (bool) ($node['verified'] ?? false),
+                'placeholder' => (bool) ($node['placeholder'] ?? false),
+            ],
+        ];
+
+    }//end unwrapLeaf()
+
+
+    /**
      * Read a nested leaf from `parameters` by path, throwing when absent —
      * a malformed/incomplete table file must never silently compute a wrong
      * amount.

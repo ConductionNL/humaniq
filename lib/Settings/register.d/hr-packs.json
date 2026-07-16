@@ -1,0 +1,68 @@
+{
+  "x-hrmq-fragment": "hr-packs",
+  "components": {
+    "schemas": {
+      "JurisdictionPack": {
+        "title": "JurisdictionPack",
+        "description": "An UPLOADED jurisdiction pack (jurisdiction-packs design.md D7). Bundled packs — including NL — live in code under lib/Standards/packs/ and are NEVER imported as objects; this schema is the second home, for packs an admin uploads. Both homes are resolved by the same (jurisdiction, taxYear) key, and bundled wins by default: a pack stored here may only claim a key a bundled pack already owns when an admin explicitly activated it as a recorded override. Activation is recorded on THIS object, never read from the author-supplied document.",
+        "type": "object",
+        "required": ["packId", "jurisdiction", "taxYear", "packVersion", "dslVersion", "tables", "document"],
+        "properties": {
+          "packId": {
+            "type": "string",
+            "title": "Pack id",
+            "description": "The pack's declared id, e.g. nl-2026."
+          },
+          "jurisdiction": {
+            "type": "string",
+            "title": "Jurisdiction",
+            "description": "The pack's DECLARED ISO 3166-1 alpha-2 jurisdiction — never parsed from the pack id. Half of the resolver key."
+          },
+          "taxYear": {
+            "type": "integer",
+            "title": "Tax year",
+            "description": "The pack's DECLARED tax year — never parsed from the pack id. The other half of the resolver key."
+          },
+          "packVersion": {
+            "type": "string",
+            "title": "Pack version",
+            "description": "Semver. Stamped onto every run this pack computes as engineVersion = {packId}@{packVersion}."
+          },
+          "dslVersion": {
+            "type": "string",
+            "title": "DSL version",
+            "description": "The interpreter contract this pack was written against."
+          },
+          "tables": {
+            "type": "string",
+            "title": "Tables corpus",
+            "description": "The TaxTables id this pack's @table.* references resolve against. The pack references the verified corpus; it never copies it."
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": false,
+            "description": "Whether this pack resolves for its (jurisdiction, taxYear). Set by hrmq only after every validation gate passed — including an in-process dry-run of the pack's own golden vectors."
+          },
+          "overridesBundled": {
+            "type": "boolean",
+            "title": "Overrides a bundled pack",
+            "default": false,
+            "description": "Whether an admin explicitly activated this pack over a bundled pack owning the same key. Overriding the bundled NL pack replaces the engine's regression contract, so it is a deliberate, recorded act — never an accident of upload order."
+          },
+          "provenance": {
+            "type": "string",
+            "title": "Provenance",
+            "nullable": true,
+            "description": "Any verified:false / placeholder:true corpus leaf this pack resolves. Such leaves do NOT block activation, but are stamped so downstream consumers see a stand-in rather than assuming engine truth."
+          },
+          "document": {
+            "type": "string",
+            "title": "Pack document",
+            "description": "The pack's full JSON document, as uploaded. Data only: the DSL has no loops, no recursion and no IO, and a pack can never carry code, a class path or a callable — it names an allow-listed handler or it is rejected."
+          }
+        }
+      }
+    }
+  }
+}

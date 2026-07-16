@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://conduction.nl/schemas/hrmq/jurisdiction-pack-1.0.json",
+  "title": "hrmq jurisdiction pack (dslVersion 1.0)",
+  "description": "A country's gross-to-net chain as configuration a pure interpreter executes (ADR-101). Authoring reference and editor support; the BLOCKING gates are implemented in lib/Payroll/PackValidator.php, which additionally runs each pack's own golden vectors in-process — a schema cannot check arithmetic. See SCHEMA.md.",
+  "type": "object",
+  "required": ["id", "jurisdiction", "taxYear", "packVersion", "dslVersion", "tables", "currency", "grossRef", "inputs", "steps", "selfTest"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z]{2}-[0-9]{4}$" },
+    "jurisdiction": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "description": "ISO 3166-1 alpha-2. A DECLARED field — never parsed from the id."
+    },
+    "taxYear": {
+      "type": "integer",
+      "minimum": 1900,
+      "maximum": 2999,
+      "description": "A DECLARED field — never parsed from the id."
+    },
+    "packVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "dslVersion": { "const": "1.0" },
+    "tables": {
+      "type": "string",
+      "description": "The TaxTables id this pack's @table.* refs resolve against. The pack REFERENCES the verified corpus; it never copies it."
+    },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "grossRef": {
+      "type": "string",
+      "pattern": "^@",
+      "description": "Which value is the gross base the incidence fold subtracts from. The pack declares WHICH value is gross; the fold itself is the interpreter's and is not authorable."
+    },
+    "basedOn": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["doc"],
+        "properties": {
+          "doc": { "type": "string" },
+          "url": { "type": "string" }
+        }
+      }
+    },
+    "_notes": { "type": "object" },
+    "inputs": {
+      "type": "object",
+      "description": "The pack's declared input contract. The interpreter validates the supplied map against this before executing.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": { "enum": ["cents", "int", "percent", "boolean", "date", "enum", "string"] },
+          "required": { "type": "boolean" },
+          "nullable": { "type": "boolean" },
+          "values": { "type": "array", "items": { "type": "string" } },
+          "default": {}
+        }
+      }
+    },
+    "bindings": {
+      "type": "array",
+      "description": "Named intermediates, in order. A binding carries NO incidence — it is not money out.",
+      "items": {
+        "type": "object",
+        "required": ["id", "op", "using"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/identifier" },
+          "op": { "const": "derive" },
+          "using": { "type": "object" },
+          "round": { "$ref": "#/$defs/round" },
+          "_note": { "type": "string" }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 200,
+      "description": "The ordered chain. A step may reference only EARLIER steps, so a pack is a finite acyclic graph.",
+      "items": {
+        "type": "object",
+        "required": ["id", "op", "incidence"],
+        "properties": {
+          "id": { "$ref": "#/$defs/identifier" },
+          "op": { "enum": ["rate", "cappedRate", "bracket", "taper", "piecewiseAccrue", "quantize", "clamp", "match", "expr", "phpStep"] },
+          "incidence": {
+            "enum": ["reduces-net", "employer-cost", "informative", "reserve"],
+            "description": "What this amount DOES to the payslip. net = gross - sum(reduces-net) is derived by the interpreter; a pack must NOT declare a net step."
+          },
+          "when": { "description": "A predicate or a boolean reference. A step gated off yields 0 without resolving its params." },
+          "round": { "$ref": "#/$defs/round" },
+          "_note": { "type": "string" },
+          "handler": {
+            "type": "string",
+            "description": "phpStep ONLY: the name of an allow-listed handler shipping inside hrmq. A pack supplies a NAME — never code, a class path, a callable or a file. An unknown name rejects the upload."
+          },
+          "params": { "type": "object", "description": "phpStep ONLY: data-only params." },
+          "expression": { "type": "string", "maxLength": 2000, "description": "expr ONLY: the closed, total arithmetic grammar. No loops, recursion, IO or clock." },
+          "unit": { "enum": ["euro", "cent"], "description": "bracket ONLY: the unit of the rows' tot/a/c. Required, because the corpus carries no unit marker." },
+          "mode": { "type": "string" },
+          "base": {},
+          "rate": {},
+          "cap": {},
+          "value": {},
+          "table": {},
+          "threshold": {},
+          "floor": {},
+          "min": {},
+          "max": {},
+          "step": {},
+          "on": {},
+          "cases": { "type": "object" },
+          "default": {},
+          "segments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["upTo", "rate", "cap"],
+              "properties": {
+                "upTo": {},
+                "rate": {},
+                "cap": {}
+              }
+            }
+          },
+          "tail": {
+            "type": "object",
+            "required": ["from", "rate"],
+            "properties": {
+              "from": {},
+              "rate": {}
+            }
+          },
+          "zeroAbove": {},
+          "roundTerm": { "type": "integer", "minimum": 0, "maximum": 10 }
+        }
+      }
+    },
+    "selfTest": {
+      "type": "object",
+      "required": ["vectors"],
+      "description": "REQUIRED. Every vector is executed in-process at upload; any mismatch rejects the pack. A pack that cannot reproduce its own declared arithmetic never activates.",
+      "properties": {
+        "_note": { "type": "string" },
+        "fixtureMap": {
+          "type": "object",
+          "description": "Bundled packs only: maps an hrmq fixture's expected components onto result references.",
+          "additionalProperties": { "type": "string" }
+        },
+        "vectors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": ["$fixture"],
+                "additionalProperties": false,
+                "description": "BUNDLED-ONLY. References an hrmq golden fixture, in CalculationInput vocabulary. An uploaded pack must be self-contained and is rejected if it names a fixture.",
+                "properties": { "$fixture": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*\\.json$" } }
+              },
+              {
+                "type": "object",
+                "required": ["period", "input", "expected"],
+                "additionalProperties": false,
+                "description": "The portable form: pack input vocabulary, expected values in CENTS keyed by @net / @employerCharges / @gross / @step.* / @binding.*.",
+                "properties": {
+                  "period": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}$" },
+                  "input": { "type": "object" },
+                  "expected": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "additionalProperties": { "type": "integer" }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+    "round": {
+      "type": "object",
+      "required": ["mode", "unit"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "enum": ["floor", "ceil", "nearest"] },
+        "unit": { "enum": ["cent", "euro", "decimals"] },
+        "decimals": { "type": "integer", "minimum": 0, "maximum": 10 }
+      }
+    }
+  }
+}

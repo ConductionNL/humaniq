@@ -32,6 +32,9 @@ use OCA\Hrmq\Command\RulesAuditCommand;
 use OCA\Hrmq\Command\RulesSeedTestDataCommand;
 use OCA\Hrmq\Lifecycle\CompEffectiveDateGuard;
 use OCA\Hrmq\Lifecycle\LeaveBuySellApprovalGuard;
+use OCA\Hrmq\Payroll\PackRepository;
+use OCA\Hrmq\Payroll\PayrollCalculator;
+use OCA\Hrmq\Service\JurisdictionPackService;
 use OCA\Hrmq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Hrmq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Hrmq\Lifecycle\PayrollRunApprovedGuard;
@@ -161,6 +164,29 @@ class Application extends App implements IBootstrap
             LeaveSettlementPeriodGuard::class,
             static function ($c): LeaveSettlementPeriodGuard {
                 return new LeaveSettlementPeriodGuard();
+            }
+        );
+
+        // jurisdiction-packs (design.md D7): the pack resolver spans two homes —
+        // bundled packs in lib/Standards/packs/ (universal facts live in code)
+        // and uploaded packs as OpenRegister objects. lib/Payroll/ carries zero
+        // Nextcloud dependencies by design, so the OpenRegister-backed source is
+        // injected here through the pure PackSourceInterface seam. Without this
+        // wiring an uploaded pack would validate and store but never resolve —
+        // an orphaned capability.
+        $context->registerService(
+            PackRepository::class,
+            static function ($c): PackRepository {
+                return new PackRepository($c->get(JurisdictionPackService::class));
+            }
+        );
+
+        // The façade must resolve through the SAME two-home repository, or the
+        // engine and the upload surface would disagree about which pack is live.
+        $context->registerService(
+            PayrollCalculator::class,
+            static function ($c): PayrollCalculator {
+                return new PayrollCalculator($c->get(PackRepository::class));
             }
         );
 

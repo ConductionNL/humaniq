@@ -1,0 +1,545 @@
+{
+  "id": "nl-2026",
+  "jurisdiction": "NL",
+  "taxYear": 2026,
+  "packVersion": "1.0.0",
+  "dslVersion": "1.0",
+  "tables": "nl-2026",
+  "currency": "EUR",
+  "grossRef": "@binding.tvl",
+  "basedOn": [
+    {
+      "doc": "Belastingdienst — Rekenvoorschriften voor de geautomatiseerde loonadministratie 2026 (RV2026), sec. 2.1-2.2.4",
+      "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/aangifte-loonheffingen/content/rekenvoorschriften"
+    },
+    {
+      "doc": "Belastingdienst — Rekenregels en premiepercentages 2026 (RPP2026)",
+      "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/aangifte-loonheffingen/content/rekenregels-premiepercentages"
+    }
+  ],
+  "_notes": {
+    "parameters": "Every rate, bracket and threshold arrives by @table.* reference into the verified lib/Standards/tables/nl-2026.json corpus. NO parameter value is copied into this pack: the {value, source, verified} leaves keep exactly one home (design.md D4).",
+    "units": "The corpus carries no unit marker on its leaves (Lv: 54 is euro, zvw.werkgeversheffing: 6.1 is a percentage), so this pack DECLARES the unit via the :cents ref suffix and the bracket op's `unit` field. Unit knowledge lives here, in config — never in the interpreter.",
+    "hatch": "Zero phpStep uses. Every step of the NL chain is expressible in the declarative vocabulary.",
+    "netto": "There is deliberately NO netto step. Net is the interpreter's fold over incidence: gross - sum(reduces-net). For NL that yields tvl - loonheffing because every employer charge below honestly declares employer-cost — not because any rule says so.",
+    "gaps": "Reproduces the engine at HEAD, gaps included: no VCR (every premium is period-capped, not cumulative-year-capped) and no above-Lmax 'systematiek 1' (the aboveLmax binding flags it; the chain does not extend)."
+  },
+  "inputs": {
+    "gross": {
+      "type": "cents",
+      "required": true
+    },
+    "taxTableColor": {
+      "type": "enum",
+      "values": ["wit", "groen"],
+      "default": "wit"
+    },
+    "loonheffingskortingToegepast": {
+      "type": "boolean",
+      "default": true
+    },
+    "dateOfBirth": {
+      "type": "date",
+      "nullable": true,
+      "default": null
+    },
+    "awfTariff": {
+      "type": "enum",
+      "values": ["laag", "hoog"],
+      "default": "laag"
+    },
+    "aofTariff": {
+      "type": "enum",
+      "values": ["laag", "hoog"],
+      "default": "laag"
+    },
+    "whkPercentage": {
+      "type": "percent",
+      "default": 0
+    },
+    "verzekeringsplichtig": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "bindings": [
+    {
+      "id": "tvl",
+      "_note": "The taxable wage for the period. HEAD: max(0, grossMonthlySalaryCents).",
+      "op": "derive",
+      "using": {
+        "op": "clamp",
+        "value": "@input.gross",
+        "min": 0
+      }
+    },
+    {
+      "id": "aow",
+      "_note": "AOW-age applies from the FIRST DAY OF THE MONTH in which the employee reaches the statutory AOW-leeftijd (RV2026 tabel 3 toelichting). An absent/unparseable date of birth yields false — the conservative default, as at HEAD.",
+      "op": "derive",
+      "using": {
+        "op": "ageReached",
+        "dob": "@input.dateOfBirth",
+        "years": "@table.aow.leeftijdJaren",
+        "asOf": "@period.lastDay",
+        "granularity": "month"
+      }
+    },
+    {
+      "id": "wit",
+      "_note": "The groene tabel runs the identical chain with arbeidskorting skipped (RV2026 sec. 2.2.3.4).",
+      "op": "derive",
+      "using": {
+        "op": "ne",
+        "left": "@input.taxTableColor",
+        "right": "groen"
+      }
+    },
+    {
+      "id": "birthYear",
+      "op": "derive",
+      "using": {
+        "op": "yearOf",
+        "value": "@input.dateOfBirth",
+        "default": 1946
+      }
+    },
+    {
+      "id": "bornBefore1946",
+      "op": "derive",
+      "using": {
+        "op": "lte",
+        "left": "@binding.birthYear",
+        "right": 1945
+      }
+    },
+    {
+      "id": "aowSchijvenSet",
+      "op": "derive",
+      "using": {
+        "op": "match",
+        "on": "@binding.bornBefore1946",
+        "cases": {
+          "true": "aowBorn1945OrEarlier",
+          "false": "aowBorn1946OrLater"
+        }
+      }
+    },
+    {
+      "id": "schijvenSet",
+      "_note": "HEAD's schijvenSet() PHP branch, as a data lookup.",
+      "op": "derive",
+      "using": {
+        "op": "match",
+        "on": "@binding.aow",
+        "cases": {
+          "true": "@binding.aowSchijvenSet",
+          "false": "belowAow"
+        }
+      }
+    },
+    {
+      "id": "kortingCol",
+      "_note": "The AHK/ARK korting column: a table-set selection, not a branch.",
+      "op": "derive",
+      "using": {
+        "op": "match",
+        "on": "@binding.aow",
+        "cases": {
+          "true": "aowAge",
+          "false": "belowAow"
+        }
+      }
+    },
+    {
+      "id": "annualised",
+      "_note": "tvl x F (the tijdvakfactor for a monthly period).",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "@binding.tvl * @table.loonheffing.tijdvakFactoren.maand"
+      }
+    },
+    {
+      "id": "aboveLmax",
+      "_note": "Documented edge: the engine flags it but does not implement the above-Lmax 'systematiek 1' linear extension.",
+      "op": "derive",
+      "using": {
+        "op": "gt",
+        "left": "@binding.annualised",
+        "right": "@table.loonheffing.Lmax:cents"
+      }
+    },
+    {
+      "id": "L",
+      "_note": "Tabelloon L = floor(annualised / Lv) x Lv. Lv is a whole-euro multiple, so L is automatically a whole-euro amount.",
+      "op": "derive",
+      "using": {
+        "op": "quantize",
+        "value": "@binding.annualised",
+        "step": "@table.loonheffing.Lv:cents",
+        "mode": "floor"
+      }
+    },
+    {
+      "id": "schijf1Top",
+      "_note": "The top of the first bracket, over which the informative volksverzekeringen split is computed.",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "@table.loonheffing.schijven[@binding.schijvenSet][0].tot:cents"
+      }
+    },
+    {
+      "id": "vvRateBelowAow",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "@table.volksverzekeringen.aow + @table.volksverzekeringen.anw + @table.volksverzekeringen.wlz"
+      }
+    },
+    {
+      "id": "vvRateAow",
+      "_note": "At AOW-age the AOW premium is no longer levied.",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "@table.volksverzekeringen.anw + @table.volksverzekeringen.wlz"
+      }
+    },
+    {
+      "id": "vvRate",
+      "op": "derive",
+      "using": {
+        "op": "match",
+        "on": "@binding.aow",
+        "cases": {
+          "true": "@binding.vvRateAow",
+          "false": "@binding.vvRateBelowAow"
+        }
+      }
+    },
+    {
+      "id": "vvJaar",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "min(@binding.L, @binding.schijf1Top) * (@binding.vvRate / 100)"
+      }
+    },
+    {
+      "id": "vakantiegeldRate",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "@table.vakantiebijslag.minRatePercent"
+      }
+    },
+    {
+      "id": "zvwRate",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "@table.zvw.werkgeversheffing"
+      }
+    },
+    {
+      "id": "premieloonCap",
+      "_note": "The monthly maximum premieloon — the same leaf caps the Zvw bijdrageloon, since both share one annual maximum in the corpus.",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "@table.werknemersverzekeringen.maximumpremieloon.maand:cents"
+      }
+    },
+    {
+      "id": "awfRate",
+      "op": "derive",
+      "using": {
+        "op": "match",
+        "on": "@input.awfTariff",
+        "cases": {
+          "laag": "@table.werknemersverzekeringen.awf.laag",
+          "hoog": "@table.werknemersverzekeringen.awf.hoog"
+        }
+      }
+    },
+    {
+      "id": "aofRate",
+      "op": "derive",
+      "using": {
+        "op": "match",
+        "on": "@input.aofTariff",
+        "cases": {
+          "laag": "@table.werknemersverzekeringen.aof.laag",
+          "hoog": "@table.werknemersverzekeringen.aof.hoog"
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "vakantiegeld",
+      "_note": "Vakantiegeldreservering — 8% of the gross wage. RESERVE: neither cash to the employee this period nor an employer charge this period. Folding it into either would misstate one of them.",
+      "op": "rate",
+      "incidence": "reserve",
+      "base": "@binding.tvl",
+      "rate": "@binding.vakantiegeldRate",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "x1",
+      "_note": "Schijventarief X1 = floorEuro((L - a) x percentage/100 + c).",
+      "op": "bracket",
+      "incidence": "informative",
+      "value": "@binding.L",
+      "table": "@table.loonheffing.schijven[@binding.schijvenSet]",
+      "unit": "euro",
+      "mode": "affine",
+      "round": {
+        "mode": "floor",
+        "unit": "euro"
+      }
+    },
+    {
+      "id": "ahk",
+      "_note": "Algemene heffingskorting — a phase-out above ahkg1, floored at 0, ceil-to-whole-euro.",
+      "op": "taper",
+      "incidence": "informative",
+      "when": "@input.loonheffingskortingToegepast",
+      "base": "@table.heffingskortingen.ahkm1[@binding.kortingCol]:cents",
+      "value": "@binding.L",
+      "threshold": "@table.heffingskortingen.ahkg1[@binding.kortingCol]:cents",
+      "rate": "@table.heffingskortingen.ahka1[@binding.kortingCol]",
+      "floor": 0,
+      "round": {
+        "mode": "ceil",
+        "unit": "euro"
+      }
+    },
+    {
+      "id": "ark",
+      "_note": "Arbeidskorting opbouw — three cumulative segments, each term rounded to 5 decimals of a euro (3 in cents-space) BEFORE being capped at that segment's own ceiling, then the descending tail above arkg3, then hard zero above arkg4. Not applied on the groene tabel.",
+      "op": "piecewiseAccrue",
+      "incidence": "informative",
+      "when": {
+        "op": "and",
+        "of": ["@input.loonheffingskortingToegepast", "@binding.wit"]
+      },
+      "value": "@binding.L",
+      "roundTerm": 3,
+      "segments": [
+        {
+          "upTo": "@table.heffingskortingen.arkg1[@binding.kortingCol]:cents",
+          "rate": "@table.heffingskortingen.arko1[@binding.kortingCol]",
+          "cap": "@table.heffingskortingen.arkm1[@binding.kortingCol]:cents"
+        },
+        {
+          "upTo": "@table.heffingskortingen.arkg2[@binding.kortingCol]:cents",
+          "rate": "@table.heffingskortingen.arko2[@binding.kortingCol]",
+          "cap": "@table.heffingskortingen.arkm2[@binding.kortingCol]:cents"
+        },
+        {
+          "upTo": "@table.heffingskortingen.arkg3[@binding.kortingCol]:cents",
+          "rate": "@table.heffingskortingen.arko3[@binding.kortingCol]",
+          "cap": "@table.heffingskortingen.arkm3[@binding.kortingCol]:cents"
+        }
+      ],
+      "tail": {
+        "from": "@table.heffingskortingen.arkg3[@binding.kortingCol]:cents",
+        "rate": "@table.heffingskortingen.arka1[@binding.kortingCol]"
+      },
+      "zeroAbove": "@table.heffingskortingen.arkg4[@binding.kortingCol]:cents",
+      "round": {
+        "mode": "ceil",
+        "unit": "euro"
+      }
+    },
+    {
+      "id": "ouk",
+      "_note": "Ouderenkorting — AOW-age only, so the aowAge column is referenced directly and the `when` gate gates the whole step (the belowAow column is null, n.v.t.).",
+      "op": "taper",
+      "incidence": "informative",
+      "when": {
+        "op": "and",
+        "of": ["@input.loonheffingskortingToegepast", "@binding.aow"]
+      },
+      "base": "@table.heffingskortingen.oukm1.aowAge:cents",
+      "value": "@binding.L",
+      "threshold": "@table.heffingskortingen.oukg1.aowAge:cents",
+      "rate": "@table.heffingskortingen.ouka1.aowAge",
+      "floor": 0,
+      "round": {
+        "mode": "ceil",
+        "unit": "euro"
+      }
+    },
+    {
+      "id": "loonheffingJaar",
+      "_note": "X = max(0, X1 - (AHK + OUK + ARK)).",
+      "op": "expr",
+      "incidence": "informative",
+      "expression": "max(0, @step.x1 - (@step.ahk + @step.ouk + @step.ark))"
+    },
+    {
+      "id": "loonheffing",
+      "_note": "The tijdvakbedrag x = X / F. The ONLY step in the NL chain that reduces net — which is why the interpreter's incidence fold yields exactly tvl - loonheffing.",
+      "op": "expr",
+      "incidence": "reduces-net",
+      "expression": "@step.loonheffingJaar / @table.loonheffing.tijdvakFactoren.maand",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "arbeidskorting",
+      "_note": "The applied arbeidskorting tijdvakbedrag. Informative: it is already reflected inside loonheffing, so it must not reduce net a second time.",
+      "op": "expr",
+      "incidence": "informative",
+      "expression": "@step.ark / @table.loonheffing.tijdvakFactoren.maand",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "volksverzekeringen",
+      "_note": "Informative split ONLY — the withholding itself is the combined loonheffing, so this is bounded by it and never reduces net.",
+      "op": "expr",
+      "incidence": "informative",
+      "when": {
+        "op": "gt",
+        "left": "@step.x1",
+        "right": 0
+      },
+      "expression": "min(@step.loonheffing, (@step.loonheffing * @binding.vvJaar) / @step.x1)",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "zvw",
+      "_note": "Zvw werkgeversheffing over the capped bijdrageloon. EMPLOYER-COST.",
+      "op": "cappedRate",
+      "incidence": "employer-cost",
+      "base": "@binding.tvl",
+      "rate": "@binding.zvwRate",
+      "cap": "@binding.premieloonCap",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "awf",
+      "_note": "A DGA is not verzekeringsplichtig for the werknemersverzekeringen (Wfsv art. 6 lid 1 sub d), so the gate is a declared predicate — no rate is looked up at all.",
+      "op": "cappedRate",
+      "incidence": "employer-cost",
+      "when": "@input.verzekeringsplichtig",
+      "base": "@binding.tvl",
+      "rate": "@binding.awfRate",
+      "cap": "@binding.premieloonCap",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "aof",
+      "op": "cappedRate",
+      "incidence": "employer-cost",
+      "when": "@input.verzekeringsplichtig",
+      "base": "@binding.tvl",
+      "rate": "@binding.aofRate",
+      "cap": "@binding.premieloonCap",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "wko",
+      "op": "cappedRate",
+      "incidence": "employer-cost",
+      "when": "@input.verzekeringsplichtig",
+      "base": "@binding.tvl",
+      "rate": "@table.werknemersverzekeringen.wkoOpslag",
+      "cap": "@binding.premieloonCap",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "whk",
+      "_note": "The Whk percentage is per-employer (a Belastingdienst beschikking), so it is an INPUT rather than a table leaf; the corpus leaf is a verified-but-placeholder average used only as the employer default.",
+      "op": "cappedRate",
+      "incidence": "employer-cost",
+      "when": "@input.verzekeringsplichtig",
+      "base": "@binding.tvl",
+      "rate": "@input.whkPercentage",
+      "cap": "@binding.premieloonCap",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "werknemersverzekeringen",
+      "_note": "An informative roll-up of the four employer premium lines. It must NOT declare employer-cost: its components already did, and the interpreter's fold would double-count it.",
+      "op": "expr",
+      "incidence": "informative",
+      "expression": "@step.awf + @step.aof + @step.wko + @step.whk"
+    },
+    {
+      "id": "appliedTaxRate",
+      "_note": "The effective loonheffing rate, as a percentage — a rate, not money, hence rounded to 2 decimals rather than to cents.",
+      "op": "expr",
+      "incidence": "informative",
+      "when": {
+        "op": "gt",
+        "left": "@binding.tvl",
+        "right": 0
+      },
+      "expression": "(@step.loonheffing / @binding.tvl) * 100",
+      "round": {
+        "mode": "nearest",
+        "unit": "decimals",
+        "decimals": 2
+      }
+    }
+  ],
+  "selfTest": {
+    "_note": "REQUIRED (REQ-JP-006). NL's golden vectors ARE the 9 existing fixtures under tests/fixtures/payroll-2026/ — referenced, never copied, edited or re-derived. The machinery that gates a third-party pack is therefore the exact machinery that proves the NL migration was behaviour-identical: one mechanism, two jobs. The `$fixture` vector form is bundled-only; an uploaded pack must carry inline {input, expected} vectors and is rejected if it names a fixture.",
+    "fixtureMap": {
+      "loonheffing": "@step.loonheffing",
+      "arbeidskorting": "@step.arbeidskorting",
+      "volksverzekeringen": "@step.volksverzekeringen",
+      "zvw": "@step.zvw",
+      "awf": "@step.awf",
+      "aof": "@step.aof",
+      "wko": "@step.wko",
+      "whk": "@step.whk",
+      "werknemersverzekeringen": "@step.werknemersverzekeringen",
+      "employerCharges": "@employerCharges",
+      "vakantiegeldReserved": "@step.vakantiegeld",
+      "nettoPay": "@net"
+    },
+    "vectors": [
+      { "$fixture": "payroll-2026/anchor.json" },
+      { "$fixture": "payroll-2026/aow-age.json" },
+      { "$fixture": "payroll-2026/bracket-3.json" },
+      { "$fixture": "payroll-2026/groen.json" },
+      { "$fixture": "payroll-2026/min-wage.json" },
+      { "$fixture": "payroll-2026/no-korting.json" },
+      { "$fixture": "payroll-2026/part-time.json" },
+      { "$fixture": "payroll-2026/bijtelling-anchor.json" },
+      { "$fixture": "payroll-2026/dga-anchor.json" }
+    ]
+  }
+}

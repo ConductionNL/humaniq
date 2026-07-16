@@ -13,18 +13,26 @@ Part of the Conduction ecosystem alongside [shillinq](https://codeberg.org/Condu
 
 ## Payroll engine — NOT certified (read this before production use)
 
-hrmq ships an open-source Dutch payroll calculation engine
-(`lib/Payroll/PayrollCalculator.php`) implementing the Belastingdienst
-*Rekenvoorschriften voor de geautomatiseerde loonadministratie 2026* formula
-chain (witte/groene maandtabel, schijventarief, AHK/ARK/OUK heffingskortingen,
-Zvw werkgeversheffing, Awf/Aof/Wko/Whk employer charges) over the versioned
-tax-year parameter file `lib/Standards/tables/nl-2026.json`.
+hrmq ships an open-source Dutch payroll calculation engine implementing the
+Belastingdienst *Rekenvoorschriften voor de geautomatiseerde loonadministratie
+2026* formula chain (witte/groene maandtabel, schijventarief, AHK/ARK/OUK
+heffingskortingen, Zvw werkgeversheffing, Awf/Aof/Wko/Whk employer charges) over
+the versioned tax-year parameter file `lib/Standards/tables/nl-2026.json`.
+
+Since **jurisdiction packs** (ADR-101), that chain is no longer PHP: it is
+declarative configuration in `lib/Standards/packs/nl-2026.pack.json`, executed by
+a small pure interpreter (`lib/Payroll/Dsl/`).
+`PayrollCalculator` is now a thin façade over it. A new tax year stays a
+data-only change — and so does **a new country**.
 
 **The engine is NOT certified.** Be aware of the following before relying on
 its output:
 
 - **Traceability**: every computed `PayrollRun` carries `engineVersion` (the
-  exact parameter file that produced it, e.g. `nl-2026`) and `calculatedAt`,
+  exact jurisdiction pack that produced it, `{packId}@{packVersion}`, e.g.
+  `nl-2026@1.0.0` — which names the *chain* as well as the parameter set; runs
+  computed before jurisdiction packs carry the older bare `nl-2026` form and are
+  never rewritten) and `calculatedAt`,
   and every computed `Payslip` reconciles cents-exact to the declared net
   equation — both enforced by the machine-checkable corpus rules
   `nl-engine-table-version` and `nl-engine-output-consistency`
@@ -50,6 +58,65 @@ its output:
 
 Honesty is a feature: this disclaimer is a requirement of the
 `payroll-core-engine` spec, not a footnote.
+
+## Jurisdiction packs — onboarding a country by uploading configuration
+
+A **jurisdiction pack** is one country's gross-to-net chain as a single
+self-contained JSON artefact: you can author it, validate it, version it,
+download it and hand it to someone else — without shipping PHP. The authoring
+reference is `lib/Standards/packs/SCHEMA.md`; the machine-readable schema is
+`lib/Standards/packs/pack.schema.json`.
+
+- **Net is not a rule, it is a fold.** Every step declares its *incidence* —
+  `reduces-net`, `employer-cost`, `informative` or `reserve` — and the
+  interpreter derives `net = gross - sum(reduces-net)`. The Dutch property that
+  employer charges never reduce take-home pay is **not** built into the engine;
+  it falls out of the NL pack declaring its Zvw/Awf/Aof/Wko/Whk steps
+  `employer-cost`. A country whose pension contribution reduces net says
+  `reduces-net`, and nothing in the interpreter changes.
+- **A pack is config, not code.** The `expr` grammar is a closed, total
+  calculator (`+ - * /`, `min max abs round floor ceil`) — no loops, no
+  recursion, no IO, no clock. Every pack is a finite acyclic graph evaluated
+  once, with step-count and expression-depth caps.
+- **The escape hatch names a handler; it can never define one.** A pack supplies
+  a *name*, resolved at **validation time** against a compile-time allow-list. An
+  unknown handler **rejects the upload with the name in the error** — it never
+  reaches a run to be silently skipped, because a skipped step quietly
+  under-taxes someone. hrmq ships **zero** handlers and NL needs **zero**.
+- **A pack must prove itself before it can pay anybody.** Every pack carries
+  golden vectors, run in-process at upload; any mismatch rejects it. **NL's 9
+  golden fixtures are the NL pack's own self-test block**, so the machinery that
+  gates a third-party pack is the machinery that proved the NL migration was
+  behaviour-identical.
+- **Bundled NL is not shadowable by accident.** Uploading a pack for a
+  `(jurisdiction, taxYear)` that a bundled pack owns is rejected unless an admin
+  explicitly activates it as a recorded override.
+
+Upload: `POST /api/payroll/packs` (admin only).
+
+**What packs cannot do — named up front, not discovered later:**
+
+- **No VCR** (voortschrijdend cumulatief rekenen). The DSL is per-period pure by
+  construction and *cannot* express cross-period state. The honest expectation is
+  that **NL itself will be the escape hatch's first customer**, at VCR. Widening
+  `expr` to compensate is forbidden (ADR-101): it would void the entire "config,
+  not code" trust model.
+- **No inverse solves** — the 30%-ruling netto-operation is not a forward chain.
+- **`piecewiseAccrue` is on probation.** It was designed by staring at NL's
+  `arkChain()`, and its round-each-term-then-cap ordering is Rekenvoorschriften
+  arcana. Phase-in/phase-out credit schedules are a plausibly general shape, but
+  **that generality is unproven until a second country lands on it.** Country two
+  either validates this primitive or exposes it as NL-shaped. That is this
+  design's central unproven claim, and it is recorded rather than hidden.
+- **Some NL law still lives outside the pack.** Bijtelling privégebruik auto and
+  the loonbeslag *beslagvrije voet* are computed in `PayrollRunService`, because
+  they read stored objects while the interpreter is pure and object-blind. That
+  is a *scope* cut, not a principled boundary — bijtelling's arithmetic is a pure
+  function of parameters already in the tables and belongs in the pack. It is a
+  named follow-up, and country two will feel it.
+- **A second country is unproven.** This mechanism is proved against NL and ships
+  the upload surface. Any claim that country two "just works" is unproven until
+  country two lands.
 
 ## Retroactive corrections (TWK) — terugwerkende kracht herrekening
 

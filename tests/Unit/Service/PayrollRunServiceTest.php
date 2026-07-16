@@ -365,7 +365,11 @@ class PayrollRunServiceTest extends TestCase
         $this->assertSame(650.94, $final['totalEmployerCharges']);
         $this->assertSame(718.83, $final['totalWithholdings']);
         $this->assertSame(3081.17, $final['totalNet']);
-        $this->assertSame('nl-2026', $final['engineVersion']);
+        // jurisdiction-packs design.md D7: engineVersion stamps the jurisdiction
+        // PACK that computed the run, `{packId}@{packVersion}`, rather than the
+        // bare tables id. Strictly more information — it names the chain as well
+        // as the parameter set. Every cents-exact total above is unchanged.
+        $this->assertSame('nl-2026@1.0.0', $final['engineVersion']);
         $this->assertNotSame('', trim((string) $final['calculatedAt']));
         $this->assertArrayNotHasKey('glExpensePosted', $final);
 

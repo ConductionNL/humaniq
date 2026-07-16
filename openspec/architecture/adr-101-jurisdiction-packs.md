@@ -1,8 +1,29 @@
 # ADR-101: Jurisdiction packs — a declarative step-DSL with a named PHP escape hatch
 
-**Status**: proposed
+**Status**: accepted — implemented by
+[jurisdiction-packs](../changes/archive/2026-07-15-jurisdiction-packs/), canonical spec
+[jurisdiction-packs](../specs/jurisdiction-packs/spec.md)
 
 **Date**: 2026-07-16
+
+> **Outcome (2026-07-16).** The forcing constraint held: NL re-expressed as
+> `lib/Standards/packs/nl-2026.pack.json` reproduces all 9 golden fixtures digit-for-digit with
+> `PayrollCalculator::calculate()`'s signature and `CalculationResult`'s 18 fields unchanged, and both
+> pinning test classes pass unmodified. Decision 1 landed as specified: `PackInterpreter` names no
+> jurisdiction, and NL's netto falls out of the incidence fold. Decision 2 held — `expr` was NOT
+> widened. Decision 3 ships with zero registered handlers and zero NL uses, as predicted. Decision 4's
+> gate 5 is what proved the migration.
+>
+> Two things the analysis did not anticipate, both recorded in the change's tasks.md: the tables
+> corpus carries **no unit marker** on its leaves, so the ref grammar needed a pack-declared `:cents`
+> suffix to keep unit knowledge out of the interpreter; and `engineVersion = {packId}@{packVersion}`
+> **broke the `nl-engine-table-version` corpus predicate**, which asserted the stamp was a known table
+> id. The predicate and its rule statement were widened to accept both forms.
+>
+> One requirement did not land as written: REQ-JP-006's "placeholder provenance is stamped onto the
+> run". The mechanism exists and is tested, but NL's flagged set is **empty** — the corpus's only
+> `placeholder: true` leaf (employer Whk) is not referenced by the pack; it is an employer-level input
+> the service resolves. The scenario rests on a false premise about NL. See the change report.
 
 > **Numbering note.** hrmq's local ADR namespace lives in `openspec/architecture/` and today holds
 > exactly one record (`adr-001-information-architecture.md`). That number already collides with the

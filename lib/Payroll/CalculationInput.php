@@ -53,9 +53,11 @@ final class CalculationInput
      * @param string      $aofTariff                     `laag` or `hoog` (employer-level config).
      * @param float       $whkPercentage                 The employer's Whk percentage (percentage scale, e.g. `1.52`).
      * @param bool        $verzekeringsplichtig          Whether the employee is verzekeringsplichtig for the werknemersverzekeringen (dga-payroll-mode). `false` for a DGA — zeroes Awf/Aof/Wko/Whk; every other component is unaffected.
+     * @param string      $jurisdiction                  The ISO 3166-1 alpha-2 jurisdiction whose pack computes this wage (jurisdiction-packs). Additive and defaults to `NL`, so every pre-existing named-argument call site is unaffected.
      *
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
      * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
+     * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-001
      */
     public function __construct(
         public readonly int $grossMonthlySalaryCents,
@@ -67,6 +69,7 @@ final class CalculationInput
         public readonly string $aofTariff,
         public readonly float $whkPercentage,
         public readonly bool $verzekeringsplichtig=true,
+        public readonly string $jurisdiction='NL',
     ) {
 
     }//end __construct()

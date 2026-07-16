@@ -1228,7 +1228,7 @@
       "jurisdiction": "NL",
       "framework": "payroll-core",
       "source": "Rekenvoorschriften geautomatiseerde loonadministratie 2026 (traceability + gross-to-net arithmetic)",
-      "statement": "A payroll run that carries engineVersion (i.e. was produced by the calculation engine) shall reference an existing versioned tax-year table file (lib/Standards/tables/<engineVersion>.json) and carry calculatedAt, so every computed amount is traceable to the parameter set that produced it.",
+      "statement": "A payroll run that carries engineVersion (i.e. was produced by the calculation engine) shall name an existing engine artefact — a jurisdiction pack (lib/Standards/packs/<packId>.pack.json, stamped as <packId>@<packVersion>) or, for runs computed before jurisdiction packs, a versioned tax-year table file (lib/Standards/tables/<engineVersion>.json) — and carry calculatedAt, so every computed amount is traceable to the chain and parameter set that produced it.",
       "severity": "mandatory",
       "machineCheckable": true,
       "effectiveDate": "2026-01-01",

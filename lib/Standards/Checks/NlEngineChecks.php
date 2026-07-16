@@ -46,6 +46,7 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Standards\Checks;
 
+use OCA\Hrmq\Payroll\PackRepository;
 use OCA\Hrmq\Payroll\TaxTables;
 
 /**
@@ -53,6 +54,13 @@ use OCA\Hrmq\Payroll\TaxTables;
  */
 final class NlEngineChecks implements CheckProvider
 {
+
+    /**
+     * Memoised bundled jurisdiction-pack ids (globbed once — no per-object IO).
+     *
+     * @var array<int, string>|null
+     */
+    private static ?array $bundledPackIdsCache = null;
 
 
     /**
@@ -114,9 +122,100 @@ final class NlEngineChecks implements CheckProvider
             return false;
         }
 
-        return in_array($engineVersion, TaxTables::availableIds(), true);
+        return self::namesAKnownEngineArtefact(self::artefactOf($engineVersion));
 
     }//end hasValidTableVersion()
+
+
+    /**
+     * The engine artefact an `engineVersion` stamp names.
+     *
+     * Since jurisdiction-packs, a run stamps `{packId}@{packVersion}` (e.g.
+     * `nl-2026@1.0.0`) — strictly more information than the bare table id it
+     * stamped before. Runs computed BEFORE that change carry the legacy bare
+     * form, and historical runs are never rewritten, so both are accepted.
+     *
+     * Only the artefact id is checked, never the version suffix: a run stays
+     * stamped with the pack version that actually produced it, so requiring
+     * the suffix to match the pack's CURRENT version would fail every run the
+     * moment a pack is bumped — the opposite of traceability.
+     *
+     * @param string $engineVersion The run's `engineVersion` stamp.
+     *
+     * @return string
+     */
+    private static function artefactOf(string $engineVersion): string
+    {
+        $at = strpos($engineVersion, '@');
+        if ($at === false) {
+            return $engineVersion;
+        }
+
+        return substr($engineVersion, 0, $at);
+
+    }//end artefactOf()
+
+
+    /**
+     * Whether an artefact id names a jurisdiction pack that ships with hrmq,
+     * or a versioned tax-year table file (the legacy stamp).
+     *
+     * @param string $artefact The artefact id.
+     *
+     * @return bool
+     */
+    private static function namesAKnownEngineArtefact(string $artefact): bool
+    {
+        if ($artefact === '') {
+            return false;
+        }
+
+        if (in_array($artefact, TaxTables::availableIds(), true) === true) {
+            return true;
+        }
+
+        return in_array($artefact, self::bundledPackIds(), true);
+
+    }//end namesAKnownEngineArtefact()
+
+
+    /**
+     * The ids of every bundled jurisdiction pack, read ONCE and memoised —
+     * this predicate runs per audited object, and the provider's contract is
+     * that it performs no per-object IO (the `TaxTables::availableIds()`
+     * precedent).
+     *
+     * @return array<int, string>
+     */
+    private static function bundledPackIds(): array
+    {
+        if (self::$bundledPackIdsCache !== null) {
+            return self::$bundledPackIdsCache;
+        }
+
+        $ids = [];
+        foreach ((new PackRepository())->bundled() as $pack) {
+            $ids[] = $pack->id();
+        }
+
+        self::$bundledPackIdsCache = $ids;
+
+        return $ids;
+
+    }//end bundledPackIds()
+
+
+    /**
+     * Reset the memoised bundled-pack ids (test hook, mirroring
+     * `TaxTables::resetAvailableIdsCache()`).
+     *
+     * @return void
+     */
+    public static function resetBundledPackIdsCache(): void
+    {
+        self::$bundledPackIdsCache = null;
+
+    }//end resetBundledPackIdsCache()
 
 
     /**
