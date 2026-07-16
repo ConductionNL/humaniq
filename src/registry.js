@@ -47,6 +47,34 @@
  * `CnPageRenderer` provides regardless of which slot renders it, so no
  * object-context wiring is lost by skipping CnDetailPage.
  *
+ * `lifecycle-actions` (kind: "widget") — live-verified 2026-07-16 gap, the
+ * worst of the three: 20 `type:"detail"` pages (TimesheetDetail,
+ * ExpenseDetail, LoonaangifteFilingDetail, PensionFilingDetail, …) declare a
+ * page-level `config.lifecycleActions` (the shape `CnDetailPage.vue`'s own
+ * `lifecycleActions` prop expects, mounting the library's
+ * `CnLifecycleActions`). Same root cause as `actions` above — every page has
+ * a `slot:"body"` widget, so `CnPageRenderer` renders `CnWidgetGrid` directly
+ * and NEVER instantiates `CnDetailPage`, so `config.lifecycleActions` never
+ * reaches anywhere. This meant every approve/reject/submit/reopen button in
+ * the app — hrmq's core submit-approve-reject workflow — was unclickable.
+ *
+ * UNLIKE `actions`, this isn't a drop-in registration: `CnLifecycleActions`
+ * takes plain props (`object-id`, `object`, `config`) and does NOT inject
+ * `cnObjectContext` / `cnDetailObjectContext` itself the way
+ * `CnActionButtons` / `CnAuditTrailWidget` do. `CnWidgetGrid` merges the
+ * detail context into every widget's props as `objectData` (not `object`),
+ * so `CnLifecycleActions` dropped in directly would receive `objectId`
+ * correctly but `object` would stay `null` — and every one of these 20 pages
+ * declares an explicit `config.transitions` array, which makes
+ * `CnLifecycleActions` filter client-side by `object[config.field]`, so a
+ * null `object` means every transition silently fails to match and renders
+ * NO buttons at all (a second-order phantom underneath the first). See
+ * `./widgets/LifecycleActionsWidget.vue` for the thin bridge that renames
+ * `objectData` → `object` and backstops the `@reload` event (CnWidgetGrid
+ * renders widgets `v-bind`-only, so nothing above ever hears it — the v2
+ * detail context's own `or-object-{id}` live-update subscription is the
+ * primary refresh path; see that file's docblock).
+ *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  */
@@ -54,6 +82,7 @@
 import { CnActionButtons, CnStatWidget } from '@conduction/nextcloud-vue'
 import AdministrationSwitcher from './views/AdministrationSwitcher.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
+import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
 
 export default {
 	ProformaPayslip: {
@@ -85,5 +114,15 @@ export default {
 		allowedSlots: ['header-actions'],
 		propsSchema: null,
 		_note: 'Wires the library\'s CnActionButtons into a widgetKey so a page-level `{ widgetKey:"actions", slot:"header-actions", props:{ actions:[...] } }` entry actually renders — see the module docblock above (defect: config.headerActions is dead code once a page has any body-slot widgets).',
+	},
+	'lifecycle-actions': {
+		kind: 'widget',
+		component: LifecycleActionsWidget,
+		defaultSize: { w: 8, h: 1 },
+		minSize: { w: 4, h: 1 },
+		maxSize: { w: 12, h: 2 },
+		allowedSlots: ['header-actions'],
+		propsSchema: null,
+		_note: 'Wires a host-app bridge (./widgets/LifecycleActionsWidget.vue) around the library\'s CnLifecycleActions into a widgetKey so a page-level `{ widgetKey:"lifecycle-actions", slot:"header-actions", props:{ config:{...} } }` entry actually renders — see the module docblock above (defect: config.lifecycleActions is dead code once a page has any body-slot widgets, AND CnLifecycleActions needs an `object` prop CnWidgetGrid never supplies under that name). Remove the bridge (register CnLifecycleActions here directly) if a future @conduction/nextcloud-vue release gives it its own cnDetailObjectContext inject the way CnActionButtons has.',
 	},
 }
