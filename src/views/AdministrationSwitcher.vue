@@ -20,6 +20,18 @@
 
  There is deliberately no register/schema on this page and no object
  create/save call: the switch is a per-user IConfig pointer, not domain data.
+
+ #64: on a successful switch this injects the SAME reactive `cnWorkspaceContext`
+ App.vue provides at the SPA root and writes the chosen id into it directly
+ (`nextcloud-vue`'s `CnWorkspaceFilterWidget.writeWorkspace()` unwrap-mutate
+ pattern) — Vue's provide/inject walks the whole ancestor chain regardless of
+ how this component was resolved (a manifest `type: "custom"` page component),
+ so every sibling page's `@workspace.activeAdministrationId?` base filter
+ re-resolves and re-fetches WITHOUT a full reload. This replaces an earlier
+ `cn:workspace:set` `$emit` that nothing ever listened for (no ancestor
+ declared `@cn:workspace:set`) — that was a stated intent, not a wired
+ mechanism. `PageController::index()` seeds the SAME context via
+ `IInitialState` so it is also correct on first paint, not only post-switch.
 -->
 <template>
 	<div class="administration-switcher">
@@ -80,6 +92,15 @@ export default {
 		Domain,
 	},
 
+	inject: {
+		/**
+		 * The reactive workspace bag App.vue provides at the SPA root
+		 * (`ref({})`). Null when rendered somewhere that doesn't provide it
+		 * (defensive default only — App.vue always provides it in practice).
+		 */
+		cnWorkspaceContext: { default: null },
+	},
+
 	data() {
 		return {
 			activeAdministrationId: null,
@@ -120,9 +141,10 @@ export default {
 		/**
 		 * POST a switch to the guarded setter. The server refuses any
 		 * administratie the caller has no access row for (404) before
-		 * persisting. On success, mirror the choice into the page workspace
-		 * context so sibling pages re-scope (the documented interim
-		 * mechanism, design.md D3).
+		 * persisting. On success, write the chosen id into the SAME reactive
+		 * `cnWorkspaceContext` App.vue provides at the SPA root so every
+		 * sibling page's `@workspace.activeAdministrationId?` base filter
+		 * re-resolves and re-fetches without a full reload.
 		 *
 		 * @param {string} administrationId The administratie id to activate.
 		 * @return {Promise<void>}
@@ -136,13 +158,33 @@ export default {
 					administrationId,
 				})
 				this.activeAdministrationId = response.data.activeAdministrationId ?? administrationId
-				this.$emit('cn:workspace:set', { key: 'activeAdministrationId', value: this.activeAdministrationId })
+				this.writeWorkspaceContext(this.activeAdministrationId)
 			} catch (error) {
 				this.errorMessage = error?.response?.data?.error
 					|| this.t('hrmq', 'Could not switch administration. You may not have access to it.')
 			} finally {
 				this.switching = false
 			}
+		},
+
+		/**
+		 * Write `activeAdministrationId` into the injected `cnWorkspaceContext`
+		 * bag — the `CnWorkspaceFilterWidget.writeWorkspace()` unwrap-mutate
+		 * pattern: replace-in-place for an already-unwrapped bag, `.value` for
+		 * the raw-ref shape App.vue provides. A no-op (never throws) when the
+		 * context wasn't provided.
+		 *
+		 * @param {string} administrationId The administratie id to publish.
+		 * @return {void}
+		 */
+		writeWorkspaceContext(administrationId) {
+			const holder = this.cnWorkspaceContext
+			if (!holder || typeof holder !== 'object') return
+			if ('value' in holder) {
+				holder.value = { ...(holder.value || {}), activeAdministrationId: administrationId }
+				return
+			}
+			this.$set(holder, 'activeAdministrationId', administrationId)
 		},
 	},
 }
