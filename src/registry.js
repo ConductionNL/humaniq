@@ -30,11 +30,28 @@
  * `@conduction/nextcloud-vue` release inline-registers `stat` the same way
  * `object-list` / `map` were fixed.
  *
+ * `actions` (kind: "widget") — live-verified 2026-07-16 gap, same family as
+ * `stat`: 14 `type:"detail"` pages declared a page-level `config.headerActions`
+ * (the shape CnDetailPage.vue's own `headerActions` prop expects), but a v2
+ * manifest with ANY `widgets[]` entry whose `slot:"body"` (every page in this
+ * manifest) makes `CnPageRenderer` take the `widgetsBySlot.has('body')`
+ * branch — it renders `CnWidgetGrid` directly and NEVER instantiates
+ * `CnDetailPage` at all, so `config.headerActions` never reaches anywhere.
+ * `CnPageRenderer` DOES render a `widgets[]` entry whose `slot:"header-actions"`
+ * (via the same `CnWidgetGrid`), but `CnActionButtons` — the component that
+ * shape actually needs — was never wired into `BUILT_IN_WIDGETS` as a
+ * resolvable `widgetKey`. Registering it here (same override path as `stat`)
+ * lets each page place `{ widgetKey:"actions", slot:"header-actions",
+ * props:{ actions:[...] } }`; `CnActionButtons` resolves `@objectId`/
+ * `@object.<field>` tokens itself via the `cnDetailObjectContext` inject
+ * `CnPageRenderer` provides regardless of which slot renders it, so no
+ * object-context wiring is lost by skipping CnDetailPage.
+ *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  */
 
-import { CnStatWidget } from '@conduction/nextcloud-vue'
+import { CnActionButtons, CnStatWidget } from '@conduction/nextcloud-vue'
 import AdministrationSwitcher from './views/AdministrationSwitcher.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
 
@@ -58,5 +75,15 @@ export default {
 		allowedSlots: ['body', 'sidebar'],
 		propsSchema: null,
 		_note: 'Explicit override for the library\'s CnStatWidget — see the module docblock above. Manifest widgets already pass the exact { title, icon, content } shape CnStatWidget expects, so no wrapper is needed.',
+	},
+	actions: {
+		kind: 'widget',
+		component: CnActionButtons,
+		defaultSize: { w: 12, h: 1 },
+		minSize: { w: 2, h: 1 },
+		maxSize: { w: 12, h: 2 },
+		allowedSlots: ['header-actions'],
+		propsSchema: null,
+		_note: 'Wires the library\'s CnActionButtons into a widgetKey so a page-level `{ widgetKey:"actions", slot:"header-actions", props:{ actions:[...] } }` entry actually renders — see the module docblock above (defect: config.headerActions is dead code once a page has any body-slot widgets).',
 	},
 }

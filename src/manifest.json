@@ -1634,22 +1634,6 @@
 			"route": "/expenses/:id",
 			"type": "detail",
 			"title": "Declaratie",
-			"actions": [
-				{
-					"id": "extract-receipt",
-					"label": "Extract receipt data",
-					"type": "api-call",
-					"icon": "TextRecognition",
-					"url": "/api/expenses/extract-receipt",
-					"method": "POST",
-					"params": {
-						"expenseId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "Extraction started.",
-					"errorMessage": "Extraction failed."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "Expense",
@@ -1698,6 +1682,32 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "extract-receipt",
+								"label": "Extract receipt data",
+								"type": "api-call",
+								"icon": "TextRecognition",
+								"url": "/api/expenses/extract-receipt",
+								"method": "POST",
+								"params": {
+									"expenseId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "Extraction started.",
+								"errorMessage": "Extraction failed."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "stat",
 					"slot": "body",
@@ -2480,23 +2490,6 @@
 			"route": "/contracts/:id",
 			"type": "detail",
 			"title": "Contract",
-			"actions": [
-				{
-					"id": "generate-arbeidsovereenkomst",
-					"label": "Genereer arbeidsovereenkomst",
-					"type": "api-call",
-					"icon": "FileDocumentPlusOutline",
-					"url": "/api/documents/generate",
-					"method": "POST",
-					"params": {
-						"contractId": "@objectId",
-						"documentType": "arbeidsovereenkomst"
-					},
-					"confirm": true,
-					"successMessage": "Arbeidsovereenkomst wordt gegenereerd.",
-					"errorMessage": "Genereren van de arbeidsovereenkomst is mislukt."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "EmploymentContract",
@@ -2507,6 +2500,33 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "generate-arbeidsovereenkomst",
+								"label": "Genereer arbeidsovereenkomst",
+								"type": "api-call",
+								"icon": "FileDocumentPlusOutline",
+								"url": "/api/documents/generate",
+								"method": "POST",
+								"params": {
+									"contractId": "@objectId",
+									"documentType": "arbeidsovereenkomst"
+								},
+								"confirm": true,
+								"successMessage": "Arbeidsovereenkomst wordt gegenereerd.",
+								"errorMessage": "Genereren van de arbeidsovereenkomst is mislukt."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -2681,23 +2701,6 @@
 			"route": "/payslips/:id",
 			"type": "detail",
 			"title": "Loonstrook",
-			"actions": [
-				{
-					"id": "generate-loonstrook",
-					"label": "Genereer PDF",
-					"type": "api-call",
-					"icon": "FileDocumentPlusOutline",
-					"url": "/api/documents/generate",
-					"method": "POST",
-					"params": {
-						"payslipId": "@objectId",
-						"documentType": "loonstrook"
-					},
-					"confirm": true,
-					"successMessage": "Loonstrook-PDF wordt gegenereerd.",
-					"errorMessage": "Genereren van de loonstrook-PDF is mislukt."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "Payslip",
@@ -2708,6 +2711,33 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "generate-loonstrook",
+								"label": "Genereer PDF",
+								"type": "api-call",
+								"icon": "FileDocumentPlusOutline",
+								"url": "/api/documents/generate",
+								"method": "POST",
+								"params": {
+									"payslipId": "@objectId",
+									"documentType": "loonstrook"
+								},
+								"confirm": true,
+								"successMessage": "Loonstrook-PDF wordt gegenereerd.",
+								"errorMessage": "Genereren van de loonstrook-PDF is mislukt."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "stat",
 					"slot": "body",
@@ -2939,47 +2969,6 @@
 			"route": "/payroll-runs/:id",
 			"type": "detail",
 			"title": "Loonrun",
-			"actions": [
-				{
-					"id": "recalculate",
-					"label": "(Her)berekenen",
-					"type": "api-call",
-					"icon": "Calculator",
-					"url": "/api/payroll/calculate",
-					"method": "POST",
-					"params": {
-						"runId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "Loonrun (her)berekend — loonstroken en totalen zijn bijgewerkt.",
-					"errorMessage": "(Her)berekenen van de loonrun is mislukt."
-				},
-				{
-					"id": "mutations",
-					"label": "Mutatieoverzicht",
-					"type": "api-call",
-					"icon": "SwapHorizontal",
-					"url": "/api/payroll/mutations",
-					"method": "POST",
-					"params": {
-						"toRunId": "@objectId"
-					},
-					"confirm": true,
-					"onSuccessRoute": "PayrollMutationReportDetail",
-					"successMessage": "Mutatierapport gegenereerd — vergeleken met de vorige periode.",
-					"errorMessage": "Genereren van het mutatierapport is mislukt."
-				},
-				{
-					"id": "book-correction",
-					"label": "Correctie boeken (TWK)",
-					"type": "open-form",
-					"icon": "CashSync",
-					"register": "hrmq",
-					"schema": "PayrollAdjustment",
-					"onSuccessRoute": "PayrollAdjustmentDetail",
-					"successMessage": "Concept-correctie aangemaakt — gebruik Herrekenen om de delta te berekenen."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "PayrollRun",
@@ -2990,6 +2979,57 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "recalculate",
+								"label": "(Her)berekenen",
+								"type": "api-call",
+								"icon": "Calculator",
+								"url": "/api/payroll/calculate",
+								"method": "POST",
+								"params": {
+									"runId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "Loonrun (her)berekend — loonstroken en totalen zijn bijgewerkt.",
+								"errorMessage": "(Her)berekenen van de loonrun is mislukt."
+							},
+							{
+								"id": "mutations",
+								"label": "Mutatieoverzicht",
+								"type": "api-call",
+								"icon": "SwapHorizontal",
+								"url": "/api/payroll/mutations",
+								"method": "POST",
+								"params": {
+									"toRunId": "@objectId"
+								},
+								"confirm": true,
+								"onSuccessRoute": "PayrollMutationReportDetail",
+								"successMessage": "Mutatierapport gegenereerd — vergeleken met de vorige periode.",
+								"errorMessage": "Genereren van het mutatierapport is mislukt."
+							},
+							{
+								"id": "book-correction",
+								"label": "Correctie boeken (TWK)",
+								"type": "open-form",
+								"icon": "CashSync",
+								"register": "hrmq",
+								"schema": "PayrollAdjustment",
+								"onSuccessRoute": "PayrollAdjustmentDetail",
+								"successMessage": "Concept-correctie aangemaakt — gebruik Herrekenen om de delta te berekenen."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "stat",
 					"slot": "body",
@@ -3190,22 +3230,6 @@
 			"route": "/payroll-adjustments/:id",
 			"type": "detail",
 			"title": "Correctie (TWK)",
-			"actions": [
-				{
-					"id": "recompute",
-					"label": "Herrekenen",
-					"type": "api-call",
-					"icon": "Calculator",
-					"url": "/api/payroll/adjust",
-					"method": "POST",
-					"params": {
-						"adjustmentId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "Correctie herrekend — de delta is bijgewerkt.",
-					"errorMessage": "Herrekenen van de correctie is mislukt."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "PayrollAdjustment",
@@ -3216,6 +3240,32 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "recompute",
+								"label": "Herrekenen",
+								"type": "api-call",
+								"icon": "Calculator",
+								"url": "/api/payroll/adjust",
+								"method": "POST",
+								"params": {
+									"adjustmentId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "Correctie herrekend — de delta is bijgewerkt.",
+								"errorMessage": "Herrekenen van de correctie is mislukt."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "stat",
 					"slot": "body",
@@ -3938,22 +3988,6 @@
 			"route": "/wkr-assessments/:id",
 			"type": "detail",
 			"title": "WKR-beoordeling",
-			"actions": [
-				{
-					"id": "wkr-assess",
-					"label": "Beoordelen",
-					"type": "api-call",
-					"icon": "Calculator",
-					"url": "/api/payroll/wkr-assess",
-					"method": "POST",
-					"params": {
-						"assessmentId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "WKR-beoordeling herberekend.",
-					"errorMessage": "Herberekenen van de WKR-beoordeling is mislukt."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "WkrAssessment",
@@ -3964,6 +3998,32 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "wkr-assess",
+								"label": "Beoordelen",
+								"type": "api-call",
+								"icon": "Calculator",
+								"url": "/api/payroll/wkr-assess",
+								"method": "POST",
+								"params": {
+									"assessmentId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "WKR-beoordeling herberekend.",
+								"errorMessage": "Herberekenen van de WKR-beoordeling is mislukt."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "stat",
 					"slot": "body",
@@ -4170,51 +4230,6 @@
 			"route": "/loonbeslagen/:id",
 			"type": "detail",
 			"title": "Loonbeslag",
-			"actions": [
-				{
-					"id": "loonbeslag-activate",
-					"label": "Verifiëren en activeren",
-					"type": "api-call",
-					"icon": "CheckCircleOutline",
-					"url": "/api/loonbeslag/activate",
-					"method": "POST",
-					"params": {
-						"loonbeslagId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "Loonbeslag geverifieerd en geactiveerd.",
-					"errorMessage": "Activeren van het loonbeslag is mislukt."
-				},
-				{
-					"id": "loonbeslag-settle",
-					"label": "Markeer voldaan",
-					"type": "api-call",
-					"icon": "CashCheck",
-					"url": "/api/loonbeslag/settle",
-					"method": "POST",
-					"params": {
-						"loonbeslagId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "Loonbeslag gemarkeerd als voldaan.",
-					"errorMessage": "Markeren als voldaan is mislukt."
-				},
-				{
-					"id": "loonbeslag-withdraw",
-					"label": "Intrekken",
-					"type": "api-call",
-					"icon": "CloseCircleOutline",
-					"url": "/api/loonbeslag/withdraw",
-					"method": "POST",
-					"params": {
-						"loonbeslagId": "@objectId",
-						"reason": "Ingetrokken door beheerder/HR via het beheerpaneel."
-					},
-					"confirm": true,
-					"successMessage": "Loonbeslag ingetrokken.",
-					"errorMessage": "Intrekken van het loonbeslag is mislukt."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "Loonbeslag",
@@ -4225,6 +4240,61 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "loonbeslag-activate",
+								"label": "Verifiëren en activeren",
+								"type": "api-call",
+								"icon": "CheckCircleOutline",
+								"url": "/api/loonbeslag/activate",
+								"method": "POST",
+								"params": {
+									"loonbeslagId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "Loonbeslag geverifieerd en geactiveerd.",
+								"errorMessage": "Activeren van het loonbeslag is mislukt."
+							},
+							{
+								"id": "loonbeslag-settle",
+								"label": "Markeer voldaan",
+								"type": "api-call",
+								"icon": "CashCheck",
+								"url": "/api/loonbeslag/settle",
+								"method": "POST",
+								"params": {
+									"loonbeslagId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "Loonbeslag gemarkeerd als voldaan.",
+								"errorMessage": "Markeren als voldaan is mislukt."
+							},
+							{
+								"id": "loonbeslag-withdraw",
+								"label": "Intrekken",
+								"type": "api-call",
+								"icon": "CloseCircleOutline",
+								"url": "/api/loonbeslag/withdraw",
+								"method": "POST",
+								"params": {
+									"loonbeslagId": "@objectId",
+									"reason": "Ingetrokken door beheerder/HR via het beheerpaneel."
+								},
+								"confirm": true,
+								"successMessage": "Loonbeslag ingetrokken.",
+								"errorMessage": "Intrekken van het loonbeslag is mislukt."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "stat",
 					"slot": "body",
@@ -5049,18 +5119,6 @@
 			"route": "/comp-review-cycles/:id",
 			"type": "detail",
 			"title": "Beloningscyclus",
-			"actions": [
-				{
-					"id": "propose-comp-adjustment",
-					"label": "Aanpassing voorstellen",
-					"type": "open-form",
-					"icon": "PlusCircleOutline",
-					"register": "hrmq",
-					"schema": "CompAdjustment",
-					"onSuccessRoute": "CompAdjustmentDetail",
-					"successMessage": "Beloningsvoorstel aangemaakt."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "CompReviewCycle",
@@ -5084,6 +5142,28 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "propose-comp-adjustment",
+								"label": "Aanpassing voorstellen",
+								"type": "open-form",
+								"icon": "PlusCircleOutline",
+								"register": "hrmq",
+								"schema": "CompAdjustment",
+								"onSuccessRoute": "CompAdjustmentDetail",
+								"successMessage": "Beloningsvoorstel aangemaakt."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -5155,22 +5235,6 @@
 			"route": "/comp-adjustments/:id",
 			"type": "detail",
 			"title": "Beloningsvoorstel",
-			"actions": [
-				{
-					"id": "effectueren",
-					"label": "Effectueren",
-					"type": "api-call",
-					"icon": "CashCheck",
-					"url": "/api/comp/effectuate",
-					"method": "POST",
-					"params": {
-						"adjustmentId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "Beloningsvoorstel geëffectueerd; het brutomaandsalaris is bijgewerkt.",
-					"errorMessage": "Effectueren van het beloningsvoorstel is mislukt."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "CompAdjustment",
@@ -5210,6 +5274,32 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "effectueren",
+								"label": "Effectueren",
+								"type": "api-call",
+								"icon": "CashCheck",
+								"url": "/api/comp/effectuate",
+								"method": "POST",
+								"params": {
+									"adjustmentId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "Beloningsvoorstel geëffectueerd; het brutomaandsalaris is bijgewerkt.",
+								"errorMessage": "Effectueren van het beloningsvoorstel is mislukt."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -5259,22 +5349,6 @@
 			"route": "/leave-transactions/:id",
 			"type": "detail",
 			"title": "Verlof kopen/verkopen",
-			"actions": [
-				{
-					"id": "verrekenen",
-					"label": "Verrekenen",
-					"type": "api-call",
-					"icon": "CashCheck",
-					"url": "/api/leave/settle",
-					"method": "POST",
-					"params": {
-						"transactionId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "Transactie verrekend; het verlofsaldo is bijgewerkt.",
-					"errorMessage": "Verrekenen van de transactie is mislukt."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "LeaveTransaction",
@@ -5315,6 +5389,32 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "verrekenen",
+								"label": "Verrekenen",
+								"type": "api-call",
+								"icon": "CashCheck",
+								"url": "/api/leave/settle",
+								"method": "POST",
+								"params": {
+									"transactionId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "Transactie verrekend; het verlofsaldo is bijgewerkt.",
+								"errorMessage": "Verrekenen van de transactie is mislukt."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -5972,22 +6072,6 @@
 			"route": "/applications/:id",
 			"type": "detail",
 			"title": "Sollicitatie",
-			"actions": [
-				{
-					"id": "request-offer-signature",
-					"label": "Aanbiedingsbrief + e-handtekening aanvragen",
-					"type": "api-call",
-					"icon": "FileDocumentPlusOutline",
-					"url": "/api/offer/request-signature",
-					"method": "POST",
-					"params": {
-						"applicationId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "Aanbiedingsbrief wordt gegenereerd en e-handtekening aangevraagd.",
-					"errorMessage": "Aanvragen van de aanbiedingsbrief/e-handtekening is mislukt."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "Application",
@@ -6046,6 +6130,32 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "request-offer-signature",
+								"label": "Aanbiedingsbrief + e-handtekening aanvragen",
+								"type": "api-call",
+								"icon": "FileDocumentPlusOutline",
+								"url": "/api/offer/request-signature",
+								"method": "POST",
+								"params": {
+									"applicationId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "Aanbiedingsbrief wordt gegenereerd en e-handtekening aangevraagd.",
+								"errorMessage": "Aanvragen van de aanbiedingsbrief/e-handtekening is mislukt."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -6204,22 +6314,6 @@
 			"route": "/interviews/:id",
 			"type": "detail",
 			"title": "Interview",
-			"actions": [
-				{
-					"id": "sync-to-calendar",
-					"label": "Sync naar agenda",
-					"type": "api-call",
-					"icon": "CalendarSyncOutline",
-					"url": "/api/interviews/sync",
-					"method": "POST",
-					"params": {
-						"interviewId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "Gesprek gesynchroniseerd naar de gedeelde agenda.",
-					"errorMessage": "Synchroniseren naar de agenda is mislukt."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "Interview",
@@ -6251,6 +6345,32 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "sync-to-calendar",
+								"label": "Sync naar agenda",
+								"type": "api-call",
+								"icon": "CalendarSyncOutline",
+								"url": "/api/interviews/sync",
+								"method": "POST",
+								"params": {
+									"interviewId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "Gesprek gesynchroniseerd naar de gedeelde agenda.",
+								"errorMessage": "Synchroniseren naar de agenda is mislukt."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -7923,22 +8043,6 @@
 			"route": "/rosters/:id",
 			"type": "detail",
 			"title": "Rooster",
-			"actions": [
-				{
-					"id": "atw-controle",
-					"label": "ATW-controle",
-					"type": "api-call",
-					"icon": "ClipboardCheckOutline",
-					"url": "/api/roster/check",
-					"method": "POST",
-					"params": {
-						"rosterId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "ATW-controle uitgevoerd — bekijk de uitkomst per roosterindeling.",
-					"errorMessage": "ATW-controle van het rooster is mislukt."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "Roster",
@@ -7970,6 +8074,32 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "atw-controle",
+								"label": "ATW-controle",
+								"type": "api-call",
+								"icon": "ClipboardCheckOutline",
+								"url": "/api/roster/check",
+								"method": "POST",
+								"params": {
+									"rosterId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "ATW-controle uitgevoerd — bekijk de uitkomst per roosterindeling.",
+								"errorMessage": "ATW-controle van het rooster is mislukt."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
@@ -8179,69 +8309,6 @@
 			"route": "/dsr-requests/:id",
 			"type": "detail",
 			"title": "AVG-verzoek",
-			"actions": [
-				{
-					"id": "dsr-export",
-					"label": "Exporteer",
-					"type": "api-call",
-					"icon": "DownloadOutline",
-					"url": "/api/dsr/export",
-					"method": "POST",
-					"params": {
-						"employeeId": "@object.employeeId",
-						"right": "@object.right",
-						"dsrRequestId": "@objectId"
-					},
-					"confirm": false,
-					"successMessage": "AVG-export uitgevoerd.",
-					"errorMessage": "Exporteren is mislukt."
-				},
-				{
-					"id": "dsr-erase-preview",
-					"label": "Voorbeeld verwijdering",
-					"type": "api-call",
-					"icon": "EyeOutline",
-					"url": "/api/dsr/erase-preview",
-					"method": "POST",
-					"params": {
-						"employeeId": "@object.employeeId",
-						"dsrRequestId": "@objectId"
-					},
-					"confirm": false,
-					"successMessage": "Voorbeeld verwijdering opgehaald (geen schrijfacties).",
-					"errorMessage": "Voorbeeld verwijdering kon niet worden opgehaald."
-				},
-				{
-					"id": "dsr-erase-confirm",
-					"label": "Bevestig verwijdering",
-					"type": "api-call",
-					"icon": "DeleteAlertOutline",
-					"url": "/api/dsr/erase-confirm",
-					"method": "POST",
-					"params": {
-						"employeeId": "@object.employeeId",
-						"dsrRequestId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "Verwijdering uitgevoerd (retained objecten uitgesloten, wettelijke bewaarplicht).",
-					"errorMessage": "Verwijdering is mislukt of geweigerd — voer eerst Voorbeeld verwijdering uit."
-				},
-				{
-					"id": "dsr-rectify",
-					"label": "Rectificeer",
-					"type": "api-call",
-					"icon": "PencilOutline",
-					"url": "/api/dsr/rectify",
-					"method": "POST",
-					"params": {
-						"employeeId": "@object.employeeId",
-						"dsrRequestId": "@objectId"
-					},
-					"confirm": true,
-					"successMessage": "Rectificatie toegepast.",
-					"errorMessage": "Rectificatie is mislukt."
-				}
-			],
 			"config": {
 				"register": "hrmq",
 				"schema": "DsrRequest",
@@ -8252,6 +8319,79 @@
 				}
 			},
 			"widgets": [
+				{
+					"widgetKey": "actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"actions": [
+							{
+								"id": "dsr-export",
+								"label": "Exporteer",
+								"type": "api-call",
+								"icon": "DownloadOutline",
+								"url": "/api/dsr/export",
+								"method": "POST",
+								"params": {
+									"employeeId": "@object.employeeId",
+									"right": "@object.right",
+									"dsrRequestId": "@objectId"
+								},
+								"confirm": false,
+								"successMessage": "AVG-export uitgevoerd.",
+								"errorMessage": "Exporteren is mislukt."
+							},
+							{
+								"id": "dsr-erase-preview",
+								"label": "Voorbeeld verwijdering",
+								"type": "api-call",
+								"icon": "EyeOutline",
+								"url": "/api/dsr/erase-preview",
+								"method": "POST",
+								"params": {
+									"employeeId": "@object.employeeId",
+									"dsrRequestId": "@objectId"
+								},
+								"confirm": false,
+								"successMessage": "Voorbeeld verwijdering opgehaald (geen schrijfacties).",
+								"errorMessage": "Voorbeeld verwijdering kon niet worden opgehaald."
+							},
+							{
+								"id": "dsr-erase-confirm",
+								"label": "Bevestig verwijdering",
+								"type": "api-call",
+								"icon": "DeleteAlertOutline",
+								"url": "/api/dsr/erase-confirm",
+								"method": "POST",
+								"params": {
+									"employeeId": "@object.employeeId",
+									"dsrRequestId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "Verwijdering uitgevoerd (retained objecten uitgesloten, wettelijke bewaarplicht).",
+								"errorMessage": "Verwijdering is mislukt of geweigerd — voer eerst Voorbeeld verwijdering uit."
+							},
+							{
+								"id": "dsr-rectify",
+								"label": "Rectificeer",
+								"type": "api-call",
+								"icon": "PencilOutline",
+								"url": "/api/dsr/rectify",
+								"method": "POST",
+								"params": {
+									"employeeId": "@object.employeeId",
+									"dsrRequestId": "@objectId"
+								},
+								"confirm": true,
+								"successMessage": "Rectificatie toegepast.",
+								"errorMessage": "Rectificatie is mislukt."
+							}
+						]
+					}
+				},
 				{
 					"widgetKey": "data",
 					"slot": "body",
