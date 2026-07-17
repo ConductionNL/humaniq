@@ -4,8 +4,9 @@
  * Hrmq Initialize Register Repair Step
  *
  * Post-migration repair step that imports the hrmq OpenRegister register on
- * install/upgrade. It delegates to SettingsService::loadConfigurationForced(),
- * which reads lib/Settings/hrmq_register.json, deep-merges the modular schema
+ * install/upgrade. It delegates to SettingsService::loadConfiguration() (NOT the
+ * forced variant — see the run() body), which reads lib/Settings/hrmq_register.json,
+ * deep-merges the modular schema
  * fragments under lib/Settings/register.d/*.json, and hands the result to
  * OpenRegister. OpenRegister's per-register/per-schema version_compare provides
  * idempotency, so re-running on a routine upgrade is a no-op unless a schema or
@@ -83,7 +84,14 @@ class InitializeRegister implements IRepairStep
         }
 
         try {
-            $result = $this->settingsService->loadConfigurationForced();
+            // NOT forced. loadConfigurationForced() passes force:true, which bypasses
+            // OpenRegister's app-level import fast-skip (gated on `$force === false`), so this
+            // step re-parsed hrmq_register.json + the register.d fragments and walked every
+            // register/schema on EVERY upgrade, even when nothing changed. Forcing was never
+            // needed: the version passed to OR is content-addressed (`+frag.<md5 of the
+            // fragments>`), so a content change already bumps the version and re-imports;
+            // OpenRegister#426 additionally makes the gate content-aware.
+            $result = $this->settingsService->loadConfiguration();
 
             if (($result['success'] ?? false) === true) {
                 if (($result['skipped'] ?? false) === true) {
