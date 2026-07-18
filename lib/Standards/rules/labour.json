@@ -434,6 +434,18 @@
       "machineCheckable": true,
       "effectiveDate": "2020-01-01",
       "sourceUrl": "https://wetten.overheid.nl/BWBR0001947"
+    },
+    {
+      "id": "nl-bpv-overeenkomst-vereist",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-stagiair",
+      "source": "Praktijkleerovereenkomst/BPV-overeenkomst (stage- en beroepspraktijkvorming)",
+      "statement": "A Stagiair whose startDate has passed, or an EmploymentContract with type: bbl whose startDate has passed, shall have a signed BPV-/praktijkleerovereenkomst on file (bpvOvereenkomstOndertekend true); a placement that has started with bpvOvereenkomstOndertekend not true is flagged. A placement whose startDate has not yet passed, or whose bpvOvereenkomstOndertekend is true, passes. An EmploymentContract with any type other than bbl passes vacuously regardless of its bpvOvereenkomstOndertekend value (design.md D4). The signing fact is HR-entered (the writtenContract convention), not an automated multi-party e-signature flow.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": null
     }
   ]
 }

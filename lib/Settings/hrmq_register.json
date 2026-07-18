@@ -3,7 +3,7 @@
     "info": {
         "title": "Hrmq Register",
         "description": "Register containing all schemas for the Hrmq application.",
-        "version": "0.11.0"
+        "version": "0.12.0"
     },
     "x-openregister": {
         "type": "application",

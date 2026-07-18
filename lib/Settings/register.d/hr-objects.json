@@ -56,7 +56,7 @@
             "EmploymentContract": {
                 "slug": "EmploymentContract",
                 "icon": "FileSignOutline",
-                "version": "0.5.0",
+                "version": "0.6.0",
                 "title": "Employment Contract",
                 "description": "An employment agreement between the organisation and an employee. Carries the contract attributes the payroll checks read (permanent/temporary type that drives the Awf low/high premium, contracted hours, CAO, minimum-wage hourly basis).",
                 "type": "object",
@@ -68,7 +68,7 @@
                 ],
                 "properties": {
                     "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "description": "Reference to the Employee this contract belongs to."},
-                    "type": {"type": "string", "enum": ["permanent", "temporary", "agency", "minijob"], "description": "Contract type. 'permanent' (written, indefinite) takes the Awf low tariff; flexible/temporary take the high tariff (nl-awf-laag-hoog-tarief)."},
+                    "type": {"type": "string", "enum": ["permanent", "temporary", "agency", "minijob", "bbl"], "title": "Contract type", "description": "Contract type. 'permanent' (written, indefinite) takes the Awf low tariff; flexible/temporary/agency/minijob take the high tariff (nl-awf-laag-hoog-tarief). 'bbl' (MBO-BBL leerarbeidsovereenkomst, stagiair-bbl-admin): a BBL-leerling has a real arbeidsovereenkomst and is loonheffingplichtig as an ordinary werknemer (loon, loonheffing, premies, CAO-toepassing all apply), per the Belastingdienst Handboek Loonheffingen (hoofdstuk 17, 'Stagiairs') -- so a bbl contract flows through PayrollCalculator and the NL jurisdiction pack exactly like a permanent/temporary contract, with NO type-specific branch (design.md D1/D2). Takes the Awf high tariff (not permanent). A person on a stageovereenkomst zonder dienstverband (HBO/WO/MBO-BOL) is NOT a bbl contract -- it is a separate Stagiair schema, structurally outside payroll."},
                     "writtenContract": {"type": "boolean", "description": "Whether the contract is in writing — a precondition for the Awf low tariff (nl-awf-laag-hoog-tarief)."},
                     "startDate": {"type": "string", "format": "date", "description": "Contract start date (ISO 8601)."},
                     "endDate": {"type": "string", "format": "date", "nullable": true, "description": "Contract end date, or null for indefinite."},
@@ -83,7 +83,9 @@
                     "ftePartOfYearMinijob": {"type": "boolean", "description": "DE: whether the contract is a Minijob within the geringfügige Beschäftigung threshold using flat-rate contributions (de-minijob-pauschale)."},
                     "dpaeFiledBeforeStart": {"type": "boolean", "description": "FR: whether the Déclaration Préalable À l'Embauche (DPAE) was filed in the 8 days before the hire (fr-dpae)."},
                     "aanzegdOn": {"type": "string", "format": "date", "nullable": true, "title": "Aanzegd on", "description": "NL: date the written aanzegging (BW 7:668 lid 1) was sent to the employee, informing whether a fixed-term contract of six months or longer will be continued. Must be on or before endDate minus one month to satisfy nl-aanzegtermijn-bewaking."},
-                    "administrationId": {"type": "string", "nullable": true, "description": "Denormalized administratie key this EmploymentContract is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun convention), mirroring its owning Employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007)."}
+                    "administrationId": {"type": "string", "nullable": true, "description": "Denormalized administratie key this EmploymentContract is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun convention), mirroring its owning Employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007)."},
+                    "bpvOvereenkomstOndertekend": {"type": "boolean", "nullable": true, "title": "BPV-overeenkomst ondertekend", "description": "NL: for a type: bbl contract (stagiair-bbl-admin), whether the (three-party) BPV-/praktijkleerovereenkomst is signed -- marked manually by HR after paper or externally-handled signing is complete, the writtenContract convention, NOT an automated e-signature flow (offer-esign design.md point 4, design.md D3). The BBL counterpart of Stagiair.bpvOvereenkomstOndertekend. Gates the type: bbl branch of nl-bpv-overeenkomst-vereist: must be true once startDate has passed. Null/absent for every non-bbl contract type (the rule is vacuous for them, design.md D4)."},
+                    "bpvSchoolNaam": {"type": "string", "nullable": true, "title": "BPV school", "description": "NL: for a type: bbl contract, the name of the onderwijsinstelling (ROC/vakschool) party to the BPV-/praktijkleerovereenkomst. Informational; null/absent for every non-bbl contract type."}
                 }
             },
             "Payslip": {
