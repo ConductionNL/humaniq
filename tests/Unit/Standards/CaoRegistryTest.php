@@ -201,7 +201,7 @@ class CaoRegistryTest extends TestCase
      */
     public function testVersionConstantIsBumped(): void
     {
-        $this->assertSame('2026-07.17', CaoRegistry::VERSION);
+        $this->assertSame('2026-07.18', CaoRegistry::VERSION);
 
     }//end testVersionConstantIsBumped()
 
@@ -230,7 +230,8 @@ class CaoRegistryTest extends TestCase
             'cao-zorg-vvt',
         ];
 
-        $this->assertCount(9, $available, 'Expected three existing CAOs plus six new sector CAOs.');
+        $this->assertCount(10, $available, 'Expected three existing CAOs plus six new sector CAOs plus cao-abu.');
+        $this->assertArrayHasKey('cao-abu', $available, 'cao-abu (uitzend-flexpool) must be listed by availableCaos().');
 
         foreach ($sixNew as $id) {
             $this->assertArrayHasKey($id, $available, $id.' must be listed by availableCaos().');

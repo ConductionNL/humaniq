@@ -585,6 +585,12 @@
 					"route": "PensionFilings"
 				},
 				{
+					"id": "WntDisclosures",
+					"label": "WNT-verantwoording",
+					"icon": "ScaleBalance",
+					"route": "WntDisclosures"
+				},
+				{
 					"id": "PayrollMutations",
 					"label": "Mutatieoverzichten",
 					"icon": "SwapHorizontal",
@@ -3732,6 +3738,133 @@
 							"columns": 2,
 							"exclude": [
 								"payrollRunId"
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "related",
+					"slot": "body",
+					"gridX": 8,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 9,
+					"props": {
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
+		},
+		{
+			"id": "WntDisclosures",
+			"route": "/wnt-disclosures",
+			"type": "index",
+			"title": "WNT-verantwoording",
+			"config": {
+				"register": "hrmq",
+				"schema": "WntDisclosure",
+				"description": "Jaarlijkse WNT-verantwoording per topfunctionaris: de bezoldiging per jaar en de publicatiestatus. De verzameling regels van een jaar IS de WNT-verantwoording van dat jaar (wnt-disclosure).",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"columns": [
+					"year",
+					"employeeId",
+					"totalCompensation",
+					"status"
+				],
+				"filters": [
+					"year",
+					"status"
+				],
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				}
+			}
+		},
+		{
+			"id": "WntDisclosureDetail",
+			"route": "/wnt-disclosures/:id",
+			"type": "detail",
+			"title": "WNT-verantwoording",
+			"config": {
+				"register": "hrmq",
+				"schema": "WntDisclosure",
+				"_note": "wnt-disclosure: the annual WNT-verantwoording record for one topfunctionaris (PensionFilingDetail shape -- a per-period disclosure carrying a real FK, employeeId -> Employee). wd-status leads top-left with the year/totalCompensation/status facts; wd-related sits top-right at matching height to resolve and link the referenced topfunctionaris Employee (whose wntTopfunctionaris/wntUitzonderingReden drive the nl-wnt-norm-overschrijding audit); wd-data runs below with the remaining fields excluding employeeId since Related already resolves it. No stats-block (the vendored schema's metric only aggregates over a collection, cannot echo a scalar field of the current object -- PensionFilingDetail reasoning). No Files/comms/calendar leaves -- the disclosure carries no attached-document/appointment fields. lifecycleActions expose the single publiceren transition (concept -> gepubliceerd, no guard). Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			},
+			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "publiceren",
+									"from": [
+										"concept"
+									],
+									"to": "gepubliceerd",
+									"label": "Publiceren"
+								}
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "data",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 3,
+					"props": {
+						"title": "Bezoldiging & status",
+						"icon": "ScaleBalance",
+						"content": {
+							"columns": 4,
+							"include": [
+								"year",
+								"totalCompensation",
+								"status"
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "data",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 3,
+					"gridWidth": 8,
+					"gridHeight": 6,
+					"props": {
+						"title": "Verantwoording",
+						"icon": "ScaleBalance",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId"
 							]
 						}
 					}
