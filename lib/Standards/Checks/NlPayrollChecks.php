@@ -32,11 +32,42 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Standards\Checks;
 
+use OCA\Hrmq\Payroll\TaxTables;
+
 /**
  * Dutch payroll / loonheffingen + global GL-control + EU A1 executable checks.
  */
 final class NlPayrollChecks implements CheckProvider, SeedsObjects
 {
+
+    /**
+     * The 30%-ruling maximum term in months (Belastingdienst beschikking; the
+     * `dertigProcentRegeling.maxDurationMonths` corpus leaf). An Employee check
+     * has no wage period to load a versioned table for, so the flat statutory
+     * value is a class constant here -- the `nl-30-percent-regeling` <= 30 and
+     * `nl-minimumloon-2026` >= 14,71 hardcoding precedent.
+     *
+     * @var int
+     */
+    private const THIRTY_PERCENT_MAX_DURATION_MONTHS = 60;
+
+    /**
+     * The 2026 general 30%-ruling annual salary norm in cents
+     * (`dertigProcentRegeling.salarisnormAlgemeen`, €48.013). Same
+     * Employee-check hardcoding precedent as the term above.
+     *
+     * @var int
+     */
+    private const THIRTY_PERCENT_SALARISNORM_ALGEMEEN_CENTS = 4801300;
+
+    /**
+     * The 2026 reduced 30%-ruling annual salary norm in cents
+     * (`dertigProcentRegeling.salarisnormMasterOnder30`, €36.497) for employees
+     * under 30 with a qualifying master's degree.
+     *
+     * @var int
+     */
+    private const THIRTY_PERCENT_SALARISNORM_MASTER_ONDER30_CENTS = 3649700;
 
 
     /**
@@ -92,6 +123,11 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects
                     && (($o['showsDeductionBasis'] ?? false) === true)
                     && (($o['showsMinimumWage'] ?? false) === true)
                     && (($o['showsEmployerEmployeeIds'] ?? false) === true),
+                // Wet LB 1964 art. 31a (aftopping WNT-norm) — the recorded 30%-ruling
+                // exemption re-derives cents-exact from the WNT-capped formula
+                // (30-procent-regeling): the NUMERIC enforcement the boolean-only
+                // nl-30-regeling-aftoppingsgrens never provided.
+                'nl-30-regeling-aftoppingsgrens-bedrag' => static fn(array $o, array $context): bool => self::thirtyPercentExemptionMatchesFormula($o, $context),
             ],
             'Employee'           => [
                 // Handboek Loonheffingen — a verified ID-document copy is kept until at least
@@ -107,6 +143,14 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects
                 // at the WNT-norm.
                 'nl-30-regeling-aftoppingsgrens'     => static fn(array $o): bool => (($o['thirtyPercentRulingGranted'] ?? false) !== true)
                     || (($o['thirtyPercentCappedAtWntNorm'] ?? false) === true),
+                // Wet LB 1964 art. 31a (looptijd) — a granted 30%-ruling runs at most
+                // 60 months from its start; flags an end date absent/beyond the term
+                // or a stale ruling past its end date (30-procent-regeling).
+                'nl-30-regeling-looptijd-5jaar'      => static fn(array $o): bool => self::thirtyPercentTermSatisfied($o),
+                // Wet LB 1964 art. 31a (salarisnorm) — a granted 30%-ruling requires an
+                // annualised salary at or above the applicable norm (general or the
+                // under-30-master reduced norm) (30-procent-regeling).
+                'nl-30-regeling-salarisnorm'         => static fn(array $o): bool => self::thirtyPercentSalaryNormSatisfied($o),
                 // Regulation (EC) 883/2004 art. 12 — a posted worker holds a valid A1
                 // certificate that runs no longer than 24 months from the posting.
                 'eu-a1-posted-worker'                => static fn(array $o): bool => (($o['postedWorker'] ?? false) !== true)
@@ -193,6 +237,12 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects
                     'thirtyPercentRulingGranted'     => true,
                     'thirtyPercentRulingRate'        => 30.0,
                     'thirtyPercentCappedAtWntNorm'   => true,
+                    // 30-procent-regeling: the seeded ruling qualifies for the reduced
+                    // (under-30 master's) salary norm, so its €45.600 annualised salary
+                    // clears €36.497 -- nl-30-regeling-salarisnorm passes. (startDate/
+                    // endDate are left absent: nl-30-regeling-looptijd-5jaar treats an
+                    // incomplete-but-not-contradictory ruling as vacuous, D5.)
+                    'thirtyPercentRulingReducedNormApplies' => true,
                     // Cross-jurisdiction-neutral fields so a DE/FR/US audit of this NL
                     // sample also reports zero violations (the matching country checks).
                     'elstamRetrieved'                => true,
@@ -429,6 +479,188 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects
         return $retain >= $required;
 
     }//end retainedAtLeastYearsAfterEnd()
+
+
+    /**
+     * The `nl-30-regeling-looptijd-5jaar` predicate (30-procent-regeling
+     * REQ-30P-004): vacuous when the ruling is not granted, or when the ruling
+     * has no `thirtyPercentRulingStartDate` (an incomplete-but-not-contradictory
+     * record — a MISSING start date is a data-quality signal deferred to a
+     * follow-up check, design.md D5, so it is not flagged here). Otherwise flags
+     * when the end date is absent, more than the 60-month maximum term after the
+     * start date, or already in the past while the ruling is still granted.
+     *
+     * @param array<string, mixed> $o The Employee object.
+     *
+     * @return bool
+     *
+     * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-004
+     */
+    private static function thirtyPercentTermSatisfied(array $o): bool
+    {
+        if (($o['thirtyPercentRulingGranted'] ?? false) !== true) {
+            return true;
+        }
+
+        $start = strtotime((string) ($o['thirtyPercentRulingStartDate'] ?? ''));
+        if ($start === false) {
+            // Incomplete-but-not-contradictory ruling (no start date) — vacuous,
+            // deferred to a follow-up data-quality check (design.md D5).
+            return true;
+        }
+
+        $end = strtotime((string) ($o['thirtyPercentRulingEndDate'] ?? ''));
+        if ($end === false) {
+            // Granted with a start but no end date — flag.
+            return false;
+        }
+
+        $maxEnd = strtotime('+'.self::THIRTY_PERCENT_MAX_DURATION_MONTHS.' months', $start);
+        if ($maxEnd !== false && $end > $maxEnd) {
+            // End date runs beyond the 60-month statutory term — flag.
+            return false;
+        }
+
+        // A stale ruling still marked granted after its end date has passed — flag.
+        return $end >= time();
+
+    }//end thirtyPercentTermSatisfied()
+
+
+    /**
+     * The `nl-30-regeling-salarisnorm` predicate (30-procent-regeling
+     * REQ-30P-004): vacuous when the ruling is not granted or
+     * `grossMonthlySalary` is non-numeric. Otherwise flags when the annualised
+     * salary (`grossMonthlySalary × 12`) is below the applicable norm — the
+     * reduced under-30-master norm when
+     * `thirtyPercentRulingReducedNormApplies` is true, else the general norm.
+     *
+     * @param array<string, mixed> $o The Employee object.
+     *
+     * @return bool
+     *
+     * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-004
+     */
+    private static function thirtyPercentSalaryNormSatisfied(array $o): bool
+    {
+        if (($o['thirtyPercentRulingGranted'] ?? false) !== true) {
+            return true;
+        }
+
+        if (self::numeric($o, 'grossMonthlySalary') === false) {
+            return true;
+        }
+
+        $annualCents = (int) round(((float) $o['grossMonthlySalary']) * 12 * 100);
+        $normCents   = ((($o['thirtyPercentRulingReducedNormApplies'] ?? false) === true)
+            ? self::THIRTY_PERCENT_SALARISNORM_MASTER_ONDER30_CENTS
+            : self::THIRTY_PERCENT_SALARISNORM_ALGEMEEN_CENTS);
+
+        return $annualCents >= $normCents;
+
+    }//end thirtyPercentSalaryNormSatisfied()
+
+
+    /**
+     * The `nl-30-regeling-aftoppingsgrens-bedrag` predicate (30-procent-regeling
+     * REQ-30P-004): vacuous when `thirtyPercentRulingExemption` is null. Else
+     * resolves the referenced Employee via `$context['payroll']
+     * ['employeesById']` (the `fleet.carAssignmentsById` precedent), re-derives
+     * `min(grossPay, dertigProcentRegeling.aftoppingsgrens.maand) ×
+     * employee.thirtyPercentRulingRate / 100` from the SAME versioned table the
+     * engine reads (via `TaxTables`, never a duplicated literal), and flags a
+     * cents-mismatch against the recorded amount. Vacuous on a dangling employee
+     * reference or a non-resolvable tax-year table (the `NlFleetChecks`
+     * vacuous-on-dangling posture).
+     *
+     * @param array<string, mixed> $o       The Payslip object.
+     * @param array<string, mixed> $context Evaluation context; reads `payroll.employeesById`.
+     *
+     * @return bool
+     *
+     * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-004
+     */
+    private static function thirtyPercentExemptionMatchesFormula(array $o, array $context): bool
+    {
+        if (($o['thirtyPercentRulingExemption'] ?? null) === null) {
+            // No 30%-ruling exemption recorded on this payslip — out of scope.
+            return true;
+        }
+
+        $employeeId = trim((string) ($o['employeeId'] ?? ''));
+        $employee   = ($context['payroll']['employeesById'][$employeeId] ?? null);
+        if (is_array($employee) === false) {
+            // Dangling employee reference — a different data-integrity problem,
+            // not this rule's job (NlFleetChecks vacuous-on-dangling posture).
+            return true;
+        }
+
+        $rate = ($employee['thirtyPercentRulingRate'] ?? null);
+        if (is_numeric($rate) === false) {
+            return true;
+        }
+
+        $tables = self::tablesFor((string) ($o['period'] ?? ''));
+        if ($tables === null) {
+            // No resolvable tax-year table — nl-engine-table-version's concern,
+            // not this arithmetic-consistency rule's. Vacuous.
+            return true;
+        }
+
+        $capCents      = $tables->dertigProcentRegeling()['aftoppingsgrensMaandCents'];
+        $grossCents    = self::cents($o['grossPay'] ?? null);
+        $expectedCents = (int) round((min($grossCents, $capCents) * ((float) $rate)) / 100);
+        $recordedCents = self::cents($o['thirtyPercentRulingExemption'] ?? null);
+
+        return $expectedCents === $recordedCents;
+
+    }//end thirtyPercentExemptionMatchesFormula()
+
+
+    /**
+     * Load the versioned tax-year table for a Payslip's `period` (`YYYY-MM` ->
+     * `nl-{YYYY}`, the `NlFleetChecks::tablesFor()` precedent), or null when
+     * unparseable/unavailable. Never throws.
+     *
+     * @param string $period Wage period (YYYY-MM).
+     *
+     * @return TaxTables|null
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) TaxTables::load() is a pure value-object factory method — the same unguarded precedent NlFleetChecks::tablesFor() and PayrollRunService already use.
+     */
+    private static function tablesFor(string $period): ?TaxTables
+    {
+        if (preg_match('/^(\d{4})/', trim($period), $matches) !== 1) {
+            return null;
+        }
+
+        try {
+            return TaxTables::load('nl-'.$matches[1]);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+    }//end tablesFor()
+
+
+    /**
+     * Convert a euro-denominated value to integer cents (`round($euros × 100)`,
+     * the `NlFleetChecks::cents()` precedent). Non-numeric/null values convert
+     * to 0.
+     *
+     * @param mixed $euros The raw field value.
+     *
+     * @return int
+     */
+    private static function cents(mixed $euros): int
+    {
+        if (is_numeric($euros) === false) {
+            return 0;
+        }
+
+        return (int) round(((float) $euros) * 100);
+
+    }//end cents()
 
 
     /**

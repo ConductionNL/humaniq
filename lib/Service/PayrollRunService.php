@@ -482,6 +482,15 @@ class PayrollRunService
                 $grossMonthlySalaryCents += $bijtellingCents;
             }
 
+            // 30-procent-regeling (design.md D2/D7): a granted 30%-ruling feeds
+            // its applied rate into the engine, which reduces the TAXABLE base
+            // (pack `belastbaarLoon` binding) while leaving the net-fold's gross
+            // untouched -- so nettoPay RISES. Not granted -> rate 0.0 -> the
+            // pack's cappedRate exemption degrades to zero (byte-identical path).
+            $thirtyPercentRulingRate = ((($employee['thirtyPercentRulingGranted'] ?? false) === true)
+                ? (float) ($employee['thirtyPercentRulingRate'] ?? 0.0)
+                : 0.0);
+
             $input = new CalculationInput(
                 grossMonthlySalaryCents: $grossMonthlySalaryCents,
                 taxTableColor: $taxTableColor,
@@ -492,10 +501,18 @@ class PayrollRunService
                 aofTariff: $aofTariff,
                 whkPercentage: $whkPercentage,
                 verzekeringsplichtig: (($employee['isDga'] ?? false) !== true),
-                jurisdiction: $jurisdiction
+                jurisdiction: $jurisdiction,
+                thirtyPercentRulingRate: $thirtyPercentRulingRate
             );
 
             $result = $this->calculator->calculate($input, $tables);
+
+            // 30-procent-regeling (design.md D5): independently re-derive the
+            // exemption amount (the same cappedRate formula, in PHP -- the
+            // bijtelling D3 precedent) over the SAME tvl the engine saw, to
+            // stamp the Payslip. nl-30-regeling-aftoppingsgrens-bedrag is the
+            // drift detector if this ever disagrees with the pack binding.
+            $thirtyPercentExemptionCents = $this->thirtyPercentExemptionCentsFor($employee, $grossMonthlySalaryCents, $tables);
 
             // retro-adjustments (design.md D4): fold every APPLIED
             // PayrollAdjustment settling into THIS period for this employee
@@ -525,6 +542,7 @@ class PayrollRunService
             $payload = $this->payslipPayload($runId, $employee, $contract, $period, $result);
             $payload = array_merge($payload, $this->sickPayFields($sickCase, $sickResult));
             $payload = array_merge($payload, $this->bijtellingFields($carAssignment, $bijtellingCents));
+            $payload = array_merge($payload, $this->thirtyPercentRulingFields($thirtyPercentExemptionCents));
             $payload = array_merge($payload, $this->retroAdjustmentFields($retroAdjustmentCents, $result->nettoPayCents));
             $payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents, ($result->nettoPayCents + $retroAdjustmentCents)));
             $payload = array_merge($payload, $this->loonbeslagFields($loonbeslag, $loonbeslagDeductionCents, $nettoPaySoFarCents));
@@ -1202,6 +1220,66 @@ class PayrollRunService
         ];
 
     }//end bijtellingFields()
+
+
+    /**
+     * Re-derive the 30%-ruling tax-free exemption for an employee over the
+     * gross fed to the engine (30-procent-regeling design.md D2/D5, the
+     * `bijtellingCentsFor()` precedent): `min(gross, WNT-aftoppingsgrens.maand)
+     * x thirtyPercentRulingRate / 100`, rounded to the cent -- the SAME
+     * cappedRate formula the pack's `thirtyPercentExemption` binding evaluates,
+     * computed here in PHP over the SAME tvl the calculator saw so the two are
+     * consistent by construction. Returns null when no ruling is granted or the
+     * applied rate is not a positive number, so the Payslip records null rather
+     * than €0,00 for a non-ruling employee.
+     *
+     * @param array<string, mixed> $employee  The Employee.
+     * @param int                  $grossCents The gross fed to the engine (`tvl`), in cents -- post bijtelling/sick-pay substitution.
+     * @param TaxTables            $tables    The tax-year parameter set.
+     *
+     * @return int|null The exemption in cents, or null when not applicable.
+     *
+     * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-003
+     */
+    private function thirtyPercentExemptionCentsFor(array $employee, int $grossCents, TaxTables $tables): ?int
+    {
+        if (($employee['thirtyPercentRulingGranted'] ?? false) !== true) {
+            return null;
+        }
+
+        $rate = ($employee['thirtyPercentRulingRate'] ?? null);
+        if (is_numeric($rate) === false || ((float) $rate) <= 0.0) {
+            return null;
+        }
+
+        $capCents = $tables->dertigProcentRegeling()['aftoppingsgrensMaandCents'];
+
+        return (int) round((min($grossCents, $capCents) * ((float) $rate)) / 100);
+
+    }//end thirtyPercentExemptionCentsFor()
+
+
+    /**
+     * The `thirtyPercentRulingExemption` Payslip field to merge onto the
+     * payload (30-procent-regeling design.md D5): null when no ruling was
+     * applied -- a normal payslip stays byte-identical to the pre-change shape
+     * (the `bijtellingFields()` precedent). `grossPay` already carries the full
+     * (unreduced) gross; this only records the tax-free allowance amount, it
+     * does not fold anything into `nettoPay`.
+     *
+     * @param int|null $exemptionCents The re-derived exemption, in cents, or null when not applicable.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-003
+     */
+    private function thirtyPercentRulingFields(?int $exemptionCents): array
+    {
+        return [
+            'thirtyPercentRulingExemption' => ($exemptionCents === null ? null : $this->euros($exemptionCents)),
+        ];
+
+    }//end thirtyPercentRulingFields()
 
 
     /**
