@@ -6,27 +6,27 @@
 > `Employee.iban`/`tenaamstelling` exists elsewhere before treating
 > REQ-AUTH-003's trigger condition as unmet.
 
-- [ ] 1. Docs: add an "Authentication" section to `README.md` (or `docs/`)
+- [x] 1. Docs: add an "Authentication" section to `README.md` (or `docs/`)
   stating that DigiD, Yivi and eHerkenning are configured at the Nextcloud
   instance level via `user_saml` (SAML 2.0, Logius DigiD/eHerkenning broker)
   and/or `user_oidc` (OIDC, Yivi-compatible bridge), entirely outside hrmq's
   install footprint, per REQ-AUTH-001/-002
-- [ ] 2. Docs: state explicitly that once either backend authenticates a
+- [x] 2. Docs: state explicitly that once either backend authenticates a
   person, hrmq requires nothing further — no hrmq-side setup, certificate,
   or configuration step exists or is needed — per REQ-AUTH-002
-- [ ] 3. Docs: record the superseded draft (`spec/irma-digid-auth`) as idea
+- [x] 3. Docs: record the superseded draft (`spec/irma-digid-auth`) as idea
   source only, listing which of its ideas were rejected outright (federation
   stack, fraud scoring, hash-chained audit) versus deferred with a named
   trigger (step-up) per REQ-AUTH-001/-003
-- [ ] 4. Docs: state the REQ-AUTH-003 revisit condition verbatim (a genuine
+- [x] 4. Docs: state the REQ-AUTH-003 revisit condition verbatim (a genuine
   sensitive self-service write action is proposed AND a concrete
   NC-exposed assurance signal is verified) so a future proposal can cite it
   directly per REQ-AUTH-003
-- [ ] 5. Verify: confirm via `grep` against current HEAD that no
+- [x] 5. Verify: confirm via `grep` against current HEAD that no
   `IdentityProvider`/`Session`/`AuthEvent`/`FraudSignal`/`AttributeMapping`
   schema, route, controller, or service exists anywhere in the repo (this
   change must not introduce any) per REQ-AUTH-001
-- [ ] 6. Verify: re-check `openspec/specs/mijn-hr-self-service/spec.md`
+- [x] 6. Verify: re-check `openspec/specs/mijn-hr-self-service/spec.md`
   (`MijnLoonstroken` read-only) and `openspec/specs/
   payroll-sepa-netpay-shillinq/spec.md` (`iban`/`tenaamstelling`
   payroll-authored) are still accurate at implementation time — if either
