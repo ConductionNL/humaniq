@@ -1342,6 +1342,69 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-ambtenaar-genormaliseerd"
+                },
+                "employeeNumber": "EMP-AOR-0001",
+                "firstName": "Wendel",
+                "lastName": "Postma",
+                "dateOfBirth": "1985-06-20",
+                "startDate": "2021-09-01",
+                "grossMonthlySalary": 4100.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "nextcloudUserId": "admin",
+                "administrationId": "ADM-001",
+                "publicSectorRegime": "genormaliseerd",
+                "ambtseedAfgelegdOp": "2021-09-01",
+                "nevenwerkzaamhedenGemeld": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-ambtenaar-politie"
+                },
+                "employeeNumber": "EMP-AOR-0002",
+                "firstName": "Ravi",
+                "lastName": "Bhagwandin",
+                "dateOfBirth": "1988-11-03",
+                "startDate": "2019-04-01",
+                "grossMonthlySalary": 3900.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "nextcloudUserId": "admin",
+                "administrationId": "ADM-001",
+                "publicSectorRegime": "ambtenarenwet",
+                "ambtseedAfgelegdOp": "2019-04-01",
+                "nevenwerkzaamhedenGemeld": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-ambtenaar-eed-ontbreekt"
+                },
+                "employeeNumber": "EMP-AOR-0003",
+                "firstName": "Ingrid",
+                "lastName": "Doornbos",
+                "dateOfBirth": "1992-02-14",
+                "startDate": "2026-01-15",
+                "grossMonthlySalary": 3700.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "nextcloudUserId": "admin",
+                "administrationId": "ADM-001",
+                "publicSectorRegime": "ambtenarenwet",
+                "ambtseedAfgelegdOp": null,
+                "nevenwerkzaamhedenGemeld": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "Timesheet",
                     "slug": "example-timesheet-adm002-2026-05"
                 },

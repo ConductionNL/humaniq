@@ -4,37 +4,37 @@
 > auto-discovery, and the labour-corpus mechanism (`hr-signals` precedent). Verify against HEAD, not
 > this brief.
 
-- [ ] 1. Schema: `Employee` (`lib/Settings/register.d/hr-objects.json`) gains `publicSectorRegime`
+- [x] 1. Schema: `Employee` (`lib/Settings/register.d/hr-objects.json`) gains `publicSectorRegime`
   (nullable enum `genormaliseerd`/`ambtenarenwet`, default null) per REQ-AOR-001
-- [ ] 2. Schema: `Employee` gains `ambtseedAfgelegdOp` (date, nullable) per REQ-AOR-001
-- [ ] 3. Schema: `Employee` gains `nevenwerkzaamhedenGemeld` (boolean, default `false`) per
+- [x] 2. Schema: `Employee` gains `ambtseedAfgelegdOp` (date, nullable) per REQ-AOR-001
+- [x] 3. Schema: `Employee` gains `nevenwerkzaamhedenGemeld` (boolean, default `false`) per
   REQ-AOR-001
-- [ ] 4. Corpus rule `nl-ambtenaar-eed-vereist` in `lib/Standards/rules/labour.json`
+- [x] 4. Corpus rule `nl-ambtenaar-eed-vereist` in `lib/Standards/rules/labour.json`
   (`framework: ambtenarenwet-2017`, `Employee`, `mandatory`, `machineCheckable: true`, sourced
   Ambtenarenwet 2017 art. 5) per REQ-AOR-002
-- [ ] 5. Corpus rule `nl-ambtenaar-nevenwerkzaamheden-melding` in the same file
+- [x] 5. Corpus rule `nl-ambtenaar-nevenwerkzaamheden-melding` in the same file
   (`framework: ambtenarenwet-2017`, `Employee`, `mandatory`, `machineCheckable: true`, sourced
   Ambtenarenwet 2017 art. 9) per REQ-AOR-003
-- [ ] 6. Add `ambtenarenwet-2017` to `lib/Standards/rules/SCHEMA.md`'s framework-examples list (the
+- [x] 6. Add `ambtenarenwet-2017` to `lib/Standards/rules/SCHEMA.md`'s framework-examples list (the
   `nl-pensioenaangifte`/`hr-signals` precedent) per REQ-AOR-002 / REQ-AOR-003
-- [ ] 7. Bump `RuleCatalogue::VERSION` per REQ-AOR-002 / REQ-AOR-003
-- [ ] 8. Provider `lib/Standards/Checks/NlAorChecks.php` (`CheckProvider`, auto-discovered):
+- [x] 7. Bump `RuleCatalogue::VERSION` per REQ-AOR-002 / REQ-AOR-003
+- [x] 8. Provider `lib/Standards/Checks/NlAorChecks.php` (`CheckProvider`, auto-discovered):
   `nl-ambtenaar-eed-vereist` predicate — vacuous when `publicSectorRegime` is null, else violates
   when `ambtseedAfgelegdOp` is null, per REQ-AOR-002
-- [ ] 9. Provider: `nl-ambtenaar-nevenwerkzaamheden-melding` predicate — vacuous when
+- [x] 9. Provider: `nl-ambtenaar-nevenwerkzaamheden-melding` predicate — vacuous when
   `publicSectorRegime` is null, else violates when `nevenwerkzaamhedenGemeld` is `false`, per
   REQ-AOR-003
-- [ ] 10. Seed data: one `genormaliseerd` `Employee` with both fields satisfied per REQ-AOR-004 /
+- [x] 10. Seed data: one `genormaliseerd` `Employee` with both fields satisfied per REQ-AOR-004 /
   design.md Seed Data
-- [ ] 11. Seed data: one `ambtenarenwet` `Employee` with both fields satisfied per REQ-AOR-004 /
+- [x] 11. Seed data: one `ambtenarenwet` `Employee` with both fields satisfied per REQ-AOR-004 /
   design.md Seed Data
-- [ ] 12. Seed data: one `ambtenarenwet` `Employee` with `ambtseedAfgelegdOp: null` proving the
+- [x] 12. Seed data: one `ambtenarenwet` `Employee` with `ambtseedAfgelegdOp: null` proving the
   `nl-ambtenaar-eed-vereist` violation branch per REQ-AOR-004 / design.md Seed Data
-- [ ] 13. Tests: `tests/Unit/Standards/NlAorChecksTest.php` — both violation branches, both clean
+- [x] 13. Tests: `tests/Unit/Standards/NlAorChecksTest.php` — both violation branches, both clean
   passes, and vacuous pass for every `publicSectorRegime: null` employee (including the pre-existing
   seed population), driving the REAL `RuleEngine` + catalogue per REQ-AOR-002 / REQ-AOR-003 /
   REQ-AOR-004
-- [ ] 14. Quality gates: `composer lint` green, full PHPUnit suite green; SPDX + `@spec` tags on every
+- [x] 14. Quality gates: `composer lint` green, full PHPUnit suite green; SPDX + `@spec` tags on every
   new/changed PHP method (gate-16); i18n keys ENGLISH
 
 Acceptance criteria (plain reminders, not tasks):
