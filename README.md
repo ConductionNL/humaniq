@@ -202,6 +202,54 @@ availability/preferences, skills-matching, open-shift bidding/shift-swap and
 coverage alerts are named fast-follows. There is no automation between a
 published roster and realised `AttendanceRecord`/`Timesheet` hours.
 
+## Uitzendkrachten & flexpool — hrmq serves the uitzendbureau, not the inlener
+
+hrmq models an uitzendkracht as **the agency's own `Employee`** on an
+`EmploymentContract` of `type: agency`, paid through the normal payroll path.
+This is a deliberate side choice: **hrmq serves the uitzendbureau (the agency),
+never the inlener (the hirer).** Under WAADI the uitzendbureau is the werkgever
+and carries the payroll obligation; an inlener has *no* payroll relationship
+with a temp worker at all. hrmq's entire product is a payroll engine, so the
+agency side is the only side its architecture fits. There is deliberately **no
+`Bureau`, no `InhuurOpdracht`, no SNA-keurmerk / G-rekening /
+ketenaansprakelijkheid / invoice-matching / TCO** schema or service anywhere in
+this app — those are inlener-side vendor-risk concerns and would be a different
+capability with a different employer-of-record relationship, not an extension
+of this one. **A future contributor must not silently rebuild the inlener side
+inside this capability.**
+
+The agency contract carries three HR-entered fields on `EmploymentContract`:
+
+- **`uitzendFase`** (`A`/`B`/`C`, nullable) — the ABU/NBBU fasensysteem stage.
+  It is HR-entered, **not** derived from a worked-weeks count. This change does
+  **not** assert the exact number of weeks that define fase A — that figure has
+  changed across successive CAO texts (notably around the 2020 WAB) and is not
+  cited here. The check `nl-uitzendbeding-alleen-fase-a` therefore enforces only
+  the *structural* relationship (below), never a week-count.
+- **`uitzendbedingVanToepassing`** (boolean, nullable) — whether the
+  uitzendbeding (BW art. 7:691 lid 2, which ends the uitzendovereenkomst by
+  operation of law when the inlener ends the assignment) applies. When `true`,
+  `uitzendFase` must equal `A` — the beding is not legally sound past fase A
+  (`nl-uitzendbeding-alleen-fase-a`, mandatory). Agency-scoped: a non-`agency`
+  contract is never evaluated.
+- **`inlenersbeloningReferentie`** (string, nullable) — a free-text reference to
+  the documentation backing the contracted `hourlyWage` against the inlener's
+  comparable-function beloning (WAADI art. 8). It is an **audit-trail field, not
+  a computed figure** (the same trust boundary as `Loonbeslag.beslagvrijeVoet`):
+  `nl-inlenersbeloning-onderbouwing-vereist` (mandatory, agency-scoped) checks
+  only that the field is **present** when an agency contract sets an `hourlyWage`
+  — never the correctness of the referenced amount.
+
+ABU/NBBU wage data ships through the **existing CAO mechanism** as
+`lib/Standards/cao/cao-abu.json`, fully placeholder-marked
+(`verified: false`, `placeholder: true`, `checkAgainst` on every leaf) — this
+change proves the wiring, **not** the compliance value. It contains **no sourced
+ABU/NBBU loontabel figure**; the existing `nl-cao-minimumloon-schaal` check
+evaluates an agency contract that sets `cao: "cao-abu"` + a `caoSchaal` but
+passes vacuously until a maintainer transcribes the real loontabel. Rostering
+and time-attendance already cover agency employees unchanged — both are scoped
+by `employeeId` only, with no `type` branch.
+
 ## BHV (bedrijfshulpverlening) — certificate signalling, not a coverage formula
 
 hrmq tracks BHV-related certifications (`BhvCertificering`: employee, role
@@ -445,3 +493,60 @@ methods. Be aware of the following:
   prompt-collecting modal is a named fast-follow; `occ hrmq:avg:rectify
   --changes '{"field":"value"}'` and the `POST /api/dsr/rectify` endpoint
   are both fully functional today.
+
+## Stagiairs & BBL-leerlingen (stageovereenkomst vs. arbeidsovereenkomst)
+
+hrmq distinguishes the two legally different things the word "stage" covers,
+and models each where it structurally belongs:
+
+- **A stagiair (HBO/WO/MBO-BOL, zonder dienstverband)** is a first-class
+  `Stagiair` schema, kept **structurally outside** `Employee` and the payroll
+  engine. A stagiair has no arbeidsovereenkomst and, in the ordinary case, no
+  loonheffing on the stagevergoeding, so no payroll schema (`PayrollRun`,
+  `Payslip`, `PayrollMutationReport`) references `Stagiair` and
+  `PayrollCalculator` never reads it — a stagiair can never reach the loon
+  path by accident. It lives under the **Personeel/Medewerkers** menu with a
+  plain `aangemeld → lopend → afgerond`/`gestopt` lifecycle.
+- **A BBL-leerling (MBO-BBL)** has a real *leerarbeidsovereenkomst* and is,
+  fiscally, an ordinary employee (loon, loonheffing, premies, CAO-toepassing
+  all apply — Belastingdienst, Handboek Loonheffingen, hoofdstuk 17
+  "Stagiairs"). It is therefore **not** a second entity: it is an
+  `EmploymentContract` with `type: bbl`, visible on the existing contract
+  pages, flowing through `PayrollCalculator` and the NL jurisdiction pack
+  **exactly like** a `permanent`/`temporary` contract — no `type`-specific
+  branch exists or was added.
+
+Be aware of the following boundaries:
+
+- **BPV-overeenkomst signing is a plain HR-entered boolean, not an
+  e-signature flow.** `Stagiair.bpvOvereenkomstOndertekend` and
+  `EmploymentContract.bpvOvereenkomstOndertekend` mirror
+  `EmploymentContract.writtenContract` exactly — a fact HR marks true once
+  the three-party praktijkleerovereenkomst (leerbedrijf/onderwijsinstelling/
+  deelnemer) is signed by whatever external means the parties use. This is a
+  **deliberate, documented boundary**: the shipped `offer-esign` leaf already
+  proved digital multi-party signing through docudesk cannot complete for a
+  non-NC-user signer (`SigningService::sign()` requires
+  `signer.userId === $user->getUID()`, offer-esign design.md point 4), and two
+  of POK's three signers are not ordinarily Nextcloud users of this instance.
+  Building a second signing mechanism for exactly the case the first one ruled
+  out would not fix it. The corpus rule `nl-bpv-overeenkomst-vereist` flags a
+  placement (a `Stagiair`, or a `type: bbl` `EmploymentContract` — never any
+  other contract type) that has **started** with the BPV still unsigned.
+- **No stagevergoeding fiscal ceiling is asserted.**
+  `Stagiair.stagevergoedingPerMaand` is stored as a plain informational figure
+  and no machine-checkable rule enforces an untaxed euro limit, because no
+  single Belastingdienst threshold can be asserted in the abstract for every
+  organisation. A future change sourcing the exact Handboek Loonheffingen
+  onkostenvergoeding figure (with URL + effective date) can add the rule using
+  the `{value, source, verified}` leaf discipline (`verified: false` +
+  `checkAgainst` until confirmed).
+- **Out of scope (named fast-follows, not silently dropped):** SBB-erkenning/
+  CREBO validation, RVO Subsidieregeling Praktijkleren submission/polling
+  (no `openconnector`-mediated integration surface exists in hrmq today);
+  automated 25%/50%/75% evaluation scheduling and reminders (hrmq has no
+  task-scheduling capability to create them against); BBL-staffel payscale
+  data (a data-only follow-up on a sourced sector-CAO via the existing
+  `caoSchaal` mechanism). The minimum-wage rules (`nl-minimumloon-2026`/
+  `nl-minimumuurloon-wet`) remain age-unaware — a pre-existing corpus gap that
+  affects every contract type, not just `bbl`.

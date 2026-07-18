@@ -488,14 +488,46 @@ class NlCaoChecksTest extends TestCase
         $rows   = NlCaoChecks::seedObjects()['Cao'];
         $caoIds = array_column($rows, 'caoId');
 
-        $this->assertCount(9, $rows, 'Expected one Cao row per corpus CAO (three existing + six sector CAOs).');
-        $this->assertSame(9, count(array_unique($caoIds)), 'caoId must be unique across all nine seeded rows.');
+        $this->assertCount(10, $rows, 'Expected one Cao row per corpus CAO (three existing + six sector CAOs + cao-abu).');
+        $this->assertSame(10, count(array_unique($caoIds)), 'caoId must be unique across all ten seeded rows.');
 
-        foreach (['cao-rijk', 'cao-gemeenten', 'cao-onderwijs-po', 'cao-onderwijs-vo', 'cao-ziekenhuizen', 'cao-zorg-vvt'] as $id) {
+        foreach (['cao-rijk', 'cao-gemeenten', 'cao-onderwijs-po', 'cao-onderwijs-vo', 'cao-ziekenhuizen', 'cao-zorg-vvt', 'cao-abu'] as $id) {
             $this->assertContains($id, $caoIds, $id.' must be seeded as a Cao object.');
         }
 
     }//end testSeedObjectsCoversAllNineCaosWithNoDuplicates()
+
+
+    /**
+     * D4 wiring (uitzend-flexpool REQ-UITZ-004): an agency-type
+     * EmploymentContract naming `cao: "cao-abu"` + a caoSchaal is EVALUATED by
+     * the existing nl-cao-minimumloon-schaal check (cao-abu resolves through
+     * CaoRegistry) with no new PHP -- and passes vacuously because cao-abu ships
+     * placeholder, so minMaandloonCents resolves null. This proves the check
+     * evaluates the agency contract at all, without asserting a real compliance
+     * figure.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/uitzend-flexpool/specs/uitzend-flexpool/spec.md
+     */
+    public function testAgencyContractWithCaoAbuIsEvaluatedButVacuous(): void
+    {
+        // cao-abu is loaded and resolvable through the existing registry.
+        $this->assertArrayHasKey('cao-abu', CaoRegistry::availableCaos());
+        $this->assertIsArray(CaoRegistry::get('cao-abu'));
+
+        // Even at a EUR 1.00 salary the placeholder figure raises no violation
+        // -- the check applies to the agency contract but degrades to advisory.
+        $contract   = ['employeeId' => 'emp-1', 'type' => 'agency', 'cao' => 'cao-abu', 'caoSchaal' => 'A'];
+        $violations = RuleEngine::evaluate('EmploymentContract', $contract, $this->context(1.00, 'cao-abu'));
+
+        $this->assertFalse(
+            $this->hasViolation($violations, 'nl-cao-minimumloon-schaal'),
+            'cao-abu is placeholder -- nl-cao-minimumloon-schaal must evaluate the agency contract but pass vacuously.'
+        );
+
+    }//end testAgencyContractWithCaoAbuIsEvaluatedButVacuous()
 
 
 }//end class

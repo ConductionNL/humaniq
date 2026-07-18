@@ -1088,6 +1088,142 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-visser-bbl"
+                },
+                "employeeId": "employee-visser",
+                "type": "bbl",
+                "writtenContract": true,
+                "startDate": "2026-07-01",
+                "endDate": "2028-06-30",
+                "hoursPerWeek": 32,
+                "hourlyWage": 16.00,
+                "cao": null,
+                "normfunctieId": null,
+                "awfTariff": "high",
+                "aanzegdOn": null,
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "bpvOvereenkomstOndertekend": true,
+                "bpvSchoolNaam": "ROC van Amsterdam",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-uitzend-abu"
+                },
+                "employeeNumber": "EMP-0009",
+                "firstName": "Robin",
+                "lastName": "Uitzendkracht",
+                "dateOfBirth": "1998-05-22",
+                "startDate": "2026-03-01",
+                "grossMonthlySalary": 2900.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "iban": "NL00BANK0987654321",
+                "tenaamstelling": "R. Uitzendkracht",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-uitzend-abu-fase-a"
+                },
+                "employeeId": "employee-uitzend-abu",
+                "type": "agency",
+                "writtenContract": true,
+                "startDate": "2026-03-01",
+                "endDate": null,
+                "hoursPerWeek": 32,
+                "hourlyWage": 16.50,
+                "cao": "cao-abu",
+                "caoSchaal": "A",
+                "normfunctieId": null,
+                "awfTariff": "high",
+                "aanzegdOn": null,
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "uitzendFase": "A",
+                "uitzendbedingVanToepassing": true,
+                "inlenersbeloningReferentie": "Inlener loonschaal referentie, functie magazijnmedewerker, schaal 3 (onderbouwing 2026-03-01)",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Stagiair",
+                    "slug": "stagiair-devries"
+                },
+                "onderwijsinstelling": "Hogeschool van Amsterdam",
+                "opleiding": "HBO Bedrijfskunde",
+                "niveau": "hbo",
+                "stagetype": "afstudeerstage",
+                "startDate": "2026-02-01",
+                "endDate": "2026-08-31",
+                "begeleiderId": "employee-jansen",
+                "stagevergoedingPerMaand": 400.00,
+                "bpvOvereenkomstOndertekend": true,
+                "verzekeringGeverifieerd": true,
+                "status": "lopend",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Stagiair",
+                    "slug": "stagiair-bakker"
+                },
+                "onderwijsinstelling": "ROC van Amsterdam",
+                "opleiding": "MBO Applicatieontwikkeling",
+                "niveau": "mbo-bol",
+                "stagetype": "meeloopstage",
+                "startDate": "2026-06-01",
+                "endDate": "2027-01-31",
+                "begeleiderId": "employee-devries",
+                "stagevergoedingPerMaand": 300.00,
+                "bpvOvereenkomstOndertekend": false,
+                "verzekeringGeverifieerd": false,
+                "status": "lopend",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-uitzend-abu-beding-fase-b"
+                },
+                "employeeId": "employee-uitzend-abu",
+                "type": "agency",
+                "writtenContract": true,
+                "startDate": "2024-06-01",
+                "endDate": null,
+                "hoursPerWeek": 32,
+                "hourlyWage": 17.25,
+                "cao": "cao-abu",
+                "caoSchaal": "B",
+                "normfunctieId": null,
+                "awfTariff": "high",
+                "aanzegdOn": null,
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "uitzendFase": "B",
+                "uitzendbedingVanToepassing": true,
+                "inlenersbeloningReferentie": "Inlener loonschaal referentie, functie orderpicker, schaal 4 (onderbouwing 2024-06-01)",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-001"
                 },
@@ -1290,6 +1426,73 @@
                 "kvkNumber": "87654321",
                 "loonheffingennummer": "000000000L02",
                 "active": true
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Administration",
+                    "slug": "example-adm-004"
+                },
+                "administrationId": "ADM-004",
+                "name": "Example: Van der Berg Advies B.V. (DGA)",
+                "kvkNumber": "44556677",
+                "loonheffingennummer": "000000000L04",
+                "active": true,
+                "mode": "dga_single_person",
+                "_note": "single-person-modes (design.md Seed Data, reconciled to HEAD -- the design's ADM-003 slot was already taken by abp-aansluiting, so the DGA fixture lands on ADM-004): a single-person BV in dga_single_person mode. Its one seeded DGA Employee (employee-devries-dga: isDga true, grossMonthlySalary 3500 -- below the EUR 4.833,33/maand implied by the EUR 58.000 annual norm, no gebruikelijkloonJustification) proves GET /api/payroll/dga-status returns met:false and the MijnGebruikelijkLoon banner renders the warning variant, while occ hrmq:rules:audit still reports the same nl-gebruikelijkloon-norm violation it already did. nl-single-person-mode-employee-count is SATISFIED (exactly one active DGA). A user whose active administratie is ADM-004 sees Salarissen/Medewerkers but NOT org-chart/planning/team-approval menus (REQ-SPM-003)."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-devries-dga"
+                },
+                "employeeNumber": "EMP-ADM004-DGA",
+                "firstName": "Robin",
+                "lastName": "De Vries",
+                "dateOfBirth": "1980-06-20",
+                "startDate": "2023-01-01",
+                "grossMonthlySalary": 3500.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "nextcloudUserId": "dga-devries",
+                "isDga": true,
+                "administrationId": "ADM-004",
+                "_note": "single-person-modes (design.md Seed Data): the DGA of ADM-004. isDga true + grossMonthlySalary 3500 (annualised EUR 42.000, below the EUR 58.000 gebruikelijkloon norm) + no gebruikelijkloonJustification -> a nl-gebruikelijkloon-norm violation AND dgaStatus met:false. nextcloudUserId 'dga-devries' is a shape example (the hr-devries seed precedent) -- not a real dev-login account, so live self-service is demonstrated once such an account is linked; the dgaStatus contract itself is pinned by PayrollControllerDgaStatusTest."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AdministrationAccess",
+                    "slug": "example-admaccess-admin-adm004"
+                },
+                "userId": "admin",
+                "administrationId": "ADM-004",
+                "role": "accountant"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Administration",
+                    "slug": "example-adm-005"
+                },
+                "administrationId": "ADM-005",
+                "name": "Example: Eenmanszaak Bakker (geen loon)",
+                "kvkNumber": "55667788",
+                "active": true,
+                "mode": "eenmanszaak_no_payroll",
+                "_note": "single-person-modes (design.md Seed Data, ADM-004->ADM-005 reconciled to HEAD): a sole proprietorship in eenmanszaak_no_payroll mode with ZERO seeded Employee rows (a true eenmanszaak takes winstuitkering, never loon). A user whose active administratie is ADM-005 sees NO PayrollGroup/ProformaPayslipMenu entries (REQ-SPM-004) and none of the multi-person menus, while Medewerkers/MijnHrGroup remain. No loonheffingennummer -- no payroll is ever filed."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AdministrationAccess",
+                    "slug": "example-admaccess-admin-adm005"
+                },
+                "userId": "admin",
+                "administrationId": "ADM-005",
+                "role": "accountant"
             },
             {
                 "@self": {
@@ -1514,69 +1717,98 @@
             {
                 "@self": {
                     "register": "hrmq",
-                    "schema": "Administration",
-                    "slug": "example-adm-004"
+                    "schema": "Employee",
+                    "slug": "employee-wnt-schoenmaker"
                 },
-                "administrationId": "ADM-004",
-                "name": "Example: Van der Berg Advies B.V. (DGA)",
-                "kvkNumber": "44556677",
-                "loonheffingennummer": "000000000L04",
-                "active": true,
-                "mode": "dga_single_person",
-                "_note": "single-person-modes (design.md Seed Data, reconciled to HEAD -- the design's ADM-003 slot was already taken by abp-aansluiting, so the DGA fixture lands on ADM-004): a single-person BV in dga_single_person mode. Its one seeded DGA Employee (employee-devries-dga: isDga true, grossMonthlySalary 3500 -- below the EUR 4.833,33/maand implied by the EUR 58.000 annual norm, no gebruikelijkloonJustification) proves GET /api/payroll/dga-status returns met:false and the MijnGebruikelijkLoon banner renders the warning variant, while occ hrmq:rules:audit still reports the same nl-gebruikelijkloon-norm violation it already did. nl-single-person-mode-employee-count is SATISFIED (exactly one active DGA). A user whose active administratie is ADM-004 sees Salarissen/Medewerkers but NOT org-chart/planning/team-approval menus (REQ-SPM-003)."
+                "employeeNumber": "EMP-9001",
+                "firstName": "Trees",
+                "lastName": "Schoenmaker",
+                "dateOfBirth": "1968-05-02",
+                "startDate": "2019-01-01",
+                "grossMonthlySalary": 18000.00,
+                "taxTableColor": "wit",
+                "loonheffingenVerklaringOnFile": true,
+                "wntTopfunctionaris": true,
+                "wntUitzonderingReden": null,
+                "administrationId": "ADM-001",
+                "_note": "wnt-disclosure (design.md Seed Data): a topfunctionaris at/under the WNT-norm with no exemption -- the clean-pass branch of nl-wnt-norm-overschrijding."
             },
             {
                 "@self": {
                     "register": "hrmq",
                     "schema": "Employee",
-                    "slug": "employee-devries-dga"
+                    "slug": "employee-wnt-dijkstra"
                 },
-                "employeeNumber": "EMP-ADM004-DGA",
-                "firstName": "Robin",
-                "lastName": "De Vries",
-                "dateOfBirth": "1980-06-20",
-                "startDate": "2023-01-01",
-                "grossMonthlySalary": 3500.00,
+                "employeeNumber": "EMP-9002",
+                "firstName": "Ronald",
+                "lastName": "Dijkstra",
+                "dateOfBirth": "1961-11-20",
+                "startDate": "2015-03-01",
+                "grossMonthlySalary": 22000.00,
                 "taxTableColor": "wit",
-                "identityDocumentVerified": true,
                 "loonheffingenVerklaringOnFile": true,
-                "nextcloudUserId": "dga-devries",
-                "isDga": true,
-                "administrationId": "ADM-004",
-                "_note": "single-person-modes (design.md Seed Data): the DGA of ADM-004. isDga true + grossMonthlySalary 3500 (annualised EUR 42.000, below the EUR 58.000 gebruikelijkloon norm) + no gebruikelijkloonJustification -> a nl-gebruikelijkloon-norm violation AND dgaStatus met:false. nextcloudUserId 'dga-devries' is a shape example (the hr-devries seed precedent) -- not a real dev-login account, so live self-service is demonstrated once such an account is linked; the dgaStatus contract itself is pinned by PayrollControllerDgaStatusTest."
+                "wntTopfunctionaris": true,
+                "wntUitzonderingReden": "overgangsrecht",
+                "administrationId": "ADM-001",
+                "_note": "wnt-disclosure (design.md Seed Data): a topfunctionaris over the WNT-norm WITH a recorded overgangsrecht exemption -- the exemption-gate clean-pass branch."
             },
             {
                 "@self": {
                     "register": "hrmq",
-                    "schema": "AdministrationAccess",
-                    "slug": "example-admaccess-admin-adm004"
+                    "schema": "Employee",
+                    "slug": "employee-wnt-molenaar"
                 },
-                "userId": "admin",
-                "administrationId": "ADM-004",
-                "role": "accountant"
+                "employeeNumber": "EMP-9003",
+                "firstName": "Ingrid",
+                "lastName": "Molenaar",
+                "dateOfBirth": "1972-08-09",
+                "startDate": "2021-06-01",
+                "grossMonthlySalary": 23000.00,
+                "taxTableColor": "wit",
+                "loonheffingenVerklaringOnFile": true,
+                "wntTopfunctionaris": true,
+                "wntUitzonderingReden": null,
+                "administrationId": "ADM-001",
+                "_note": "wnt-disclosure (design.md Seed Data): a topfunctionaris over the WNT-norm with NO exemption -- the single violation branch of nl-wnt-norm-overschrijding."
             },
             {
                 "@self": {
                     "register": "hrmq",
-                    "schema": "Administration",
-                    "slug": "example-adm-005"
+                    "schema": "WntDisclosure",
+                    "slug": "wnt-disclosure-schoenmaker-2026"
                 },
-                "administrationId": "ADM-005",
-                "name": "Example: Eenmanszaak Bakker (geen loon)",
-                "kvkNumber": "55667788",
-                "active": true,
-                "mode": "eenmanszaak_no_payroll",
-                "_note": "single-person-modes (design.md Seed Data, ADM-004->ADM-005 reconciled to HEAD): a sole proprietorship in eenmanszaak_no_payroll mode with ZERO seeded Employee rows (a true eenmanszaak takes winstuitkering, never loon). A user whose active administratie is ADM-005 sees NO PayrollGroup/ProformaPayslipMenu entries (REQ-SPM-004) and none of the multi-person menus, while Medewerkers/MijnHrGroup remain. No loonheffingennummer -- no payroll is ever filed."
+                "employeeId": "employee-wnt-schoenmaker",
+                "year": "2026",
+                "totalCompensation": 245000,
+                "status": "concept",
+                "administrationId": "ADM-001",
+                "_note": "wnt-disclosure: at/under the EUR 262.000 WNT-norm -- clean pass."
             },
             {
                 "@self": {
                     "register": "hrmq",
-                    "schema": "AdministrationAccess",
-                    "slug": "example-admaccess-admin-adm005"
+                    "schema": "WntDisclosure",
+                    "slug": "wnt-disclosure-dijkstra-2026"
                 },
-                "userId": "admin",
-                "administrationId": "ADM-005",
-                "role": "accountant"
+                "employeeId": "employee-wnt-dijkstra",
+                "year": "2026",
+                "totalCompensation": 275000,
+                "status": "gepubliceerd",
+                "administrationId": "ADM-001",
+                "_note": "wnt-disclosure: over the WNT-norm but cleared by the referenced Employee's overgangsrecht exemption -- clean pass."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "WntDisclosure",
+                    "slug": "wnt-disclosure-molenaar-2026"
+                },
+                "employeeId": "employee-wnt-molenaar",
+                "year": "2026",
+                "totalCompensation": 280000,
+                "status": "concept",
+                "administrationId": "ADM-001",
+                "_note": "wnt-disclosure: over the WNT-norm with no exemption -- the single seeded nl-wnt-norm-overschrijding violation."
             }
         ]
     }

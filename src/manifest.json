@@ -97,6 +97,12 @@
 		},
 		{
 			"registerSlug": "hrmq",
+			"schemaSlug": "Stagiair",
+			"urlTemplate": "/apps/hrmq/stagiairs/{uuid}",
+			"displayName": "Stagiair"
+		},
+		{
+			"registerSlug": "hrmq",
 			"schemaSlug": "Vacancy",
 			"urlTemplate": "/apps/hrmq/vacancies/{uuid}",
 			"displayName": "Vacancy"
@@ -327,6 +333,12 @@
 					"label": "Contracten",
 					"icon": "FileSign",
 					"route": "EmploymentContracts"
+				},
+				{
+					"id": "Stagiairs",
+					"label": "Stagiairs",
+					"icon": "SchoolOutline",
+					"route": "Stagiairs"
 				},
 				{
 					"id": "Caos",
@@ -592,6 +604,12 @@
 					"label": "Pensioenaangiftes",
 					"icon": "PiggyBankOutline",
 					"route": "PensionFilings"
+				},
+				{
+					"id": "WntDisclosures",
+					"label": "WNT-verantwoording",
+					"icon": "ScaleBalance",
+					"route": "WntDisclosures"
 				},
 				{
 					"id": "PayrollMutations",
@@ -3771,6 +3789,133 @@
 			]
 		},
 		{
+			"id": "WntDisclosures",
+			"route": "/wnt-disclosures",
+			"type": "index",
+			"title": "WNT-verantwoording",
+			"config": {
+				"register": "hrmq",
+				"schema": "WntDisclosure",
+				"description": "Jaarlijkse WNT-verantwoording per topfunctionaris: de bezoldiging per jaar en de publicatiestatus. De verzameling regels van een jaar IS de WNT-verantwoording van dat jaar (wnt-disclosure).",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"columns": [
+					"year",
+					"employeeId",
+					"totalCompensation",
+					"status"
+				],
+				"filters": [
+					"year",
+					"status"
+				],
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				}
+			}
+		},
+		{
+			"id": "WntDisclosureDetail",
+			"route": "/wnt-disclosures/:id",
+			"type": "detail",
+			"title": "WNT-verantwoording",
+			"config": {
+				"register": "hrmq",
+				"schema": "WntDisclosure",
+				"_note": "wnt-disclosure: the annual WNT-verantwoording record for one topfunctionaris (PensionFilingDetail shape -- a per-period disclosure carrying a real FK, employeeId -> Employee). wd-status leads top-left with the year/totalCompensation/status facts; wd-related sits top-right at matching height to resolve and link the referenced topfunctionaris Employee (whose wntTopfunctionaris/wntUitzonderingReden drive the nl-wnt-norm-overschrijding audit); wd-data runs below with the remaining fields excluding employeeId since Related already resolves it. No stats-block (the vendored schema's metric only aggregates over a collection, cannot echo a scalar field of the current object -- PensionFilingDetail reasoning). No Files/comms/calendar leaves -- the disclosure carries no attached-document/appointment fields. lifecycleActions expose the single publiceren transition (concept -> gepubliceerd, no guard). Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			},
+			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "publiceren",
+									"from": [
+										"concept"
+									],
+									"to": "gepubliceerd",
+									"label": "Publiceren"
+								}
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "data",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 3,
+					"props": {
+						"title": "Bezoldiging & status",
+						"icon": "ScaleBalance",
+						"content": {
+							"columns": 4,
+							"include": [
+								"year",
+								"totalCompensation",
+								"status"
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "data",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 3,
+					"gridWidth": 8,
+					"gridHeight": 6,
+					"props": {
+						"title": "Verantwoording",
+						"icon": "ScaleBalance",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId"
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "related",
+					"slot": "body",
+					"gridX": 8,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 9,
+					"props": {
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
+		},
+		{
 			"id": "PayrollMutations",
 			"route": "/payroll-mutations",
 			"type": "index",
@@ -6280,6 +6425,132 @@
 						"title": "Contract & WID-documenten",
 						"only": "files",
 						"icon": "FolderOutline"
+					}
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
+		},
+		{
+			"id": "Stagiairs",
+			"route": "/stagiairs",
+			"type": "index",
+			"title": "Stagiairs",
+			"config": {
+				"register": "hrmq",
+				"schema": "Stagiair",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Stagiairs (HBO/WO/MBO-BOL, zonder dienstverband) op een stageovereenkomst -- expliciet geen werknemers en geen payroll-input (stagiair-bbl-admin). BBL-leerlingen staan niet hier: die hebben een leerarbeidsovereenkomst en zijn contracten met type 'bbl' op de Contracten-pagina.",
+				"columns": [
+					"onderwijsinstelling",
+					"opleiding",
+					"niveau",
+					"status",
+					"startDate",
+					"endDate"
+				],
+				"filters": [
+					"status",
+					"niveau"
+				],
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				}
+			}
+		},
+		{
+			"id": "StagiairDetail",
+			"route": "/stagiairs/:id",
+			"type": "detail",
+			"title": "Stagiair",
+			"config": {
+				"register": "hrmq",
+				"schema": "Stagiair",
+				"_note": "stagiair-bbl-admin (2026-07-18): the 'Stage' widget excludes begeleiderId (Related resolves the begeleider Employee), leaving onderwijsinstelling/opleiding/niveau/stagetype/startDate/endDate/stagevergoedingPerMaand/bpvOvereenkomstOndertekend/verzekeringGeverifieerd/status -- the OnboardingDetail data-widget pattern. lifecycleActions expose exactly the three REQ-STAG-001 edges (starten/afronden/stoppen) -- no invented edges, no guard (design.md D-declarative). The BPV-overeenkomst signing fact is an HR-entered boolean, not an e-signature flow (design.md D3); nl-bpv-overeenkomst-vereist is audit-enforced (lib/Standards/Checks/NlStagiairChecks.php), NOT a write-time guard. Audit history is a sidebar tab. BBL-leerlingen have no page here -- they are EmploymentContract records with type: bbl on the existing contract pages (design.md D1).",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			},
+			"widgets": [
+				{
+					"widgetKey": "lifecycle-actions",
+					"slot": "header-actions",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"props": {
+						"config": {
+							"field": "status",
+							"transitions": [
+								{
+									"action": "starten",
+									"from": [
+										"aangemeld"
+									],
+									"to": "lopend",
+									"label": "Starten"
+								},
+								{
+									"action": "afronden",
+									"from": [
+										"lopend"
+									],
+									"to": "afgerond",
+									"label": "Afronden"
+								},
+								{
+									"action": "stoppen",
+									"from": [
+										"aangemeld",
+										"lopend"
+									],
+									"to": "gestopt",
+									"label": "Stoppen"
+								}
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "data",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 8,
+					"props": {
+						"title": "Stage",
+						"icon": "SchoolOutline",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"begeleiderId"
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "related",
+					"slot": "body",
+					"gridX": 8,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 8,
+					"props": {
+						"title": "Begeleider",
+						"icon": "LinkVariant"
 					}
 				},
 				{

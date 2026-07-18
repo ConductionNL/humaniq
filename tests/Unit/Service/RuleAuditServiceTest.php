@@ -1543,4 +1543,243 @@ class RuleAuditServiceTest extends TestCase
     }//end testBhvContextDegradesToEmptyWhenSchemaAbsent()
 
 
+    // -- uitzend-flexpool: agency EmploymentContract seeds --
+
+
+    /**
+     * The uitzend-flexpool hr-seed.json fixture shapes: one compliant agency
+     * contract (fase A, uitzendbeding true, cao-abu + caoSchaal, hourlyWage and
+     * inlenersbeloningReferentie populated) and one intended-violation agency
+     * contract (fase B, uitzendbeding true), fed through audit() as if loaded
+     * from the register (design.md Seed Data).
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededUitzendRows(): array
+    {
+        return [
+            'EmploymentContract' => [
+                [
+                    'id'                         => 'contract-uitzend-abu-fase-a',
+                    'employeeId'                 => 'employee-uitzend-abu',
+                    'type'                       => 'agency',
+                    'writtenContract'            => true,
+                    'startDate'                  => '2026-03-01',
+                    'endDate'                    => null,
+                    'hoursPerWeek'               => 32,
+                    'hourlyWage'                 => 16.50,
+                    'cao'                        => 'cao-abu',
+                    'caoSchaal'                  => 'A',
+                    'awfTariff'                  => 'high',
+                    'uitzendFase'                => 'A',
+                    'uitzendbedingVanToepassing' => true,
+                    'inlenersbeloningReferentie' => 'Inlener loonschaal referentie, functie magazijnmedewerker, schaal 3',
+                    'administrationId'           => 'ADM-001',
+                ],
+                [
+                    'id'                         => 'contract-uitzend-abu-beding-fase-b',
+                    'employeeId'                 => 'employee-uitzend-abu',
+                    'type'                       => 'agency',
+                    'writtenContract'            => true,
+                    'startDate'                  => '2024-06-01',
+                    'endDate'                    => null,
+                    'hoursPerWeek'               => 32,
+                    'hourlyWage'                 => 17.25,
+                    'cao'                        => 'cao-abu',
+                    'caoSchaal'                  => 'B',
+                    'awfTariff'                  => 'high',
+                    'uitzendFase'                => 'B',
+                    'uitzendbedingVanToepassing' => true,
+                    'inlenersbeloningReferentie' => 'Inlener loonschaal referentie, functie orderpicker, schaal 4',
+                    'administrationId'           => 'ADM-001',
+                ],
+            ],
+        ];
+
+    }//end seededUitzendRows()
+
+
+    /**
+     * The seeded agency contracts reproduce exactly one new violation (the
+     * fase-B seed -> nl-uitzendbeding-alleen-fase-a) and zero regressions: the
+     * compliant seed is clean, both carry a populated inlenersbeloning
+     * reference, and neither trips the pre-existing Awf/minimum-wage/CAO rules
+     * (cao-abu is placeholder, so nl-cao-minimumloon-schaal is vacuous).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/uitzend-flexpool/specs/uitzend-flexpool/spec.md
+     */
+    public function testSeededUitzendDataFlagsExactlyTheIntendedUitzendbedingViolation(): void
+    {
+        $service = $this->serviceWithRows($this->seededUitzendRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-uitzendbeding-alleen-fase-a'] ?? 0));
+        // No inlenersbeloning violation -- both seeds carry a reference.
+        $this->assertArrayNotHasKey('nl-inlenersbeloning-onderbouwing-vereist', $byRule);
+        // No regressions on the pre-existing EmploymentContract rules.
+        $this->assertArrayNotHasKey('nl-awf-laag-hoog-tarief', $byRule);
+        $this->assertArrayNotHasKey('nl-minimumloon-2026', $byRule);
+        $this->assertArrayNotHasKey('nl-minimumuurloon-wet', $byRule);
+        $this->assertArrayNotHasKey('nl-cao-minimumloon-schaal', $byRule);
+
+    }//end testSeededUitzendDataFlagsExactlyTheIntendedUitzendbedingViolation()
+
+
+    /**
+     * occ hrmq:rules:audit reports the two new rules as enforced against the
+     * bumped catalogue version.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/uitzend-flexpool/specs/uitzend-flexpool/spec.md
+     */
+    public function testSeededUitzendDataReportsBumpedCatalogueVersionAndBothRulesEnforceable(): void
+    {
+        $service = $this->serviceWithRows($this->seededUitzendRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+
+        $enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+        $this->assertContains('nl-uitzendbeding-alleen-fase-a', $enforceable);
+        $this->assertContains('nl-inlenersbeloning-onderbouwing-vereist', $enforceable);
+
+    }//end testSeededUitzendDataReportsBumpedCatalogueVersionAndBothRulesEnforceable()
+
+
+    // -- stagiair-bbl-admin: Stagiair + type:bbl EmploymentContract BPV-overeenkomst --
+
+
+    /**
+     * A date N days from today, ISO 8601.
+     *
+     * @param int $days Offset in days (negative = past).
+     *
+     * @return string
+     */
+    private function stagiairDateOffset(int $days): string
+    {
+        return (new \DateTimeImmutable('today'))->modify($days.' days')->format('Y-m-d');
+
+    }//end stagiairDateOffset()
+
+
+    /**
+     * The stagiair-bbl-admin hr-seed.json fixture shapes: a compliant Stagiair
+     * (devries, started, BPV signed), the intended-violation Stagiair (bakker,
+     * started, BPV unsigned), and the new type: bbl EmploymentContract
+     * (visser, started, BPV signed, clean payroll fields) — fed through
+     * audit() as if loaded from the register.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     *
+     * @spec openspec/changes/stagiair-bbl-admin/specs/stagiair-bbl-admin/spec.md#REQ-STAG-005
+     */
+    private function seededStagiairRows(): array
+    {
+        return [
+            'Stagiair'           => [
+                [
+                    'id'                         => 'stagiair-devries',
+                    'onderwijsinstelling'        => 'Hogeschool van Amsterdam',
+                    'niveau'                     => 'hbo',
+                    'startDate'                  => $this->stagiairDateOffset(-160),
+                    'bpvOvereenkomstOndertekend' => true,
+                    'status'                     => 'lopend',
+                ],
+                [
+                    'id'                         => 'stagiair-bakker',
+                    'onderwijsinstelling'        => 'ROC van Amsterdam',
+                    'niveau'                     => 'mbo-bol',
+                    'startDate'                  => $this->stagiairDateOffset(-47),
+                    'bpvOvereenkomstOndertekend' => false,
+                    'status'                     => 'lopend',
+                ],
+            ],
+            'EmploymentContract' => [
+                [
+                    'id'                         => 'contract-visser-bbl',
+                    'employeeId'                 => 'employee-visser',
+                    'type'                       => 'bbl',
+                    'writtenContract'            => true,
+                    'startDate'                  => $this->stagiairDateOffset(-17),
+                    'endDate'                    => $this->stagiairDateOffset(700),
+                    'hoursPerWeek'               => 32,
+                    'hourlyWage'                 => 16.00,
+                    'awfTariff'                  => 'high',
+                    'aanzegdOn'                  => null,
+                    'workingTimeDocumented'      => true,
+                    'overtimeMultiplier'         => 1.5,
+                    'ftePartOfYearMinijob'       => false,
+                    'dpaeFiledBeforeStart'       => true,
+                    'bpvOvereenkomstOndertekend' => true,
+                    'bpvSchoolNaam'              => 'ROC van Amsterdam',
+                ],
+            ],
+        ];
+
+    }//end seededStagiairRows()
+
+
+    /**
+     * REQ-STAG-005 — the seeded audit reports EXACTLY one new
+     * nl-bpv-overeenkomst-vereist violation (stagiair-bakker) and zero
+     * regressions: the signed Stagiair and the signed type: bbl contract stay
+     * clean, and the bbl contract trips none of the pre-existing
+     * EmploymentContract rules (design.md D1 — no type-specific branch).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/stagiair-bbl-admin/specs/stagiair-bbl-admin/spec.md#REQ-STAG-005
+     */
+    public function testSeededStagiairDataFlagsExactlyOneBpvViolation(): void
+    {
+        $service = $this->serviceWithRows($this->seededStagiairRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-bpv-overeenkomst-vereist'] ?? 0), 'Exactly one BPV violation (stagiair-bakker) is expected.');
+        // Non-regression: the signed type: bbl contract trips no pre-existing
+        // EmploymentContract rule (no type-specific branch exists, D1).
+        $this->assertArrayNotHasKey('nl-awf-laag-hoog-tarief', $byRule);
+        $this->assertArrayNotHasKey('nl-minimumloon-2026', $byRule);
+        $this->assertArrayNotHasKey('nl-minimumuurloon-wet', $byRule);
+        $this->assertArrayNotHasKey('nl-administratie-scope-consistency', $byRule);
+
+    }//end testSeededStagiairDataFlagsExactlyOneBpvViolation()
+
+
+    /**
+     * REQ-STAG-002 — a type: bbl contract flows through the audit exactly like
+     * any other type: a permanent contract with the same clean fields, and the
+     * bbl contract, both stay silent for every EmploymentContract rule (the
+     * BPV rule included, once the bbl contract's BPV is signed).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/stagiair-bbl-admin/specs/stagiair-bbl-admin/spec.md#REQ-STAG-002
+     */
+    public function testBblContractReportsBumpedCatalogueVersionAndRuleEnforceable(): void
+    {
+        $service = $this->serviceWithRows($this->seededStagiairRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+        $enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+        $this->assertContains('nl-bpv-overeenkomst-vereist', $enforceable);
+
+    }//end testBblContractReportsBumpedCatalogueVersionAndRuleEnforceable()
+
+
 }//end class

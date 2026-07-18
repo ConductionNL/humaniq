@@ -288,6 +288,11 @@ class RuleAuditService
      * filing), kept separate from the existing, unchanged, fund-blind global
      * `filedPeriods` set -- consumed by
      * NlAbpChecks::checks()['PayrollRun']['nl-abp-fund-required'].
+     * wnt-disclosure further extends the Employee index with
+     * `wntTopfunctionaris` + `wntUitzonderingReden` (the incremental-field
+     * precedent, design.md D5), consumed by NlWntChecks::checks()
+     * ['WntDisclosure']['nl-wnt-norm-overschrijding'] to resolve the referenced
+     * topfunctionaris's exemption ground without re-querying the register.
      * Loads independently of the main per-type loop (a small, side-effect-free
      * reload) so the index is ready before any object of either type is
      * evaluated. Degrades gracefully to empty sets when a schema does not
@@ -300,6 +305,7 @@ class RuleAuditService
      * @spec openspec/changes/mss-team-scope/specs/mss-team-scope/spec.md#REQ-MSS-005
      * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-007
      * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-003
+     * @spec openspec/changes/wnt-disclosure/specs/wnt-disclosure/spec.md#REQ-WNT-003
      */
     private function buildRelatedContext(): array
     {
@@ -396,6 +402,14 @@ class RuleAuditService
                 // ['nl-administratie-scope-consistency'] to resolve the
                 // parent employee's expected administrationId.
                 'administrationId'              => (string) ($employee['administrationId'] ?? ''),
+                // wnt-disclosure: the topfunctionaris's recorded
+                // transitional-exemption ground (overgangsrecht |
+                // ontheffing-minister | null), consumed by
+                // NlWntChecks::checks()['WntDisclosure']
+                // ['nl-wnt-norm-overschrijding'] -- a non-null value clears the
+                // norm-overschrijding flag (design.md D4/D5).
+                'wntTopfunctionaris'            => (bool) ($employee['wntTopfunctionaris'] ?? false),
+                'wntUitzonderingReden'          => (($employee['wntUitzonderingReden'] ?? null) === null) ? null : (string) $employee['wntUitzonderingReden'],
             ];
         }
 
