@@ -1283,6 +1283,18 @@
       "sourceUrl": null
     },
     {
+      "id": "nl-hr21-schaal-consistentie",
+      "domain": "pay",
+      "jurisdiction": "NL",
+      "framework": "hr21",
+      "source": "VNG HR21 functiewaarderingssysteem / Cao Gemeenten (functiehuis-hr21)",
+      "statement": "When an employment contract is assigned a normfunctie (normfunctieId) whose HR21-to-Cao-Gemeenten schaal mapping is verified, the contract's own caoSchaal shall equal that normfunctie's mapped caoSchaal. Vacuous when normfunctieId is null, does not resolve to a Normfunctie, or the resolved Normfunctie's caoSchaalVerified is false (an unconfirmed mapping is advisory, never a false mandatory violation -- the nl-cao-minimumloon-schaal precedent, applied to a classification mapping instead of a rate).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": null
+    },
+    {
       "id": "nl-retro-adjustment-consistency",
       "domain": "tax",
       "jurisdiction": "NL",

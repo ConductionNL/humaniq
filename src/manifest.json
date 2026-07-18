@@ -323,6 +323,12 @@
 					"route": "Caos"
 				},
 				{
+					"id": "Normfuncties",
+					"label": "Functiehuis",
+					"icon": "BriefcaseOutline",
+					"route": "Normfuncties"
+				},
+				{
 					"id": "SalaryBands",
 					"label": "Salarisschalen",
 					"icon": "CurrencyEur",
@@ -2565,7 +2571,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "EmploymentContract",
-				"_note": "Leaf compliance record: no other schema in hrmq references EmploymentContract by FK, so the page is a simple two-panel layout -- the data widget (type/writtenContract/dates/hoursPerWeek/hourlyWage/cao/caoSchaal/awfTariff plus the jurisdiction-specific fields: workingTimeDocumented, overtimeMultiplier, ftePartOfYearMinijob, dpaeFiledBeforeStart) at 8-wide, excluding employeeId since the Related panel already resolves and links the owning Employee by name -- and Related at 4-wide for that one meaningful outbound ref. cao-library (2026-07-14): the ct-data widget excludes only employeeId, so the contract's cao (the referenced CAO library id) and caoSchaal (its pay scale) render here for free -- no widget change needed. No child lists (nothing points at a contract), no files/calendar/comms leaves (no linkedType or document field evidence on this schema), no lifecycleActions (EmploymentContract has no x-openregister-lifecycle). Audit history is a sidebar tab.",
+				"_note": "Leaf compliance record: no other schema in hrmq references EmploymentContract by FK, so the page is a simple two-panel layout -- the data widget (type/writtenContract/dates/hoursPerWeek/hourlyWage/cao/caoSchaal/awfTariff plus the jurisdiction-specific fields: workingTimeDocumented, overtimeMultiplier, ftePartOfYearMinijob, dpaeFiledBeforeStart) at 8-wide, excluding employeeId since the Related panel already resolves and links the owning Employee by name -- and Related at 4-wide for that one meaningful outbound ref. cao-library (2026-07-14): the ct-data widget excludes only employeeId, so the contract's cao (the referenced CAO library id) and caoSchaal (its pay scale) render here for free -- no widget change needed. No child lists (nothing points at a contract), no files/calendar/comms leaves (no linkedType or document field evidence on this schema), no lifecycleActions (EmploymentContract has no x-openregister-lifecycle). Audit history is a sidebar tab. functiehuis-hr21 (2026-07-18): the ct-data widget now also excludes normfunctieId (the new $ref, the employeeId precedent) -- the Related panel resolves and links the assigned Normfunctie by name for free, confirmed rendering the contract's HR21 function assignment.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -2612,7 +2618,8 @@
 						"content": {
 							"columns": 2,
 							"exclude": [
-								"employeeId"
+								"employeeId",
+								"normfunctieId"
 							]
 						}
 					}
@@ -5083,6 +5090,93 @@
 								"allowances",
 								"leaveEntitlement",
 								"workingTime"
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
+		},
+		{
+			"id": "Normfuncties",
+			"route": "/normfuncties",
+			"type": "index",
+			"title": "Functiehuis",
+			"config": {
+				"register": "hrmq",
+				"schema": "Normfunctie",
+				"_note": "functiehuis-hr21 (2026-07-18): read-only HR21 (VNG municipal functiewaarderingssysteem) normfunctie reference index (ADR-001 Rule 1 sub-page under the existing Personeel menu, sibling of CAO's/Salarisschalen — the Caos allowCreate:false + actionToggles shape). Illustrative subset seeded by NlHr21Checks::seedObjects() -- explicitly NOT a claimed-complete ~150-function library (proposal.md 'Honesty about verification'). Rows navigate to NormfunctieDetail.",
+				"description": "HR21-normfuncties en hun gekoppelde Cao Gemeenten-schaal (illustratieve subset, geen volledige bibliotheek). Alleen-lezen referentiedata.",
+				"allowCreate": false,
+				"columns": [
+					"functiecode",
+					"naam",
+					"functiegroep",
+					"caoSchaal",
+					"caoSchaalVerified"
+				],
+				"filters": [
+					"functiegroep"
+				],
+				"sort": {
+					"field": "functiecode",
+					"order": "asc"
+				},
+				"actionToggles": {
+					"showAdd": false,
+					"showFormDialog": false,
+					"showEditAction": false,
+					"showDeleteAction": false,
+					"showCopyAction": false,
+					"showMassImport": false,
+					"showMassCopy": false,
+					"showMassDelete": false
+				}
+			}
+		},
+		{
+			"id": "NormfunctieDetail",
+			"route": "/normfuncties/:id",
+			"type": "detail",
+			"title": "Normfunctie",
+			"config": {
+				"register": "hrmq",
+				"schema": "Normfunctie",
+				"allowCreate": false,
+				"_note": "functiehuis-hr21 (2026-07-18): read-only HR21 normfunctie reference detail (the CaoDetail allowCreate:false shape). The 'Normfunctie' data widget carries every field (functiecode/naam/functiegroep/caoSchaal/caoSchaalVerified/caoSchaalSource) -- no Related widget, since no other schema in hrmq references Normfunctie's own object identity here (EmploymentContract.normfunctieId points AT a Normfunctie, not the reverse). No lifecycleActions (Normfunctie has no x-openregister-lifecycle). No create/edit affordances (seeded reference data). Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 7,
+					"props": {
+						"title": "Normfunctie",
+						"icon": "BriefcaseOutline",
+						"content": {
+							"columns": 2,
+							"include": [
+								"functiecode",
+								"naam",
+								"functiegroep",
+								"caoSchaal",
+								"caoSchaalVerified",
+								"caoSchaalSource"
 							]
 						}
 					}

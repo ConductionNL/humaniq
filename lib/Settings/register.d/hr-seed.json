@@ -1053,6 +1053,7 @@
                 "hoursPerWeek": 32,
                 "hourlyWage": 21.00,
                 "cao": null,
+                "normfunctieId": null,
                 "awfTariff": "high",
                 "aanzegdOn": null,
                 "workingTimeDocumented": true,
@@ -1075,6 +1076,120 @@
                 "hoursPerWeek": 36,
                 "hourlyWage": 24.36,
                 "cao": null,
+                "normfunctieId": null,
+                "awfTariff": "low",
+                "aanzegdOn": null,
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Normfunctie",
+                    "slug": "normfunctie-hr21-001"
+                },
+                "functiecode": "HR21-001",
+                "naam": "Medewerker Beheer",
+                "functiegroep": "Beheer",
+                "caoSchaal": "6",
+                "caoSchaalVerified": false,
+                "caoSchaalSource": "HR21/VNG functieboek — mapping not yet independently confirmed against a primary source."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Normfunctie",
+                    "slug": "normfunctie-hr21-002"
+                },
+                "functiecode": "HR21-002",
+                "naam": "Senior Beleidsmedewerker",
+                "functiegroep": "Beleid",
+                "caoSchaal": "10",
+                "caoSchaalVerified": true,
+                "caoSchaalSource": "Illustrative proof-case only — flipped to verified:true so the nl-hr21-schaal-consistentie check has one resolvable mapping to demonstrate against; NOT an actual VNG/HR21 confirmation."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Normfunctie",
+                    "slug": "normfunctie-hr21-003"
+                },
+                "functiecode": "HR21-003",
+                "naam": "Beleidsmedewerker",
+                "functiegroep": "Beleid",
+                "caoSchaal": "9",
+                "caoSchaalVerified": false,
+                "caoSchaalSource": "HR21/VNG functieboek — mapping not yet independently confirmed against a primary source."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Normfunctie",
+                    "slug": "normfunctie-hr21-004"
+                },
+                "functiecode": "HR21-004",
+                "naam": "Teammanager",
+                "functiegroep": "Management",
+                "caoSchaal": "11",
+                "caoSchaalVerified": false,
+                "caoSchaalSource": "HR21/VNG functieboek — mapping not yet independently confirmed against a primary source."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Normfunctie",
+                    "slug": "normfunctie-hr21-005"
+                },
+                "functiecode": "HR21-005",
+                "naam": "Afdelingsmanager",
+                "functiegroep": "Management",
+                "caoSchaal": "13",
+                "caoSchaalVerified": false,
+                "caoSchaalSource": "HR21/VNG functieboek — mapping not yet independently confirmed against a primary source."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-hr21-devries-schaal-match"
+                },
+                "employeeId": "employee-devries",
+                "type": "temporary",
+                "writtenContract": true,
+                "startDate": "2025-09-01",
+                "endDate": "2026-08-01",
+                "hoursPerWeek": 32,
+                "hourlyWage": 21.00,
+                "cao": "cao-gemeenten",
+                "caoSchaal": "10",
+                "normfunctieId": "normfunctie-hr21-002",
+                "awfTariff": "high",
+                "aanzegdOn": null,
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-hr21-jansen-schaal-mismatch"
+                },
+                "employeeId": "employee-jansen",
+                "type": "permanent",
+                "writtenContract": true,
+                "startDate": "2024-01-01",
+                "endDate": null,
+                "hoursPerWeek": 36,
+                "hourlyWage": 24.36,
+                "cao": "cao-gemeenten",
+                "caoSchaal": "8",
+                "normfunctieId": "normfunctie-hr21-002",
                 "awfTariff": "low",
                 "aanzegdOn": null,
                 "workingTimeDocumented": true,
