@@ -3,14 +3,16 @@
 /**
  * Unit tests for the NL HR-signals checks.
  *
- * Pins the two hr-signals predicates: the contract-expiry successor signal
+ * Pins the three hr-signals predicates: the contract-expiry successor signal
  * (nl-signaal-contract-verloopt, cross-object via the context's
- * signals.contractsByEmployeeId full-list index) and the statutory
- * aanzegtermijn (nl-aanzegtermijn-bewaking, object-local). Both predicates
- * read `new \DateTimeImmutable('today')`, so every time-sensitive fixture
- * here uses relative offsets (`date('Y-m-d', strtotime(...))`) rather than
- * hardcoded calendar dates -- the same convention NlOnboardingChecksTest uses
- * for its overdue-proeftijd cases.
+ * signals.contractsByEmployeeId full-list index), the statutory
+ * aanzegtermijn (nl-aanzegtermijn-bewaking, object-local), and the
+ * BHV-certificate expiry signal (nl-bhv-certificaat-verloopt, object-local,
+ * bhv-organisatie). All three read `new \DateTimeImmutable('today')`, so
+ * every time-sensitive fixture here uses relative offsets
+ * (`date('Y-m-d', strtotime(...))`) rather than hardcoded calendar dates --
+ * the same convention NlOnboardingChecksTest uses for its overdue-proeftijd
+ * cases.
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
@@ -25,6 +27,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/hr-signals/specs/hr-signals/spec.md
+ * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
  */
 
 declare(strict_types=1);
@@ -50,13 +53,22 @@ class NlSignalChecksTest extends TestCase
      */
     private array $checks;
 
+    /**
+     * The registered BhvCertificering predicates, keyed by rule id.
+     *
+     * @var array<string, callable>
+     */
+    private array $bhvChecks;
+
 
     /**
      * @return void
      */
     protected function setUp(): void
     {
-        $this->checks = NlSignalChecks::checks()['EmploymentContract'];
+        $all             = NlSignalChecks::checks();
+        $this->checks    = $all['EmploymentContract'];
+        $this->bhvChecks = $all['BhvCertificering'];
 
     }//end setUp()
 
@@ -466,6 +478,157 @@ class NlSignalChecksTest extends TestCase
         $this->assertTrue(($this->checks['nl-aanzegtermijn-bewaking'])($contract));
 
     }//end testAanzegtermijnSatisfiedWhenAlreadyExpired()
+
+
+    // -- nl-bhv-certificaat-verloopt: bhv-organisatie -------------------------
+
+
+    /**
+     * A minimal BhvCertificering fixture; each test overrides the fields it
+     * exercises.
+     *
+     * @param array<string, mixed> $overrides Fields to override.
+     *
+     * @return array<string, mixed>
+     */
+    private function bhvCertificering(array $overrides=[]): array
+    {
+        return array_merge(
+            [
+                'id'                   => 'bhv-x',
+                'employeeId'           => 'employee-x',
+                'rol'                  => 'bhv_basis',
+                'certificaatBehaaldOp' => '2024-01-01',
+                'certificaatGeldigTot' => date('Y-m-d', strtotime('+45 days')),
+            ],
+            $overrides
+        );
+
+    }//end bhvCertificering()
+
+
+    /**
+     * @return void
+     *
+     * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
+     */
+    public function testBhvCertificaatViolatedWhenExpiringInsideTheNinetyDayWindow(): void
+    {
+        $cert = $this->bhvCertificering(['certificaatGeldigTot' => date('Y-m-d', strtotime('+45 days'))]);
+
+        $this->assertFalse(($this->bhvChecks['nl-bhv-certificaat-verloopt'])($cert));
+
+    }//end testBhvCertificaatViolatedWhenExpiringInsideTheNinetyDayWindow()
+
+
+    /**
+     * @return void
+     *
+     * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
+     */
+    public function testBhvCertificaatViolatedAtDayZeroOfWindow(): void
+    {
+        $cert = $this->bhvCertificering(['certificaatGeldigTot' => date('Y-m-d')]);
+
+        $this->assertFalse(($this->bhvChecks['nl-bhv-certificaat-verloopt'])($cert));
+
+    }//end testBhvCertificaatViolatedAtDayZeroOfWindow()
+
+
+    /**
+     * @return void
+     *
+     * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
+     */
+    public function testBhvCertificaatViolatedAtDayNinetyOfWindow(): void
+    {
+        $cert = $this->bhvCertificering(['certificaatGeldigTot' => date('Y-m-d', strtotime('+90 days'))]);
+
+        $this->assertFalse(($this->bhvChecks['nl-bhv-certificaat-verloopt'])($cert));
+
+    }//end testBhvCertificaatViolatedAtDayNinetyOfWindow()
+
+
+    /**
+     * @return void
+     *
+     * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
+     */
+    public function testBhvCertificaatSatisfiedAtDayNinetyOneOutsideWindow(): void
+    {
+        $cert = $this->bhvCertificering(['certificaatGeldigTot' => date('Y-m-d', strtotime('+91 days'))]);
+
+        $this->assertTrue(($this->bhvChecks['nl-bhv-certificaat-verloopt'])($cert));
+
+    }//end testBhvCertificaatSatisfiedAtDayNinetyOneOutsideWindow()
+
+
+    /**
+     * @return void
+     *
+     * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
+     */
+    public function testBhvCertificaatSatisfiedWhenValidOneYearOut(): void
+    {
+        $cert = $this->bhvCertificering(['certificaatGeldigTot' => date('Y-m-d', strtotime('+1 year'))]);
+
+        $this->assertTrue(($this->bhvChecks['nl-bhv-certificaat-verloopt'])($cert));
+
+    }//end testBhvCertificaatSatisfiedWhenValidOneYearOut()
+
+
+    /**
+     * @return void
+     *
+     * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
+     */
+    public function testBhvCertificaatSatisfiedWhenAlreadyExpired(): void
+    {
+        // An already-expired certificate is a distinct, more urgent state
+        // this MVP does not separately classify (REQ-BHV-002) -- it passes
+        // this predicate vacuously, the same monitoring-window posture the
+        // two EmploymentContract predicates take.
+        $cert = $this->bhvCertificering(['certificaatGeldigTot' => date('Y-m-d', strtotime('-1 day'))]);
+
+        $this->assertTrue(($this->bhvChecks['nl-bhv-certificaat-verloopt'])($cert));
+
+    }//end testBhvCertificaatSatisfiedWhenAlreadyExpired()
+
+
+    /**
+     * @return void
+     *
+     * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
+     */
+    public function testBhvCertificaatSatisfiedWhenGeldigTotUnparseable(): void
+    {
+        $cert = $this->bhvCertificering(['certificaatGeldigTot' => '']);
+
+        $this->assertTrue(($this->bhvChecks['nl-bhv-certificaat-verloopt'])($cert));
+
+    }//end testBhvCertificaatSatisfiedWhenGeldigTotUnparseable()
+
+
+    /**
+     * The two existing EmploymentContract predicates are unaffected by the
+     * BhvCertificering addition (REQ-BHV-002 "the existing hr-signals
+     * predicates are unaffected") -- both remain registered exclusively
+     * under the EmploymentContract key.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
+     */
+    public function testExistingContractPredicatesRemainUnderEmploymentContractKeyOnly(): void
+    {
+        $all = NlSignalChecks::checks();
+
+        $this->assertArrayHasKey('nl-signaal-contract-verloopt', $all['EmploymentContract']);
+        $this->assertArrayHasKey('nl-aanzegtermijn-bewaking', $all['EmploymentContract']);
+        $this->assertArrayHasKey('nl-bhv-certificaat-verloopt', $all['BhvCertificering']);
+        $this->assertArrayNotHasKey('nl-bhv-certificaat-verloopt', $all['EmploymentContract']);
+
+    }//end testExistingContractPredicatesRemainUnderEmploymentContractKeyOnly()
 
 
 }//end class

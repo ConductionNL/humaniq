@@ -1257,6 +1257,34 @@
                 "statementProvided": true,
                 "userId": "admin",
                 "administrationId": "ADM-002"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "BhvCertificering",
+                    "slug": "bhv-jansen-basis"
+                },
+                "employeeId": "employee-jansen",
+                "rol": "bhv_basis",
+                "certificaatBehaaldOp": "2024-07-18",
+                "certificaatGeldigTot": "2027-07-18",
+                "opleider": "NIBHV",
+                "orgUnitId": "orgunit-consultancy",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "BhvCertificering",
+                    "slug": "bhv-visser-ehbo"
+                },
+                "employeeId": "employee-visser",
+                "rol": "ehbo",
+                "certificaatBehaaldOp": "2023-09-01",
+                "certificaatGeldigTot": "2026-09-01",
+                "opleider": "Het Oranje Kruis",
+                "orgUnitId": "orgunit-backoffice",
+                "administrationId": "ADM-001"
             }
         ]
     }

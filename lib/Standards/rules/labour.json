@@ -385,6 +385,21 @@
       "sourceUrl": null
     },
     {
+      "id": "nl-bhv-certificaat-verloopt",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-signals",
+      "source": "HR safety-administration control (aflopend BHV-certificaat) -- underlying duty: Arbeidsomstandighedenwet art. 15 (bedrijfshulpverlening aanwijzing)",
+      "statement": "A BhvCertificering whose certificaatGeldigTot falls within the next 90 days shall be signalled for HR follow-up (herhalingscursus, herbeoordeling van de aanwijzing). This rule does NOT assert a numeric BHV-to-employee coverage ratio -- Arbowet art. 15 lid 2 requires the aanwijzing to account for de grootte van het bedrijf en de aard van de aanwezige risico's, a qualitative RI&E-driven standard the statute sets no fixed number for.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0007671/artikel15",
+      "parameters": {
+        "windowDays": 90
+      }
+    },
+    {
       "id": "nl-administratie-scope-consistency",
       "domain": "labour",
       "jurisdiction": "global",
