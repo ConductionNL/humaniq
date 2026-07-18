@@ -41,6 +41,7 @@ use OCA\Hrmq\Payroll\PayrollCalculator;
 use OCA\Hrmq\Payroll\SickPayCalculator;
 use OCA\Hrmq\Service\PayrollReproduceService;
 use OCA\Hrmq\Service\PayrollRunService;
+use OCA\Hrmq\Service\PayrollRetentionGuardService;
 use OCA\Hrmq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -239,7 +240,9 @@ class PayrollReproduceServiceTest extends TestCase
 
         $logger = $this->createMock(LoggerInterface::class);
 
-        $runService = new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $logger);
+        $retentionGuard = $this->createMock(PayrollRetentionGuardService::class);
+
+        $runService = new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger);
         $runService->runFor('2026-02');
 
         $run     = $fake->rowsBySchema['PayrollRun'][0];
