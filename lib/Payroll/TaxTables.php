@@ -467,10 +467,16 @@ final class TaxTables
      * the raw corpus via `@table.*` refs); this exists for
      * `PayrollRunService`'s exemption re-derivation and the `NlPayrollChecks`
      * 30%-ruling corpus rules -- the `bijtellingPrivegebruikAuto()` precedent.
+     * `aftoppingsgrensJaarCents` is the SAME WNT-norm leaf's ANNUAL figure
+     * (`aftoppingsgrens.jaar`, EUR 262.000/jaar in 2026), read by `NlWntChecks`
+     * for the `nl-wnt-norm-overschrijding` check -- the single, shared home for
+     * the WNT-norm datum, never re-declared in a second corpus file
+     * (wnt-disclosure design.md D1).
      *
-     * @return array{percent: float, maxDurationMonths: int, aftoppingsgrensMaandCents: int, salarisnormAlgemeenCents: int, salarisnormMasterOnder30Cents: int}
+     * @return array{percent: float, maxDurationMonths: int, aftoppingsgrensMaandCents: int, aftoppingsgrensJaarCents: int, salarisnormAlgemeenCents: int, salarisnormMasterOnder30Cents: int}
      *
      * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-001
+     * @spec openspec/changes/wnt-disclosure/specs/wnt-disclosure/spec.md#REQ-WNT-003
      */
     public function dertigProcentRegeling(): array
     {
@@ -478,6 +484,7 @@ final class TaxTables
             'percent'                       => (float) $this->leaf(['dertigProcentRegeling', 'percent', 'value']),
             'maxDurationMonths'             => (int) $this->leaf(['dertigProcentRegeling', 'maxDurationMonths', 'value']),
             'aftoppingsgrensMaandCents'     => self::euroToCents((float) $this->leaf(['dertigProcentRegeling', 'aftoppingsgrens', 'value', 'maand'])),
+            'aftoppingsgrensJaarCents'      => self::euroToCents((float) $this->leaf(['dertigProcentRegeling', 'aftoppingsgrens', 'value', 'jaar'])),
             'salarisnormAlgemeenCents'      => self::euroToCents((float) $this->leaf(['dertigProcentRegeling', 'salarisnormAlgemeen', 'value'])),
             'salarisnormMasterOnder30Cents' => self::euroToCents((float) $this->leaf(['dertigProcentRegeling', 'salarisnormMasterOnder30', 'value'])),
         ];

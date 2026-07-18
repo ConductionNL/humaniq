@@ -1583,6 +1583,102 @@
                 "withholdingsClearedToZero": true,
                 "withholdingLiabilityBalance": 0.00,
                 "_note": "abp-aansluiting (design.md Seed Data): deliberately period 2026-06 -- the SAME period ADM-001 already filed ABP for globally -- and deliberately no PensionFiling seeded for ADM-003, to prove the fund/tenant-scoped violation (REQ-ABP-003/004)."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-wnt-schoenmaker"
+                },
+                "employeeNumber": "EMP-9001",
+                "firstName": "Trees",
+                "lastName": "Schoenmaker",
+                "dateOfBirth": "1968-05-02",
+                "startDate": "2019-01-01",
+                "grossMonthlySalary": 18000.00,
+                "taxTableColor": "wit",
+                "loonheffingenVerklaringOnFile": true,
+                "wntTopfunctionaris": true,
+                "wntUitzonderingReden": null,
+                "administrationId": "ADM-001",
+                "_note": "wnt-disclosure (design.md Seed Data): a topfunctionaris at/under the WNT-norm with no exemption -- the clean-pass branch of nl-wnt-norm-overschrijding."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-wnt-dijkstra"
+                },
+                "employeeNumber": "EMP-9002",
+                "firstName": "Ronald",
+                "lastName": "Dijkstra",
+                "dateOfBirth": "1961-11-20",
+                "startDate": "2015-03-01",
+                "grossMonthlySalary": 22000.00,
+                "taxTableColor": "wit",
+                "loonheffingenVerklaringOnFile": true,
+                "wntTopfunctionaris": true,
+                "wntUitzonderingReden": "overgangsrecht",
+                "administrationId": "ADM-001",
+                "_note": "wnt-disclosure (design.md Seed Data): a topfunctionaris over the WNT-norm WITH a recorded overgangsrecht exemption -- the exemption-gate clean-pass branch."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-wnt-molenaar"
+                },
+                "employeeNumber": "EMP-9003",
+                "firstName": "Ingrid",
+                "lastName": "Molenaar",
+                "dateOfBirth": "1972-08-09",
+                "startDate": "2021-06-01",
+                "grossMonthlySalary": 23000.00,
+                "taxTableColor": "wit",
+                "loonheffingenVerklaringOnFile": true,
+                "wntTopfunctionaris": true,
+                "wntUitzonderingReden": null,
+                "administrationId": "ADM-001",
+                "_note": "wnt-disclosure (design.md Seed Data): a topfunctionaris over the WNT-norm with NO exemption -- the single violation branch of nl-wnt-norm-overschrijding."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "WntDisclosure",
+                    "slug": "wnt-disclosure-schoenmaker-2026"
+                },
+                "employeeId": "employee-wnt-schoenmaker",
+                "year": "2026",
+                "totalCompensation": 245000,
+                "status": "concept",
+                "administrationId": "ADM-001",
+                "_note": "wnt-disclosure: at/under the EUR 262.000 WNT-norm -- clean pass."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "WntDisclosure",
+                    "slug": "wnt-disclosure-dijkstra-2026"
+                },
+                "employeeId": "employee-wnt-dijkstra",
+                "year": "2026",
+                "totalCompensation": 275000,
+                "status": "gepubliceerd",
+                "administrationId": "ADM-001",
+                "_note": "wnt-disclosure: over the WNT-norm but cleared by the referenced Employee's overgangsrecht exemption -- clean pass."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "WntDisclosure",
+                    "slug": "wnt-disclosure-molenaar-2026"
+                },
+                "employeeId": "employee-wnt-molenaar",
+                "year": "2026",
+                "totalCompensation": 280000,
+                "status": "concept",
+                "administrationId": "ADM-001",
+                "_note": "wnt-disclosure: over the WNT-norm with no exemption -- the single seeded nl-wnt-norm-overschrijding violation."
             }
         ]
     }
