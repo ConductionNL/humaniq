@@ -1199,6 +1199,18 @@
       "sourceUrl": "https://www.sivi.org/standaarden/uniforme-pensioenaangifte/"
     },
     {
+      "id": "nl-abp-fund-required",
+      "domain": "reporting",
+      "jurisdiction": "NL",
+      "framework": "nl-pensioenaangifte",
+      "source": "Wet Privatisering ABP (1996)",
+      "statement": "A client administratie legally obligated to affiliate with ABP (Administration.abpAansluitingsplichtig) must have its own ABP PensionFiling (fund: abp) for every period with an approved-or-later NL PayrollRun of that same administratie -- fund- and tenant-scoped, unlike the fund-blind/tenant-blind nl-upa-monthly-completeness check.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0007791"
+    },
+    {
       "id": "nl-glpost-idempotent-per-run",
       "domain": "ledger-integrity",
       "jurisdiction": "NL",

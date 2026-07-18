@@ -184,7 +184,7 @@
                 ],
                 "properties": {
                     "period": {"type": "string", "description": "Wage period in YYYY-MM."},
-                    "administrationId": {"type": "string", "description": "The administration/employer this run belongs to. No Administration schema is modeled in hrmq — plain string, not a $ref relation (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."},
+                    "administrationId": {"type": "string", "description": "The administration/employer this run belongs to -- the Administration.administrationId business key (multi-administratie) -- plain string, not a $ref relation (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."},
                     "jurisdiction": {"type": "string", "description": "ISO 3166-1 alpha-2 country governing this run."},
                     "status": {"type": "string", "enum": ["draft", "approved", "posted", "paid"], "description": "Run lifecycle state."},
                     "totalGross": {"type": "number", "description": "Total gross wages for the period."},

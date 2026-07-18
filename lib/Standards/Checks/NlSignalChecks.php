@@ -3,14 +3,19 @@
 /**
  * NL HR-Signals Check Provider
  *
- * Executable checks for the two hr-signals corpus rules
- * (lib/Standards/rules/labour.json, framework `hr-signals` /`bw7-10`), both
- * keyed on `EmploymentContract`: a temporary contract nearing its `endDate`
+ * Executable checks for the three hr-signals corpus rules
+ * (lib/Standards/rules/labour.json, framework `hr-signals` /`bw7-10`): two
+ * keyed on `EmploymentContract` -- a temporary contract nearing its `endDate`
  * with no successor is signalled for HR follow-up
  * (nl-signaal-contract-verloopt, advisory), and a fixed-term contract of six
  * months or longer whose written aanzegging deadline has passed without a
  * recorded `aanzegdOn` violates the statutory aanzegplicht
- * (nl-aanzegtermijn-bewaking, BW 7:668 lid 1, mandatory).
+ * (nl-aanzegtermijn-bewaking, BW 7:668 lid 1, mandatory) -- and a third keyed
+ * on `BhvCertificering` (bhv-organisatie): a certification nearing its
+ * `certificaatGeldigTot` is signalled for HR follow-up
+ * (nl-bhv-certificaat-verloopt, advisory). All three are literal siblings in
+ * the same `hr-signals` framework/provider -- no second alerting mechanism
+ * (bhv-organisatie design.md D1).
  *
  * The successor predicate is cross-object: it reads
  * `context['signals']['contractsByEmployeeId']`, a FULL-LIST index
@@ -18,11 +23,13 @@
  * (design.md D4) -- unlike the existing
  * `context['related']['EmploymentContract']['byEmployeeId']` index (last-wins,
  * consumed by NlOnboardingChecks), which cannot see sibling contracts. The
- * aanzegtermijn predicate is object-local -- no context needed.
+ * aanzegtermijn and BHV-certificate predicates are both object-local -- no
+ * context needed.
  *
  * This provider does NOT implement SeedsObjects: the seeded
- * `contract-devries-tijdelijk` (deliberately violating both rules at the seed
- * anchor) lives declaratively in lib/Settings/register.d/hr-seed.json
+ * `contract-devries-tijdelijk` (deliberately violating both EmploymentContract
+ * rules at the seed anchor) and the seeded BHV-certificate violation
+ * (bhv-organisatie) live declaratively in lib/Settings/register.d/hr-seed.json
  * (ADR-001), the same pattern NlOnboardingChecks/NlDocumentChecks document for
  * predicates whose sample needs a resolvable cross-reference or an
  * intentional-violation demonstration rather than a compliant sample.
@@ -40,6 +47,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/hr-signals/specs/hr-signals/spec.md
+ * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
  */
 
 declare(strict_types=1);
@@ -76,6 +84,16 @@ final class NlSignalChecks implements CheckProvider
      */
     private const NOTICE_MONTHS = 1;
 
+    /**
+     * `nl-bhv-certificaat-verloopt` window, days (parameters.windowDays in
+     * labour.json -- kept in sync here since the predicate is code, not
+     * data; also the window the "Aflopende BHV-certificaten" dashboard
+     * widget filter must stay in sync with, src/manifest.json).
+     *
+     * @var int
+     */
+    private const BHV_WINDOW_DAYS = 90;
+
 
     /**
      * {@inheritDoc}
@@ -92,6 +110,15 @@ final class NlSignalChecks implements CheckProvider
                 // BW art. 7:668 lid 1 -- written aanzegging at least one month
                 // before the end date of a fixed-term contract of >= 6 months.
                 'nl-aanzegtermijn-bewaking'    => static fn(array $o): bool => self::aanzegtermijnSatisfied($o),
+            ],
+            'BhvCertificering'   => [
+                // bhv-organisatie -- expiring BHV-related certification is
+                // signalled for HR follow-up (herhalingscursus /
+                // herbeoordeling van de aanwijzing). Same hr-signals
+                // framework, same object-local shape as the two
+                // EmploymentContract predicates above -- no second alerting
+                // mechanism (design.md D1).
+                'nl-bhv-certificaat-verloopt' => static fn(array $o): bool => self::bhvCertificaatVerloeptSatisfied($o),
             ],
         ];
 
@@ -270,6 +297,35 @@ final class NlSignalChecks implements CheckProvider
         return $aanzegdOnDate <= $deadline;
 
     }//end aanzegtermijnSatisfied()
+
+
+    /**
+     * `nl-bhv-certificaat-verloopt`: true unless `certificaatGeldigTot` is a
+     * parseable date AND today is within `[today, today + BHV_WINDOW_DAYS]`
+     * of it. A certificate further out, or already expired, passes vacuously
+     * -- the same "expiring date, no successor-equivalent needed" shape as
+     * `nl-signaal-contract-verloopt`, minus the successor lookup (a BHV
+     * certificate has no "successor contract" concept; a renewal is simply a
+     * new record, bhv-organisatie design.md D4). Object-local: no context
+     * needed.
+     *
+     * @param array<string, mixed> $o The BhvCertificering.
+     *
+     * @return bool
+     */
+    private static function bhvCertificaatVerloeptSatisfied(array $o): bool
+    {
+        $geldigTot = strtotime((string) ($o['certificaatGeldigTot'] ?? ''));
+        if ($geldigTot === false) {
+            return true;
+        }
+
+        $today     = (new \DateTimeImmutable('today'))->getTimestamp();
+        $windowEnd = strtotime('+'.self::BHV_WINDOW_DAYS.' days', $today);
+
+        return ($geldigTot >= $today && $geldigTot <= $windowEnd) === false;
+
+    }//end bhvCertificaatVerloeptSatisfied()
 
 
 }//end class

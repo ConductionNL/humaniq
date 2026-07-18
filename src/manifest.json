@@ -439,6 +439,12 @@
 					"label": "Aanwezigheid",
 					"icon": "ClockOutline",
 					"route": "AttendanceRecords"
+				},
+				{
+					"id": "BhvCertificeringen",
+					"label": "BHV-certificeringen",
+					"icon": "ShieldCheckOutline",
+					"route": "BhvCertificeringen"
 				}
 			]
 		},
@@ -672,7 +678,7 @@
 			"title": "Dashboard",
 			"config": {
 				"description": "Jouw eigen ingediende items en, als beoordelaar, wat er op je wacht.",
-				"_note": "mijn-hr-self-service: smallest useful ADR-001 menu-1 dashboard — 3 @me-scoped stat KPIs (mine), 1 @me-scoped object-table of recent timesheets. hr-signals (2026-07-13) added 'Aflopende contracten' (object-table over EmploymentContract, filter type=temporary + endDate within @today..@today+60d), full-width below the recent-hours table -- the 60 stays literally in sync with nl-signaal-contract-verloopt's parameters.windowDays (labour.json); a window change touches both. mss-team-scope (2026-07-13, round 3) re-scopes the two approver KPIs in place from global submitted-counts to the manager's own team ({ managerUserId: @me, status: submitted }, re-titled '(mijn team)', re-routed to the new Team*goedkeuring pages) and adds a third team KPI (leave) so the trio matches the three schemas that carry managerUserId; a new HR-fallback row restores exactly the two global submitted-counts the re-scope removed (routes to the existing global TimesheetApproval/ExpenseApproval pages, captioned 'alle medewerkers') so HR is never starved of a queue by an unpopulated managerUserId stamp — team scoping is additive, not a replacement for the HR view. verzuim-analytics-widgets (2026-07-13) appends a fourth stat row after the HR-fallback row and before the recent-hours table (which shifts down accordingly): `dash-verzuim-open`/`dash-verzuim-langdurig` are SickLeaveCase counts (the second filtered on the `@today-294d` 42-weken UWV-melding horizon) and `dash-leave-pending`/`dash-leave-hours-month` are the app's only global LeaveRequest count/sum — `hours` is nullable on LeaveRequest so an approved request without hours does not contribute to the sum (see that widget's own `_note`). All widgets stay type stat/object-table (the built-in widget enum) — no custom widgets, no dateRange, no charts."
+				"_note": "mijn-hr-self-service: smallest useful ADR-001 menu-1 dashboard — 3 @me-scoped stat KPIs (mine), 1 @me-scoped object-table of recent timesheets. hr-signals (2026-07-13) added 'Aflopende contracten' (object-table over EmploymentContract, filter type=temporary + endDate within @today..@today+60d), full-width below the recent-hours table -- the 60 stays literally in sync with nl-signaal-contract-verloopt's parameters.windowDays (labour.json); a window change touches both. mss-team-scope (2026-07-13, round 3) re-scopes the two approver KPIs in place from global submitted-counts to the manager's own team ({ managerUserId: @me, status: submitted }, re-titled '(mijn team)', re-routed to the new Team*goedkeuring pages) and adds a third team KPI (leave) so the trio matches the three schemas that carry managerUserId; a new HR-fallback row restores exactly the two global submitted-counts the re-scope removed (routes to the existing global TimesheetApproval/ExpenseApproval pages, captioned 'alle medewerkers') so HR is never starved of a queue by an unpopulated managerUserId stamp — team scoping is additive, not a replacement for the HR view. verzuim-analytics-widgets (2026-07-13) appends a fourth stat row after the HR-fallback row and before the recent-hours table (which shifts down accordingly): `dash-verzuim-open`/`dash-verzuim-langdurig` are SickLeaveCase counts (the second filtered on the `@today-294d` 42-weken UWV-melding horizon) and `dash-leave-pending`/`dash-leave-hours-month` are the app's only global LeaveRequest count/sum — `hours` is nullable on LeaveRequest so an approved request without hours does not contribute to the sum (see that widget's own `_note`). bhv-organisatie (2026-07-17) appends a fifth full-width row, 'Aflopende BHV-certificaten', below 'Aflopende contracten', in the identical object-table shape (filter/order/limit) reusing the existing hr-signals mechanism — no coverage-ratio computation anywhere on this page. All widgets stay type stat/object-table (the built-in widget enum) — no custom widgets, no dateRange, no charts."
 			},
 			"widgets": [
 				{
@@ -1147,6 +1153,52 @@
 							"viewAllRoute": "EmploymentContracts",
 							"viewAllLabel": "Alles bekijken",
 							"emptyText": "Geen aflopende contracten binnen 60 dagen"
+						}
+					}
+				},
+				{
+					"widgetKey": "object-table",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 18,
+					"gridWidth": 12,
+					"gridHeight": 5,
+					"props": {
+						"title": "Aflopende BHV-certificaten",
+						"icon": "ShieldCheckOutline",
+						"content": {
+							"_note": "bhv-organisatie: the 90 in certificaatGeldigTot.lte must stay in sync with nl-bhv-certificaat-verloopt's parameters.windowDays (lib/Standards/rules/labour.json) -- a window change touches both. Same object-table shape as the existing 'Aflopende contracten' widget above (hr-signals) -- no coverage-ratio computation, a plain expiry list.",
+							"source": {
+								"register": "hrmq",
+								"schema": "BhvCertificering",
+								"filter": {
+									"certificaatGeldigTot": {
+										"gte": "@today",
+										"lte": "@today+90d"
+									}
+								},
+								"order": {
+									"certificaatGeldigTot": "asc"
+								},
+								"limit": 5
+							},
+							"columns": [
+								{
+									"key": "employeeId",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "rol"
+								},
+								{
+									"key": "certificaatGeldigTot",
+									"cellClass": "cn-cell--muted"
+								}
+							],
+							"rowRoute": "BhvCertificeringDetail",
+							"viewAllRoute": "BhvCertificeringen",
+							"viewAllLabel": "Alles bekijken",
+							"emptyText": "Geen aflopende BHV-certificaten binnen 90 dagen"
 						}
 					}
 				}
@@ -5909,6 +5961,92 @@
 							"columns": 2,
 							"exclude": [
 								"employeeId"
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "related",
+					"slot": "body",
+					"gridX": 8,
+					"gridY": 0,
+					"gridWidth": 4,
+					"gridHeight": 6,
+					"props": {
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
+		},
+		{
+			"id": "BhvCertificeringen",
+			"route": "/bhv-certificeringen",
+			"type": "index",
+			"title": "BHV-certificeringen",
+			"config": {
+				"register": "hrmq",
+				"schema": "BhvCertificering",
+				"_note": "bhv-organisatie (2026-07-17): coverage VISIBILITY, not a coverage formula (REQ-BHV-003/-004, design.md D2) -- this index lists who is currently certified, filterable/groupable by orgUnitId and rol, so HR/a safety officer can judge adequacy against their own RI&E. No red/green adequacy indicator, no computed ratio anywhere on this page.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "BHV-gerelateerde certificeringen per medewerker: rol, geldigheid en organisatie-eenheid. Geen numerieke dekkingsnorm -- de Arbowet (art. 15) vraagt een RI&E-gebaseerde, kwalitatieve beoordeling.",
+				"columns": [
+					"employeeId",
+					"rol",
+					"certificaatGeldigTot",
+					"orgUnitId"
+				],
+				"filters": [
+					"orgUnitId",
+					"rol"
+				],
+				"sort": {
+					"field": "certificaatGeldigTot",
+					"order": "asc"
+				}
+			}
+		},
+		{
+			"id": "BhvCertificeringDetail",
+			"route": "/bhv-certificeringen/:id",
+			"type": "detail",
+			"title": "BHV-certificering",
+			"config": {
+				"register": "hrmq",
+				"schema": "BhvCertificering",
+				"_note": "bhv-organisatie (2026-07-17): plain dated-fact record, no x-openregister-lifecycle (design.md D4) -- a renewal is a new BhvCertificering object, not a status transition, so this page carries NO lifecycleActions widget (the OrgUnitDetail/OrgAssignmentDetail precedent for lifecycle-less schemas). The 'Certificering' data widget excludes employeeId/orgUnitId since Related already resolves and links both by name (the EmployeeDetail exclude convention). No stat/files/comms leaves -- a certification record has no numeric headline aggregate or document field. Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 8,
+					"gridHeight": 6,
+					"props": {
+						"title": "Certificering",
+						"icon": "ShieldCheckOutline",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"orgUnitId"
 							]
 						}
 					}

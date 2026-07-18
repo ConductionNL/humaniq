@@ -202,6 +202,39 @@ availability/preferences, skills-matching, open-shift bidding/shift-swap and
 coverage alerts are named fast-follows. There is no automation between a
 published roster and realised `AttendanceRecord`/`Timesheet` hours.
 
+## BHV (bedrijfshulpverlening) — certificate signalling, not a coverage formula
+
+hrmq tracks BHV-related certifications (`BhvCertificering`: employee, role
+`bhv_basis`/`hoofd_bhv`/`ehbo`/`ontruimingsleider`, obtained/valid-until
+dates, training provider, optional `OrgUnit` scope) and signals an expiring
+certificate through the **existing `hr-signals` mechanism** — the same
+provider class, the same framework, the same "Aflopende ..." dashboard
+widget shape the expiring-contract signal already uses
+(`nl-bhv-certificaat-verloopt`, advisory, 90-day window). No second alerting
+mechanism was built for this.
+
+**No numeric BHV coverage ratio is asserted anywhere** (not in the rule
+corpus, not in the manifest, not as a computed adequacy verdict on any
+page). Arbeidsomstandighedenwet art. 15 requires the werkgever to appoint one
+or more bedrijfshulpverleners accounting for de grootte van het bedrijf en de
+aard van de aanwezige risico's — a qualitative, RI&E-driven standard. No
+article sets a fixed number (no "1 per 50" or similar), so this feature does
+not invent one: the `BhvCertificeringen` index gives HR **visibility**
+(who is certified, in which role, in which `OrgUnit`, expiring when) so
+coverage adequacy can be judged against the organisation's own RI&E, not
+against a formula hrmq computes.
+
+hrmq has no physical-`Location` concept (`OrgUnit` is an organisational
+grouping — afdeling/team/kostenplaats — not a site register), so BHV
+coverage visibility is scoped by `OrgUnit`, an honest downgrade from "per
+building" named as such, not disguised as the real thing.
+
+**Named fast-follow:** `Asset` (laptop/telefoon/voertuig/gereedschap/
+toegangspas/kleding/`overig`) has no inspection-expiry field today, so
+AED/EHBO-equipment inspection tracking is not covered by this feature. A
+future small change adding that field would reuse this same `hr-signals`
+expiry-alert mechanism rather than build a third one.
+
 ## Multi-administratie (accountant multi-client)
 
 hrmq supports multiple administraties (companies/clients) in one instance — the

@@ -1,0 +1,30 @@
+{
+    "x-hrmq-fragment": "hr-bhv",
+    "components": {
+        "schemas": {
+            "BhvCertificering": {
+                "slug": "BhvCertificering",
+                "icon": "ShieldCheckOutline",
+                "version": "0.1.0",
+                "title": "BHV certification",
+                "description": "A bedrijfshulpverlening (BHV) related certification held by one employee: a plain dated fact (certificate obtained, certificate valid until), not a workflow. A renewal after a herhalingscursus is recorded as a NEW BhvCertificering object with a later certificaatBehaaldOp/certificaatGeldigTot pair -- the original record is left unmodified (bhv-organisatie design.md D4). No x-openregister-lifecycle. Certificate-expiry signalling reuses the existing hr-signals mechanism (nl-bhv-certificaat-verloopt, lib/Standards/Checks/NlSignalChecks.php) rather than a new alerting mechanism, and this schema/its pages assert NO numeric BHV-coverage ratio -- Arbeidsomstandighedenwet art. 15 sets a qualitative, RI&E-driven adequacy standard, not a fixed number (bhv-organisatie proposal.md Why).",
+                "type": "object",
+                "x-schema-org": "schema:EducationalOccupationalCredential",
+                "required": [
+                    "employeeId",
+                    "rol",
+                    "certificaatGeldigTot"
+                ],
+                "properties": {
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "title": "Employee", "description": "UUID reference to the Employee holding this BHV-related certification."},
+                    "rol": {"type": "string", "enum": ["bhv_basis", "hoofd_bhv", "ehbo", "ontruimingsleider"], "title": "Role", "description": "The BHV-related role this certification covers. Enum append-only: renaming a value later is breaking, adding one is not."},
+                    "certificaatBehaaldOp": {"type": "string", "format": "date", "nullable": true, "title": "Certificate obtained on", "description": "Date the certification was obtained (ISO 8601)."},
+                    "certificaatGeldigTot": {"type": "string", "format": "date", "title": "Certificate valid until", "description": "Date the certification expires (ISO 8601) -- the expiry-alert anchor read by nl-bhv-certificaat-verloopt (lib/Standards/Checks/NlSignalChecks.php, framework hr-signals, parameters.windowDays=90)."},
+                    "opleider": {"type": "string", "nullable": true, "title": "Training provider", "description": "Name of the training provider (opleidingsinstituut) that issued the certification, when known."},
+                    "orgUnitId": {"type": "string", "format": "uuid", "$ref": "OrgUnit", "nullable": true, "title": "Organisational unit", "description": "UUID reference to the OrgUnit this certification's coverage is grouped/visible under (the coverage-visibility scoping concept, bhv-organisatie design.md D3 -- deliberately NOT a physical Location, which hrmq's register does not model). Null when the certification is not scoped to a specific unit."},
+                    "administrationId": {"type": "string", "nullable": true, "title": "Administration", "description": "Denormalized administratie key this BhvCertificering is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); maintained by HR/back-office when the record is created."}
+                }
+            }
+        }
+    }
+}
