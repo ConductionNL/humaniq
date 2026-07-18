@@ -8,7 +8,7 @@
  * from its OWN stored `engineInputSnapshot` — never from live Employee/
  * EmploymentContract state — through the real `PayrollCalculator` and
  * `PackRepository` (the anchor-case golden fixture, design.md D2: €3.800,
- * wit, korting, below AOW, `nl-2026@1.0.0`), and compared cents-exact
+ * wit, korting, below AOW, `nl-2026@1.1.0`), and compared cents-exact
  * against the payslip's stored figures. A clean payslip reproduces; a
  * tampered stored figure is caught and named; a payslip with no snapshot (or
  * whose run's engine artefact has drifted) is refused, never silently

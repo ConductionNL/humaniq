@@ -1,0 +1,28 @@
+{
+  "name": "thirty-percent-ruling-anchor — €3.800,00 wit anchor + 30%-ruling granted (30-procent-regeling design.md D4): exemption €1.140,00, belastbaarLoon €2.660,00, taxable base and every tax/premium component drop, grossPay unchanged, nettoPay RISES to €3.548,83",
+  "input": {
+    "grossMonthly": 3800.00,
+    "taxTableColor": "wit",
+    "dateOfBirth": "1990-04-12",
+    "loonheffingskortingToegepast": true,
+    "awfTariff": "low",
+    "aofTariff": "laag",
+    "whkPercentage": 1.52,
+    "period": "2026-02",
+    "thirtyPercentRulingRate": 30.0
+  },
+  "expected": {
+    "loonheffing": 251.17,
+    "arbeidskorting": 451.58,
+    "volksverzekeringen": 194.27,
+    "zvw": 162.26,
+    "awf": 72.88,
+    "aof": 166.78,
+    "wko": 13.30,
+    "whk": 40.43,
+    "werknemersverzekeringen": 293.39,
+    "employerCharges": 455.65,
+    "vakantiegeldReserved": 212.80,
+    "nettoPay": 3548.83
+  }
+}

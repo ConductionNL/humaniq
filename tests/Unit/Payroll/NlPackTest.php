@@ -75,16 +75,17 @@ class NlPackTest extends TestCase
 
 
     /**
-     * REQ-JP-006: the NL pack's self-test block is the 9 existing fixtures —
+     * REQ-JP-006 / 30-procent-regeling: the NL pack's self-test block is the 10
+     * existing fixtures (the original 9 plus the 30%-ruling anchor) —
      * referenced, never copied. If a fixture is added, it belongs here too.
      *
      * @return void
      */
-    public function testTheNlPackDeclaresAllNineGoldenFixturesAsItsOwnVectors(): void
+    public function testTheNlPackDeclaresAllTenGoldenFixturesAsItsOwnVectors(): void
     {
         $vectors = $this->pack()->selfTest()['vectors'];
 
-        $this->assertCount(9, $vectors);
+        $this->assertCount(10, $vectors);
         $this->assertSame(
             [
                 'payroll-2026/anchor.json',
@@ -96,11 +97,12 @@ class NlPackTest extends TestCase
                 'payroll-2026/part-time.json',
                 'payroll-2026/bijtelling-anchor.json',
                 'payroll-2026/dga-anchor.json',
+                'payroll-2026/thirty-percent-ruling-anchor.json',
             ],
             array_column($vectors, '$fixture')
         );
 
-    }//end testTheNlPackDeclaresAllNineGoldenFixturesAsItsOwnVectors()
+    }//end testTheNlPackDeclaresAllTenGoldenFixturesAsItsOwnVectors()
 
 
     /**
@@ -195,7 +197,7 @@ class NlPackTest extends TestCase
 
         $this->assertSame('NL', $pack->jurisdiction());
         $this->assertSame(2026, $pack->taxYear());
-        $this->assertSame('nl-2026@1.0.0', $pack->engineVersion());
+        $this->assertSame('nl-2026@1.1.0', $pack->engineVersion());
         $this->assertTrue($pack->isBundled());
 
     }//end testThePackIsResolvedByItsDeclaredJurisdictionAndTaxYear()

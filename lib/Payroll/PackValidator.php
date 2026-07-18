@@ -789,6 +789,9 @@ final class PackValidator
      * @param JurisdictionPack     $pack  The pack (its declared jurisdiction).
      *
      * @return CalculationInput
+     *
+     * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-006
+     * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-003
      */
     private function inputFrom(array $input, JurisdictionPack $pack): CalculationInput
     {
@@ -802,7 +805,8 @@ final class PackValidator
             aofTariff: (string) $input['aofTariff'],
             whkPercentage: (float) $input['whkPercentage'],
             verzekeringsplichtig: (bool) ($input['verzekeringsplichtig'] ?? true),
-            jurisdiction: $pack->jurisdiction()
+            jurisdiction: $pack->jurisdiction(),
+            thirtyPercentRulingRate: (float) ($input['thirtyPercentRulingRate'] ?? 0.0)
         );
 
     }//end inputFrom()

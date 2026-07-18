@@ -43,6 +43,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-009
  * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
+ * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-003
  */
 class BalancingInvariantTest extends TestCase
 {
@@ -73,6 +74,35 @@ class BalancingInvariantTest extends TestCase
         }
 
     }//end testNetEquationHoldsCentsExactAcrossAllFixtures()
+
+
+    /**
+     * The 30%-ruling regression guard (30-procent-regeling design.md D2): for
+     * the thirty-percent-ruling-anchor fixture the net equation must still hold
+     * as `grossPay - loonheffing` with `grossPay` UNCHANGED at the full
+     * €3.800,00 -- a future `grossRef` mistake (reducing `tvl` itself) would
+     * make `grossPay` drop to €2.660,00 and this assertion would catch it.
+     *
+     * @return void
+     */
+    public function testThirtyPercentRulingFixtureKeepsGrossUnchangedAndNetRises(): void
+    {
+        $calculator = new PayrollCalculator();
+        $tables     = TaxTables::load('nl-2026');
+
+        $fixtures = self::loadFixtures();
+        $this->assertArrayHasKey('thirty-percent-ruling-anchor.json', $fixtures, 'The 30%-ruling anchor fixture must be present.');
+
+        $result = $calculator->calculate(
+            self::inputFromFixture($fixtures['thirty-percent-ruling-anchor.json']['input']),
+            $tables
+        );
+
+        $this->assertSame(380000, $result->grossPayCents, '30%-ruling: grossPay must stay the full unreduced €3.800,00 (grossRef = @binding.tvl).');
+        $this->assertSame(($result->grossPayCents - $result->loonheffingCents), $result->nettoPayCents, '30%-ruling: net equation must hold as grossPay - loonheffing.');
+        $this->assertSame(354883, $result->nettoPayCents, '30%-ruling: nettoPay must be €3.548,83 (risen from the €3.081,17 no-ruling case).');
+
+    }//end testThirtyPercentRulingFixtureKeepsGrossUnchangedAndNetRises()
 
 
     /**
@@ -213,7 +243,8 @@ class BalancingInvariantTest extends TestCase
             awfTariff: (string) $input['awfTariff'],
             aofTariff: (string) $input['aofTariff'],
             whkPercentage: (float) $input['whkPercentage'],
-            verzekeringsplichtig: (bool) ($input['verzekeringsplichtig'] ?? true)
+            verzekeringsplichtig: (bool) ($input['verzekeringsplichtig'] ?? true),
+            thirtyPercentRulingRate: (float) ($input['thirtyPercentRulingRate'] ?? 0.0)
         );
 
     }//end inputFromFixture()
