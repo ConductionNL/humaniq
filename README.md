@@ -550,3 +550,39 @@ Be aware of the following boundaries:
   `caoSchaal` mechanism). The minimum-wage rules (`nl-minimumloon-2026`/
   `nl-minimumuurloon-wet`) remain age-unaware — a pre-existing corpus gap that
   affects every contract type, not just `bbl`.
+
+## Authentication (DigiD / Yivi / eHerkenning) — a Nextcloud platform layer, not an hrmq auth stack
+
+**hrmq installs, configures, and ships nothing for authentication.** Who a user
+is, and how strongly that identity was proven, is entirely the responsibility of
+the Nextcloud instance hrmq runs on. hrmq consumes the authenticated session
+Nextcloud hands it (`OCP\IUserSession`) and does no identity work of its own.
+
+- **DigiD and eHerkenning** are configured at the instance level via the
+  Nextcloud **`user_saml`** app (SAML 2.0), pointed at the Logius
+  DigiD/eHerkenning broker. **Yivi** (formerly IRMA) is configured via the
+  Nextcloud **`user_oidc`** app (OIDC) against a Yivi-compatible bridge. Both are
+  standard Nextcloud identity backends installed and administered outside hrmq's
+  footprint — there is no hrmq-side setup, certificate, endpoint, or
+  configuration step, and none is needed. Once either backend authenticates a
+  person, hrmq requires nothing further.
+- **The superseded draft (`spec/irma-digid-auth`, 2026-05) is idea-source only.**
+  Its bespoke federation stack — five hand-rolled IdP integrations plus app-local
+  `IdentityProvider`/`AuthenticationContext`/`Session`/`AuthEvent`/`FraudSignal`/
+  `AttributeMapping` schemas, a login-page façade, hash-chained auth audit, and
+  real-time fraud scoring — is **rejected outright**: it rebuilds platform
+  responsibilities inside a leaf app, and none of those schemas, routes,
+  controllers, or services exist anywhere in this repository (verified by grep at
+  implementation time; this change introduces none).
+- **Mid-session assurance step-up is deferred with a named trigger, not a
+  commitment.** It is worth building **only if and when** BOTH of these become
+  true: (1) a genuine *sensitive self-service write* action is proposed — one
+  where an end user, not HR/back-office, mutates a high-impact field such as
+  `Employee.iban`/`tenaamstelling`; AND (2) a *concrete Nextcloud-exposed
+  assurance signal* (e.g. a per-request AAL/LoA claim surfaced by `user_saml`/
+  `user_oidc`) is verified to exist and be readable by hrmq. As of this change
+  neither holds: `mijn-hr-self-service`'s `MijnLoonstroken` is **read-only**, and
+  `Employee.iban`/`tenaamstelling` are payroll/back-office-authored (the SEPA
+  net-pay path sources the debtor IBAN from config, never from a self-service
+  write). A future proposal must re-verify **both** conditions before citing this
+  as a reason to build step-up.
