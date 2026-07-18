@@ -534,7 +534,7 @@ class PayrollRunService
             // -- the input that produced this payslip is never re-derivable
             // from Employee/EmploymentContract state once either is edited
             // later, so it is persisted here, once, at generation time.
-            $payload['engineInputSnapshot'] = $input->toCanonicalJson();
+            $payload['engineInputSnapshot'] = $input->toArray();
 
             try {
                 $existingPayslip = ($existingByEmployeeId[$employeeId] ?? null);

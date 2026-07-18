@@ -457,13 +457,13 @@ class PayrollRunServiceTest extends TestCase
         $payslip = $payslips[0];
 
         $this->assertArrayHasKey('engineInputSnapshot', $payslip);
-        $snapshot = $payslip['engineInputSnapshot'];
-        $this->assertIsString($snapshot);
-        $this->assertNotSame('', $snapshot);
-
-        $decoded = json_decode($snapshot, true);
-        $this->assertSame(JSON_ERROR_NONE, json_last_error());
+        $decoded = $payslip['engineInputSnapshot'];
+        // Stored as a structured object (not a JSON string): OpenRegister's
+        // MagicMapper json_decodes any string column on read, so a string field
+        // would read back as an array and fail its own `type: string` on the
+        // next validated save (hrmq#98 follow-up).
         $this->assertIsArray($decoded);
+        $this->assertNotSame([], $decoded);
 
         // Matches the employee/contract inputs that were actually resolved.
         $this->assertSame(380000, $decoded['grossMonthlySalaryCents']);
@@ -475,14 +475,6 @@ class PayrollRunServiceTest extends TestCase
         $this->assertSame('laag', $decoded['aofTariff']);
         $this->assertTrue($decoded['verzekeringsplichtig']);
         $this->assertSame('NL', $decoded['jurisdiction']);
-
-        // Sorted keys, no whitespace -- the AuditHashService::getCanonicalJson()
-        // canonical-form precedent applied to a value object.
-        $keys = array_keys($decoded);
-        $sortedKeys = $keys;
-        sort($sortedKeys);
-        $this->assertSame($sortedKeys, $keys);
-        $this->assertStringNotContainsString(' ', $snapshot);
 
     }//end testGeneratedPayslipCarriesADecodableEngineInputSnapshotMatchingResolvedInputs()
 
