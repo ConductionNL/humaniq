@@ -1,0 +1,55 @@
+{
+  "id": "cao-ziekenhuizen",
+  "name": "CAO Ziekenhuizen",
+  "sector": "Ziekenhuizen (NVZ-leden)",
+  "version": null,
+  "effectiveDate": null,
+  "basedOn": [
+    {"doc": "NVZ, Salarisschalen, premies & vergoedingen (CAO Ziekenhuizen)", "url": "https://www.cao-ziekenhuizen.nl/"}
+  ],
+  "payScales": {
+    "value": {
+      "FWG-15": 210000, "FWG-20": 230000, "FWG-25": 250000, "FWG-30": 270000,
+      "FWG-35": 290000, "FWG-40": 310000, "FWG-45": 335000, "FWG-50": 360000,
+      "FWG-55": 390000, "FWG-60": 420000, "FWG-65": 460000, "FWG-70": 500000,
+      "FWG-75": 550000, "FWG-80": 600000
+    },
+    "source": "Illustrative FWG 3.0 functiegroepen shape (14 salarisschalen, FWG-15 t/m FWG-80, per the current NVZ CAO) pending confirmation against the official CAO-tekst — not transcribed from the primary document in this pass.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "cao-ziekenhuizen.nl 'Salarisschalen, premies & vergoedingen' (NVZ's own page)"
+  },
+  "allowances": {
+    "value": {
+      "ort": {
+        "avond": {"pct": 20},
+        "nacht": {"pct": 40},
+        "zaterdag": {"pct": 35},
+        "zondagFeestdag": {"pct": 65}
+      }
+    },
+    "source": "Illustrative ORT (onregelmatigheidstoeslag) reference-rate shape pending confirmation against the official CAO-tekst — day/time bands and stacking rules not transcribed in this pass. Display-only: no check, resolver, or payroll-calculator hook applies these rates to an actual worked shift (design.md Named gap 2 — no shift/roster object exists in hrmq's schema).",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "cao-ziekenhuizen.nl 'Salariëring en vakantiebijslag'"
+  },
+  "leaveEntitlement": {
+    "value": {
+      "vakantiedagenWettelijk": 20,
+      "vakantiedagenBovenwettelijk": 6
+    },
+    "source": "Illustrative bovenwettelijk leave (26 days total at full-time) pending confirmation against the official CAO-tekst — not transcribed from the primary document in this pass.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "cao-ziekenhuizen.nl CAO-tekst, verlofhoofdstuk"
+  },
+  "workingTime": {
+    "value": {
+      "fulltimeHoursPerWeek": 36
+    },
+    "source": "Illustrative full-time working week (typical zorgsector norm) pending confirmation against the official CAO-tekst. Display-only — not read by any CaoRegistry resolver.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "cao-ziekenhuizen.nl CAO-tekst, arbeidsduurartikel"
+  }
+}

@@ -270,6 +270,16 @@ class RuleAuditService
      * the Payslip variant of that same check reuses the existing
      * `payroll.runsById` index (buildPayrollContext()) instead, since a
      * Payslip's parent is its PayrollRun, not its Employee.
+     * abp-aansluiting further extends this pre-pass with three additions
+     * (design.md D3): the `PayrollRun.byId` entries gain `administrationId`;
+     * a new `Administration.abpPlichtigByAdministrationId` map
+     * (`administrationId` business key -> `abpAansluitingsplichtig` bool),
+     * loaded from `loadAll('Administration')` once; and a new
+     * `PensionFiling.abpFiledPeriodsByAdministrationId` map
+     * (`administrationId` -> set of periods with at least one `fund: "abp"`
+     * filing), kept separate from the existing, unchanged, fund-blind global
+     * `filedPeriods` set -- consumed by
+     * NlAbpChecks::checks()['PayrollRun']['nl-abp-fund-required'].
      * Loads independently of the main per-type loop (a small, side-effect-free
      * reload) so the index is ready before any object of either type is
      * evaluated. Degrades gracefully to empty sets when a schema does not
@@ -281,18 +291,28 @@ class RuleAuditService
      * @spec openspec/changes/asset-management-mvp/specs/asset-management/spec.md#REQ-AST-005
      * @spec openspec/changes/mss-team-scope/specs/mss-team-scope/spec.md#REQ-MSS-005
      * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-007
+     * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-003
      */
     private function buildRelatedContext(): array
     {
         $byId            = [];
         $approvedPeriods = [];
         foreach ($this->loadAll('PayrollRun') as $run) {
-            $id     = (string) ($run['id'] ?? $run['@self']['id'] ?? '');
-            $period = (string) ($run['period'] ?? '');
-            $status = (string) ($run['status'] ?? '');
+            $id               = (string) ($run['id'] ?? $run['@self']['id'] ?? '');
+            $period           = (string) ($run['period'] ?? '');
+            $status           = (string) ($run['status'] ?? '');
+            $administrationId = (string) ($run['administrationId'] ?? '');
 
             if ($id !== '') {
-                $byId[$id] = ['id' => $id, 'period' => $period, 'status' => $status];
+                $byId[$id] = [
+                    'id'               => $id,
+                    'period'           => $period,
+                    'status'           => $status,
+                    // abp-aansluiting (REQ-ABP-003): the run's own denormalized
+                    // administratie key, consumed by NlAbpChecks to resolve the
+                    // run's Administration and its own abpFiledPeriods entry.
+                    'administrationId' => $administrationId,
+                ];
             }
 
             if ($period !== '' && in_array($status, ['approved', 'posted', 'paid'], true) === true) {
@@ -300,12 +320,39 @@ class RuleAuditService
             }
         }
 
-        $filedPeriods = [];
+        $filedPeriods                    = [];
+        $abpFiledPeriodsByAdministrationId = [];
         foreach ($this->loadAll('PensionFiling') as $filing) {
             $period = (string) ($filing['period'] ?? '');
             if ($period !== '') {
                 $filedPeriods[$period] = true;
             }
+
+            // abp-aansluiting (REQ-ABP-003): a SECOND, narrower index alongside
+            // the global filedPeriods set above -- fund AND tenant scoped,
+            // unlike that set. Only `fund: "abp"` filings with both a period
+            // and an administrationId contribute.
+            $administrationId = (string) ($filing['administrationId'] ?? '');
+            if ($period !== '' && $administrationId !== '' && (string) ($filing['fund'] ?? '') === 'abp') {
+                $abpFiledPeriodsByAdministrationId[$administrationId][$period] = true;
+            }
+        }
+
+        // abp-aansluiting (REQ-ABP-003): an Administration index keyed on the
+        // `administrationId` business key (not the object UUID -- the same
+        // key every denormalized child field already uses), carrying only
+        // the boolean NlAbpChecks needs to scope its predicate. Loaded once,
+        // no per-object IO (the buildPayrollContext() precedent). Degrades to
+        // an empty map when the Administration schema does not exist yet in
+        // the register.
+        $abpPlichtigByAdministrationId = [];
+        foreach ($this->loadAll('Administration') as $administration) {
+            $administrationId = (string) ($administration['administrationId'] ?? '');
+            if ($administrationId === '') {
+                continue;
+            }
+
+            $abpPlichtigByAdministrationId[$administrationId] = (bool) ($administration['abpAansluitingsplichtig'] ?? false);
         }
 
         // onboarding-wizard-mvp: an Employee index (loonheffingenVerklaringOnFile +
@@ -486,7 +533,13 @@ class RuleAuditService
                 'approvedPeriods' => array_keys($approvedPeriods),
             ],
             'PensionFiling'      => [
-                'filedPeriods' => array_keys($filedPeriods),
+                'filedPeriods'                      => array_keys($filedPeriods),
+                // abp-aansluiting (REQ-ABP-003): administrationId -> [period => true].
+                'abpFiledPeriodsByAdministrationId' => $abpFiledPeriodsByAdministrationId,
+            ],
+            'Administration'     => [
+                // abp-aansluiting (REQ-ABP-003): administrationId -> abpAansluitingsplichtig bool.
+                'abpPlichtigByAdministrationId' => $abpPlichtigByAdministrationId,
             ],
             'Employee'           => [
                 'byId' => $employeesById,

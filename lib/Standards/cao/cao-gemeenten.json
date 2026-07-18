@@ -1,0 +1,49 @@
+{
+  "id": "cao-gemeenten",
+  "name": "CAO Gemeenten",
+  "sector": "Gemeenten (VNG-werkgevers)",
+  "version": "2025-2027",
+  "effectiveDate": "2026-01-01",
+  "basedOn": [
+    {"doc": "VNG, Eindresultaat Cao Gemeenten en Cao SGO 2025-2027", "url": "https://www.vng.nl/"},
+    {"doc": "LOGA salarisbrief (salaristabellen gemeenten)", "url": "https://www.caogemeenten.nl/"}
+  ],
+  "payScales": {
+    "value": {
+      "1": 175000, "2": 210000, "3": 245000, "4": 280000, "5": 315000,
+      "6": 350000, "7": 385000, "8": 420000, "9": 455000, "10": 490000,
+      "11": 525000, "12": 560000, "13": 595000, "14": 630000, "15": 665000,
+      "16": 700000, "17": 735000, "18": 770000, "19": 805000
+    },
+    "source": "Illustrative VNG/HR21 numeric schalen 1-19 shape. A search-derived corroboration confirms a 2025-2027 CAO akkoord with a EUR 16/uur wettelijk-uurloon vloer effective 2026-01-01 (vng.nl 'Eindresultaat Cao Gemeenten en Cao SGO 2025-2027', LOGA salarisbrief, both fetched as search results 2026-07-17) — the exact per-schaal-per-periodiek table was not independently fetched from a primary document, hence placeholder.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "VNG/LOGA salaristabel Cao Gemeenten 2025-2027 (caogemeenten.nl, LOGA salarisbrief)"
+  },
+  "allowances": {
+    "value": {},
+    "source": "Cao Gemeenten kent een Individueel Keuzebudget (IKB), net als CAO Rijk; het percentage/vaste bedrag is in deze onderzoeksronde niet bevestigd tegen de primaire CAO-tekst. Geen cijfer opgenomen om verzinnen te voorkomen — leeg totdat een maintainer de officiele IKB-bepaling transcribeert.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "caogemeenten.nl CAO-tekst, hoofdstuk Individueel Keuzebudget"
+  },
+  "leaveEntitlement": {
+    "value": {
+      "vakantiedagenWettelijk": 20,
+      "vakantiedagenBovenwettelijk": 7
+    },
+    "source": "Illustrative bovenwettelijk leave (27 days total at full-time) pending confirmation against the official CAO-tekst — not transcribed from the primary document in this pass.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "caogemeenten.nl CAO-tekst, verlofhoofdstuk"
+  },
+  "workingTime": {
+    "value": {
+      "fulltimeHoursPerWeek": 36
+    },
+    "source": "Illustrative full-time working week (common gemeente convention) pending confirmation against the official CAO-tekst. Display-only — not read by any CaoRegistry resolver.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "caogemeenten.nl CAO-tekst, arbeidsduurartikel"
+  }
+}

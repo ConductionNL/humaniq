@@ -15,6 +15,14 @@
  * (round 3) adds coverage for the Employee.nextcloudUserId/OrgUnit.managerId
  * index extensions and the new OrgAssignment.byEmployeeId index, through the
  * exact seeded Timesheet/Expense/LeaveRequest managerUserId stamps.
+ * abp-aansluiting adds a third context extension: an Administration
+ * `abpPlichtigByAdministrationId` index, the `PayrollRun.byId` entries
+ * gaining `administrationId`, and a new PensionFiling
+ * `abpFiledPeriodsByAdministrationId` index, exercised through the exact
+ * seeded ADM-001/ADM-003 fixture shapes to prove the new
+ * nl-abp-fund-required rule fires for ADM-003's own unfiled run while the
+ * shipped, fund-blind/tenant-blind nl-upa-monthly-completeness stays silent
+ * for that same run (design.md Seed Data).
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Service
@@ -30,6 +38,7 @@
  *
  * @spec openspec/changes/pension-filing-upa-mvp/specs/pension-filing-upa-mvp/spec.md
  * @spec openspec/changes/mss-team-scope/specs/mss-team-scope/spec.md#REQ-MSS-005
+ * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-003
  */
 
 declare(strict_types=1);
@@ -1275,6 +1284,155 @@ class RuleAuditServiceTest extends TestCase
         $this->assertNotContains('nl-reiskosten-onbelast-tarief', $ruleIds);
 
     }//end testPreExistingTravelExpenseWithNoMileageFieldsIsNeverFlagged()
+
+
+    // -- abp-aansluiting: Administration/PayrollRun.administrationId/PensionFiling.abpFiled context --
+
+
+    /**
+     * The exact abp-aansluiting hr-seed.json fixture shapes: ADM-001
+     * (abpAansluitingsplichtig true) with its two existing approved
+     * 2026-05/2026-06 NL PayrollRuns, each already carrying a fund:abp
+     * PensionFiling scoped to ADM-001 (pension-filing-upa-mvp REQ-PFU-007 —
+     * zero new filing seeds needed for the happy path), and ADM-003
+     * ("Gemeente Voorbeeld", abpAansluitingsplichtig true) with one approved
+     * NL PayrollRun for period 2026-06 and deliberately NO PensionFiling of
+     * its own — the same period ADM-001 already filed ABP for globally, so
+     * the shipped fund-blind/tenant-blind nl-upa-monthly-completeness stays
+     * silent for it while the new fund-and-tenant-scoped nl-abp-fund-required
+     * still fires (design.md Seed Data).
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededAbpRows(): array
+    {
+        $administrations = [
+            ['administrationId' => 'ADM-001', 'name' => 'Example: Conduction Demo B.V.', 'active' => true, 'abpAansluitingsplichtig' => true],
+            ['administrationId' => 'ADM-003', 'name' => 'Gemeente Voorbeeld', 'active' => true, 'abpAansluitingsplichtig' => true],
+        ];
+
+        $runs = [
+            array_merge(self::GL_FIELDS, ['id' => 'payrollrun-2026-05', 'period' => '2026-05', 'status' => 'approved', 'administrationId' => 'ADM-001']),
+            array_merge(self::GL_FIELDS, ['id' => 'payrollrun-2026-06', 'period' => '2026-06', 'status' => 'approved', 'administrationId' => 'ADM-001']),
+            array_merge(self::GL_FIELDS, ['id' => 'example-payrollrun-adm003-2026-06', 'period' => '2026-06', 'status' => 'approved', 'administrationId' => 'ADM-003']),
+        ];
+
+        $filings = [
+            ['payrollRunId' => 'payrollrun-2026-05', 'period' => '2026-05', 'fund' => 'abp', 'deadline' => '2026-06-30', 'status' => 'verzonden', 'administrationId' => 'ADM-001'],
+            ['payrollRunId' => 'payrollrun-2026-06', 'period' => '2026-06', 'fund' => 'abp', 'deadline' => '2026-07-31', 'status' => 'concept', 'administrationId' => 'ADM-001'],
+        ];
+
+        return [
+            'Administration' => $administrations,
+            'PayrollRun'     => $runs,
+            'PensionFiling'  => $filings,
+        ];
+
+    }//end seededAbpRows()
+
+
+    /**
+     * design.md Seed Data "Seeded data reproduces both branches in one
+     * audit" / REQ-ABP-004: exactly one nl-abp-fund-required violation (the
+     * ADM-003 run), none for either ADM-001 run.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-004
+     */
+    public function testSeededAbpDataFlagsExactlyOneFundRequiredViolationForAdm003(): void
+    {
+        $service = $this->serviceWithRows($this->seededAbpRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-abp-fund-required'] ?? 0));
+
+    }//end testSeededAbpDataFlagsExactlyOneFundRequiredViolationForAdm003()
+
+
+    /**
+     * REQ-ABP-003 scenario "The global fund-blind rule stays silent for the
+     * same run the new rule flags": nl-upa-monthly-completeness reports NO
+     * violation for the ADM-003 run (2026-06 is already globally filed via
+     * ADM-001), while nl-abp-fund-required still reports its own violation
+     * for that same run — demonstrating the two rules are not redundant.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-003
+     */
+    public function testShippedFundBlindRuleStaysSilentWhileNewRuleFiresOnTheSameAdm003Run(): void
+    {
+        $service = $this->serviceWithRows($this->seededAbpRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-upa-monthly-completeness', $ruleIds);
+        $this->assertContains('nl-abp-fund-required', $ruleIds);
+
+    }//end testShippedFundBlindRuleStaysSilentWhileNewRuleFiresOnTheSameAdm003Run()
+
+
+    /**
+     * @return void
+     */
+    public function testSeededAbpDataReportsBumpedCatalogueVersionAndRuleEnforceable(): void
+    {
+        $service = $this->serviceWithRows($this->seededAbpRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+        $enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+        $this->assertContains('nl-abp-fund-required', $enforceable);
+
+    }//end testSeededAbpDataReportsBumpedCatalogueVersionAndRuleEnforceable()
+
+
+    /**
+     * A non-obligated administratie (abpAansluitingsplichtig false/absent)
+     * never violates, regardless of whether it has an ABP filing of its own.
+     *
+     * @return void
+     */
+    public function testNonObligatedAdministratieNeverFlaggedByAbpFundRequired(): void
+    {
+        $rows                     = $this->seededAbpRows();
+        $rows['Administration'][1]['abpAansluitingsplichtig'] = false;
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-abp-fund-required', $ruleIds);
+
+    }//end testNonObligatedAdministratieNeverFlaggedByAbpFundRequired()
+
+
+    /**
+     * The three abp-aansluiting context indexes degrade gracefully to empty
+     * when the Administration schema does not exist yet in the register —
+     * no PayrollRun is ever flagged from a missing index (fail-vacuous, not
+     * fail-open, the buildRelatedContext() precedent).
+     *
+     * @return void
+     */
+    public function testAbpContextDegradesToEmptyWhenAdministrationSchemaAbsent(): void
+    {
+        $rows                  = $this->seededAbpRows();
+        $rows['Administration'] = [];
+
+        $service = $this->serviceWithRows($rows);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-abp-fund-required', $ruleIds);
+
+    }//end testAbpContextDegradesToEmptyWhenAdministrationSchemaAbsent()
 
 
     // -- bhv-organisatie: BhvCertificering expiry signal + seeded certificates --

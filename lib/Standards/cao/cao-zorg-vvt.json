@@ -1,0 +1,53 @@
+{
+  "id": "cao-zorg-vvt",
+  "name": "CAO VVT (Verpleeg-, Verzorgingshuizen en Thuiszorg)",
+  "sector": "Verpleeg-, verzorgingshuizen en thuiszorg (ActiZ-leden)",
+  "version": "2025-2026",
+  "effectiveDate": null,
+  "basedOn": [
+    {"doc": "ActiZ, CAO VVT 2025-2026, hoofdstuk 4.4 Onregelmatig werken en de vergoeding die je daarvoor ontvangt", "url": "https://www.actiz.nl/"}
+  ],
+  "payScales": {
+    "value": {
+      "FWG-15": 205000, "FWG-20": 225000, "FWG-25": 245000, "FWG-30": 265000,
+      "FWG-35": 285000, "FWG-40": 305000, "FWG-45": 328000, "FWG-50": 352000,
+      "FWG-55": 380000, "FWG-60": 408000, "FWG-65": 445000, "FWG-70": 480000,
+      "FWG-75": 525000, "FWG-80": 570000
+    },
+    "source": "Illustrative FWG 3.0 functiegroepen shape — CAO VVT shares the FWG 3.0 functiegroep system with CAO Ziekenhuizen — pending confirmation against the official CAO-tekst. Not transcribed from the primary document in this pass.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "actiz.nl CAO VVT 2025-2026 tekst, salaristabellen"
+  },
+  "allowances": {
+    "value": {
+      "ort": {
+        "weekdagNacht0006of2224": {"pctFrom": 44, "pctTo": 47, "effectiveDate": "2026-01-01"},
+        "zaterdag0006of2224": {"pctFrom": 49, "pctTo": 52, "effectiveDate": "2026-01-01"}
+      }
+    },
+    "source": "Directly fetched, confirmed 2026 change: actiz.nl 'CAO VVT, hoofdstuk 4.4 Onregelmatig werken en de vergoeding die je daarvoor ontvangt' states the onregelmatigheidstoeslag (ORT) rose per 1 January 2026 — weekdag-nacht 00:00-06:00/22:00-24:00 from 44% to 47%, zaterdag 00:00-06:00/22:00-24:00 from 49% to 52%. Kept placeholder despite this confirmed citation because the full day/time/holiday/regeling-A-vs-B stacking matrix was not transcribed in this pass (design.md Named gap 2) — a real, cited fact is not the same as a complete, verifiable leaf. Display-only: no check, resolver, or payroll-calculator hook applies these rates to an actual worked shift.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "actiz.nl CAO VVT tekst, hoofdstuk 4.4 Onregelmatig werken en de vergoeding die je daarvoor ontvangt"
+  },
+  "leaveEntitlement": {
+    "value": {
+      "vakantiedagenWettelijk": 20,
+      "vakantiedagenBovenwettelijk": 6
+    },
+    "source": "Illustrative bovenwettelijk leave (26 days total at full-time) pending confirmation against the official CAO-tekst — not transcribed from the primary document in this pass.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "actiz.nl CAO VVT tekst, verlofhoofdstuk"
+  },
+  "workingTime": {
+    "value": {
+      "fulltimeHoursPerWeek": 36
+    },
+    "source": "Illustrative full-time working week (typical zorgsector norm) pending confirmation against the official CAO-tekst. Display-only — not read by any CaoRegistry resolver.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "actiz.nl CAO VVT tekst, arbeidsduurartikel"
+  }
+}
