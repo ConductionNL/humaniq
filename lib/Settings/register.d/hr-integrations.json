@@ -1,0 +1,32 @@
+{
+    "x-hrmq-fragment": "hr-integrations",
+    "components": {
+        "schemas": {
+            "IntegrationAccount": {
+                "slug": "IntegrationAccount",
+                "icon": "PowerPlugOutline",
+                "version": "0.1.0",
+                "title": "Integration account",
+                "description": "A governance/audit record cataloguing an external system that has been granted access to hrmq's data through OpenRegister's public REST surface (GET/POST/PUT/PATCH/DELETE /api/objects/{register}/{schema}, authenticated with a Nextcloud app password). This schema is deliberately NOT an authorization mechanism: it records WHICH external systems have been granted HRIS access, for WHAT purpose, and WHEN that access was last reviewed, so HR/security have a single place to answer that question for the REST surface — the same governance discipline hrmq-mcp-adoption established for the LLM tool surface. The actual access grant lives entirely in OpenRegister's own RBAC configuration and the Nextcloud app password, outside this schema and outside any hrmq file (hris-api-public design.md D1/D2). No x-openregister-lifecycle: a plain audit record whose status is toggled actief/ingetrokken by an admin, not a guarded workflow.",
+                "type": "object",
+                "x-schema-org": "schema:SoftwareApplication",
+                "required": [
+                    "name",
+                    "purpose",
+                    "nextcloudUserId",
+                    "grantedSchemas"
+                ],
+                "properties": {
+                    "name": {"type": "string", "title": "Name", "description": "The external system's name (e.g. \"Voorbeeld Payroll Partner BV\") — the human-readable identity of the integration this record catalogues."},
+                    "purpose": {"type": "string", "title": "Purpose", "description": "Free-text reason the access was granted (the business justification). Any grant reaching beyond the recommended default schema subset (a schema carrying BSN/IBAN/health/special-category data such as Payslip or Employee) is expected to state its explicit justification here, per the hris-api-public README guidance."},
+                    "nextcloudUserId": {"type": "string", "title": "Nextcloud user id", "description": "The dedicated Nextcloud account (typically a service account, not a real employee) whose app password this integration authenticates with. A plain string per the approvedBy/reviewedBy convention (ADR-062 rule 7), never a $ref — the app password itself is issued and revoked through Nextcloud's own Settings › Personal › Security › App passwords, never by hrmq."},
+                    "grantedSchemas": {"type": "array", "items": {"type": "string"}, "title": "Granted schemas", "description": "Informational, audit-only list of the hrmq schema slugs (e.g. \"Vacancy\", \"OrgUnit\") this integration is INTENDED to read or write. This field does NOT grant or enforce access — it is purely a record of intent. The actual, enforced access grant is configured through OpenRegister's RBAC mechanism (per-user/per-group ACLs on a register or schema), outside this schema and outside any hrmq file; revoking access requires revoking the RBAC grant and/or the Nextcloud app password, never editing this list. Because it is not synchronised with the real RBAC configuration, it can drift from it (hris-api-public design.md D2 / Risks)."},
+                    "status": {"type": "string", "enum": ["actief", "ingetrokken"], "default": "actief", "title": "Status", "description": "Governance state of the catalog record: actief (the integration is a currently sanctioned grant) or ingetrokken (access was withdrawn). Enum append-only. Setting this to ingetrokken records the withdrawal for audit but changes NOTHING about actual access on its own — the underlying RBAC grant and app password must still be revoked separately (design.md D2)."},
+                    "reviewedBy": {"type": "string", "nullable": true, "title": "Reviewed by", "description": "Who performed the most recent periodic access review of this integration (plain string, the reviewer's identifier). Null until the first review is recorded."},
+                    "reviewedAt": {"type": "string", "format": "date-time", "nullable": true, "title": "Reviewed at", "description": "When the most recent periodic access review took place (ISO 8601 date-time). Null until the first review is recorded — the audit answer to \"when was this integration's access last checked\"."},
+                    "createdAt": {"type": "string", "format": "date-time", "nullable": true, "title": "Created at", "description": "When this catalog record was first created (ISO 8601 date-time) — the audit trail of when the integration was first registered."}
+                }
+            }
+        }
+    }
+}
