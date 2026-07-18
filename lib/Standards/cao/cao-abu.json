@@ -1,0 +1,51 @@
+{
+  "id": "cao-abu",
+  "name": "CAO voor Uitzendkrachten (ABU)",
+  "sector": "Uitzendbranche",
+  "version": "2025-2026",
+  "effectiveDate": "2025-01-01",
+  "basedOn": [
+    {"doc": "CAO voor Uitzendkrachten (ABU), cao-tekst 2025-2026", "url": "https://www.abu.nl/cao/"}
+  ],
+  "payScales": {
+    "value": {
+      "A": 240000,
+      "B": 255000,
+      "C": 275000
+    },
+    "source": "Illustrative placeholder loontabel shape. The ABU CAO applies the inlenersbeloning (WAADI art. 8) -- the uitzendkracht is paid per the inlener's own comparable-function loonschaal -- rather than a single ABU-wide loontabel, so these fase-keyed figures are stand-ins pending confirmation against the official CAO-tekst and are NOT the ABU/NBBU loontabel.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO voor Uitzendkrachten (ABU) beloningsartikelen and the applicable inlener loonschaal (abu.nl/cao)"
+  },
+  "allowances": {
+    "value": {
+      "ploegentoeslag": {
+        "pct": 0
+      }
+    },
+    "source": "Illustrative placeholder allowance shape -- ABU toeslagen (ploegentoeslag, onregelmatigheidstoeslag) follow the inlenersbeloning of the inlener, not a fixed ABU rate; pending confirmation against the official CAO-tekst.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO voor Uitzendkrachten (ABU) toeslagenartikelen via the inlenersbeloning (abu.nl/cao)"
+  },
+  "leaveEntitlement": {
+    "value": {
+      "vakantiedagenWettelijk": 20,
+      "vakantiedagenBovenwettelijk": 5
+    },
+    "source": "Illustrative placeholder leave entitlement pending confirmation against the official ABU CAO-tekst; ABU verlof follows the inlenersbeloning where the inlener grants more.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO voor Uitzendkrachten (ABU) vakantie-artikel (abu.nl/cao)"
+  },
+  "workingTime": {
+    "value": {
+      "fulltimeHoursPerWeek": 40
+    },
+    "source": "Illustrative placeholder full-time working week pending confirmation against the official ABU CAO-tekst. Display-only -- not read by any CaoRegistry resolver.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO voor Uitzendkrachten (ABU) arbeidsduurartikel (abu.nl/cao)"
+  }
+}

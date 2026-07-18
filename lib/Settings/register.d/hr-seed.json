@@ -1088,6 +1088,79 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-uitzend-abu"
+                },
+                "employeeNumber": "EMP-0009",
+                "firstName": "Robin",
+                "lastName": "Uitzendkracht",
+                "dateOfBirth": "1998-05-22",
+                "startDate": "2026-03-01",
+                "grossMonthlySalary": 2900.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "iban": "NL00BANK0987654321",
+                "tenaamstelling": "R. Uitzendkracht",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-uitzend-abu-fase-a"
+                },
+                "employeeId": "employee-uitzend-abu",
+                "type": "agency",
+                "writtenContract": true,
+                "startDate": "2026-03-01",
+                "endDate": null,
+                "hoursPerWeek": 32,
+                "hourlyWage": 16.50,
+                "cao": "cao-abu",
+                "caoSchaal": "A",
+                "normfunctieId": null,
+                "awfTariff": "high",
+                "aanzegdOn": null,
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "uitzendFase": "A",
+                "uitzendbedingVanToepassing": true,
+                "inlenersbeloningReferentie": "Inlener loonschaal referentie, functie magazijnmedewerker, schaal 3 (onderbouwing 2026-03-01)",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-uitzend-abu-beding-fase-b"
+                },
+                "employeeId": "employee-uitzend-abu",
+                "type": "agency",
+                "writtenContract": true,
+                "startDate": "2024-06-01",
+                "endDate": null,
+                "hoursPerWeek": 32,
+                "hourlyWage": 17.25,
+                "cao": "cao-abu",
+                "caoSchaal": "B",
+                "normfunctieId": null,
+                "awfTariff": "high",
+                "aanzegdOn": null,
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "uitzendFase": "B",
+                "uitzendbedingVanToepassing": true,
+                "inlenersbeloningReferentie": "Inlener loonschaal referentie, functie orderpicker, schaal 4 (onderbouwing 2024-06-01)",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-001"
                 },
