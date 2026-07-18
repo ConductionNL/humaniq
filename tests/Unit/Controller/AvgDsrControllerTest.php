@@ -3,15 +3,17 @@
 /**
  * Unit tests for AvgDsrController.
  *
- * Pins the guarded endpoint contract (avg-dsr design.md D3, REQ-DSR-004): a
- * non-admin caller is refused 403 BEFORE any ObjectService resolve (no probe
- * possible, unlike the `isAdminOrHr()` precedent elsewhere in this app --
- * this gate is admin-ONLY); an unknown/unauthorized `employeeId` collapses
- * to 404; and a `RuntimeException` `DsarService::assertPrivileged()` could
- * throw is translated into a 403 JSON response, never an uncaught 500.
- * Drives the controller through a fake ObjectService double for the
- * no-admin-idor resolve, and a mocked `AvgDsrService` for the operation
- * itself (the LoonbeslagControllerTest precedent).
+ * Pins the guarded endpoint contract (REQ-DSR-004): a non-admin caller is
+ * refused 403 BEFORE any ObjectService resolve (no probe possible, unlike the
+ * `isAdminOrHr()` precedent elsewhere in this app -- this gate is admin-ONLY,
+ * a deliberate hrmq policy choice, hrmq#99); an unknown/unauthorized
+ * `employeeId` collapses to 404; and any `RuntimeException` `AvgDsrService`
+ * throws is translated into a 403 JSON response, never an uncaught 500 (kept
+ * as defense-in-depth even though the guarded OpenRegister service consumed
+ * since hrmq#99 does not throw one for privilege reasons). Drives the
+ * controller through a fake ObjectService double for the no-admin-idor
+ * resolve, and a mocked `AvgDsrService` for the operation itself (the
+ * LoonbeslagControllerTest precedent).
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Controller
@@ -25,7 +27,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
  */
 
 declare(strict_types=1);
@@ -46,7 +48,7 @@ use Psr\Container\ContainerInterface;
 /**
  * Tests for AvgDsrController.
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
  */
 class AvgDsrControllerTest extends TestCase
 {
@@ -184,6 +186,30 @@ class AvgDsrControllerTest extends TestCase
         $this->assertFalse($fake->findCalled);
 
     }//end testRectifyRefusesEmptyChangesBeforeAnyResolve()
+
+
+    /**
+     * hrmq#99: rectify() passes the RBAC-resolved employeeId STRING directly
+     * to `rectifySubjectObject()` -- no internal-int-id resolution
+     * workaround (the guarded `Gdpr\DataSubjectRequestService::rectify()`
+     * takes a plain id/uuid string).
+     *
+     * @return void
+     */
+    public function testRectifyHappyPathPassesEmployeeIdentifierDirectly(): void
+    {
+        [$controller, , $service] = $this->buildController(isAdmin: true, employeeRow: ['id' => 'emp-1']);
+
+        $service->expects($this->once())
+            ->method('rectifySubjectObject')
+            ->with('emp-1', ['lastName' => 'Corrected'], 'dsr-1')
+            ->willReturn(['id' => 'emp-1', 'lastName' => 'Corrected']);
+
+        $response = $controller->rectify('emp-1', ['lastName' => 'Corrected'], 'dsr-1');
+
+        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+
+    }//end testRectifyHappyPathPassesEmployeeIdentifierDirectly()
 
 
     /**

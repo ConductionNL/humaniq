@@ -24,8 +24,8 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-003
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-003
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
  */
 
 declare(strict_types=1);
@@ -61,7 +61,7 @@ class AvgDsrExportCommand extends Command
     /**
      * @return void
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-003
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-003
      */
     protected function configure(): void
     {
@@ -81,8 +81,8 @@ class AvgDsrExportCommand extends Command
      *
      * @return int 0 on success, 1 on a controlled refusal (never an uncaught throw).
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-003
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-003
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {

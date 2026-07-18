@@ -53,8 +53,22 @@
  *
  * @link https://conduction.nl
  *
+ * hrmq#99 (consume-not-rebuild correction, hole #1): a generated loonstrook/
+ * jaaropgaaf PDF is its own `GeneratedDocument` object and, once matched by
+ * OpenRegister's PII index, is otherwise erase-eligible on its own -- even
+ * when the Payslip it renders is correctly retention-locked. `generateLoonstrook()`/
+ * `generateJaaropgaaf()` now check whether their SOURCE (the resolved
+ * Payslip, or -- for jaaropgaaf -- any Payslip the aggregate covers) is
+ * currently under active OpenRegister retention (`PayrollRetentionGuardService
+ * ::isUnderActiveRetention()`) and, if so, place the SAME legal hold on the
+ * newly created `GeneratedDocument` (`PayrollRetentionGuardService
+ * ::inheritLegalHold()`) -- never a bespoke `retainedUntil` field on
+ * `GeneratedDocument` (that was the original, since-revised
+ * `document-dossier-avg` proposal's shape).
+ *
  * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md
  * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
  */
 
 declare(strict_types=1);
@@ -179,15 +193,17 @@ class HrDocumentService
 
 
     /**
-     * @param ContainerInterface $container       DI container for lazy ObjectService/docudesk/FileService resolution.
-     * @param IAppManager        $appManager      To duck-type-probe docudesk's presence.
-     * @param SettingsService    $settingsService Register slug, template config, and employer block.
-     * @param LoggerInterface    $logger          Logger.
+     * @param ContainerInterface           $container       DI container for lazy ObjectService/docudesk/FileService resolution.
+     * @param IAppManager                  $appManager      To duck-type-probe docudesk's presence.
+     * @param SettingsService              $settingsService Register slug, template config, and employer block.
+     * @param PayrollRetentionGuardService $retentionGuard  Reads a source's already-known retention ceiling and inherits a legal hold onto a generated PDF (hrmq#99 hole #1).
+     * @param LoggerInterface              $logger          Logger.
      */
     public function __construct(
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly SettingsService $settingsService,
+        private readonly PayrollRetentionGuardService $retentionGuard,
         private readonly LoggerInterface $logger,
     ) {
 
@@ -419,7 +435,10 @@ class HrDocumentService
             return $this->outcome('', null, self::LOONSTROOK_DOCUMENT_TYPE, 'failed', 'Payslip heeft geen gekoppelde medewerker: '.$payslipId);
         }
 
-        return $this->generateInternal($employeeId, null, $payslipId, null, self::LOONSTROOK_DOCUMENT_TYPE, $userId);
+        $outcome = $this->generateInternal($employeeId, null, $payslipId, null, self::LOONSTROOK_DOCUMENT_TYPE, $userId);
+        $this->inheritRetentionIfSourceHeld($outcome, self::PAYSLIP_SCHEMA, $payslipId, 'Payslip '.$payslipId);
+
+        return $outcome;
 
     }//end generateLoonstrook()
 
@@ -463,7 +482,10 @@ class HrDocumentService
             return $this->outcome($employeeId, null, self::JAAROPGAAF_DOCUMENT_TYPE, 'failed', 'De aangemaakte jaaropgaaf heeft geen id.');
         }
 
-        return $this->generateInternal($employeeId, null, null, $jaaropgaafId, self::JAAROPGAAF_DOCUMENT_TYPE, $userId);
+        $outcome = $this->generateInternal($employeeId, null, null, $jaaropgaafId, self::JAAROPGAAF_DOCUMENT_TYPE, $userId);
+        $this->inheritRetentionIfAnyPayslipHeld($outcome, $employeeId, $year);
+
+        return $outcome;
 
     }//end generateJaaropgaaf()
 
@@ -670,6 +692,165 @@ class HrDocumentService
         return null;
 
     }//end findPayslip()
+
+
+    /**
+     * hrmq#99 hole #1: when the single named source object (a Payslip) is
+     * currently under active OpenRegister retention, inherit the SAME legal
+     * hold onto the just-created `GeneratedDocument` -- never a bespoke
+     * `retainedUntil` field on the document itself. A no-op when generation
+     * did not produce a `generatedDocumentId` (failed/skipped outcome) or the
+     * source cannot be resolved.
+     *
+     * @param array<string, mixed> $outcome           The outcome `generateInternal()` returned.
+     * @param string                $sourceSchema      The source object's schema (e.g. `Payslip`).
+     * @param string                $sourceId          The source object's id.
+     * @param string                $sourceDescription A short, non-PII description of the source for the hold reason.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+     */
+    private function inheritRetentionIfSourceHeld(array $outcome, string $sourceSchema, string $sourceId, string $sourceDescription): void
+    {
+        $docId = (string) ($outcome['generatedDocumentId'] ?? '');
+        if ($docId === '') {
+            return;
+        }
+
+        $sourceEntity = $this->findEntity($sourceSchema, $sourceId);
+        if ($sourceEntity === null || $this->retentionGuard->isUnderActiveRetention($sourceEntity) === false) {
+            return;
+        }
+
+        $docEntity = $this->findEntity(self::GENERATED_DOCUMENT_SCHEMA, $docId);
+        if ($docEntity === null) {
+            return;
+        }
+
+        $this->retentionGuard->inheritLegalHold($docEntity, self::GENERATED_DOCUMENT_SCHEMA, $sourceDescription);
+
+    }//end inheritRetentionIfSourceHeld()
+
+
+    /**
+     * hrmq#99 hole #1, jaaropgaaf variant: a jaaropgaaf aggregates every
+     * Payslip in one (employeeId, year) window, so its `GeneratedDocument`
+     * inherits a legal hold when ANY of those Payslips is currently under
+     * active OpenRegister retention.
+     *
+     * @param array<string, mixed> $outcome    The outcome `generateInternal()` returned.
+     * @param string                $employeeId The Employee id.
+     * @param int                   $year       The kalenderjaar aggregated.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+     */
+    private function inheritRetentionIfAnyPayslipHeld(array $outcome, string $employeeId, int $year): void
+    {
+        $docId = (string) ($outcome['generatedDocumentId'] ?? '');
+        if ($docId === '') {
+            return;
+        }
+
+        $heldPayslipId = $this->findHeldPayslipIdForYear($employeeId, $year);
+        if ($heldPayslipId === null) {
+            return;
+        }
+
+        $docEntity = $this->findEntity(self::GENERATED_DOCUMENT_SCHEMA, $docId);
+        if ($docEntity === null) {
+            return;
+        }
+
+        $this->retentionGuard->inheritLegalHold(
+            $docEntity,
+            self::GENERATED_DOCUMENT_SCHEMA,
+            'Payslip '.$heldPayslipId.' (jaaropgaaf '.$year.')'
+        );
+
+    }//end inheritRetentionIfAnyPayslipHeld()
+
+
+    /**
+     * The id of the first Payslip in one (employeeId, year) window that is
+     * currently under active OpenRegister retention, or null when none is.
+     * Extracted from `inheritRetentionIfAnyPayslipHeld()` to keep that
+     * method's own complexity small.
+     *
+     * @param string $employeeId The Employee id.
+     * @param int    $year       The kalenderjaar aggregated.
+     *
+     * @return string|null
+     */
+    private function findHeldPayslipIdForYear(string $employeeId, int $year): ?string
+    {
+        foreach ($this->loadAll(self::PAYSLIP_SCHEMA) as $payslip) {
+            $payslipId = $this->payslipIdIfInScope($payslip, $employeeId, $year);
+            if ($payslipId === null) {
+                continue;
+            }
+
+            $entity = $this->findEntity(self::PAYSLIP_SCHEMA, $payslipId);
+            if ($entity !== null && $this->retentionGuard->isUnderActiveRetention($entity) === true) {
+                return $payslipId;
+            }
+        }
+
+        return null;
+
+    }//end findHeldPayslipIdForYear()
+
+
+    /**
+     * The Payslip's id when it belongs to `$employeeId` and falls within
+     * `$year`, or null otherwise.
+     *
+     * @param array<string, mixed> $payslip    The Payslip row.
+     * @param string               $employeeId The Employee id.
+     * @param int                  $year       The kalenderjaar.
+     *
+     * @return string|null
+     */
+    private function payslipIdIfInScope(array $payslip, string $employeeId, int $year): ?string
+    {
+        if (trim((string) ($payslip['employeeId'] ?? '')) !== $employeeId) {
+            return null;
+        }
+
+        if (str_starts_with((string) ($payslip['period'] ?? ''), $year.'-') === false) {
+            return null;
+        }
+
+        $payslipId = (string) ($payslip['id'] ?? $payslip['@self']['id'] ?? '');
+        return ($payslipId === '') ? null : $payslipId;
+
+    }//end payslipIdIfInScope()
+
+
+    /**
+     * Resolve one object as a real OpenRegister entity (not the array shape
+     * `loadAll()`/`toArray()` return) -- needed so `PayrollRetentionGuardService`
+     * can read/write `retention` directly. Internal-service resolve (`_rbac:
+     * false`, `_multitenancy: false`), matching this service's other
+     * internal reads/writes.
+     *
+     * @param string $schema The schema name.
+     * @param string $id     The object id.
+     *
+     * @return mixed The resolved ObjectEntity, or null when it cannot be loaded.
+     */
+    private function findEntity(string $schema, string $id): mixed
+    {
+        try {
+            return $this->objectService()->find(id: $id, register: $this->register(), schema: $schema, _rbac: false, _multitenancy: false);
+        } catch (\Throwable $e) {
+            $this->logger->debug('HrDocumentService: kon '.$schema.' '.$id.' niet opnieuw ophalen als entity: '.$e->getMessage());
+            return null;
+        }
+
+    }//end findEntity()
 
 
     /**

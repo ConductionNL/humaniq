@@ -5,13 +5,16 @@
  *
  * `occ hrmq:avg:erase --employee <id> --as-user <admin-uid> [--dsr-request-id
  * <id>] [--confirm]` -- the CLI mirror of Art 17 vergetelheid, retention-
- * guarded (avg-dsr design.md D5/D6): `--as-user` establishes the privileged
- * session BEFORE any call (design.md D3); a bare invocation (no `--confirm`)
- * ALWAYS previews (zero writes) -- when `--dsr-request-id` is given the
- * preview is recorded onto that `DsrRequest`, the evidence `--confirm`'s
- * precondition checks for. `--confirm` REQUIRES `--dsr-request-id` naming a
- * request whose preview already ran; only then does the retention-guarded
- * erase execute (REQ-DSR-005/-006).
+ * guarded by OpenRegister's own `Gdpr\DataSubjectRequestService::erase()`
+ * (hrmq#99 -- consumed directly, never a bespoke hrmq classification): a bare
+ * invocation (no `--confirm`) ALWAYS previews (zero writes, `erase(...,
+ * dryRun: true)`) -- when `--dsr-request-id` is given the preview is
+ * recorded onto that `DsrRequest`, the evidence `--confirm`'s precondition
+ * checks for. `--confirm` REQUIRES `--dsr-request-id` naming a request whose
+ * preview already ran; only then does the guarded erase execute
+ * (REQ-DSR-005/-006). `--as-user` establishes a session for the guarded
+ * service's RBAC/tenant scoping (CLI has no ambient request/session by
+ * default).
  *
  * @category Command
  * @package  OCA\Hrmq\Command
@@ -25,8 +28,8 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
  */
 
 declare(strict_types=1);
@@ -62,7 +65,7 @@ class AvgDsrEraseCommand extends Command
     /**
      * @return void
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
      */
     protected function configure(): void
     {
@@ -82,8 +85,8 @@ class AvgDsrEraseCommand extends Command
      *
      * @return int 0 on success (including a successful preview), 1 on a controlled refusal.
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -138,7 +141,7 @@ class AvgDsrEraseCommand extends Command
      *
      * @return int Always 0 (a successful preview is not an error).
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
      */
     private function runPreview(OutputInterface $output, string $employeeId, ?string $dsrRequestId): int
     {
@@ -149,16 +152,14 @@ class AvgDsrEraseCommand extends Command
         foreach ($preview['retained'] as $ref) {
             $output->writeln(
                 sprintf(
-                    '  - %s / %s: %s (%s)',
-                    (string) $ref['schema'],
-                    (string) $ref['uuid'],
-                    (string) $ref['label'],
-                    (string) $ref['retainedUntil']
+                    '  - %s: %s',
+                    (string) ($ref['uuid'] ?? ''),
+                    (string) ($ref['reason'] ?? '')
                 )
             );
         }
 
-        $output->writeln('  retained (wettelijke bewaarplicht): '.count($preview['retained']));
+        $output->writeln('  retained (OpenRegister legal-hold / immutable archival status): '.count($preview['retained']));
 
         return 0;
 
@@ -175,8 +176,8 @@ class AvgDsrEraseCommand extends Command
      *
      * @return int 0 when the erase ran (regardless of a partial failure list -- see the printed outcome), 1 when refused.
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
      */
     private function runExecute(OutputInterface $output, string $employeeId, string $dsrRequestId): int
     {
@@ -189,7 +190,7 @@ class AvgDsrEraseCommand extends Command
 
         $output->writeln('<info>Hrmq AVG-verwijdering — uitgevoerd</info>');
         $output->writeln('  verwijderd: '.count((array) $outcome['erased']));
-        $output->writeln('  retained (wettelijke bewaarplicht): '.count((array) $outcome['retained']));
+        $output->writeln('  retained (OpenRegister legal-hold / immutable archival status): '.count((array) $outcome['retained']));
         $output->writeln('  mislukt: '.count((array) $outcome['failed']));
 
         return ((string) $outcome['status'] === 'afgewezen') ? 1 : 0;

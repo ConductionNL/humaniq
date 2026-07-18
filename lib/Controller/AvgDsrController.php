@@ -4,25 +4,31 @@
  * AVG DSR Controller
  *
  * Backs the `DsrRequestDetail` manifest page actions "Exporteer"/"Voorbeeld
- * verwijdering"/"Bevestig verwijdering"/"Rectificeer" (avg-dsr design.md D3):
- * every method is `#[NoAdminRequired]` + a manual admin-only 403 gate BEFORE
- * any resolve (the `PayrollController::mutations()`/`wkrAssess()` two-gate
- * shape), then the posted `employeeId` is RBAC-resolved through
- * ObjectService (unknown/unauthorized -> 404, the no-admin-idor pattern)
- * before any `AvgDsrService`/`DsarService` call, and every `RuntimeException`
- * `DsarService::assertPrivileged()` could throw is caught and translated
- * into a 403 JSON response -- defense-in-depth, since the admin gate below
- * already guarantees `assertPrivileged()` passes in the normal flow
- * (REQ-DSR-004).
+ * verwijdering"/"Bevestig verwijdering"/"Rectificeer": every method is
+ * `#[NoAdminRequired]` + a manual admin-only 403 gate BEFORE any resolve (the
+ * `PayrollController::mutations()`/`wkrAssess()` two-gate shape), then the
+ * posted `employeeId` is RBAC-resolved through ObjectService
+ * (unknown/unauthorized -> 404, the no-admin-idor pattern) before any
+ * `AvgDsrService` call.
  *
- * design.md D3 hard constraint: this controller's admin gate MUST NOT widen
- * to admit a future dedicated "HR" Nextcloud group the way other
- * `isAdminOrHr()`-gated endpoints in this app may correctly do.
- * `DsarService::assertPrivileged()` hard-requires actual
- * `IGroupManager::isAdmin()`, not "admin or HR" -- widening this gate would
- * let a non-admin HR caller pass it and then hit the RuntimeException-to-403
- * translation instead of succeeding (a behaviour regression, not a security
- * hole, but a named trap for that future change to avoid).
+ * hrmq#99: `AvgDsrService` now consumes OpenRegister's guarded, RBAC/tenant-
+ * scoped `Gdpr\DataSubjectRequestService` rather than the privileged,
+ * admin-only `DsarService` -- that guarded service does not itself require
+ * `IGroupManager::isAdmin()` or throw a privilege `RuntimeException`. The
+ * admin-only gate below is now a deliberate hrmq POLICY choice (AVG
+ * data-subject-rights handling for an employee stays an administrator-only
+ * operation in this app), not a requirement imposed by the consumed
+ * OpenRegister service. The `RuntimeException` catch in every action method
+ * is kept as defense-in-depth (a future OpenRegister change could reintroduce
+ * a thrown privilege error) even though the guarded service does not throw
+ * one today.
+ *
+ * design.md D3 hard constraint (retained as hrmq's own policy, not an
+ * OpenRegister requirement): this controller's admin gate MUST NOT widen to
+ * admit a future dedicated "HR" Nextcloud group the way other
+ * `isAdminOrHr()`-gated endpoints in this app may correctly do -- AVG
+ * data-subject-rights handling for an employee is deliberately kept
+ * administrator-only.
  *
  * @category Controller
  * @package  OCA\Hrmq\Controller
@@ -36,10 +42,10 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-007
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
  */
 
 declare(strict_types=1);
@@ -70,7 +76,7 @@ class AvgDsrController extends Controller
      * @param ContainerInterface  $container       DI container for the RBAC-guarded ObjectService resolve.
      * @param AvgDsrService       $avgDsrService    The DSR orchestration service.
      * @param SettingsService     $settingsService The register-slug source.
-     * @param IUserSession        $userSession     The current user session (admin gate; ambient DsarService session).
+     * @param IUserSession        $userSession     The current user session (admin gate; ambient session for the guarded OpenRegister service).
      * @param IGroupManager       $groupManager    To check the caller's admin membership (admin gate).
      */
     public function __construct(
@@ -95,8 +101,8 @@ class AvgDsrController extends Controller
      *
      * @return JSONResponse The export envelope, 400 on a missing/invalid input, 403 for a non-admin caller or a RuntimeException, 404 when the employee does not resolve.
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-003
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-003
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
      */
     #[NoAdminRequired]
     public function export(?string $employeeId=null, ?string $right=null, ?string $dsrRequestId=null): JSONResponse
@@ -132,8 +138,8 @@ class AvgDsrController extends Controller
      *
      * @return JSONResponse The preview envelope, 400 on a missing employeeId, 403 for a non-admin caller or a RuntimeException, 404 when the employee does not resolve.
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
      */
     #[NoAdminRequired]
     public function erasePreview(?string $employeeId=null, ?string $dsrRequestId=null): JSONResponse
@@ -164,8 +170,8 @@ class AvgDsrController extends Controller
      *
      * @return JSONResponse The erase outcome, 400 on a missing input or a refused precondition, 403 for a non-admin caller or a RuntimeException, 404 when the employee does not resolve.
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
      */
     #[NoAdminRequired]
     public function eraseConfirm(?string $employeeId=null, ?string $dsrRequestId=null): JSONResponse
@@ -205,30 +211,30 @@ class AvgDsrController extends Controller
      *
      * @return JSONResponse The updated object, 400 on missing/invalid input or a failed rectification, 403 for a non-admin caller or a RuntimeException, 404 when the employee does not resolve.
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-007
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
      */
     #[NoAdminRequired]
     public function rectify(?string $employeeId=null, mixed $changes=null, ?string $dsrRequestId=null): JSONResponse
     {
-        if ($this->isAdmin() === false) {
-            return $this->forbidden();
-        }
-
         $validationError = $this->validateRectifyInput($employeeId, $changes, $dsrRequestId);
         if ($validationError !== null) {
             return $validationError;
         }
 
-        // resolveEmployeeInternalId() IS the no-admin-idor guard here
-        // (ObjectService::find() under the caller's ambient RBAC) -- an
+        // guardAdminAndEmployee() IS the admin gate + no-admin-idor guard
+        // here (ObjectService::find() under the caller's ambient RBAC) -- an
         // unresolvable/unauthorized id never reaches rectifySubjectObject().
-        $objectId = $this->resolveEmployeeInternalId(trim((string) $employeeId));
-        if ($objectId === null) {
-            return new JSONResponse(['error' => 'Werknemer niet gevonden.'], Http::STATUS_NOT_FOUND);
+        // hrmq#99: the guarded Gdpr\DataSubjectRequestService::rectify()
+        // takes the plain id/uuid string directly, so the resolved
+        // employeeId is passed straight through -- no internal-int-id
+        // resolution workaround is needed anymore.
+        $guard = $this->guardAdminAndEmployee($employeeId);
+        if ($guard instanceof JSONResponse) {
+            return $guard;
         }
 
         try {
-            $result = $this->avgDsrService->rectifySubjectObject($objectId, $changes, trim((string) $dsrRequestId));
+            $result = $this->avgDsrService->rectifySubjectObject($guard, $changes, trim((string) $dsrRequestId));
         } catch (\RuntimeException $e) {
             return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
         }
@@ -274,12 +280,13 @@ class AvgDsrController extends Controller
      * Whether the current caller is a Nextcloud admin -- the gate for every
      * method on this controller. MUST NOT widen to `isAdminOrHr()` even
      * after a future dedicated HR group ships elsewhere in this app
-     * (design.md D3) -- `DsarService::assertPrivileged()` hard-requires
-     * actual `IGroupManager::isAdmin()`.
+     * (design.md D3) -- a deliberate hrmq policy choice (AVG data-subject-
+     * rights handling stays administrator-only), not a requirement of the
+     * guarded OpenRegister service this controller now consumes (hrmq#99).
      *
      * @return bool
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
      */
     private function isAdmin(): bool
     {
@@ -306,11 +313,11 @@ class AvgDsrController extends Controller
 
 
     /**
-     * Shared guard for `export()`/`erasePreview()`/`eraseConfirm()`: the
-     * admin gate, a non-empty `employeeId`, and the no-admin-idor RBAC
-     * resolve (ADR-005 Rule 3) -- an unresolvable/unauthorized id never
-     * reaches any `AvgDsrService`/`DsarService` call. Extracted to keep each
-     * caller method's own complexity small.
+     * Shared guard for `export()`/`erasePreview()`/`eraseConfirm()`/
+     * `rectify()`: the admin gate, a non-empty `employeeId`, and the
+     * no-admin-idor RBAC resolve (ADR-005 Rule 3) -- an unresolvable/
+     * unauthorized id never reaches any `AvgDsrService` call. Extracted to
+     * keep each caller method's own complexity small.
      *
      * @param string|null $employeeId The Employee id.
      *
@@ -367,41 +374,6 @@ class AvgDsrController extends Controller
         return $this->toArray($employee);
 
     }//end authorizeEmployee()
-
-
-    /**
-     * RBAC-resolve the employee's real internal (int) object id
-     * (`ObjectService::find()`'s entity `getId()`) -- the `int $objectId`
-     * `DsarService::rectifyObjectForSubject()` requires.
-     *
-     * @param string $employeeId The Employee id.
-     *
-     * @return int|null
-     */
-    private function resolveEmployeeInternalId(string $employeeId): ?int
-    {
-        try {
-            $entity = $this->objectService()->find(
-                id: $employeeId,
-                register: $this->settingsService->getRegisterSlug(),
-                schema: 'Employee'
-            );
-        } catch (\Throwable $e) {
-            return null;
-        }
-
-        if ($entity === null) {
-            return null;
-        }
-
-        if (is_object($entity) === true && method_exists($entity, 'getId') === true) {
-            $id = $entity->getId();
-            return is_numeric($id) ? (int) $id : null;
-        }
-
-        return null;
-
-    }//end resolveEmployeeInternalId()
 
 
     /**

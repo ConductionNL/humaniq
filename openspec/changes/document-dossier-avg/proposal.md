@@ -4,6 +4,24 @@ kind: code+config
 
 # document-dossier-avg — the personnel-dossier gaps left after subtracting three shipped capabilities
 
+> **Revised 2026-07-18 (hrmq#99 consume-not-rebuild correction).** This proposal's item 3
+> (`GeneratedDocument.retainedUntil`, a new bespoke field so `AvgDsrRetentionClassifier` would pick
+> it up) and item 4's ORIGINAL framing (a new standalone check file) are SUPERSEDED by hrmq#99, which
+> landed 2026-07-18: `AvgDsrRetentionClassifier` is deleted outright (it duplicated OpenRegister's own
+> retention/legal-hold machinery), `AvgDsrService` now consumes OpenRegister's guarded
+> `Gdpr\DataSubjectRequestService::erase()` directly, and the "generated PDF evades the guard its
+> retained source carries" gap is closed via `PayrollRetentionGuardService::inheritLegalHold()`
+> (consumed by `HrDocumentService::generateLoonstrook()`/`generateJaaropgaaf()`) — a real
+> OpenRegister legal hold on the `GeneratedDocument` object, never a `retainedUntil` field. hrmq#99
+> also already ships `lib/Standards/Checks/NlDossierRetentionChecks.php`'s
+> `nl-bewaartermijn-verstreken` reading OpenRegister's own `retention.archiefactiedatum`, scoped to
+> the payroll/loonadministratie family + `GeneratedDocument`. **This change's remaining scope is
+> items 1 and 2 only** (the `EmployeeDetail` dossier list, and the loonbelastingverklaring retention
+> sibling rule on `Employee`) **plus a narrowed item 4** (the SAME `nl-bewaartermijn-verstreken` rule
+> id, extended to cover `Employee.identityDocumentRetainedUntil`/`loonheffingenVerklaringRetainedUntil`
+> — a different object type, so no collision with hrmq#99's provider). See the revised design.md D3/D4
+> and tasks.md for what is now DONE (by hrmq#99) vs. still open.
+
 ## Why
 
 **Verified against HEAD 2026-07-17.** The May-2026 draft (`spec/document-dossier-avg`) proposed six new
@@ -74,18 +92,21 @@ longer holds:
   exact shape) + **NEW `nl-loonbelastingverklaring-bewaarplicht-5jaar`** check (`NlPayrollChecks`, reusing the
   existing `retainedAtLeastYearsAfterEnd()` helper against the new field, `years: 5`) — the sibling of
   `nl-id-bewaarplicht-5jaar`, sourced to Uitvoeringsregeling loonbelasting 2011 art. 12.1 lid 5.
-- **NEW `GeneratedDocument.retainedUntil`**, populated by `HrDocumentService` at generation time for
-  `loonstrook` (copied from the resolved `Payslip.retainedUntil`, or derived from `Payslip.period` with the
-  identical AWR 7-year formula `avg-dsr`'s own classifier already applies elsewhere) and `jaaropgaaf` (derived
-  directly from `Jaaropgaaf.year`, already a local parameter at generation time) — `AvgDsrRetentionClassifier`
-  needs NO code change: it already reads any schema's populated `retainedUntil` field generically (design.md D3).
-  This closes the gap without touching `avg-dsr`'s shipped engine.
-- **NEW `nl-bewaartermijn-verstreken`** (`lib/Standards/Checks/NlDossierRetentionChecks.php`, auto-discovered,
-  recommended severity): flags any `Employee`/`GeneratedDocument` record carrying a populated retention-deadline
-  field (`identityDocumentRetainedUntil`, the new `loonheffingenVerklaringRetainedUntil`, or the extended
-  classifier's derived `GeneratedDocument` deadline) whose date has passed while the record is still present —
-  the storage-limitation ceiling the floor-checking rules above do not cover. Calls the SAME classification helper
-  the extended `AvgDsrRetentionClassifier` exposes rather than re-deriving dates a second way.
+- **DONE by hrmq#99, not this change's diff**: a generated `loonstrook`/`jaaropgaaf` `GeneratedDocument` now
+  inherits a real OpenRegister legal hold from its source `Payslip` (`PayrollRetentionGuardService
+  ::inheritLegalHold()`, consumed by `HrDocumentService::generateLoonstrook()`/`generateJaaropgaaf()`) whenever
+  that source is currently under active retention — never a `GeneratedDocument.retainedUntil` field. This closes
+  the exact gap this proposal originally named (item 3), via OpenRegister's own retention primitive instead of a
+  bespoke classifier-readable field.
+- **DONE by hrmq#99, not this change's diff, for the payroll/loonadministratie family + GeneratedDocument**:
+  `lib/Standards/Checks/NlDossierRetentionChecks.php` (auto-discovered, recommended severity) ships
+  `nl-bewaartermijn-verstreken`, reading OpenRegister's own `retention.archiefactiedatum` — never a bespoke field
+  — for `Payslip`/`PayrollRun`/`LoonaangifteFiling`/`PayrollMutationReport`/`WkrDeclaration`/`WkrAssessment`/
+  `PensionFiling`/`GeneratedDocument`. **This change's remaining, narrower item 4**: extend the SAME rule id
+  (a different object-type key, `Employee` — no collision with hrmq#99's provider) to also cover
+  `Employee.identityDocumentRetainedUntil`/`loonheffingenVerklaringRetainedUntil`, the two fields this change's
+  item 2 concerns. Implemented as an addition alongside item 2's `NlPayrollChecks` work, not a second standalone
+  check file.
 
 ### Non-goals (named exclusions, not deferred follow-ups)
 
@@ -102,15 +123,16 @@ here.
 
 ### New Capabilities
 
-- `document-dossier-avg`: the `EmployeeDetail` dossier list, the loonbelastingverklaring retention field+check,
-  the `AvgDsrRetentionClassifier` `GeneratedDocument` extension, and the storage-limitation-ceiling check.
+- `document-dossier-avg`: the `EmployeeDetail` dossier list and the loonbelastingverklaring retention
+  field+check (items 1-2). Items 3-4 as originally proposed are superseded by hrmq#99 (see above); item 4's
+  narrower Employee-scoped remainder ships alongside item 2.
 
 ### Modified Capabilities
 
 - `hrmq-docudesk-documents`: `EmployeeDetail` gains a `GeneratedDocument` FK-scoped list; no schema/service change.
-- `avg-dsr`: unchanged. `AvgDsrRetentionClassifier` already reads any schema's populated `retainedUntil` field;
-  this change only starts populating one on `GeneratedDocument`. No change to `DsarService` consumption, the
-  two-path erase, or any other classified schema.
+- `avg-dsr`: superseded (not by this change) by hrmq#99 — `AvgDsrRetentionClassifier` is deleted;
+  `AvgDsrService` now consumes OpenRegister's guarded `Gdpr\DataSubjectRequestService` directly. Not touched by
+  this change's own diff.
 - `dga-payroll-mode`/payroll checks: `NlPayrollChecks` gains one sibling rule on `Employee`; the shipped
   `nl-id-bewaarplicht-5jaar` predicate and its field are unchanged.
 
@@ -120,11 +142,13 @@ here.
 - `lib/Settings/register.d/hr-objects.json` — `Employee.loonheffingenVerklaringRetainedUntil` (nullable date).
 - `lib/Standards/Checks/NlPayrollChecks.php` — `nl-loonbelastingverklaring-bewaarplicht-5jaar`.
 - `lib/Standards/rules/payroll.json` — the new rule's corpus entry (recommended severity, source citation).
-- `lib/Settings/register.d/hr-documents.json` — `GeneratedDocument.retainedUntil` (nullable date).
-- `lib/Service/HrDocumentService.php` — `generateLoonstrook()`/`generateJaaropgaaf()` populate `retainedUntil`
-  at generation time. `AvgDsrRetentionClassifier` itself is UNCHANGED (design.md D3).
-- `lib/Standards/Checks/NlDossierRetentionChecks.php` — NEW, auto-discovered; `nl-bewaartermijn-verstreken`.
-- `tests/Unit/Standards/Checks/NlPayrollChecksTest.php`, `tests/Unit/Service/HrDocumentServiceTest.php`,
-  `tests/Unit/Standards/Checks/NlDossierRetentionChecksTest.php` — NEW/extended coverage.
-- `README.md` — the four-item delta and the explicit non-goals list (so the destruction-job/e-sign/ACL scope
-  boundary is not silently rediscovered as a gap).
+- `lib/Standards/Checks/NlDossierRetentionChecks.php` — EXTEND (shipped by hrmq#99, NOT new in this change's
+  diff): add an `Employee` entry to `checks()` for the same `nl-bewaartermijn-verstreken` rule id, covering
+  `identityDocumentRetainedUntil`/`loonheffingenVerklaringRetainedUntil`.
+- `tests/Unit/Standards/Checks/NlPayrollChecksTest.php`,
+  `tests/Unit/Standards/Checks/NlDossierRetentionChecksTest.php` — NEW/extended coverage for the two items above.
+- `README.md` — the remaining two-item delta, a note on what hrmq#99 already closed, and the explicit non-goals
+  list (so the destruction-job/e-sign/ACL scope boundary is not silently rediscovered as a gap).
+- **No longer in this change's diff** (hrmq#99 already shipped it): `lib/Settings/register.d/hr-documents.json`
+  `GeneratedDocument.retainedUntil` field, and any `HrDocumentService` retention-population code — see
+  `PayrollRetentionGuardService`/`HrDocumentService` instead.

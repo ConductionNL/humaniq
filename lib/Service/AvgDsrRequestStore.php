@@ -5,12 +5,14 @@
  *
  * The `DsrRequest` bookkeeping record's load/save mechanics, extracted from
  * `AvgDsrService` to keep the DSAR composition logic (subject resolution,
- * retention classification, the two-path erase) separate from the plain
- * OpenRegister CRUD that records each operation's outcome onto the request
- * (avg-dsr design.md D7 -- status transitions, `outcomeSummary`,
- * `retainedObjectRefs`, `rejectionReason`). Never writes a raw PII value
- * (REQ-DSR-002/-005): only object `uuid`/`schema`/`register`/`retainedUntil`
- * references and changed field NAMES are recorded.
+ * the guarded erase call) separate from the plain OpenRegister CRUD that
+ * records each operation's outcome onto the request (avg-dsr design.md D7 --
+ * status transitions, `outcomeSummary`, `retainedObjectRefs`,
+ * `rejectionReason`). Never writes a raw PII value (REQ-DSR-002/-005): only
+ * the `held` refs OpenRegister's guarded `Gdpr\DataSubjectRequestService
+ * ::erase()` returns (`uuid`/`reason` -- hrmq#99, no longer a bespoke
+ * `schema`/`register`/`retainedUntil` shape) and changed field NAMES are
+ * recorded.
  *
  * @category Service
  * @package  OCA\Hrmq\Service
@@ -24,7 +26,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-001
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-001
  */
 
 declare(strict_types=1);

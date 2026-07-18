@@ -26,9 +26,9 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 /**
  * Tests for AvgDsrEraseCommand.
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
  */
 class AvgDsrEraseCommandTest extends TestCase
 {

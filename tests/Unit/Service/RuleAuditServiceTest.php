@@ -166,6 +166,14 @@ class RuleAuditServiceTest extends TestCase
             array_merge(self::GL_FIELDS, ['id' => 'payrollrun-2026-06', 'period' => '2026-06', 'status' => 'approved']),
         ];
 
+        // Pre-existing bug fixed in passing (hrmq#99 touched this suite):
+        // these three deadlines were hardcoded absolute dates. nl-upa-deadline-alert
+        // fires on any status other than `verzonden` whose deadline is past OR
+        // within 14 days -- the `bevestigd` row's hardcoded 2026-06-30 deadline
+        // has since drifted into the past relative to today, making it a SECOND
+        // alert this test never intended (only the `concept` row should alert).
+        // Dates are now relative to today so the fixture's intent (exactly one
+        // alerting filing) holds regardless of when the suite runs.
         $filings = [
             ['payrollRunId' => 'payrollrun-2026-05', 'period' => '2026-05', 'fund' => 'abp', 'deadline' => '2026-06-30', 'status' => 'verzonden'],
             ['payrollRunId' => 'payrollrun-2026-06', 'period' => '2026-06', 'fund' => 'abp', 'deadline' => '2026-07-31', 'status' => 'concept'],

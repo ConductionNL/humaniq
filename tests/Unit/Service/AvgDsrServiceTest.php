@@ -3,22 +3,24 @@
 /**
  * Unit tests for AvgDsrService.
  *
- * Pins the avg-dsr compliance contract (design.md D1/D2/D4/D5/D6): the
- * statutory-retention guard is STRUCTURAL -- a retention-locked object (a
- * populated `retainedUntil`/`identityDocumentRetainedUntil` dated on or
- * after today, or the AWR art. 52 lid 4 7-year fallback derivation for the
- * payroll/loonadministratie family) is NEVER passed into
- * `eraseObjectsForSubject()` or `rectifyObjectForSubject()`, always reported
- * in the outcome's `retained` list (REQ-DSR-005); erasure is always a
- * zero-write preview before an explicitly-confirmed execute tied to that
- * SAME recorded preview (REQ-DSR-006); export renders `findObjectsForSubject()`
- * exactly once for either right (REQ-DSR-003); rectification is a direct,
- * no-retention-guard pass-through recording only changed field NAMES
- * (REQ-DSR-007); and the raw `bsn` value is resolved transiently and never
- * persisted onto `DsrRequest` or logged (REQ-DSR-002). Drives the service
- * through fake ObjectService/DsarService doubles (fake collaborators, not
- * fakes of the logic under test) since the real OpenRegister services are a
- * sibling-app dependency not available in this standalone suite -- the
+ * hrmq#99 (consume-not-rebuild correction): pins the avg-dsr contract as it
+ * now consumes OpenRegister's guarded, RBAC/tenant-scoped
+ * `Gdpr\DataSubjectRequestService` directly -- retention enforcement is the
+ * GUARDED SERVICE's own (a legal hold / immutable archival status refuses an
+ * object, reported in `held`, REQ-DSR-005), never a bespoke hrmq
+ * classification. `AvgDsrService` performs NO retention computation of its
+ * own: `eraseSubject()`/`previewErasure()` call `erase()` directly and relay
+ * its `held`/`erased`/`failed` buckets unchanged. Export renders
+ * `findSubjectData()` exactly once for either right (REQ-DSR-003); erasure is
+ * always a zero-write preview (`erase(..., dryRun: true)`) before an
+ * explicitly-confirmed execute tied to that SAME recorded preview
+ * (REQ-DSR-006); rectification calls `rectify()` directly with the object's
+ * id/uuid (no int-id resolution workaround, REQ-DSR-007); and the raw `bsn`
+ * value is resolved transiently and never persisted onto `DsrRequest` or
+ * logged (REQ-DSR-002). Drives the service through a fake ObjectService/
+ * guarded-service double (fake collaborators, not fakes of the logic under
+ * test) since the real OpenRegister services are a sibling-app dependency
+ * not available in this standalone suite -- the
  * LoonbeslagControllerTest/AdministrationServiceTest precedent.
  *
  * @category Test
@@ -33,11 +35,11 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-002
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-003
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-007
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-002
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-003
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
  */
 
 declare(strict_types=1);
@@ -55,7 +57,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for AvgDsrService.
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
  */
 class AvgDsrServiceTest extends TestCase
 {
@@ -70,114 +72,78 @@ class AvgDsrServiceTest extends TestCase
 
 
     /**
-     * The retention guard NEVER passes a retention-locked object into
-     * `eraseObjectsForSubject()` or `rectifyObjectForSubject()` (REQ-DSR-005):
-     * given a mix of one retained Payslip and one eligible object, the
-     * guarded execute NEVER calls `eraseObjectsForSubject()` at all, and
-     * `rectifyObjectForSubject()` is called ONLY with the eligible object's
-     * internal id -- the retained object's internal id never appears in
-     * either DsarService write call.
+     * REQ-DSR-005: the guarded service's `held` bucket is relayed unchanged
+     * into the outcome's `retained` list -- `AvgDsrService` computes nothing
+     * itself.
      *
      * @return void
      */
-    public function testRetainedObjectIsNeverPassedToEitherEraseCall(): void
+    public function testHeldObjectIsReportedRetainedNeverErased(): void
     {
-        $futureRetainedUntil = date('Y-m-d', strtotime('+1 year'));
-
-        $retainedPayslip = $this->fakeEntity(
-            internalId: 5001,
-            data: ['retainedUntil' => $futureRetainedUntil, 'period' => date('Y-m')],
-            uuid: 'payslip-retained-uuid',
-            schema: 'Payslip'
-        );
-        $eligibleContract = $this->fakeEntity(
-            internalId: 5002,
-            data: [],
-            uuid: 'contract-eligible-uuid',
-            schema: 'EmploymentContract'
-        );
-
         $objectService = $this->fakeObjectService(
             [
-                'emp-1'                 => $this->fakeEntity(1, ['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee'),
-                'dsr-1'                 => $this->fakeEntity(
-                    2,
-                    [
-                        'employeeId'          => 'emp-1',
-                        'status'              => 'in_behandeling',
-                        'retainedObjectRefs'  => '[]',
-                    ],
-                    'dsr-1',
-                    'DsrRequest'
-                ),
-                'payslip-retained-uuid' => $retainedPayslip,
-                'contract-eligible-uuid' => $eligibleContract,
+                'emp-1' => $this->fakeEntity(['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee'),
+                'dsr-1' => $this->fakeEntity(['status' => 'in_behandeling', 'retainedObjectRefs' => '[]'], 'dsr-1', 'DsrRequest'),
             ]
         );
 
-        $dsarService = $this->fakeDsarService(
-            [
-                ['object' => $retainedPayslip->jsonSerialize()],
-                ['object' => $eligibleContract->jsonSerialize()],
-            ]
+        $guarded = $this->fakeGuardedService(
+            erased: [['uuid' => 'contract-eligible-uuid', 'register' => 'hrmq', 'schema' => 'EmploymentContract']],
+            held: [['uuid' => 'payslip-retained-uuid', 'reason' => 'legal-hold']],
+            failed: []
         );
 
-        $service = $this->buildService($objectService, $dsarService);
-
+        $service = $this->buildService($objectService, $guarded);
         $outcome = $service->eraseSubject('emp-1', 'dsr-1');
 
         $this->assertSame('voldaan', $outcome['status']);
-        $this->assertSame([], $dsarService->eraseCalls, 'eraseObjectsForSubject() must NEVER be called when anything is retained.');
-        $this->assertCount(1, $dsarService->rectifyCalls, 'Exactly one rectify call -- the eligible object only.');
-        $this->assertSame(5002, $dsarService->rectifyCalls[0]['objectId'], 'Only the ELIGIBLE object\'s internal id is rectified.');
-
-        foreach ($dsarService->rectifyCalls as $call) {
-            $this->assertNotSame(5001, $call['objectId'], 'The RETAINED object\'s internal id must never be passed to rectifyObjectForSubject().');
-        }
+        $this->assertCount(1, $guarded->eraseCalls, 'erase() is called exactly once -- no per-object loop in hrmq.');
+        $this->assertFalse($guarded->eraseCalls[0]['dryRun']);
 
         $this->assertCount(1, $outcome['retained']);
         $this->assertSame('payslip-retained-uuid', $outcome['retained'][0]['uuid']);
-        $this->assertSame('retained (wettelijke bewaarplicht)', $outcome['retained'][0]['label']);
+        $this->assertSame('legal-hold', $outcome['retained'][0]['reason']);
         $this->assertCount(1, $outcome['erased']);
         $this->assertSame('contract-eligible-uuid', $outcome['erased'][0]['uuid']);
 
-    }//end testRetainedObjectIsNeverPassedToEitherEraseCall()
+    }//end testHeldObjectIsReportedRetainedNeverErased()
 
 
     /**
-     * REQ-DSR-005 fast path: when nothing is retained, ONE wholesale
-     * `eraseObjectsForSubject()` call runs and `rectifyObjectForSubject()` is
-     * never called.
+     * REQ-DSR-005: when nothing is held, the outcome's `retained` list is
+     * empty and everything the guarded service erased is reported.
      *
      * @return void
      */
-    public function testFastPathWholesaleEraseWhenNothingRetained(): void
+    public function testNothingHeldReportsAnEmptyRetainedList(): void
     {
-        $eligible = $this->fakeEntity(6001, [], 'eligible-uuid', 'EmploymentContract');
-
         $objectService = $this->fakeObjectService(
             [
-                'emp-1' => $this->fakeEntity(1, ['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee'),
-                'dsr-1' => $this->fakeEntity(2, ['status' => 'in_behandeling', 'retainedObjectRefs' => '[]'], 'dsr-1', 'DsrRequest'),
+                'emp-1' => $this->fakeEntity(['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee'),
+                'dsr-1' => $this->fakeEntity(['status' => 'in_behandeling', 'retainedObjectRefs' => '[]'], 'dsr-1', 'DsrRequest'),
             ]
         );
 
-        $dsarService = $this->fakeDsarService([['object' => $eligible->jsonSerialize()]]);
+        $guarded = $this->fakeGuardedService(
+            erased: [['uuid' => 'eligible-uuid', 'register' => 'hrmq', 'schema' => 'EmploymentContract']],
+            held: [],
+            failed: []
+        );
 
-        $service = $this->buildService($objectService, $dsarService);
+        $service = $this->buildService($objectService, $guarded);
         $outcome = $service->eraseSubject('emp-1', 'dsr-1');
 
         $this->assertSame('voldaan', $outcome['status']);
-        $this->assertCount(1, $dsarService->eraseCalls);
-        $this->assertSame([], $dsarService->rectifyCalls);
         $this->assertSame([], $outcome['retained']);
+        $this->assertCount(1, $outcome['erased']);
 
-    }//end testFastPathWholesaleEraseWhenNothingRetained()
+    }//end testNothingHeldReportsAnEmptyRetainedList()
 
 
     /**
      * REQ-DSR-006: `eraseSubject()` refuses (controlled, zero writes) when
-     * the referenced DsrRequest has no recorded preview.
+     * the referenced DsrRequest has no recorded preview -- the guarded
+     * service's `erase()` is never called.
      *
      * @return void
      */
@@ -185,49 +151,49 @@ class AvgDsrServiceTest extends TestCase
     {
         $objectService = $this->fakeObjectService(
             [
-                'emp-1' => $this->fakeEntity(1, ['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee'),
+                'emp-1' => $this->fakeEntity(['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee'),
                 // status ontvangen, retainedObjectRefs still null -- no preview recorded.
-                'dsr-1' => $this->fakeEntity(2, ['status' => 'ontvangen', 'retainedObjectRefs' => null], 'dsr-1', 'DsrRequest'),
+                'dsr-1' => $this->fakeEntity(['status' => 'ontvangen', 'retainedObjectRefs' => null], 'dsr-1', 'DsrRequest'),
             ]
         );
-        $dsarService = $this->fakeDsarService([]);
+        $guarded = $this->fakeGuardedService(erased: [], held: [], failed: []);
 
-        $service = $this->buildService($objectService, $dsarService);
+        $service = $this->buildService($objectService, $guarded);
         $outcome = $service->eraseSubject('emp-1', 'dsr-1');
 
         $this->assertSame('refused', $outcome['status']);
-        $this->assertSame([], $dsarService->eraseCalls);
-        $this->assertSame([], $dsarService->rectifyCalls);
+        $this->assertSame([], $guarded->eraseCalls);
         $this->assertSame([], $objectService->saved, 'A refused precondition performs zero writes.');
 
     }//end testEraseSubjectRefusedWithoutRecordedPreview()
 
 
     /**
-     * REQ-DSR-006: `previewErasure()` performs zero writes to any subject's
-     * data object -- neither DsarService write method is called, regardless
-     * of whether a `$dsrRequestId` is given.
+     * REQ-DSR-006: `previewErasure()` calls `erase(..., dryRun: true)` --
+     * zero writes to any subject's data object -- and records the preview
+     * marker on the DsrRequest as the ONLY write.
      *
      * @return void
      */
-    public function testPreviewErasurePerformsZeroWrites(): void
+    public function testPreviewErasureCallsDryRunAndPerformsZeroObjectWrites(): void
     {
-        $retained = $this->fakeEntity(7001, ['retainedUntil' => date('Y-m-d', strtotime('+1 year'))], 'retained-uuid', 'Payslip');
-        $eligible = $this->fakeEntity(7002, [], 'eligible-uuid', 'EmploymentContract');
-
         $objectService = $this->fakeObjectService(
             [
-                'emp-1' => $this->fakeEntity(1, ['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee'),
-                'dsr-1' => $this->fakeEntity(2, ['status' => 'ontvangen', 'retainedObjectRefs' => null], 'dsr-1', 'DsrRequest'),
+                'emp-1' => $this->fakeEntity(['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee'),
+                'dsr-1' => $this->fakeEntity(['status' => 'ontvangen', 'retainedObjectRefs' => null], 'dsr-1', 'DsrRequest'),
             ]
         );
-        $dsarService = $this->fakeDsarService([['object' => $retained->jsonSerialize()], ['object' => $eligible->jsonSerialize()]]);
+        $guarded = $this->fakeGuardedService(
+            erased: [['uuid' => 'eligible-uuid', 'register' => 'hrmq', 'schema' => 'EmploymentContract']],
+            held: [['uuid' => 'retained-uuid', 'reason' => 'legal-hold']],
+            failed: []
+        );
 
-        $service = $this->buildService($objectService, $dsarService);
+        $service = $this->buildService($objectService, $guarded);
         $preview = $service->previewErasure('emp-1', 'dsr-1');
 
-        $this->assertSame([], $dsarService->eraseCalls);
-        $this->assertSame([], $dsarService->rectifyCalls);
+        $this->assertCount(1, $guarded->eraseCalls);
+        $this->assertTrue($guarded->eraseCalls[0]['dryRun'], 'previewErasure() MUST call erase() with dryRun: true.');
         $this->assertCount(1, $preview['retained']);
         $this->assertCount(1, $preview['wouldErase']);
 
@@ -238,133 +204,86 @@ class AvgDsrServiceTest extends TestCase
         $this->assertSame('in_behandeling', $objectService->saved[0]['status']);
         $this->assertNotNull($objectService->saved[0]['retainedObjectRefs'], 'The preview marker is always recorded, even for an empty retained list.');
 
-    }//end testPreviewErasurePerformsZeroWrites()
+    }//end testPreviewErasureCallsDryRunAndPerformsZeroObjectWrites()
 
 
     /**
-     * REQ-DSR-005: a populated `retainedUntil` in the PAST wins over the AWR
-     * fallback derivation -- classified erase-eligible, not retained.
+     * REQ-DSR-003: `exportForSubject()` calls `findSubjectData()` exactly
+     * once per export request, for either right.
      *
      * @return void
      */
-    public function testPopulatedPastRetainedUntilWinsOverDerivedFallback(): void
+    public function testExportCallsFindSubjectDataExactlyOncePerRight(): void
     {
-        $lapsed = $this->fakeEntity(
-            8001,
-            ['retainedUntil' => date('Y-m-d', strtotime('-1 year')), 'period' => date('Y-m')],
-            'lapsed-uuid',
-            'Payslip'
-        );
+        $matched = $this->fakeEntity([], 'matched-uuid', 'Payslip');
 
-        $objectService = $this->fakeObjectService(['emp-1' => $this->fakeEntity(1, ['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee')]);
-        $dsarService   = $this->fakeDsarService([['object' => $lapsed->jsonSerialize()]]);
+        $objectService = $this->fakeObjectService(['emp-1' => $this->fakeEntity(['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee')]);
+        $guarded       = $this->fakeGuardedService(erased: [], held: [], failed: []);
+        $guarded->findSubjectDataResult = [['object' => $matched->jsonSerialize(), 'gdprEntities' => []]];
 
-        $service        = $this->buildService($objectService, $dsarService);
-        $classification = $service->classifyForErasure('emp-1');
-
-        $this->assertSame([], $classification['retained']);
-        $this->assertCount(1, $classification['eligible']);
-        $this->assertSame('lapsed-uuid', $classification['eligible'][0]['uuid']);
-
-    }//end testPopulatedPastRetainedUntilWinsOverDerivedFallback()
-
-    /**
-     * REQ-DSR-005: an object outside the payroll/loonadministratie family
-     * with no populated retention field is NOT retention-locked, even with a
-     * period-shaped field -- the family list is a closed set.
-     *
-     * @return void
-     */
-    public function testObjectOutsideFamilyWithNoRetentionFieldIsEligible(): void
-    {
-        $offRegisterFamily = $this->fakeEntity(9001, ['period' => date('Y-m')], 'off-family-uuid', 'Timesheet');
-
-        $objectService = $this->fakeObjectService(['emp-1' => $this->fakeEntity(1, ['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee')]);
-        $dsarService   = $this->fakeDsarService([['object' => $offRegisterFamily->jsonSerialize()]]);
-
-        $service        = $this->buildService($objectService, $dsarService);
-        $classification = $service->classifyForErasure('emp-1');
-
-        $this->assertSame([], $classification['retained']);
-        $this->assertCount(1, $classification['eligible']);
-
-    }//end testObjectOutsideFamilyWithNoRetentionFieldIsEligible()
-
-
-    /**
-     * REQ-DSR-003: `exportForSubject()` calls `findObjectsForSubject()`
-     * exactly once per export request, for either right.
-     *
-     * @return void
-     */
-    public function testExportCallsFindObjectsForSubjectExactlyOncePerRight(): void
-    {
-        $matched = $this->fakeEntity(1, [], 'matched-uuid', 'Payslip');
-
-        $objectService = $this->fakeObjectService(['emp-1' => $this->fakeEntity(1, ['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee')]);
-        $dsarService   = $this->fakeDsarService([['object' => $matched->jsonSerialize(), 'gdprEntities' => []]]);
-
-        $service = $this->buildService($objectService, $dsarService);
+        $service = $this->buildService($objectService, $guarded);
 
         $inzage = $service->exportForSubject('emp-1', 'inzage');
-        $this->assertSame(1, $dsarService->findCallCount);
+        $this->assertSame(1, $guarded->findCallCount);
         $this->assertSame('inzage', $inzage['right']);
         $this->assertSame(1, $inzage['count']);
 
         $portabiliteit = $service->exportForSubject('emp-1', 'portabiliteit');
-        $this->assertSame(2, $dsarService->findCallCount, 'A SECOND export call makes exactly one MORE findObjectsForSubject() call.');
+        $this->assertSame(2, $guarded->findCallCount, 'A SECOND export call makes exactly one MORE findSubjectData() call.');
         $this->assertSame('portabiliteit', $portabiliteit['right']);
         $this->assertSame(1, $portabiliteit['count']);
 
-    }//end testExportCallsFindObjectsForSubjectExactlyOncePerRight()
+    }//end testExportCallsFindSubjectDataExactlyOncePerRight()
 
 
     /**
-     * REQ-DSR-007: rectification records only the changed field NAMES, never
-     * before/after values, and applies no retention guard.
+     * REQ-DSR-007: rectification calls the guarded service's `rectify()`
+     * with the object identifier directly (a plain id/uuid string, no
+     * internal-int-id resolution workaround) and records only the changed
+     * field NAMES, never before/after values.
      *
      * @return void
      */
-    public function testRectifyRecordsOnlyFieldNamesNoRetentionGuard(): void
+    public function testRectifyCallsGuardedRectifyWithIdentifierDirectly(): void
     {
         $objectService = $this->fakeObjectService(
-            ['dsr-1' => $this->fakeEntity(2, ['status' => 'in_behandeling'], 'dsr-1', 'DsrRequest')]
+            ['dsr-1' => $this->fakeEntity(['status' => 'in_behandeling'], 'dsr-1', 'DsrRequest')]
         );
-        $dsarService = $this->fakeDsarService([]);
-        $dsarService->rectifyResults[999] = ['id' => 'emp-1-uuid', 'lastName' => 'Corrected'];
+        $guarded                                    = $this->fakeGuardedService(erased: [], held: [], failed: []);
+        $guarded->rectifyResults['emp-1-uuid'] = ['id' => 'emp-1-uuid', 'lastName' => 'Corrected'];
 
-        $service = $this->buildService($objectService, $dsarService);
-        $result  = $service->rectifySubjectObject(999, ['lastName' => 'Corrected'], 'dsr-1');
+        $service = $this->buildService($objectService, $guarded);
+        $result  = $service->rectifySubjectObject('emp-1-uuid', ['lastName' => 'Corrected'], 'dsr-1');
 
         $this->assertNotNull($result);
-        $this->assertCount(1, $dsarService->rectifyCalls);
-        $this->assertSame(999, $dsarService->rectifyCalls[0]['objectId']);
+        $this->assertCount(1, $guarded->rectifyCalls);
+        $this->assertSame('emp-1-uuid', $guarded->rectifyCalls[0]['objectIdentifier']);
 
         $saved = $objectService->saved[0];
         $this->assertSame('voldaan', $saved['status']);
         $this->assertStringContainsString('lastName', $saved['outcomeSummary']);
         $this->assertStringNotContainsString('Corrected', $saved['outcomeSummary'], 'Only the field NAME is recorded, never the new value.');
 
-    }//end testRectifyRecordsOnlyFieldNamesNoRetentionGuard()
+    }//end testRectifyCallsGuardedRectifyWithIdentifierDirectly()
 
 
     /**
-     * REQ-DSR-007: a failed rectification (rectifyObjectForSubject returns
-     * null) is reported -- DsrRequest -> afgewezen with a rejectionReason,
-     * never silently dropped.
+     * REQ-DSR-007: a failed rectification (guarded rectify() returns null,
+     * e.g. an immutable archival status) is reported -- DsrRequest ->
+     * afgewezen with a rejectionReason, never silently dropped.
      *
      * @return void
      */
     public function testFailedRectificationIsReportedNotSilentlyDropped(): void
     {
         $objectService = $this->fakeObjectService(
-            ['dsr-1' => $this->fakeEntity(2, ['status' => 'in_behandeling'], 'dsr-1', 'DsrRequest')]
+            ['dsr-1' => $this->fakeEntity(['status' => 'in_behandeling'], 'dsr-1', 'DsrRequest')]
         );
-        $dsarService                      = $this->fakeDsarService([]);
-        $dsarService->rectifyResults[999] = null;
+        $guarded                                    = $this->fakeGuardedService(erased: [], held: [], failed: []);
+        $guarded->rectifyResults['emp-1-uuid'] = null;
 
-        $service = $this->buildService($objectService, $dsarService);
-        $result  = $service->rectifySubjectObject(999, ['lastName' => 'X'], 'dsr-1');
+        $service = $this->buildService($objectService, $guarded);
+        $result  = $service->rectifySubjectObject('emp-1-uuid', ['lastName' => 'X'], 'dsr-1');
 
         $this->assertNull($result);
         $saved = $objectService->saved[0];
@@ -383,18 +302,20 @@ class AvgDsrServiceTest extends TestCase
      */
     public function testBsnValueNeverPersistedOrLogged(): void
     {
-        $eligible = $this->fakeEntity(1, [], 'eligible-uuid', 'EmploymentContract');
-
         $objectService = $this->fakeObjectService(
             [
-                'emp-1' => $this->fakeEntity(1, ['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee'),
-                'dsr-1' => $this->fakeEntity(2, ['status' => 'in_behandeling', 'retainedObjectRefs' => '[]'], 'dsr-1', 'DsrRequest'),
+                'emp-1' => $this->fakeEntity(['bsn' => self::SENTINEL_BSN], 'emp-1-uuid', 'Employee'),
+                'dsr-1' => $this->fakeEntity(['status' => 'in_behandeling', 'retainedObjectRefs' => '[]'], 'dsr-1', 'DsrRequest'),
             ]
         );
-        $dsarService = $this->fakeDsarService([['object' => $eligible->jsonSerialize()]]);
-        $logger      = $this->spyLogger();
+        $guarded = $this->fakeGuardedService(
+            erased: [['uuid' => 'eligible-uuid', 'register' => 'hrmq', 'schema' => 'EmploymentContract']],
+            held: [],
+            failed: []
+        );
+        $logger = $this->spyLogger();
 
-        $service = $this->buildService($objectService, $dsarService, logger: $logger);
+        $service = $this->buildService($objectService, $guarded, logger: $logger);
 
         $service->exportForSubject('emp-1', 'inzage', 'dsr-1');
         $service->previewErasure('emp-1', 'dsr-1');
@@ -405,6 +326,10 @@ class AvgDsrServiceTest extends TestCase
             $this->assertStringNotContainsString(self::SENTINEL_BSN, (string) $encoded, 'The raw bsn value must never be written onto a DsrRequest.');
         }
 
+        foreach ($guarded->eraseCalls as $call) {
+            $this->assertSame(self::SENTINEL_BSN, $call['subjectId'], 'The resolved bsn IS the in-memory subjectId argument -- this assertion documents that, it is not itself a leak.');
+        }
+
         foreach ($logger->messages as $message) {
             $this->assertStringNotContainsString(self::SENTINEL_BSN, $message, 'The raw bsn value must never be logged.');
         }
@@ -413,26 +338,27 @@ class AvgDsrServiceTest extends TestCase
 
 
     /**
-     * Build an AvgDsrService wired to fake ObjectService/DsarService doubles.
+     * Build an AvgDsrService wired to fake ObjectService/guarded-service
+     * doubles.
      *
      * @param object               $objectService The fake ObjectService.
-     * @param object               $dsarService   The fake DsarService.
+     * @param object               $guarded       The fake `Gdpr\DataSubjectRequestService` double.
      * @param string               $currentUid    The active session uid.
      * @param LoggerInterface|null $logger        Optional logger double (a spy, or a plain mock when unused by the test).
      *
      * @return AvgDsrService
      */
-    private function buildService(object $objectService, object $dsarService, string $currentUid='admin', ?LoggerInterface $logger=null): AvgDsrService
+    private function buildService(object $objectService, object $guarded, string $currentUid='admin', ?LoggerInterface $logger=null): AvgDsrService
     {
         $container = $this->createMock(ContainerInterface::class);
         $container->method('get')->willReturnCallback(
-            static function (string $id) use ($objectService, $dsarService) {
+            static function (string $id) use ($objectService, $guarded) {
                 if ($id === 'OCA\OpenRegister\Service\ObjectService') {
                     return $objectService;
                 }
 
-                if ($id === 'OCA\OpenRegister\Service\DsarService') {
-                    return $dsarService;
+                if ($id === 'OCA\OpenRegister\Service\Gdpr\DataSubjectRequestService') {
+                    return $guarded;
                 }
 
                 throw new \RuntimeException('Unexpected container->get('.$id.')');
@@ -454,32 +380,29 @@ class AvgDsrServiceTest extends TestCase
 
 
     /**
-     * A fake ObjectEntity double exposing the SAME `getId(): int` +
-     * `jsonSerialize(): array` contract as OpenRegister's real ObjectEntity
-     * (`id` overwritten with the string uuid, `@self` carries schema/register).
+     * A fake ObjectEntity double exposing the SAME `jsonSerialize(): array`
+     * contract as OpenRegister's real ObjectEntity (`id` overwritten with the
+     * string uuid, `@self` carries schema/register).
      *
-     * @param int                   $internalId The real (int) primary key `rectifyObjectForSubject()` requires.
-     * @param array<string, mixed>  $data       The object's own data fields.
-     * @param string                $uuid       The object's string uuid.
-     * @param string                $schema     The object's schema.
-     * @param string                $register   The object's register.
+     * @param array<string, mixed>  $data     The object's own data fields.
+     * @param string                $uuid     The object's string uuid.
+     * @param string                $schema   The object's schema.
+     * @param string                $register The object's register.
      *
      * @return object
      */
-    private function fakeEntity(int $internalId, array $data, string $uuid, string $schema, string $register='hrmq'): object
+    private function fakeEntity(array $data, string $uuid, string $schema, string $register='hrmq'): object
     {
-        return new class ($internalId, $data, $uuid, $schema, $register) {
+        return new class ($data, $uuid, $schema, $register) {
 
 
             /**
-             * @param int                  $internalId Internal int id.
-             * @param array<string, mixed> $data       Object data.
-             * @param string               $uuid       String uuid.
-             * @param string               $schema     Schema name.
-             * @param string               $register   Register slug.
+             * @param array<string, mixed> $data     Object data.
+             * @param string               $uuid     String uuid.
+             * @param string               $schema   Schema name.
+             * @param string               $register Register slug.
              */
             public function __construct(
-                private readonly int $internalId,
                 private readonly array $data,
                 private readonly string $uuid,
                 private readonly string $schema,
@@ -487,16 +410,6 @@ class AvgDsrServiceTest extends TestCase
             ) {
 
             }//end __construct()
-
-
-            /**
-             * @return int
-             */
-            public function getId(): int
-            {
-                return $this->internalId;
-
-            }//end getId()
 
 
             /**
@@ -597,24 +510,44 @@ class AvgDsrServiceTest extends TestCase
 
 
     /**
-     * A fake DsarService double: `findObjectsForSubject()` returns the
-     * configured envelopes and increments `findCallCount`;
-     * `eraseObjectsForSubject()`/`rectifyObjectForSubject()` record every
-     * call.
+     * A fake `Gdpr\DataSubjectRequestService` double: `findSubjectData()`
+     * returns the configured result and increments `findCallCount`;
+     * `erase()` records every call and returns the pre-configured
+     * `erased`/`held`/`failed` split UNCHANGED regardless of `dryRun`
+     * (mirroring the real guarded service, which classifies the SAME way for
+     * a dry run -- only the actual mutation is skipped); `rectify()` records
+     * every call.
      *
-     * @param array<int, array<string, mixed>> $envelopes The envelopes findObjectsForSubject() returns.
+     * @param array<int, array<string, mixed>> $erased The pre-configured `erased` bucket.
+     * @param array<int, array<string, mixed>> $held   The pre-configured `held` bucket.
+     * @param array<int, array<string, mixed>> $failed The pre-configured `failed` bucket.
      *
      * @return object
      */
-    private function fakeDsarService(array $envelopes): object
+    private function fakeGuardedService(array $erased, array $held, array $failed): object
     {
-        return new class ($envelopes) {
+        return new class ($erased, $held, $failed) {
 
 
             /**
              * @var array<int, array<string, mixed>>
              */
-            private array $envelopes;
+            private array $erased;
+
+            /**
+             * @var array<int, array<string, mixed>>
+             */
+            private array $held;
+
+            /**
+             * @var array<int, array<string, mixed>>
+             */
+            private array $failed;
+
+            /**
+             * @var array<int, array<string, mixed>>
+             */
+            public array $findSubjectDataResult = [];
 
             /**
              * @var int
@@ -622,98 +555,102 @@ class AvgDsrServiceTest extends TestCase
             public int $findCallCount = 0;
 
             /**
-             * @var array<int, array<string, mixed>>
+             * @var array<int, array{subjectId: string, type: string|null, eraseMode: string, dryRun: bool}>
              */
             public array $eraseCalls = [];
 
             /**
-             * @var array<int, array{objectId: int, changes: array<string, mixed>}>
+             * @var array<int, array{objectIdentifier: string, changes: array<string, mixed>}>
              */
             public array $rectifyCalls = [];
 
             /**
-             * Per-objectId configured rectifyObjectForSubject() return value.
+             * Per-objectIdentifier configured rectify() return value.
              *
-             * @var array<int, array<string, mixed>|null>
+             * @var array<string, array<string, mixed>|null>
              */
             public array $rectifyResults = [];
 
 
             /**
-             * @param array<int, array<string, mixed>> $envelopes Configured envelopes.
+             * @param array<int, array<string, mixed>> $erased Configured `erased` bucket.
+             * @param array<int, array<string, mixed>> $held   Configured `held` bucket.
+             * @param array<int, array<string, mixed>> $failed Configured `failed` bucket.
              */
-            public function __construct(array $envelopes)
+            public function __construct(array $erased, array $held, array $failed)
             {
-                $this->envelopes = $envelopes;
+                $this->erased = $erased;
+                $this->held   = $held;
+                $this->failed = $failed;
 
             }//end __construct()
 
 
             /**
-             * @param string      $subject Subject value.
-             * @param string|null $type    Unused by the fake.
-             * @param string      $mode    Unused by the fake.
+             * @param string      $subjectId Subject value.
+             * @param string|null $type      Unused by the fake.
+             * @param string      $mode      Unused by the fake.
+             * @param bool        $rbac      Unused by the fake.
+             * @param bool        $multitenancy Unused by the fake.
              *
              * @return array<int, array<string, mixed>>
              */
-            public function findObjectsForSubject(string $subject, ?string $type=null, string $mode='exact'): array
+            public function findSubjectData(string $subjectId, ?string $type=null, string $mode='exact', bool $rbac=true, bool $multitenancy=true): array
             {
                 $this->findCallCount++;
-                return $this->envelopes;
+                return $this->findSubjectDataResult;
 
-            }//end findObjectsForSubject()
+            }//end findSubjectData()
 
 
             /**
-             * @param string      $subject Subject value.
-             * @param string|null $type    Type filter.
-             * @param bool        $dryRun  Dry-run flag.
+             * @param string      $subjectId Subject value.
+             * @param string|null $type      Type filter.
+             * @param string      $eraseMode Erase mode.
+             * @param bool        $dryRun    Dry-run flag.
              *
              * @return array<string, mixed>
              */
-            public function eraseObjectsForSubject(string $subject, ?string $type=null, bool $dryRun=false): array
+            public function erase(string $subjectId, ?string $type=null, string $eraseMode='pseudonymise', bool $dryRun=false): array
             {
-                $this->eraseCalls[] = ['subject' => $subject, 'type' => $type, 'dryRun' => $dryRun];
+                $this->eraseCalls[] = ['subjectId' => $subjectId, 'type' => $type, 'eraseMode' => $eraseMode, 'dryRun' => $dryRun];
+
                 return [
-                    'subject'      => $subject,
+                    'subject'      => $subjectId,
                     'type'         => $type,
+                    'eraseMode'    => $eraseMode,
                     'dryRun'       => $dryRun,
-                    'matchedCount' => count($this->envelopes),
-                    'erased'       => array_map(
-                        static fn(array $e): array => [
-                            'uuid'     => (string) ($e['object']['id'] ?? ''),
-                            'register' => (string) ($e['object']['@self']['register'] ?? ''),
-                            'schema'   => (string) ($e['object']['@self']['schema'] ?? ''),
-                        ],
-                        $this->envelopes
-                    ),
-                    'failed'       => [],
-                    'complete'     => true,
-                    'failedCount'  => 0,
+                    'matchedCount' => (count($this->erased) + count($this->held) + count($this->failed)),
+                    'erased'       => $this->erased,
+                    'held'         => $this->held,
+                    'failed'       => $this->failed,
+                    'complete'     => ($this->failed === []),
+                    'failedCount'  => count($this->failed),
+                    'heldCount'    => count($this->held),
                 ];
 
-            }//end eraseObjectsForSubject()
+            }//end erase()
 
 
             /**
-             * @param int                   $objectId Internal id.
-             * @param array<string, mixed>  $changes  Changes.
+             * @param string               $objectIdentifier Object id/uuid.
+             * @param array<string, mixed> $changes          Changes.
              *
              * @return array<string, mixed>|null
              */
-            public function rectifyObjectForSubject(int $objectId, array $changes): ?array
+            public function rectify(string $objectIdentifier, array $changes): ?array
             {
-                $this->rectifyCalls[] = ['objectId' => $objectId, 'changes' => $changes];
-                if (array_key_exists($objectId, $this->rectifyResults) === true) {
-                    return $this->rectifyResults[$objectId];
+                $this->rectifyCalls[] = ['objectIdentifier' => $objectIdentifier, 'changes' => $changes];
+                if (array_key_exists($objectIdentifier, $this->rectifyResults) === true) {
+                    return $this->rectifyResults[$objectIdentifier];
                 }
 
-                return ['id' => $objectId, 'updated' => true];
+                return ['id' => $objectIdentifier, 'updated' => true];
 
-            }//end rectifyObjectForSubject()
+            }//end rectify()
         };
 
-    }//end fakeDsarService()
+    }//end fakeGuardedService()
 
 
     /**
