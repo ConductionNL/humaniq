@@ -25,7 +25,7 @@
 <template>
 	<CnAppRoot
 		:ai-companion="true"
-		:manifest="manifest"
+		:manifest="effectiveManifest"
 		:registry="registry"
 		:page-types="pageTypes"
 		app-id="hrmq"
@@ -77,6 +77,31 @@ export default {
 			initialAdministrationId ? { activeAdministrationId: initialAdministrationId } : {},
 		)
 		provide('cnWorkspaceContext', cnWorkspaceContext)
+	},
+
+	computed: {
+		/**
+		 * The manifest handed to CnAppRoot with `runtime.user.administrationMode`
+		 * merged in from the `activeAdministrationMode` initial state
+		 * `PageController::index()` stamps (single-person-modes REQ-SPM-002/D2).
+		 * This is the FIRST real consumer of nc-vue's `visibleIf` primitive in
+		 * hrmq: `CnAppNav` evaluates each menu item's `visibleIf` against
+		 * `effectiveManifest.runtime` (`utils/visibleIfContext.js`), so a
+		 * `{"user.administrationMode": {...}}` predicate resolves against the
+		 * key merged here. Defaults to `standard` (the no-menu-change default)
+		 * when the initial state is absent — every existing multi-employee
+		 * administratie renders exactly as before this change. A reload picks up
+		 * a fresh mode after an administratie switch (REQ-SPM-002 scenario).
+		 *
+		 * @return {object} The bundled manifest with runtime.user.administrationMode set.
+		 */
+		effectiveManifest() {
+			const mode = loadState('hrmq', 'activeAdministrationMode', 'standard') || 'standard'
+			const base = this.manifest || {}
+			const runtime = { ...(base.runtime || {}) }
+			runtime.user = { ...(runtime.user || {}), administrationMode: mode }
+			return { ...base, runtime }
+		},
 	},
 
 	methods: {

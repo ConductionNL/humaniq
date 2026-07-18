@@ -108,11 +108,16 @@ class AdministrationController extends Controller
     /**
      * `GET /api/administration/context` -- the active administratie id (or
      * null) plus the caller's accessible administraties, for the switcher
-     * and the Dashboard/Configuratie indicator.
+     * and the Dashboard/Configuratie indicator. single-person-modes
+     * (REQ-SPM-002): every administratie entry additionally carries its
+     * resolved `mode` (via `AdministrationService::accessibleAdministrations()`),
+     * so the switcher can display it and a client-side switch can update
+     * `runtime.user.administrationMode` without a reload.
      *
-     * @return JSONResponse `{activeAdministrationId, administrations}`.
+     * @return JSONResponse `{activeAdministrationId, administrations}` (each administratie carries `mode`).
      *
      * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-004
+     * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
      */
     #[NoAdminRequired]
     public function context(): JSONResponse

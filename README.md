@@ -274,6 +274,65 @@ NL accountant channel where one office runs payroll for many SMBs:
 > administraties a user can access are shown together (the safe `?`-optional
 > default).
 
+## Single-person modes (DGA / eenmanszaak) — a setting, not a second app
+
+The ~400k NL single-person entrepreneurs (a one-person BV run by its DGA, or a
+sole proprietorship/eenmanszaak) are served by a **mode toggle on the existing
+`Administration`**, not a separate product (ADR-001 Rule 4: *"ZZP/DGA en
+eenmanszaak zijn MODES, geen aparte app"*). `Administration.mode` is an enum —
+`standard` (default), `dga_single_person`, or `eenmanszaak_no_payroll` —
+resolved by `AdministrationService`, stamped into
+`manifest.runtime.user.administrationMode`, and read by nc-vue's `visibleIf`
+menu-visibility primitive.
+
+- **Default is a no-op.** `standard` (the default for every existing and every
+  newly-created administratie, and for any legacy/unknown value) changes no
+  menu and shows no new page. The multi-employee experience is unchanged.
+- **What each non-standard mode hides** (menu entry → hidden under):
+
+  | Menu entry | `dga_single_person` | `eenmanszaak_no_payroll` |
+  |---|---|---|
+  | `OrgUnits`, `OrgAssignments` (org-chart) | hidden | hidden |
+  | `TimesheetApproval`, `TeamUrengoedkeuring` | hidden | hidden |
+  | `LeaveApproval`, `TeamVerlofgoedkeuring` | hidden | hidden |
+  | `ExpenseApproval`, `TeamDeclaratiegoedkeuring` | hidden | hidden |
+  | `PlanningGroup` (Rosters/RosterAssignments/Shifts) | hidden | hidden |
+  | `PayrollGroup` (whole Loonadministratie group) | **visible** | hidden |
+  | `ProformaPayslipMenu` (Simuleer loonstrook) | **visible** | hidden |
+  | `Medewerkers`, `Salarissen`, `MijnHrGroup` | visible | visible |
+
+  A DGA still draws one monthly `loon` through the existing payroll engine, so
+  `dga_single_person` keeps the whole payroll surface; a true eenmanszaak takes
+  `winstuitkering` and never `loon`, so `eenmanszaak_no_payroll` additionally
+  hides every payroll surface.
+- **Headcount drift is a lamp, never a block.**
+  `nl-single-person-mode-employee-count` (recommended severity, auto-discovered)
+  flags a `dga_single_person` administratie whose active-Employee headcount is
+  not exactly one DGA — surfaced on the next `occ hrmq:rules:audit`, never a
+  write-time block. Reversing `mode` back to `standard` deletes/alters nothing.
+- **Self-service gebruikelijkloon status.** `GET /api/payroll/dga-status`
+  (`#[NoAdminRequired]`, read-only, stateless) resolves the caller's own
+  `Employee` via `nextcloudUserId` and returns the **existing**
+  `nl-gebruikelijkloon-norm` verdict for that one record —
+  `{isDga, grossAnnualSalaryCents, jaarnormCents, met, justification}`, reusing
+  `NlDgaChecks`' predicate with zero new tax logic. No own Employee **and** an
+  own Employee that is not a DGA both return the identical 404 (existence and
+  DGA-ness are never leaked). The `Mijn HR › Mijn gebruikelijk loon` page
+  (visible only under `dga_single_person`) renders a warning banner bound to
+  this endpoint so a self-running DGA sees their status without `occ`.
+
+> **Explicit non-goals (a scope boundary, not deferred follow-ups).** This is a
+> mode-switch on the existing payroll/HRM suite, not IB-aangifte (income-tax-
+> return) tooling. It deliberately does **not** build: FOR-saldo
+> (fiscale-oudedagsreserve) tracking, lijfrente-jaarruimte calculation, box-2
+> aanmerkelijk-belang dividend/verkrijgingsprijs tracking, an IB-pakket ZIP
+> export for an accountant, an `accountant_of_record` delegation role, a
+> `KilometerLog` entity (kilometer data already lives on the existing `Expense`
+> "Type reis"/"Afstand (km)" fields), a `TaxContext`/urencriterium engine, or an
+> IB-jaaroverzicht export. None compute a payroll figure or extend an existing
+> hrmq engine; all are a different compliance domain. Named here so this is not
+> silently rediscovered as a gap by a future proposal.
+
 ## Loonbeslag (wage garnishment)
 
 hrmq models a court/deurwaarder-ordered wage garnishment (loonbeslag) as a

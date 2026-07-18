@@ -25,6 +25,8 @@
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Command/WkrAssessCommand.php" method="execute"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Controller/PayrollController.php"/>
   <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Controller/PayrollController.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Controller/PayrollController.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Controller/PayrollController.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Lifecycle/LeaveBuySellApprovalGuard.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Lifecycle/LeaveBuySellApprovalGuard.php" method="resolveBalance"/>
   <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Payroll/CalculationInput.php" method="__construct"/>

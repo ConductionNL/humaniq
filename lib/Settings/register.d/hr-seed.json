@@ -1510,6 +1510,73 @@
                 "withholdingsClearedToZero": true,
                 "withholdingLiabilityBalance": 0.00,
                 "_note": "abp-aansluiting (design.md Seed Data): deliberately period 2026-06 -- the SAME period ADM-001 already filed ABP for globally -- and deliberately no PensionFiling seeded for ADM-003, to prove the fund/tenant-scoped violation (REQ-ABP-003/004)."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Administration",
+                    "slug": "example-adm-004"
+                },
+                "administrationId": "ADM-004",
+                "name": "Example: Van der Berg Advies B.V. (DGA)",
+                "kvkNumber": "44556677",
+                "loonheffingennummer": "000000000L04",
+                "active": true,
+                "mode": "dga_single_person",
+                "_note": "single-person-modes (design.md Seed Data, reconciled to HEAD -- the design's ADM-003 slot was already taken by abp-aansluiting, so the DGA fixture lands on ADM-004): a single-person BV in dga_single_person mode. Its one seeded DGA Employee (employee-devries-dga: isDga true, grossMonthlySalary 3500 -- below the EUR 4.833,33/maand implied by the EUR 58.000 annual norm, no gebruikelijkloonJustification) proves GET /api/payroll/dga-status returns met:false and the MijnGebruikelijkLoon banner renders the warning variant, while occ hrmq:rules:audit still reports the same nl-gebruikelijkloon-norm violation it already did. nl-single-person-mode-employee-count is SATISFIED (exactly one active DGA). A user whose active administratie is ADM-004 sees Salarissen/Medewerkers but NOT org-chart/planning/team-approval menus (REQ-SPM-003)."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-devries-dga"
+                },
+                "employeeNumber": "EMP-ADM004-DGA",
+                "firstName": "Robin",
+                "lastName": "De Vries",
+                "dateOfBirth": "1980-06-20",
+                "startDate": "2023-01-01",
+                "grossMonthlySalary": 3500.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "nextcloudUserId": "dga-devries",
+                "isDga": true,
+                "administrationId": "ADM-004",
+                "_note": "single-person-modes (design.md Seed Data): the DGA of ADM-004. isDga true + grossMonthlySalary 3500 (annualised EUR 42.000, below the EUR 58.000 gebruikelijkloon norm) + no gebruikelijkloonJustification -> a nl-gebruikelijkloon-norm violation AND dgaStatus met:false. nextcloudUserId 'dga-devries' is a shape example (the hr-devries seed precedent) -- not a real dev-login account, so live self-service is demonstrated once such an account is linked; the dgaStatus contract itself is pinned by PayrollControllerDgaStatusTest."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AdministrationAccess",
+                    "slug": "example-admaccess-admin-adm004"
+                },
+                "userId": "admin",
+                "administrationId": "ADM-004",
+                "role": "accountant"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Administration",
+                    "slug": "example-adm-005"
+                },
+                "administrationId": "ADM-005",
+                "name": "Example: Eenmanszaak Bakker (geen loon)",
+                "kvkNumber": "55667788",
+                "active": true,
+                "mode": "eenmanszaak_no_payroll",
+                "_note": "single-person-modes (design.md Seed Data, ADM-004->ADM-005 reconciled to HEAD): a sole proprietorship in eenmanszaak_no_payroll mode with ZERO seeded Employee rows (a true eenmanszaak takes winstuitkering, never loon). A user whose active administratie is ADM-005 sees NO PayrollGroup/ProformaPayslipMenu entries (REQ-SPM-004) and none of the multi-person menus, while Medewerkers/MijnHrGroup remain. No loonheffingennummer -- no payroll is ever filed."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AdministrationAccess",
+                    "slug": "example-admaccess-admin-adm005"
+                },
+                "userId": "admin",
+                "administrationId": "ADM-005",
+                "role": "accountant"
             }
         ]
     }

@@ -234,6 +234,11 @@
 			"displayName": "Car Assignment"
 		}
 	],
+	"runtime": {
+		"user": {
+			"administrationMode": "standard"
+		}
+	},
 	"menu": [
 		{
 			"id": "Dashboard",
@@ -295,6 +300,13 @@
 					"label": "Verlof kopen/verkopen",
 					"icon": "SwapHorizontal",
 					"route": "MijnVerlofKopenVerkopen"
+				},
+				{
+					"id": "MijnGebruikelijkLoon",
+					"label": "Mijn gebruikelijk loon",
+					"icon": "ScaleBalance",
+					"route": "MijnGebruikelijkLoon",
+					"visibleIf": {"user.administrationMode": {"eq": "dga_single_person"}}
 				}
 			]
 		},
@@ -344,13 +356,15 @@
 					"id": "OrgUnits",
 					"label": "Organisatie-eenheden",
 					"icon": "SitemapOutline",
-					"route": "OrgUnits"
+					"route": "OrgUnits",
+					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
 				},
 				{
 					"id": "OrgAssignments",
 					"label": "Plaatsingen",
 					"icon": "AccountArrowRightOutline",
-					"route": "OrgAssignments"
+					"route": "OrgAssignments",
+					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
 				},
 				{
 					"id": "GeneratedDocuments",
@@ -382,13 +396,15 @@
 					"id": "TimesheetApproval",
 					"label": "Urengoedkeuring",
 					"icon": "CheckDecagramOutline",
-					"route": "TimesheetApproval"
+					"route": "TimesheetApproval",
+					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
 				},
 				{
 					"id": "TeamUrengoedkeuring",
 					"label": "Team-urengoedkeuring",
 					"icon": "AccountCheckOutline",
-					"route": "TeamUrengoedkeuring"
+					"route": "TeamUrengoedkeuring",
+					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
 				}
 			]
 		},
@@ -408,13 +424,15 @@
 					"id": "LeaveApproval",
 					"label": "Verlofgoedkeuring",
 					"icon": "CheckDecagramOutline",
-					"route": "LeaveApproval"
+					"route": "LeaveApproval",
+					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
 				},
 				{
 					"id": "TeamVerlofgoedkeuring",
 					"label": "Team-verlofgoedkeuring",
 					"icon": "AccountCheckOutline",
-					"route": "TeamVerlofgoedkeuring"
+					"route": "TeamVerlofgoedkeuring",
+					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
 				},
 				{
 					"id": "LeaveBalances",
@@ -502,13 +520,15 @@
 					"id": "ExpenseApproval",
 					"label": "Declaratiegoedkeuring",
 					"icon": "CheckDecagramOutline",
-					"route": "ExpenseApproval"
+					"route": "ExpenseApproval",
+					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
 				},
 				{
 					"id": "TeamDeclaratiegoedkeuring",
 					"label": "Team-declaratiegoedkeuring",
 					"icon": "AccountCheckOutline",
-					"route": "TeamDeclaratiegoedkeuring"
+					"route": "TeamDeclaratiegoedkeuring",
+					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
 				},
 				{
 					"id": "Assets",
@@ -541,6 +561,7 @@
 			"label": "Loonadministratie",
 			"icon": "CogPlayOutline",
 			"order": 120,
+			"visibleIf": {"user.administrationMode": {"notIn": ["eenmanszaak_no_payroll"]}},
 			"children": [
 				{
 					"id": "Payslips",
@@ -627,6 +648,7 @@
 			"label": "Planning",
 			"icon": "CalendarMonthOutline",
 			"order": 107,
+			"visibleIf": {"user.administrationMode": {"eq": "standard"}},
 			"children": [
 				{
 					"id": "Rosters",
@@ -653,7 +675,8 @@
 			"label": "Simuleer loonstrook",
 			"icon": "Calculator",
 			"order": 125,
-			"route": "ProformaPayslip"
+			"route": "ProformaPayslip",
+			"visibleIf": {"user.administrationMode": {"notIn": ["eenmanszaak_no_payroll"]}}
 		},
 		{
 			"id": "ConfiguratieGroup",
@@ -8319,6 +8342,48 @@
 			"title": "Simuleer loonstrook",
 			"component": "ProformaPayslip",
 			"_note": "proforma-payslip design.md D6: manifest v2 has no declarative primitive for a persist-nothing interactive compute-form. open-form is bound to a register/schema and PERSISTS the created object -- exactly what a pro-forma simulation must not do. api-call only interpolates fixed/@token params against a form-less trigger and surfaces a toast + page refresh -- it cannot gather a bespoke set of hypothetical inputs (bruto, tabel, geboortedatum, deeltijdfactor, bijzondere beloning, periode) nor render the returned JSON breakdown. So this page is a host-app SFC (ProformaPayslip.vue, registered in src/registry.js) that renders the input form and calls POST /api/payroll/proforma directly, showing the full gross-to-net breakdown. No register/schema is referenced and no object is ever created -- the stable, test-covered contract is the endpoint (PayrollController::proforma) + the hrmq:payroll:proforma occ command."
+		},
+		{
+			"id": "MijnGebruikelijkLoon",
+			"route": "/mijn-hr/gebruikelijk-loon",
+			"type": "dashboard",
+			"title": "Mijn gebruikelijk loon",
+			"config": {
+				"description": "Zie of je loon als DGA voldoet aan de gebruikelijkloonnorm -- zonder accountant of occ-tool.",
+				"_note": "single-person-modes (REQ-SPM-006/D5): a self-service surface for the EXISTING nl-gebruikelijkloon-norm verdict for the caller's own DGA Employee. The whole menu entry is visibleIf-gated on administrationMode: dga_single_person (D2/D3). The warning banner is bound to the read-only, stateless GET /apps/hrmq/api/payroll/dga-status endpoint (PayrollController::dgaStatus, which REUSES NlDgaChecks' predicate -- zero new tax logic, zero new persistence): visibleWhen {endpoint, field: met, op: eq, value: false} renders it only when the caller's own annualised loon is below norm AND unjustified. The endpoint takes no per-object parameter (it always means 'my own record', D5.1), so the visibleWhen.endpoint non-templated same-origin path applies cleanly -- no object id to interpolate, the documented fallback (a custom widget) is not needed. Fail-safe: the banner stays hidden on a 404 (no Employee, or Employee not a DGA -- both collapse to the same status, D5.1) or any fetch failure, so a non-DGA caller who somehow reaches this route sees no alert. The info banner is always visible and explains the page. Both widgets are built-in `banner` (CnBannerWidget) -- no custom component, no single-widget-dashboard anti-pattern."
+			},
+			"widgets": [
+				{
+					"widgetKey": "banner",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 2,
+					"props": {
+						"variant": "info",
+						"text": "Als directeur-grootaandeelhouder (DGA) moet je jezelf minimaal het gebruikelijk loon uitbetalen. Ligt je loon eronder zonder vastgelegde onderbouwing, dan zie je hieronder een waarschuwing."
+					}
+				},
+				{
+					"widgetKey": "banner",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 2,
+					"gridWidth": 12,
+					"gridHeight": 2,
+					"props": {
+						"variant": "warning",
+						"text": "Je loon ligt onder de gebruikelijkloonnorm en er is geen onderbouwing vastgelegd. Verhoog je maandloon of leg een onderbouwing vast op je werknemersrecord.",
+						"visibleWhen": {
+							"endpoint": "/apps/hrmq/api/payroll/dga-status",
+							"field": "met",
+							"op": "eq",
+							"value": false
+						}
+					}
+				}
+			]
 		},
 		{
 			"id": "Administraties",
