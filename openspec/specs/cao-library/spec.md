@@ -20,6 +20,19 @@ built_by: openspec/changes/archive/2026-07-14-cao-library
   the new `UpsertsObjects` upsert-by-`caoId` capability), and the read-only `Caos` / `CaoDetail`
   reference pages — three MVP CAOs (`cao-generiek` verified anchor, `cao-metaal-techniek` /
   `cao-horeca` placeholder-marked).
+- [cao-sector-datasets](../../changes/archive/2026-07-17-cao-sector-datasets/) _(archived
+  2026-07-17)_ — six additional sector CAOs in the existing corpus leaf shape (`cao-rijk`,
+  `cao-gemeenten`, `cao-onderwijs-po`, `cao-onderwijs-vo`, `cao-ziekenhuizen`, `cao-zorg-vvt`),
+  exercising the data-only extension path `cao/SCHEMA.md` already documents: `CaoRegistry::VERSION`
+  bumped, zero lines changed in `CaoRegistry`, `NlCaoChecks`, `RuleAuditService`, `RuleCatalogue`,
+  `hr-objects.json`, `hr-cao.json` or `src/manifest.json`. `cao-rijk`'s IKB (16.50%/min
+  €452/mo/64u) and 36u/week `workingTime` are the one directly-fetched, `verified: true` anchor in
+  this batch (`caorijk.nl`, retrieved 2026-07-17); every other leaf across all six CAOs ships
+  `verified: false` + `placeholder: true` + `checkAgainst`, per the `cao-metaal-techniek`/
+  `cao-horeca` precedent. Named, explicitly out-of-scope gaps: IKB accrual/spend ledgers, an ORT
+  (onregelmatigheidstoeslag) time-segmentation engine, FWG-3.0-score-to-schaal derivation,
+  periodiek/trede auto-progression, and multi-version CAO history with retroactive
+  recalculation — none built here (see the archived change's design.md "Named gaps").
 
 ## Purpose
 
@@ -46,15 +59,24 @@ a figure not confirmed against the CAO-tekst SHALL carry `verified: false` + `pl
 `checkAgainst`. `CaoRegistry` SHALL expose `availableCaos()`, `get(caoId)`, and the resolvers
 `minMaandloonCents(caoId, schaal)` and `minLeaveHours(caoId, contractHoursPerWeek)` — both returning
 `null` when the CAO/scale is unknown OR the underlying leaf is `verified:false`/`placeholder:true`.
-`CaoRegistry::VERSION` SHALL be bumped on any corpus change. At least the MVP CAOs `cao-generiek`
-(statutory-floor baseline, verified), `cao-metaal-techniek` and `cao-horeca` (concrete sectors,
-placeholder-marked where unverified) SHALL ship.
+`CaoRegistry::VERSION` SHALL be bumped on any corpus change (adding a further sector CAO — e.g. a
+seventh CAO beyond the current nine — follows the identical data-only path: a new `cao/{id}.json`
+file plus a `VERSION` bump, no other file changed). `schaal` (the `payScales.value` key) is an
+opaque string never parsed by the loader, so it MAY use any sector-specific naming convention
+(numeric BBRA/VNG schalen, onderwijs letter-schalen, FWG-functiegroep ids) without a loader change.
+At least the MVP CAOs `cao-generiek` (statutory-floor baseline, verified), `cao-metaal-techniek`
+and `cao-horeca` (concrete sectors, placeholder-marked where unverified), plus the six sector CAOs
+`cao-rijk`, `cao-gemeenten`, `cao-onderwijs-po`, `cao-onderwijs-vo`, `cao-ziekenhuizen` and
+`cao-zorg-vvt` (cao-sector-datasets, placeholder-marked except `cao-rijk`'s IKB/`workingTime`
+leaves) SHALL ship.
 
 #### Scenario: The corpus loads and resolves a verified minimum
 - **GIVEN** the `cao-generiek` corpus file with a `verified: true` `payScales` leaf
 - **WHEN** `CaoRegistry::minMaandloonCents('cao-generiek', <scale>)` is called
-- **THEN** it returns the scale's minimum maandloon in integer cents, and `availableCaos()` lists
-  `cao-generiek`, `cao-metaal-techniek` and `cao-horeca` with their `version`/`effectiveDate`
+- **THEN** it returns the scale's minimum maandloon in integer cents, and `availableCaos()` lists all
+  nine CAOs (`cao-generiek`, `cao-metaal-techniek`, `cao-horeca`, `cao-rijk`, `cao-gemeenten`,
+  `cao-onderwijs-po`, `cao-onderwijs-vo`, `cao-ziekenhuizen`, `cao-zorg-vvt`) with their
+  `version`/`effectiveDate`
 
 #### Scenario: A placeholder figure resolves to null (advisory)
 - **GIVEN** the `cao-metaal-techniek` corpus with a `payScales` leaf marked `verified: false` /
@@ -62,6 +84,13 @@ placeholder-marked where unverified) SHALL ship.
 - **WHEN** `CaoRegistry::minMaandloonCents('cao-metaal-techniek', <scale>)` is called
 - **THEN** it returns `null` so the pay-scale check treats the scale as advisory, and the leaf still
   carries a `checkAgainst` naming the official loontabel to confirm
+
+#### Scenario: A sector-specific scale identifier resolves like any other (cao-sector-datasets)
+- **GIVEN** `cao-ziekenhuizen.json` with a `payScales.value` keyed by FWG-functiegroep ids (e.g.
+  `"FWG-40"`), placeholder-marked
+- **WHEN** `CaoRegistry::minMaandloonCents('cao-ziekenhuizen', 'FWG-40')` is called
+- **THEN** the lookup succeeds exactly as it would for a letter or numeric schaal key (no
+  schaal-format validation) and returns `null` because the leaf is unverified/placeholder
 
 ### Requirement: An employment contract SHALL reference its CAO (REQ-CAO-002)
 
@@ -105,6 +134,14 @@ violation.
 - **THEN** neither contract reports a `nl-cao-minimumloon-schaal` violation (the first meets the
   minimum; the second is advisory because the scale figure is unverified)
 
+#### Scenario: A verified minimum on any new sector CAO is enforced without a code change (cao-sector-datasets)
+- **GIVEN** a maintainer confirms `cao-rijk`'s `payScales` leaf against the official BBRA loontabel
+  and flips it to `verified: true`, and a contract `cao: "cao-rijk"`, `caoSchaal` set, whose
+  employee's `grossMonthlySalary` is below that confirmed minimum
+- **WHEN** `occ hrmq:rules:audit` runs
+- **THEN** a mandatory `nl-cao-minimumloon-schaal` violation is reported, with zero lines of
+  `NlCaoChecks`/`RuleAuditService`/rule-catalogue code changed to make this happen
+
 ### Requirement: Leave entitlement below the contract's CAO minimum SHALL be a violation (REQ-CAO-004)
 
 The system SHALL enforce the corpus rule `nl-cao-verlof-minimum` (`lib/Standards/rules/labour.json`,
@@ -128,6 +165,12 @@ the CAO minimum SHALL raise the violation.
 - **WHEN** the audit runs
 - **THEN** no `nl-cao-verlof-minimum` violation is reported (vacuous pass)
 
+#### Scenario: A placeholder leave minimum on any new sector CAO never raises a violation (cao-sector-datasets)
+- **GIVEN** a `LeaveBalance` (`leaveType: "holiday"`) whose employee's active contract is
+  `cao: "cao-zorg-vvt"`, whose `leaveEntitlement` leaf is `verified: false` / `placeholder: true`
+- **WHEN** the audit runs regardless of `entitledHours + bovenwettelijkHours`
+- **THEN** no `nl-cao-verlof-minimum` violation is reported for that balance
+
 ### Requirement: A read-only CAO reference page SHALL list available CAOs and the contract SHALL show its CAO (REQ-CAO-005)
 
 `src/manifest.json` SHALL add a read-only `Caos` index page and a `CaoDetail` detail page bound to the
@@ -140,9 +183,17 @@ working-time norms. The selected CAO (`cao` + `caoSchaal`) SHALL render on `Empl
 #### Scenario: The CAO reference page lists the seeded CAOs read-only
 - **GIVEN** the seeded `Cao` display objects
 - **WHEN** a user opens the `Caos` page
-- **THEN** it lists `cao-generiek`, `cao-metaal-techniek` and `cao-horeca` with their sector/version,
-  offers no create affordance (`allowCreate: false`), and `CaoDetail` shows a CAO's scales, allowances,
-  leave and working-time
+- **THEN** it lists all nine CAOs (`cao-generiek`, `cao-metaal-techniek`, `cao-horeca`, `cao-rijk`,
+  `cao-gemeenten`, `cao-onderwijs-po`, `cao-onderwijs-vo`, `cao-ziekenhuizen`, `cao-zorg-vvt`) with
+  their sector/version, offers no create affordance (`allowCreate: false`), and `CaoDetail` shows a
+  CAO's scales, allowances, leave and working-time
+
+#### Scenario: Re-seeding after adding sector CAOs surfaces them with no manifest edit (cao-sector-datasets)
+- **GIVEN** the six `cao-sector-datasets` corpus files exist and `occ hrmq:rules:seed-test-data` has
+  been run
+- **WHEN** a user opens the `Caos` page
+- **THEN** all six appear alongside the original three, with zero lines changed in
+  `src/manifest.json`, `lib/Settings/register.d/hr-cao.json` or the menu entry
 
 #### Scenario: A contract detail shows its CAO
 - **GIVEN** an `EmploymentContract` with `cao` and `caoSchaal` set
@@ -164,3 +215,8 @@ vacuously.
 - **WHEN** the seed runs again after a corpus figure changed
 - **THEN** no duplicate `Cao` object exists for any cao id and each object reflects the current corpus
   value
+
+#### Scenario: Seeding covers all nine CAOs with no duplicates (cao-sector-datasets)
+- **GIVEN** the three original CAOs plus the six `cao-sector-datasets` sector CAOs in the corpus
+- **WHEN** `NlCaoChecks::seedObjects()` runs
+- **THEN** it projects exactly nine `Cao` rows, one per corpus id, with no duplicate `caoId`

@@ -201,9 +201,131 @@ class CaoRegistryTest extends TestCase
      */
     public function testVersionConstantIsBumped(): void
     {
-        $this->assertSame('2026-07.14', CaoRegistry::VERSION);
+        $this->assertSame('2026-07.17', CaoRegistry::VERSION);
 
     }//end testVersionConstantIsBumped()
+
+
+    /**
+     * availableCaos() lists all nine CAOs (three existing + six sector CAOs
+     * added by cao-sector-datasets) and get() resolves the full record for
+     * each of the six new ids — the loader is generic over however many
+     * cao/*.json files exist, no per-CAO wiring (cao-sector-datasets
+     * REQ-CAOS-001).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/cao-sector-datasets/specs/cao-sector-datasets/spec.md#REQ-CAOS-001
+     */
+    public function testAvailableCaosListsAllNineCaosIncludingTheSixSectorCaos(): void
+    {
+        $available = CaoRegistry::availableCaos();
+
+        $sixNew = [
+            'cao-rijk',
+            'cao-gemeenten',
+            'cao-onderwijs-po',
+            'cao-onderwijs-vo',
+            'cao-ziekenhuizen',
+            'cao-zorg-vvt',
+        ];
+
+        $this->assertCount(9, $available, 'Expected three existing CAOs plus six new sector CAOs.');
+
+        foreach ($sixNew as $id) {
+            $this->assertArrayHasKey($id, $available, $id.' must be listed by availableCaos().');
+            $this->assertNotSame('', trim((string) $available[$id]['name']), $id.' must carry a name.');
+            $this->assertNotSame('', trim((string) $available[$id]['sector']), $id.' must carry a sector.');
+
+            $cao = CaoRegistry::get($id);
+            $this->assertIsArray($cao, $id.' must resolve through get().');
+        }
+
+    }//end testAvailableCaosListsAllNineCaosIncludingTheSixSectorCaos()
+
+
+    /**
+     * Every placeholder leaf on the six new sector CAOs resolves null through
+     * both resolvers — the advisory lever holds for every sector-naming
+     * convention (numeric BBRA/VNG schalen, onderwijs letter-schalen,
+     * FWG-functiegroep ids), never a wrong number (cao-sector-datasets
+     * REQ-CAOS-002).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/cao-sector-datasets/specs/cao-sector-datasets/spec.md#REQ-CAOS-002
+     */
+    public function testSixNewCaosPlaceholderLeavesResolveNull(): void
+    {
+        $this->assertNull(CaoRegistry::minMaandloonCents('cao-rijk', '11'));
+        $this->assertNull(CaoRegistry::minMaandloonCents('cao-rijk', '15a'));
+        $this->assertNull(CaoRegistry::minMaandloonCents('cao-gemeenten', '10'));
+        $this->assertNull(CaoRegistry::minMaandloonCents('cao-onderwijs-po', 'L11'));
+        $this->assertNull(CaoRegistry::minMaandloonCents('cao-onderwijs-po', 'OOP-6'));
+        $this->assertNull(CaoRegistry::minMaandloonCents('cao-onderwijs-po', 'DIR-A'));
+        $this->assertNull(CaoRegistry::minMaandloonCents('cao-onderwijs-vo', 'LB'));
+        $this->assertNull(CaoRegistry::minMaandloonCents('cao-ziekenhuizen', 'FWG-40'));
+        $this->assertNull(CaoRegistry::minMaandloonCents('cao-zorg-vvt', 'FWG-40'));
+
+        $this->assertNull(CaoRegistry::minLeaveHours('cao-rijk', 36.0));
+        $this->assertNull(CaoRegistry::minLeaveHours('cao-gemeenten', 36.0));
+        $this->assertNull(CaoRegistry::minLeaveHours('cao-onderwijs-po', 40.0));
+        $this->assertNull(CaoRegistry::minLeaveHours('cao-onderwijs-vo', 40.0));
+        $this->assertNull(CaoRegistry::minLeaveHours('cao-ziekenhuizen', 36.0));
+        $this->assertNull(CaoRegistry::minLeaveHours('cao-zorg-vvt', 36.0));
+
+    }//end testSixNewCaosPlaceholderLeavesResolveNull()
+
+
+    /**
+     * cao-rijk's two verified leaves (allowances/IKB, workingTime) are
+     * display-only facts, never read by minMaandloonCents/minLeaveHours
+     * (design.md D4/Context) — marking them verified changes nothing about
+     * which checks fire. payScales/leaveEntitlement stay placeholder, so both
+     * enforcement resolvers still return null for cao-rijk even though the
+     * CAO itself carries two verified: true leaves (cao-sector-datasets
+     * REQ-CAOS-001 tasks.md #12).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/cao-sector-datasets/specs/cao-sector-datasets/spec.md#REQ-CAOS-001
+     */
+    public function testCaoRijkVerifiedLeavesAreDisplayOnlyNotEnforcementCritical(): void
+    {
+        $cao = CaoRegistry::get('cao-rijk');
+        $this->assertIsArray($cao);
+
+        $this->assertTrue($cao['allowances']['verified']);
+        $this->assertTrue($cao['workingTime']['verified']);
+        $this->assertFalse($cao['payScales']['verified']);
+        $this->assertFalse($cao['leaveEntitlement']['verified']);
+
+        $this->assertNull(CaoRegistry::minMaandloonCents('cao-rijk', '11'));
+        $this->assertNull(CaoRegistry::minLeaveHours('cao-rijk', 36.0));
+
+    }//end testCaoRijkVerifiedLeavesAreDisplayOnlyNotEnforcementCritical()
+
+
+    /**
+     * A sector-specific scale identifier (FWG-functiegroep id) resolves like
+     * any other schaal key — CaoRegistry performs no schaal-format validation
+     * (cao-sector-datasets REQ-CAOS-001, D2).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/cao-sector-datasets/specs/cao-sector-datasets/spec.md#REQ-CAOS-001
+     */
+    public function testFwgFunctiegroepScaleIdentifierResolvesLikeAnyOtherSchaal(): void
+    {
+        $cao = CaoRegistry::get('cao-ziekenhuizen');
+        $this->assertIsArray($cao);
+        $this->assertArrayHasKey('FWG-40', $cao['payScales']['value']);
+
+        // Placeholder -- resolves null, but the lookup path itself succeeds
+        // (no format validation), proving the resolver is schaal-format-agnostic.
+        $this->assertNull(CaoRegistry::minMaandloonCents('cao-ziekenhuizen', 'FWG-40'));
+
+    }//end testFwgFunctiegroepScaleIdentifierResolvesLikeAnyOtherSchaal()
 
 
     /**
