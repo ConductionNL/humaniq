@@ -72,6 +72,25 @@ class AdministrationService
      */
     private const LIMIT = 10000;
 
+    /**
+     * The default `Administration.mode` (single-person-modes REQ-SPM-001):
+     * every administratie created before this change, and every one with no
+     * `mode` value set, resolves to `standard` -- the identical no-regression
+     * default REQ-MULTI-004 established for `activeAdministrationId`.
+     *
+     * @var string
+     */
+    public const DEFAULT_MODE = 'standard';
+
+    /**
+     * The valid `Administration.mode` values (single-person-modes REQ-SPM-001).
+     * Anything outside this set degrades to `DEFAULT_MODE` -- an unknown/legacy
+     * value never hides a menu by accident.
+     *
+     * @var string[]
+     */
+    private const VALID_MODES = ['standard', 'dga_single_person', 'eenmanszaak_no_payroll'];
+
 
     /**
      * @param ContainerInterface $container      DI container for the ObjectService resolve.
@@ -104,6 +123,36 @@ class AdministrationService
         return $value === '' ? null : $value;
 
     }//end getActiveAdministrationId()
+
+
+    /**
+     * The caller's active administratie's resolved `mode`
+     * (single-person-modes REQ-SPM-002/D2): the `Administration.mode` of the
+     * caller's currently active administratie, or `DEFAULT_MODE` (`standard`)
+     * when no active administratie is resolved, the active id has no catalog
+     * entry, or its `mode` is unset/invalid -- the identical no-regression
+     * default REQ-MULTI-004 established for `activeAdministrationId`. Stamped
+     * into `manifest.runtime.user.administrationMode` by
+     * `PageController::index()` so nc-vue's `visibleIf` primitive can act on
+     * it.
+     *
+     * @param string $userId The Nextcloud user id.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
+     */
+    public function getActiveAdministrationMode(string $userId): string
+    {
+        $activeId = $this->getActiveAdministrationId($userId);
+        if ($activeId === null) {
+            return self::DEFAULT_MODE;
+        }
+
+        $catalog = $this->administrationCatalogById();
+        return (string) ($catalog[$activeId]['mode'] ?? self::DEFAULT_MODE);
+
+    }//end getActiveAdministrationMode()
 
 
     /**
@@ -168,13 +217,14 @@ class AdministrationService
      *
      * @param string $userId The Nextcloud user id.
      *
-     * @return array<int, array{administrationId: string, name: string, role: string}>
+     * @return array<int, array{administrationId: string, name: string, role: string, mode: string}>
      *
      * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-002
+     * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
      */
     public function accessibleAdministrations(string $userId): array
     {
-        $namesById = $this->administrationNamesById();
+        $catalog = $this->administrationCatalogById();
 
         $result = [];
         foreach ($this->accessRowsForUser($userId) as $row) {
@@ -183,10 +233,17 @@ class AdministrationService
                 continue;
             }
 
+            $entry = ($catalog[$administrationId] ?? null);
             $result[] = [
                 'administrationId' => $administrationId,
-                'name'             => (string) ($namesById[$administrationId] ?? $administrationId),
+                'name'             => (string) ($entry['name'] ?? $administrationId),
                 'role'             => (string) ($row['role'] ?? ''),
+                // single-person-modes (REQ-SPM-002): the administratie's
+                // resolved mode, so the switcher UI can display it and a
+                // client-side switch can update `runtime.user.administrationMode`
+                // without a reload. Defaults to `standard` for a legacy/absent
+                // value (the no-regression default).
+                'mode'             => (string) ($entry['mode'] ?? self::DEFAULT_MODE),
             ];
         }
 
@@ -202,9 +259,10 @@ class AdministrationService
      *
      * @param string $userId The Nextcloud user id.
      *
-     * @return array{activeAdministrationId: string|null, administrations: array<int, array{administrationId: string, name: string, role: string}>}
+     * @return array{activeAdministrationId: string|null, administrations: array<int, array{administrationId: string, name: string, role: string, mode: string}>}
      *
      * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-004
+     * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
      */
     public function context(string $userId): array
     {
@@ -240,25 +298,48 @@ class AdministrationService
 
 
     /**
-     * The `Administration` catalog's `administrationId => name` map.
-     * Degrades to an empty map when the schema does not exist yet in the
-     * register.
+     * The `Administration` catalog's `administrationId => {name, mode}` map
+     * (single-person-modes REQ-SPM-002: the `name` this switcher already
+     * needed, plus the resolved `mode` the mode-switch now needs, loaded in
+     * one pass). Degrades to an empty map when the schema does not exist yet
+     * in the register.
      *
-     * @return array<string, string>
+     * @return array<string, array{name: string, mode: string}>
      */
-    private function administrationNamesById(): array
+    private function administrationCatalogById(): array
     {
-        $names = [];
+        $catalog = [];
         foreach ($this->loadAll('Administration') as $row) {
             $administrationId = (string) ($row['administrationId'] ?? '');
             if ($administrationId !== '') {
-                $names[$administrationId] = (string) ($row['name'] ?? $administrationId);
+                $catalog[$administrationId] = [
+                    'name' => (string) ($row['name'] ?? $administrationId),
+                    'mode' => self::normaliseMode($row['mode'] ?? null),
+                ];
             }
         }
 
-        return $names;
+        return $catalog;
 
-    }//end administrationNamesById()
+    }//end administrationCatalogById()
+
+
+    /**
+     * Normalise a raw `Administration.mode` value to one of the valid enum
+     * values, degrading anything unset/unknown to `DEFAULT_MODE` (`standard`)
+     * -- a legacy or malformed value never hides a menu by accident
+     * (single-person-modes REQ-SPM-001/-002).
+     *
+     * @param mixed $mode The raw mode value from the register.
+     *
+     * @return string
+     */
+    private static function normaliseMode(mixed $mode): string
+    {
+        $mode = trim((string) ($mode ?? ''));
+        return in_array($mode, self::VALID_MODES, true) === true ? $mode : self::DEFAULT_MODE;
+
+    }//end normaliseMode()
 
 
     /**

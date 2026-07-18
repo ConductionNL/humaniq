@@ -93,9 +93,21 @@ class PageController extends Controller
      * clause, matching the documented no-regression default for
      * single-administratie installs.
      *
+     * single-person-modes (REQ-SPM-002/D2): additionally stamps the caller's
+     * active administratie's resolved `mode` under `activeAdministrationMode`
+     * (the exact `activeAdministrationId` mechanism, applied to a second key),
+     * so `App.vue` can seed `manifest.runtime.user.administrationMode` on first
+     * paint and nc-vue's `visibleIf` primitive hides the mode-scoped menus.
+     * Unlike the id (which stamps nothing when unset so the `?`-optional
+     * filters drop), the mode ALWAYS resolves to a concrete value
+     * (`standard` by default), so it is always stamped -- a `visibleIf`
+     * predicate keyed on `administrationMode` needs a value present to
+     * evaluate, and `standard` is the no-menu-change default.
+     *
      * @return TemplateResponse
      *
      * @spec openspec/specs/multi-administratie/spec.md#REQ-MULTI-004
+     * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
      */
     #[NoAdminRequired]
     #[NoCSRFRequired]
@@ -107,6 +119,11 @@ class PageController extends Controller
             if ($administrationId !== null) {
                 $this->initialState->provideInitialState('activeAdministrationId', $administrationId);
             }
+
+            $this->initialState->provideInitialState(
+                'activeAdministrationMode',
+                $this->administrationService->getActiveAdministrationMode($user->getUID())
+            );
         }
 
         return new TemplateResponse(Application::APP_ID, 'index');

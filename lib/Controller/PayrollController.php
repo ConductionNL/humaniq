@@ -47,6 +47,17 @@
  * `WkrService::assess()` — the recompute upserts the SAME assessment in
  * place (idempotent), it never creates a second one.
  *
+ * single-person-modes (design.md D5) adds `dgaStatus()`, backing the
+ * `MijnGebruikelijkLoon` self-service page's warning banner: a
+ * `#[NoAdminRequired]`, read-only, stateless `GET /api/payroll/dga-status`
+ * that resolves the caller's OWN `Employee` via `nextcloudUserId` (the
+ * `mijn-hr-self-service` link), 404s identically when no such Employee exists
+ * OR it is not a DGA (both collapse to the same status — existence/DGA-ness
+ * is never leaked, the `proforma()` posture), and otherwise REUSES
+ * `NlDgaChecks`'s existing `nl-gebruikelijkloon-norm` predicate for the `met`
+ * verdict — zero new tax logic, zero new persistence, computed fresh on
+ * every call.
+ *
  * @category Controller
  * @package  OCA\Hrmq\Controller
  *
@@ -65,6 +76,7 @@
  * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-004
  * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-007
  * @spec openspec/changes/wkr-administration/specs/wkr-administration/spec.md#REQ-WKR-005
+ * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-006
  */
 
 declare(strict_types=1);
@@ -72,12 +84,14 @@ declare(strict_types=1);
 namespace OCA\Hrmq\Controller;
 
 use OCA\Hrmq\AppInfo\Application;
+use OCA\Hrmq\Payroll\TaxTables;
 use OCA\Hrmq\Service\PayrollMutationService;
 use OCA\Hrmq\Service\PayrollRunService;
 use OCA\Hrmq\Service\ProformaPayslipService;
 use OCA\Hrmq\Service\RetroAdjustmentService;
 use OCA\Hrmq\Service\SettingsService;
 use OCA\Hrmq\Service\WkrService;
+use OCA\Hrmq\Standards\Checks\NlDgaChecks;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -94,6 +108,16 @@ use Psr\Log\LoggerInterface;
  */
 class PayrollController extends Controller
 {
+
+    /**
+     * Max Employee rows loaded when resolving the caller's own record for
+     * `dgaStatus()` — the fleet's `findAll(['limit' => N])`-then-filter-in-PHP
+     * convention (AdministrationService/RuleAuditService precedent); a
+     * single-person administratie realistically never approaches this.
+     *
+     * @var int
+     */
+    private const EMPLOYEE_LOOKUP_LIMIT = 10000;
 
 
     /**
@@ -351,6 +375,116 @@ class PayrollController extends Controller
         return true;
 
     }//end authorizeProformaAccess()
+
+
+    /**
+     * `GET /api/payroll/dga-status` — the self-service gebruikelijkloon
+     * compliance status for the caller's OWN DGA record (single-person-modes
+     * design.md D5). Read-only, stateless, persists nothing:
+     *
+     * 1. Resolves the caller's own `Employee` via `nextcloudUserId` (the
+     *    `mijn-hr-self-service` link). No `Employee` found, or the resolved
+     *    `Employee` is not a DGA (`isDga` not `true`) → **404** — both cases
+     *    collapse to the SAME status so the response never distinguishes
+     *    "no Employee" from "Employee, not a DGA" (D5.1, the `proforma()`
+     *    resolve-first-then-404 posture; existence/DGA-ness is never leaked).
+     * 2. REUSES `NlDgaChecks`'s existing `nl-gebruikelijkloon-norm` predicate
+     *    for the `met` verdict — zero new tax logic; the norm comparison is
+     *    never reimplemented here. The `grossAnnualSalaryCents`/`jaarnormCents`
+     *    display figures are derived from the SAME annualisation
+     *    (`grossMonthlySalary × 12`) and the SAME loaded tables'
+     *    `gebruikelijkloon().jaarnormCents` the predicate uses — read fresh on
+     *    every call, no caching, no register write, EVER.
+     *
+     * @return JSONResponse `{isDga, grossAnnualSalaryCents, jaarnormCents, met, justification}` for the caller's own DGA record, or 404 when no own DGA Employee resolves.
+     *
+     * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-006
+     */
+    #[NoAdminRequired]
+    public function dgaStatus(): JSONResponse
+    {
+        $userId = $this->userSession->getUser()?->getUID();
+        if ($userId === null || $userId === '') {
+            return new JSONResponse(['error' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
+        }
+
+        $employee = $this->resolveOwnEmployee($userId);
+        if ($employee === null || ($employee['isDga'] ?? false) !== true) {
+            // D5.1: "no Employee" and "Employee, not a DGA" collapse to the
+            // SAME 404 — the response never reveals which case occurred.
+            return new JSONResponse(['error' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
+        }
+
+        // REUSE the shipped predicate for the verdict — never a reimplemented
+        // norm comparison (acceptance criterion: NlDgaChecks' predicate gains
+        // exactly this one new caller).
+        $met = NlDgaChecks::meetsGebruikelijkloonNorm($employee);
+
+        $grossMonthly     = ($employee['grossMonthlySalary'] ?? null);
+        $grossAnnualCents = is_numeric($grossMonthly) === true ? (int) round(((float) $grossMonthly) * 12 * 100) : 0;
+
+        // The SAME loaded-tables gebruikelijkloon norm the predicate reads —
+        // the ONE new call site of TaxTables::gebruikelijkloon() (this
+        // self-service wrapper), for display alongside the verdict.
+        $jaarnormCents = 0;
+        $ids           = TaxTables::availableIds();
+        if ($ids !== []) {
+            $jaarnormCents = TaxTables::load(max($ids))->gebruikelijkloon()['jaarnormCents'];
+        }
+
+        $justification = trim((string) ($employee['gebruikelijkloonJustification'] ?? ''));
+
+        return new JSONResponse(
+            [
+                'isDga'                  => true,
+                'grossAnnualSalaryCents' => $grossAnnualCents,
+                'jaarnormCents'          => $jaarnormCents,
+                'met'                    => $met,
+                'justification'          => ($justification === '' ? null : $justification),
+            ]
+        );
+
+    }//end dgaStatus()
+
+
+    /**
+     * Resolve the caller's OWN `Employee` record by matching
+     * `nextcloudUserId === $userId` (the `mijn-hr-self-service` durable
+     * account link, single-person-modes design.md D5). Loads under the
+     * caller's ambient RBAC and filters in PHP (the
+     * AdministrationService/RuleAuditService `findAll`-then-filter precedent);
+     * returns null when nothing matches OR the caller's RBAC denies the read
+     * (both collapse to the same null → the caller's 404, never leaking
+     * existence). The first matching record wins.
+     *
+     * @param string $userId The caller's Nextcloud user id.
+     *
+     * @return array<string, mixed>|null
+     *
+     * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-006
+     */
+    private function resolveOwnEmployee(string $userId): ?array
+    {
+        try {
+            $rows = $this->objectService()
+                ->setRegister($this->settingsService->getRegisterSlug())
+                ->setSchema('Employee')
+                ->findAll(['limit' => self::EMPLOYEE_LOOKUP_LIMIT]);
+        } catch (\Throwable $e) {
+            $this->logger->info('PayrollController: eigen werknemer kon niet worden geresolved: '.$e->getMessage());
+            return null;
+        }
+
+        foreach ((is_array($rows) === true ? $rows : []) as $row) {
+            $employee = $this->toArray($row);
+            if (trim((string) ($employee['nextcloudUserId'] ?? '')) === $userId) {
+                return $employee;
+            }
+        }
+
+        return null;
+
+    }//end resolveOwnEmployee()
 
 
     /**

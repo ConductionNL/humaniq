@@ -45,6 +45,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-003
  * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-004
+ * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
  */
 class AdministrationControllerTest extends TestCase
 {
@@ -149,8 +150,11 @@ class AdministrationControllerTest extends TestCase
         $expected = [
             'activeAdministrationId' => 'ADM-001',
             'administrations'        => [
-                ['administrationId' => 'ADM-001', 'name' => 'Example: Conduction Demo B.V.', 'role' => 'accountant'],
-                ['administrationId' => 'ADM-002', 'name' => 'Example: Tweede Klant B.V.', 'role' => 'accountant'],
+                // single-person-modes (REQ-SPM-002): every administratie entry
+                // carries its resolved `mode` — the controller surfaces exactly
+                // what AdministrationService::context() resolves.
+                ['administrationId' => 'ADM-001', 'name' => 'Example: Conduction Demo B.V.', 'role' => 'accountant', 'mode' => 'standard'],
+                ['administrationId' => 'ADM-002', 'name' => 'Example: Tweede Klant B.V.', 'role' => 'accountant', 'mode' => 'dga_single_person'],
             ],
         ];
 

@@ -88,13 +88,20 @@ final class NlDgaChecks implements CheckProvider
      * `grossMonthlySalary x 12` must reach the loaded tables'
      * gebruikelijkloon norm.
      *
+     * single-person-modes (REQ-SPM-006/D5): exposed `public` so the
+     * self-service `PayrollController::dgaStatus()` endpoint can REUSE this
+     * exact predicate for its `met` verdict -- the ONE new caller. The norm
+     * comparison is never reimplemented; only its invocation surface is new.
+     * The predicate itself is unchanged.
+     *
      * @param array<string, mixed> $o The Employee object.
      *
      * @return bool
      *
      * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-004
+     * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-006
      */
-    private static function meetsGebruikelijkloonNorm(array $o): bool
+    public static function meetsGebruikelijkloonNorm(array $o): bool
     {
         if (($o['isDga'] ?? false) !== true) {
             // Vacuous: not a DGA, the norm does not apply.

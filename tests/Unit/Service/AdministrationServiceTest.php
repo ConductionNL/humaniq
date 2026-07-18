@@ -28,6 +28,7 @@
  *
  * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-002
  * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-003
+ * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
  */
 
 declare(strict_types=1);
@@ -46,6 +47,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-002
  * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-003
+ * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
  */
 class AdministrationServiceTest extends TestCase
 {
@@ -72,6 +74,90 @@ class AdministrationServiceTest extends TestCase
         $this->assertSame('Example: Tweede Klant B.V.', $administrations[1]['name']);
 
     }//end testAccountantResolvesBothAccessibleAdministraties()
+
+
+    /**
+     * REQ-SPM-002 response shape: every accessible-administratie entry carries
+     * its resolved `mode` — the standard default for a legacy/absent value
+     * (ADM-001), the set value for one that has it (ADM-002).
+     *
+     * @return void
+     */
+    public function testAccessibleAdministrationsCarryResolvedMode(): void
+    {
+        $service = $this->buildService();
+
+        $administrations = $service->accessibleAdministrations('admin');
+
+        $this->assertSame('standard', $administrations[0]['mode']);
+        $this->assertSame('dga_single_person', $administrations[1]['mode']);
+
+    }//end testAccessibleAdministrationsCarryResolvedMode()
+
+
+    /**
+     * REQ-SPM-002 "Switching administratie updates the stamped mode": the
+     * active administratie's `mode` resolves from the catalog (ADM-002 →
+     * dga_single_person).
+     *
+     * @return void
+     */
+    public function testActiveAdministrationModeResolvesFromCatalog(): void
+    {
+        $store  = ['admin' => ['active_administration_id' => 'ADM-002']];
+        $config = $this->createMock(IConfig::class);
+        $config->method('getUserValue')
+            ->willReturnCallback(static function (string $userId, string $appName, string $key, string $default) use (&$store): string {
+                return $store[$userId][$key] ?? $default;
+            });
+
+        $service = $this->buildService($config);
+
+        $this->assertSame('dga_single_person', $service->getActiveAdministrationMode('admin'));
+
+    }//end testActiveAdministrationModeResolvesFromCatalog()
+
+
+    /**
+     * REQ-SPM-002 default: a caller with NO active administratie (never
+     * switched) resolves the standard mode — the no-regression default, so no
+     * visibleIf predicate hides a menu for them.
+     *
+     * @return void
+     */
+    public function testActiveAdministrationModeDefaultsToStandardWhenUnresolved(): void
+    {
+        $config = $this->createMock(IConfig::class);
+        $config->method('getUserValue')
+            ->willReturnCallback(static fn(string $u, string $a, string $k, string $default): string => $default);
+
+        $service = $this->buildService($config);
+
+        $this->assertSame('standard', $service->getActiveAdministrationMode('admin'));
+
+    }//end testActiveAdministrationModeDefaultsToStandardWhenUnresolved()
+
+
+    /**
+     * An active administratie with no `mode` value set (ADM-001) resolves the
+     * standard default — a legacy administratie never hides a menu by accident.
+     *
+     * @return void
+     */
+    public function testActiveAdministrationModeDefaultsToStandardForLegacyAdministratie(): void
+    {
+        $store  = ['admin' => ['active_administration_id' => 'ADM-001']];
+        $config = $this->createMock(IConfig::class);
+        $config->method('getUserValue')
+            ->willReturnCallback(static function (string $userId, string $appName, string $key, string $default) use (&$store): string {
+                return $store[$userId][$key] ?? $default;
+            });
+
+        $service = $this->buildService($config);
+
+        $this->assertSame('standard', $service->getActiveAdministrationMode('admin'));
+
+    }//end testActiveAdministrationModeDefaultsToStandardForLegacyAdministratie()
 
 
     /**
@@ -179,8 +265,10 @@ class AdministrationServiceTest extends TestCase
     private function buildService(?IConfig $config=null): AdministrationService
     {
         $administrations = [
+            // ADM-001 has no `mode` value set — proves the standard default
+            // resolves for a legacy/pre-change administratie (REQ-SPM-001).
             ['administrationId' => 'ADM-001', 'name' => 'Example: Conduction Demo B.V.'],
-            ['administrationId' => 'ADM-002', 'name' => 'Example: Tweede Klant B.V.'],
+            ['administrationId' => 'ADM-002', 'name' => 'Example: Tweede Klant B.V.', 'mode' => 'dga_single_person'],
         ];
 
         $access = [

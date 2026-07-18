@@ -29,6 +29,12 @@ return [
         // proforma-payslip — persist-nothing "Simuleer loonstrook" pro-forma
         // simulation, RBAC-gated capability probe (design.md D4).
         ['name' => 'payroll#proforma', 'url' => '/api/payroll/proforma', 'verb' => 'POST'],
+        // single-person-modes — self-service, read-only gebruikelijkloon
+        // status for the caller's own DGA record (design.md D5): resolve-first
+        // then 404 (no own Employee / not a DGA collapse to the same status),
+        // reuses NlDgaChecks' predicate, persists nothing. BEFORE the SPA
+        // catch-all per REQ-SPM-006.
+        ['name' => 'payroll#dgaStatus', 'url' => '/api/payroll/dga-status', 'verb' => 'GET'],
         // retro-adjustments — guarded "Herrekenen" trigger for the
         // PayrollAdjustmentDetail manifest api-call action (design.md D8).
         ['name' => 'payroll#adjust', 'url' => '/api/payroll/adjust', 'verb' => 'POST'],
