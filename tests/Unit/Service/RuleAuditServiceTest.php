@@ -1543,4 +1543,115 @@ class RuleAuditServiceTest extends TestCase
     }//end testBhvContextDegradesToEmptyWhenSchemaAbsent()
 
 
+    // -- uitzend-flexpool: agency EmploymentContract seeds --
+
+
+    /**
+     * The uitzend-flexpool hr-seed.json fixture shapes: one compliant agency
+     * contract (fase A, uitzendbeding true, cao-abu + caoSchaal, hourlyWage and
+     * inlenersbeloningReferentie populated) and one intended-violation agency
+     * contract (fase B, uitzendbeding true), fed through audit() as if loaded
+     * from the register (design.md Seed Data).
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededUitzendRows(): array
+    {
+        return [
+            'EmploymentContract' => [
+                [
+                    'id'                         => 'contract-uitzend-abu-fase-a',
+                    'employeeId'                 => 'employee-uitzend-abu',
+                    'type'                       => 'agency',
+                    'writtenContract'            => true,
+                    'startDate'                  => '2026-03-01',
+                    'endDate'                    => null,
+                    'hoursPerWeek'               => 32,
+                    'hourlyWage'                 => 16.50,
+                    'cao'                        => 'cao-abu',
+                    'caoSchaal'                  => 'A',
+                    'awfTariff'                  => 'high',
+                    'uitzendFase'                => 'A',
+                    'uitzendbedingVanToepassing' => true,
+                    'inlenersbeloningReferentie' => 'Inlener loonschaal referentie, functie magazijnmedewerker, schaal 3',
+                    'administrationId'           => 'ADM-001',
+                ],
+                [
+                    'id'                         => 'contract-uitzend-abu-beding-fase-b',
+                    'employeeId'                 => 'employee-uitzend-abu',
+                    'type'                       => 'agency',
+                    'writtenContract'            => true,
+                    'startDate'                  => '2024-06-01',
+                    'endDate'                    => null,
+                    'hoursPerWeek'               => 32,
+                    'hourlyWage'                 => 17.25,
+                    'cao'                        => 'cao-abu',
+                    'caoSchaal'                  => 'B',
+                    'awfTariff'                  => 'high',
+                    'uitzendFase'                => 'B',
+                    'uitzendbedingVanToepassing' => true,
+                    'inlenersbeloningReferentie' => 'Inlener loonschaal referentie, functie orderpicker, schaal 4',
+                    'administrationId'           => 'ADM-001',
+                ],
+            ],
+        ];
+
+    }//end seededUitzendRows()
+
+
+    /**
+     * The seeded agency contracts reproduce exactly one new violation (the
+     * fase-B seed -> nl-uitzendbeding-alleen-fase-a) and zero regressions: the
+     * compliant seed is clean, both carry a populated inlenersbeloning
+     * reference, and neither trips the pre-existing Awf/minimum-wage/CAO rules
+     * (cao-abu is placeholder, so nl-cao-minimumloon-schaal is vacuous).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/uitzend-flexpool/specs/uitzend-flexpool/spec.md
+     */
+    public function testSeededUitzendDataFlagsExactlyTheIntendedUitzendbedingViolation(): void
+    {
+        $service = $this->serviceWithRows($this->seededUitzendRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-uitzendbeding-alleen-fase-a'] ?? 0));
+        // No inlenersbeloning violation -- both seeds carry a reference.
+        $this->assertArrayNotHasKey('nl-inlenersbeloning-onderbouwing-vereist', $byRule);
+        // No regressions on the pre-existing EmploymentContract rules.
+        $this->assertArrayNotHasKey('nl-awf-laag-hoog-tarief', $byRule);
+        $this->assertArrayNotHasKey('nl-minimumloon-2026', $byRule);
+        $this->assertArrayNotHasKey('nl-minimumuurloon-wet', $byRule);
+        $this->assertArrayNotHasKey('nl-cao-minimumloon-schaal', $byRule);
+
+    }//end testSeededUitzendDataFlagsExactlyTheIntendedUitzendbedingViolation()
+
+
+    /**
+     * occ hrmq:rules:audit reports the two new rules as enforced against the
+     * bumped catalogue version.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/uitzend-flexpool/specs/uitzend-flexpool/spec.md
+     */
+    public function testSeededUitzendDataReportsBumpedCatalogueVersionAndBothRulesEnforceable(): void
+    {
+        $service = $this->serviceWithRows($this->seededUitzendRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+
+        $enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+        $this->assertContains('nl-uitzendbeding-alleen-fase-a', $enforceable);
+        $this->assertContains('nl-inlenersbeloning-onderbouwing-vereist', $enforceable);
+
+    }//end testSeededUitzendDataReportsBumpedCatalogueVersionAndBothRulesEnforceable()
+
+
 }//end class
