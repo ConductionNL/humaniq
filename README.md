@@ -202,6 +202,54 @@ availability/preferences, skills-matching, open-shift bidding/shift-swap and
 coverage alerts are named fast-follows. There is no automation between a
 published roster and realised `AttendanceRecord`/`Timesheet` hours.
 
+## Uitzendkrachten & flexpool — hrmq serves the uitzendbureau, not the inlener
+
+hrmq models an uitzendkracht as **the agency's own `Employee`** on an
+`EmploymentContract` of `type: agency`, paid through the normal payroll path.
+This is a deliberate side choice: **hrmq serves the uitzendbureau (the agency),
+never the inlener (the hirer).** Under WAADI the uitzendbureau is the werkgever
+and carries the payroll obligation; an inlener has *no* payroll relationship
+with a temp worker at all. hrmq's entire product is a payroll engine, so the
+agency side is the only side its architecture fits. There is deliberately **no
+`Bureau`, no `InhuurOpdracht`, no SNA-keurmerk / G-rekening /
+ketenaansprakelijkheid / invoice-matching / TCO** schema or service anywhere in
+this app — those are inlener-side vendor-risk concerns and would be a different
+capability with a different employer-of-record relationship, not an extension
+of this one. **A future contributor must not silently rebuild the inlener side
+inside this capability.**
+
+The agency contract carries three HR-entered fields on `EmploymentContract`:
+
+- **`uitzendFase`** (`A`/`B`/`C`, nullable) — the ABU/NBBU fasensysteem stage.
+  It is HR-entered, **not** derived from a worked-weeks count. This change does
+  **not** assert the exact number of weeks that define fase A — that figure has
+  changed across successive CAO texts (notably around the 2020 WAB) and is not
+  cited here. The check `nl-uitzendbeding-alleen-fase-a` therefore enforces only
+  the *structural* relationship (below), never a week-count.
+- **`uitzendbedingVanToepassing`** (boolean, nullable) — whether the
+  uitzendbeding (BW art. 7:691 lid 2, which ends the uitzendovereenkomst by
+  operation of law when the inlener ends the assignment) applies. When `true`,
+  `uitzendFase` must equal `A` — the beding is not legally sound past fase A
+  (`nl-uitzendbeding-alleen-fase-a`, mandatory). Agency-scoped: a non-`agency`
+  contract is never evaluated.
+- **`inlenersbeloningReferentie`** (string, nullable) — a free-text reference to
+  the documentation backing the contracted `hourlyWage` against the inlener's
+  comparable-function beloning (WAADI art. 8). It is an **audit-trail field, not
+  a computed figure** (the same trust boundary as `Loonbeslag.beslagvrijeVoet`):
+  `nl-inlenersbeloning-onderbouwing-vereist` (mandatory, agency-scoped) checks
+  only that the field is **present** when an agency contract sets an `hourlyWage`
+  — never the correctness of the referenced amount.
+
+ABU/NBBU wage data ships through the **existing CAO mechanism** as
+`lib/Standards/cao/cao-abu.json`, fully placeholder-marked
+(`verified: false`, `placeholder: true`, `checkAgainst` on every leaf) — this
+change proves the wiring, **not** the compliance value. It contains **no sourced
+ABU/NBBU loontabel figure**; the existing `nl-cao-minimumloon-schaal` check
+evaluates an agency contract that sets `cao: "cao-abu"` + a `caoSchaal` but
+passes vacuously until a maintainer transcribes the real loontabel. Rostering
+and time-attendance already cover agency employees unchanged — both are scoped
+by `employeeId` only, with no `type` branch.
+
 ## BHV (bedrijfshulpverlening) — certificate signalling, not a coverage formula
 
 hrmq tracks BHV-related certifications (`BhvCertificering`: employee, role

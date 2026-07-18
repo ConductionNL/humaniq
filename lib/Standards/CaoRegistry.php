@@ -49,7 +49,7 @@ final class CaoRegistry
      *
      * @var string
      */
-    public const VERSION = '2026-07.17';
+    public const VERSION = '2026-07.18';
 
     /**
      * Required top-level keys on every well-formed CAO file.

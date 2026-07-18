@@ -434,6 +434,30 @@
       "machineCheckable": true,
       "effectiveDate": "2020-01-01",
       "sourceUrl": "https://wetten.overheid.nl/BWBR0001947"
+    },
+    {
+      "id": "nl-uitzendbeding-alleen-fase-a",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-uitzend",
+      "source": "BW art. 7:691 lid 2 (uitzendovereenkomst, uitzendbeding)",
+      "statement": "On an agency-type EmploymentContract (type 'agency') the uitzendbeding may only apply during fase A: when uitzendbedingVanToepassing is true, uitzendFase must equal A. The beding that ends the uitzendovereenkomst by operation of law when the inlener ends the terbeschikkingstelling is not legally sound once the uitzendkracht is past fase A. Vacuous for non-agency contracts and when uitzendbedingVanToepassing is not true. This rule asserts only the fase/beding relationship, never a specific number of weeks defining fase A's duration (uitzend-flexpool D2).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290"
+    },
+    {
+      "id": "nl-inlenersbeloning-onderbouwing-vereist",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-uitzend",
+      "source": "WAADI art. 8 (inlenersbeloning)",
+      "statement": "On an agency-type EmploymentContract (type 'agency') with a populated hourlyWage, inlenersbeloningReferentie must be present (non-empty) -- the uitzendbureau owes the uitzendkracht at least the beloning a comparable werknemer in an equivalent function at the inlener would receive, and the wage basis must be documented. Presence-only (the WID-check boolean-gate shape): the correctness of the referenced figure is never validated. Vacuous for non-agency contracts and when hourlyWage is absent (nothing decidable without a wage to substantiate).",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0009611"
     }
   ]
 }
