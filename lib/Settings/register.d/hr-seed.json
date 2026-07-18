@@ -1160,7 +1160,9 @@
                 "name": "Example: Conduction Demo B.V.",
                 "kvkNumber": "12345678",
                 "loonheffingennummer": "000000000L01",
-                "active": true
+                "active": true,
+                "abpAansluitingsplichtig": true,
+                "_note": "abp-aansluiting (design.md Seed Data): flipped to true -- ADM-001's existing approved 2026-05/2026-06 NL PayrollRuns already each carry a fund:abp PensionFiling (pension-filing-upa-mvp REQ-PFU-007), so nl-abp-fund-required reports zero violations for ADM-001 with no new filing seeds."
             },
             {
                 "@self": {
@@ -1257,6 +1259,51 @@
                 "statementProvided": true,
                 "userId": "admin",
                 "administrationId": "ADM-002"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Administration",
+                    "slug": "example-adm-003"
+                },
+                "administrationId": "ADM-003",
+                "name": "Gemeente Voorbeeld",
+                "kvkNumber": "11223344",
+                "loonheffingennummer": "000000000L03",
+                "active": true,
+                "abpAansluitingsplichtig": true,
+                "_note": "abp-aansluiting (design.md Seed Data): a second, minimal ABP-obligated administratie with NO PensionFiling seeded for its own 2026-06 run -- proves the nl-abp-fund-required violation branch, while the same run stays silent under the shipped, fund-blind/tenant-blind nl-upa-monthly-completeness (2026-06 is already globally filed via ADM-001's ABP delivery above)."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "AdministrationAccess",
+                    "slug": "example-admaccess-admin-adm003"
+                },
+                "userId": "admin",
+                "administrationId": "ADM-003",
+                "role": "accountant"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "PayrollRun",
+                    "slug": "example-payrollrun-adm003-2026-06"
+                },
+                "period": "2026-06",
+                "administrationId": "ADM-003",
+                "jurisdiction": "NL",
+                "status": "approved",
+                "totalGross": 3400.00,
+                "totalLoonheffing": 986.00,
+                "totalEmployerCharges": 581.40,
+                "totalWithholdings": 986.00,
+                "totalNet": 2414.00,
+                "glExpensePosted": 3981.40,
+                "glLiabilityPosted": 1567.40,
+                "withholdingsClearedToZero": true,
+                "withholdingLiabilityBalance": 0.00,
+                "_note": "abp-aansluiting (design.md Seed Data): deliberately period 2026-06 -- the SAME period ADM-001 already filed ABP for globally -- and deliberately no PensionFiling seeded for ADM-003, to prove the fund/tenant-scoped violation (REQ-ABP-003/004)."
             }
         ]
     }
