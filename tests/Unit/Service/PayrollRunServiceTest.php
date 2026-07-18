@@ -43,6 +43,7 @@ namespace OCA\Hrmq\Tests\Unit\Service;
 
 use OCA\Hrmq\Payroll\PayrollCalculator;
 use OCA\Hrmq\Payroll\SickPayCalculator;
+use OCA\Hrmq\Service\PayrollRetentionGuardService;
 use OCA\Hrmq\Service\PayrollRunService;
 use OCA\Hrmq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
@@ -233,11 +234,12 @@ class PayrollRunServiceTest extends TestCase
      * Build a fully-wired PayrollRunService plus its fake ObjectService
      * double (for assertions on what was saved/deleted).
      *
-     * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
+     * @param array<string, array<int, array<string, mixed>>> $rowsBySchema    Seed rows keyed by schema.
+     * @param PayrollRetentionGuardService|null                $retentionGuard A mocked retention guard, or null for a permissive default (hrmq#99 -- `savePayslip()` places the AWR floor hold on every seal; most tests here are not exercising that behaviour, so a plain mock with no expectations is the default).
      *
-     * @return array{0: PayrollRunService, 1: object}
+     * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
      */
-    private function service(array $rowsBySchema=[]): array
+    private function service(array $rowsBySchema=[], ?PayrollRetentionGuardService $retentionGuard=null): array
     {
         $fake = $this->fakeObjectService($rowsBySchema);
 
@@ -251,7 +253,15 @@ class PayrollRunServiceTest extends TestCase
 
         $logger = $this->createMock(LoggerInterface::class);
 
-        return [new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $logger), $fake];
+        if ($retentionGuard === null) {
+            $retentionGuard = $this->createMock(PayrollRetentionGuardService::class);
+        }
+
+        return [
+            new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger),
+            $fake,
+            $retentionGuard,
+        ];
 
     }//end service()
 
@@ -374,6 +384,47 @@ class PayrollRunServiceTest extends TestCase
         $this->assertArrayNotHasKey('glExpensePosted', $final);
 
     }//end testCreatesDraftRunAndAnchorPayslip()
+
+
+    /**
+     * hrmq#99 regression fix: `savePayslip()` places the AWR art. 52 lid 4
+     * statutory-retention legal hold on every sealed Payslip -- a plain NL
+     * Payslip has neither a populated `retainedUntil` nor an OpenRegister-
+     * computed `archiefactiedatum`, so without this call it was left fully
+     * erasable by the guarded DSAR erase (`PayrollRetentionGuardService`'s
+     * class docblock REGRESSION note).
+     *
+     * @return void
+     */
+    public function testSavePayslipPlacesTheAwrStatutoryFloorHoldOnEverySeal(): void
+    {
+        $retentionGuard = $this->createMock(PayrollRetentionGuardService::class);
+        $retentionGuard->expects($this->once())
+            ->method('placeStatutoryFloorHold')
+            ->with(
+                $this->anything(),
+                'Payslip',
+                'period',
+                PayrollRetentionGuardService::AWR_RETENTION_YEARS,
+                PayrollRetentionGuardService::AWR_LAW_REFERENCE
+            )
+            ->willReturn(['held' => true, 'ceiling' => '2033-12-31']);
+
+        [$service] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+            ],
+            retentionGuard: $retentionGuard
+        );
+
+        $result = $service->runFor('2026-02');
+
+        $this->assertSame('calculated', $result['status']);
+
+    }//end testSavePayslipPlacesTheAwrStatutoryFloorHoldOnEverySeal()
 
 
     /**

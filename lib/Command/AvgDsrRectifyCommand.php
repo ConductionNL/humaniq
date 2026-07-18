@@ -6,11 +6,13 @@
  * `occ hrmq:avg:rectify --employee <id> --as-user <admin-uid> --changes
  * <json> --dsr-request-id <id>` -- the CLI mirror of Art 16 rectificatie
  * (avg-dsr design.md D6): `--as-user` establishes the privileged session
- * BEFORE any call (design.md D3), the employee is RBAC-resolved to its real
- * internal object id, then `AvgDsrService::rectifySubjectObject()` calls
- * `DsarService::rectifyObjectForSubject()` directly -- NO retention guard (a
- * correction does not remove data). A failed rectification is reported
- * (`DsrRequest` -> `afgewezen`) with a non-zero exit, never silently dropped.
+ * BEFORE any call (design.md D3), the employee is RBAC-resolved (existence +
+ * access, the no-admin-idor guard), then `AvgDsrService::rectifySubjectObject()`
+ * calls OpenRegister's guarded `Gdpr\DataSubjectRequestService::rectify()`
+ * directly (hrmq#99) -- only an immutable archival status blocks it (a
+ * correction does not remove data, so no legal-hold guard applies). A failed
+ * rectification is reported (`DsrRequest` -> `afgewezen`) with a non-zero
+ * exit, never silently dropped.
  *
  * @category Command
  * @package  OCA\Hrmq\Command
@@ -24,7 +26,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-007
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
  */
 
 declare(strict_types=1);
@@ -66,7 +68,7 @@ class AvgDsrRectifyCommand extends Command
     /**
      * @return void
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-007
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
      */
     protected function configure(): void
     {
@@ -86,7 +88,7 @@ class AvgDsrRectifyCommand extends Command
      *
      * @return int 0 on a successful rectification, 1 on a controlled refusal or a failed rectification.
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-007
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -118,14 +120,14 @@ class AvgDsrRectifyCommand extends Command
             return 1;
         }
 
-        $objectId = $this->resolveEmployeeInternalId($employeeId);
-        if ($objectId === null) {
+        $resolvedEmployeeId = $this->resolveEmployeeIdentifier($employeeId);
+        if ($resolvedEmployeeId === null) {
             $output->writeln('<error>Werknemer niet gevonden.</error>');
             return 1;
         }
 
         try {
-            $result = $this->service->rectifySubjectObject($objectId, $changes, $dsrRequestId);
+            $result = $this->service->rectifySubjectObject($resolvedEmployeeId, $changes, $dsrRequestId);
         } catch (\RuntimeException $e) {
             // Defense-in-depth (design.md D3 step 4): a RuntimeException from
             // assertPrivileged() is still caught rather than reaching the
@@ -148,15 +150,17 @@ class AvgDsrRectifyCommand extends Command
 
 
     /**
-     * RBAC-resolve the employee's real internal (int) object id
-     * (`ObjectService::find()`'s entity `getId()`) -- the `int $objectId`
-     * `DsarService::rectifyObjectForSubject()` requires.
+     * RBAC-resolve the employee (existence + access, the no-admin-idor
+     * guard) and return its id unchanged (hrmq#99: the guarded
+     * `Gdpr\DataSubjectRequestService::rectify()` takes a plain id/uuid
+     * string directly -- no internal-int-id resolution workaround is needed
+     * anymore).
      *
      * @param string $employeeId The Employee id.
      *
-     * @return int|null
+     * @return string|null
      */
-    private function resolveEmployeeInternalId(string $employeeId): ?int
+    private function resolveEmployeeIdentifier(string $employeeId): ?string
     {
         try {
             $entity = $this->objectService()->find(
@@ -172,14 +176,9 @@ class AvgDsrRectifyCommand extends Command
             return null;
         }
 
-        if (is_object($entity) === true && method_exists($entity, 'getId') === true) {
-            $id = $entity->getId();
-            return is_numeric($id) ? (int) $id : null;
-        }
+        return $employeeId;
 
-        return null;
-
-    }//end resolveEmployeeInternalId()
+    }//end resolveEmployeeIdentifier()
 
 
     /**

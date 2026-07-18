@@ -3,28 +3,43 @@
 /**
  * AVG Data-Subject-Rights Service
  *
- * Thin hrmq orchestration layer over OpenRegister's `DsarService` (avg-dsr
- * design.md): maps a `DsrRequest.employeeId` to the subject value
- * `DsarService` expects (design.md D1 -- `Employee.bsn`, resolved
- * transiently, in memory, at call time, never persisted or logged), renders
- * `findObjectsForSubject()` once for both inzage/portabiliteit (design.md
- * D2), classifies every matched object as retention-locked or
- * erase-eligible against the statutory fiscal retention duty
- * (`AvgDsrRetentionClassifier`, design.md D4), and drives the two-path
- * erase (design.md D5): a fast wholesale `eraseObjectsForSubject()` call
- * when nothing is retention-locked, or a per-object
- * `rectifyObjectForSubject()` anonymisation loop over ONLY the eligible
- * objects when something is retained -- a retention-locked object is NEVER
- * passed into either DsarService write call, the structural guarantee
- * `eraseObjectsForSubject()`'s lack of a per-object exclusion parameter
- * otherwise could not provide. Rectification (design.md D6) is a direct
- * pass-through with no retention guard. Every operation's outcome is
- * recorded onto the `DsrRequest` bookkeeping record via
- * `AvgDsrRequestStore`.
+ * Thin hrmq orchestration layer over OpenRegister's RBAC/tenant-scoped
+ * `OCA\OpenRegister\Service\Gdpr\DataSubjectRequestService` (hrmq#99 --
+ * consume-not-rebuild correction, superseding the original avg-dsr design):
+ * maps a `DsrRequest.employeeId` to the subject value the guarded service
+ * expects (`Employee.bsn`, resolved transiently, in memory, at call time,
+ * never persisted or logged), renders `findSubjectData()` once for both
+ * inzage/portabiliteit, and drives erasure (Art 17) directly through the
+ * guarded service's own `erase()` -- which REFUSES a legal-hold or
+ * immutable-archival-status object on its own, from OpenRegister's real
+ * retention/legal-hold machinery (`RetentionService`), not a bespoke
+ * per-object exclusion loop hrmq maintained itself.
  *
- * `DsarService` has zero new call sites beyond its three existing public
- * methods -- no reimplementation of entity matching, soft-delete, or
- * anonymisation logic lives in hrmq (ADR-022).
+ * hrmq#99 background: the previous design duplicated OpenRegister's
+ * retention/legal-hold machinery with its own `AvgDsrRetentionClassifier`
+ * (a `retainedUntil`/`identityDocumentRetainedUntil` field plus a
+ * hand-rolled AWR art. 52 lid 4 "period year + 7" derivation) and called the
+ * *privileged, unguarded* `OCA\OpenRegister\Service\DsarService` directly,
+ * structurally excluding retained objects itself before ever calling
+ * `eraseObjectsForSubject()`/`rectifyObjectForSubject()`. That left two real
+ * AVG retention holes (a generated payslip/jaaropgaaf PDF carried no
+ * retention signal of its own, and nothing flagged a record still present
+ * past its own retention ceiling -- see `PayrollRetentionGuardService` and
+ * `NlDossierRetentionChecks`). This class now consumes the guarded,
+ * RBAC-scoped `DataSubjectRequestService::erase()` instead: retention state
+ * lives on the OBJECT (legal hold / archival status), maintained proactively
+ * by `PayrollRetentionGuardService`, not recomputed ad hoc on every DSAR
+ * call. `DataSubjectRequestService`'s guard does not itself gate on
+ * `retention.archiefactiedatum` (openregister#475) -- only on an active
+ * legal hold or an immutable archival status -- which is exactly why
+ * `PayrollRetentionGuardService` translates a still-open statutory retention
+ * window into a real legal hold rather than leaving it as a date field only
+ * OpenRegister's destruction-eligibility listing would ever read.
+ *
+ * `DataSubjectRequestService` has no new call sites beyond its public
+ * `findSubjectData()`/`erase()`/`rectify()` methods -- no reimplementation of
+ * entity matching, soft-delete, pseudonymisation, or retention-guarding logic
+ * lives in hrmq (ADR-022).
  *
  * @category Service
  * @package  OCA\Hrmq\Service
@@ -38,11 +53,11 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-002
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-003
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-007
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-002
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-003
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
  */
 
 declare(strict_types=1);
@@ -55,38 +70,30 @@ use OCP\IUserSession;
 
 /**
  * Orchestrates AVG data-subject-rights operations over OpenRegister's
- * DsarService, with a structural statutory-retention guard on erasure.
+ * guarded, RBAC/tenant-scoped `Gdpr\DataSubjectRequestService` -- retention
+ * enforcement on erasure is OpenRegister's, not a bespoke hrmq classifier.
  */
 class AvgDsrService
 {
 
     /**
-     * Candidate PII field names (drawn from the Employee schema, design.md
-     * D5 risk note) nulled by the guarded per-object anonymisation path when
-     * present on a matched, erase-eligible object. Deliberately small and
-     * reviewed against real schema fields rather than an exhaustive assumed
-     * list (design.md Risks).
+     * The guarded service's field-level erase mode (mirrors
+     * `DataSubjectRequestService::ERASE_MODE_PSEUDONYMISE` -- inlined as a
+     * literal, not imported, per this codebase's no-compile-time-dependency
+     * convention for OpenRegister classes resolved by FQCN).
      *
-     * @var array<int, string>
+     * @var string
      */
-    private const ANONYMISATION_FIELD_CANDIDATES = [
-        'firstName',
-        'lastName',
-        'bsn',
-        'iban',
-        'tenaamstelling',
-        'dateOfBirth',
-        'email',
-    ];
+    private const ERASE_MODE_PSEUDONYMISE = 'pseudonymise';
 
     /**
-     * The pure retention-classification predicate (design.md D4), extracted
-     * to keep it small, testable in isolation, and independent of the
-     * OpenRegister I/O the rest of this service performs.
+     * The FQCN of OpenRegister's guarded, RBAC/tenant-scoped data-subject-
+     * request service (hrmq#99) -- resolved via the DI container only, never
+     * duck-typed or compile-time imported (ADR-022).
      *
-     * @var AvgDsrRetentionClassifier
+     * @var string
      */
-    private readonly AvgDsrRetentionClassifier $retentionClassifier;
+    private const GUARDED_SERVICE_FQCN = 'OCA\OpenRegister\Service\Gdpr\DataSubjectRequestService';
 
     /**
      * The `DsrRequest` bookkeeping load/save mechanics, extracted to keep
@@ -99,9 +106,9 @@ class AvgDsrService
 
 
     /**
-     * @param ContainerInterface $container       DI container for the lazy DsarService/ObjectService resolve (OpenRegister is a hard dependency, resolved by FQCN, never duck-typed).
+     * @param ContainerInterface $container       DI container for the lazy DataSubjectRequestService/ObjectService resolve (OpenRegister is a hard dependency, resolved by FQCN, never duck-typed).
      * @param SettingsService    $settingsService The register-slug source.
-     * @param IUserSession       $userSession     The current (by now privileged) session -- the privileged session itself is established BEFORE this service is called (design.md D3); forwarded to `AvgDsrRequestStore` only (`handledBy`), not retained as a property here.
+     * @param IUserSession       $userSession     The current session, forwarded to `AvgDsrRequestStore` only (`handledBy`), not retained as a property here. The guarded service itself uses the ambient session for RBAC/tenant scoping -- no privileged-session establishment is required for it (unlike the previous `DsarService`-based design).
      * @param LoggerInterface    $logger          Logger. Never receives a raw bsn value (REQ-DSR-002).
      */
     public function __construct(
@@ -110,14 +117,13 @@ class AvgDsrService
         IUserSession $userSession,
         private readonly LoggerInterface $logger,
     ) {
-        $this->retentionClassifier = new AvgDsrRetentionClassifier();
-        $this->requestStore        = new AvgDsrRequestStore($container, $settingsService, $userSession, $logger);
+        $this->requestStore = new AvgDsrRequestStore($container, $settingsService, $userSession, $logger);
 
     }//end __construct()
 
 
     /**
-     * Resolve the `DsarService` subject value for an employee (design.md
+     * Resolve the guarded service's subject value for an employee (design.md
      * D1): RBAC-resolves the `Employee` object and returns its `bsn` field
      * transiently, in memory. The caller MUST NOT persist or log the return
      * value (REQ-DSR-002).
@@ -126,7 +132,7 @@ class AvgDsrService
      *
      * @return string The resolved bsn, or '' when the employee does not resolve or carries no bsn.
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-002
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-002
      */
     public function resolveSubject(string $employeeId): string
     {
@@ -152,10 +158,10 @@ class AvgDsrService
 
     /**
      * Export the AVG overview for one employee -- Art 15 inzage / Art 20
-     * portabiliteit are the SAME `findObjectsForSubject()` call, rendered two
-     * ways (design.md D2): grouped-by-object with `gdprEntities` annotated
-     * for `inzage`, flattened into a single structured document for
-     * `portabiliteit`. Exactly one `DsarService` call regardless of `$right`.
+     * portabiliteit are the SAME `findSubjectData()` call, rendered two ways
+     * (design.md D2): grouped-by-object with `gdprEntities` annotated for
+     * `inzage`, flattened into a single structured document for
+     * `portabiliteit`. Exactly one guarded-service call regardless of `$right`.
      *
      * @param string      $employeeId   The Employee id.
      * @param string      $right        `inzage` or `portabiliteit`.
@@ -163,12 +169,12 @@ class AvgDsrService
      *
      * @return array<string, mixed>
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-003
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-003
      */
     public function exportForSubject(string $employeeId, string $right, ?string $dsrRequestId=null): array
     {
         $subject   = $this->resolveSubject($employeeId);
-        $envelopes = $this->dsarService()->findObjectsForSubject($subject);
+        $envelopes = $this->guardedService()->findSubjectData($subject);
         $result    = $this->renderExport($envelopes, $right);
 
         if ($dsrRequestId !== null && $dsrRequestId !== '') {
@@ -181,17 +187,17 @@ class AvgDsrService
 
 
     /**
-     * Render the SAME `findObjectsForSubject()` result set for either right
+     * Render the SAME `findSubjectData()` result set for either right
      * (design.md D2) -- `inzage`: grouped-by-object with `gdprEntities`
      * annotated; `portabiliteit`: the same objects flattened into a single
      * structured document.
      *
-     * @param array<int, array<string, mixed>> $envelopes `findObjectsForSubject()`'s return value.
+     * @param array<int, array<string, mixed>> $envelopes `findSubjectData()`'s return value.
      * @param string                            $right     `inzage` or `portabiliteit`.
      *
      * @return array<string, mixed>
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-003
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-003
      */
     private function renderExport(array $envelopes, string $right): array
     {
@@ -215,52 +221,32 @@ class AvgDsrService
 
 
     /**
-     * Classify every object `findObjectsForSubject()` returns for one
-     * employee as retention-locked (`retained`) or erase-eligible
-     * (`eligible`) -- the D4 predicate. The single function both the preview
-     * and execute paths call -- never duplicated between them.
-     *
-     * @param string $employeeId The Employee id.
-     *
-     * @return array{retained: array<int, array<string, mixed>>, eligible: array<int, array<string, mixed>>}
-     *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
-     */
-    public function classifyForErasure(string $employeeId): array
-    {
-        $subject   = $this->resolveSubject($employeeId);
-        $envelopes = $this->dsarService()->findObjectsForSubject($subject);
-
-        return $this->retentionClassifier->classify($envelopes);
-
-    }//end classifyForErasure()
-
-
-    /**
-     * Zero-write erasure preview (design.md D5) -- the same classification
-     * `eraseSubject()` would use, relabelled `wouldErase`/`retained`/
-     * `failed`. Neither `eraseObjectsForSubject(dryRun:false)` nor
-     * `rectifyObjectForSubject()` is called. When `$dsrRequestId` is given,
-     * the preview is RECORDED onto that `DsrRequest` -- the evidence
-     * `eraseSubject()`'s precondition checks for. That write touches only
-     * the `DsrRequest` bookkeeping record, never a subject's data object.
+     * Zero-write erasure preview (design.md D5, hrmq#99): calls the guarded
+     * service's own `erase(..., dryRun: true)` -- the SAME retention guard
+     * (`RetentionService::hasActiveLegalHold()` + `validateNotImmutable()`)
+     * `eraseSubject()` would hit, never a bespoke hrmq classification. When
+     * `$dsrRequestId` is given, the preview is RECORDED onto that
+     * `DsrRequest` -- the evidence `eraseSubject()`'s precondition checks
+     * for. That write touches only the `DsrRequest` bookkeeping record,
+     * never a subject's data object (a dry run performs no object writes).
      *
      * @param string      $employeeId   The Employee id.
      * @param string|null $dsrRequestId Optional DsrRequest id to record this preview against.
      *
      * @return array{wouldErase: array<int, array<string, mixed>>, retained: array<int, array<string, mixed>>, failed: array<int, array<string, mixed>>}
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
      */
     public function previewErasure(string $employeeId, ?string $dsrRequestId=null): array
     {
-        $classification = $this->classifyForErasure($employeeId);
+        $subject = $this->resolveSubject($employeeId);
+        $summary = $this->guardedService()->erase($subject, null, self::ERASE_MODE_PSEUDONYMISE, true);
 
         $preview = [
-            'wouldErase' => $classification['eligible'],
-            'retained'   => $classification['retained'],
-            'failed'     => [],
+            'wouldErase' => (array) ($summary['erased'] ?? []),
+            'retained'   => (array) ($summary['held'] ?? []),
+            'failed'     => (array) ($summary['failed'] ?? []),
         ];
 
         if ($dsrRequestId !== null && $dsrRequestId !== '') {
@@ -273,24 +259,21 @@ class AvgDsrService
 
 
     /**
-     * Execute the retention-guarded erase (design.md D5) for a `DsrRequest`
-     * whose preview already ran (`status: in_behandeling` and a recorded
-     * `retainedObjectRefs` -- the preview marker `previewErasure()` writes).
-     * Re-derives `classifyForErasure()` fresh (idempotency, design.md D5):
-     *
-     *   - `retained` empty  -> ONE wholesale `eraseObjectsForSubject()` call.
-     *   - `retained` non-empty -> `eraseObjectsForSubject()` is NEVER called
-     *     for this subject; instead a per-object `rectifyObjectForSubject()`
-     *     anonymisation loop runs over `eligible` ONLY. A retention-locked
-     *     object is referenced in NEITHER DsarService write call.
+     * Execute the retention-guarded erase (design.md D5, hrmq#99) for a
+     * `DsrRequest` whose preview already ran (`status: in_behandeling` and a
+     * recorded `retainedObjectRefs` -- the preview marker `previewErasure()`
+     * writes). Calls the guarded service's `erase()` directly (dryRun:
+     * false) -- it refuses a legal-hold or immutable-archival-status object
+     * itself; hrmq no longer excludes objects via its own classification
+     * before the call.
      *
      * @param string $employeeId   The Employee id.
      * @param string $dsrRequestId The DsrRequest id whose preview already ran.
      *
      * @return array<string, mixed> {status, erased, retained, failed} on a run, or {status: 'refused', message} when the precondition is unmet -- a controlled refusal, never a write.
      *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-005
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-006
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
      */
     public function eraseSubject(string $employeeId, string $dsrRequestId): array
     {
@@ -309,24 +292,19 @@ class AvgDsrService
             ];
         }
 
-        $classification = $this->classifyForErasure($employeeId);
-        $subject        = $this->resolveSubject($employeeId);
+        $subject = $this->resolveSubject($employeeId);
+        $summary = $this->guardedService()->erase($subject, null, self::ERASE_MODE_PSEUDONYMISE, false);
 
-        // Fast path (design.md D5) when nothing is retention-locked: the
-        // whole subject is safe to erase in one wholesale sweep. Guarded path
-        // otherwise: eraseObjectsForSubject() is NEVER called for this
-        // subject -- it would sweep the retained objects too -- a per-object
-        // anonymisation loop runs over `eligible` ONLY instead.
-        [$erased, $failed] = ($classification['retained'] === [])
-            ? $this->eraseWholesale($subject)
-            : $this->eraseGuarded($classification['eligible']);
+        $erased   = (array) ($summary['erased'] ?? []);
+        $retained = (array) ($summary['held'] ?? []);
+        $failed   = (array) ($summary['failed'] ?? []);
 
-        $newStatus = $this->requestStore->recordEraseOutcome($dsrRequest, $erased, $classification['retained'], $failed);
+        $newStatus = $this->requestStore->recordEraseOutcome($dsrRequest, $erased, $retained, $failed);
 
         return [
             'status'   => $newStatus,
             'erased'   => $erased,
-            'retained' => $classification['retained'],
+            'retained' => $retained,
             'failed'   => $failed,
         ];
 
@@ -351,66 +329,28 @@ class AvgDsrService
 
 
     /**
-     * The fast path (design.md D5): ONE wholesale `eraseObjectsForSubject()`
-     * call, safe because `classifyForErasure()` found nothing retained.
+     * Direct rectification pass-through (design.md D6, Art 16) via the
+     * guarded service's own `rectify()`, which takes the object's id/uuid
+     * directly (hrmq#99 -- no int-id resolution workaround is needed
+     * anymore; the previous `DsarService::rectifyObjectForSubject(int
+     * $objectId, ...)` contract required one). Only an immutable archival
+     * status blocks a rectification (a correction does not remove data, so
+     * no legal-hold guard applies here either -- matching the guarded
+     * service's own `rectify()` semantics). Records only the changed field
+     * NAMES on `DsrRequest.outcomeSummary`, never before/after values.
      *
-     * @param string $subject The resolved DsarService subject value.
+     * @param string               $objectIdentifier The RBAC-resolved object id/uuid to update (the caller resolves and authorises it first).
+     * @param array<string, mixed> $changes          Property -> new value map.
+     * @param string               $dsrRequestId     The DsrRequest id this rectification is recorded against.
      *
-     * @return array{0: array<int, array<string,mixed>>, 1: array<int, array<string,mixed>>} [erased, failed].
+     * @return array<string, mixed>|null The updated object envelope, or null when `rectify()` could not load/update the object.
+     *
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
      */
-    private function eraseWholesale(string $subject): array
-    {
-        $summary = $this->dsarService()->eraseObjectsForSubject($subject, null, false);
-
-        return [
-            (array) ($summary['erased'] ?? []),
-            (array) ($summary['failed'] ?? []),
-        ];
-
-    }//end eraseWholesale()
-
-
-    /**
-     * The guarded path (design.md D5): `eraseObjectsForSubject()` is NEVER
-     * called here -- a per-object `rectifyObjectForSubject()` anonymisation
-     * loop runs over `$eligible` ONLY, never over a retention-locked object.
-     *
-     * @param array<int, array<string, mixed>> $eligible The `eligible` refs from classifyForErasure().
-     *
-     * @return array{0: array<int, array<string,mixed>>, 1: array<int, array<string,mixed>>} [erased, failed].
-     */
-    private function eraseGuarded(array $eligible): array
-    {
-        $erased = [];
-        $failed = [];
-
-        foreach ($eligible as $ref) {
-            $this->anonymiseEligibleObject($ref, $erased, $failed);
-        }
-
-        return [$erased, $failed];
-
-    }//end eraseGuarded()
-
-
-    /**
-     * Direct rectification pass-through (design.md D6, Art 16) -- NO
-     * retention classification applies (a correction does not remove data).
-     * Records only the changed field NAMES on `DsrRequest.outcomeSummary`,
-     * never before/after values.
-     *
-     * @param int                  $objectId     Internal id of the object to update (the caller RBAC-resolves it first).
-     * @param array<string, mixed> $changes      Property -> new value map.
-     * @param string               $dsrRequestId The DsrRequest id this rectification is recorded against.
-     *
-     * @return array<string, mixed>|null The updated object envelope, or null when `rectifyObjectForSubject()` could not load/update the object.
-     *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-007
-     */
-    public function rectifySubjectObject(int $objectId, array $changes, string $dsrRequestId): ?array
+    public function rectifySubjectObject(string $objectIdentifier, array $changes, string $dsrRequestId): ?array
     {
         $dsrRequest = $this->requestStore->load($dsrRequestId);
-        $result     = $this->dsarService()->rectifyObjectForSubject($objectId, $changes);
+        $result     = $this->guardedService()->rectify($objectIdentifier, $changes);
 
         if ($dsrRequest !== null) {
             $this->requestStore->recordRectifyOutcome($dsrRequest, $result, $changes);
@@ -419,107 +359,6 @@ class AvgDsrService
         return $result;
 
     }//end rectifySubjectObject()
-
-
-    /**
-     * Resolve one eligible object's internal id and anonymise it via
-     * `rectifyObjectForSubject()`, appending to `$erased`/`$failed` in place.
-     * Never called for a retention-locked object (REQ-DSR-005).
-     *
-     * @param array<string, mixed>            $ref    {uuid, schema, register} from classifyForErasure().
-     * @param array<int, array<string,mixed>> $erased Accumulator, by reference.
-     * @param array<int, array<string,mixed>> $failed Accumulator, by reference.
-     *
-     * @return void
-     */
-    private function anonymiseEligibleObject(array $ref, array &$erased, array &$failed): void
-    {
-        try {
-            $entity = $this->objectService()->find(
-                id: (string) $ref['uuid'],
-                register: (string) $ref['register'],
-                schema: (string) $ref['schema']
-            );
-        } catch (\Throwable $e) {
-            $entity = null;
-        }
-
-        if ($entity === null) {
-            $failed[] = ['object' => $ref, 'error' => 'Object kon niet worden opgehaald voor anonimisatie.'];
-            return;
-        }
-
-        $internalId = $this->extractInternalId($entity);
-        if ($internalId === null) {
-            $failed[] = ['object' => $ref, 'error' => 'Object-id kon niet worden bepaald voor anonimisatie.'];
-            return;
-        }
-
-        $changes = $this->anonymisationChangesFor($this->toArray($entity));
-
-        $result = $this->dsarService()->rectifyObjectForSubject($internalId, $changes);
-        if ($result === null) {
-            $failed[] = ['object' => $ref, 'error' => 'Anonimisatie mislukt.'];
-            return;
-        }
-
-        $erased[] = $ref;
-
-    }//end anonymiseEligibleObject()
-
-
-    /**
-     * The per-object anonymisation change set (design.md D5 step 3): null
-     * every candidate PII field actually present (and non-null) on the
-     * object. Small and reviewed against real schema fields, not an
-     * exhaustive assumed list (design.md Risks).
-     *
-     * @param array<string, mixed> $object The object data.
-     *
-     * @return array<string, mixed>
-     */
-    private function anonymisationChangesFor(array $object): array
-    {
-        $changes = [];
-        foreach (self::ANONYMISATION_FIELD_CANDIDATES as $field) {
-            if (array_key_exists($field, $object) === true && $object[$field] !== null) {
-                $changes[$field] = null;
-            }
-        }
-
-        return $changes;
-
-    }//end anonymisationChangesFor()
-
-
-    /**
-     * The real internal (int) primary key of an object, resolved via
-     * `ObjectService::find()`'s returned entity's `getId()` -- distinct from
-     * the string uuid `jsonSerialize()` exposes under `id`.
-     * `DsarService::rectifyObjectForSubject()` requires this real int id
-     * (`declare(strict_types=1)` in openregister forbids passing a uuid
-     * string to its `int $objectId` parameter).
-     *
-     * @param mixed $entity The resolved entity (an OpenRegister ObjectEntity in production, or a fake test double exposing the same `getId(): int` contract).
-     *
-     * @return int|null
-     */
-    private function extractInternalId(mixed $entity): ?int
-    {
-        if (is_object($entity) === true && method_exists($entity, 'getId') === true) {
-            $id = $entity->getId();
-            if (is_int($id) === true) {
-                return $id;
-            }
-
-            if (is_numeric($id) === true) {
-                return (int) $id;
-            }
-        }
-
-        return null;
-
-    }//end extractInternalId()
 
 
     /**
@@ -533,15 +372,17 @@ class AvgDsrService
 
 
     /**
-     * @return mixed OpenRegister's DsarService -- every public method
-     *               throws `RuntimeException` unless the active session is a
-     *               privileged (admin) one (design.md Context/D3).
+     * @return mixed OpenRegister's guarded, RBAC/tenant-scoped
+     *               `Gdpr\DataSubjectRequestService` (hrmq#99) -- unlike the
+     *               previous `DsarService`, every public method runs under the
+     *               caller's ambient RBAC/tenant scope; no privileged-session
+     *               establishment is required.
      */
-    private function dsarService(): mixed
+    private function guardedService(): mixed
     {
-        return $this->container->get('OCA\OpenRegister\Service\DsarService');
+        return $this->container->get(self::GUARDED_SERVICE_FQCN);
 
-    }//end dsarService()
+    }//end guardedService()
 
 
     /**

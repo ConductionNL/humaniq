@@ -192,18 +192,20 @@ class PayrollRunService
 
 
     /**
-     * @param ContainerInterface $container         DI container for lazy ObjectService resolution.
-     * @param SettingsService    $settingsService   Register slug + employer-level payroll config.
-     * @param PayrollCalculator  $calculator        The pure gross-to-net calculator.
-     * @param SickPayCalculator  $sickPayCalculator The pure loondoorbetaling-bij-ziekte calculator (sick-pay-calc).
-     * @param LoggerInterface    $logger            Logger.
-     * @param PackRepository     $packs             The jurisdiction-pack resolver (jurisdiction-packs design.md D7).
+     * @param ContainerInterface           $container         DI container for lazy ObjectService resolution.
+     * @param SettingsService              $settingsService   Register slug + employer-level payroll config.
+     * @param PayrollCalculator            $calculator        The pure gross-to-net calculator.
+     * @param SickPayCalculator            $sickPayCalculator The pure loondoorbetaling-bij-ziekte calculator (sick-pay-calc).
+     * @param PayrollRetentionGuardService $retentionGuard    Places the AWR art. 52 lid 4 statutory-retention legal hold on every sealed Payslip (hrmq#99 regression fix -- see `savePayslip()`).
+     * @param LoggerInterface              $logger            Logger.
+     * @param PackRepository               $packs             The jurisdiction-pack resolver (jurisdiction-packs design.md D7).
      */
     public function __construct(
         private readonly ContainerInterface $container,
         private readonly SettingsService $settingsService,
         private readonly PayrollCalculator $calculator,
         private readonly SickPayCalculator $sickPayCalculator,
+        private readonly PayrollRetentionGuardService $retentionGuard,
         private readonly LoggerInterface $logger,
         private readonly PackRepository $packs=new PackRepository(),
     ) {
@@ -669,12 +671,22 @@ class PayrollRunService
 
     /**
      * Upsert one engine Payslip: update the existing (payrollRunId,
-     * employeeId)-keyed payslip in place, or create a new one.
+     * employeeId)-keyed payslip in place, or create a new one. Every seal
+     * (create or recalculate) places the AWR art. 52 lid 4 statutory-
+     * retention legal hold (hrmq#99 regression fix: a plain NL Payslip has
+     * neither a populated `retainedUntil` nor an OpenRegister-computed
+     * `archiefactiedatum` for `PayrollRetentionGuardService::syncLegalHold()`
+     * to read, so without this call it was left fully erasable by the
+     * guarded DSAR erase -- see `PayrollRetentionGuardService`'s class
+     * docblock REGRESSION note). Idempotent: a recalculated payslip that
+     * already carries the hold is left untouched.
      *
      * @param array<string, mixed>      $payload  The new payslip payload.
      * @param array<string, mixed>|null $existing The existing engine payslip for this (run, employee), if any.
      *
      * @return array<string, mixed> The saved object.
+     *
+     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
      */
     private function savePayslip(array $payload, ?array $existing): array
     {
@@ -691,6 +703,14 @@ class PayrollRunService
             uuid: $uuid,
             _rbac: false,
             _multitenancy: false
+        );
+
+        $this->retentionGuard->placeStatutoryFloorHold(
+            $saved,
+            'Payslip',
+            'period',
+            PayrollRetentionGuardService::AWR_RETENTION_YEARS,
+            PayrollRetentionGuardService::AWR_LAW_REFERENCE
         );
 
         return $this->toArray($saved);

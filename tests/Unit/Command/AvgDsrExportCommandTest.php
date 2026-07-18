@@ -23,8 +23,8 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-003
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-003
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 /**
  * Tests for AvgDsrExportCommand.
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
  */
 class AvgDsrExportCommandTest extends TestCase
 {

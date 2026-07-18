@@ -22,8 +22,8 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-007
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-004
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 /**
  * Tests for AvgDsrRectifyCommand.
  *
- * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-007
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
  */
 class AvgDsrRectifyCommandTest extends TestCase
 {
@@ -110,24 +110,23 @@ class AvgDsrRectifyCommandTest extends TestCase
 
 
     /**
-     * REQ-DSR-007: a valid rectification resolves the employee's internal id
-     * and calls `rectifySubjectObject()` with it.
+     * hrmq#99: a valid rectification RBAC-resolves the employee (existence +
+     * access) and calls `rectifySubjectObject()` with the employeeId STRING
+     * directly -- no internal-int-id resolution workaround (the guarded
+     * `Gdpr\DataSubjectRequestService::rectify()` takes a plain id/uuid
+     * string).
      *
      * @return void
      */
     public function testValidRectificationResolvesEmployeeAndCallsService(): void
     {
         $employeeEntity = new class {
-            public function getId(): int
-            {
-                return 4242;
-            }
         };
 
         $service = $this->createMock(AvgDsrService::class);
         $service->expects($this->once())
             ->method('rectifySubjectObject')
-            ->with(4242, ['lastName' => 'Corrected'], 'dsr-1')
+            ->with('emp-1', ['lastName' => 'Corrected'], 'dsr-1')
             ->willReturn(['id' => 'emp-1-uuid', 'lastName' => 'Corrected']);
 
         $container = $this->createMock(ContainerInterface::class);

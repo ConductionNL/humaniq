@@ -25,7 +25,15 @@
  *
  * @link https://conduction.nl
  *
+ * hrmq#99 hole #1: also pins that a generated loonstrook/jaaropgaaf
+ * `GeneratedDocument` inherits a legal hold from its source Payslip when that
+ * source is currently under active OpenRegister retention
+ * (`PayrollRetentionGuardService::isUnderActiveRetention()`/
+ * `inheritLegalHold()`, mocked here as a collaborator double), and does NOT
+ * when the source is not retained.
+ *
  * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
  */
 
 declare(strict_types=1);
@@ -33,6 +41,7 @@ declare(strict_types=1);
 namespace OCA\Hrmq\Tests\Unit\Service;
 
 use OCA\Hrmq\Service\HrDocumentService;
+use OCA\Hrmq\Service\PayrollRetentionGuardService;
 use OCA\Hrmq\Service\SettingsService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
@@ -125,6 +134,39 @@ class HrDocumentServiceTest extends TestCase
                 return $this->rowsBySchema[$this->schema] ?? [];
 
             }//end findAll()
+
+
+            /**
+             * hrmq#99: `HrDocumentService::findEntity()` re-resolves a source/
+             * derived object as an "entity" to hand to
+             * `PayrollRetentionGuardService`. This fake returns a small
+             * wrapper object (or null) -- the retention guard itself is
+             * mocked separately in these tests, so its actual shape is never
+             * inspected, only its presence/absence.
+             *
+             * @param string      $id       Object id.
+             * @param string|null $register Register slug (unused by the fake).
+             * @param string|null $schema   Schema name to search.
+             * @param bool        $_rbac    Unused by the fake.
+             * @param bool        $_multitenancy Unused by the fake.
+             *
+             * @return object|null
+             */
+            public function find(string $id, ?string $register=null, ?string $schema=null, bool $_rbac=true, bool $_multitenancy=true): ?object
+            {
+                foreach (($this->rowsBySchema[$schema] ?? []) as $row) {
+                    if ((string) ($row['id'] ?? '') === $id) {
+                        return new class ($row) {
+                            public function __construct(public readonly array $row)
+                            {
+                            }
+                        };
+                    }
+                }
+
+                return null;
+
+            }//end find()
 
 
             /**
@@ -363,6 +405,7 @@ class HrDocumentServiceTest extends TestCase
      * @param object|null                                       $templateService   A fake TemplateService, or null for the default (empty) double.
      * @param object|null                                       $fileService       A fake FileService, or null for the default success double.
      * @param string                                            $configuredTemplateId Value returned by getDocumentsTemplateId() (empty means discovery).
+     * @param PayrollRetentionGuardService|null                 $retentionGuard    A mocked retention guard, or null for the default (never reports anything held -- hrmq#99 hole #1 is off unless a test opts in).
      *
      * @return array{0: HrDocumentService, 1: object, 2: object}
      */
@@ -372,7 +415,8 @@ class HrDocumentServiceTest extends TestCase
         ?object $documentService=null,
         ?object $templateService=null,
         ?object $fileService=null,
-        string $configuredTemplateId=''
+        string $configuredTemplateId='',
+        ?PayrollRetentionGuardService $retentionGuard=null
     ): array {
         $fakeObjects  = $this->fakeObjectService($rowsBySchema);
         $documentSvc  = $documentService ?? $this->fakeDocumentService();
@@ -401,7 +445,12 @@ class HrDocumentServiceTest extends TestCase
 
         $logger = $this->createMock(LoggerInterface::class);
 
-        return [new HrDocumentService($container, $appManager, $settings, $logger), $fakeObjects, $fileSvc];
+        if ($retentionGuard === null) {
+            $retentionGuard = $this->createMock(PayrollRetentionGuardService::class);
+            $retentionGuard->method('isUnderActiveRetention')->willReturn(false);
+        }
+
+        return [new HrDocumentService($container, $appManager, $settings, $retentionGuard, $logger), $fakeObjects, $fileSvc];
 
     }//end service()
 
@@ -941,6 +990,60 @@ class HrDocumentServiceTest extends TestCase
     }//end testGenerateLoonstrookFailsWhenPayslipDoesNotExist()
 
 
+    /**
+     * hrmq#99 hole #1: a loonstrook `GeneratedDocument` inherits a legal hold
+     * when its source Payslip is currently under active OpenRegister
+     * retention.
+     *
+     * @return void
+     */
+    public function testGenerateLoonstrookInheritsLegalHoldWhenSourcePayslipIsRetained(): void
+    {
+        $retentionGuard = $this->createMock(PayrollRetentionGuardService::class);
+        $retentionGuard->method('isUnderActiveRetention')->willReturn(true);
+        $retentionGuard->expects($this->once())
+            ->method('inheritLegalHold')
+            ->with($this->anything(), 'GeneratedDocument', $this->stringContains('payslip-1'))
+            ->willReturn(true);
+
+        [$service] = $this->service(
+            ['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]],
+            configuredTemplateId: 'T1',
+            retentionGuard: $retentionGuard
+        );
+
+        $result = $service->generateLoonstrook('payslip-1');
+
+        $this->assertSame('generated', $result['status']);
+
+    }//end testGenerateLoonstrookInheritsLegalHoldWhenSourcePayslipIsRetained()
+
+
+    /**
+     * hrmq#99 hole #1: no hold is inherited when the source Payslip is NOT
+     * under active retention.
+     *
+     * @return void
+     */
+    public function testGenerateLoonstrookDoesNotInheritHoldWhenSourceNotRetained(): void
+    {
+        $retentionGuard = $this->createMock(PayrollRetentionGuardService::class);
+        $retentionGuard->method('isUnderActiveRetention')->willReturn(false);
+        $retentionGuard->expects($this->never())->method('inheritLegalHold');
+
+        [$service] = $this->service(
+            ['Employee' => [$this->employee()], 'Payslip' => [$this->payslip()]],
+            configuredTemplateId: 'T1',
+            retentionGuard: $retentionGuard
+        );
+
+        $result = $service->generateLoonstrook('payslip-1');
+
+        $this->assertSame('generated', $result['status']);
+
+    }//end testGenerateLoonstrookDoesNotInheritHoldWhenSourceNotRetained()
+
+
     // -- payslip-pdf-docudesk: jaaropgaaf ------------------------------------
 
 
@@ -1034,6 +1137,35 @@ class HrDocumentServiceTest extends TestCase
         $this->assertCount(0, $this->savedFor($fake, 'GeneratedDocument'));
 
     }//end testGenerateJaaropgaafFailsClosedWhenEmployeeHasNoPayslipsInTheYear()
+
+
+    /**
+     * hrmq#99 hole #1, jaaropgaaf variant: the aggregate's `GeneratedDocument`
+     * inherits a legal hold when ANY Payslip it aggregates is currently under
+     * active OpenRegister retention.
+     *
+     * @return void
+     */
+    public function testGenerateJaaropgaafInheritsLegalHoldWhenAnyAggregatedPayslipIsRetained(): void
+    {
+        $retentionGuard = $this->createMock(PayrollRetentionGuardService::class);
+        $retentionGuard->method('isUnderActiveRetention')->willReturn(true);
+        $retentionGuard->expects($this->once())
+            ->method('inheritLegalHold')
+            ->with($this->anything(), 'GeneratedDocument', $this->stringContains('2026'))
+            ->willReturn(true);
+
+        [$service] = $this->service(
+            ['Employee' => [$this->employee()], 'Payslip' => [$this->payslip(['id' => 'ps-1', 'period' => '2026-01'])]],
+            configuredTemplateId: 'T1',
+            retentionGuard: $retentionGuard
+        );
+
+        $result = $service->generateJaaropgaaf('emp-1', 2026);
+
+        $this->assertSame('generated', $result['status']);
+
+    }//end testGenerateJaaropgaafInheritsLegalHoldWhenAnyAggregatedPayslipIsRetained()
 
 
     // -- payslip-pdf-docudesk: occ backlog + usage guards --------------------

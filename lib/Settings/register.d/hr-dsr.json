@@ -5,9 +5,9 @@
             "DsrRequest": {
                 "slug": "DsrRequest",
                 "icon": "ShieldAccountOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "DsrRequest",
-                "description": "One AVG (GDPR) data-subject-rights request lifecycle record (avg-dsr design.md D7): the requesting subject (employeeId $ref Employee -- the ONLY persisted subject-identifying field, design.md D1 -- the raw bsn value AvgDsrService resolves to call OpenRegister's DsarService is never written here), the right invoked, and the statutory deadline (receivedDate + 1 calendar month, AVG art. 12 lid 3, no extension in this MVP). status is a plain enum, deliberately no x-openregister-lifecycle map (design.md D3/D5): every transition requires a caller-role (admin) check plus an explicitly-established DsarService-privileged session plus, for verwijdering, the statutory-retention guard -- none of which a lifecycle guard's (object, action, userId) contract can express, so AvgDsrService/AvgDsrController/the occ hrmq:avg:* commands own every transition instead. retainedObjectRefs never carries a raw PII value -- only uuid/schema/register/retainedUntil references (design.md D5).",
+                "description": "One AVG (GDPR) data-subject-rights request lifecycle record (avg-dsr design.md D7, revised hrmq#99): the requesting subject (employeeId $ref Employee -- the ONLY persisted subject-identifying field, design.md D1 -- the raw bsn value AvgDsrService resolves to call OpenRegister's guarded Gdpr\\DataSubjectRequestService is never written here), the right invoked, and the statutory deadline (receivedDate + 1 calendar month, AVG art. 12 lid 3, no extension in this MVP). status is a plain enum, deliberately no x-openregister-lifecycle map (design.md D3/D5): every transition requires a caller-role (admin) check plus, for verwijdering, OpenRegister's own legal-hold/immutable-archival-status guard -- none of which a lifecycle guard's (object, action, userId) contract can express, so AvgDsrService/AvgDsrController/the occ hrmq:avg:* commands own every transition instead. retainedObjectRefs never carries a raw PII value -- only the uuid/reason refs OpenRegister's guarded erase() returns for a held object (hrmq#99).",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [
@@ -25,7 +25,7 @@
                     "handledBy": {"type": "string", "nullable": true, "description": "Nextcloud uid of the admin who processed this request -- the --as-user/session uid (design.md D3)."},
                     "completedDate": {"type": "string", "format": "date-time", "nullable": true, "description": "When status became voldaan/afgewezen."},
                     "outcomeSummary": {"type": "string", "nullable": true, "description": "Human-readable outcome -- export confirmation, or erase's erased/retained/failed counts, or rectify's changed field NAMES only, never before/after PII values (design.md D6)."},
-                    "retainedObjectRefs": {"type": "string", "nullable": true, "description": "JSON-encoded list of {uuid, schema, register, retainedUntil} for objects excluded from erasure under the statutory-retention guard (design.md D5) -- never a raw PII value. Also doubles as the erase-preview-recorded marker: previewErasure() always sets this field (even to an empty JSON array) before eraseSubject() will execute."},
+                    "retainedObjectRefs": {"type": "string", "nullable": true, "description": "JSON-encoded list of {uuid, reason} for objects OpenRegister's guarded Gdpr\\DataSubjectRequestService::erase() held back (legal hold or immutable archival status, hrmq#99) -- never a raw PII value. Also doubles as the erase-preview-recorded marker: previewErasure() always sets this field (even to an empty JSON array) before eraseSubject() will execute."},
                     "rejectionReason": {"type": "string", "nullable": true, "description": "Populated only when status becomes afgewezen -- which objects failed and why, or why a rectification could not be applied."}
                 }
             }

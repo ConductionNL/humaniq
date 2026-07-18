@@ -35,6 +35,7 @@ use OCA\Hrmq\Payroll\CalculationInput;
 use OCA\Hrmq\Payroll\PayrollCalculator;
 use OCA\Hrmq\Payroll\SickPayCalculator;
 use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Hrmq\Service\PayrollRetentionGuardService;
 use OCA\Hrmq\Service\PayrollRunService;
 use OCA\Hrmq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
@@ -236,7 +237,9 @@ class PayrollRunServiceSickPayTest extends TestCase
 
         $logger = $this->createMock(LoggerInterface::class);
 
-        return [new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $logger), $fake];
+        $retentionGuard = $this->createMock(PayrollRetentionGuardService::class);
+
+        return [new PayrollRunService($container, $settings, new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger), $fake];
 
     }//end service()
 

@@ -101,7 +101,30 @@ Belastingdienst Handboek Loonheffingen — bewaarplicht loonbelastingverklaring"
 `verified: true`. This is the ONE retention period this change adds with full confidence — see D4 for the one it
 does not.
 
-### D3 — GeneratedDocument.retainedUntil: populated at generation time, zero classifier change
+### D3 — SUPERSEDED by hrmq#99 (2026-07-18): GeneratedDocument inherits a real legal hold, not a retainedUntil field
+
+**This decision as originally written below is superseded and NOT implemented as described.** hrmq#99 (a
+consume-not-rebuild correction, landed 2026-07-18) deleted `AvgDsrRetentionClassifier` outright — it duplicated
+OpenRegister's own retention/legal-hold machinery — and switched `AvgDsrService` to consume OpenRegister's
+guarded `Gdpr\DataSubjectRequestService::erase()` directly. That guarded service refuses an object under an
+active legal hold or an immutable archival status; it does **not** read a `retainedUntil` field at all. Adding
+`GeneratedDocument.retainedUntil` as originally planned below would therefore have done NOTHING to protect the
+object under the new (correct) architecture — a second reason, beyond "don't duplicate OpenRegister's ceiling
+math", to not build it.
+
+The gap this decision names (a generated `loonstrook`/`jaaropgaaf` PDF evading the guard its retained source
+carries) is closed instead by `PayrollRetentionGuardService::inheritLegalHold()`, consumed by
+`HrDocumentService::generateLoonstrook()`/`generateJaaropgaaf()`: when the source `Payslip` (or, for jaaropgaaf,
+any Payslip the aggregate covers) is currently under active OpenRegister retention
+(`PayrollRetentionGuardService::isUnderActiveRetention()` — an active legal hold, an immutable archival status,
+or a still-open ceiling from a populated `retainedUntil` field or OpenRegister's own computed
+`retention.archiefactiedatum`), the SAME legal hold is placed on the `GeneratedDocument` object. This is a real
+OpenRegister write (a legal hold persisted on the object), not a classifier-readable date field — see
+`lib/Service/PayrollRetentionGuardService.php` and `openspec/specs/avg-dsr/spec.md` REQ-DSR-005 for the shipped
+design. **Not part of this change's diff** — already landed.
+
+<details>
+<summary>Original (superseded) D3 text, kept for history</summary>
 
 Re-reading `AvgDsrRetentionClassifier::populatedRetentionDate()` (Context) shows it already reads
 `$object['retainedUntil']` for **any** schema, unconditionally — the classifier does not need to learn about
@@ -125,18 +148,27 @@ now correctly retention-locks a `loonstrook`/`jaaropgaaf` `GeneratedDocument` wh
 period is still within the AWR window, closing the gap the proposal names (a DSR erase could previously delete
 the PDF record while the classifier correctly protected the underlying `Payslip`).
 
+</details>
+
 ### D4 — A storage-limitation ceiling check, complementary to (not a duplicate of) the floor checks
 
-`nl-id-bewaarplicht-5jaar` and D2's new sibling check that a retention field is populated FAR ENOUGH ahead (a
-floor — "you have not under-retained"). Nothing checks the opposite direction: a populated `retainedUntil` date
-that has already passed while the record is still present is exactly the AVG art. 5 lid 1 sub e storage-
-limitation signal — "this should probably be gone by now." `lib/Standards/Checks/NlDossierRetentionChecks.php`
-(new `CheckProvider`, auto-discovered, recommended severity) contributes `nl-bewaartermijn-verstreken`:
+**Narrowed by hrmq#99 (2026-07-18).** `lib/Standards/Checks/NlDossierRetentionChecks.php` already exists,
+shipped by hrmq#99, contributing `nl-bewaartermijn-verstreken` for the payroll/loonadministratie family +
+`GeneratedDocument`, reading OpenRegister's own `retention.archiefactiedatum` (never a bespoke field). This
+change does NOT create a new file: it adds an `Employee` entry to that SAME provider's `checks()` array, under
+the SAME rule id — a different object-type key, so no collision with hrmq#99's registration — covering the two
+fields D2 concerns.
 
-| Schema | Fields checked | Violates when |
-|---|---|---|
-| `Employee` | `identityDocumentRetainedUntil`, `loonheffingenVerklaringRetainedUntil` | either populated field's date is before today |
-| `GeneratedDocument` | `retainedUntil` | populated AND before today |
+`nl-id-bewaarplicht-5jaar` and D2's new sibling check that a retention field is populated FAR ENOUGH ahead (a
+floor — "you have not under-retained"). Nothing checked the opposite direction until hrmq#99 shipped
+`nl-bewaartermijn-verstreken` for the payroll/loonadministratie family + `GeneratedDocument`, reading
+OpenRegister's own `retention.archiefactiedatum` (never a bespoke field). **This change adds one more entry to
+that SAME, already-shipped `lib/Standards/Checks/NlDossierRetentionChecks.php` provider** (not a new file):
+
+| Schema | Fields checked | Violates when | Shipped by |
+|---|---|---|---|
+| `Employee` (this change) | `identityDocumentRetainedUntil`, `loonheffingenVerklaringRetainedUntil` | either populated field's date is before today | this change |
+| `Payslip`/`PayrollRun`/`LoonaangifteFiling`/`PayrollMutationReport`/`WkrDeclaration`/`WkrAssessment`/`PensionFiling`/`GeneratedDocument` | `retention.archiefactiedatum` (OpenRegister-computed) | populated, before today, and `archiefstatus` is not `vernietigd` | hrmq#99, already shipped |
 
 Vacuous whenever the relevant field is unpopulated (nothing to check — the same posture every other check in
 this corpus takes for an absent field). This is a **recommended-severity flag**, surfaced only through `occ
@@ -145,14 +177,13 @@ proposal's explicit Non-Goal: no automated destruction job). An HR admin acts on
 posture `nl-administratie-scope-consistency` and `nl-single-person-mode-employee-count` (a sibling change) both
 already take for a soft compliance signal.
 
-**Why not reuse `AvgDsrRetentionClassifier::classify()` directly for this check:** that method takes
-`findObjectsForSubject()`'s envelope shape (a specific subject-scoped array of `{object, gdprEntities}` pairs)
-and is designed to be called per-DSR-request, not per-corpus-audit; `RuleAuditService`'s auditing loop calls
-`CheckProvider::checks()` closures per-object, a different calling convention. Re-deriving the two-line "is this
-populated date in the past" comparison directly in `NlDossierRetentionChecks` (rather than force-fitting the
-classifier's method signature into the audit loop) is the smaller, more honest reuse — the *fields* it reads
-(`retainedUntil`, `identityDocumentRetainedUntil`) are shared vocabulary with the classifier, not shared code, and
-that is enough: both readers agree on what the field means because D3 is the one place that populates it.
+**Why not reuse a classifier-style method for this check:** `RuleAuditService`'s auditing loop calls
+`CheckProvider::checks()` closures per-object; a DSR-request-scoped classification method is a different calling
+convention. Re-deriving the two-line "is this populated date in the past" comparison directly in
+`NlDossierRetentionChecks` is the smaller, more honest reuse — the *field* it reads
+(`identityDocumentRetainedUntil`/`loonheffingenVerklaringRetainedUntil`) is shared vocabulary with
+`nl-id-bewaarplicht-5jaar`/D2's sibling rule, not shared code, and that is enough: both readers agree on what the
+field means because those checks are the ones that populate/validate it.
 
 ### Declarative vs imperative (ADR-031)
 
@@ -161,8 +192,7 @@ that is enough: both readers agree on what the field means because D3 is the one
 | `EmployeeDetail` dossier list (D1) | declarative manifest widget | ordinary FK-scoped object-list, no computation |
 | `Employee.loonheffingenVerklaringRetainedUntil` field (D2) | declarative schema | HR-entered trusted input, same as its sibling |
 | `nl-loonbelastingverklaring-bewaarplicht-5jaar` (D2) | imperative pure predicate, reused helper | one new corpus-rule registration calling an existing helper |
-| `GeneratedDocument.retainedUntil` population (D3) | imperative (`HrDocumentService`, at generation time) | the exact `Payslip.isDga` denormalize-at-generation precedent (`dga-payroll-mode`) |
-| `nl-bewaartermijn-verstreken` (D4) | imperative pure predicate, auto-discovered `CheckProvider` | reads existing/new fields; the `nl-administratie-scope-consistency` posture applied to a new direction (ceiling, not floor) |
+| `nl-bewaartermijn-verstreken` `Employee` entry (D4) | imperative pure predicate, extends an existing auto-discovered `CheckProvider` | reads existing fields; the `nl-administratie-scope-consistency` posture applied to a new direction (ceiling, not floor) |
 
 ## Seed Data (ADR-001)
 
@@ -177,31 +207,32 @@ that is enough: both readers agree on what the field means because D3 is the one
    violation for this employee, and (since the field is unpopulated) zero `nl-bewaartermijn-verstreken` violations
    for the same field on the same record (D4 is vacuous on an unpopulated field — the two checks report distinct
    facts, never overlapping on the same cause).
-3. **GeneratedDocument.retainedUntil populated at generation**: the existing seeded `gendoc-arbeidsovereenkomst-
-   jansen` (a letter type) keeps `retainedUntil: null` (D3 — no signal for letter types); a NEW seeded loonstrook
-   `GeneratedDocument` referencing the anchor's existing seeded `Payslip` carries a `retainedUntil` computed by the
-   D3 formula from that Payslip's `period` — verification: `AvgDsrService::previewErasure()` (avg-dsr, unchanged)
-   run against the anchor employee now lists this loonstrook `GeneratedDocument` in `retained`, not `wouldErase` —
-   proving the gap the proposal names is closed without touching `avg-dsr`'s own code.
-4. **Storage-limitation ceiling, violated**: a NEW seeded `GeneratedDocument` (`documentType: loonstrook`) with
-   `retainedUntil` set to a date in the past and `status: generated` (still present, not destroyed) — `occ
-   hrmq:rules:audit` reports exactly one `nl-bewaartermijn-verstreken` violation naming it.
+3. **Superseded — already verified live by hrmq#99, not this change's seed diff**: a loonstrook
+   `GeneratedDocument` generated for a legal-hold-protected Payslip inherits the SAME hold
+   (`PayrollRetentionGuardService::inheritLegalHold()`); `AvgDsrService::previewErasure()` lists it in `retained`,
+   not `wouldErase`. See hrmq#99's live-verification evidence, not a seed fixture here.
+4. **Storage-limitation ceiling, violated (Employee, this change's own seed addition)**: a NEW seeded `Employee`
+   with `identityDocumentRetainedUntil` set to a date in the past and still on file — `occ hrmq:rules:audit`
+   reports exactly one `nl-bewaartermijn-verstreken` violation naming it (the `Employee`-scoped entry this change
+   adds to `NlDossierRetentionChecks`). The `GeneratedDocument`/payroll-family ceiling case is already covered by
+   hrmq#99's own seed/tests, not duplicated here.
 
 ## Risks / Trade-offs
 
-- **The D3 `generatedAt`-vs-`period` derivation is applied at generation time, once** — if `Payslip.period` or
-  `Payslip.retainedUntil` is corrected AFTER the loonstrook PDF was generated, the `GeneratedDocument.retainedUntil`
-  copy does not automatically follow. Named explicitly: a future fast-follow could recompute on Payslip update,
-  out of this change's scope (the `hrmq-docudesk-documents` precedent — `Payslip.isDga` — has the identical,
-  already-accepted trade-off).
+- **D3 is superseded (see above) — its original risk (a retainedUntil copy going stale after a Payslip
+  correction) no longer applies.** The hrmq#99 replacement (`PayrollRetentionGuardService::inheritLegalHold()`)
+  has its own, different trade-off instead: it is called once, at generation time; if a Payslip's retention state
+  changes AFTER its loonstrook was generated, the `GeneratedDocument`'s inherited hold does not automatically
+  re-sync. Tracked in `openspec/specs/avg-dsr/spec.md`, not re-litigated here.
 - **`nl-bewaartermijn-verstreken` is a flag, never an action** (the proposal's explicit Non-Goal on automated
-  destruction) — a flagged document does not get destroyed by this change; an HR admin must act on the audit
-  report manually, same posture as every other recommended-severity check in this corpus today.
+  destruction) — a flagged document/record does not get destroyed by this change (or by hrmq#99); an HR admin
+  must act on the audit report manually, same posture as every other recommended-severity check in this corpus
+  today.
 - **No retention signal for the four letter-type documents (D — Non-Goals)** — arbeidsovereenkomst/
-  aanbiedingsbrief/werkgeversverklaring/getuigschrift carry no `retainedUntil`, so neither D3's population nor
-  D4's ceiling check ever fires for them. This is intentional (Sourcing), not an oversight, but it does mean the
-  dossier view (D1) will show these documents with no visible retention status — a plainly named limitation, not
-  hidden inside the widget.
+  aanbiedingsbrief/werkgeversverklaring/getuigschrift carry no retention signal (no `retainedUntil`, no `archive`
+  schema config), so `nl-bewaartermijn-verstreken`'s `GeneratedDocument` entry (hrmq#99) never fires for them.
+  This is intentional (Sourcing), not an oversight, but it does mean the dossier view (D1) will show these
+  documents with no visible retention status — a plainly named limitation, not hidden inside the widget.
 
 ## Open Questions
 
