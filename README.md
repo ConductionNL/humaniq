@@ -551,6 +551,98 @@ Be aware of the following boundaries:
   `nl-minimumuurloon-wet`) remain age-unaware — a pre-existing corpus gap that
   affects every contract type, not just `bbl`.
 
+## Public HRIS API — already delivered by OpenRegister, catalogued here
+
+hrmq needs no bespoke REST v1, GraphQL endpoint, webhook stack, or SCIM
+provisioner to expose a public HRIS API: **it already has one**, provided by
+the sibling `openregister` app, and it is the exact same API hrmq's own Vue
+frontend calls for every declarative page (ADR-022 — hrmq consumes
+OpenRegister's abstractions, it does not rebuild CRUD). This section documents
+that existing surface for an external integrator; **this feature adds zero
+hrmq routes, controllers, or services** — its whole diff is one schema
+fragment (`IntegrationAccount`), one seed record, two manifest pages, this
+documentation, and a schema-validation test.
+
+### Endpoint pattern and verbs
+
+Every hrmq schema lives in the OpenRegister `hrmq` register and is reachable
+under `openregister`'s generic object routes (verified against the live
+`openregister/appinfo/routes.php` + `ObjectsController` at HEAD):
+
+| Verb | Path | Action |
+|---|---|---|
+| `GET` | `/api/objects/hrmq/{schema}` | index — list, filterable and paginated |
+| `POST` | `/api/objects/hrmq/{schema}` | create |
+| `GET` | `/api/objects/hrmq/{schema}/{id}` | read one |
+| `PUT` | `/api/objects/hrmq/{schema}/{id}` | replace |
+| `PATCH` | `/api/objects/hrmq/{schema}/{id}` | partial update |
+| `DELETE` | `/api/objects/hrmq/{schema}/{id}` | delete |
+
+For example `GET /api/objects/hrmq/Vacancy` returns a paginated JSON list of
+vacancies; `{schema}` is a schema *slug* (`Vacancy`, `OrgUnit`, `Employee`, …).
+The index route accepts OpenRegister's standard filter and pagination query
+parameters. These routes carry OpenRegister's `@NoAdminRequired` /
+`@NoCSRFRequired` posture, so any authenticated Nextcloud principal — not only
+an interactive browser session — can call them.
+
+### Authentication — Nextcloud app passwords, no custom credential
+
+An external system authenticates with a **standard Nextcloud app password**,
+issued per Nextcloud account under **Settings › Personal › Security › App
+passwords** and sent as HTTP **Basic Auth** (`Authorization: Basic <base64
+user:app-password>`). This is Nextcloud core, present on every instance, and is
+precisely the "a non-interactive client needs durable API access" primitive —
+so hrmq deliberately ships **no** custom API-key, token-scope, or rate-limit
+system. Issue an app password on a **dedicated service account** (typically not
+a real employee's account), and revoke it from the same screen when the
+integration ends. The `IntegrationAccount.nextcloudUserId` catalog field
+records *which* NC account an integration uses; the app password itself is
+never issued or stored by hrmq.
+
+### Authorization — OpenRegister RBAC, enforced server-side
+
+Authorization is enforced entirely by OpenRegister, server-side, at call time:
+
+- A Nextcloud administrator grants the integration's account read (and/or
+  write) access per register/schema through OpenRegister's own RBAC
+  configuration (per-user / per-group ACLs). Whoever holds that grant can call
+  the API; whoever does not, cannot — `ObjectsController` derives
+  `_rbac = (isAdmin === false)` from the caller's *actual* admin status, never
+  from request input.
+- **`writeOnly` secret redaction applies to every caller.**
+  `RenderHandler::redactWriteOnlyFromRows()` strips `_render:false` (writeOnly)
+  fields from every response row, regardless of RBAC — so secret-marked fields
+  never leave the boundary in cleartext, even for an administrator.
+
+`IntegrationAccount` is a **governance/audit catalog, not an enforcement
+point**: recording a grant here (or setting `status: ingetrokken`) changes
+nothing about actual access. Revoking access always means revoking the RBAC
+grant and/or the app password — never editing this catalog. See
+`openspec/changes/hris-api-public/design.md` D2.
+
+### Recommended default schema subset for a new integration
+
+Because the REST surface is ungated (any RBAC-granted caller reaches it, for any
+purpose), a new `IntegrationAccount` should start from the **same six read-only,
+non-special-category schemas** the `hrmq-mcp-adoption` change already vetted
+against AVG art. 9 (special categories), the Wet BSN regime, and purpose
+limitation:
+
+> `Vacancy`, `OrgUnit`, `Asset`, `AssetAssignment`, `Timesheet`, `Expense`
+
+This is **guidance, not an enforced allow-list** — hrmq cannot enforce it (RBAC
+lives outside hrmq's schema fragments, D2). The classification is reused by
+reference from `hrmq-mcp-adoption`'s design.md rather than re-derived here (its
+reasoning — "what may leave hrmq's boundary toward a less-trusted external
+consumer" — describes a third-party REST integration exactly as well as an MCP
+tool call). **Any wider grant** — access to `Payslip`, `Employee`, or any
+schema carrying BSN/IBAN/health/special-category data — is legitimate when
+genuinely needed (e.g. a payroll partner), but **requires an explicit,
+documented reason recorded in `IntegrationAccount.purpose`**. The catalog and
+its review fields (`reviewedBy`/`reviewedAt`) give HR/security a single place to
+see which external systems have HRIS access, for what, and when it was last
+reviewed — the governance question `hrmq-mcp-adoption` answers for the LLM tool
+surface, extended here to the wider REST surface.
 ## Authentication (DigiD / Yivi / eHerkenning) — a Nextcloud platform layer, not an hrmq auth stack
 
 **hrmq installs, configures, and ships nothing for authentication.** Who a user

@@ -1809,6 +1809,22 @@
                 "status": "concept",
                 "administrationId": "ADM-001",
                 "_note": "wnt-disclosure: over the WNT-norm with no exemption -- the single seeded nl-wnt-norm-overschrijding violation."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "IntegrationAccount",
+                    "slug": "integration-payrollpartner"
+                },
+                "name": "Voorbeeld Payroll Partner BV",
+                "purpose": "Maandelijkse export van vacatures en organisatie-eenheden naar partnerplatform",
+                "nextcloudUserId": "integration-payrollpartner",
+                "grantedSchemas": ["Vacancy", "OrgUnit"],
+                "status": "actief",
+                "reviewedBy": "admin",
+                "reviewedAt": "2026-06-15T09:00:00Z",
+                "createdAt": "2026-01-10T08:00:00Z",
+                "_note": "hris-api-public: a fictitious payroll-partner integration demonstrating the IntegrationAccount catalog shape. grantedSchemas stays within hrmq-mcp-adoption's six-schema recommended default (Vacancy, OrgUnit), so purpose needs no special justification. This record grants NOTHING on its own -- the real access is an OpenRegister RBAC grant + a Nextcloud app password on the integration-payrollpartner account, configured outside hrmq (design.md D2)."
             }
         ]
     }

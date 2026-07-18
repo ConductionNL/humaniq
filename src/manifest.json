@@ -707,6 +707,12 @@
 					"label": "Administraties",
 					"icon": "DomainOutline",
 					"route": "Administraties"
+				},
+				{
+					"id": "Integraties",
+					"label": "Integraties",
+					"icon": "PowerPlugOutline",
+					"route": "IntegrationAccounts"
 				}
 			]
 		}
@@ -8663,6 +8669,83 @@
 			"title": "Administraties",
 			"component": "AdministrationSwitcher",
 			"_note": "multi-administratie design.md D4/D5 (REQ-MULTI-006): the ADR-001 Rule 3 active-administratie indicator + switch, homed under Configuratie as a SETTING surface (never a per-tenant menu duplication). The manifest v2 renderer chrome exposes no topbar-switcher slot (the known v2 renderer chrome gap), and no declarative primitive can gather the caller's accessible administraties, POST a guarded switch, and re-scope sibling pages -- open-form persists a register object (wrong: the active pointer is a per-user IConfig value, not domain data) and api-call cannot render the returned accessible-administration list. So this page is a host-app SFC (AdministrationSwitcher.vue, registered in src/registry.js) calling GET/POST /api/administration/* (AdministrationController, no-admin-idor guarded server-side). The true topbar chrome slot is a named upstream nc-vue fast-follow; the sibling hrmq-ia-navigation-alignment change owns the Configuratie menu-9 drawer -- this page lands under it as a clean union (neither re-declares the group)."
+		},
+		{
+			"id": "IntegrationAccounts",
+			"route": "/configuratie/integraties",
+			"type": "index",
+			"title": "Integraties",
+			"actions": [
+				{
+					"id": "create-integration-account",
+					"label": "Integratie registreren",
+					"type": "open-form",
+					"icon": "PlusCircleOutline",
+					"register": "hrmq",
+					"schema": "IntegrationAccount",
+					"onSuccessRoute": "IntegrationAccountDetail",
+					"successMessage": "Integratie geregistreerd. Configureer de daadwerkelijke RBAC-toegang en het app-wachtwoord in OpenRegister / Nextcloud."
+				}
+			],
+			"config": {
+				"register": "hrmq",
+				"schema": "IntegrationAccount",
+				"description": "Governance-/auditcatalogus van externe systemen die toegang hebben gekregen tot hrmq via OpenRegister's publieke REST-API (/api/objects/{register}/{schema}, geauthenticeerd met een Nextcloud app-wachtwoord). Dit overzicht legt VAST welk extern systeem toegang heeft, waarvoor, en wanneer die toegang voor het laatst is beoordeeld — het verleent of handhaaft die toegang NIET (de echte RBAC-grant staat in OpenRegister, buiten hrmq; hris-api-public design.md D2). Alleen-beheerder surface.",
+				"columns": [
+					"name",
+					"purpose",
+					"status",
+					"reviewedAt"
+				],
+				"filters": [
+					"status"
+				],
+				"sort": {
+					"field": "name",
+					"order": "asc"
+				}
+			}
+		},
+		{
+			"id": "IntegrationAccountDetail",
+			"route": "/configuratie/integraties/:id",
+			"type": "detail",
+			"title": "Integratie",
+			"config": {
+				"register": "hrmq",
+				"schema": "IntegrationAccount",
+				"_note": "hris-api-public (2026-07-18): a governance/audit record of one external system granted access to hrmq via OpenRegister's public REST surface. The 'Integratie' data widget carries the whole record (name/purpose/nextcloudUserId/grantedSchemas/status/reviewedBy/reviewedAt/createdAt); no exclude, because IntegrationAccount carries NO $ref field (nextcloudUserId is a plain string per ADR-062 rule 7, never a $ref to an Employee), so there is no Related panel to resolve. NO lifecycleActions: status is a plain actief/ingetrokken enum with no x-openregister-lifecycle transition map (the OrgUnitDetail/ShiftDetail precedent) -- toggling it records a governance state, it does not run a guarded workflow, and it changes NOTHING about actual access (design.md D2). No stat/files/calendar/comms leaves -- a catalog record has no numeric headline aggregate, document, appointment, or correspondence thread. Audit history stays a sidebar tab so a reviewer can see who changed the catalog record and when. Alleen-beheerder surface (like DsrRequestDetail); enforcement is server-side OpenRegister RBAC, not a manifest flag.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			},
+			"widgets": [
+				{
+					"widgetKey": "data",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 6,
+					"props": {
+						"title": "Integratie",
+						"icon": "PowerPlugOutline",
+						"content": {
+							"columns": 2
+						}
+					}
+				},
+				{
+					"widgetKey": "audit-trail",
+					"slot": "sidebar",
+					"tabGroup": "audit",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 1,
+					"gridHeight": 1
+				}
+			]
 		},
 		{
 			"id": "Shifts",
