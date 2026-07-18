@@ -280,10 +280,46 @@
       "jurisdiction": "NL",
       "framework": "nl-loonheffingen",
       "source": "Wet LB 1964 art. 31a (aftopping WNT-norm)",
-      "statement": "The 30%-regeling tax-free allowance is capped on wages up to the WNT-norm (Balkenende-norm), with the excess no longer eligible. (verify cap amount)",
+      "statement": "The 30%-regeling tax-free allowance is capped on wages up to the WNT-norm (Balkenende-norm) of EUR 262.000 per year in 2026, with the excess no longer eligible; the cap is unconditional for every 30%-ruling from 1 January 2026 (the transitional carve-out expired 31 December 2025).",
       "severity": "conditional",
       "machineCheckable": true,
       "effectiveDate": "2024-01-01",
+      "sourceUrl": "https://www.moore-drv.nl/wnt-norm-expatregeling/"
+    },
+    {
+      "id": "nl-30-regeling-looptijd-5jaar",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Wet LB 1964 art. 31a",
+      "statement": "A granted 30%-beschikking runs for at most 60 months (5 years) from the first working day; a ruling still marked granted must carry a start date and an end date no more than 60 months later, and must not remain granted after its end date has passed.",
+      "severity": "conditional",
+      "machineCheckable": true,
+      "effectiveDate": "2024-01-01",
+      "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/internationaal/personeel/u_bent_niet_in_nederland_gevestigd_loonheffingen_inhouden/als_u_loonheffingen_gaat_inhouden/extraterritoriale_kosten_en_de_30procentregeling/voorwaarden_voor_de_30procentregeling1/beschikking_geldigheid_en_toetsen_voorwaarden"
+    },
+    {
+      "id": "nl-30-regeling-aftoppingsgrens-bedrag",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Wet LB 1964 art. 31a (aftopping WNT-norm)",
+      "statement": "The 30%-ruling exemption recorded on a payslip shall equal min(gross wage, the WNT-aftoppingsgrens per period) times the granted percentage, to the cent; a recorded amount that does not re-derive from the WNT-capped formula is flagged.",
+      "severity": "conditional",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://www.moore-drv.nl/wnt-norm-expatregeling/"
+    },
+    {
+      "id": "nl-30-regeling-salarisnorm",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "nl-loonheffingen",
+      "source": "Wet LB 1964 art. 31a",
+      "statement": "A granted 30%-ruling requires the employee's annualised salary (excluding the tax-free allowance) to meet the salarisnorm: EUR 48.013 in 2026, or the reduced EUR 36.497 for employees under 30 with a qualifying master's degree.",
+      "severity": "conditional",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
       "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/nl/personeel-en-loon/personeel-en-loon"
     },
     {

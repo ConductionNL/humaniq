@@ -16,6 +16,14 @@
  * Awf/Aof/Wko/Whk while every other component stays computed exactly as
  * for `true`.
  *
+ * `$thirtyPercentRulingRate` (30-procent-regeling) is likewise additive and
+ * defaults to `0.0`, so every pre-existing named-argument call site is
+ * unaffected: a granted 30%-ruling reduces the TAXABLE wage the pack computes
+ * tax/premiums over (via the pack's `belastbaarLoon` binding) while leaving the
+ * unreduced gross as the net-fold's base, so `nettoPay` correctly rises. `0.0`
+ * degrades the pack's `cappedRate` exemption binding to zero — the non-ruling
+ * path is byte-identical.
+ *
  * @category Payroll
  * @package  OCA\Hrmq\Payroll
  *
@@ -30,6 +38,7 @@
  *
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
  * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
+ * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-003
  */
 
 declare(strict_types=1);
@@ -56,10 +65,12 @@ final class CalculationInput
      * @param float       $whkPercentage                 The employer's Whk percentage (percentage scale, e.g. `1.52`).
      * @param bool        $verzekeringsplichtig          Whether the employee is verzekeringsplichtig for the werknemersverzekeringen (dga-payroll-mode). `false` for a DGA — zeroes Awf/Aof/Wko/Whk; every other component is unaffected.
      * @param string      $jurisdiction                  The ISO 3166-1 alpha-2 jurisdiction whose pack computes this wage (jurisdiction-packs). Additive and defaults to `NL`, so every pre-existing named-argument call site is unaffected.
+     * @param float       $thirtyPercentRulingRate       The applied 30%-ruling percentage (30-procent-regeling). Additive and defaults to `0.0`, so every pre-existing named-argument call site is unaffected: a positive rate drives the pack's `thirtyPercentExemption`/`belastbaarLoon` bindings, reducing the taxable base while leaving the net-fold's gross unchanged. `0.0` degrades the exemption to zero (non-ruling path byte-identical).
      *
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
      * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
      * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-001
+     * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-003
      */
     public function __construct(
         public readonly int $grossMonthlySalaryCents,
@@ -72,13 +83,14 @@ final class CalculationInput
         public readonly float $whkPercentage,
         public readonly bool $verzekeringsplichtig=true,
         public readonly string $jurisdiction='NL',
+        public readonly float $thirtyPercentRulingRate=0.0,
     ) {
 
     }//end __construct()
 
 
     /**
-     * All ten public readonly properties as a plain array, keyed by name.
+     * All eleven public readonly properties as a plain array, keyed by name.
      *
      * @return array<string, mixed>
      *
@@ -97,6 +109,7 @@ final class CalculationInput
             'whkPercentage'                => $this->whkPercentage,
             'verzekeringsplichtig'         => $this->verzekeringsplichtig,
             'jurisdiction'                 => $this->jurisdiction,
+            'thirtyPercentRulingRate'      => $this->thirtyPercentRulingRate,
         ];
 
     }//end toArray()
@@ -131,7 +144,7 @@ final class CalculationInput
      * sealed payslip from ITS OWN stored snapshot, never from the live
      * Employee/EmploymentContract state.
      *
-     * @param string $json A `toCanonicalJson()`-produced string (or any JSON object carrying the same ten keys).
+     * @param string $json A `toCanonicalJson()`-produced string (or any JSON object carrying the same eleven keys).
      *
      * @return self
      *
@@ -184,6 +197,7 @@ final class CalculationInput
             whkPercentage: (float) ($decoded['whkPercentage'] ?? 0.0),
             verzekeringsplichtig: (($decoded['verzekeringsplichtig'] ?? true) === true),
             jurisdiction: (string) ($decoded['jurisdiction'] ?? 'NL'),
+            thirtyPercentRulingRate: (float) ($decoded['thirtyPercentRulingRate'] ?? 0.0),
         );
 
     }//end fromDecoded()

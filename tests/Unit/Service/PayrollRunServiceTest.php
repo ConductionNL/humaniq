@@ -35,6 +35,7 @@
  * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
  * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
  * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
+ * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-003
  */
 
 declare(strict_types=1);
@@ -379,11 +380,86 @@ class PayrollRunServiceTest extends TestCase
         // PACK that computed the run, `{packId}@{packVersion}`, rather than the
         // bare tables id. Strictly more information — it names the chain as well
         // as the parameter set. Every cents-exact total above is unchanged.
-        $this->assertSame('nl-2026@1.0.0', $final['engineVersion']);
+        $this->assertSame('nl-2026@1.1.0', $final['engineVersion']);
         $this->assertNotSame('', trim((string) $final['calculatedAt']));
         $this->assertArrayNotHasKey('glExpensePosted', $final);
 
     }//end testCreatesDraftRunAndAnchorPayslip()
+
+
+    /**
+     * 30-procent-regeling (design.md D4/D5): a granted-ruling employee's
+     * payslip carries `thirtyPercentRulingExemption` €1.140,00 and a `nettoPay`
+     * of €3.548,83 -- HIGHER than the €3.081,17 the same €3.800,00 gross yields
+     * without the ruling, never lower. `grossPay` stays the full €3.800,00.
+     *
+     * @return void
+     */
+    public function testGrantedRulingStampsExemptionAndRaisesNetto(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [
+                    $this->employee(
+                        [
+                            'thirtyPercentRulingGranted' => true,
+                            'thirtyPercentRulingRate'    => 30.0,
+                        ]
+                    ),
+                ],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+        $this->assertSame('calculated', $result['status']);
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+        $payslip = $payslips[0];
+
+        $this->assertSame(1140.00, $payslip['thirtyPercentRulingExemption'], '30%-ruling: exemption must be €1.140,00 (min(3800, 21833.33) × 30%).');
+        $this->assertSame(3800.00, $payslip['grossPay'], '30%-ruling: grossPay stays the full unreduced €3.800,00.');
+        $this->assertSame(251.17, $payslip['loonheffing']);
+        $this->assertSame(3548.83, $payslip['nettoPay']);
+        $this->assertGreaterThan(3081.17, $payslip['nettoPay'], '30%-ruling: nettoPay must RISE relative to the same-gross non-ruling case, never fall.');
+
+    }//end testGrantedRulingStampsExemptionAndRaisesNetto()
+
+
+    /**
+     * 30-procent-regeling (design.md D5): a non-granted employee's payslip is
+     * byte-identical to the pre-change shape -- `thirtyPercentRulingExemption`
+     * is null and every engine component matches the base anchor exactly.
+     *
+     * @return void
+     */
+    public function testNonGrantedRulingPayslipIsByteIdenticalWithNullExemption(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee(['thirtyPercentRulingGranted' => false])],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+            ]
+        );
+
+        $result = $service->runFor('2026-02');
+        $this->assertSame('calculated', $result['status']);
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+        $payslip = $payslips[0];
+
+        $this->assertNull($payslip['thirtyPercentRulingExemption'], 'no ruling: exemption must be null, not €0,00.');
+        $this->assertSame(3800.00, $payslip['grossPay']);
+        $this->assertSame(718.83, $payslip['loonheffing']);
+        $this->assertSame(3081.17, $payslip['nettoPay']);
+
+    }//end testNonGrantedRulingPayslipIsByteIdenticalWithNullExemption()
 
 
     /**

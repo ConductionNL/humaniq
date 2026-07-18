@@ -714,10 +714,19 @@ class RuleAuditService
      * predicate re-querying the register. Degrades gracefully to an empty map
      * when the Loonbeslag schema does not exist yet in the register.
      *
+     * 30-procent-regeling (design.md D5): also builds `employeesById`, the FULL
+     * Employee row keyed by id -- the SAME `runsById` shape, consumed by
+     * `NlPayrollChecks::checks()['Payslip']
+     * ['nl-30-regeling-aftoppingsgrens-bedrag']` to resolve a Payslip's
+     * `employeeId` reference to the owning Employee's `thirtyPercentRulingRate`
+     * without re-querying the register. Degrades gracefully to an empty map
+     * when the Employee schema does not exist yet.
+     *
      * @return array<string, mixed>
      *
      * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-007
      * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-007
+     * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-004
      */
     private function buildPayrollContext(): array
     {
@@ -737,9 +746,18 @@ class RuleAuditService
             }
         }
 
+        $employeesById = [];
+        foreach ($this->loadAll('Employee') as $employee) {
+            $id = (string) ($employee['id'] ?? $employee['@self']['id'] ?? '');
+            if ($id !== '') {
+                $employeesById[$id] = $employee;
+            }
+        }
+
         return [
             'runsById'         => $runsById,
             'loonbeslagenById' => $loonbeslagenById,
+            'employeesById'    => $employeesById,
         ];
 
     }//end buildPayrollContext()

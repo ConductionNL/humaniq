@@ -9,7 +9,9 @@
     {"doc": "Rijksoverheid — Bedragen minimumloon 2026", "url": "https://www.rijksoverheid.nl/onderwerpen/minimumloon/bedragen-minimumloon/bedragen-minimumloon-2026"},
     {"doc": "Belastingdienst — Werkkostenregeling (vrije ruimte en eindheffing)", "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/personeel-en-loon/content/werkkostenregeling"},
     {"doc": "Belastingdienst — Bijtelling privégebruik auto 2026", "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/inkomstenbelasting/veranderingen-inkomstenbelasting-2026/bijtelling-privegebruik-auto-2026"},
-    {"doc": "Belastingdienst — Loon en aanmerkelijk belang (gebruikelijkloonregeling, Wet LB 1964 art. 12a)", "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/loon_en_aanmerkelijk_belang/loon_en_aanmerkelijk_belang"}
+    {"doc": "Belastingdienst — Loon en aanmerkelijk belang (gebruikelijkloonregeling, Wet LB 1964 art. 12a)", "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/loon_en_aanmerkelijk_belang/loon_en_aanmerkelijk_belang"},
+    {"doc": "Belastingdienst — Nieuwsbrief Loonheffingen 2026 (30%-regeling / expatregeling salarisnormen)", "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/personeel-en-loon/content/nieuwsbrief-loonheffingen"},
+    {"doc": "Belastingdienst — Beschikking 30%-regeling: geldigheid en toetsen voorwaarden (Wet LB 1964 art. 31a)", "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/internationaal/personeel/u_bent_niet_in_nederland_gevestigd_loonheffingen_inhouden/als_u_loonheffingen_gaat_inhouden/extraterritoriale_kosten_en_de_30procentregeling/voorwaarden_voor_de_30procentregeling1/beschikking_geldigheid_en_toetsen_voorwaarden"}
   ],
   "parameters": {
     "loonheffing": {
@@ -183,6 +185,39 @@
         "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/loon_en_aanmerkelijk_belang/loon_en_aanmerkelijk_belang",
         "verified": true,
         "note": "Minimum gebruikelijk loon per jaar for a DGA/aanmerkelijkbelanghouder in 2026 (2024/2025: EUR 56.000). The statutory norm is the HIGHEST of: comparable-employment salary, highest-paid-employee salary at the BV/related BV, or this floor -- the engine checks only the floor (dga-payroll-mode MVP, non-goal: comparable-salary benchmarking)."
+      }
+    },
+    "dertigProcentRegeling": {
+      "percent": {
+        "value": 30,
+        "source": "Belastingdienst Nieuwsbrief Loonheffingen 2026 / Belastingplan 2025 (Voorjaarsnota 2024 coalitieakkoord)",
+        "verified": true,
+        "note": "Flat 30% for the full term for 2025/2026 grants. The Belastingplan 2024 stepped 30/20/10 step-down was REVERSED before taking effect -- NOT modelled. A flat 27% applies from 2027 (also not stepped); a future nl-2027.json data-only addition, no engine change (30-procent-regeling)."
+      },
+      "maxDurationMonths": {
+        "value": 60,
+        "source": "Belastingdienst -- Beschikking: geldigheid en toetsen voorwaarden",
+        "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/internationaal/personeel/u_bent_niet_in_nederland_gevestigd_loonheffingen_inhouden/als_u_loonheffingen_gaat_inhouden/extraterritoriale_kosten_en_de_30procentregeling/voorwaarden_voor_de_30procentregeling1/beschikking_geldigheid_en_toetsen_voorwaarden",
+        "verified": true,
+        "note": "Maximum 5 years (60 months) from the first working day in NL; prior NL employment/stay is deducted from the 5 years (not modelled -- MVP non-goal, 30-procent-regeling)."
+      },
+      "aftoppingsgrens": {
+        "value": {"jaar": 262000, "maand": 21833.33},
+        "source": "WNT-norm (Balkenende-norm) 2026 -- unconditional for every 30%-ruling from 1 Jan 2026 (transitional carve-out expired 31 Dec 2025)",
+        "verified": true,
+        "note": "Fixes the pre-existing nl-30-regeling-aftoppingsgrens rule's placeholder cap amount. maand = jaar / 12, rounded to the cent, the maximumpremieloon.maand precedent (30-procent-regeling)."
+      },
+      "salarisnormAlgemeen": {
+        "value": 48013,
+        "source": "Belastingdienst Nieuwsbrief Loonheffingen 2026",
+        "verified": true,
+        "note": "2025: EUR 46.660. Minimum annualised loon for a granted 30%-ruling (excl. the tax-free allowance itself) (30-procent-regeling)."
+      },
+      "salarisnormMasterOnder30": {
+        "value": 36497,
+        "source": "Belastingdienst Nieuwsbrief Loonheffingen 2026",
+        "verified": true,
+        "note": "2025: EUR 35.468. Reduced norm for employees under 30 with a qualifying (NL-equivalent) master's degree -- Employee.thirtyPercentRulingReducedNormApplies gates which norm nl-30-regeling-salarisnorm compares against (30-procent-regeling)."
       }
     }
   },

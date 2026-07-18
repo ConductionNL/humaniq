@@ -456,6 +456,36 @@ final class TaxTables
 
 
     /**
+     * The 30%-ruling (expatregeling, Wet LB 1964 art. 31a) rate/cap/norm
+     * parameters from the `dertigProcentRegeling` table group
+     * (30-procent-regeling design.md D3): `percent` stays on the percentage
+     * scale (0-100) -- the vakantiebijslagRate()/zvw() precedent --
+     * `aftoppingsgrensMaandCents`/`salarisnormAlgemeenCents`/
+     * `salarisnormMasterOnder30Cents` are cents-converted since they are
+     * compared directly against wage amounts in cents, and `maxDurationMonths`
+     * is a plain month count. Not read by `PayrollCalculator` (the pack reads
+     * the raw corpus via `@table.*` refs); this exists for
+     * `PayrollRunService`'s exemption re-derivation and the `NlPayrollChecks`
+     * 30%-ruling corpus rules -- the `bijtellingPrivegebruikAuto()` precedent.
+     *
+     * @return array{percent: float, maxDurationMonths: int, aftoppingsgrensMaandCents: int, salarisnormAlgemeenCents: int, salarisnormMasterOnder30Cents: int}
+     *
+     * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-001
+     */
+    public function dertigProcentRegeling(): array
+    {
+        return [
+            'percent'                       => (float) $this->leaf(['dertigProcentRegeling', 'percent', 'value']),
+            'maxDurationMonths'             => (int) $this->leaf(['dertigProcentRegeling', 'maxDurationMonths', 'value']),
+            'aftoppingsgrensMaandCents'     => self::euroToCents((float) $this->leaf(['dertigProcentRegeling', 'aftoppingsgrens', 'value', 'maand'])),
+            'salarisnormAlgemeenCents'      => self::euroToCents((float) $this->leaf(['dertigProcentRegeling', 'salarisnormAlgemeen', 'value'])),
+            'salarisnormMasterOnder30Cents' => self::euroToCents((float) $this->leaf(['dertigProcentRegeling', 'salarisnormMasterOnder30', 'value'])),
+        ];
+
+    }//end dertigProcentRegeling()
+
+
+    /**
      * The werkkostenregeling (WKR) vrije-ruimte tranche + eindheffing
      * parameters from the `wkr` table group (wkr-administration design.md
      * D2/D4): `tranche1Percent`/`tranche2Percent`/`eindheffingPercent` stay on

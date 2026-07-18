@@ -2,7 +2,7 @@
   "id": "nl-2026",
   "jurisdiction": "NL",
   "taxYear": 2026,
-  "packVersion": "1.0.0",
+  "packVersion": "1.1.0",
   "dslVersion": "1.0",
   "tables": "nl-2026",
   "currency": "EUR",
@@ -60,6 +60,10 @@
     "verzekeringsplichtig": {
       "type": "boolean",
       "default": true
+    },
+    "thirtyPercentRulingRate": {
+      "type": "percent",
+      "default": 0
     }
   },
   "bindings": [
@@ -71,6 +75,30 @@
         "op": "clamp",
         "value": "@input.gross",
         "min": 0
+      }
+    },
+    {
+      "id": "thirtyPercentExemption",
+      "_note": "Wet LB 1964 art. 31a -- the 30%-ruling's tax-free target allowance: min(gross, WNT-aftoppingsgrens) x the granted rate. Zero when not granted (thirtyPercentRulingRate defaults to 0, so cappedRate naturally degrades to 0 -- no `when` gate needed). 30-procent-regeling D2.",
+      "op": "derive",
+      "using": {
+        "op": "cappedRate",
+        "base": "@binding.tvl",
+        "rate": "@input.thirtyPercentRulingRate",
+        "cap": "@table.dertigProcentRegeling.aftoppingsgrens.maand:cents"
+      },
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "belastbaarLoon",
+      "_note": "The TAXABLE wage after the 30%-ruling exemption. Every step below that used to read @binding.tvl as its tax/premium/vakantiegeld base now reads THIS instead. grossRef stays @binding.tvl (unreduced) -- the exempted cash never leaves net pay, only the tax base. 30-procent-regeling D2.",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "max(0, @binding.tvl - @binding.thirtyPercentExemption)"
       }
     },
     {
@@ -153,11 +181,11 @@
     },
     {
       "id": "annualised",
-      "_note": "tvl x F (the tijdvakfactor for a monthly period).",
+      "_note": "belastbaarLoon x F (the tijdvakfactor for a monthly period). 30-procent-regeling D2: repointed from @binding.tvl to @binding.belastbaarLoon so the tabelloon/schijventarief/heffingskortingen chain is computed over the 30%-reduced taxable base.",
       "op": "derive",
       "using": {
         "op": "expr",
-        "expression": "@binding.tvl * @table.loonheffing.tijdvakFactoren.maand"
+        "expression": "@binding.belastbaarLoon * @table.loonheffing.tijdvakFactoren.maand"
       }
     },
     {
@@ -283,7 +311,7 @@
       "_note": "Vakantiegeldreservering — 8% of the gross wage. RESERVE: neither cash to the employee this period nor an employer charge this period. Folding it into either would misstate one of them.",
       "op": "rate",
       "incidence": "reserve",
-      "base": "@binding.tvl",
+      "base": "@binding.belastbaarLoon",
       "rate": "@binding.vakantiegeldRate",
       "round": {
         "mode": "nearest",
@@ -427,7 +455,7 @@
       "_note": "Zvw werkgeversheffing over the capped bijdrageloon. EMPLOYER-COST.",
       "op": "cappedRate",
       "incidence": "employer-cost",
-      "base": "@binding.tvl",
+      "base": "@binding.belastbaarLoon",
       "rate": "@binding.zvwRate",
       "cap": "@binding.premieloonCap",
       "round": {
@@ -441,7 +469,7 @@
       "op": "cappedRate",
       "incidence": "employer-cost",
       "when": "@input.verzekeringsplichtig",
-      "base": "@binding.tvl",
+      "base": "@binding.belastbaarLoon",
       "rate": "@binding.awfRate",
       "cap": "@binding.premieloonCap",
       "round": {
@@ -454,7 +482,7 @@
       "op": "cappedRate",
       "incidence": "employer-cost",
       "when": "@input.verzekeringsplichtig",
-      "base": "@binding.tvl",
+      "base": "@binding.belastbaarLoon",
       "rate": "@binding.aofRate",
       "cap": "@binding.premieloonCap",
       "round": {
@@ -467,7 +495,7 @@
       "op": "cappedRate",
       "incidence": "employer-cost",
       "when": "@input.verzekeringsplichtig",
-      "base": "@binding.tvl",
+      "base": "@binding.belastbaarLoon",
       "rate": "@table.werknemersverzekeringen.wkoOpslag",
       "cap": "@binding.premieloonCap",
       "round": {
@@ -481,7 +509,7 @@
       "op": "cappedRate",
       "incidence": "employer-cost",
       "when": "@input.verzekeringsplichtig",
-      "base": "@binding.tvl",
+      "base": "@binding.belastbaarLoon",
       "rate": "@input.whkPercentage",
       "cap": "@binding.premieloonCap",
       "round": {
@@ -539,7 +567,8 @@
       { "$fixture": "payroll-2026/no-korting.json" },
       { "$fixture": "payroll-2026/part-time.json" },
       { "$fixture": "payroll-2026/bijtelling-anchor.json" },
-      { "$fixture": "payroll-2026/dga-anchor.json" }
+      { "$fixture": "payroll-2026/dga-anchor.json" },
+      { "$fixture": "payroll-2026/thirty-percent-ruling-anchor.json" }
     ]
   }
 }
