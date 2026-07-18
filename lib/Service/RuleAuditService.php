@@ -160,6 +160,14 @@ class RuleAuditService
         // register — the `cao.employeesById` / `payroll.runsById` precedent.
         $context['comp'] = $this->buildCompContext();
 
+        // functiehuis-hr21: a Normfunctie-by-id index (caoSchaal +
+        // caoSchaalVerified) so NlHr21Checks::checks()['EmploymentContract']
+        // ['nl-hr21-schaal-consistentie'] can resolve a contract's assigned
+        // normfunctie's mapped schaal without re-querying the register — the
+        // `buildCompContext()` salaryBandsById precedent, mirrored onto
+        // Normfunctie.
+        $context['hr21'] = $this->buildHr21Context();
+
         // wkr-administration: a per-(administrationId, year) fiscale-loonsom
         // + vrije-ruimte-used aggregate so NlWkrChecks::checks()
         // ['WkrAssessment']['nl-wkr-eindheffing-exposure'] can recompute the
@@ -812,6 +820,38 @@ class RuleAuditService
         ];
 
     }//end buildCompContext()
+
+
+    /**
+     * Build the Normfunctie-by-id index consumed by
+     * `NlHr21Checks::checks()['EmploymentContract']['nl-hr21-schaal-consistentie']`
+     * (functiehuis-hr21) — the `buildCompContext()` salaryBandsById precedent,
+     * mirrored onto Normfunctie.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
+     */
+    private function buildHr21Context(): array
+    {
+        $normfunctiesById = [];
+        foreach ($this->loadAll('Normfunctie') as $normfunctie) {
+            $id = (string) ($normfunctie['id'] ?? $normfunctie['@self']['id'] ?? '');
+            if ($id === '') {
+                continue;
+            }
+
+            $normfunctiesById[$id] = [
+                'caoSchaal'         => ($normfunctie['caoSchaal'] ?? null),
+                'caoSchaalVerified' => ($normfunctie['caoSchaalVerified'] ?? false),
+            ];
+        }
+
+        return [
+            'normfunctiesById' => $normfunctiesById,
+        ];
+
+    }//end buildHr21Context()
 
 
     /**
