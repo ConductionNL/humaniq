@@ -1,0 +1,73 @@
+{
+    "x-hrmq-fragment": "hr-wnt",
+    "components": {
+        "schemas": {
+            "WntDisclosure": {
+                "slug": "WntDisclosure",
+                "icon": "ScaleBalance",
+                "version": "0.1.0",
+                "title": "WNT disclosure",
+                "description": "The annual WNT-verantwoording for one topfunctionaris for one calendar year (Wet normering topinkomens, BWBR0032249). One row per (topfunctionaris, year) carrying the hand-entered total WNT-bezoldiging for that year and a two-state concept -> gepubliceerd publication lifecycle. The set of a year's WntDisclosure rows IS that year's WNT-verantwoording -- there is no separate aggregate report schema (wnt-disclosure design.md D2). totalCompensation is hand-entered by finance; this app computes and aggregates nothing (design.md D3).",
+                "type": "object",
+                "x-schema-org": "schema:Report",
+                "required": [
+                    "employeeId",
+                    "year",
+                    "totalCompensation",
+                    "status"
+                ],
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "concept",
+                        "terminal": [],
+                        "transitions": {
+                            "publiceren": {
+                                "from": [
+                                    "concept"
+                                ],
+                                "to": "gepubliceerd",
+                                "description": "Publishes the disclosure as part of the year's WNT-verantwoording. No guard -- publication is a plain per-row status transition (wnt-disclosure design.md D2)."
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Reference to the topfunctionaris Employee this annual disclosure reports on. The referenced Employee's wntTopfunctionaris and wntUitzonderingReden gate the nl-wnt-norm-overschrijding check."
+                    },
+                    "year": {
+                        "type": "string",
+                        "title": "Year",
+                        "description": "The calendar year this disclosure covers, in YYYY. The year's full WNT-verantwoording is every WntDisclosure row carrying this year (design.md D2)."
+                    },
+                    "totalCompensation": {
+                        "type": "number",
+                        "title": "Total compensation",
+                        "description": "The total WNT-bezoldiging for this topfunctionaris for the year, in whole euro (salary + vacation allowance + year-end bonus + taxable expense reimbursements + pension contribution, per the WNT's own compensation definition). Hand-entered by finance -- this app computes and aggregates nothing across payroll runs (design.md D3). Compared against the WNT-norm's annual figure (EUR 262.000 in 2026) by nl-wnt-norm-overschrijding."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Publication lifecycle status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd).",
+                        "enum": [
+                            "concept",
+                            "gepubliceerd"
+                        ],
+                        "default": "concept"
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "Denormalized administratie key this WntDisclosure is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PensionFiling convention)."
+                    }
+                }
+            }
+        }
+    }
+}

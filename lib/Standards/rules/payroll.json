@@ -1380,6 +1380,18 @@
       "machineCheckable": true,
       "effectiveDate": "2026-01-01",
       "sourceUrl": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/loon_en_aanmerkelijk_belang/loon_en_aanmerkelijk_belang"
+    },
+    {
+      "id": "nl-wnt-norm-overschrijding",
+      "domain": "payroll",
+      "jurisdiction": "NL",
+      "framework": "wnt-2013",
+      "source": "WNT art. 2.3 (bezoldigingsmaximum), BWBR0032249",
+      "statement": "A topfunctionaris's total annual bezoldiging (WNT-bezoldiging) shall not exceed the general bezoldigingsmaximum (WNT-norm, the Balkenende-norm: EUR 262.000 per year in 2026) unless a valid transitional-exemption ground (overgangsrecht or a ministerial ontheffing) is recorded; an annual WNT-disclosure above the norm without such a recorded exemption is flagged.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2013-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0032249"
     }
   ]
 }
