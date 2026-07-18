@@ -1435,4 +1435,112 @@ class RuleAuditServiceTest extends TestCase
     }//end testAbpContextDegradesToEmptyWhenAdministrationSchemaAbsent()
 
 
+    // -- bhv-organisatie: BhvCertificering expiry signal + seeded certificates --
+
+
+    /**
+     * The bhv-organisatie hr-seed.json fixture shapes: `bhv-jansen-basis`
+     * (clean, certificaatGeldigTot one year out) and `bhv-visser-ehbo` (the
+     * intended violation, certificaatGeldigTot 45 days out -- inside the
+     * 90-day window), fed through audit() as if loaded from the register.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function seededBhvRows(): array
+    {
+        return [
+            'BhvCertificering' => [
+                [
+                    'id'                   => 'bhv-jansen-basis',
+                    'employeeId'           => 'employee-jansen',
+                    'rol'                  => 'bhv_basis',
+                    'certificaatBehaaldOp' => date('Y-m-d', strtotime('-2 years')),
+                    'certificaatGeldigTot' => date('Y-m-d', strtotime('+1 year')),
+                    'opleider'             => 'NIBHV',
+                    'orgUnitId'            => 'orgunit-consultancy',
+                ],
+                [
+                    'id'                   => 'bhv-visser-ehbo',
+                    'employeeId'           => 'employee-visser',
+                    'rol'                  => 'ehbo',
+                    'certificaatBehaaldOp' => date('Y-m-d', strtotime('-3 years')),
+                    'certificaatGeldigTot' => date('Y-m-d', strtotime('+45 days')),
+                    'opleider'             => 'Het Oranje Kruis',
+                    'orgUnitId'            => 'orgunit-backoffice',
+                ],
+            ],
+        ];
+
+    }//end seededBhvRows()
+
+
+    /**
+     * @return void
+     *
+     * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
+     */
+    public function testSeededBhvDataFlagsExactlyOneCertificateExpiryViolation(): void
+    {
+        $service = $this->serviceWithRows($this->seededBhvRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $byRule = [];
+        foreach ($report['topViolatedRules'] as $entry) {
+            $byRule[$entry['ruleId']] = $entry['count'];
+        }
+
+        $this->assertSame(1, ($byRule['nl-bhv-certificaat-verloopt'] ?? 0));
+
+    }//end testSeededBhvDataFlagsExactlyOneCertificateExpiryViolation()
+
+
+    /**
+     * @return void
+     *
+     * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-003
+     */
+    public function testNoCoverageRatioRuleExistsInTheCorpus(): void
+    {
+        $ids = array_column(\OCA\Hrmq\Standards\RuleCatalogue::all(), 'id');
+
+        foreach ($ids as $id) {
+            $this->assertDoesNotMatchRegularExpression('/dekking|coverage|ratio/i', $id);
+        }
+
+    }//end testNoCoverageRatioRuleExistsInTheCorpus()
+
+
+    /**
+     * @return void
+     *
+     * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
+     */
+    public function testSeededBhvDataReportsBumpedCatalogueVersionAndRuleEnforceable(): void
+    {
+        $service = $this->serviceWithRows($this->seededBhvRows());
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+        $enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+        $this->assertContains('nl-bhv-certificaat-verloopt', $enforceable);
+
+    }//end testSeededBhvDataReportsBumpedCatalogueVersionAndRuleEnforceable()
+
+
+    /**
+     * @return void
+     *
+     * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
+     */
+    public function testBhvContextDegradesToEmptyWhenSchemaAbsent(): void
+    {
+        $service = $this->serviceWithRows([]);
+        $report  = $service->audit(['jurisdiction' => 'NL']);
+
+        $ruleIds = array_column($report['topViolatedRules'], 'ruleId');
+        $this->assertNotContains('nl-bhv-certificaat-verloopt', $ruleIds);
+
+    }//end testBhvContextDegradesToEmptyWhenSchemaAbsent()
+
+
 }//end class

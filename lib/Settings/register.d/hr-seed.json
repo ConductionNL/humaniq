@@ -1263,6 +1263,20 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "BhvCertificering",
+                    "slug": "bhv-jansen-basis"
+                },
+                "employeeId": "employee-jansen",
+                "rol": "bhv_basis",
+                "certificaatBehaaldOp": "2024-07-18",
+                "certificaatGeldigTot": "2027-07-18",
+                "opleider": "NIBHV",
+                "orgUnitId": "orgunit-consultancy",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "Administration",
                     "slug": "example-adm-003"
                 },
@@ -1273,6 +1287,20 @@
                 "active": true,
                 "abpAansluitingsplichtig": true,
                 "_note": "abp-aansluiting (design.md Seed Data): a second, minimal ABP-obligated administratie with NO PensionFiling seeded for its own 2026-06 run -- proves the nl-abp-fund-required violation branch, while the same run stays silent under the shipped, fund-blind/tenant-blind nl-upa-monthly-completeness (2026-06 is already globally filed via ADM-001's ABP delivery above)."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "BhvCertificering",
+                    "slug": "bhv-visser-ehbo"
+                },
+                "employeeId": "employee-visser",
+                "rol": "ehbo",
+                "certificaatBehaaldOp": "2023-09-01",
+                "certificaatGeldigTot": "2026-09-01",
+                "opleider": "Het Oranje Kruis",
+                "orgUnitId": "orgunit-backoffice",
+                "administrationId": "ADM-001"
             },
             {
                 "@self": {
