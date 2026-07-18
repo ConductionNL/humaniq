@@ -434,3 +434,60 @@ methods. Be aware of the following:
   prompt-collecting modal is a named fast-follow; `occ hrmq:avg:rectify
   --changes '{"field":"value"}'` and the `POST /api/dsr/rectify` endpoint
   are both fully functional today.
+
+## Stagiairs & BBL-leerlingen (stageovereenkomst vs. arbeidsovereenkomst)
+
+hrmq distinguishes the two legally different things the word "stage" covers,
+and models each where it structurally belongs:
+
+- **A stagiair (HBO/WO/MBO-BOL, zonder dienstverband)** is a first-class
+  `Stagiair` schema, kept **structurally outside** `Employee` and the payroll
+  engine. A stagiair has no arbeidsovereenkomst and, in the ordinary case, no
+  loonheffing on the stagevergoeding, so no payroll schema (`PayrollRun`,
+  `Payslip`, `PayrollMutationReport`) references `Stagiair` and
+  `PayrollCalculator` never reads it — a stagiair can never reach the loon
+  path by accident. It lives under the **Personeel/Medewerkers** menu with a
+  plain `aangemeld → lopend → afgerond`/`gestopt` lifecycle.
+- **A BBL-leerling (MBO-BBL)** has a real *leerarbeidsovereenkomst* and is,
+  fiscally, an ordinary employee (loon, loonheffing, premies, CAO-toepassing
+  all apply — Belastingdienst, Handboek Loonheffingen, hoofdstuk 17
+  "Stagiairs"). It is therefore **not** a second entity: it is an
+  `EmploymentContract` with `type: bbl`, visible on the existing contract
+  pages, flowing through `PayrollCalculator` and the NL jurisdiction pack
+  **exactly like** a `permanent`/`temporary` contract — no `type`-specific
+  branch exists or was added.
+
+Be aware of the following boundaries:
+
+- **BPV-overeenkomst signing is a plain HR-entered boolean, not an
+  e-signature flow.** `Stagiair.bpvOvereenkomstOndertekend` and
+  `EmploymentContract.bpvOvereenkomstOndertekend` mirror
+  `EmploymentContract.writtenContract` exactly — a fact HR marks true once
+  the three-party praktijkleerovereenkomst (leerbedrijf/onderwijsinstelling/
+  deelnemer) is signed by whatever external means the parties use. This is a
+  **deliberate, documented boundary**: the shipped `offer-esign` leaf already
+  proved digital multi-party signing through docudesk cannot complete for a
+  non-NC-user signer (`SigningService::sign()` requires
+  `signer.userId === $user->getUID()`, offer-esign design.md point 4), and two
+  of POK's three signers are not ordinarily Nextcloud users of this instance.
+  Building a second signing mechanism for exactly the case the first one ruled
+  out would not fix it. The corpus rule `nl-bpv-overeenkomst-vereist` flags a
+  placement (a `Stagiair`, or a `type: bbl` `EmploymentContract` — never any
+  other contract type) that has **started** with the BPV still unsigned.
+- **No stagevergoeding fiscal ceiling is asserted.**
+  `Stagiair.stagevergoedingPerMaand` is stored as a plain informational figure
+  and no machine-checkable rule enforces an untaxed euro limit, because no
+  single Belastingdienst threshold can be asserted in the abstract for every
+  organisation. A future change sourcing the exact Handboek Loonheffingen
+  onkostenvergoeding figure (with URL + effective date) can add the rule using
+  the `{value, source, verified}` leaf discipline (`verified: false` +
+  `checkAgainst` until confirmed).
+- **Out of scope (named fast-follows, not silently dropped):** SBB-erkenning/
+  CREBO validation, RVO Subsidieregeling Praktijkleren submission/polling
+  (no `openconnector`-mediated integration surface exists in hrmq today);
+  automated 25%/50%/75% evaluation scheduling and reminders (hrmq has no
+  task-scheduling capability to create them against); BBL-staffel payscale
+  data (a data-only follow-up on a sourced sector-CAO via the existing
+  `caoSchaal` mechanism). The minimum-wage rules (`nl-minimumloon-2026`/
+  `nl-minimumuurloon-wet`) remain age-unaware — a pre-existing corpus gap that
+  affects every contract type, not just `bbl`.

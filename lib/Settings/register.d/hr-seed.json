@@ -1088,6 +1088,31 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-visser-bbl"
+                },
+                "employeeId": "employee-visser",
+                "type": "bbl",
+                "writtenContract": true,
+                "startDate": "2026-07-01",
+                "endDate": "2028-06-30",
+                "hoursPerWeek": 32,
+                "hourlyWage": 16.00,
+                "cao": null,
+                "normfunctieId": null,
+                "awfTariff": "high",
+                "aanzegdOn": null,
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "bpvOvereenkomstOndertekend": true,
+                "bpvSchoolNaam": "ROC van Amsterdam",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "Employee",
                     "slug": "employee-uitzend-abu"
                 },
@@ -1129,6 +1154,44 @@
                 "uitzendFase": "A",
                 "uitzendbedingVanToepassing": true,
                 "inlenersbeloningReferentie": "Inlener loonschaal referentie, functie magazijnmedewerker, schaal 3 (onderbouwing 2026-03-01)",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Stagiair",
+                    "slug": "stagiair-devries"
+                },
+                "onderwijsinstelling": "Hogeschool van Amsterdam",
+                "opleiding": "HBO Bedrijfskunde",
+                "niveau": "hbo",
+                "stagetype": "afstudeerstage",
+                "startDate": "2026-02-01",
+                "endDate": "2026-08-31",
+                "begeleiderId": "employee-jansen",
+                "stagevergoedingPerMaand": 400.00,
+                "bpvOvereenkomstOndertekend": true,
+                "verzekeringGeverifieerd": true,
+                "status": "lopend",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Stagiair",
+                    "slug": "stagiair-bakker"
+                },
+                "onderwijsinstelling": "ROC van Amsterdam",
+                "opleiding": "MBO Applicatieontwikkeling",
+                "niveau": "mbo-bol",
+                "stagetype": "meeloopstage",
+                "startDate": "2026-06-01",
+                "endDate": "2027-01-31",
+                "begeleiderId": "employee-devries",
+                "stagevergoedingPerMaand": 300.00,
+                "bpvOvereenkomstOndertekend": false,
+                "verzekeringGeverifieerd": false,
+                "status": "lopend",
                 "administrationId": "ADM-001"
             },
             {
