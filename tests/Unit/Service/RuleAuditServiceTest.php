@@ -169,7 +169,17 @@ class RuleAuditServiceTest extends TestCase
         $filings = [
             ['payrollRunId' => 'payrollrun-2026-05', 'period' => '2026-05', 'fund' => 'abp', 'deadline' => '2026-06-30', 'status' => 'verzonden'],
             ['payrollRunId' => 'payrollrun-2026-06', 'period' => '2026-06', 'fund' => 'abp', 'deadline' => '2026-07-31', 'status' => 'concept'],
-            ['payrollRunId' => 'payrollrun-2026-05', 'period' => '2026-05', 'fund' => 'spw', 'deadline' => '2026-06-30', 'status' => 'bevestigd'],
+            // Pre-existing test-fixture fix (encountered while adding
+            // audit-trail-payroll's own rule, unrelated to it): `bevestigd`
+            // is a mid-lifecycle state (concept -> gecontroleerd -> bevestigd
+            // -> verzonden), NOT exempted by `deadlineNotAlerting()` (only
+            // `verzonden` is) -- this row's fixed 2026-06-30 deadline was
+            // compliant only while "today" stayed before it, then time-bombed
+            // once the real date passed it. `verzonden` is this fixture's
+            // actually-intended "already handled, never alerts" state
+            // (identical to the `abp`/2026-05 row above), so it is now
+            // date-invariant rather than merely date-lucky.
+            ['payrollRunId' => 'payrollrun-2026-05', 'period' => '2026-05', 'fund' => 'spw', 'deadline' => '2026-06-30', 'status' => 'verzonden'],
         ];
 
         return [

@@ -1247,6 +1247,18 @@
       "sourceUrl": "https://download.belastingdienst.nl/belastingdienst/docs/rekenvoorschriften_voor_geautomatiseerde_loonadministratie_lh991z62fd.pdf"
     },
     {
+      "id": "nl-engine-provenance-complete",
+      "domain": "tax",
+      "jurisdiction": "NL",
+      "framework": "payroll-core",
+      "source": "Rekenvoorschriften geautomatiseerde loonadministratie 2026 (7-year fiscal defensibility / reproducibility, audit-trail-payroll REQ-AUDP-005, hrmq#98)",
+      "statement": "A payslip produced by the calculation engine shall persist the exact resolved CalculationInput (engineInputSnapshot) that fed it, so it remains reproducible from that snapshot independent of any later edit to the underlying Employee/EmploymentContract record: engineInputSnapshot must be present, decode as valid JSON, and carry a jurisdiction consistent with its run's engine artefact.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2026-01-01",
+      "sourceUrl": "https://download.belastingdienst.nl/belastingdienst/docs/rekenvoorschriften_voor_geautomatiseerde_loonadministratie_lh991z62fd.pdf"
+    },
+    {
       "id": "nl-cao-minimumloon-schaal",
       "domain": "pay",
       "jurisdiction": "NL",

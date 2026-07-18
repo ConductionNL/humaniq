@@ -36,6 +36,8 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Payroll;
 
+use InvalidArgumentException;
+
 /**
  * Immutable input to one gross-to-net calculation.
  */
@@ -73,6 +75,118 @@ final class CalculationInput
     ) {
 
     }//end __construct()
+
+
+    /**
+     * All ten public readonly properties as a plain array, keyed by name.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
+     */
+    public function toArray(): array
+    {
+        return [
+            'grossMonthlySalaryCents'      => $this->grossMonthlySalaryCents,
+            'taxTableColor'                => $this->taxTableColor,
+            'loonheffingskortingToegepast' => $this->loonheffingskortingToegepast,
+            'dateOfBirth'                  => $this->dateOfBirth,
+            'period'                       => $this->period,
+            'awfTariff'                    => $this->awfTariff,
+            'aofTariff'                    => $this->aofTariff,
+            'whkPercentage'                => $this->whkPercentage,
+            'verzekeringsplichtig'         => $this->verzekeringsplichtig,
+            'jurisdiction'                 => $this->jurisdiction,
+        ];
+
+    }//end toArray()
+
+
+    /**
+     * The canonical-JSON serialization of this instance (audit-trail-payroll
+     * design.md D1): sorted keys, no whitespace — the
+     * `AuditHashService::getCanonicalJson()` precedent for "canonical" in
+     * this codebase, applied to a value object instead of an audit row. This
+     * is the exact string `PayrollRunService::generate()` stamps onto
+     * `Payslip.engineInputSnapshot` (REQ-AUDP-001).
+     *
+     * @return string
+     *
+     * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
+     */
+    public function toCanonicalJson(): string
+    {
+        $data = $this->toArray();
+        ksort($data);
+
+        return (string) json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+    }//end toCanonicalJson()
+
+
+    /**
+     * Reconstruct a `CalculationInput` from a decoded
+     * `Payslip.engineInputSnapshot` (the `toCanonicalJson()` inverse) — the
+     * `occ hrmq:payroll:reproduce` entry point (REQ-AUDP-002): recomputing a
+     * sealed payslip from ITS OWN stored snapshot, never from the live
+     * Employee/EmploymentContract state.
+     *
+     * @param string $json A `toCanonicalJson()`-produced string (or any JSON object carrying the same ten keys).
+     *
+     * @return self
+     *
+     * @throws InvalidArgumentException When `$json` does not decode to a JSON object.
+     *
+     * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-002
+     */
+    public static function fromCanonicalJson(string $json): self
+    {
+        $decoded = json_decode($json, true);
+        if (json_last_error() !== JSON_ERROR_NONE || is_array($decoded) === false) {
+            throw new InvalidArgumentException('CalculationInput: engineInputSnapshot is not valid JSON ('.json_last_error_msg().').');
+        }
+
+        return self::fromDecoded($decoded);
+
+    }//end fromCanonicalJson()
+
+
+    /**
+     * Reconstruct a `CalculationInput` from an ALREADY-decoded
+     * `engineInputSnapshot` array — live-verified against 8080: OpenRegister's
+     * `MagicMapper::rowToObjectEntity()` (`lib/Db/MagicMapper.php`, "Decode
+     * JSON values") blanket `json_decode()`s any string column value that
+     * happens to parse as valid JSON, REGARDLESS of the schema's declared
+     * `type: string` — so every read of `engineInputSnapshot` through
+     * `ObjectService` (the only path this app uses) comes back as a PHP
+     * array, never the raw string `toCanonicalJson()` wrote. Only a
+     * direct-SQL read (or a hand-built test fixture, pre-audit-trail-payroll
+     * `NlEngineChecksTest` style) ever sees the literal JSON string, which is
+     * why `fromCanonicalJson()` (string input) still exists and is kept for
+     * that case, delegating here.
+     *
+     * @param array<string, mixed> $decoded The decoded snapshot fields.
+     *
+     * @return self
+     *
+     * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-002
+     */
+    public static function fromDecoded(array $decoded): self
+    {
+        return new self(
+            grossMonthlySalaryCents: (int) ($decoded['grossMonthlySalaryCents'] ?? 0),
+            taxTableColor: (string) ($decoded['taxTableColor'] ?? ''),
+            loonheffingskortingToegepast: (($decoded['loonheffingskortingToegepast'] ?? false) === true),
+            dateOfBirth: (($decoded['dateOfBirth'] ?? null) !== null ? (string) $decoded['dateOfBirth'] : null),
+            period: (string) ($decoded['period'] ?? ''),
+            awfTariff: (string) ($decoded['awfTariff'] ?? ''),
+            aofTariff: (string) ($decoded['aofTariff'] ?? ''),
+            whkPercentage: (float) ($decoded['whkPercentage'] ?? 0.0),
+            verzekeringsplichtig: (($decoded['verzekeringsplichtig'] ?? true) === true),
+            jurisdiction: (string) ($decoded['jurisdiction'] ?? 'NL'),
+        );
+
+    }//end fromDecoded()
 
 
 }//end class
