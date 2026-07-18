@@ -12,6 +12,10 @@
  * a run stamped with a non-existent table version raises
  * `nl-engine-table-version`, and the scope is EXACTLY the period's run(s) +
  * their payslips (other periods / hand-entered payslips stay out).
+ * `enginePayslip()`'s fixture also carries a valid `engineInputSnapshot`
+ * (audit-trail-payroll REQ-AUDP-005, fixing hrmq#98) so the "zero mandatory
+ * violations" baseline stays genuinely clean under the new
+ * `nl-engine-provenance-complete` rule, not just the pre-existing two.
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Service
@@ -197,6 +201,10 @@ class RuleAuditServicePayrollScopeTest extends TestCase
                 'showsMinimumWage'         => true,
                 'showsEmployerEmployeeIds' => true,
                 'hoursWorked'              => 156.0,
+                // audit-trail-payroll REQ-AUDP-001/REQ-AUDP-005 (fixing
+                // hrmq#98): the resolved CalculationInput PayrollRunService
+                // stamps on every engine-produced payslip going forward.
+                'engineInputSnapshot'      => '{"aofTariff":"laag","awfTariff":"low","dateOfBirth":"1990-04-12","grossMonthlySalaryCents":380000,"jurisdiction":"NL","loonheffingskortingToegepast":true,"period":"2026-02","taxTableColor":"wit","verzekeringsplichtig":true,"whkPercentage":1.52}',
             ],
             $overrides
         );

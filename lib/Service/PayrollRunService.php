@@ -110,6 +110,19 @@
  * assuming an engine bug. No `isDga` on the Employee -> `verzekeringsplichtig`
  * defaults `true` and the payslip is byte-identical to before this change.
  *
+ * audit-trail-payroll (design.md D1, fixing hrmq#98): the resolved
+ * `CalculationInput` fed to `PayrollCalculator::calculate()` was previously
+ * discarded once `calculate()` returned -- `engineVersion`/`calculatedAt`
+ * pinned WHICH code+parameters produced a run, but nothing pinned WHICH
+ * resolved values (gross salary, `taxTableColor`,
+ * `loonheffingskortingToegepast`, Awf/Aof tariffs, Whk percentage, ...) fed
+ * it, so a later edit to the underlying `Employee`/`EmploymentContract`
+ * could make a sealed payslip unreproducible. `$input->toCanonicalJson()` is
+ * now stamped onto `Payslip.engineInputSnapshot` in the SAME write as the
+ * rest of the payload (REQ-AUDP-001) -- `occ hrmq:payroll:reproduce` reloads
+ * this snapshot (never live Employee/Contract state) to recompute and
+ * compare a sealed payslip byte-for-byte (REQ-AUDP-002).
+ *
  * @category Service
  * @package  OCA\Hrmq\Service
  *
@@ -133,6 +146,7 @@
  * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
  * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
  * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
+ * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
  */
 
 declare(strict_types=1);
@@ -352,6 +366,7 @@ class PayrollRunService
      * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
      * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
      * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
+     * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
      */
     private function generate(array $run): array
     {
@@ -511,6 +526,13 @@ class PayrollRunService
             $payload = array_merge($payload, $this->retroAdjustmentFields($retroAdjustmentCents, $result->nettoPayCents));
             $payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents, ($result->nettoPayCents + $retroAdjustmentCents)));
             $payload = array_merge($payload, $this->loonbeslagFields($loonbeslag, $loonbeslagDeductionCents, $nettoPaySoFarCents));
+
+            // audit-trail-payroll (REQ-AUDP-001): stamp the exact resolved
+            // CalculationInput alongside the engine output, in the SAME write
+            // -- the input that produced this payslip is never re-derivable
+            // from Employee/EmploymentContract state once either is edited
+            // later, so it is persisted here, once, at generation time.
+            $payload['engineInputSnapshot'] = $input->toCanonicalJson();
 
             try {
                 $existingPayslip = ($existingByEmployeeId[$employeeId] ?? null);
