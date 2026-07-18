@@ -3,12 +3,15 @@
 /**
  * Unit tests for the payroll-engine contract checks (NlEngineChecks).
  *
- * Pins both payroll-core predicates (design.md D7): `nl-engine-table-version`
- * (hand-entered runs vacuous; engine runs need calculatedAt + an existing
- * versioned table file) and `nl-engine-output-consistency` (hand-entered /
- * unresolvable-run payslips vacuous; engine payslips reconcile cents-exact to
- * nettoPay = grossPay - loonheffing - pensionContribution(null->0) - (zvw if
- * zvwMode = inhouding)).
+ * Pins all three payroll-core predicates (design.md D7 + audit-trail-payroll
+ * REQ-AUDP-005): `nl-engine-table-version` (hand-entered runs vacuous; engine
+ * runs need calculatedAt + an existing versioned table file);
+ * `nl-engine-output-consistency` (hand-entered / unresolvable-run payslips
+ * vacuous; engine payslips reconcile cents-exact to nettoPay = grossPay -
+ * loonheffing - pensionContribution(null->0) - (zvw if zvwMode =
+ * inhouding)); and `nl-engine-provenance-complete` (same vacuous scoping;
+ * engine payslips need a present, valid, jurisdiction-consistent
+ * `engineInputSnapshot`, fixing hrmq#98).
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
@@ -244,6 +247,127 @@ class NlEngineChecksTest extends TestCase
         $this->assertFalse($check($this->payslip(['nettoPay' => null]), $context));
 
     }//end testMissingComponentsOnAnEnginePayslipViolate()
+
+
+    // -----------------------------------------------------------------
+    // nl-engine-provenance-complete (audit-trail-payroll REQ-AUDP-005,
+    // fixing hrmq#98).
+    // -----------------------------------------------------------------
+
+
+    /**
+     * @return void
+     */
+    public function testHandEnteredPayslipWithoutPayrollRunIdIsVacuouslyCompliantForProvenance(): void
+    {
+        $check = $this->checks['Payslip']['nl-engine-provenance-complete'];
+
+        $payslip = $this->payslip(['payrollRunId' => null, 'engineInputSnapshot' => null]);
+        $this->assertTrue($check($payslip, $this->context()));
+
+    }//end testHandEnteredPayslipWithoutPayrollRunIdIsVacuouslyCompliantForProvenance()
+
+
+    /**
+     * @return void
+     */
+    public function testUnresolvableOrHandEnteredRunIsVacuouslyCompliantForProvenance(): void
+    {
+        $check = $this->checks['Payslip']['nl-engine-provenance-complete'];
+
+        $payslip = $this->payslip(['engineInputSnapshot' => null]);
+
+        // Run resolvable but hand-entered (no engineVersion).
+        $this->assertTrue($check($payslip, $this->context(['run-1' => ['id' => 'run-1', 'status' => 'draft']])));
+        // Run unresolvable (empty context).
+        $this->assertTrue($check($payslip, $this->context()));
+        $this->assertTrue($check($payslip, []));
+
+    }//end testUnresolvableOrHandEnteredRunIsVacuouslyCompliantForProvenance()
+
+
+    /**
+     * @return void
+     */
+    public function testFreshlyGeneratedPayslipWithAConsistentSnapshotPasses(): void
+    {
+        $check   = $this->checks['Payslip']['nl-engine-provenance-complete'];
+        $context = $this->context(['run-1' => ['id' => 'run-1', 'engineVersion' => 'nl-2026@1.0.0']]);
+
+        $payslip = $this->payslip(['engineInputSnapshot' => '{"jurisdiction":"NL","period":"2026-02"}']);
+        $this->assertTrue($check($payslip, $context));
+
+    }//end testFreshlyGeneratedPayslipWithAConsistentSnapshotPasses()
+
+
+    /**
+     * @return void
+     */
+    public function testEnginePayslipStrippedOfItsSnapshotViolatesProvenance(): void
+    {
+        $check   = $this->checks['Payslip']['nl-engine-provenance-complete'];
+        $context = $this->context(['run-1' => ['id' => 'run-1', 'engineVersion' => 'nl-2026@1.0.0']]);
+
+        $payslip = $this->payslip(['engineInputSnapshot' => null]);
+        $this->assertFalse($check($payslip, $context));
+
+        $blank = $this->payslip(['engineInputSnapshot' => '']);
+        $this->assertFalse($check($blank, $context));
+
+    }//end testEnginePayslipStrippedOfItsSnapshotViolatesProvenance()
+
+
+    /**
+     * @return void
+     */
+    public function testEnginePayslipWithInvalidJsonSnapshotViolatesProvenance(): void
+    {
+        $check   = $this->checks['Payslip']['nl-engine-provenance-complete'];
+        $context = $this->context(['run-1' => ['id' => 'run-1', 'engineVersion' => 'nl-2026@1.0.0']]);
+
+        $payslip = $this->payslip(['engineInputSnapshot' => 'not-json{']);
+        $this->assertFalse($check($payslip, $context));
+
+    }//end testEnginePayslipWithInvalidJsonSnapshotViolatesProvenance()
+
+
+    /**
+     * @return void
+     */
+    public function testSnapshotJurisdictionInconsistentWithTheRunsArtefactViolatesProvenance(): void
+    {
+        $check   = $this->checks['Payslip']['nl-engine-provenance-complete'];
+        $context = $this->context(['run-1' => ['id' => 'run-1', 'engineVersion' => 'nl-2026@1.0.0']]);
+
+        // The bundled nl-2026 pack declares jurisdiction NL -- a snapshot
+        // claiming DE is internally inconsistent with its own run.
+        $payslip = $this->payslip(['engineInputSnapshot' => '{"jurisdiction":"DE","period":"2026-02"}']);
+        $this->assertFalse($check($payslip, $context));
+
+    }//end testSnapshotJurisdictionInconsistentWithTheRunsArtefactViolatesProvenance()
+
+
+    /**
+     * An unresolvable artefact (legacy bare table-id stamp, or a since-
+     * deleted pack) stays vacuous under THIS predicate -- `nl-engine-table-
+     * version` already flags the unresolvable artefact under its own rule
+     * id; this predicate does not double-penalize the same root cause.
+     *
+     * @return void
+     */
+    public function testUnresolvableArtefactStaysVacuousUnderProvenance(): void
+    {
+        $check = $this->checks['Payslip']['nl-engine-provenance-complete'];
+
+        $legacyContext = $this->context(['run-1' => ['id' => 'run-1', 'engineVersion' => 'nl-2026']]);
+        $legacy        = $this->payslip(['engineInputSnapshot' => '{"jurisdiction":"NL"}']);
+        $this->assertTrue($check($legacy, $legacyContext));
+
+        $deletedContext = $this->context(['run-1' => ['id' => 'run-1', 'engineVersion' => 'nl-2099@1.0.0']]);
+        $deleted        = $this->payslip(['engineInputSnapshot' => '{"jurisdiction":"NL"}']);
+        $this->assertTrue($check($deleted, $deletedContext));
+
+    }//end testUnresolvableArtefactStaysVacuousUnderProvenance()
 
 
 }//end class

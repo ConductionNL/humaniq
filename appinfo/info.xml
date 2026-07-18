@@ -138,6 +138,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
              payslips (payroll-core-engine); exits non-zero on any mandatory
              violation. -->
         <command>OCA\Hrmq\Command\PayrollVerifyCommand</command>
+        <!-- Recompute a sealed Payslip from its stored engineInputSnapshot
+             (never the live Employee/EmploymentContract state) and compare
+             cents-exact against the archived figures (audit-trail-payroll,
+             fixing hrmq#98); exits non-zero on any mismatch or missing
+             snapshot. -->
+        <command>OCA\Hrmq\Command\PayrollReproduceCommand</command>
         <!-- Print (and optionally persist) the run-to-run payroll mutation
              report — who joined/left and each shared employee's per-component
              cents delta between two PayrollRuns (payroll-mutation-reports).

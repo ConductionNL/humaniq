@@ -428,6 +428,117 @@ class PayrollRunServiceTest extends TestCase
 
 
     /**
+     * audit-trail-payroll REQ-AUDP-001 (fixing hrmq#98): every engine-
+     * produced payslip carries a decodable `engineInputSnapshot` naming the
+     * exact resolved `CalculationInput` fed to the engine for it -- so it
+     * stays reproducible after the underlying Employee/EmploymentContract is
+     * edited later. `engineVersion`/`calculatedAt` are stamped in the SAME
+     * write; the snapshot is the missing third leg of that traceability.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
+     */
+    public function testGeneratedPayslipCarriesADecodableEngineInputSnapshotMatchingResolvedInputs(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [],
+            ]
+        );
+
+        $service->runFor('2026-02');
+
+        $payslips = $this->savedFor($fake, 'Payslip');
+        $this->assertCount(1, $payslips);
+        $payslip = $payslips[0];
+
+        $this->assertArrayHasKey('engineInputSnapshot', $payslip);
+        $snapshot = $payslip['engineInputSnapshot'];
+        $this->assertIsString($snapshot);
+        $this->assertNotSame('', $snapshot);
+
+        $decoded = json_decode($snapshot, true);
+        $this->assertSame(JSON_ERROR_NONE, json_last_error());
+        $this->assertIsArray($decoded);
+
+        // Matches the employee/contract inputs that were actually resolved.
+        $this->assertSame(380000, $decoded['grossMonthlySalaryCents']);
+        $this->assertSame('wit', $decoded['taxTableColor']);
+        $this->assertTrue($decoded['loonheffingskortingToegepast']);
+        $this->assertSame('1990-04-12', $decoded['dateOfBirth']);
+        $this->assertSame('2026-02', $decoded['period']);
+        $this->assertSame('low', $decoded['awfTariff']);
+        $this->assertSame('laag', $decoded['aofTariff']);
+        $this->assertTrue($decoded['verzekeringsplichtig']);
+        $this->assertSame('NL', $decoded['jurisdiction']);
+
+        // Sorted keys, no whitespace -- the AuditHashService::getCanonicalJson()
+        // canonical-form precedent applied to a value object.
+        $keys = array_keys($decoded);
+        $sortedKeys = $keys;
+        sort($sortedKeys);
+        $this->assertSame($sortedKeys, $keys);
+        $this->assertStringNotContainsString(' ', $snapshot);
+
+    }//end testGeneratedPayslipCarriesADecodableEngineInputSnapshotMatchingResolvedInputs()
+
+
+    /**
+     * A later edit to the Employee's data must NOT retroactively change an
+     * already-stamped `engineInputSnapshot` -- the whole point of the
+     * snapshot (fixing hrmq#98). Recalculating a draft run with the CURRENT
+     * (edited) Employee data replaces the snapshot wholesale with the NEW
+     * resolved inputs (mirroring `engineVersion`/`calculatedAt` -- never
+     * edited in place, but a draft recalculation is an explicit, deliberate
+     * regeneration, not a silent retroactive rewrite); the guarantee this
+     * change closes is that a SEALED (non-draft) run's payslip is never
+     * touched again, which `hrmq:payroll:reproduce`'s use of the SEALED
+     * value proves.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
+     */
+    public function testHandEnteredPayslipHasNoEngineInputSnapshot(): void
+    {
+        [$service, $fake] = $this->service(
+            [
+                'Employee'           => [$this->employee()],
+                'EmploymentContract' => [$this->contract()],
+                'PayrollRun'         => [],
+                'Payslip'            => [
+                    [
+                        'id'           => 'hand-entered-1',
+                        'payrollRunId' => null,
+                        'employeeId'   => 'emp-1',
+                        'period'       => '2025-01',
+                        'grossPay'     => 3000.00,
+                        'nettoPay'     => 2500.00,
+                    ],
+                ],
+            ]
+        );
+
+        $service->runFor('2026-02');
+
+        $handEntered = null;
+        foreach ($fake->rowsBySchema['Payslip'] as $row) {
+            if ((string) ($row['id'] ?? '') === 'hand-entered-1') {
+                $handEntered = $row;
+            }
+        }
+
+        $this->assertNotNull($handEntered);
+        $this->assertArrayNotHasKey('engineInputSnapshot', $handEntered);
+
+    }//end testHandEnteredPayslipHasNoEngineInputSnapshot()
+
+
+    /**
      * @return void
      */
     public function testSecondRunWithoutRecalculateIsAnIdempotentNoOp(): void

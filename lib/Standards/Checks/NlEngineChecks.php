@@ -21,11 +21,19 @@
  *   equation `nettoPay = grossPay - loonheffing - pensionContribution
  *   (null->0) - (zvw if zvwMode = inhouding)` (NlPayrollChecks::centsEqual
  *   semantics).
+ * - `nl-engine-provenance-complete` (Payslip, audit-trail-payroll REQ-AUDP-005,
+ *   fixing hrmq#98): vacuous under the same `payrollRunId`/hand-entered-run
+ *   scoping as `nl-engine-output-consistency`; else requires
+ *   `engineInputSnapshot` to be non-empty, decode as valid JSON, and carry a
+ *   `jurisdiction` field consistent with the run's engine artefact's own
+ *   declared jurisdiction. Deliberately does NOT invoke `PayrollCalculator`/
+ *   the pack interpreter — byte-exact recomputation is
+ *   `hrmq:payroll:reproduce`'s job, not a per-audit-pass cost.
  *
  * This provider does NOT implement SeedsObjects: the pre-existing seeded
  * run/payslip stay hand-entered (null engineVersion/payrollRunId) and vacuous
- * under both predicates — the golden fixtures are this change's canonical
- * data (design.md Seed Data).
+ * under all three predicates — the golden fixtures are this change's
+ * canonical data (design.md Seed Data).
  *
  * @category Standards
  * @package  OCA\Hrmq\Standards\Checks
@@ -40,6 +48,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-007
+ * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-005
  */
 
 declare(strict_types=1);
@@ -62,6 +71,16 @@ final class NlEngineChecks implements CheckProvider
      */
     private static ?array $bundledPackIdsCache = null;
 
+    /**
+     * Memoised bundled jurisdiction packs keyed by pack id (audit-trail-payroll
+     * REQ-AUDP-005) — `bundledPackIds()` above only carries ids; this
+     * predicate additionally needs each pack's DECLARED `jurisdiction()`.
+     * Globbed once, same memoisation discipline as `bundledPackIdsCache`.
+     *
+     * @var array<string, \OCA\Hrmq\Payroll\JurisdictionPack>|null
+     */
+    private static ?array $bundledPacksByIdCache = null;
+
 
     /**
      * {@inheritDoc}
@@ -78,6 +97,7 @@ final class NlEngineChecks implements CheckProvider
             ],
             'Payslip'    => [
                 'nl-engine-output-consistency'  => static fn(array $o, array $context): bool => self::isOutputConsistent($o, $context),
+                'nl-engine-provenance-complete' => static fn(array $o, array $context): bool => self::hasCompleteProvenance($o, $context),
             ],
         ];
 
@@ -206,6 +226,31 @@ final class NlEngineChecks implements CheckProvider
 
 
     /**
+     * Every bundled jurisdiction pack, keyed by its own `id()` (audit-trail-payroll
+     * REQ-AUDP-005) — the `bundledPackIds()` precedent, but keeping the pack
+     * itself (needed for its declared `jurisdiction()`) instead of just ids.
+     *
+     * @return array<string, \OCA\Hrmq\Payroll\JurisdictionPack>
+     */
+    private static function bundledPacksById(): array
+    {
+        if (self::$bundledPacksByIdCache !== null) {
+            return self::$bundledPacksByIdCache;
+        }
+
+        $packs = [];
+        foreach ((new PackRepository())->bundled() as $pack) {
+            $packs[$pack->id()] = $pack;
+        }
+
+        self::$bundledPacksByIdCache = $packs;
+
+        return $packs;
+
+    }//end bundledPacksById()
+
+
+    /**
      * Reset the memoised bundled-pack ids (test hook, mirroring
      * `TaxTables::resetAvailableIdsCache()`).
      *
@@ -213,7 +258,8 @@ final class NlEngineChecks implements CheckProvider
      */
     public static function resetBundledPackIdsCache(): void
     {
-        self::$bundledPackIdsCache = null;
+        self::$bundledPackIdsCache    = null;
+        self::$bundledPacksByIdCache = null;
 
     }//end resetBundledPackIdsCache()
 
@@ -265,6 +311,112 @@ final class NlEngineChecks implements CheckProvider
         return self::centsEqual((float) $o['nettoPay'], $expectedNet);
 
     }//end isOutputConsistent()
+
+
+    /**
+     * The `nl-engine-provenance-complete` predicate (audit-trail-payroll
+     * REQ-AUDP-005, fixing hrmq#98): on an engine-produced payslip (its run
+     * carries `engineVersion`), `engineInputSnapshot` must be present, decode
+     * as valid JSON, and carry a `jurisdiction` field consistent with the
+     * run's engine artefact's own declared jurisdiction. Vacuous under the
+     * exact same scoping as `nl-engine-output-consistency` (hand-entered
+     * payslip, or unresolvable/hand-entered run). Never invokes
+     * `PayrollCalculator`/the pack interpreter — that is
+     * `hrmq:payroll:reproduce`'s job (REQ-AUDP-002), not a per-audit-pass
+     * cost.
+     *
+     * `engineInputSnapshot` comes back as EITHER a raw JSON string (a
+     * hand-built test fixture, or a direct-SQL read) OR an already-decoded
+     * array — live-verified against 8080: `OCA\OpenRegister\Db\MagicMapper::
+     * rowToObjectEntity()` blanket `json_decode()`s any string column value
+     * that happens to parse as valid JSON, regardless of the schema's
+     * declared `type: string`, so every real `ObjectService`/`RuleAuditService`
+     * read of this field returns it pre-decoded. Both shapes are handled
+     * here rather than assumed to always be a string.
+     *
+     * @param array<string, mixed> $o       The Payslip object.
+     * @param array<string, mixed> $context Evaluation context; reads `payroll.runsById`.
+     *
+     * @return bool
+     *
+     * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-005
+     */
+    private static function hasCompleteProvenance(array $o, array $context): bool
+    {
+        $runId = trim((string) ($o['payrollRunId'] ?? ''));
+        if ($runId === '') {
+            // Hand-entered payslip — out of scope (vacuous pass).
+            return true;
+        }
+
+        $run = ($context['payroll']['runsById'][$runId] ?? null);
+        $engineVersion = (is_array($run) === true) ? trim((string) ($run['engineVersion'] ?? '')) : '';
+        if ($engineVersion === '') {
+            // Unresolvable or hand-entered run — out of scope (vacuous pass).
+            return true;
+        }
+
+        $decoded = self::decodeSnapshot($o['engineInputSnapshot'] ?? null);
+        if ($decoded === null) {
+            // Missing snapshot, or one that failed to decode.
+            return false;
+        }
+
+        $snapshotJurisdiction = strtoupper(trim((string) ($decoded['jurisdiction'] ?? '')));
+        if ($snapshotJurisdiction === '') {
+            return false;
+        }
+
+        $pack = (self::bundledPacksById()[self::artefactOf($engineVersion)] ?? null);
+        if ($pack === null) {
+            // Artefact not resolvable as a bundled pack (legacy bare
+            // table-id stamp, or a since-deleted pack) -- nl-engine-table-
+            // version already flags an unresolvable artefact; this predicate
+            // stays silent about a jurisdiction consistency it has no pack
+            // to check against, rather than double-penalizing the same root
+            // cause under a second rule id.
+            return true;
+        }
+
+        return $snapshotJurisdiction === $pack->jurisdiction();
+
+    }//end hasCompleteProvenance()
+
+
+    /**
+     * Decode an `engineInputSnapshot` value to an array, or null when
+     * missing/undecodable.
+     *
+     * Accepts EITHER a raw JSON string (a hand-built test fixture, or a
+     * direct-SQL read) OR an already-decoded array — live-verified against
+     * 8080: `OCA\OpenRegister\Db\MagicMapper::rowToObjectEntity()` blanket
+     * `json_decode()`s any string column value that happens to parse as
+     * valid JSON, regardless of the schema's declared `type: string`, so
+     * every real `ObjectService`/`RuleAuditService` read of this field
+     * returns it pre-decoded.
+     *
+     * @param mixed $snapshot The raw `engineInputSnapshot` field value.
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function decodeSnapshot(mixed $snapshot): ?array
+    {
+        if ($snapshot === null || $snapshot === '' || $snapshot === []) {
+            return null;
+        }
+
+        if (is_array($snapshot) === true) {
+            return $snapshot;
+        }
+
+        $decoded = json_decode(trim((string) $snapshot), true);
+        if (json_last_error() !== JSON_ERROR_NONE || is_array($decoded) === false) {
+            return null;
+        }
+
+        return $decoded;
+
+    }//end decodeSnapshot()
 
 
     /**
