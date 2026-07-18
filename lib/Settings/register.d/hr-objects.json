@@ -5,7 +5,7 @@
             "Employee": {
                 "slug": "Employee",
                 "icon": "AccountOutline",
-                "version": "0.6.0",
+                "version": "0.7.0",
                 "title": "Employee",
                 "description": "A natural person employed by the organisation. Carries the identity, payroll, and wage-tax attributes the payroll/wage-tax compliance checks read (BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting, minimum-wage basis).",
                 "type": "object",
