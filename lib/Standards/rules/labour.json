@@ -410,6 +410,30 @@
       "machineCheckable": true,
       "effectiveDate": null,
       "sourceUrl": null
+    },
+    {
+      "id": "nl-ambtenaar-eed-vereist",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "ambtenarenwet-2017",
+      "source": "Ambtenarenwet 2017 art. 5 (eed of belofte)",
+      "statement": "Every ambtenaar (an Employee with a non-null publicSectorRegime, under either the genormaliseerd or the ambtenarenwet regime) shall have taken the ambtseed or -belofte before exercising their function; a recorded ambtseedAfgelegdOp date must be on file. Presence-only (the MVP boundary the gebruikelijkloonJustification check sets): the content or validity of the oath ceremony is not verified. Vacuous for a private-sector employee (publicSectorRegime null), for whom this obligation does not exist.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2020-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0001947"
+    },
+    {
+      "id": "nl-ambtenaar-nevenwerkzaamheden-melding",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "ambtenarenwet-2017",
+      "source": "Ambtenarenwet 2017 art. 9 (nevenwerkzaamheden)",
+      "statement": "Every ambtenaar (an Employee with a non-null publicSectorRegime) carries a standing integrity obligation to disclose side activities that could affect the proper performance of duty or public trust; the nevenwerkzaamhedenGemeld attestation must be on file (true). Presence-only: the content of the disclosure is never validated. Vacuous for a private-sector employee (publicSectorRegime null), who carries no such obligation.",
+      "severity": "mandatory",
+      "machineCheckable": true,
+      "effectiveDate": "2020-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0001947"
     }
   ]
 }

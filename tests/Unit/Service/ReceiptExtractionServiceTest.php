@@ -390,6 +390,26 @@ class ReceiptExtractionServiceTest extends TestCase
     }//end savedFor()
 
 
+    /**
+     * The last object saved to a given schema (the newest save).
+     *
+     * Assigns the list to a local first so `end()` receives a variable by
+     * reference rather than a function return value ("Only variables should be
+     * passed by reference").
+     *
+     * @param object $fake   The fake ObjectService.
+     * @param string $schema The schema name.
+     *
+     * @return array<string, mixed>|false
+     */
+    private function lastSavedFor(object $fake, string $schema)
+    {
+        $saves = $this->savedFor($fake, $schema);
+        return end($saves);
+
+    }//end lastSavedFor()
+
+
     // -- REQ-RCPT-002: mapping + prefill-not-overwrite -----------------------
 
 
@@ -470,10 +490,10 @@ class ReceiptExtractionServiceTest extends TestCase
 
         $service->extractForExpense('expense-1', 'admin');
 
-        $final = end($this->savedFor($fake, 'Expense'));
+        $final = $this->lastSavedFor($fake, 'Expense');
         $this->assertSame('2026-06-12', $final['expenseDate']);
 
-        $extraction = end($this->savedFor($fake, 'ReceiptExtraction'));
+        $extraction = $this->lastSavedFor($fake, 'ReceiptExtraction');
         $this->assertStringNotContainsString('expenseDate', $extraction['appliedFields']);
         $this->assertSame('2026-06-11', $extraction['extractedDate']);
 
@@ -490,10 +510,10 @@ class ReceiptExtractionServiceTest extends TestCase
 
         $service->extractForExpense('expense-1', 'admin');
 
-        $final = end($this->savedFor($fake, 'Expense'));
+        $final = $this->lastSavedFor($fake, 'Expense');
         $this->assertSame('Employee-typed BV', $final['vendor']);
 
-        $extraction = end($this->savedFor($fake, 'ReceiptExtraction'));
+        $extraction = $this->lastSavedFor($fake, 'ReceiptExtraction');
         $this->assertSame('amount,expenseDate,vatAmount', $extraction['appliedFields']);
         $this->assertSame('Grand Café De Kroon', $extraction['extractedVendor']);
 
@@ -510,10 +530,10 @@ class ReceiptExtractionServiceTest extends TestCase
 
         $service->extractForExpense('expense-1', 'admin');
 
-        $final = end($this->savedFor($fake, 'Expense'));
+        $final = $this->lastSavedFor($fake, 'Expense');
         $this->assertSame(5.68, $final['vatAmount']);
 
-        $extraction = end($this->savedFor($fake, 'ReceiptExtraction'));
+        $extraction = $this->lastSavedFor($fake, 'ReceiptExtraction');
         $this->assertSame('amount,expenseDate,vendor', $extraction['appliedFields']);
         $this->assertSame(6.02, $extraction['extractedVatAmount']);
 
@@ -554,7 +574,7 @@ class ReceiptExtractionServiceTest extends TestCase
 
         $this->assertCount(0, $this->savedFor($fake, 'Expense'), 'the Expense is never saved when docudesk is unavailable');
 
-        $extraction = end($this->savedFor($fake, 'ReceiptExtraction'));
+        $extraction = $this->lastSavedFor($fake, 'ReceiptExtraction');
         $this->assertSame('skipped-no-docudesk', $extraction['status']);
 
     }//end testDocudeskNotInstalledDegradesToSkippedNoDocudeskAndNeverThrows()
@@ -574,7 +594,7 @@ class ReceiptExtractionServiceTest extends TestCase
 
         $this->assertSame('failed', $result['status']);
 
-        $extraction = end($this->savedFor($fake, 'ReceiptExtraction'));
+        $extraction = $this->lastSavedFor($fake, 'ReceiptExtraction');
         $this->assertSame('failed', $extraction['status']);
         $this->assertStringContainsString('docudesk', $extraction['errorMessage']);
 
@@ -666,7 +686,7 @@ class ReceiptExtractionServiceTest extends TestCase
 
         $this->assertSame('extracted', $result['status']);
 
-        $final = end($this->savedFor($fake, 'Expense'));
+        $final = $this->lastSavedFor($fake, 'Expense');
         // status is carried forward UNCHANGED -- never a new value, never a
         // lifecycle transition (PUT-semantic saves would NULL it if omitted).
         $this->assertSame('submitted', $final['status']);
@@ -689,10 +709,10 @@ class ReceiptExtractionServiceTest extends TestCase
 
         $this->assertSame('extracted', $result['status']);
 
-        $final = end($this->savedFor($fake, 'Expense'));
+        $final = $this->lastSavedFor($fake, 'Expense');
         $this->assertSame(32.75, $final['amount']);
 
-        $extraction = end($this->savedFor($fake, 'ReceiptExtraction'));
+        $extraction = $this->lastSavedFor($fake, 'ReceiptExtraction');
         $this->assertSame(0.2, $extraction['overallConfidence']);
 
     }//end testLowConfidenceStillWritesTheEmptyFieldsAndDoesNotBlockTheSave()
