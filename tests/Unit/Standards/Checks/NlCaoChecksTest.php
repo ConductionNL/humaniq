@@ -399,4 +399,103 @@ class NlCaoChecksTest extends TestCase
     }//end testSeedObjectsIsDeterministic()
 
 
+    /**
+     * A contract naming any of the six new sector CAOs + a placeholder scale
+     * is vacuous — no nl-cao-minimumloon-schaal violation, regardless of
+     * salary — exercising three different scale-naming conventions (numeric,
+     * onderwijs letter-schalen, FWG-functiegroep) through the real RuleEngine
+     * (cao-sector-datasets REQ-CAOS-002).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/cao-sector-datasets/specs/cao-sector-datasets/spec.md#REQ-CAOS-002
+     */
+    public function testEachNewSectorCaoPlaceholderScaleIsVacuous(): void
+    {
+        $cases = [
+            ['cao-rijk', '11'],
+            ['cao-gemeenten', '10'],
+            ['cao-onderwijs-po', 'L11'],
+            ['cao-onderwijs-vo', 'LB'],
+            ['cao-ziekenhuizen', 'FWG-40'],
+            ['cao-zorg-vvt', 'FWG-40'],
+        ];
+
+        foreach ($cases as [$caoId, $schaal]) {
+            $contract   = ['employeeId' => 'emp-1', 'cao' => $caoId, 'caoSchaal' => $schaal];
+            $violations = RuleEngine::evaluate('EmploymentContract', $contract, $this->context(1.00, $caoId));
+
+            $this->assertFalse(
+                $this->hasViolation($violations, 'nl-cao-minimumloon-schaal'),
+                $caoId.'/'.$schaal.' is placeholder -- must never raise a violation even at a EUR 1.00 salary.'
+            );
+        }
+
+    }//end testEachNewSectorCaoPlaceholderScaleIsVacuous()
+
+
+    /**
+     * A holiday LeaveBalance under any of the six new sector CAOs is vacuous
+     * — no nl-cao-verlof-minimum violation, regardless of entitledHours —
+     * since every new CAO's leaveEntitlement leaf ships placeholder
+     * (cao-sector-datasets REQ-CAOS-002).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/cao-sector-datasets/specs/cao-sector-datasets/spec.md#REQ-CAOS-002
+     */
+    public function testEachNewSectorCaoLeaveBalanceIsVacuous(): void
+    {
+        $caoIds = [
+            'cao-rijk',
+            'cao-gemeenten',
+            'cao-onderwijs-po',
+            'cao-onderwijs-vo',
+            'cao-ziekenhuizen',
+            'cao-zorg-vvt',
+        ];
+
+        foreach ($caoIds as $caoId) {
+            $balance    = [
+                'employeeId'           => 'emp-1',
+                'leaveType'            => 'holiday',
+                'contractHoursPerWeek' => 36,
+                'entitledHours'        => 1,
+                'bovenwettelijkHours'  => 0,
+            ];
+            $violations = RuleEngine::evaluate('LeaveBalance', $balance, $this->context(null, $caoId));
+
+            $this->assertFalse(
+                $this->hasViolation($violations, 'nl-cao-verlof-minimum'),
+                $caoId.' leaveEntitlement is placeholder -- must never raise a violation even at 1 entitled hour.'
+            );
+        }
+
+    }//end testEachNewSectorCaoLeaveBalanceIsVacuous()
+
+
+    /**
+     * seedObjects() covers all nine Cao objects (three existing + six new
+     * sector CAOs) with no duplicate caoId keys — idempotency holds at the
+     * new corpus size (cao-sector-datasets REQ-CAOS-005).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/cao-sector-datasets/specs/cao-sector-datasets/spec.md#REQ-CAOS-005
+     */
+    public function testSeedObjectsCoversAllNineCaosWithNoDuplicates(): void
+    {
+        $rows   = NlCaoChecks::seedObjects()['Cao'];
+        $caoIds = array_column($rows, 'caoId');
+
+        $this->assertCount(9, $rows, 'Expected one Cao row per corpus CAO (three existing + six sector CAOs).');
+        $this->assertSame(9, count(array_unique($caoIds)), 'caoId must be unique across all nine seeded rows.');
+
+        foreach (['cao-rijk', 'cao-gemeenten', 'cao-onderwijs-po', 'cao-onderwijs-vo', 'cao-ziekenhuizen', 'cao-zorg-vvt'] as $id) {
+            $this->assertContains($id, $caoIds, $id.' must be seeded as a Cao object.');
+        }
+
+    }//end testSeedObjectsCoversAllNineCaosWithNoDuplicates()
+
+
 }//end class

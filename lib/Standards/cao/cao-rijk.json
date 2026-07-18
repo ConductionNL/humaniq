@@ -1,0 +1,51 @@
+{
+  "id": "cao-rijk",
+  "name": "CAO Rijk",
+  "sector": "Rijksoverheid (ambtenaren, sector Rijk)",
+  "version": null,
+  "effectiveDate": null,
+  "basedOn": [
+    {"doc": "CAO Rijk, hoofdstuk 9 (Individueel Keuzebudget)", "url": "https://www.caorijk.nl/cao-rijk/1.-algemeen/hoofdstuk-9/individueel-keuzebudget"}
+  ],
+  "payScales": {
+    "value": {
+      "1": 170000, "2": 210000, "3": 250000, "4": 290000, "5": 330000,
+      "6": 370000, "7": 410000, "8": 450000, "9": 490000, "10": 530000,
+      "11": 570000, "12": 610000, "13": 650000, "14": 690000, "15": 730000,
+      "16": 770000, "17": 810000, "18": 850000,
+      "15a": 750000, "16a": 790000, "17a": 830000, "18a": 870000
+    },
+    "source": "Illustrative BBRA-schalen 1-18 + chief subschalen 15a/16a/17a/18a shape pending confirmation against the official BBRA loontabel — not transcribed from the primary document in this pass.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official BBRA loontabel (Bezoldigingsbesluit Burgerlijke Rijksambtenaren), caorijk.nl / P-Direkt salaristabellen"
+  },
+  "allowances": {
+    "value": {
+      "ikb": {
+        "pct": 16.50,
+        "minEuroPerMonth": 452,
+        "ikbUrenPerJaar": 64
+      }
+    },
+    "source": "Directly fetched: caorijk.nl, hoofdstuk 9 (Individueel Keuzebudget), retrieved 2026-07-17, states verbatim: \"Uw IKB-budget bedraagt 16,50% van uw salaris, waarbij een minimumbedrag geldt van € 452 per maand\" and \"U krijgt ieder jaar 64 IKB-uren\" for een fulltime dienstverband van gemiddeld 36 uur per week. Supersedes the 16.37% figure in the obsolete spec/cao-rijk draft (2026 CAO Rijk raised it) — the stale draft number must never be ported as fact.",
+    "verified": true
+  },
+  "leaveEntitlement": {
+    "value": {
+      "vakantiedagenWettelijk": 20,
+      "vakantiedagenBovenwettelijk": 8
+    },
+    "source": "Illustrative bovenwettelijk leave (28 days total at full-time) pending confirmation against the official CAO Rijk verlofhoofdstuk — not transcribed from the primary document in this pass.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "CAO Rijk verlofhoofdstuk (hoofdstuk verlof), caorijk.nl"
+  },
+  "workingTime": {
+    "value": {
+      "fulltimeHoursPerWeek": 36
+    },
+    "source": "Directly fetched: caorijk.nl, hoofdstuk 9, same 2026-07-17 retrieval, which states the IKB minimum applies \"voor een fulltime dienstverband van gemiddeld 36 uur per week.\" Display-only — not read by any CaoRegistry resolver.",
+    "verified": true
+  }
+}

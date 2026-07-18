@@ -1,0 +1,47 @@
+{
+  "id": "cao-onderwijs-vo",
+  "name": "CAO Voortgezet Onderwijs (VO)",
+  "sector": "Voortgezet onderwijs",
+  "version": "2025-2027",
+  "effectiveDate": "2025-11-01",
+  "basedOn": [
+    {"doc": "VO-raad, Salarisschalen cao vo 2025-2027 bekend", "url": "https://www.vo-raad.nl/"}
+  ],
+  "payScales": {
+    "value": {
+      "LB": 340000,
+      "LC": 400000,
+      "LD": 460000
+    },
+    "source": "Illustrative LB/LC/LD leraarschalen shape. A search-derived corroboration confirms a 2025-2027 CAO VO akkoord effective 2025-11-01 with a further 1.2% step effective 2026-11-01 (vo-raad.nl 'Salarisschalen cao vo 2025-2027 bekend', fetched as a search result 2026-07-17) — the exact bedragen were not independently fetched from a primary loontabel, hence placeholder.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "VO-raad CAO VO 2025-2027 salaristabellen (vo-raad.nl)"
+  },
+  "allowances": {
+    "value": {},
+    "source": "CAO VO kent toelagen; geen percentage of bedrag getranscribeerd in deze onderzoeksronde. Geen cijfer opgenomen om verzinnen te voorkomen.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "vo-raad.nl CAO VO tekst, hoofdstuk toelagen"
+  },
+  "leaveEntitlement": {
+    "value": {
+      "vakantiedagenWettelijk": 20,
+      "vakantiedagenBovenwettelijk": 0
+    },
+    "source": "Illustrative placeholder. Note: net als bij CAO PO neemt VO-personeel vrije dagen doorgaans op via de vaste schoolvakanties — vandaar bovenwettelijk 0 als illustratieve plaatshouder, pending confirmation against the official CAO-tekst.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "vo-raad.nl CAO VO tekst, verlofhoofdstuk"
+  },
+  "workingTime": {
+    "value": {
+      "fulltimeHoursPerWeek": 40
+    },
+    "source": "Illustrative full-time working week (statutory reference) pending confirmation against the official CAO VO tekst — not transcribed from the primary document in this pass. Display-only — not read by any CaoRegistry resolver.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "vo-raad.nl CAO VO tekst, arbeidsduurartikel"
+  }
+}
