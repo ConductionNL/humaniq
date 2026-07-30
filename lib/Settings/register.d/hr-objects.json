@@ -57,7 +57,7 @@
             },
             "EmploymentContract": {
                 "slug": "EmploymentContract",
-                "icon": "FileSignOutline",
+                "icon": "FileSign",
                 "version": "0.7.0",
                 "title": "Employment Contract",
                 "description": "An employment agreement between the organisation and an employee. Carries the contract attributes the payroll checks read (permanent/temporary type that drives the Awf low/high premium, contracted hours, CAO, minimum-wage hourly basis).",

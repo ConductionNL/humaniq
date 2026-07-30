@@ -268,13 +268,13 @@
 				{
 					"id": "MijnDeclaraties",
 					"label": "Mijn declaraties",
-					"icon": "Receipt",
+					"icon": "ReceiptOutline",
 					"route": "MijnDeclaraties"
 				},
 				{
 					"id": "MijnVerlof",
 					"label": "Mijn verlof",
-					"icon": "CalendarClock",
+					"icon": "CalendarWeekendOutline",
 					"route": "MijnVerlof"
 				},
 				{
@@ -304,7 +304,7 @@
 				{
 					"id": "MijnVerlofKopenVerkopen",
 					"label": "Verlof kopen/verkopen",
-					"icon": "SwapHorizontal",
+					"icon": "CalendarWeekendOutline",
 					"route": "MijnVerlofKopenVerkopen"
 				},
 				{
@@ -319,13 +319,13 @@
 		{
 			"id": "EmployeesGroup",
 			"label": "Personeel",
-			"icon": "AccountOutline",
+			"icon": "AccountMultipleOutline",
 			"order": 90,
 			"children": [
 				{
 					"id": "Employees",
 					"label": "Werknemers",
-					"icon": "AccountOutline",
+					"icon": "AccountTieOutline",
 					"route": "Employees"
 				},
 				{
@@ -367,7 +367,7 @@
 				{
 					"id": "OrgUnits",
 					"label": "Organisatie-eenheden",
-					"icon": "SitemapOutline",
+					"icon": "OfficeBuildingOutline",
 					"route": "OrgUnits",
 					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
 				},
@@ -381,7 +381,7 @@
 				{
 					"id": "GeneratedDocuments",
 					"label": "Documenten",
-					"icon": "FileDocumentOutline",
+					"icon": "FileDocumentMultipleOutline",
 					"route": "GeneratedDocuments"
 				},
 				{
@@ -414,7 +414,7 @@
 				{
 					"id": "TeamUrengoedkeuring",
 					"label": "Team-urengoedkeuring",
-					"icon": "AccountCheckOutline",
+					"icon": "CheckDecagramOutline",
 					"route": "TeamUrengoedkeuring",
 					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
 				}
@@ -423,13 +423,13 @@
 		{
 			"id": "VerlofVerzuimGroup",
 			"label": "Verlof & verzuim",
-			"icon": "CalendarClock",
+			"icon": "CalendarWeekendOutline",
 			"order": 105,
 			"children": [
 				{
 					"id": "LeaveRequests",
 					"label": "Verlofaanvragen",
-					"icon": "CalendarClock",
+					"icon": "CalendarWeekendOutline",
 					"route": "LeaveRequests"
 				},
 				{
@@ -442,14 +442,14 @@
 				{
 					"id": "TeamVerlofgoedkeuring",
 					"label": "Team-verlofgoedkeuring",
-					"icon": "AccountCheckOutline",
+					"icon": "CheckDecagramOutline",
 					"route": "TeamVerlofgoedkeuring",
 					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
 				},
 				{
 					"id": "LeaveBalances",
 					"label": "Verlofsaldi",
-					"icon": "ScaleBalance",
+					"icon": "CalendarWeekendOutline",
 					"route": "LeaveBalances"
 				},
 				{
@@ -481,7 +481,7 @@
 		{
 			"id": "OnboardingAtsGroup",
 			"label": "Onboarding & ATS",
-			"icon": "AccountPlus",
+			"icon": "AccountPlusOutline",
 			"order": 106,
 			"children": [
 				{
@@ -493,7 +493,7 @@
 				{
 					"id": "Vacancies",
 					"label": "Vacatures",
-					"icon": "BriefcaseSearchOutline",
+					"icon": "AccountBoxOutline",
 					"route": "Vacancies"
 				},
 				{
@@ -519,13 +519,13 @@
 		{
 			"id": "ExpensesGroup",
 			"label": "Onkosten",
-			"icon": "Receipt",
+			"icon": "ReceiptOutline",
 			"order": 110,
 			"children": [
 				{
 					"id": "Expenses",
 					"label": "Declaraties",
-					"icon": "Receipt",
+					"icon": "ReceiptOutline",
 					"route": "Expenses"
 				},
 				{
@@ -538,14 +538,14 @@
 				{
 					"id": "TeamDeclaratiegoedkeuring",
 					"label": "Team-declaratiegoedkeuring",
-					"icon": "AccountCheckOutline",
+					"icon": "CheckDecagramOutline",
 					"route": "TeamDeclaratiegoedkeuring",
 					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
 				},
 				{
 					"id": "Assets",
 					"label": "Assets",
-					"icon": "PackageVariantClosed",
+					"icon": "DesktopTowerMonitor",
 					"route": "Assets"
 				},
 				{
@@ -557,7 +557,7 @@
 				{
 					"id": "Vehicles",
 					"label": "Wagenpark",
-					"icon": "CarSide",
+					"icon": "CarOutline",
 					"route": "Vehicles"
 				},
 				{
@@ -571,7 +571,7 @@
 		{
 			"id": "PayrollGroup",
 			"label": "Loonadministratie",
-			"icon": "CogPlayOutline",
+			"icon": "CashSync",
 			"order": 120,
 			"visibleIf": {"user.administrationMode": {"notIn": ["eenmanszaak_no_payroll"]}},
 			"children": [
@@ -632,7 +632,7 @@
 				{
 					"id": "PayrollPaymentBatches",
 					"label": "Betaalbatches",
-					"icon": "BankTransferOutline",
+					"icon": "CreditCardOutline",
 					"route": "PayrollPaymentBatches"
 				},
 				{
@@ -656,7 +656,7 @@
 				{
 					"id": "DsrRequests",
 					"label": "AVG-verzoeken",
-					"icon": "ShieldAccountOutline",
+					"icon": "Magnify",
 					"route": "DsrRequests"
 				}
 			]
@@ -671,13 +671,13 @@
 				{
 					"id": "Rosters",
 					"label": "Roosters",
-					"icon": "CalendarMonthOutline",
+					"icon": "TableClock",
 					"route": "Rosters"
 				},
 				{
 					"id": "RosterAssignments",
 					"label": "Roosterindelingen",
-					"icon": "AccountClockOutline",
+					"icon": "TableClock",
 					"route": "RosterAssignments"
 				},
 				{
@@ -705,7 +705,7 @@
 				{
 					"id": "Administraties",
 					"label": "Administraties",
-					"icon": "DomainOutline",
+					"icon": "OfficeBuildingOutline",
 					"route": "Administraties"
 				},
 				{
@@ -4877,7 +4877,7 @@
 					"gridHeight": 8,
 					"props": {
 						"title": "Betaalbatch",
-						"icon": "BankTransferOutline",
+						"icon": "BankTransfer",
 						"content": {
 							"columns": 2,
 							"exclude": [

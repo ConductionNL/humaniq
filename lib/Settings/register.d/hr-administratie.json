@@ -4,7 +4,7 @@
         "schemas": {
             "Administration": {
                 "slug": "Administration",
-                "icon": "DomainOutline",
+                "icon": "Domain",
                 "version": "1.1.0",
                 "title": "Administration",
                 "description": "multi-administratie (design.md D2): the accountant multi-client tenant catalog -- ONE row per client administratie. This is the switcher's source list and the topbar/Dashboard indicator's label source; child HR/payroll objects do NOT $ref this schema (ADR-062 rule 7 -- they carry a plain-string copy of `administrationId` instead, D1). `administrationId` is the stable business key already used fleet-wide as a plain string on the payroll aggregates (PayrollRun/PayrollMutationReport/PayrollGLPost/PayrollPaymentBatch); this schema is where that key finally becomes a real, addressable catalog entry.",
