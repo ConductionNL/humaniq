@@ -45,6 +45,7 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\EventDispatcher\IEventDispatcher;
 
 /**
  * The hrmq application bootstrap.
@@ -195,7 +196,83 @@ class Application extends App implements IBootstrap
         // compliance services resolve it lazily via $container->get('OCA\\OpenRegister
         // \\Service\\ObjectService'); no app-level alias is needed (a self-alias would
         // recurse). When OpenRegister is absent the lazy get() throws and fails soft.
-        //
+
+    }//end register()
+
+
+    /**
+     * Register an object-lifecycle listener that declares its interest up front.
+     *
+     * OpenRegister's `ObjectEventSubscription` records the register/schema slugs
+     * a listener reacts to and routes dispatches through a single shared proxy,
+     * so an uninterested listener is neither constructed nor invoked. When
+     * OpenRegister is absent — hrmq carries no hard dependency on it — this
+     * degrades to the plain global registration it replaced, which is exactly
+     * the behaviour every listener had before.
+     *
+     * This MUST be called from boot(), never from register(). Nextcloud enables
+     * each app's autoloader immediately before calling that app's own
+     * register(), so during register() OpenRegister's classes are only
+     * autoloadable to apps that register after it — the class_exists() guard
+     * below would silently resolve to false purely because of this app's
+     * position in the enabled-app list, and the unfiltered fallback would look
+     * identical to a working narrowing. boot() runs only after every app's
+     * register() has completed, so the guard resolves regardless of ordering.
+     *
+     * @param IEventDispatcher       $dispatcher The live event dispatcher.
+     * @param string                 $event      OpenRegister event class name.
+     * @param string                 $listener   Listener class name.
+     * @param array<int,string>|null $registers  Register slugs, or null for all.
+     * @param array<int,string>|null $schemas    Schema slugs, or null for all.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+     */
+    private function registerFilteredObjectListener(
+        IEventDispatcher $dispatcher,
+        string $event,
+        string $listener,
+        ?array $registers,
+        ?array $schemas
+    ): void {
+        $subscription = '\\OCA\\OpenRegister\\Event\\ObjectEventSubscription';
+        if (class_exists($subscription) === true) {
+            $subscription::subscribe(
+                dispatcher: $dispatcher,
+                event: $event,
+                listener: $listener,
+                registers: $registers,
+                schemas: $schemas
+            );
+            return;
+        }
+
+        // Loud on purpose. This fallback is correct but UNFILTERED, and while it
+        // was silent it was indistinguishable from a working narrowing.
+        \OCP\Server::get(\Psr\Log\LoggerInterface::class)->warning(
+            'OpenRegister ObjectEventSubscription unavailable: '.$listener
+            .' fell back to an UNFILTERED registration for '.$event
+            .' and will be invoked on every object write instance-wide.',
+            ['app' => self::APP_ID]
+        );
+
+        $dispatcher->addServiceListener($event, $listener);
+
+    }//end registerFilteredObjectListener()
+
+
+    /**
+     * Boot the application — declare the filtered object-event subscriptions.
+     *
+     * @param IBootContext $context Boot context.
+     *
+     * @return void
+     */
+    public function boot(IBootContext $context): void
+    {
+        $dispatcher = $context->getServerContainer()->get(IEventDispatcher::class);
+
         // Time-entry capture (time-entry-capture): on a Timesheet crossing into
         // `approved`, emit the `nl.conduction.hrmq.timeentry.approved` CloudEvent so a
         // finance app (shillinq) can consume the approved hours for invoice-from-time /
@@ -213,71 +290,12 @@ class Application extends App implements IBootstrap
         // stays in place as defence in depth. No register is declared: the
         // listener never inspects one.
         $this->registerFilteredObjectListener(
-            context: $context,
+            dispatcher: $dispatcher,
             event: ObjectUpdatedEvent::class,
             listener: TimesheetApprovalListener::class,
             registers: null,
             schemas: [TimeEntryEventService::TIMESHEET_SLUG]
         );
-
-    }//end register()
-
-
-    /**
-     * Register an object-lifecycle listener that declares its interest up front.
-     *
-     * OpenRegister's `ObjectEventSubscription` records the register/schema slugs
-     * a listener reacts to and routes dispatches through a single shared proxy,
-     * so an uninterested listener is neither constructed nor invoked. When
-     * OpenRegister is absent — hrmq carries no hard dependency on it — this
-     * degrades to the plain global registration it replaced, which is exactly
-     * the behaviour every listener had before.
-     *
-     * @param IRegistrationContext   $context   Registration context.
-     * @param string                 $event     OpenRegister event class name.
-     * @param string                 $listener  Listener class name.
-     * @param array<int,string>|null $registers Register slugs, or null for all.
-     * @param array<int,string>|null $schemas   Schema slugs, or null for all.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
-     */
-    private function registerFilteredObjectListener(
-        IRegistrationContext $context,
-        string $event,
-        string $listener,
-        ?array $registers,
-        ?array $schemas
-    ): void {
-        $subscription = '\\OCA\\OpenRegister\\Event\\ObjectEventSubscription';
-        if (class_exists($subscription) === true) {
-            $subscription::register(
-                context: $context,
-                event: $event,
-                listener: $listener,
-                registers: $registers,
-                schemas: $schemas
-            );
-            return;
-        }
-
-        $context->registerEventListener(event: $event, listener: $listener);
-
-    }//end registerFilteredObjectListener()
-
-
-    /**
-     * Boot the application. Nothing to do — the app is config + commands only.
-     *
-     * @param IBootContext $context Boot context.
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function boot(IBootContext $context): void
-    {
 
     }//end boot()
 
