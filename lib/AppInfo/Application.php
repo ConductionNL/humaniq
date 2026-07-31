@@ -39,6 +39,7 @@ use OCA\Hrmq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Hrmq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Hrmq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Hrmq\Listener\TimesheetApprovalListener;
+use OCA\Hrmq\Service\TimeEntryEventService;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -201,12 +202,69 @@ class Application extends App implements IBootstrap
         // WBSO. The listener is a thin OR adapter over TimeEntryEventService; it filters
         // to the Timesheet schema and the approval edge, and is fire-and-forget so a
         // missing consumer never fails the approval write (REQ-TEC-002).
-        $context->registerEventListener(
-            ObjectUpdatedEvent::class,
-            TimesheetApprovalListener::class
+        //
+        // That Timesheet-schema filter is now also declared at REGISTRATION
+        // time (TimeEntryEventService::TIMESHEET_SLUG, shipped by hrmq's own
+        // register fragment lib/Settings/register.d/hr-timesheet.json as slug
+        // `Timesheet`), so an unrelated app's object update no longer
+        // constructs the listener — nor performs the SchemaMapper lookup
+        // resolveSchemaSlug() needs to reject it. OpenRegister matches declared
+        // slugs case-insensitively, and the listener's own strtolower() guard
+        // stays in place as defence in depth. No register is declared: the
+        // listener never inspects one.
+        $this->registerFilteredObjectListener(
+            context: $context,
+            event: ObjectUpdatedEvent::class,
+            listener: TimesheetApprovalListener::class,
+            registers: null,
+            schemas: [TimeEntryEventService::TIMESHEET_SLUG]
         );
 
     }//end register()
+
+
+    /**
+     * Register an object-lifecycle listener that declares its interest up front.
+     *
+     * OpenRegister's `ObjectEventSubscription` records the register/schema slugs
+     * a listener reacts to and routes dispatches through a single shared proxy,
+     * so an uninterested listener is neither constructed nor invoked. When
+     * OpenRegister is absent — hrmq carries no hard dependency on it — this
+     * degrades to the plain global registration it replaced, which is exactly
+     * the behaviour every listener had before.
+     *
+     * @param IRegistrationContext   $context   Registration context.
+     * @param string                 $event     OpenRegister event class name.
+     * @param string                 $listener  Listener class name.
+     * @param array<int,string>|null $registers Register slugs, or null for all.
+     * @param array<int,string>|null $schemas   Schema slugs, or null for all.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+     */
+    private function registerFilteredObjectListener(
+        IRegistrationContext $context,
+        string $event,
+        string $listener,
+        ?array $registers,
+        ?array $schemas
+    ): void {
+        $subscription = '\\OCA\\OpenRegister\\Event\\ObjectEventSubscription';
+        if (class_exists($subscription) === true) {
+            $subscription::register(
+                context: $context,
+                event: $event,
+                listener: $listener,
+                registers: $registers,
+                schemas: $schemas
+            );
+            return;
+        }
+
+        $context->registerEventListener(event: $event, listener: $listener);
+
+    }//end registerFilteredObjectListener()
 
 
     /**
