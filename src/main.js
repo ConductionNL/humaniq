@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import { PiniaVuePlugin } from 'pinia'
+import { createApp, h, markRaw } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
 import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -21,12 +20,17 @@ import appIcons from './icons.js'
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
 
+// gridstack is a REQUIRED peer of @conduction/nextcloud-vue that no consumer
+// declares, and its stylesheet is the silent half: hrmq ships two
+// `type: "dashboard"` pages, and gridstack v12 sizes every item with
+// `width: var(--gs-column-width)`. Without this import each dashboard item
+// renders 0 px wide with NO console error — heights still look right (those
+// come from JS) while widths collapse. nc-vue's own `css/index.css` does not
+// bundle it (verified: no `--gs-column-width` anywhere in that file).
+import 'gridstack/dist/gridstack.min.css'
+
 // Global (unscoped) app styles
 import './assets/app.css'
-
-Vue.mixin({ methods: { t, n } })
-Vue.use(PiniaVuePlugin)
-Vue.use(VueRouter)
 
 // Register the app's schema/menu icons + lib translations once at bootstrap.
 // Without the icon registration every manifest `icon` name fails the CnIcon
@@ -55,17 +59,20 @@ function tryLoadTranslations() {
 	}
 }
 
-// Shallow-clone CnPageRenderer to give Vue Router an extensible component
-// object — lib barrel exports are non-extensible (webpack ESM module records)
-// and Vue 2's Vue.extend() adds an internal _Ctor cache entry.
-const RoutePageRenderer = { ...CnPageRenderer }
+// Shallow-clone CnPageRenderer before handing it to vue-router. The library's
+// barrel exports are frozen module records (nc-vue API friction, playbook
+// §4.1) and `markRaw` writes a `__v_skip` marker through
+// `Object.defineProperty`, which throws on a frozen object. Cloning yields an
+// extensible object with the same resolved definition; `markRaw` then keeps Vue
+// from making the component definition reactive inside the route record.
+const RoutePageRenderer = markRaw({ ...CnPageRenderer })
 
 /**
  * Build the vue-router config from the manifest. Each manifest page becomes
  * one route; the route name IS page.id (per the lib's manifest contract).
  *
  * @param {object} manifest The bundled manifest (with `pages[]`).
- * @return {Array<object>} vue-router 3 routes config.
+ * @return {Array<object>} vue-router 4 routes config.
  */
 function routesFromManifest(manifest) {
 	const routes = manifest.pages.map((page) => ({
@@ -74,36 +81,45 @@ function routesFromManifest(manifest) {
 		component: RoutePageRenderer,
 		props: page.route.includes(':'),
 	}))
-	// Catch-all redirect to the first page.
-	routes.push({ path: '*', redirect: '/timesheets' })
+	// Catch-all redirect to the first page. vue-router 4 REMOVED the bare
+	// `path: '*'` wildcard: it matches nothing and raises no error, so any
+	// unmatched route renders the shell with an empty <main>. The named
+	// catch-all param below is its v4 replacement.
+	routes.push({ path: '/:pathMatch(.*)*', redirect: '/timesheets' })
 	return routes
 }
 
-const router = new VueRouter({
-	mode: 'history',
-	base: generateUrl('/apps/hrmq'),
+const router = createRouter({
+	history: createWebHistory(generateUrl('/apps/hrmq')),
 	routes: routesFromManifest(bundledManifest),
 })
 
 tryLoadTranslations()
 
-// Pass shallow copies of the registry maps to CnAppRoot. The lib exports
+// Pass shallow copies of the registry maps to CnAppRoot — the library exports
 // `defaultPageTypes` (and our `registry`) as frozen module objects in some
-// bundle shapes — Vue 2's `Vue.extend()` mutates component definitions to
-// attach an internal `_Ctor` cache, which throws against a frozen source map.
-// Cloning yields extensible objects without altering resolved values.
+// bundle shapes, so anything downstream that annotates them would throw against
+// a frozen source map. Cloning yields extensible objects without altering
+// resolved values.
 const pageTypesProp = { ...defaultPageTypes }
 const registryProp = { ...registry }
 
-// eslint-disable-next-line no-new
-new Vue({
-	pinia,
-	router,
-	render: (h) => h(App, {
-		props: {
-			manifest: bundledManifest,
-			registry: registryProp,
-			pageTypes: pageTypesProp,
-		},
+// Vue 3: `createApp(...).mount()` replaces `new Vue(...).$mount()`, and the
+// render function passes props as a FLAT second argument to `h()` — the Vue 2
+// `{ props: { … } }` nesting is silently ignored, which would leave CnAppRoot
+// with no manifest at all.
+const app = createApp({
+	render: () => h(App, {
+		manifest: bundledManifest,
+		registry: registryProp,
+		pageTypes: pageTypesProp,
 	}),
-}).$mount('#content')
+})
+
+// `t` / `n` are used bare in templates and as `this.t(…)` in methods. Vue 3 has
+// no global `Vue.mixin`; a mixin is registered per app instance. Pinia is
+// likewise a normal plugin now — `PiniaVuePlugin` was Vue-2 only.
+app.mixin({ methods: { t, n } })
+app.use(pinia)
+app.use(router)
+app.mount('#content')

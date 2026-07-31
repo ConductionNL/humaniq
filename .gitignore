@@ -31,3 +31,12 @@ psalm-output.json
 
 # Hydra builder internal state — emitted by run-hydra-gates.sh
 task-audit.json
+
+# Playwright e2e run artefacts. `.auth/` holds a real logged-in session for the
+# instance under test — never commit it.
+/tests/e2e/.auth/
+/tests/e2e/playwright-report/
+/tests/e2e/test-results/
+/tests/e2e/.last-cj-run.txt
+/playwright-report/
+/test-results/
