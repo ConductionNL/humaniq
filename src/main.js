@@ -122,4 +122,9 @@ const app = createApp({
 app.mixin({ methods: { t, n } })
 app.use(pinia)
 app.use(router)
-app.mount('#content')
+// Mount on the app's OWN host element (templates/index.php), never `#content`:
+// Nextcloud core's layout.user.php already owns a `<div id="content">` that
+// this template renders inside, and Vue 3 `mount()` renders INSIDE the match
+// (Vue 2 `$mount()` REPLACED it). Selecting `#content` therefore resolved to
+// core's wrapper, not ours. See the comment in templates/index.php.
+app.mount('#hrmq-app')

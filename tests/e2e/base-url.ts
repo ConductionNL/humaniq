@@ -26,6 +26,16 @@
  *
  * `NEXTCLOUD_URL` stays supported as a legacy alias so an existing invocation
  * keeps working, but it is never defaulted.
+ *
+ * ⚠️ `BASE_URL` is ALSO accepted, and that is not cosmetic. The shared
+ * Conduction quality workflow exports the target instance as `BASE_URL` —
+ * not `PLAYWRIGHT_BASE_URL`. openconnector adopted a `PLAYWRIGHT_BASE_URL`-only
+ * resolver during its own Vue 3 migration and its E2E job has hard-failed on
+ * every run since with `Error: PLAYWRIGHT_BASE_URL is not set.` hrmq ships no
+ * `.github/workflows/` at all today, so nothing exercises this yet — which is
+ * precisely why it has to be right before CI is added, rather than after the
+ * first red run. Accepting the CI name costs nothing and keeps rule 1 intact:
+ * all three names are read from the environment, none is defaulted.
  */
 
 /** Nextcloud instances this suite must never touch. */
@@ -37,11 +47,11 @@ const FORBIDDEN_HOSTS = ['localhost:8080', '127.0.0.1:8080']
  * @return The normalised base URL, without a trailing slash.
  */
 export function resolveBaseURL(): string {
-	const raw = process.env.PLAYWRIGHT_BASE_URL || process.env.NEXTCLOUD_URL
+	const raw = process.env.PLAYWRIGHT_BASE_URL || process.env.NEXTCLOUD_URL || process.env.BASE_URL
 
 	if (!raw) {
 		throw new Error(
-			'PLAYWRIGHT_BASE_URL is not set. This suite deliberately has no default: '
+			'PLAYWRIGHT_BASE_URL / NEXTCLOUD_URL / BASE_URL is not set. This suite deliberately has no default: '
 			+ 'the old `|| http://localhost:8080` fallback pointed writes at the SHARED dev '
 			+ 'instance. Provision an isolated instance and pass it explicitly, e.g. '
 			+ 'PLAYWRIGHT_BASE_URL=http://localhost:8091 npm run test:e2e',

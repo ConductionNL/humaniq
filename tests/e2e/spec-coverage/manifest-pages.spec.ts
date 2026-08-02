@@ -7,13 +7,17 @@
  * hrmq is the fleet's manifest-purity flagship: 113 pages come straight
  * out of `src/manifest.json` (60 index, 49 detail, 2 dashboard, 2
  * custom), rendered by @conduction/nextcloud-vue's CnAppRoot with
- * hash-mode routing. This spec is generated FROM the manifest at spec
- * load time — add a page to the manifest and it is automatically smoke
- * tested; no hand-maintained route list to drift.
+ * HISTORY-mode routing (`createWebHistory`, src/main.js). This spec is
+ * generated FROM the manifest at spec load time — add a page to the
+ * manifest and it is automatically smoke tested; no hand-maintained
+ * route list to drift.
  *
- * For every NON-parameterised page route it navigates to the hash-form
- * URL (`/apps/hrmq/#<route>`) and asserts:
+ * For every NON-parameterised page route it navigates to the PATH-form
+ * URL (`/apps/hrmq<route>`) — see the long comment on the navigation
+ * itself for why the hash form silently greenwashes every case — and
+ * asserts:
  *   - the SPA shell mounts (`#app-content` is visible)
+ *   - the router is still ON the requested route (no fallback redirect)
  *   - the rendered page contains real content (innerHTML > 100 chars)
  *   - no app-origin console errors fire during initial mount
  *
