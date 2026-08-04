@@ -1,0 +1,366 @@
+[
+  {
+    "slug": "abp-aansluiting",
+    "title": "Abp Aansluiting",
+    "summary": "Record which client administraties are legally obligated (Wet Privatisering ABP, 1996) to affiliate with ABP, and close the one compliance gap the shipped, deliberately fund-blind and tenant-blind nl-upa-monthly-completeness check (pension-filing-upa-mvp) cannot catch: an obligated administratie whose own payroll was approved but never actually filed with ABP for that period.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/abp-aansluiting/spec.md"
+  },
+  {
+    "slug": "asset-management",
+    "title": "Asset Management",
+    "summary": "Give hrmq its first asset register: company property (laptops, phones, vehicles, tools, access passes, clothing) as Asset records with a declarative custody lifecycle, and effective-dated AssetAssignment uitgiftes linking assets to employees.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/asset-management/spec.md"
+  },
+  {
+    "slug": "audit-trail-payroll",
+    "title": "Audit Trail Payroll",
+    "summary": "Before this change, PayrollRun.engineVersion/calculatedAt pinned WHICH code and tax-year parameters produced a run, but nothing pinned WHICH resolved input values (gross salary, taxTableColor, loonheffingskortingToegepast, Awf/Aof tariffs, Whk percentage) fed it.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/audit-trail-payroll/spec.md"
+  },
+  {
+    "slug": "avg-dsr",
+    "title": "AVG Dsr",
+    "summary": "OpenRegister ships two data-subject-request surfaces.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/avg-dsr/spec.md"
+  },
+  {
+    "slug": "bhv-organisatie",
+    "title": "Bhv Organisatie",
+    "summary": "Track who holds a valid BHV-related certification (bedrijfshulpverlening) and when it expires, and signal an expiring certificate through the **existing hr-signals mechanism** rather than a second alerting mechanism.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/bhv-organisatie/spec.md"
+  },
+  {
+    "slug": "cao-library",
+    "title": "Cao Library",
+    "summary": "Turns the payroll engine into a *compliance* engine by giving the audit something sector-specific to check a contract against.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/cao-library/spec.md"
+  },
+  {
+    "slug": "comp-cycles",
+    "title": "Comp Cycles",
+    "summary": "Hrmq owns the personnel dossier, the payroll engine that reads Employee.grossMonthlySalary, and a maintained CAO corpus, but had no surface for the recurring management ritual every employer runs on top of those numbers: a periodic compensation review where managers propose salary adjustments against a band, a second actor approves them, and the approved figure lands on the employee's compensation on a chosen effective date.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/comp-cycles/spec.md"
+  },
+  {
+    "slug": "dga-payroll-mode",
+    "title": "Dga Payroll Mode",
+    "summary": "A DGA (directeur-grootaandeelhouder.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/dga-payroll-mode/spec.md"
+  },
+  {
+    "slug": "fleet-bijtelling",
+    "title": "Fleet Bijtelling",
+    "summary": "Bijtelling privégebruik auto (Wet LB 1964 art.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/fleet-bijtelling/spec.md"
+  },
+  {
+    "slug": "functiehuis-hr21",
+    "title": "Functiehuis Hr21",
+    "summary": "HR21 is the VNG-owned functiewaarderingssysteem for the Dutch municipal sector (Cao Gemeenten / Cao SGO name it as the applicable job-evaluation system unless an employer has chosen another union-recognized one; roughly 80% of Dutch municipalities hold an HR21 license).",
+    "status": "stable",
+    "docsUrl": "openspec/specs/functiehuis-hr21/spec.md"
+  },
+  {
+    "slug": "goals-okr",
+    "title": "Goals Okr",
+    "summary": "Measurable OKR tracking as a new member of the performance-review family (ADR-001 Rule 6): an Objective with several measurable KeyResults, each carrying a numeric start/target/current value and a writer-maintained progress reading tracked *between* reviews and optionally rolled up under a ReviewCycle.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/goals-okr/spec.md"
+  },
+  {
+    "slug": "hr-signals",
+    "title": "Hr Signals",
+    "summary": "Stop temporary contracts from lapsing unnoticed (Spectr hrmq-canon-hr-signals, 3/9 competitor coverage): the rule corpus signals a temporary contract ending within 60 days that has no successor, and enforces the statutory aanzegplicht (written notice one month before the end of a ≥6-month fixed term, BW 7:668.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/hr-signals/spec.md"
+  },
+  {
+    "slug": "hrmq-docudesk-documents",
+    "title": "Hrmq Docudesk Documents",
+    "summary": "Generate the standard Dutch HR documents (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift) from templates hosted in docudesk (namespace: hrmq), by calling docudesk's DocumentService::generateDocument() on the same instance (never HTTP), storing the returned PDF on a new GeneratedDocument record via OpenRegister's FileService, degrading gracefully to skipped-no-docudesk when docudesk is absent, and giving EmploymentContract.writtenContract machine-checked document evidence (nl-contract-schriftelijk).",
+    "status": "stable",
+    "docsUrl": "openspec/specs/hrmq-docudesk-documents/spec.md"
+  },
+  {
+    "slug": "interview-scheduling",
+    "title": "Interview Scheduling",
+    "summary": "Close the gap recruiting-ats-basic's uitnodigen transition docblock states plainly (\"No calendar/scheduling integration in the MVP\"): today an interview invitation is a bare status flip with no artifact, so nobody on the recruiting team can see from a calendar when and with whom a gesprek is actually happening.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/interview-scheduling/spec.md"
+  },
+  {
+    "slug": "jurisdiction-packs",
+    "title": "Jurisdiction Packs",
+    "summary": "Hrmq owns the first open-source Dutch payroll engine, and its *parameters* were already data (lib/Standards/tables/nl-2026.json).",
+    "status": "stable",
+    "docsUrl": "openspec/specs/jurisdiction-packs/spec.md"
+  },
+  {
+    "slug": "leave-accrual-job",
+    "title": "Leave Accrual Job",
+    "summary": "The leave-verzuim MVP shipped the LeaveBalance ledger.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/leave-accrual-job/spec.md"
+  },
+  {
+    "slug": "leave-buy-sell",
+    "title": "Leave Buy Sell",
+    "summary": "Hrmq's leave surface (leave-management) gives employees a LeaveRequest workflow and a LeaveBalance ledger with a declaratively calculated remainingHours (entitledHours + bovenwettelijkHours − usedHours), guarded by the three mandatory NL leave rules in lib/Standards/rules/labour.json (nl-verlof-wettelijk-minimum, nl-verlof-saldo-niet-negatief, nl-verlof-vervaltermijn).",
+    "status": "stable",
+    "docsUrl": "openspec/specs/leave-buy-sell/spec.md"
+  },
+  {
+    "slug": "leave-calendar-nc",
+    "title": "Leave Calendar Nc",
+    "summary": "Make approved absence visible on a plain, shareable Nextcloud calendar.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/leave-calendar-nc/spec.md"
+  },
+  {
+    "slug": "leave-management",
+    "title": "Leave Management",
+    "summary": "Make the existing LeaveRequest workflow (shipped schema-only by portal-schemas) a usable back-office feature: the frozen ADR-001 menu-5 Verlof & verzuim surface with request, approval-queue and detail pages bound to the already-declared submit→approve/reject lifecycle, a LeaveBalance schema with a declaratively calculated remaining-hours figure (statutory minimum 4× contractual weekly hours per BW art.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/leave-management/spec.md"
+  },
+  {
+    "slug": "loonaangifte-filing-lifecycle",
+    "title": "Loonaangifte Filing Lifecycle",
+    "summary": "Turn the passive LoonaangifteFiling record into a real Dutch wage-tax filing workflow: a declarative create→review→confirm→send state machine, first-class tijdvakcode data per Belastingdienst LH 210, statutory deadline derivation (period end + one calendar month, no weekend extension) and alerting as versioned machine-checkable corpus rules, and filing pages that drive the lifecycle.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/loonaangifte-filing-lifecycle/spec.md"
+  },
+  {
+    "slug": "loonbeslag",
+    "title": "Loonbeslag",
+    "summary": "Hrmq computes NL gross-to-net (PayrollCalculator, pure, table-driven) and already folds current-run, post-tax components onto Payslip.nettoPay without ever re-invoking the calculator (retro-adjustments, leave-buy-sell).",
+    "status": "stable",
+    "docsUrl": "openspec/specs/loonbeslag/spec.md"
+  },
+  {
+    "slug": "mijn-hr-self-service",
+    "title": "Mijn Hr Self Service",
+    "summary": "Give hrmq's logged-in employees an in-app self-service surface per ADR-001 Rule 2 (role-filtered wrapper, never a sibling portal app): Mijn HR index pages that show only the current user's records.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/mijn-hr-self-service/spec.md"
+  },
+  {
+    "slug": "mileage-rules",
+    "title": "Mileage Rules",
+    "summary": "Bring the Belastingdienst's onbelaste kilometervergoeding.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/mileage-rules/spec.md"
+  },
+  {
+    "slug": "mss-team-scope",
+    "title": "Mss Team Scope",
+    "summary": "Give managers a team-scoped self-service surface per ADR-001 Rule 2 (Dashboard widgets + scoped acties inside existing menus.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/mss-team-scope/spec.md"
+  },
+  {
+    "slug": "multi-administratie",
+    "title": "Multi Administratie",
+    "summary": "Let one hrmq instance carry multiple administraties (companies/clients).",
+    "status": "stable",
+    "docsUrl": "openspec/specs/multi-administratie/spec.md"
+  },
+  {
+    "slug": "offboarding-wizard",
+    "title": "Offboarding Wizard",
+    "summary": "Give hrmq its departure surface, closing the hire-to-leave case bracket the hr-onboarding fragment opened: one Offboarding case per departure with a deterministic, declarative lifecycle whose milestones (departure announced, afronding planned, eindafrekening ready, completed) are gated by concrete checklist and eindafrekening fields.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/offboarding-wizard/spec.md"
+  },
+  {
+    "slug": "offer-esign",
+    "title": "Offer Esign",
+    "summary": "Close the MVP gap the Application.aanbieden transition's own docblock names (\"An offer is extended to the candidate.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/offer-esign/spec.md"
+  },
+  {
+    "slug": "onboarding-wizard",
+    "title": "Onboarding Wizard",
+    "summary": "Give hrmq its first onboarding surface: one Onboarding case per hire with a deterministic, declarative lifecycle whose milestones (contract signed, data validated, ready for first workday, proeftijd running, completed) are gated by concrete checklist fields.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/onboarding-wizard/spec.md"
+  },
+  {
+    "slug": "org-chart-basic",
+    "title": "Org Chart Basic",
+    "summary": "Give hrmq its first organisational model: an OrgUnit hierarchy (self-referencing parent, type, cost-center, manager) and effective-dated OrgAssignment placements linking employees to units, in a new hr-org register fragment.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/org-chart-basic/spec.md"
+  },
+  {
+    "slug": "payroll-core-engine",
+    "title": "Payroll Core Engine",
+    "summary": "The strategic centerpiece: the only open-source Dutch payroll calculation engine (verified 2026-07-12/13.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/payroll-core-engine/spec.md"
+  },
+  {
+    "slug": "payroll-core-schema",
+    "title": "Payroll Core Schema",
+    "summary": "Chain head for the open-source Dutch payroll engine (Spectr hrmq-canon-payroll-engine, P1-strategic; no OSS NL payroll engine exists.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/payroll-core-schema/spec.md"
+  },
+  {
+    "slug": "payroll-glpost-shillinq",
+    "title": "Payroll Glpost Shillinq",
+    "summary": "Make payroll flow automatically into the books.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/payroll-glpost-shillinq/spec.md"
+  },
+  {
+    "slug": "payroll-mutation-reports",
+    "title": "Payroll Mutation Reports",
+    "summary": "The one thing a loonadministrateur does before flipping a run from draft to approved: compare it to the previous period.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/payroll-mutation-reports/spec.md"
+  },
+  {
+    "slug": "payroll-sepa-netpay-shillinq",
+    "title": "Payroll SEPA Netpay Shillinq",
+    "summary": "Pay the salaries an approved payroll run owes.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/payroll-sepa-netpay-shillinq/spec.md"
+  },
+  {
+    "slug": "payslip-pdf-docudesk",
+    "title": "Payslip PDF Docudesk",
+    "summary": "Give every Payslip a downloadable loonstrook PDF and every employee-year a jaaropgaaf PDF.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/payslip-pdf-docudesk/spec.md"
+  },
+  {
+    "slug": "pension-filing-upa-mvp",
+    "title": "Pension Filing Upa Mvp",
+    "summary": "Give hrmq its first sector-pension filing surface (UPA.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/pension-filing-upa-mvp/spec.md"
+  },
+  {
+    "slug": "performance-review-cycles",
+    "title": "Performance Review Cycles",
+    "summary": "The orchestration container of the performance-review MVP: a generic ReviewCycle (jaargesprek / beoordeling / tussentijds) with a declarative open/close lifecycle, surfaced as SUB_PAGEs under the existing Personeel group per ADR-001 Rule 6.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/performance-review-cycles/spec.md"
+  },
+  {
+    "slug": "performance-reviews",
+    "title": "Performance Reviews",
+    "summary": "The dossier half of the performance-review MVP: the PerformanceReview object per employee per cycle, carrying rating, sterktes, ontwikkelpunten, afspraken and a goals array **inside** the review (one dossier document, one lifecycle, one retention context.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/performance-reviews/spec.md"
+  },
+  {
+    "slug": "portal-contribution",
+    "title": "Portal Contribution",
+    "summary": "Hrmq contributes to portaliq, the shared external portal for people without Nextcloud accounts (hydra ADR-046 + 2026-07-06 amendment, contribution contract v2): external employees get UUID-scoped self-service over their own employee record, payslips, employment contracts, timesheets, expenses and leave requests (with strict create whitelists for timesheet/expense/leave), and clients get a read-only view over the timesheets whose billable hours they review.",
+    "status": "beta",
+    "docsUrl": "openspec/specs/portal-contribution/spec.md"
+  },
+  {
+    "slug": "portal-schemas",
+    "title": "Portal Schemas",
+    "summary": "Declarative register foundation for hrmq's Wave-1 contribution to portaliq, the shared external portal for people without Nextcloud accounts (hydra ADR-046 + 2026-07-06 amendment).",
+    "status": "beta",
+    "docsUrl": "openspec/specs/portal-schemas/spec.md"
+  },
+  {
+    "slug": "proforma-payslip",
+    "title": "Proforma Payslip",
+    "summary": "HR admins repeatedly need the answer to a hypothetical (\"if I offer €4.100 bruto wit, what is the net?\", \"what does an AOW-age hire net?\", \"how does a 0,8 part-time factor land?\") without creating throw-away Employee/Contract/Run/Payslip records.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/proforma-payslip/spec.md"
+  },
+  {
+    "slug": "receipt-ocr",
+    "title": "Receipt OCR",
+    "summary": "Give every Expense with an attached receiptFile an automatic prefill of its still-empty amount/expenseDate/vendor/vatAmount fields, extracted by docudesk's FinancialExtractionService from the receipt, with confidence and provenance recorded so a reviewer can tell a value was machine-suggested rather than hand-entered.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/receipt-ocr/spec.md"
+  },
+  {
+    "slug": "recruiting-applications",
+    "title": "Recruiting Applications",
+    "summary": "The application half of the recruiting MVP: candidate PII lives inside the Application object (AVG data-minimisation.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/recruiting-applications/spec.md"
+  },
+  {
+    "slug": "recruiting-vacancies",
+    "title": "Recruiting Vacancies",
+    "summary": "Open the frozen ADR-001 menu-6 Onboarding & ATS surface with the vacancy half of the recruiting MVP: a Vacancy schema with a declarative publish lifecycle (publiceren stamps publishedDate on the carrying write; sluiten closes; terminal), index/detail pages with the per-vacancy candidate list via the related panel, and a seeded published vacancy.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/recruiting-vacancies/spec.md"
+  },
+  {
+    "slug": "retro-adjustments",
+    "title": "Retro Adjustments",
+    "summary": "The payroll engine (payroll-core-engine) seals a period's payslips into a run whose engineVersion/calculatedAt are stamped and whose non-draft states refuse recalculation.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/retro-adjustments/spec.md"
+  },
+  {
+    "slug": "rostering",
+    "title": "Rostering",
+    "summary": "Hrmq administers who is employed, what they clocked and what they claim, but had no forward-looking plan.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/rostering/spec.md"
+  },
+  {
+    "slug": "sick-pay-calc",
+    "title": "Sick Pay Calc",
+    "summary": "Hrmq already modelled the *administrative* side of sickness (leave-verzuim-mvp's SickLeaveCase + the nl-loondoorbetaling-minimum check) and already had the actual gross-to-net engine (payroll-core-engine's PayrollCalculator/PayrollRunService).",
+    "status": "stable",
+    "docsUrl": "openspec/specs/sick-pay-calc/spec.md"
+  },
+  {
+    "slug": "time-attendance",
+    "title": "Time Attendance",
+    "summary": "Give hrmq a raw clock surface with Dutch working-time-law depth no Nextcloud app has (Spectr hrmq-insight-nc-ecosystem-gap: German ArbZG time-compliance apps exist in the ecosystem, nothing covers the Arbeidstijdenwet): a per-employee/per-day AttendanceRecord (clockIn/clockOut/breakMinutes, stored writer-maintained workedHours, declarative open⇄gesloten lifecycle), three versioned machine-checkable ATW rules.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/time-attendance/spec.md"
+  },
+  {
+    "slug": "time-entry-capture",
+    "title": "Time Entry Capture",
+    "summary": "Home the fleet's timesheet / hours-capture surface in hrmq (HR's domain) and emit an approved-time-entry event a finance app consumes.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/time-entry-capture/spec.md"
+  },
+  {
+    "slug": "verzuim-analytics-widgets",
+    "title": "Verzuim Analytics Widgets",
+    "summary": "Give HR the absence analytics the stored data already supports: four demonstrably-supported stat widgets on the Dashboard (open ziektegevallen, langdurig verzuim past the WVP 42-weken horizon via an @today-relative date-threshold filter, verlofaanvragen in behandeling, and this-month approved verlofuren as a windowed sum) plus a VerzuimOverzicht open-cases werkvoorraad sorted by the UWV 42-weken deadline (the round-1 LoonaangifteFilings deadline-queue pattern).",
+    "status": "stable",
+    "docsUrl": "openspec/specs/verzuim-analytics-widgets/spec.md"
+  },
+  {
+    "slug": "verzuim-wvp",
+    "title": "Verzuim Wvp",
+    "summary": "Dutch employers must run Wet-verbetering-poortwachter case management from day one of sickness: probleemanalyse in week 6 and plan van aanpak in week 8 (Regeling procesgang eerste en tweede ziektejaar), the 42-weken ziekmelding at UWV (ZW art.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/verzuim-wvp/spec.md"
+  },
+  {
+    "slug": "wkr-administration",
+    "title": "Wkr Administration",
+    "summary": "WKR is administered from the employer's ledger of allowances/benefits for the WHOLE administration and fiscal year, not from one payslip in isolation: the vrije ruimte is a percentage of the entire fiscal wage bill, and \"used\" sums every payslip's designated allowances plus every stand-alone declaration.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/wkr-administration/spec.md"
+  }
+]
