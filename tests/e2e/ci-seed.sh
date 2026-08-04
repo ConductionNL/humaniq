@@ -125,21 +125,30 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
 # ── 0. Did the app's own install path already provision the register? ────────
-# Reported, never gated. If this says "yes", the `<install>` repair step and the
-# `components.registers` declaration are doing their job on a fresh install and
-# the import below is a no-op re-verify. If it says "no", the app-side fix
-# regressed and this script is the only thing standing between us and a green
-# run over a missing register — which is exactly the state we do not want to
-# reach silently.
+# This decides whether the HTTP import below runs at all, and it is the single
+# most informative line in the log.
+#
+# Measured on run 30919961510 (job 92028085860), the first run carrying the
+# <install> block and the components.registers declaration: "ALREADY present".
+# The app provisions its own register on a fresh install, as it should.
+#
+# So the import is a FALLBACK, not the normal path. Firing it unconditionally
+# was worse than useless: it re-posted a configuration that was already imported
+# and answered HTTP 400 on every healthy run, training the reader to ignore a
+# 400 from the one step whose failure would matter if the app fix regressed.
 PRE_BODY="${WORK}/pre-registers.json"
 PRE_CODE="$(http_get_code "$PRE_BODY" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	"${BASE}/index.php/apps/openregister/api/registers?_limit=300")"
+NEEDS_IMPORT=1
 if [ "$PRE_CODE" = "200" ] && [ -f "$PRE_BODY" ] && grep -q '"slug":[[:space:]]*"hrmq"' "$PRE_BODY"; then
+	NEEDS_IMPORT=0
 	echo "[ci-seed] BEFORE import: the hrmq register is ALREADY present — 'occ app:enable hrmq' provisioned it."
+	echo "[ci-seed] Skipping the HTTP import; the verification below still runs in full."
 else
 	echo "[ci-seed] BEFORE import: the hrmq register is NOT present (registers endpoint HTTP ${PRE_CODE})."
-	echo "[ci-seed] That means the app's own install path did not provision it; see appinfo/info.xml"
+	echo "[ci-seed] The app's own install path did not provision it — see appinfo/info.xml"
 	echo "[ci-seed] <repair-steps><install> and lib/Settings/hrmq_register.json components.registers."
+	echo "[ci-seed] Falling back to an explicit admin HTTP import."
 fi
 
 # ── 1. Build the merged configuration ────────────────────────────────────────
@@ -233,7 +242,10 @@ PY
 
 CONFIG_VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["info"]["version"])' "$MERGED")"
 
-# ── 2. Import it as admin, forced ────────────────────────────────────────────
+# ── 2. Fallback only: import it as admin, forced ─────────────────────────────
+# Runs ONLY when step 0 found no register — see the note there for why an
+# unconditional import was actively harmful.
+#
 # OpenRegister's generic importer. Admin-only, so HTTP Basic as admin gives it
 # the real session the repair step does not have. It reads the upload under the
 # literal form key `file`; a raw JSON request body is NOT one of its accepted
@@ -244,28 +256,33 @@ CONFIG_VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])
 # Request::passesCSRFCheck() short-circuits to true on that header, and the
 # strict-cookie precondition holds because a Basic-auth request carries no
 # session cookie at all.
-IMPORT_URL="${BASE}/index.php/apps/openregister/api/configurations/import"
-echo "[ci-seed] POST ${IMPORT_URL} (forced, appId=hrmq, version=${CONFIG_VERSION})"
+if [ "$NEEDS_IMPORT" = "1" ]; then
+	IMPORT_URL="${BASE}/index.php/apps/openregister/api/configurations/import"
+	echo "[ci-seed] POST ${IMPORT_URL} (forced, appId=hrmq, version=${CONFIG_VERSION})"
 
-IMPORT_BODY="${WORK}/import.json"
-IMPORT_CODE="$(http_get_code "$IMPORT_BODY" \
-	-u "${USER_NAME}:${USER_PASS}" \
-	-X POST \
-	-H 'OCS-APIRequest: true' \
-	-F "file=@${MERGED};type=application/json" \
-	-F 'force=true' \
-	-F 'appId=hrmq' \
-	-F "version=${CONFIG_VERSION}" \
-	"$IMPORT_URL")"
-echo "[ci-seed] configurations/import -> HTTP ${IMPORT_CODE}"
-if [ -f "$IMPORT_BODY" ]; then
-	head -c 2000 "$IMPORT_BODY"; echo
-fi
+	IMPORT_BODY="${WORK}/import.json"
+	IMPORT_CODE="$(http_get_code "$IMPORT_BODY" \
+		-u "${USER_NAME}:${USER_PASS}" \
+		-X POST \
+		-H 'OCS-APIRequest: true' \
+		-F "file=@${MERGED};type=application/json" \
+		-F 'force=true' \
+		-F 'appId=hrmq' \
+		-F "version=${CONFIG_VERSION}" \
+		"$IMPORT_URL")"
+	echo "[ci-seed] configurations/import -> HTTP ${IMPORT_CODE}"
+	if [ -f "$IMPORT_BODY" ]; then
+		head -c 2000 "$IMPORT_BODY"; echo
+	fi
 
-# HTTP 200 is necessary but NOT sufficient — a login redirect is also a 200 with
-# an HTML body. Nothing is decided here; the verification below is the gate.
-if [ "$IMPORT_CODE" != "200" ]; then
-	echo "::warning::The import did not return HTTP 200. The verification below decides the outcome."
+	# HTTP 200 is necessary but NOT sufficient — a login redirect is also a 200
+	# with an HTML body. Nothing is decided here; the verification below is the
+	# gate, and it will fail loudly if this fallback did not actually work.
+	if [ "$IMPORT_CODE" != "200" ]; then
+		echo "::warning::The fallback import did not return HTTP 200. The verification below decides the outcome."
+	fi
+else
+	echo "[ci-seed] Fallback import not needed."
 fi
 
 # ── 3. Verify the register and every schema actually exist ───────────────────

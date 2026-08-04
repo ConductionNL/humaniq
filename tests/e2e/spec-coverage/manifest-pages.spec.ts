@@ -88,23 +88,49 @@ const PARAM_PAGES = MANIFEST.pages.filter((p) => p.route.includes(':'))
  *  App root resolution
  * --------------------------------------------------------------------- */
 
-// In Nextcloud installs with `htaccess.RewriteBase => '/'` (the default
-// for the apache-served dev container) `generateUrl` returns `/apps/hrmq`
-// and any `/index.php/`-prefixed URL sits outside the router base. In
-// CI's php -S install (no htaccess processing) the inverse is true and
-// only the `/index.php/...` form works. Resolve at runtime via a probe.
-const ROOT_CANDIDATES = ['/apps/hrmq', '/index.php/apps/hrmq']
+// In Nextcloud installs with `htaccess.RewriteBase => '/'` (the default for
+// the apache-served dev container) `generateUrl` returns `/apps/hrmq`; with the
+// front controller active it returns `/index.php/apps/hrmq`. `src/main.js`
+// builds the router with `createWebHistory(generateUrl('/apps/hrmq'))`, so THAT
+// value — and only that value — is the base every in-app route hangs off.
+//
+// ⚠️ The previous implementation probed the two candidate prefixes and took the
+// first one that SERVED THE SHELL. That is a different question, and on CI the
+// two answers disagree: `php -S` routes BOTH `/apps/hrmq/...` and
+// `/index.php/apps/hrmq/...` into `index.php` (confirmed in nextcloud.log:
+// `"url":"/apps/hrmq/dsr-requests","scriptName":"/index.php"`), so the probe
+// always matched `/apps/hrmq` first — while `generateUrl` returned the
+// `/index.php` form. Every deep link therefore landed OUTSIDE the router base,
+// matched nothing, hit `main.js`'s `/:pathMatch(.*)*` catch-all and redirected
+// to its default page. Measured on run 30919961510 (job 92028085860): 67 of 70
+// tests failed with `Received string: "/index.php/apps/hrmq/timesheets"`, and
+// the only page that "passed" was the redirect target itself — the failure mode
+// and the success signal were the same URL.
+//
+// So ask the app, not the server: read `OC.generateUrl('/apps/hrmq')` out of the
+// live page. It is literally the call `main.js` passes to `createWebHistory`,
+// so the base cannot drift from the router's. Serving the shell is still
+// verified — via the navigation below — but it is no longer what SELECTS the
+// base.
 let _root: string | null = null
 async function rootUrl(page: Page): Promise<string> {
 	if (_root) return _root
-	for (const candidate of ROOT_CANDIDATES) {
-		const res = await page.request.get(`${candidate}/`, { failOnStatusCode: false })
-		if (res.ok() && (await res.text()).includes('hrmq-main.js')) {
-			_root = candidate
-			return candidate
-		}
+	// `/index.php/apps/hrmq/` is reachable on every install shape (the front
+	// controller is always addressable explicitly), so it is a safe place to
+	// stand while asking the page which base the router actually uses.
+	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
+	const resolved = await page.evaluate(
+		() => (window as unknown as { OC?: { generateUrl?: (p: string) => string } }).OC?.generateUrl?.('/apps/hrmq'),
+	)
+	if (!resolved) {
+		throw new Error(
+			'OC.generateUrl is not available on the hrmq page, so the router base cannot be '
+			+ 'resolved. The Nextcloud core bundle did not load — every route assertion below '
+			+ 'would be measuring the wrong URL.',
+		)
 	}
-	throw new Error('Neither /apps nor /index.php form serves the hrmq SPA shell')
+	_root = resolved.replace(/\/+$/, '')
+	return _root
 }
 
 /* --------------------------------------------------------------------- *
