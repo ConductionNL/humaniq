@@ -3,12 +3,33 @@
 /**
  * Unit test guarding appinfo/info.xml well-formedness.
  *
- * `simplexml_load_file()` is exactly what Nextcloud's `app:enable` /
- * `OC_App::getAppInfo()` path uses to parse an app's info.xml. A malformed
- * info.xml (e.g. a literal `--` inside an XML comment, which is illegal per
- * the XML spec) makes the app UNINSTALLABLE while every other quality gate
- * stays green, because none of them parse this file. This test closes that
- * gap: it must go red the moment info.xml stops being valid XML.
+ * A malformed info.xml (e.g. a literal `--` inside an XML comment, which is
+ * illegal per the XML spec) makes the app UNINSTALLABLE while every other
+ * quality gate stays green, because none of them parse this file. This test
+ * closes that gap: it must go red the moment info.xml stops being valid XML.
+ *
+ * ⚠️ It parses with `simplexml_load_string(file_get_contents(...))`, NOT
+ * `simplexml_load_file()`, and the difference is the whole reason this note
+ * exists. It used to use the latter, on the stated grounds that it was "the
+ * same call Nextcloud's app:enable uses". It is not: `OC\App\InfoParser`
+ * (lib/private/App/InfoParser.php) reads the file and calls
+ * `simplexml_load_string()`.
+ *
+ * That mattered the moment CI existed. `tests/bootstrap.php` requires the
+ * server's `lib/base.php` whenever a full checkout is present — which is
+ * always true under the shared quality workflow, where the app is mounted at
+ * `server/apps/hrmq` — and base.php hardens libxml with
+ * `libxml_set_external_entity_loader(static fn () => null)`. Under that loader
+ * `simplexml_load_file()` resolves even the PRIMARY document through the
+ * resolver and so returns false with "Failed to load external entity because
+ * the resolver function returned null (line 0)", for a perfectly valid file.
+ * `simplexml_load_string()` takes the bytes directly and is unaffected.
+ *
+ * So the test passed on every developer machine (no server checkout, no
+ * hardening) and failed on all six PHPUnit legs of hrmq's first-ever CI run,
+ * reporting "this makes the app uninstallable" — nine seconds after
+ * `occ app:enable hrmq` had printed "hrmq 0.2.0 enabled" in the same job.
+ * A false RED that named the opposite of the truth.
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit
@@ -51,7 +72,9 @@ class AppInfoTest extends TestCase
         // assertion failure instead of PHPUnit converting the warning into
         // an error with a noisy stack trace.
         $useInternalErrors = libxml_use_internal_errors(true);
-        $result            = simplexml_load_file($path);
+        // Mirrors OC\App\InfoParser::parse() exactly — see the class docblock
+        // for why load_file() cannot be used here.
+        $result            = simplexml_load_string(file_get_contents($path));
         $errors            = libxml_get_errors();
         libxml_clear_errors();
         libxml_use_internal_errors($useInternalErrors);
@@ -65,8 +88,9 @@ class AppInfoTest extends TestCase
 
         $this->assertNotFalse(
             $result,
-            "appinfo/info.xml failed to parse via simplexml_load_file() - the same call Nextcloud's "
-            ."app:enable uses, so this makes the app uninstallable. Parser errors:\n"
+            "appinfo/info.xml failed to parse via simplexml_load_string() - the same call "
+            ."OC\\App\\InfoParser uses on app:enable, so this makes the app uninstallable. "
+            ."Parser errors:\n"
             .implode("\n", $errorMessages)
         );
     }
