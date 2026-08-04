@@ -82,6 +82,29 @@ jobs:
       # are counted. Setting the input WITHOUT shipping a config at that path
       # would change nothing except make the reader think it had.
       enable-playwright: true
+      # Provision the hrmq register in OpenRegister BEFORE the specs run, and
+      # verify it is really there.
+      #
+      # The first run of this pipeline (run 30904454063, E2E job 91976455533)
+      # was 68 failed / 2 passed because the `hrmq` register did not exist:
+      # `occ app:enable hrmq` never ran the register-import repair step at all
+      # (it was declared `<post-migration>` only, and Nextcloud skips that block
+      # on a fresh install), and `hrmq_register.json` declared no
+      # `components.registers` section for it to import even if it had. Both are
+      # fixed in the app in this same change.
+      #
+      # This step exists anyway because a repair step cannot GATE: it swallows
+      # \Throwable and `app:enable` exits 0 regardless, and it runs with no user
+      # session so OpenRegister `main` evaluates the import as anonymous. The
+      # script does the import over the admin HTTP API and then verifies the
+      # register, all 54 schema slugs and the object collections the specs read
+      # — so a missing register is ONE loud step failure, not 68 spec failures
+      # blaming the selectors. It also logs whether the register was already
+      # there BEFORE it acted, which is the only evidence that the two app-side
+      # fixes work on their own.
+      #
+      # cwd for this step is the Nextcloud server root, hence the apps/ prefix.
+      playwright-seed-command: 'bash apps/hrmq/tests/e2e/ci-seed.sh'
       # src/manifest.json declares `"dependencies": ["openregister"]`, and
       # nc-vue's CnAppRoot honours that at runtime: with the dependency absent
       # it renders the "Required apps are missing" gate INSTEAD of the router

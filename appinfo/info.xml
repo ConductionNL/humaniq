@@ -81,6 +81,28 @@ Vrij en open source onder de EUPL-1.2-licentie.
     </navigations>
 
     <repair-steps>
+        <install>
+            <!-- SAME step as post-migration, and that duplication is the point.
+                 Nextcloud's Installer::installAppLastSteps() guards BOTH the
+                 pre- and post-migration blocks with `if ($previousVersion !== '')`
+                 — on a FRESH install `installed_version` is still empty, so
+                 neither block runs. Only `repair-steps/install` is executed
+                 unconditionally.
+
+                 hrmq declared post-migration ONLY, so on every fresh install
+                 the register import never ran at all: `occ app:enable hrmq`
+                 printed "hrmq 0.2.0 enabled" and NOT ONE line of this step's
+                 own output, the `hrmq` register was absent from OpenRegister,
+                 and the SPA fell back to its default route on every page — the
+                 shape the CI E2E suite hit as 68 failures whose two "passes"
+                 were both the default route.
+
+                 The step is idempotent and fails soft when OpenRegister is not
+                 yet enabled, so running it on install AND on upgrade is safe;
+                 whichever fires first wins and the other is a version-unchanged
+                 skip. -->
+            <step>OCA\Hrmq\Repair\InitializeRegister</step>
+        </install>
         <post-migration>
             <!-- Import the hrmq register (lib/Settings/hrmq_register.json +
                  register.d/*.json fragments) into OpenRegister. Idempotent;
