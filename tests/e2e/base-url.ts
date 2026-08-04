@@ -42,6 +42,32 @@
 const FORBIDDEN_HOSTS = ['localhost:8080', '127.0.0.1:8080']
 
 /**
+ * Is this process running inside a GitHub Actions runner?
+ *
+ * ⚠️ This exemption is load-bearing, and the comment above it was HALF right.
+ * It correctly predicted that the shared Conduction quality workflow exports
+ * the instance as `BASE_URL`, and accepted that name — but the value it
+ * exports is literally `http://localhost:8080`, which `FORBIDDEN_HOSTS` then
+ * rejects. So the guard written to stop this suite touching the shared dev
+ * container would have rejected the ONE instance it is supposed to run
+ * against, throwing from `resolveBaseURL()` at config-load time — before a
+ * single test, with a message blaming a shared container that does not exist
+ * on the runner.
+ *
+ * The distinction the guard actually wants is not "which port" but "is this
+ * host disposable". On a GitHub-hosted runner :8080 is the run's own
+ * `php -S` front controller, provisioned and destroyed with the job; there is
+ * no shared instance reachable from it at all. `GITHUB_ACTIONS` is used rather
+ * than the far broader `CI`, which a developer may well export in a shell that
+ * CAN see the real :8080.
+ *
+ * @return True when running on a GitHub Actions runner.
+ */
+function isGitHubActionsRunner(): boolean {
+	return process.env.GITHUB_ACTIONS === 'true'
+}
+
+/**
  * Resolve the base URL for this run, or throw.
  *
  * @return The normalised base URL, without a trailing slash.
@@ -60,7 +86,7 @@ export function resolveBaseURL(): string {
 
 	const normalised = raw.replace(/\/+$/, '')
 
-	if (FORBIDDEN_HOSTS.some((host) => normalised.includes(host))) {
+	if (!isGitHubActionsRunner() && FORBIDDEN_HOSTS.some((host) => normalised.includes(host))) {
 		throw new Error(
 			`Refusing to run against ${normalised} — that is the SHARED dev container. `
 			+ 'These specs create and delete OpenRegister objects; run them against a '

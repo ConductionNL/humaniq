@@ -31,7 +31,33 @@ import { ADMIN_CREDENTIALS, resolveBaseURL } from '../base-url'
 // PATH-form base: the hrmq router runs in HISTORY mode (`createWebHistory`,
 // src/main.js). Hash-form deep links are silently ignored and land on
 // the default page — observed live 2026-07-26.
-const APP_BASE = '/apps/hrmq'
+//
+// ⚠️ The base is NOT a constant. `src/main.js` builds the router with
+// `createWebHistory(generateUrl('/apps/hrmq'))`, which returns `/apps/hrmq` when
+// the front controller is inactive and `/index.php/apps/hrmq` when it is. This
+// file used to hardcode `/apps/hrmq`; on CI `generateUrl` returns the
+// `/index.php` form, so every `page.goto` here addressed a path OUTSIDE the
+// router base, matched nothing, and fell through main.js's `/:pathMatch(.*)*`
+// catch-all to its default page. Measured on run 30919961510 (job 92028085860):
+// every route assertion failed with `Received string:
+// "/index.php/apps/hrmq/timesheets"` — including `/employees`, whose page is
+// fine. Resolve it from the running app instead, per page.
+let _appBase: string | null = null
+async function appBase(page: Page): Promise<string> {
+	if (_appBase) return _appBase
+	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
+	const resolved = await page.evaluate(
+		() => (window as unknown as { OC?: { generateUrl?: (p: string) => string } }).OC?.generateUrl?.('/apps/hrmq'),
+	)
+	if (!resolved) {
+		throw new Error(
+			'OC.generateUrl is not available on the hrmq page, so the router base cannot be '
+			+ 'resolved — every route assertion below would be measuring the wrong URL.',
+		)
+	}
+	_appBase = resolved.replace(/\/+$/, '')
+	return _appBase
+}
 
 // This spec SEEDS AND DELETES OpenRegister objects, so its absolute base URL
 // must be the same instance the relative `page.goto`s below hit. It previously
@@ -81,7 +107,8 @@ async function resolveEmployeeSchema(api: APIRequestContext): Promise<string> {
  * for the SPA shell, asserting the router stayed on the requested route.
  */
 async function gotoRoute(page: Page, route: string): Promise<void> {
-	await page.goto(`${APP_BASE}${route}`, { waitUntil: 'domcontentloaded' })
+	const base = await appBase(page)
+	await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' })
 	await expect(page.locator('#app-content, .app-content').first()).toBeVisible({ timeout: 15_000 })
 	expect(new URL(page.url()).pathname, `router must stay on ${route}`).toContain(route)
 }

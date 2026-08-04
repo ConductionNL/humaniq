@@ -3,7 +3,7 @@
     "info": {
         "title": "Hrmq Register",
         "description": "Register containing all schemas for the Hrmq application.",
-        "version": "0.13.0"
+        "version": "0.14.0"
     },
     "x-openregister": {
         "type": "application",
@@ -13,6 +13,70 @@
     },
     "paths": {},
     "components": {
+        "registers": {
+            "hrmq": {
+                "slug": "hrmq",
+                "title": "Hrmq Register",
+                "description": "Hrmq — open-source HR & payroll administration for Dutch SMBs. Holds every HR, verzuim, verlof, roostering, ATS, performance and payroll object the app reads and writes.",
+                "version": "0.14.0",
+                "schemas": [
+                    "Administration",
+                    "AdministrationAccess",
+                    "Application",
+                    "Asset",
+                    "AssetAssignment",
+                    "AttendanceRecord",
+                    "BhvCertificering",
+                    "Cao",
+                    "CarAssignment",
+                    "CompAdjustment",
+                    "CompReviewCycle",
+                    "DsrRequest",
+                    "Employee",
+                    "EmploymentContract",
+                    "Expense",
+                    "GeneratedDocument",
+                    "IntegrationAccount",
+                    "Interview",
+                    "Jaaropgaaf",
+                    "JurisdictionPack",
+                    "KeyResult",
+                    "LeaveBalance",
+                    "LeaveRequest",
+                    "LeaveTransaction",
+                    "LoonaangifteFiling",
+                    "Loonbeslag",
+                    "Normfunctie",
+                    "Objective",
+                    "Offboarding",
+                    "Onboarding",
+                    "OrgAssignment",
+                    "OrgUnit",
+                    "PayrollAdjustment",
+                    "PayrollGLPost",
+                    "PayrollMutationReport",
+                    "PayrollPaymentBatch",
+                    "PayrollRun",
+                    "Payslip",
+                    "PensionFiling",
+                    "PerformanceReview",
+                    "ReceiptExtraction",
+                    "ReviewCycle",
+                    "Roster",
+                    "RosterAssignment",
+                    "SalaryBand",
+                    "Shift",
+                    "SickLeaveCase",
+                    "Stagiair",
+                    "Timesheet",
+                    "Vacancy",
+                    "Vehicle",
+                    "WkrAssessment",
+                    "WkrDeclaration",
+                    "WntDisclosure"
+                ]
+            }
+        },
         "schemas": {}
     }
 }
