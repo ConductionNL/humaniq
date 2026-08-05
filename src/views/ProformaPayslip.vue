@@ -18,7 +18,7 @@
 		</p>
 
 		<form class="proforma-payslip__form" @submit.prevent="simulate">
-			<NcTextField :value.sync="form.gross"
+			<NcTextField v-model="form.gross"
 				:label="t('hrmq', 'Gross monthly salary (EUR)')"
 				type="number"
 				step="0.01"
@@ -27,13 +27,13 @@
 
 			<div class="proforma-payslip__radio-group">
 				<span class="proforma-payslip__radio-label">{{ t('hrmq', 'Tax table') }}</span>
-				<NcCheckboxRadioSwitch :checked.sync="form.table"
+				<NcCheckboxRadioSwitch v-model="form.table"
 					value="wit"
 					name="table"
 					type="radio">
 					{{ t('hrmq', 'White table (wit)') }}
 				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch :checked.sync="form.table"
+				<NcCheckboxRadioSwitch v-model="form.table"
 					value="groen"
 					name="table"
 					type="radio">
@@ -41,32 +41,38 @@
 				</NcCheckboxRadioSwitch>
 			</div>
 
-			<NcCheckboxRadioSwitch :checked.sync="form.loonheffingskorting" type="switch">
+			<NcCheckboxRadioSwitch v-model="form.loonheffingskorting" type="switch">
 				{{ t('hrmq', 'Loonheffingskorting applied') }}
 			</NcCheckboxRadioSwitch>
 
-			<NcTextField :value.sync="form.dateOfBirth"
+			<NcTextField v-model="form.dateOfBirth"
 				:label="t('hrmq', 'Date of birth (optional — unknown is treated as below AOW age)')"
 				type="date" />
 
-			<NcTextField :value.sync="form.parttime"
+			<NcTextField v-model="form.parttime"
 				:label="t('hrmq', 'Part-time factor')"
 				type="number"
 				step="0.01"
 				min="0.01" />
 
-			<NcTextField :value.sync="form.bijzonder"
+			<NcTextField v-model="form.bijzonder"
 				:label="t('hrmq', 'One-off special payment (EUR, optional)')"
 				type="number"
 				step="0.01"
 				min="0" />
 
-			<NcTextField :value.sync="form.period"
+			<NcTextField v-model="form.period"
 				:label="t('hrmq', 'Wage period (YYYY-MM, defaults to the current month)')"
 				type="text"
 				placeholder="2026-02" />
 
-			<NcButton type="primary" native-type="submit" :disabled="loading">
+			<!-- @nextcloud/vue 9 renamed NcButton's style prop `type` → `variant`
+			     and repurposed `type` as the NATIVE button type (default
+			     "button"), dropping `native-type` entirely. Left as
+			     `type="primary" native-type="submit"` this button would set an
+			     invalid native type and stop submitting the form, with no
+			     warning from Vue or from any lint rule. -->
+			<NcButton variant="primary" type="submit" :disabled="loading">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" />
 					<Calculator v-else :size="20" />

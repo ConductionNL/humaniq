@@ -43,15 +43,25 @@ const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
 const useLocalLib = process.env.USE_LOCAL_LIB !== 'false' && fs.existsSync(localLib)
 
 webpackConfig.resolve = {
-	extensions: ['.vue', '.js'],
+	extensions: ['.vue', '.js', '.mjs'],
 	alias: {
 		'@': path.resolve(__dirname, 'src'),
 		...(useLocalLib ? { '@conduction/nextcloud-vue': localLib } : {}),
 		// Deduplicate shared packages so the aliased library source uses
 		// the same instances as the app (prevents dual-Pinia / dual-Vue bugs).
-		'vue$': path.resolve(__dirname, 'node_modules/vue'),
-		'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
-		'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue'),
+		//
+		// ⚠️ An alias that resolves to a package DIRECTORY makes webpack fall
+		// back to `main`/`mainFields` and skip the package's `exports` map
+		// entirely. `@nextcloud/vue@9` ships NO `main` and NO `module` — it is
+		// reachable only through `exports["."] -> ./dist/index.mjs` — so the
+		// previous directory alias produced 232 `Can't resolve '@nextcloud/vue'`
+		// errors, one per importing module, including from inside
+		// @conduction/nextcloud-vue's own dist. Point singleton aliases at a
+		// concrete entry FILE. (`vue` and `pinia` still declare `main`, so a
+		// directory alias resolves for them.)
+		vue$: path.resolve(__dirname, 'node_modules/vue'),
+		pinia$: path.resolve(__dirname, 'node_modules/pinia'),
+		'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue/dist/index.mjs'),
 	},
 }
 
@@ -78,20 +88,21 @@ webpackConfig.plugins = [
 	new webpack.DefinePlugin({ appVersion: JSON.stringify(process.env.npm_package_version) }),
 ]
 
-// Force @nextcloud/dialogs to resolve from this app's node_modules,
-// preventing the nextcloud-vue submodule's nested deps (Vue 3) from leaking in.
-// Register the exact-match style.css alias BEFORE the bare package alias below:
-// enhanced-resolve applies the first matching entry, and the bare alias maps the
-// package to its DIRECTORY, so '@nextcloud/dialogs/style.css' (imported by
-// nextcloud-vue's useAppInstaller) would resolve to a non-existent root style.css.
-// dialogs v6 ships the stylesheet at dist/style.css behind its "exports" map.
-webpackConfig.resolve.alias['@nextcloud/dialogs/style.css$'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs/dist/style.css')
-webpackConfig.resolve.alias['@nextcloud/dialogs'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs')
+// The former `@nextcloud/dialogs` directory alias is GONE.
+//
+// It existed to stop "the nextcloud-vue submodule's nested deps (Vue 3)"
+// leaking into a Vue 2 app — a rationale this migration inverts, since the app
+// is now Vue 3 and there is a single hoisted @nextcloud/dialogs@7.4.1. Worse,
+// it was the same latent landmine as the `@nextcloud/vue` alias above: dialogs
+// v7 ships NO `main`, only `exports`, so aliasing the bare specifier to the
+// package DIRECTORY makes every `import … from '@nextcloud/dialogs'` unresolvable.
+// The companion `style.css$` alias is likewise unnecessary — v7's exports map
+// publishes `./style.css` directly.
 
-// dialogs v6 drags in a FilePicker chunk that imports node's `path`, and webpack 5 no
-// longer auto-polyfills node core modules — without this the bundle fails to emit with
-// "Can't resolve 'path'". This app does not use the FilePicker API, so the code path
-// never runs and an empty module is safe.
+// @nextcloud/dialogs drags in a FilePicker chunk that imports node's `path`, and
+// webpack 5 no longer auto-polyfills node core modules — without this the bundle
+// fails to emit with "Can't resolve 'path'". This app does not use the FilePicker
+// API, so the code path never runs and an empty module is safe.
 webpackConfig.resolve.fallback = {
 	...(webpackConfig.resolve.fallback || {}),
 	path: false,
