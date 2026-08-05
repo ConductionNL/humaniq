@@ -128,20 +128,46 @@ class PayrollMutationService
         }
 
         $fromRunId = ($fromRunId === null ? null : trim($fromRunId));
-        $fromRun   = null;
 
-        if ($fromRunId !== null && $fromRunId !== '') {
-            $fromRun = ($runsById[$fromRunId] ?? null);
-            if ($fromRun === null) {
-                return $this->outcome('failed', 'Loonrun "'.$fromRunId.'" niet gevonden.');
-            }
-        } else {
+        if ($fromRunId === null || $fromRunId === '') {
             // D4 — auto-resolve the closest earlier period of the SAME
             // administration; none found => first-run path (D5).
             $fromRun   = $this->resolvePriorRun($toRun, $runsById);
             $fromRunId = ($fromRun === null ? null : $this->idOf($fromRun));
+
+            return $this->diffResolvedRuns($fromRun, $fromRunId, $toRun, $toRunId);
         }
 
+        $fromRun = ($runsById[$fromRunId] ?? null);
+        if ($fromRun === null) {
+            return $this->outcome('failed', 'Loonrun "'.$fromRunId.'" niet gevonden.');
+        }
+
+        return $this->diffResolvedRuns($fromRun, $fromRunId, $toRun, $toRunId);
+
+    }//end diff()
+
+
+    /**
+     * Diff two already-resolved runs (design.md D4/D5).
+     *
+     * Extracted from {@see self::diff()} so the two ways of arriving at a
+     * baseline run — explicit id or auto-resolved prior period — share one
+     * tail instead of being joined by an else branch. `$fromRun` is null on
+     * the first-run path (D5), which `buildReport()` handles.
+     *
+     * @param array<string, mixed>|null $fromRun   The baseline run, or null on the first-run path.
+     * @param string|null               $fromRunId The baseline run id, or null on the first-run path.
+     * @param array<string, mixed>      $toRun     The run being reviewed.
+     * @param string                    $toRunId   The reviewed run's id.
+     *
+     * @return array<string, mixed> Outcome: {status, message, report}.
+     *
+     * @spec openspec/changes/payroll-mutation-reports/specs/payroll-mutation-reports/spec.md#REQ-MUT-006
+     * @spec openspec/changes/payroll-mutation-reports/specs/payroll-mutation-reports/spec.md#REQ-MUT-007
+     */
+    private function diffResolvedRuns(?array $fromRun, ?string $fromRunId, array $toRun, string $toRunId): array
+    {
         if ($fromRun !== null
             && (string) ($fromRun['administrationId'] ?? '') !== (string) ($toRun['administrationId'] ?? '')
         ) {
@@ -154,7 +180,7 @@ class PayrollMutationService
 
         return $this->outcome('ok', 'Mutatierapport berekend.', $report);
 
-    }//end diff()
+    }//end diffResolvedRuns()
 
 
     /**

@@ -61,6 +61,7 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Standards\Checks;
 
+use DateTimeImmutable;
 use OCA\Hrmq\Standards\RuleCatalogue;
 
 /**
@@ -203,7 +204,7 @@ final class NlVerzuimChecks implements CheckProvider
             return true;
         }
 
-        $today = (new \DateTimeImmutable('today'))->getTimestamp();
+        $today = (new DateTimeImmutable('today'))->getTimestamp();
 
         foreach (self::MILESTONES as $milestone) {
             $done = trim((string) ($o[$milestone['done']] ?? ''));

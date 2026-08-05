@@ -54,6 +54,8 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Standards\Checks;
 
+use DateTimeImmutable;
+
 /**
  * Contract-expiry signal + statutory aanzegtermijn executable checks.
  */
@@ -161,7 +163,7 @@ final class NlSignalChecks implements CheckProvider
             return true;
         }
 
-        $today       = (new \DateTimeImmutable('today'))->getTimestamp();
+        $today       = (new DateTimeImmutable('today'))->getTimestamp();
         $windowEnd   = strtotime('+'.self::WINDOW_DAYS.' days', $today);
         $withinWindow = $endDate >= $today && $endDate <= $windowEnd;
         if ($withinWindow === false) {
@@ -271,7 +273,7 @@ final class NlSignalChecks implements CheckProvider
             return true;
         }
 
-        $today = (new \DateTimeImmutable('today'))->getTimestamp();
+        $today = (new DateTimeImmutable('today'))->getTimestamp();
         if ($endDate < $today) {
             // Already expired -- historical breaches are not re-flagged
             // (monitoring-window scope, design.md D2).
@@ -320,7 +322,7 @@ final class NlSignalChecks implements CheckProvider
             return true;
         }
 
-        $today     = (new \DateTimeImmutable('today'))->getTimestamp();
+        $today     = (new DateTimeImmutable('today'))->getTimestamp();
         $windowEnd = strtotime('+'.self::BHV_WINDOW_DAYS.' days', $today);
 
         return ($geldigTot >= $today && $geldigTot <= $windowEnd) === false;

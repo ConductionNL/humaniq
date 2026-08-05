@@ -49,6 +49,7 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Service;
 
+use DateTimeImmutable;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -463,7 +464,7 @@ class PayrollNetPayService
     private function executionDate(string $period): string
     {
         try {
-            $date = new \DateTimeImmutable($period.'-01');
+            $date = new DateTimeImmutable($period.'-01');
         } catch (\Throwable $e) {
             // Defensive fallback; upstream schema validation guards the YYYY-MM shape.
             return $period.'-25';

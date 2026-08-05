@@ -34,6 +34,8 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Service;
 
+use DateTimeImmutable;
+use InvalidArgumentException;
 use OCA\Hrmq\Payroll\CalculationInput;
 use OCA\Hrmq\Payroll\PayrollCalculator;
 use OCA\Hrmq\Payroll\TaxTables;
@@ -89,7 +91,7 @@ class ProformaPayslipService
         try {
             $tables = TaxTables::load($tableId);
         } catch (\RuntimeException $e) {
-            throw new \InvalidArgumentException('Belastingtabel voor periode '.$period.' is niet beschikbaar: '.$e->getMessage());
+            throw new InvalidArgumentException('Belastingtabel voor periode '.$period.' is niet beschikbaar: '.$e->getMessage());
         }
 
         $whkDefault = (float) $tables->werknemersverzekeringen()['whkDefault'];
@@ -185,7 +187,7 @@ class ProformaPayslipService
     private static function requireNumeric(mixed $value, string $label): float
     {
         if (is_numeric($value) === false) {
-            throw new \InvalidArgumentException($label.' is verplicht en moet numeriek zijn.');
+            throw new InvalidArgumentException($label.' is verplicht en moet numeriek zijn.');
         }
 
         return (float) $value;
@@ -212,7 +214,7 @@ class ProformaPayslipService
         }
 
         if (is_numeric($value) === false || ((float) $value) <= 0.0) {
-            throw new \InvalidArgumentException($label.' moet een getal groter dan 0 zijn.');
+            throw new InvalidArgumentException($label.' moet een getal groter dan 0 zijn.');
         }
 
         return (float) $value;
@@ -239,7 +241,7 @@ class ProformaPayslipService
         }
 
         if (is_numeric($value) === false || ((float) $value) < 0.0) {
-            throw new \InvalidArgumentException($label.' moet een getal van 0 of hoger zijn.');
+            throw new InvalidArgumentException($label.' moet een getal van 0 of hoger zijn.');
         }
 
         return (float) $value;
@@ -265,7 +267,7 @@ class ProformaPayslipService
 
         $color = strtolower(trim((string) $value));
         if (in_array($color, ['wit', 'groen'], true) === false) {
-            throw new \InvalidArgumentException('Onbekende loonheffingstabel "'.$value.'" — moet "wit" of "groen" zijn.');
+            throw new InvalidArgumentException('Onbekende loonheffingstabel "'.$value.'" — moet "wit" of "groen" zijn.');
         }
 
         return $color;
@@ -292,7 +294,7 @@ class ProformaPayslipService
 
         $tariff = strtolower(trim((string) $value));
         if (in_array($tariff, ['laag', 'hoog'], true) === false) {
-            throw new \InvalidArgumentException('Onbekende Aof-tariefklasse "'.$value.'" — moet "laag" of "hoog" zijn.');
+            throw new InvalidArgumentException('Onbekende Aof-tariefklasse "'.$value.'" — moet "laag" of "hoog" zijn.');
         }
 
         return $tariff;
@@ -313,12 +315,12 @@ class ProformaPayslipService
     private static function requirePeriod(mixed $value): string
     {
         if ($value === null || $value === '') {
-            return (new \DateTimeImmutable())->format('Y-m');
+            return (new DateTimeImmutable())->format('Y-m');
         }
 
         $period = trim((string) $value);
         if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period) !== 1) {
-            throw new \InvalidArgumentException('Periode "'.$value.'" moet het formaat JJJJ-MM hebben.');
+            throw new InvalidArgumentException('Periode "'.$value.'" moet het formaat JJJJ-MM hebben.');
         }
 
         return $period;

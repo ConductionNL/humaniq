@@ -983,24 +983,9 @@ class HrDocumentService
                 continue;
             }
 
-            if ($payslipId !== null) {
-                if (trim((string) ($row['payslipId'] ?? '')) !== $payslipId) {
-                    continue;
-                }
-            } else if ($jaaropgaafId !== null) {
-                if (trim((string) ($row['jaaropgaafId'] ?? '')) !== $jaaropgaafId) {
-                    continue;
-                }
-            } else {
-                $rowContractId = trim((string) ($row['contractId'] ?? ''));
-                if ($contractId !== null) {
-                    if ($rowContractId !== $contractId) {
-                        continue;
-                    }
-                } else if ($rowContractId !== '' || trim((string) ($row['employeeId'] ?? '')) !== $employeeId) {
-                    continue;
-                }
-            }//end if
+            if ($this->rowMatchesKey($row, $employeeId, $contractId, $payslipId, $jaaropgaafId) === false) {
+                continue;
+            }
 
             if (in_array((string) ($row['status'] ?? ''), self::ACTIVE_STATUSES, true) === true) {
                 return $row;
@@ -1010,6 +995,47 @@ class HrDocumentService
         return null;
 
     }//end activeDocumentFor()
+
+
+    /**
+     * Whether one GeneratedDocument row carries the idempotency key we are
+     * looking for (design.md D6).
+     *
+     * Extracted from {@see self::activeDocumentFor()}: the key precedence
+     * (payslip, then jaaropgaaf, then contract, then bare employee) reads as a
+     * sequence of guards instead of nested if/else branches.
+     *
+     * @param array<string, mixed> $row          The GeneratedDocument row.
+     * @param string               $employeeId   The Employee id.
+     * @param string|null          $contractId   The EmploymentContract id, or null.
+     * @param string|null          $payslipId    The Payslip id (loonstrook key), or null.
+     * @param string|null          $jaaropgaafId The Jaaropgaaf id (jaaropgaaf key), or null.
+     *
+     * @return bool
+     */
+    private function rowMatchesKey(
+        array $row,
+        string $employeeId,
+        ?string $contractId,
+        ?string $payslipId,
+        ?string $jaaropgaafId
+    ): bool {
+        if ($payslipId !== null) {
+            return trim((string) ($row['payslipId'] ?? '')) === $payslipId;
+        }
+
+        if ($jaaropgaafId !== null) {
+            return trim((string) ($row['jaaropgaafId'] ?? '')) === $jaaropgaafId;
+        }
+
+        $rowContractId = trim((string) ($row['contractId'] ?? ''));
+        if ($contractId !== null) {
+            return $rowContractId === $contractId;
+        }
+
+        return $rowContractId === '' && trim((string) ($row['employeeId'] ?? '')) === $employeeId;
+
+    }//end rowMatchesKey()
 
 
     /**

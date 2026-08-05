@@ -36,6 +36,8 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Payroll;
 
+use RuntimeException;
+
 /**
  * Versioned NL tax-year parameter table, integer-cents-converted.
  */
@@ -85,32 +87,32 @@ final class TaxTables
     {
         $id = trim($id);
         if ($id === '' || preg_match('/^[a-zA-Z0-9_-]+$/', $id) !== 1) {
-            throw new \RuntimeException('TaxTables: ongeldige tabel-id "'.$id.'".');
+            throw new RuntimeException('TaxTables: ongeldige tabel-id "'.$id.'".');
         }
 
         $path = self::tablesDir().'/'.$id.'.json';
         if (file_exists($path) === false) {
-            throw new \RuntimeException('TaxTables: tabelbestand niet gevonden: '.$path);
+            throw new RuntimeException('TaxTables: tabelbestand niet gevonden: '.$path);
         }
 
         $content = file_get_contents($path);
         if ($content === false) {
-            throw new \RuntimeException('TaxTables: kon tabelbestand niet lezen: '.$path);
+            throw new RuntimeException('TaxTables: kon tabelbestand niet lezen: '.$path);
         }
 
         $decoded = json_decode($content, true);
         if (json_last_error() !== JSON_ERROR_NONE || is_array($decoded) === false) {
-            throw new \RuntimeException('TaxTables: kon tabelbestand niet parsen: '.$path.' ('.json_last_error_msg().')');
+            throw new RuntimeException('TaxTables: kon tabelbestand niet parsen: '.$path.' ('.json_last_error_msg().')');
         }
 
         $parameters = ($decoded['parameters'] ?? null);
         if (is_array($parameters) === false) {
-            throw new \RuntimeException('TaxTables: tabelbestand mist "parameters": '.$path);
+            throw new RuntimeException('TaxTables: tabelbestand mist "parameters": '.$path);
         }
 
         foreach (['loonheffing', 'heffingskortingen', 'volksverzekeringen', 'aow', 'zvw', 'werknemersverzekeringen', 'vakantiebijslag'] as $group) {
             if (isset($parameters[$group]) === false) {
-                throw new \RuntimeException('TaxTables: tabelbestand mist parametergroep "'.$group.'": '.$path);
+                throw new RuntimeException('TaxTables: tabelbestand mist parametergroep "'.$group.'": '.$path);
             }
         }
 
@@ -604,7 +606,7 @@ final class TaxTables
 
             $walked[] = $segment;
             if (is_array($node) === false || array_key_exists($segment, $node) === false) {
-                throw new \RuntimeException('TaxTables ('.$this->id.'): ontbrekende parameter "'.implode('.', $walked).'".');
+                throw new RuntimeException('TaxTables ('.$this->id.'): ontbrekende parameter "'.implode('.', $walked).'".');
             }
 
             $node = $node[$segment];
@@ -618,7 +620,7 @@ final class TaxTables
 
         if ($toCents === true) {
             if (is_int($node) === false && is_float($node) === false) {
-                throw new \RuntimeException('TaxTables ('.$this->id.'): parameter "'.implode('.', $walked).'" is geen bedrag en kan niet naar centen worden omgezet.');
+                throw new RuntimeException('TaxTables ('.$this->id.'): parameter "'.implode('.', $walked).'" is geen bedrag en kan niet naar centen worden omgezet.');
             }
 
             $node = self::euroToCents((float) $node);
@@ -679,7 +681,7 @@ final class TaxTables
         foreach ($path as $segment) {
             $walked[] = $segment;
             if (is_array($node) === false || array_key_exists($segment, $node) === false) {
-                throw new \RuntimeException('TaxTables ('.$this->id.'): ontbrekende parameter "'.implode('.', $walked).'".');
+                throw new RuntimeException('TaxTables ('.$this->id.'): ontbrekende parameter "'.implode('.', $walked).'".');
             }
 
             $node = $node[$segment];

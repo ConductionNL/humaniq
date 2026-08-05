@@ -144,13 +144,17 @@ final class NlGlPostChecks implements CheckProvider
                 return false;
             }
 
+            if ($line['side'] !== 'debit' && $line['side'] !== 'credit') {
+                return false;
+            }
+
             $cents = (int) round(((float) $line['amount']) * 100);
             if ($line['side'] === 'debit') {
                 $debitCents += $cents;
-            } else if ($line['side'] === 'credit') {
+            }
+
+            if ($line['side'] === 'credit') {
                 $creditCents += $cents;
-            } else {
-                return false;
             }
         }
 

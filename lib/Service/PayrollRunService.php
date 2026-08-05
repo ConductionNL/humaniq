@@ -153,6 +153,7 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Service;
 
+use DateTimeImmutable;
 use OCA\Hrmq\Payroll\CalculationInput;
 use OCA\Hrmq\Payroll\CalculationResult;
 use OCA\Hrmq\Payroll\PackRepository;
@@ -993,8 +994,8 @@ class PayrollRunService
     private function isYearOne(string $firstSickDay, string $period): bool
     {
         try {
-            $periodStart = new \DateTimeImmutable($period.'-01');
-            $day         = new \DateTimeImmutable($firstSickDay);
+            $periodStart = new DateTimeImmutable($period.'-01');
+            $day         = new DateTimeImmutable($firstSickDay);
         } catch (\Throwable $e) {
             return false;
         }
@@ -1176,12 +1177,15 @@ class PayrollRunService
         $cataloguswaardeCents = (int) round(((float) $cataloguswaarde) * 100);
         $params               = $tables->bijtellingPrivegebruikAuto();
 
+        // Default: the flat standard-percentage bijtelling. The capped-EV
+        // category below overrides it; both branches are pure arithmetic, so
+        // initialising here is equivalent to the former if/else.
+        $baseCents = (($cataloguswaardeCents * $params['standardPercent']) / 100);
+
         if ((string) ($vehicle['bijtellingCategorie'] ?? '') === 'elektrischGeplafonneerd') {
             $cap        = $params['evReducedCataloguswaardeCapCents'];
             $baseCents  = ((min($cataloguswaardeCents, $cap) * $params['evReducedPercent']) / 100);
             $baseCents += ((max(0, ($cataloguswaardeCents - $cap)) * $params['standardPercent']) / 100);
-        } else {
-            $baseCents = (($cataloguswaardeCents * $params['standardPercent']) / 100);
         }
 
         $eigenBijdrage      = ($assignment['eigenBijdrage'] ?? 0);
@@ -1614,7 +1618,7 @@ class PayrollRunService
     private function coversPeriod(string $startDate, string $endDate, string $period): bool
     {
         try {
-            $periodStart = new \DateTimeImmutable($period.'-01');
+            $periodStart = new DateTimeImmutable($period.'-01');
         } catch (\Throwable $e) {
             return false;
         }
