@@ -230,6 +230,50 @@ class EmploymentTermsResolver
 
 
     /**
+     * Project a contract's overtime terms into the cost ADDITION shape
+     * {@see EmployeeCostRateService} accepts, for one overtime category.
+     *
+     * This is the join between the two halves: the terms say "Sunday overtime
+     * carries a 100% surcharge", the cost rate needs "+100% of the wage base
+     * on that hour". Expressed as a PERCENTAGE addition rather than a
+     * pre-computed cents figure, so it resolves against whichever wage base
+     * applies to the employee rather than against one captured here.
+     *
+     * Returns null when no terms resolve — a CLA whose overtime article has
+     * not been transcribed yields no uplift rather than an invented one, and
+     * an absent addition is a visible gap where a zero would look like an
+     * answer.
+     *
+     * @param array<string, mixed> $contract The EmploymentContract as an array.
+     * @param string               $category Overtime category (see OVERTIME_CATEGORIES).
+     *
+     * @return array{key: string, percentageOfWage: float, source: string, basis: string}|null
+     *
+     * @throws InvalidArgumentException When an override carries no reason or is less favourable.
+     */
+    public function overtimeAdditionFor(array $contract, string $category): ?array
+    {
+        $terms = $this->resolveOvertimeToeslag(contract: $contract);
+        if ($terms === null) {
+            return null;
+        }
+
+        $percentage = ($terms['percentages'][$category] ?? null);
+        if ($percentage === null) {
+            return null;
+        }
+
+        return [
+            'key'              => EmployeeCostRateService::ADDITION_OVERTIME,
+            'percentageOfWage' => (float) $percentage,
+            'source'           => $terms['source'],
+            'basis'            => 'Overwerktoeslag '.$category.' '.$percentage.'% — '.$terms['basis'],
+        ];
+
+    }//end overtimeAdditionFor()
+
+
+    /**
      * Refuse an overtime override that is LESS favourable than the collective
      * terms it departs from.
      *

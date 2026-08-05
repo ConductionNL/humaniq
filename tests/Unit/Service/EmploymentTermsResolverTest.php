@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Hrmq\Tests\Unit\Service;
 
 use InvalidArgumentException;
+use OCA\Hrmq\Service\EmployeeCostRateService;
 use OCA\Hrmq\Service\EmploymentTermsResolver;
 use OCA\Hrmq\Standards\CaoRegistry;
 use PHPUnit\Framework\TestCase;
@@ -376,6 +377,55 @@ class EmploymentTermsResolverTest extends TestCase
         $this->assertSame(150.0, $terms['percentages']['feestdag']);
 
     }//end testBetterOverrideIsAccepted()
+
+
+    /**
+     * The join between the two halves: resolved terms become a cost ADDITION
+     * the rate service accepts. Expressed as a percentage rather than
+     * pre-computed cents, so it resolves against whichever wage base applies
+     * to the employee rather than one captured at terms-resolution time.
+     *
+     * @return void
+     */
+    public function testOvertimeTermsProjectIntoACostAddition(): void
+    {
+        $addition = $this->resolver->overtimeAdditionFor(['cao' => self::EXAMPLE_CAO], 'zondag');
+
+        $this->assertNotNull($addition);
+        $this->assertSame(EmployeeCostRateService::ADDITION_OVERTIME, $addition['key']);
+        $this->assertSame(100.0, $addition['percentageOfWage']);
+        $this->assertArrayNotHasKey('centsPerHour', $addition, 'must stay relative to the wage base');
+        $this->assertStringContainsString('zondag', $addition['basis']);
+
+    }//end testOvertimeTermsProjectIntoACostAddition()
+
+
+    /**
+     * A category the terms do not cover yields no addition — not a zero. An
+     * absent addition is a visible gap; a zero looks like an answer.
+     *
+     * @return void
+     */
+    public function testUncoveredOvertimeCategoryYieldsNoAddition(): void
+    {
+        $this->assertNull(
+            $this->resolver->overtimeAdditionFor(['cao' => self::EXAMPLE_CAO], 'schrikkeldag')
+        );
+
+    }//end testUncoveredOvertimeCategoryYieldsNoAddition()
+
+
+    /**
+     * A CLA whose overtime article is still a placeholder produces no uplift
+     * at all, rather than an invented one.
+     *
+     * @return void
+     */
+    public function testUnverifiedCaoYieldsNoOvertimeAddition(): void
+    {
+        $this->assertNull($this->resolver->overtimeAdditionFor(['cao' => 'cao-gemeenten'], 'zondag'));
+
+    }//end testUnverifiedCaoYieldsNoOvertimeAddition()
 
 
     /**
