@@ -139,19 +139,67 @@ jobs:
       # should not be a moving confound while we read the baseline.
       additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"main"}]'
 
+      # ── Hydra mechanical gates ───────────────────────────────────────────
+      # Enabled here for the FIRST time. This repo previously left
+      # `enable-hydra-gates` at its default `false` on purpose, with a stated
+      # precondition: "gate-7 (no-admin-idor) currently false-positives on
+      # ordinary responder delegation — that is being fixed separately in
+      # ConductionNL/.github#149. Revisit once #149 lands."
+      #
+      # #149 has landed (`fc70ea6`), and it is in the pin below. The condition
+      # this repo set for itself is met, so the deferral is spent.
+      #
+      # The pin is set in the SAME change, and that is not cosmetic. The shared
+      # quality.yml now defaults `hydra-gates-require-full-coverage` to true
+      # (#164), and that flag requires a gate to DECLARE itself not-applicable.
+      # `v1.0.1` contains ZERO `_skip` calls; `v1.3.0` has 36. Enabling the
+      # gates while inheriting the fleet's old pin would therefore land this
+      # repo red on arrival — for gates it has no subject matter for — which is
+      # exactly the "red for a reason that is not hrmq's" the original comment
+      # was protecting against.
+      #
+      # Measured before enabling, on this branch, diff-scoped against
+      # origin/development exactly as CI scopes it, in a private mount
+      # namespace with a private tmpfs:
+      #   exit 0 — ALL 58 APPLICABLE GATES PASSED, and all 58 of them ran.
+      #   NOT APPLICABLE: 4 6 7 24 33 — each naming itself and its reason.
+      #
+      # Whole-tree debt, which future PRs touching those files WILL meet — 10
+      # gates, stated here so this enablement is not a surprise later:
+      #   gate-46 spec-anchor-existence   642 unresolved @spec targets
+      #   gate-51 schema-property-titles  289 properties without a title
+      #   gate-8  unsafe-auth-resolver     13 — ALL FALSE POSITIVES, read below
+      #   gate-40 form-label-association    3
+      #   gate-54 relation-dialect          2
+      #   gate-4/7/38/49/58                 1 each
+      #
+      # gate-8's 13 findings were triaged by reading every call path, and all
+      # 13 are the multi-tenant tenancy-guard shape, not a fail-open. The gate
+      # flags `catch (\Throwable) { return null; }` in an `authorize*` method
+      # without reading what the CALLER does with the null. Here every caller
+      # is fail-CLOSED, e.g. LeaveController::authorizeTransaction ->
+      # `if ($transaction === null) { return 404; }`. The null is deliberate:
+      # "does not exist" and "RBAC denied" collapse to the same 404 so the
+      # endpoint is not an existence oracle for other tenants. That is the
+      # OPPOSITE of the decidesk#45 defect gate-8 was built for
+      # (`if ($auth !== null) { check }`, which SKIPS the check when the
+      # resolver fails). Reported to ConductionNL/.github#160, not suppressed.
+      #
+      # gate-4 is REAL and worth naming: this repo ships composer.json but no
+      # composer.lock, so `composer audit --locked` cannot run at all
+      # ("Valid composer.json and composer.lock files are required"). Its
+      # dependencies have therefore never been CVE-audited. gate-4 is
+      # diff-scoped to composer files so it reports NOT APPLICABLE on this PR,
+      # but the gap is real and is filed separately.
+      enable-hydra-gates: true
+      hydra-gates-ref: v1.3.0
+
       # ── Deliberately NOT enabled ─────────────────────────────────────────
       # enable-newman: there is no tests/integration/ and no Postman
       #   collection anywhere in the repo. The Newman job's own validation step
       #   hard-fails on a missing collection directory, so switching it on buys
       #   a guaranteed red job and zero assertions.
       #
-      # enable-hydra-gates: left at its default `false` ON PURPOSE, not by
-      #   omission. Only 1 of 17 fleet repos sets it today, and gate-7
-      #   (no-admin-idor) currently false-positives on ordinary responder
-      #   delegation — that is being fixed separately in
-      #   ConductionNL/.github#149. Turning it on here first would mean hrmq's
-      #   very first pipeline is red for a reason that is not hrmq's. Revisit
-      #   once #149 lands.
       #
       # enable-axe: requires enable-hydra-gates to be consumed at all (gate-33
       #   reads tests/axe/report.json), so it would produce an artifact nothing
