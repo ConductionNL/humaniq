@@ -1,0 +1,59 @@
+{
+    "x-hrmq-fragment": "hr-cost-rate",
+    "components": {
+        "schemas": {
+            "Employee": {
+                "properties": {
+                    "hourlyCostRateOverrideCents": {
+                        "type": "integer",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Hourly cost rate override (cents)",
+                        "description": "Employer cost per hour in CENTS, set by hand to replace the payroll-derived loaded cost (ADR-081 decision 4). Null — the normal case — means the derived value is used. This is an EMPLOYER COST, not a wage: it is not comparable to EmploymentContract.hourlyWage, which is the employee's gross hourly wage and is never used as a cost rate. Integer cents, never a float, so a rate multiplied by logged hours cannot drift (the ActivityCostAllocationSplitter convention)."
+                    },
+                    "hourlyCostRateOverrideReason": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Hourly cost rate override reason",
+                        "description": "Why the derived loaded cost was replaced (ADR-081 decision 4). REQUIRED whenever hourlyCostRateOverrideCents is set — an override with no reason is indistinguishable from a typo six months later, and this number reaches a statutory IV3 submission through Shillinq. Free text: the derivation cannot be told 'this employee is seconded and billed at the partner rate', so the reason is the only place that survives."
+                    },
+                    "hourlyCostRateOverrideBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Hourly cost rate override set by",
+                        "description": "Nextcloud user id of whoever set the override (ADR-081 decision 4). A domain-object reference is deliberately NOT used here: this records the human who made an administrative decision, which is a Nextcloud identity, not an Employee record (ADR-046)."
+                    },
+                    "hourlyCostRateOverrideAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Hourly cost rate override set at",
+                        "description": "ISO 8601 UTC timestamp of the last override write (ADR-081 decision 4). Read together with hourlyCostRateOverrideAt on the payroll side to tell a stale override from a current one — an override set before the last salary change is a review signal, not an error."
+                    }
+                }
+            },
+            "Timesheet": {
+                "properties": {
+                    "domainObjectRef": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Domain object reference",
+                        "description": "Optional UUID of the external domain object the hours were worked on — a procest case, a decidesk dossier, anything outside hrmq (ADR-081 decision 5). Plain string, not a $ref relation, because the target schema does not exist in hrmq (ADR-062 rule 7 — the same reasoning as projectId and clientRef). Distinct from projectId: a case is not a project, and conflating them would make the resulting cost allocation ambiguous about what it is costing."
+                    },
+                    "domainObjectType": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Domain object type",
+                        "description": "What domainObjectRef points at, as `<app>:<schema>` — e.g. `procest:case` (ADR-081 decision 5). Without it a bare UUID is unresolvable: hrmq cannot ask 'which app owns this?' and neither can the receiving bookkeeping app. Set together with domainObjectRef or not at all."
+                    },
+                    "allocationKey": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Ledger allocation key",
+                        "description": "The ledger dimension the resulting cost is booked against, OPAQUE to hrmq (ADR-081 decision 5). For a Dutch municipality this is the BBV taakveld code the domain app resolved from its own classification (procest: caseType.iv3Taakveld); another jurisdiction books against something else entirely. hrmq deliberately does not model, validate or translate it — Shillinq owns the taakveld catalogue, and a BBV-shaped field in an HR app would couple hrmq to one country's accounting law. Stamped by the app that logs the hours, at the moment it logs them, so the allocation reflects the classification in force then rather than a later reclassification."
+                    }
+                }
+            }
+        }
+    }
+}
