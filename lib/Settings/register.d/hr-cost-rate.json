@@ -29,6 +29,37 @@
                         "nullable": true,
                         "title": "Hourly cost rate override set at",
                         "description": "ISO 8601 UTC timestamp of the last override write (ADR-081 decision 4). Read together with hourlyCostRateOverrideAt on the payroll side to tell a stale override from a current one — an override set before the last salary change is a review signal, not an error."
+                    },
+                    "hourlyCostAdditions": {
+                        "type": "array",
+                        "nullable": true,
+                        "title": "Hourly cost additions",
+                        "description": "Per-hour employer costs BEYOND the wage — overhead, equipment, workplace, tooling (ADR-081 decision 4). The hourly cost is `wageCost + sum(additions)`; there is exactly ONE rate, never a normal one and an overtime one. Each entry is named and sourced so a cost figure can be explained line by line, which is what an audit asks for, and so a new cost factor is data rather than a schema migration. An administrator may fill these in by hand; Shillinq is expected to calculate the overhead and equipment ones, because it holds the ledger those pools live in.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": "string",
+                                    "title": "Addition key",
+                                    "description": "Short stable identifier for the cost factor — e.g. `overhead`, `equipment`, `workplace`, `overtime`. Not an enum: the set is deliberately open (ADR-081), because a jurisdiction, a sector or an audit will want a fourth."
+                                },
+                                "centsPerHour": {
+                                    "type": "integer",
+                                    "title": "Amount per hour (cents)",
+                                    "description": "Amount added per hour, in CENTS. Integer so that rate x hours cannot accumulate IEEE-754 drift across a quarter of allocations."
+                                },
+                                "source": {
+                                    "type": "string",
+                                    "title": "Source",
+                                    "description": "Where the amount came from: `manual` (an administrator typed it) or an app id such as `shillinq` (calculated from the ledger). Distinguishes a figure someone owns from one a system derives — they age differently and are reviewed differently."
+                                },
+                                "basis": {
+                                    "type": "string",
+                                    "title": "Basis",
+                                    "description": "Why this amount, in words. For a manual addition this is the justification; for a calculated one, what it was computed from (e.g. which overhead pool over which hours). An unexplained cost component in a statutory submission is unauditable."
+                                }
+                            }
+                        }
                     }
                 }
             },

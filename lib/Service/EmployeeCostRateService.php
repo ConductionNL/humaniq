@@ -14,7 +14,11 @@
  * exactly the mistake this service exists to prevent — so `hourlyWage` is
  * never read here.
  *
- * Two sources, in priority order:
+ * The rate is a SUM, never a branch (ADR-081 decision 4):
+ *
+ *     hourlyCost = wageCost + Σ additions
+ *
+ * `wageCost` comes from one of two sources, in priority order:
  *
  * 1. **Override** — `Employee.hourlyCostRateOverrideCents`, when set. Used
  *    verbatim. An override with no reason is refused rather than silently
@@ -24,6 +28,22 @@
  *    `(grossPay + werknemersverzekeringen + zvw) / hours`. Numerator and
  *    denominator come from the SAME payslip, so they cannot disagree about
  *    which period they describe.
+ *
+ * `additions` are the per-hour employer costs beyond the wage — overhead,
+ * equipment, workplace, overtime. Each is named, amounted and justified, so a
+ * cost figure can be explained line by line. They arrive either stored on the
+ * Employee (an administrator filled them in) or passed in by a caller that
+ * computes them — Shillinq derives the overhead and equipment ones from the
+ * ledger those pools live in.
+ *
+ * **There is exactly one rate.** Overtime is more expensive per hour and is
+ * expressed as an addition, not as a second rate: two rates would force every
+ * consumer to know which applies and to agree about it. The one correctness
+ * rule attached to that: a payslip-derived base divides total pay by total
+ * hours, so overtime paid in the period is ALREADY averaged across every hour.
+ * Combining it with an overtime addition charges the premium twice, so a
+ * blended base refuses one outright rather than producing a plausible wrong
+ * number.
  *
  * The denominator prefers the payslip's own `hoursWorked`, falling back to
  * contracted hours derived from `EmploymentContract.hoursPerWeek`. ADR-081
@@ -92,6 +112,15 @@ class EmployeeCostRateService
      */
     public const SOURCE_DERIVED = 'derived';
 
+    /**
+     * The addition key reserved for the overtime uplift. Named as a constant
+     * because it is the one key with a correctness rule attached: it must not
+     * be combined with a wage base that already blends overtime.
+     *
+     * @var string
+     */
+    public const ADDITION_OVERTIME = 'overtime';
+
 
     /**
      * Resolve the employer cost per hour for one employee.
@@ -103,23 +132,146 @@ class EmployeeCostRateService
      * @param array<string, mixed>      $employee The Employee object as an array.
      * @param array<string, mixed>|null $payslip  Most recent Payslip, or null when the employee has never been paid.
      * @param float|null                $hoursPerWeek Contracted hours per week from the active EmploymentContract, when known.
+     * @param array<int, array<string, mixed>> $extraAdditions Additions supplied by a caller that computes them — Shillinq's ledger-derived overhead/equipment. Merged with the employee's own stored additions.
      *
-     * @return array{centsPerHour: int, source: string, basis: string}|null
-     *         Null when no rate can be established. `basis` names what the
-     *         number was computed from, for display next to a cost figure.
+     * @return array{
+     *     totalCentsPerHour: int, wageCostCents: int, wageSource: string, wageBasis: string,
+     *     wageBaseBlendsOvertime: bool, additions: array<int, array{key: string, centsPerHour: int, source: string, basis: string}>
+     * }|null Null when no wage base can be established — additions alone are
+     *        never a cost rate, because an hour with overhead but no wage is
+     *        not an hour anyone worked.
      *
-     * @throws InvalidArgumentException When an override amount is set without a reason.
+     * @throws InvalidArgumentException When an override amount is set without a reason, or an
+     *                                  overtime addition is applied to an overtime-blended base.
      */
-    public function resolve(array $employee, ?array $payslip=null, ?float $hoursPerWeek=null): ?array
-    {
-        $override = $this->resolveOverride(employee: $employee);
-        if ($override !== null) {
-            return $override;
+    public function resolve(
+        array $employee,
+        ?array $payslip=null,
+        ?float $hoursPerWeek=null,
+        array $extraAdditions=[]
+    ): ?array {
+        $wage = $this->resolveOverride(employee: $employee);
+        if ($wage === null) {
+            $wage = $this->deriveFromPayslip(payslip: $payslip, hoursPerWeek: $hoursPerWeek);
         }
 
-        return $this->deriveFromPayslip(payslip: $payslip, hoursPerWeek: $hoursPerWeek);
+        if ($wage === null) {
+            return null;
+        }
+
+        $additions = $this->normaliseAdditions(
+            raw: array_merge(
+                (array) ($employee['hourlyCostAdditions'] ?? []),
+                $extraAdditions
+            )
+        );
+
+        $this->assertNoOvertimeDoubleCount(
+            additions: $additions,
+            blendsOvertime: $wage['blendsOvertime']
+        );
+
+        $total = $wage['centsPerHour'];
+        foreach ($additions as $addition) {
+            $total += $addition['centsPerHour'];
+        }
+
+        return [
+            'totalCentsPerHour'      => $total,
+            'wageCostCents'          => $wage['centsPerHour'],
+            'wageSource'             => $wage['source'],
+            'wageBasis'              => $wage['basis'],
+            'wageBaseBlendsOvertime' => $wage['blendsOvertime'],
+            'additions'              => $additions,
+        ];
 
     }//end resolve()
+
+
+    /**
+     * Coerce raw addition entries into the canonical shape, dropping entries
+     * that carry no amount.
+     *
+     * @param array<int, mixed> $raw Raw addition entries.
+     *
+     * @return array<int, array{key: string, centsPerHour: int, source: string, basis: string}>
+     *
+     * @throws InvalidArgumentException When an addition carries no key or no basis.
+     */
+    private function normaliseAdditions(array $raw): array
+    {
+        $out = [];
+        foreach ($raw as $entry) {
+            if (is_array($entry) === false) {
+                continue;
+            }
+
+            $cents = ($entry['centsPerHour'] ?? null);
+            if ($cents === null || $cents === '' || is_numeric($cents) === false) {
+                continue;
+            }
+
+            $key = trim((string) ($entry['key'] ?? ''));
+            if ($key === '') {
+                throw new InvalidArgumentException('an hourly cost addition must carry a key');
+            }
+
+            // Same reasoning as an unexplained override: this figure reaches a
+            // statutory submission, and "+ EUR 12/h from somewhere" cannot be
+            // audited or defended.
+            $basis = trim((string) ($entry['basis'] ?? ''));
+            if ($basis === '') {
+                throw new InvalidArgumentException(
+                    'the hourly cost addition "'.$key.'" must carry a basis explaining the amount'
+                );
+            }
+
+            $out[] = [
+                'key'          => $key,
+                'centsPerHour' => (int) $cents,
+                'source'       => (trim((string) ($entry['source'] ?? '')) ?: 'manual'),
+                'basis'        => $basis,
+            ];
+        }//end foreach
+
+        return $out;
+
+    }//end normaliseAdditions()
+
+
+    /**
+     * Refuse an overtime addition on a wage base that already blends overtime.
+     *
+     * A payslip-derived base divides total pay by total hours, so an overtime
+     * premium paid in that period is already averaged across every hour.
+     * Adding an overtime component on top charges it twice — the one way this
+     * model silently produces a wrong number, and one that would reach a CBS
+     * submission looking entirely plausible.
+     *
+     * @param array<int, array{key: string, centsPerHour: int, source: string, basis: string}> $additions Normalised additions.
+     * @param bool                                                                             $blendsOvertime Whether the wage base already includes overtime pay.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException When both are true.
+     */
+    private function assertNoOvertimeDoubleCount(array $additions, bool $blendsOvertime): void
+    {
+        if ($blendsOvertime === false) {
+            return;
+        }
+
+        foreach ($additions as $addition) {
+            if ($addition['key'] === self::ADDITION_OVERTIME) {
+                throw new InvalidArgumentException(
+                    'an "'.self::ADDITION_OVERTIME.'" addition cannot be applied to a wage base that '
+                    .'already blends overtime: the payslip divides total pay by total hours, so the '
+                    .'premium is already averaged into every hour and would be charged twice'
+                );
+            }
+        }
+
+    }//end assertNoOvertimeDoubleCount()
 
 
     /**
@@ -127,7 +279,7 @@ class EmployeeCostRateService
      *
      * @param array<string, mixed> $employee The Employee object as an array.
      *
-     * @return array{centsPerHour: int, source: string, basis: string}|null Null when no override is set.
+     * @return array{centsPerHour: int, source: string, basis: string, blendsOvertime: bool}|null Null when no override is set.
      *
      * @throws InvalidArgumentException When an amount is set without a reason.
      */
@@ -155,10 +307,14 @@ class EmployeeCostRateService
             );
         }
 
+        // A hand-set wage base is whatever the administrator meant it to be. It
+        // is not derived from a payslip, so it does not carry a payslip's
+        // overtime blending, and an overtime addition on top is legitimate.
         return [
-            'centsPerHour' => $cents,
-            'source'       => self::SOURCE_OVERRIDE,
-            'basis'        => $reason,
+            'centsPerHour'   => $cents,
+            'source'         => self::SOURCE_OVERRIDE,
+            'basis'          => $reason,
+            'blendsOvertime' => false,
         ];
 
     }//end resolveOverride()
@@ -170,7 +326,7 @@ class EmployeeCostRateService
      * @param array<string, mixed>|null $payslip      The Payslip object as an array.
      * @param float|null                $hoursPerWeek Contracted hours per week, used only when the payslip carries no hours.
      *
-     * @return array{centsPerHour: int, source: string, basis: string}|null Null when the payslip cannot yield a rate.
+     * @return array{centsPerHour: int, source: string, basis: string, blendsOvertime: bool}|null Null when the payslip cannot yield a rate.
      */
     private function deriveFromPayslip(?array $payslip, ?float $hoursPerWeek): ?array
     {
@@ -202,10 +358,17 @@ class EmployeeCostRateService
             $basis = 'derived from payslip '.$period;
         }
 
+        // Payslip.grossPay is undifferentiated and hoursWorked counts every
+        // hour, so any overtime premium paid in the period is already averaged
+        // across the whole rate. Until the Payslip carries an overtime
+        // pay/hours split there is no way to separate it, so the base declares
+        // itself blended and refuses an overtime addition rather than
+        // double-charging the premium.
         return [
-            'centsPerHour' => (int) round($loadedCents / $hours),
-            'source'       => self::SOURCE_DERIVED,
-            'basis'        => $basis,
+            'centsPerHour'   => (int) round($loadedCents / $hours),
+            'source'         => self::SOURCE_DERIVED,
+            'basis'          => $basis,
+            'blendsOvertime' => true,
         ];
 
     }//end deriveFromPayslip()
