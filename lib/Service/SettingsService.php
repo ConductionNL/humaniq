@@ -631,25 +631,43 @@ class SettingsService
     private static function deepMergeConfig(array $base, array $overlay): array
     {
         foreach ($overlay as $key => $value) {
-            if (is_array($value) === true
-                && isset($base[$key]) === true
-                && is_array($base[$key]) === true
-            ) {
-                $baseIsList    = ($base[$key] === [] || array_keys($base[$key]) === range(0, (count($base[$key]) - 1)));
-                $overlayIsList = ($value === [] || array_keys($value) === range(0, (count($value) - 1)));
-                if ($baseIsList === true && $overlayIsList === true) {
-                    $base[$key] = array_merge($base[$key], $value);
-                } else {
-                    $base[$key] = self::deepMergeConfig(base: $base[$key], overlay: $value);
-                }
-            } else {
-                $base[$key] = $value;
-            }
+            $base[$key] = self::mergeConfigValue(($base[$key] ?? null), $value);
         }
 
         return $base;
 
     }//end deepMergeConfig()
+
+
+    /**
+     * Merge a single overlay value onto its base counterpart (ADR-037).
+     *
+     * Extracted from {@see self::deepMergeConfig()} so the per-key decision
+     * reads as a sequence of guards rather than nested if/else branches. The
+     * behaviour is unchanged: only when BOTH sides are arrays does anything
+     * other than a plain overwrite happen. `is_array($baseValue)` subsumes the
+     * former `isset($base[$key])` test — a null base can never be an array.
+     *
+     * @param mixed $baseValue The current value in the base config, or null when absent.
+     * @param mixed $value     The overlay value to merge in.
+     *
+     * @return mixed The merged value for this key.
+     */
+    private static function mergeConfigValue(mixed $baseValue, mixed $value): mixed
+    {
+        if (is_array($value) === false || is_array($baseValue) === false) {
+            return $value;
+        }
+
+        $baseIsList    = ($baseValue === [] || array_keys($baseValue) === range(0, (count($baseValue) - 1)));
+        $overlayIsList = ($value === [] || array_keys($value) === range(0, (count($value) - 1)));
+        if ($baseIsList === true && $overlayIsList === true) {
+            return array_merge($baseValue, $value);
+        }
+
+        return self::deepMergeConfig(base: $baseValue, overlay: $value);
+
+    }//end mergeConfigValue()
 
 
     /**

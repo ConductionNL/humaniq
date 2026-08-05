@@ -48,6 +48,7 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Service;
 
+use DateTimeImmutable;
 use OCA\Hrmq\Payroll\CalculationInput;
 use OCA\Hrmq\Payroll\PayrollCalculator;
 use OCA\Hrmq\Payroll\TaxTables;
@@ -496,7 +497,7 @@ class RetroAdjustmentService
     private function coversPeriod(string $startDate, string $endDate, string $period): bool
     {
         try {
-            $periodStart = new \DateTimeImmutable($period.'-01');
+            $periodStart = new DateTimeImmutable($period.'-01');
         } catch (\Throwable $e) {
             return false;
         }

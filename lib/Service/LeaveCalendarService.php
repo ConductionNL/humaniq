@@ -50,6 +50,7 @@ namespace OCA\Hrmq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Upserts/removes approved-absence VEVENTs on the configured shared calendar.
@@ -307,7 +308,12 @@ class LeaveCalendarService
             return;
         }
 
-        $dtendExclusiveSource = null;
+        // Default (gemeld / open): rolling bar through today, re-extended every
+        // sync, never bounded by --from (design.md D4/Risks). A recovered case
+        // overrides this below; addDays() is pure, so computing it up front is
+        // equivalent to the former if/else.
+        $dtendExclusiveSource = $this->addDays(gmdate('Y-m-d'), 1);
+
         if ($status === 'hersteld') {
             $recoveredDate = trim((string) ($sick['recoveredDate'] ?? ''));
             if ($recoveredDate === '') {
@@ -320,10 +326,6 @@ class LeaveCalendarService
             }
 
             $dtendExclusiveSource = $this->addDays($recoveredDate, 1);
-        } else {
-            // gemeld (open): rolling bar through today, re-extended every sync,
-            // never bounded by --from (design.md D4/Risks).
-            $dtendExclusiveSource = $this->addDays(gmdate('Y-m-d'), 1);
         }
 
         $dtstart        = $this->compactDate($firstSickDay);
@@ -393,7 +395,7 @@ class LeaveCalendarService
         if ($existingPath === null) {
             try {
                 if (method_exists($backend, 'createCalendarObject') === false) {
-                    throw new \RuntimeException('CalDavBackend::createCalendarObject is not available.');
+                    throw new RuntimeException('CalDavBackend::createCalendarObject is not available.');
                 }
 
                 $backend->createCalendarObject($calendarId, $objectUri, $ics);
@@ -414,7 +416,7 @@ class LeaveCalendarService
 
         try {
             if (method_exists($backend, 'updateCalendarObject') === false) {
-                throw new \RuntimeException('CalDavBackend::updateCalendarObject is not available.');
+                throw new RuntimeException('CalDavBackend::updateCalendarObject is not available.');
             }
 
             $backend->updateCalendarObject($calendarId, $objectUri, $ics);
@@ -473,7 +475,7 @@ class LeaveCalendarService
 
         try {
             if (method_exists($backend, 'deleteCalendarObject') === false) {
-                throw new \RuntimeException('CalDavBackend::deleteCalendarObject is not available.');
+                throw new RuntimeException('CalDavBackend::deleteCalendarObject is not available.');
             }
 
             $backend->deleteCalendarObject($calendarId, $objectUri);
@@ -528,7 +530,7 @@ class LeaveCalendarService
 
             try {
                 if (method_exists($backend, 'deleteCalendarObject') === false) {
-                    throw new \RuntimeException('CalDavBackend::deleteCalendarObject is not available.');
+                    throw new RuntimeException('CalDavBackend::deleteCalendarObject is not available.');
                 }
 
                 $backend->deleteCalendarObject($calendarId, $objectUri);

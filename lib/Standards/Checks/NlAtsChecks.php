@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Standards\Checks;
 
+use DateTimeImmutable;
 use OCA\Hrmq\Standards\RuleCatalogue;
 
 /**
@@ -154,7 +155,7 @@ final class NlAtsChecks implements CheckProvider
             return true;
         }
 
-        return $expiry >= (new \DateTimeImmutable('today'))->getTimestamp();
+        return $expiry >= (new DateTimeImmutable('today'))->getTimestamp();
 
     }//end verlopenSatisfied()
 

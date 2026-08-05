@@ -40,6 +40,8 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Standards\Checks;
 
+use DateTimeImmutable;
+
 /**
  * Dutch onboarding (WID / proeftijd / loonheffingenverklaring) executable checks.
  */
@@ -111,7 +113,7 @@ final class NlOnboardingChecks implements CheckProvider
         }
 
         $startDate = strtotime((string) ($o['startDate'] ?? ''));
-        $startDatePassed = $startDate !== false && $startDate < (new \DateTimeImmutable('today'))->getTimestamp();
+        $startDatePassed = $startDate !== false && $startDate < (new DateTimeImmutable('today'))->getTimestamp();
 
         $readyOrLater = in_array((string) ($o['status'] ?? ''), self::READY_OR_LATER, true);
 
@@ -230,7 +232,7 @@ final class NlOnboardingChecks implements CheckProvider
             return true;
         }
 
-        return $proeftijdEndDate >= (new \DateTimeImmutable('today'))->getTimestamp();
+        return $proeftijdEndDate >= (new DateTimeImmutable('today'))->getTimestamp();
 
     }//end proeftijdNotOverdueUnclosed()
 

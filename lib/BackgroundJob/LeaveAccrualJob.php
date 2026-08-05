@@ -50,6 +50,7 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\BackgroundJob;
 
+use DateTimeImmutable;
 use OCA\Hrmq\Service\SettingsService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJob;
@@ -155,7 +156,7 @@ class LeaveAccrualJob extends TimedJob
             return $this->summary('', 0, false, [], [], [], 0);
         }
 
-        $now    = (new \DateTimeImmutable())->setTimestamp($this->time->getTime());
+        $now    = (new DateTimeImmutable())->setTimestamp($this->time->getTime());
         $period = $now->format('Y-m');
         $year   = (int) $now->format('Y');
 
@@ -428,7 +429,7 @@ class LeaveAccrualJob extends TimedJob
     private function coversPeriod(string $startDate, string $endDate, string $period): bool
     {
         try {
-            $periodStart = new \DateTimeImmutable($period.'-01');
+            $periodStart = new DateTimeImmutable($period.'-01');
         } catch (\Throwable $e) {
             return false;
         }
