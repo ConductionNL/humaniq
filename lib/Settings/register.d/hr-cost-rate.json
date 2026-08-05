@@ -71,7 +71,7 @@
                 }
             },
             "CostAdditionPolicy": {
-                "slug": "costAdditionPolicy",
+                "slug": "CostAdditionPolicy",
                 "icon": "CashPlus",
                 "version": "0.1.0",
                 "title": "Cost Addition Policy",
@@ -147,7 +147,7 @@
                     }
                 }
             },
-            "Employment Contract": {
+            "EmploymentContract": {
                 "properties": {
                     "overtimeToeslagPercentages": {
                         "type": "object",

@@ -35,6 +35,7 @@ namespace OCA\Hrmq\Tests\Unit\Service;
 
 use InvalidArgumentException;
 use OCA\Hrmq\Service\EmployeeCostRateService;
+use OCA\Hrmq\Service\HourlyCostAdditions;
 use OCA\Hrmq\Service\ProformaPayslipService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -95,7 +96,7 @@ class EmployeeCostRateServiceTest extends TestCase
             }
         );
 
-        return new EmployeeCostRateService($proforma, new NullLogger());
+        return new EmployeeCostRateService($proforma, new HourlyCostAdditions(), new NullLogger());
 
     }//end makeService()
 

@@ -123,15 +123,42 @@ class EmployeeCostRateService
 
 
     /**
-     * @param ProformaPayslipService $proforma Stateless proforma calculator — persists nothing.
-     * @param LoggerInterface        $logger   Logger.
+     * @param ProformaPayslipService $proforma  Stateless proforma calculator — persists nothing.
+     * @param HourlyCostAdditions    $additions Validates and totals the per-hour additions.
+     * @param LoggerInterface        $logger    Logger.
      */
     public function __construct(
         private readonly ProformaPayslipService $proforma,
+        private readonly HourlyCostAdditions $additions,
         private readonly LoggerInterface $logger,
     ) {
 
     }//end __construct()
+
+
+    /**
+     * Refuse an overtime addition on a wage base that already blends overtime.
+     *
+     * Delegates to {@see HourlyCostAdditions::assertCompatible()}; kept on the
+     * service because the composition rule belongs to whoever composes a rate,
+     * and the bridge composes them too — a precondition only one caller can
+     * reach is a precondition that eventually gets bypassed.
+     *
+     * @param array<int, array<string, mixed>> $additions             Normalised additions.
+     * @param bool                             $wageBaseBlendsOvertime Whether the base already includes overtime pay.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException When both are true.
+     */
+    public function assertAdditionsCompatible(array $additions, bool $wageBaseBlendsOvertime): void
+    {
+        $this->additions->assertCompatible(
+            additions: $additions,
+            wageBaseBlendsOvertime: $wageBaseBlendsOvertime
+        );
+
+    }//end assertAdditionsCompatible()
 
 
     /**
@@ -172,7 +199,7 @@ class EmployeeCostRateService
             return null;
         }
 
-        $additions = $this->normaliseAdditions(
+        $additions = $this->additions->normalise(
             raw: array_merge(
                 (array) ($employee['hourlyCostAdditions'] ?? []),
                 $extraAdditions
@@ -180,18 +207,15 @@ class EmployeeCostRateService
             wageCents: $wage['centsPerHour']
         );
 
-        $this->assertAdditionsCompatible(
+        $this->additions->assertCompatible(
             additions: $additions,
             wageBaseBlendsOvertime: $wage['blendsOvertime']
         );
 
-        // Percentages resolve against the WAGE BASE ONLY, never against the
-        // running total: compounding one addition onto another would make the
-        // result depend on the order the additions happen to be listed in.
-        $total = $wage['centsPerHour'];
-        foreach ($additions as $addition) {
-            $total += $addition['centsPerHour'];
-        }
+        // Percentages already resolved against the WAGE BASE inside normalise(),
+        // never against a running total: compounding one addition onto another
+        // would make the result depend on the order they are listed in.
+        $total = ($wage['centsPerHour'] + $this->additions->total(additions: $additions));
 
         return [
             'totalCentsPerHour'      => $total,
@@ -205,142 +229,10 @@ class EmployeeCostRateService
     }//end resolve()
 
 
-    /**
-     * Refuse an overtime addition on a wage base that already blends overtime.
-     *
-     * Public because the composition rule belongs to whoever composes a rate,
-     * not only to this service — the hrmq/Shillinq bridge assembles additions
-     * too, and a precondition that only one caller can reach is a precondition
-     * that eventually gets bypassed.
-     *
-     * A base that blends overtime divides total pay by total hours, so an
-     * overtime premium is already averaged across every hour. Adding an
-     * overtime component on top charges it twice — a wrong number that would
-     * reach a CBS submission looking entirely plausible. Contract-derived
-     * bases never blend, which is one of the reasons the contract is the
-     * basis; an imported or externally-supplied base might.
-     *
-     * @param array<int, array{key: string, centsPerHour: int, source: string, basis: string}> $additions             Normalised additions.
-     * @param bool                                                                             $wageBaseBlendsOvertime Whether the wage base already includes overtime pay.
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException When both are true.
-     */
-    public function assertAdditionsCompatible(array $additions, bool $wageBaseBlendsOvertime): void
-    {
-        if ($wageBaseBlendsOvertime === false) {
-            return;
-        }
-
-        foreach ($additions as $addition) {
-            if (($addition['key'] ?? '') === self::ADDITION_OVERTIME) {
-                throw new InvalidArgumentException(
-                    'an "'.self::ADDITION_OVERTIME.'" addition cannot be applied to a wage base that '
-                    .'already blends overtime: the base divides total pay by total hours, so the '
-                    .'premium is already averaged into every hour and would be charged twice'
-                );
-            }
-        }
-
-    }//end assertAdditionsCompatible()
 
 
-    /**
-     * Coerce raw addition entries into the canonical shape, dropping entries
-     * that carry no amount.
-     *
-     * An addition states its amount EITHER as a fixed `centsPerHour` or as a
-     * `percentageOfWage`, never both — a figure carrying both would have two
-     * defensible readings and no way to choose. A percentage is resolved
-     * against the wage base here, so everything downstream sees plain cents
-     * and the composition stays a simple sum.
-     *
-     * @param array<int, mixed> $raw       Raw addition entries.
-     * @param int               $wageCents The wage base, for resolving percentages.
-     *
-     * @return array<int, array{key: string, centsPerHour: int, source: string, basis: string}>
-     *
-     * @throws InvalidArgumentException When an addition carries no key, no basis, or both amount forms.
-     */
-    private function normaliseAdditions(array $raw, int $wageCents): array
-    {
-        $out = [];
-        foreach ($raw as $entry) {
-            if (is_array($entry) === false) {
-                continue;
-            }
-
-            $cents = $this->resolveAdditionCents(entry: $entry, wageCents: $wageCents);
-            if ($cents === null) {
-                continue;
-            }
-
-            $key = trim((string) ($entry['key'] ?? ''));
-            if ($key === '') {
-                throw new InvalidArgumentException('an hourly cost addition must carry a key');
-            }
-
-            // Same reasoning as an unexplained override: this figure reaches a
-            // statutory submission, and "+ EUR 12/h from somewhere" cannot be
-            // audited or defended.
-            $basis = trim((string) ($entry['basis'] ?? ''));
-            if ($basis === '') {
-                throw new InvalidArgumentException(
-                    'the hourly cost addition "'.$key.'" must carry a basis explaining the amount'
-                );
-            }
-
-            $out[] = [
-                'key'          => $key,
-                'centsPerHour' => $cents,
-                'source'       => (trim((string) ($entry['source'] ?? '')) ?: 'manual'),
-                'basis'        => $basis,
-            ];
-        }//end foreach
-
-        return $out;
-
-    }//end normaliseAdditions()
 
 
-    /**
-     * Resolve one addition's amount to integer cents, from whichever of the
-     * two forms it states.
-     *
-     * @param array<string, mixed> $entry     The raw addition entry.
-     * @param int                  $wageCents The wage base, for a percentage.
-     *
-     * @return int|null Null when the entry states no usable amount.
-     *
-     * @throws InvalidArgumentException When both forms are present.
-     */
-    private function resolveAdditionCents(array $entry, int $wageCents): ?int
-    {
-        $fixed      = ($entry['centsPerHour'] ?? null);
-        $percentage = ($entry['percentageOfWage'] ?? null);
-
-        $hasFixed      = ($fixed !== null && $fixed !== '' && is_numeric($fixed) === true);
-        $hasPercentage = ($percentage !== null && $percentage !== '' && is_numeric($percentage) === true);
-
-        if ($hasFixed === true && $hasPercentage === true) {
-            throw new InvalidArgumentException(
-                'the hourly cost addition "'.trim((string) ($entry['key'] ?? '')).'" states both a fixed '
-                .'centsPerHour and a percentageOfWage; an amount with two readings has no defensible value'
-            );
-        }
-
-        if ($hasFixed === true) {
-            return (int) $fixed;
-        }
-
-        if ($hasPercentage === true) {
-            return (int) round($wageCents * ((float) $percentage / 100.0));
-        }
-
-        return null;
-
-    }//end resolveAdditionCents()
 
 
     /**
