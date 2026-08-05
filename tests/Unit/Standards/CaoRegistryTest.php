@@ -201,7 +201,10 @@ class CaoRegistryTest extends TestCase
      */
     public function testVersionConstantIsBumped(): void
     {
-        $this->assertSame('2026-07.18', CaoRegistry::VERSION);
+        // Bumped 2026-08-05 for the `overtime` leaf added to every corpus file.
+        // SCHEMA.md's re-issue discipline requires the bump on any cao/*.json
+        // change; this literal is the tripwire that makes it deliberate.
+        $this->assertSame('2026-08.19', CaoRegistry::VERSION);
 
     }//end testVersionConstantIsBumped()
 

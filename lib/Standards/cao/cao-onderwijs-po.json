@@ -5,14 +5,31 @@
   "version": "2024-2025",
   "effectiveDate": null,
   "basedOn": [
-    {"doc": "PO-Raad, CAO PO 2024-2025 (en opvolger)", "url": "https://www.poraad.nl/"}
+    {
+      "doc": "PO-Raad, CAO PO 2024-2025 (en opvolger)",
+      "url": "https://www.poraad.nl/"
+    }
   ],
   "payScales": {
     "value": {
-      "L10": 290000, "L11": 320000, "LA": 250000, "LB": 340000, "LC": 400000,
-      "OOP-1": 200000, "OOP-2": 215000, "OOP-3": 230000, "OOP-4": 245000,
-      "OOP-5": 260000, "OOP-6": 280000, "OOP-7": 300000, "OOP-8": 320000,
-      "DIR-A": 450000, "DIR-B": 500000, "DIR-C": 550000, "DIR-D": 600000, "DIR-E": 650000
+      "L10": 290000,
+      "L11": 320000,
+      "LA": 250000,
+      "LB": 340000,
+      "LC": 400000,
+      "OOP-1": 200000,
+      "OOP-2": 215000,
+      "OOP-3": 230000,
+      "OOP-4": 245000,
+      "OOP-5": 260000,
+      "OOP-6": 280000,
+      "OOP-7": 300000,
+      "OOP-8": 320000,
+      "DIR-A": 450000,
+      "DIR-B": 500000,
+      "DIR-C": 550000,
+      "DIR-D": 600000,
+      "DIR-E": 650000
     },
     "source": "Illustrative CAO PO loontabel shape — leraarschalen (L10/L11/LA/LB/LC), OOP-schalen (onderwijsondersteunend personeel) and DIR-schalen (directiefuncties) — pending confirmation against the official PO-Raad CAO PO tekst. Not transcribed from the primary document in this pass.",
     "verified": false,
@@ -40,7 +57,10 @@
     "value": {
       "normjaartaakUrenPerJaar": 1659,
       "lesgevendeTaakMaxUren": 940,
-      "lesgebondenTakenOpslagfactorPct": [35, 45],
+      "lesgebondenTakenOpslagfactorPct": [
+        35,
+        45
+      ],
       "professionaliseringUren": 83,
       "duurzameInzetbaarheidUren": 40
     },
@@ -48,5 +68,20 @@
     "verified": false,
     "placeholder": true,
     "checkAgainst": "PO-Raad CAO PO tekst, hoofdstuk werktijden/taakbeleid (poraad.nl)"
+  },
+  "overtime": {
+    "value": {
+      "toeslagPercentages": {
+        "doordeweeks": 25,
+        "zaterdag": 50,
+        "zondag": 100,
+        "feestdag": 100
+      },
+      "compensationPreference": "tijd-voor-tijd"
+    },
+    "source": "Illustrative overwerktoeslag percentages (Primair onderwijs) pending confirmation against the official CAO-tekst — NOT transcribed from the primary document. Placeholder, so CaoRegistry::overtimeToeslagPercentages() resolves to null and no overtime uplift is derived from this CAO until the figures are confirmed.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "poraad.nl CAO PO, hoofdstuk arbeidsduur/overwerk"
   }
 }

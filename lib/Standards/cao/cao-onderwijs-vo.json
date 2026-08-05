@@ -5,7 +5,10 @@
   "version": "2025-2027",
   "effectiveDate": "2025-11-01",
   "basedOn": [
-    {"doc": "VO-raad, Salarisschalen cao vo 2025-2027 bekend", "url": "https://www.vo-raad.nl/"}
+    {
+      "doc": "VO-raad, Salarisschalen cao vo 2025-2027 bekend",
+      "url": "https://www.vo-raad.nl/"
+    }
   ],
   "payScales": {
     "value": {
@@ -43,5 +46,20 @@
     "verified": false,
     "placeholder": true,
     "checkAgainst": "vo-raad.nl CAO VO tekst, arbeidsduurartikel"
+  },
+  "overtime": {
+    "value": {
+      "toeslagPercentages": {
+        "doordeweeks": 25,
+        "zaterdag": 50,
+        "zondag": 100,
+        "feestdag": 100
+      },
+      "compensationPreference": "tijd-voor-tijd"
+    },
+    "source": "Illustrative overwerktoeslag percentages (Voortgezet onderwijs) pending confirmation against the official CAO-tekst — NOT transcribed from the primary document. Placeholder, so CaoRegistry::overtimeToeslagPercentages() resolves to null and no overtime uplift is derived from this CAO until the figures are confirmed.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "vo-raad.nl CAO VO, hoofdstuk arbeidsduur/overwerk"
   }
 }

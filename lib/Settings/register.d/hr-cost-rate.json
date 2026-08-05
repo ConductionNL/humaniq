@@ -63,6 +63,44 @@
                     }
                 }
             },
+            "Employment Contract": {
+                "properties": {
+                    "overtimeToeslagPercentages": {
+                        "type": "object",
+                        "nullable": true,
+                        "title": "Overtime surcharge percentages (contract override)",
+                        "description": "Per-category overwerktoeslag for THIS contract, overriding whatever the CAO says. Null — the normal case — means the CAO's own overtime article applies, resolved through CaoRegistry. Terms are company-wide by default and individual only by exception, so the absence of a value here is the meaningful state, not an unfinished one. Percentages are the SURCHARGE, not the total: 50 means 150% of the normal hourly wage is paid for that hour. When set, the override wins IN FULL rather than merging per category — a partial merge would silently combine two documents' terms and produce a set of rules that exists in neither.",
+                        "properties": {
+                            "doordeweeks": {"type": "number", "nullable": true, "title": "Weekday", "description": "Surcharge percentage for overtime on an ordinary weekday."},
+                            "zaterdag": {"type": "number", "nullable": true, "title": "Saturday", "description": "Surcharge percentage for overtime on a Saturday."},
+                            "zondag": {"type": "number", "nullable": true, "title": "Sunday", "description": "Surcharge percentage for overtime on a Sunday."},
+                            "feestdag": {"type": "number", "nullable": true, "title": "Public holiday", "description": "Surcharge percentage for overtime on a public holiday."}
+                        }
+                    },
+                    "overtimeTermsOverrideReason": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Overtime terms override reason",
+                        "description": "Why this contract departs from the CAO's overtime article. REQUIRED whenever overtimeToeslagPercentages is set. Departing from a collective agreement is an individual arrangement someone negotiated and someone must be able to justify — an unexplained override is indistinguishable from a data-entry error, and it feeds a cost figure that reaches a statutory submission."
+                    },
+                    "leaveEntitlementOverrideDays": {
+                        "type": "object",
+                        "nullable": true,
+                        "title": "Leave entitlement (contract override)",
+                        "description": "Full-time vakantiedagen for THIS contract, overriding the CAO's leaveEntitlement. Null means the CAO applies. Statutory minimums still bind: nl-verlof-wettelijk-minimum is evaluated against the resulting entitlement, so an override below the wettelijk minimum is a violation rather than a permitted exception.",
+                        "properties": {
+                            "vakantiedagenWettelijk": {"type": "number", "nullable": true, "title": "Statutory leave days", "description": "Full-time statutory (wettelijk) vacation days."},
+                            "vakantiedagenBovenwettelijk": {"type": "number", "nullable": true, "title": "Additional leave days", "description": "Full-time above-statutory (bovenwettelijk) vacation days."}
+                        }
+                    },
+                    "leaveTermsOverrideReason": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Leave terms override reason",
+                        "description": "Why this contract departs from the CAO's leave entitlement. REQUIRED whenever leaveEntitlementOverrideDays is set, for the same reason the overtime override needs one."
+                    }
+                }
+            },
             "Timesheet": {
                 "properties": {
                     "domainObjectRef": {

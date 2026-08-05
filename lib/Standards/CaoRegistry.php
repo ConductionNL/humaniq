@@ -49,7 +49,7 @@ final class CaoRegistry
      *
      * @var string
      */
-    public const VERSION = '2026-07.18';
+    public const VERSION = '2026-08.19';
 
     /**
      * Required top-level keys on every well-formed CAO file.
@@ -214,6 +214,59 @@ final class CaoRegistry
         return (int) round($totalDays * $hoursPerDay);
 
     }//end minLeaveHours()
+
+
+    /**
+     * Resolve a CAO's overwerktoeslag percentages — the extra percentage paid
+     * on top of the normal hourly wage per overtime category (`doordeweeks`,
+     * `zaterdag`, `zondag`, `feestdag`).
+     *
+     * Percentages are the SURCHARGE, not the total: `50` means 150% of the
+     * normal wage is paid for that hour. Stated because the two readings
+     * differ by the whole base wage and both are common in CAO texts.
+     *
+     * Honours the same verified/placeholder lever as every other resolver: an
+     * unconfirmed leaf resolves to `null`, never to a wrong number, so a CAO
+     * whose overtime article has not been transcribed yields no uplift rather
+     * than an invented one.
+     *
+     * @param string $caoId The CAO id (e.g. `cao-gemeenten`).
+     *
+     * @return array<string, float>|null Category to surcharge percentage, or null when unresolvable.
+     */
+    public static function overtimeToeslagPercentages(string $caoId): ?array
+    {
+        $cao = self::get($caoId);
+        if ($cao === null) {
+            return null;
+        }
+
+        $leaf = ($cao['overtime'] ?? null);
+        if (self::isUsableLeaf($leaf) === false) {
+            return null;
+        }
+
+        $percentages = ((array) $leaf['value'])['toeslagPercentages'] ?? null;
+        if (is_array($percentages) === false || $percentages === []) {
+            return null;
+        }
+
+        $out = [];
+        foreach ($percentages as $category => $percentage) {
+            if (is_numeric($percentage) === false) {
+                continue;
+            }
+
+            $out[(string) $category] = (float) $percentage;
+        }
+
+        if ($out === []) {
+            return null;
+        }
+
+        return $out;
+
+    }//end overtimeToeslagPercentages()
 
 
     /**

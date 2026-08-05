@@ -31,7 +31,8 @@ One file per CAO, named `{cao-id}.json` (lowercase, hyphenated slug — the CAO'
   "payScales": { /* leaf, see below — value: { schaal: minimum maandloon in integer cents } */ },
   "allowances": { /* leaf, see below — value: { allowanceKey: {...} } */ },
   "leaveEntitlement": { /* leaf, see below — value: { vakantiedagenWettelijk, vakantiedagenBovenwettelijk } */ },
-  "workingTime": { /* leaf, see below — value: { fulltimeHoursPerWeek } */ }
+  "workingTime": { /* leaf, see below — value: { fulltimeHoursPerWeek } */ },
+  "overtime": { /* leaf, see below — value: { toeslagPercentages: {...}, compensationPreference } */ }
 }
 ```
 
@@ -47,6 +48,25 @@ One file per CAO, named `{cao-id}.json` (lowercase, hyphenated slug — the CAO'
 | `allowances`        | yes      | leaf — `value` is `{ allowanceKey: {...} }` (e.g. ploegentoeslag)     |
 | `leaveEntitlement`  | yes      | leaf — `value` is `{ vakantiedagenWettelijk, vakantiedagenBovenwettelijk }` (full-time day counts) |
 | `workingTime`       | yes      | leaf — `value` is `{ fulltimeHoursPerWeek }` (informational/display only — not read by any resolver) |
+| `overtime`          | no       | leaf — `value` is `{ toeslagPercentages: { doordeweeks, zaterdag, zondag, feestdag }, compensationPreference }` |
+
+### `overtime`
+
+`toeslagPercentages` are the **surcharge**, not the total: `50` means 150% of the
+normal hourly wage is paid for that hour. Both readings appear in CAO texts and
+they differ by the whole base wage, so the unit is stated here rather than
+inferred.
+
+The key is **optional**, unlike the other four. A CAO whose overtime article has
+not been transcribed simply omits it and
+`CaoRegistry::overtimeToeslagPercentages()` resolves to `null` — the same
+outcome as an unverified leaf. That keeps adding a CAO cheap and keeps a missing
+overtime rule from failing the whole file to load.
+
+Employment terms resolve **CAO first, contract override second**: a contract may
+carry its own `overtimeToeslagPercentages`, which wins in full (it is not merged
+per-category — a partial merge would silently mix two documents' terms). See
+`EmploymentTermsResolver`.
 
 ## Leaf shape
 
