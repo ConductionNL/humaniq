@@ -12,9 +12,9 @@
  * (Awf, Aof, Wko, Whk) and the Zvw werkgeversheffing. Costing case work at the
  * gross wage understates the real cost by the whole employer burden, which is
  * exactly the mistake this service exists to prevent — so `hourlyWage` is
- * never read here.
+ * never used as a rate.
  *
- * The rate is a SUM, never a branch (ADR-081 decision 4):
+ * The rate is a SUM, never a branch:
  *
  *     hourlyCost = wageCost + Σ additions
  *
@@ -24,10 +24,25 @@
  *    verbatim. An override with no reason is refused rather than silently
  *    accepted: this number reaches a statutory IV3 submission through
  *    Shillinq, and an unexplained hand-entered rate is unauditable.
- * 2. **Derived** — the loaded cost from the employee's most recent Payslip:
- *    `(grossPay + werknemersverzekeringen + zvw) / hours`. Numerator and
- *    denominator come from the SAME payslip, so they cannot disagree about
- *    which period they describe.
+ * 2. **Derived from the CONTRACT** — a proforma payroll calculation over the
+ *    contract's own terms, via {@see ProformaPayslipService}: what this
+ *    employment costs per hour in a plain month, employer charges included.
+ *
+ * **Why the contract and not an actual payslip.** A payslip is a period
+ * artefact and legitimately differs month to month for reasons that have
+ * nothing to do with the cost of an hour: sickness and doorbetaald loon, a
+ * bonus or bijzondere beloning, retro-adjustments, leave buy/sell, loonbeslag,
+ * bijtelling, a 13th month. Costing case work off whichever payslip happened
+ * to be last makes the same hour cost different amounts depending on when it
+ * was logged, and makes the figure irreproducible after the fact. The contract
+ * is stable, reproducible and is what the employment actually commits to.
+ *
+ * That choice also removes a correctness trap rather than guarding it. A
+ * payslip divides TOTAL pay by TOTAL hours, so an overtime premium paid in
+ * that period is already averaged into every hour of the rate — and adding an
+ * overtime addition on top would charge it twice. A proforma over the contract
+ * contains no overtime, no one-offs and no sick pay, so the base is clean by
+ * construction and an overtime addition is legitimate.
  *
  * `additions` are the per-hour employer costs beyond the wage — overhead,
  * equipment, workplace, overtime. Each is named, amounted and justified, so a
@@ -35,23 +50,6 @@
  * Employee (an administrator filled them in) or passed in by a caller that
  * computes them — Shillinq derives the overhead and equipment ones from the
  * ledger those pools live in.
- *
- * **There is exactly one rate.** Overtime is more expensive per hour and is
- * expressed as an addition, not as a second rate: two rates would force every
- * consumer to know which applies and to agree about it. The one correctness
- * rule attached to that: a payslip-derived base divides total pay by total
- * hours, so overtime paid in the period is ALREADY averaged across every hour.
- * Combining it with an overtime addition charges the premium twice, so a
- * blended base refuses one outright rather than producing a plausible wrong
- * number.
- *
- * The denominator prefers the payslip's own `hoursWorked`, falling back to
- * contracted hours derived from `EmploymentContract.hoursPerWeek`. ADR-081
- * decision 4 words the denominator as "contracted hours"; taking the payslip's
- * own hours when it has them keeps both halves of the fraction on one record,
- * which matters for anyone paid by the hour, where contracted hours and paid
- * hours legitimately differ. For a salaried employee the two coincide and the
- * distinction is moot.
  *
  * Returns null rather than guessing when there is nothing to derive from. A
  * null rate is a visible "cannot cost this yet" state for the caller to
@@ -75,6 +73,8 @@ declare(strict_types=1);
 namespace OCA\Hrmq\Service;
 
 use InvalidArgumentException;
+use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Resolves an employee's employer cost per hour, in integer cents.
@@ -84,7 +84,7 @@ class EmployeeCostRateService
 
     /**
      * Weeks in a year, for turning contracted hours-per-week into the hours
-     * behind one monthly payslip. 52 whole weeks, not 52.18 — a payroll month
+     * behind one proforma month. 52 whole weeks, not 52.18 — a payroll month
      * is an administrative twelfth of a year, not an astronomical one.
      *
      * @var float
@@ -106,11 +106,11 @@ class EmployeeCostRateService
     public const SOURCE_OVERRIDE = 'override';
 
     /**
-     * Rate was derived from the employee's most recent payslip.
+     * Rate was derived from a proforma calculation over the contract.
      *
      * @var string
      */
-    public const SOURCE_DERIVED = 'derived';
+    public const SOURCE_CONTRACT = 'contract-proforma';
 
     /**
      * The addition key reserved for the overtime uplift. Named as a constant
@@ -123,15 +123,27 @@ class EmployeeCostRateService
 
 
     /**
+     * @param ProformaPayslipService $proforma Stateless proforma calculator — persists nothing.
+     * @param LoggerInterface        $logger   Logger.
+     */
+    public function __construct(
+        private readonly ProformaPayslipService $proforma,
+        private readonly LoggerInterface $logger,
+    ) {
+
+    }//end __construct()
+
+
+    /**
      * Resolve the employer cost per hour for one employee.
      *
-     * Pure — the caller supplies the already-loaded Employee record and its
-     * most recent Payslip, so this is testable without OpenRegister and cannot
-     * pick a different payslip than the caller believes it is using.
+     * The caller supplies the already-loaded Employee and its active
+     * EmploymentContract, so this cannot silently pick a different contract
+     * than the caller believes it is using.
      *
-     * @param array<string, mixed>      $employee The Employee object as an array.
-     * @param array<string, mixed>|null $payslip  Most recent Payslip, or null when the employee has never been paid.
-     * @param float|null                $hoursPerWeek Contracted hours per week from the active EmploymentContract, when known.
+     * @param array<string, mixed>             $employee       The Employee object as an array.
+     * @param array<string, mixed>|null        $contract       The active EmploymentContract as an array.
+     * @param string                           $period         Costing period as `YYYY-MM`, for the tax year the proforma runs against.
      * @param array<int, array<string, mixed>> $extraAdditions Additions supplied by a caller that computes them — Shillinq's ledger-derived overhead/equipment. Merged with the employee's own stored additions.
      *
      * @return array{
@@ -141,18 +153,19 @@ class EmployeeCostRateService
      *        never a cost rate, because an hour with overhead but no wage is
      *        not an hour anyone worked.
      *
-     * @throws InvalidArgumentException When an override amount is set without a reason, or an
-     *                                  overtime addition is applied to an overtime-blended base.
+     * @throws InvalidArgumentException When an override amount is set without a reason, an addition
+     *                                  carries no basis, or an overtime addition is applied to an
+     *                                  overtime-blended base.
      */
     public function resolve(
         array $employee,
-        ?array $payslip=null,
-        ?float $hoursPerWeek=null,
+        ?array $contract=null,
+        string $period='',
         array $extraAdditions=[]
     ): ?array {
         $wage = $this->resolveOverride(employee: $employee);
         if ($wage === null) {
-            $wage = $this->deriveFromPayslip(payslip: $payslip, hoursPerWeek: $hoursPerWeek);
+            $wage = $this->deriveFromContract(employee: $employee, contract: $contract, period: $period);
         }
 
         if ($wage === null) {
@@ -166,9 +179,9 @@ class EmployeeCostRateService
             )
         );
 
-        $this->assertNoOvertimeDoubleCount(
+        $this->assertAdditionsCompatible(
             additions: $additions,
-            blendsOvertime: $wage['blendsOvertime']
+            wageBaseBlendsOvertime: $wage['blendsOvertime']
         );
 
         $total = $wage['centsPerHour'];
@@ -186,6 +199,47 @@ class EmployeeCostRateService
         ];
 
     }//end resolve()
+
+
+    /**
+     * Refuse an overtime addition on a wage base that already blends overtime.
+     *
+     * Public because the composition rule belongs to whoever composes a rate,
+     * not only to this service — the hrmq/Shillinq bridge assembles additions
+     * too, and a precondition that only one caller can reach is a precondition
+     * that eventually gets bypassed.
+     *
+     * A base that blends overtime divides total pay by total hours, so an
+     * overtime premium is already averaged across every hour. Adding an
+     * overtime component on top charges it twice — a wrong number that would
+     * reach a CBS submission looking entirely plausible. Contract-derived
+     * bases never blend, which is one of the reasons the contract is the
+     * basis; an imported or externally-supplied base might.
+     *
+     * @param array<int, array{key: string, centsPerHour: int, source: string, basis: string}> $additions             Normalised additions.
+     * @param bool                                                                             $wageBaseBlendsOvertime Whether the wage base already includes overtime pay.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException When both are true.
+     */
+    public function assertAdditionsCompatible(array $additions, bool $wageBaseBlendsOvertime): void
+    {
+        if ($wageBaseBlendsOvertime === false) {
+            return;
+        }
+
+        foreach ($additions as $addition) {
+            if (($addition['key'] ?? '') === self::ADDITION_OVERTIME) {
+                throw new InvalidArgumentException(
+                    'an "'.self::ADDITION_OVERTIME.'" addition cannot be applied to a wage base that '
+                    .'already blends overtime: the base divides total pay by total hours, so the '
+                    .'premium is already averaged into every hour and would be charged twice'
+                );
+            }
+        }
+
+    }//end assertAdditionsCompatible()
 
 
     /**
@@ -240,48 +294,13 @@ class EmployeeCostRateService
 
 
     /**
-     * Refuse an overtime addition on a wage base that already blends overtime.
-     *
-     * A payslip-derived base divides total pay by total hours, so an overtime
-     * premium paid in that period is already averaged across every hour.
-     * Adding an overtime component on top charges it twice — the one way this
-     * model silently produces a wrong number, and one that would reach a CBS
-     * submission looking entirely plausible.
-     *
-     * @param array<int, array{key: string, centsPerHour: int, source: string, basis: string}> $additions Normalised additions.
-     * @param bool                                                                             $blendsOvertime Whether the wage base already includes overtime pay.
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException When both are true.
-     */
-    private function assertNoOvertimeDoubleCount(array $additions, bool $blendsOvertime): void
-    {
-        if ($blendsOvertime === false) {
-            return;
-        }
-
-        foreach ($additions as $addition) {
-            if ($addition['key'] === self::ADDITION_OVERTIME) {
-                throw new InvalidArgumentException(
-                    'an "'.self::ADDITION_OVERTIME.'" addition cannot be applied to a wage base that '
-                    .'already blends overtime: the payslip divides total pay by total hours, so the '
-                    .'premium is already averaged into every hour and would be charged twice'
-                );
-            }
-        }
-
-    }//end assertNoOvertimeDoubleCount()
-
-
-    /**
      * Read the hand-set override, refusing an unexplained one.
      *
      * @param array<string, mixed> $employee The Employee object as an array.
      *
      * @return array{centsPerHour: int, source: string, basis: string, blendsOvertime: bool}|null Null when no override is set.
      *
-     * @throws InvalidArgumentException When an amount is set without a reason.
+     * @throws InvalidArgumentException When an amount is set without a reason, or is negative.
      */
     private function resolveOverride(array $employee): ?array
     {
@@ -307,9 +326,8 @@ class EmployeeCostRateService
             );
         }
 
-        // A hand-set wage base is whatever the administrator meant it to be. It
-        // is not derived from a payslip, so it does not carry a payslip's
-        // overtime blending, and an overtime addition on top is legitimate.
+        // A hand-set base is whatever the administrator meant it to be; it
+        // carries no payslip's overtime blending.
         return [
             'centsPerHour'   => $cents,
             'source'         => self::SOURCE_OVERRIDE,
@@ -321,88 +339,121 @@ class EmployeeCostRateService
 
 
     /**
-     * Derive the loaded cost per hour from one payslip.
+     * Derive the loaded cost per hour from a proforma calculation over the
+     * contract's own terms.
      *
-     * @param array<string, mixed>|null $payslip      The Payslip object as an array.
-     * @param float|null                $hoursPerWeek Contracted hours per week, used only when the payslip carries no hours.
+     * The monthly salary lives on the Employee (`grossMonthlySalary`) — the
+     * field the payroll engine reads — while the hours and the Awf tariff live
+     * on the EmploymentContract. Where no monthly salary is recorded the
+     * contract's gross `hourlyWage` reconstitutes one, so an hourly-paid
+     * employment still costs out.
      *
-     * @return array{centsPerHour: int, source: string, basis: string, blendsOvertime: bool}|null Null when the payslip cannot yield a rate.
+     * @param array<string, mixed>      $employee The Employee object as an array.
+     * @param array<string, mixed>|null $contract The active EmploymentContract as an array.
+     * @param string                    $period   Costing period as `YYYY-MM`.
+     *
+     * @return array{centsPerHour: int, source: string, basis: string, blendsOvertime: bool}|null Null when the contract cannot yield a rate.
      */
-    private function deriveFromPayslip(?array $payslip, ?float $hoursPerWeek): ?array
+    private function deriveFromContract(array $employee, ?array $contract, string $period): ?array
     {
-        if ($payslip === null) {
+        if ($contract === null || $period === '') {
             return null;
         }
 
-        $grossCents = $this->toCents(value: ($payslip['grossPay'] ?? null));
-        if ($grossCents === null || $grossCents <= 0) {
+        $hoursPerWeek = (float) ($contract['hoursPerWeek'] ?? 0);
+        if ($hoursPerWeek <= 0.0) {
             return null;
         }
 
-        // The employer burden. Both are informative lines on the payslip and
-        // both are genuinely paid by the employer, so both belong in a cost
-        // rate. A missing line is treated as zero — a payslip that omits Zvw
-        // is understating the cost, not invalidating it.
-        $employerChargesCents = ($this->toCents(value: ($payslip['werknemersverzekeringen'] ?? null)) ?? 0)
-            + ($this->toCents(value: ($payslip['zvw'] ?? null)) ?? 0);
+        $monthlyHours = ($hoursPerWeek * self::WEEKS_PER_YEAR / self::MONTHS_PER_YEAR);
 
-        $hours = $this->resolveHours(payslip: $payslip, hoursPerWeek: $hoursPerWeek);
-        if ($hours === null || $hours <= 0.0) {
+        $grossMonthly = $this->resolveGrossMonthly(
+            employee: $employee,
+            contract: $contract,
+            monthlyHours: $monthlyHours
+        );
+        if ($grossMonthly === null || $grossMonthly <= 0.0) {
             return null;
         }
 
-        $loadedCents = ($grossCents + $employerChargesCents);
-        $period      = (string) ($payslip['period'] ?? '');
-        $basis       = 'derived from payslip';
-        if ($period !== '') {
-            $basis = 'derived from payslip '.$period;
+        try {
+            // `bijzonder: 0` and `parttime: 1.0` deliberately: the contract's
+            // own hours ARE the denominator, and a one-off payment is not part
+            // of what an hour costs. This is what keeps the base free of the
+            // period noise a real payslip carries.
+            $breakdown = $this->proforma->simulate(
+                [
+                    'gross'       => $grossMonthly,
+                    'table'       => ($employee['taxTableColor'] ?? 'wit'),
+                    'dateOfBirth' => ($employee['dateOfBirth'] ?? null),
+                    'period'      => $period,
+                    'parttime'    => 1.0,
+                    'bijzonder'   => 0.0,
+                    'aof'         => ($contract['aofTariff'] ?? null),
+                ]
+            );
+        } catch (Throwable $e) {
+            // A contract the calculator cannot price is a visible "no rate",
+            // not a zero — the caller surfaces it rather than booking the work
+            // as free.
+            $this->logger->warning(
+                '[EmployeeCostRateService] proforma calculation failed; no cost rate derived',
+                ['error' => $e->getMessage()]
+            );
+            return null;
+        }//end try
+
+        $loadedCents = ($this->toCents(value: ($breakdown['grossPay'] ?? null)) ?? 0)
+            + ($this->toCents(value: ($breakdown['werknemersverzekeringen'] ?? null)) ?? 0)
+            + ($this->toCents(value: ($breakdown['zvw'] ?? null)) ?? 0);
+
+        if ($loadedCents <= 0) {
+            return null;
         }
 
-        // Payslip.grossPay is undifferentiated and hoursWorked counts every
-        // hour, so any overtime premium paid in the period is already averaged
-        // across the whole rate. Until the Payslip carries an overtime
-        // pay/hours split there is no way to separate it, so the base declares
-        // itself blended and refuses an overtime addition rather than
-        // double-charging the premium.
         return [
-            'centsPerHour'   => (int) round($loadedCents / $hours),
-            'source'         => self::SOURCE_DERIVED,
-            'basis'          => $basis,
-            'blendsOvertime' => true,
+            'centsPerHour'   => (int) round($loadedCents / $monthlyHours),
+            'source'         => self::SOURCE_CONTRACT,
+            'basis'          => 'proforma over the contract, '.$period.', '
+                .rtrim(rtrim(number_format($hoursPerWeek, 2, '.', ''), '0'), '.').'h/week',
+            // A proforma over the contract contains no overtime, no one-offs
+            // and no sick pay, so an overtime addition on top is legitimate.
+            'blendsOvertime' => false,
         ];
 
-    }//end deriveFromPayslip()
+    }//end deriveFromContract()
 
 
     /**
-     * Hours behind one payslip: its own `hoursWorked` when it has them, else
-     * contracted hours for a month.
+     * Resolve the gross monthly salary the proforma should price.
      *
-     * @param array<string, mixed> $payslip      The Payslip object as an array.
-     * @param float|null           $hoursPerWeek Contracted hours per week.
+     * @param array<string, mixed> $employee     The Employee object as an array.
+     * @param array<string, mixed> $contract     The EmploymentContract as an array.
+     * @param float                $monthlyHours Hours behind one contracted month.
      *
-     * @return float|null Null when neither source yields hours.
+     * @return float|null Null when neither a salary nor an hourly wage is recorded.
      */
-    private function resolveHours(array $payslip, ?float $hoursPerWeek): ?float
+    private function resolveGrossMonthly(array $employee, array $contract, float $monthlyHours): ?float
     {
-        $worked = ($payslip['hoursWorked'] ?? null);
-        if ($worked !== null && $worked !== '' && (float) $worked > 0.0) {
-            return (float) $worked;
+        $salary = ($employee['grossMonthlySalary'] ?? null);
+        if ($salary !== null && $salary !== '' && is_numeric($salary) === true && (float) $salary > 0.0) {
+            return (float) $salary;
         }
 
-        if ($hoursPerWeek === null || $hoursPerWeek <= 0.0) {
-            return null;
+        $hourly = ($contract['hourlyWage'] ?? null);
+        if ($hourly !== null && $hourly !== '' && is_numeric($hourly) === true && (float) $hourly > 0.0) {
+            return ((float) $hourly * $monthlyHours);
         }
 
-        return ($hoursPerWeek * self::WEEKS_PER_YEAR / self::MONTHS_PER_YEAR);
+        return null;
 
-    }//end resolveHours()
+    }//end resolveGrossMonthly()
 
 
     /**
      * Convert a euro amount to integer cents.
      *
-     * Payslip money fields are euro decimals, while a cost rate is carried in
+     * The proforma breakdown is euro decimals, while a cost rate is carried in
      * cents so that rate x hours cannot accumulate IEEE-754 drift across a
      * quarter's allocations.
      *

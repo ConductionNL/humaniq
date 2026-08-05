@@ -6,8 +6,15 @@
  * The rate these tests pin reaches a statutory IV3 submission through
  * Shillinq, so they assert the ARITHMETIC against hand-computed figures rather
  * than against whatever the implementation happens to return, and they pin the
- * two failure modes that would be invisible in production: a wage silently
- * standing in for a cost, and an unexplained override.
+ * failure modes that would be invisible in production: a wage silently
+ * standing in for a cost, an unexplained override or addition, and a base
+ * contaminated by period noise.
+ *
+ * The proforma calculator is stubbed so the fixtures state the gross-to-net
+ * figures outright. That keeps these tests about the COSTING arithmetic —
+ * the tax chain itself is already covered by the payroll-core-engine suite,
+ * and re-deriving it here would make a change in the tax tables look like a
+ * costing regression.
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Service
@@ -28,7 +35,10 @@ namespace OCA\Hrmq\Tests\Unit\Service;
 
 use InvalidArgumentException;
 use OCA\Hrmq\Service\EmployeeCostRateService;
+use OCA\Hrmq\Service\ProformaPayslipService;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
+use RuntimeException;
 
 /**
  * Unit tests for EmployeeCostRateService.
@@ -37,74 +47,98 @@ class EmployeeCostRateServiceTest extends TestCase
 {
 
     /**
-     * Service under test.
+     * A 36h/week contract. 36 x 52 / 12 = 156 hours behind one month.
      *
-     * @var EmployeeCostRateService
+     * @var array<string, mixed>
      */
-    private EmployeeCostRateService $service;
+    private const CONTRACT = ['hoursPerWeek' => 36.0];
+
+    /**
+     * Costing period.
+     *
+     * @var string
+     */
+    private const PERIOD = '2026-07';
+
+    /**
+     * Params the stubbed proforma was last called with.
+     *
+     * @var array<string, mixed>
+     */
+    private array $lastProformaParams = [];
 
 
     /**
-     * Build the service.
+     * Build the service with a proforma stub returning a fixed breakdown.
      *
-     * @return void
+     * @param array<string, mixed>|null $breakdown Breakdown to return, or null to throw.
+     *
+     * @return EmployeeCostRateService
      */
-    protected function setUp(): void
+    private function makeService(?array $breakdown=null): EmployeeCostRateService
     {
-        parent::setUp();
-        $this->service = new EmployeeCostRateService();
+        $breakdown ??= [
+            'grossPay'                => 4000.00,
+            'werknemersverzekeringen' => 700.00,
+            'zvw'                     => 244.00,
+        ];
 
-    }//end setUp()
+        $proforma = $this->createMock(ProformaPayslipService::class);
+        $proforma->method('simulate')->willReturnCallback(
+            function (array $params) use ($breakdown): array {
+                $this->lastProformaParams = $params;
+                if ($breakdown === []) {
+                    throw new RuntimeException('Belastingtabel niet beschikbaar');
+                }
+
+                return $breakdown;
+            }
+        );
+
+        return new EmployeeCostRateService($proforma, new NullLogger());
+
+    }//end makeService()
 
 
     /**
-     * A payslip with 160 worked hours: gross 4000.00 + wnv 700.00 + zvw 244.00
-     * = 4944.00 loaded, over 160h = 30.90/h = 3090 cents.
+     * Loaded cost 4000.00 + 700.00 + 244.00 = 4944.00 over 156 contracted
+     * hours = 31.6923/h -> 3169 cents.
      *
      * @return void
      */
-    public function testDerivesLoadedCostFromPayslipHours(): void
+    public function testDerivesLoadedCostFromTheContractProforma(): void
     {
-        $rate = $this->service->resolve(
-            employee: [],
-            payslip: [
-                'period'                  => '2026-07',
-                'grossPay'                => 4000.00,
-                'werknemersverzekeringen' => 700.00,
-                'zvw'                     => 244.00,
-                'hoursWorked'             => 160,
-            ]
+        $rate = $this->makeService()->resolve(
+            employee: ['grossMonthlySalary' => 4000.00],
+            contract: self::CONTRACT,
+            period: self::PERIOD
         );
 
         $this->assertNotNull($rate);
-        $this->assertSame(3090, $rate['totalCentsPerHour']);
-        $this->assertSame(EmployeeCostRateService::SOURCE_DERIVED, $rate['wageSource']);
-        $this->assertStringContainsString('2026-07', $rate['wageBasis']);
+        $this->assertSame(3169, $rate['totalCentsPerHour']);
+        $this->assertSame(EmployeeCostRateService::SOURCE_CONTRACT, $rate['wageSource']);
+        $this->assertStringContainsString(self::PERIOD, $rate['wageBasis']);
 
-    }//end testDerivesLoadedCostFromPayslipHours()
+    }//end testDerivesLoadedCostFromTheContractProforma()
 
 
     /**
      * The employer charges MUST be in the numerator. Costing at the gross wage
-     * alone is the defect this service exists to prevent, and the two figures
-     * differ by exactly the employer burden — 4000.00/160 = 25.00/h would be
-     * the wrong answer, and it is a plausible-looking one.
+     * alone is the defect this service exists to prevent, and 4000.00/156 =
+     * 25.64/h is the wrong answer — a plausible-looking one.
      *
      * @return void
      */
     public function testEmployerChargesAreIncludedNotJustGross(): void
     {
-        $payslip = [
-            'grossPay'                => 4000.00,
-            'werknemersverzekeringen' => 700.00,
-            'zvw'                     => 244.00,
-            'hoursWorked'             => 160,
-        ];
+        $rate = $this->makeService()->resolve(
+            employee: ['grossMonthlySalary' => 4000.00],
+            contract: self::CONTRACT,
+            period: self::PERIOD
+        );
 
-        $rate = $this->service->resolve(employee: [], payslip: $payslip);
-
-        $grossOnlyCents = (int) round((4000.00 * 100) / 160);
-        $this->assertSame(2500, $grossOnlyCents, 'guard: the gross-only rate is 25.00/h');
+        $grossOnlyCents = (int) round((4000.00 * 100) / 156);
+        $this->assertSame(2564, $grossOnlyCents, 'guard: the gross-only rate is 25.64/h');
         $this->assertNotSame(
             $grossOnlyCents,
             $rate['totalCentsPerHour'],
@@ -116,48 +150,191 @@ class EmployeeCostRateServiceTest extends TestCase
 
 
     /**
-     * With no hoursWorked on the payslip, contracted hours stand in:
-     * 36h/week x 52 / 12 = 156h. 4944.00 / 156 = 31.6923/h -> 3169 cents.
+     * THE reason the contract is the basis. The proforma must be asked for a
+     * PLAIN month: no bijzondere beloning and no part-time re-scaling, because
+     * the contract's own hours are already the denominator. A base carrying a
+     * bonus or a one-off would make the same hour cost a different amount
+     * depending on which month it was logged in.
      *
      * @return void
      */
-    public function testFallsBackToContractedHoursWhenPayslipHasNone(): void
+    public function testProformaIsAskedForAPlainMonthWithNoOneOffs(): void
     {
-        $rate = $this->service->resolve(
-            employee: [],
-            payslip: [
-                'grossPay'                => 4000.00,
-                'werknemersverzekeringen' => 700.00,
-                'zvw'                     => 244.00,
-            ],
-            hoursPerWeek: 36.0
+        $this->makeService()->resolve(
+            employee: ['grossMonthlySalary' => 4000.00, 'taxTableColor' => 'wit', 'dateOfBirth' => '1985-03-02'],
+            contract: self::CONTRACT,
+            period: self::PERIOD
         );
 
-        $this->assertNotNull($rate);
-        $this->assertSame(3169, $rate['totalCentsPerHour']);
+        $this->assertSame(0.0, $this->lastProformaParams['bijzonder'], 'no one-off may enter the cost base');
+        $this->assertSame(1.0, $this->lastProformaParams['parttime'], 'the contract hours are the denominator');
+        $this->assertSame(4000.00, $this->lastProformaParams['gross']);
+        $this->assertSame(self::PERIOD, $this->lastProformaParams['period']);
+        $this->assertSame('1985-03-02', $this->lastProformaParams['dateOfBirth']);
 
-    }//end testFallsBackToContractedHoursWhenPayslipHasNone()
+    }//end testProformaIsAskedForAPlainMonthWithNoOneOffs()
 
 
     /**
-     * A set override wins over the derived value, and carries its reason
-     * through as the basis.
+     * A contract-derived base contains no overtime, so it declares itself
+     * unblended and an overtime addition on top is legitimate — which is what
+     * makes "one rate plus a named addition" work at all.
+     *
+     * @return void
+     */
+    public function testContractBaseDoesNotBlendOvertimeSoOvertimeCanBeAdded(): void
+    {
+        $rate = $this->makeService()->resolve(
+            employee: ['grossMonthlySalary' => 4000.00],
+            contract: self::CONTRACT,
+            period: self::PERIOD,
+            extraAdditions: [
+                [
+                    'key'          => EmployeeCostRateService::ADDITION_OVERTIME,
+                    'centsPerHour' => 1200,
+                    'source'       => 'manual',
+                    'basis'        => '150% CAO overtime premium',
+                ],
+            ]
+        );
+
+        $this->assertFalse($rate['wageBaseBlendsOvertime']);
+        $this->assertSame((3169 + 1200), $rate['totalCentsPerHour']);
+
+    }//end testContractBaseDoesNotBlendOvertimeSoOvertimeCanBeAdded()
+
+
+    /**
+     * The double-count guard itself, exercised directly: a base that DOES
+     * blend overtime refuses an overtime addition. A payslip-style base
+     * divides total pay by total hours, so the premium is already averaged
+     * into every hour and adding it again charges it twice.
+     *
+     * @return void
+     */
+    public function testOvertimeAdditionIsRefusedOnABlendedBase(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/charged twice/');
+
+        $this->makeService()->assertAdditionsCompatible(
+            additions: [
+                [
+                    'key'          => EmployeeCostRateService::ADDITION_OVERTIME,
+                    'centsPerHour' => 1200,
+                    'source'       => 'manual',
+                    'basis'        => '150% CAO overtime premium',
+                ],
+            ],
+            wageBaseBlendsOvertime: true
+        );
+
+    }//end testOvertimeAdditionIsRefusedOnABlendedBase()
+
+
+    /**
+     * A non-overtime addition on a blended base is fine — only the overtime
+     * component double-counts.
+     *
+     * @return void
+     */
+    public function testNonOvertimeAdditionIsAllowedOnABlendedBase(): void
+    {
+        $this->makeService()->assertAdditionsCompatible(
+            additions: [
+                ['key' => 'overhead', 'centsPerHour' => 850, 'source' => 'shillinq', 'basis' => 'Pool/hours'],
+            ],
+            wageBaseBlendsOvertime: true
+        );
+
+        $this->expectNotToPerformAssertions();
+
+    }//end testNonOvertimeAdditionIsAllowedOnABlendedBase()
+
+
+    /**
+     * The total is the wage base PLUS every addition, and the wage base stays
+     * separately visible so a cost can be explained line by line.
+     * 3169 + 850 + 210 = 4229.
+     *
+     * @return void
+     */
+    public function testTotalIsWagePlusAdditions(): void
+    {
+        $rate = $this->makeService()->resolve(
+            employee: [
+                'grossMonthlySalary'  => 4000.00,
+                'hourlyCostAdditions' => [
+                    [
+                        'key'          => 'overhead',
+                        'centsPerHour' => 850,
+                        'source'       => 'shillinq',
+                        'basis'        => 'Overhead pool 4900 over billable hours 2026-Q2',
+                    ],
+                    [
+                        'key'          => 'equipment',
+                        'centsPerHour' => 210,
+                        'source'       => 'manual',
+                        'basis'        => 'Laptop + phone, amortised over 3 years',
+                    ],
+                ],
+            ],
+            contract: self::CONTRACT,
+            period: self::PERIOD
+        );
+
+        $this->assertSame(4229, $rate['totalCentsPerHour']);
+        $this->assertSame(3169, $rate['wageCostCents'], 'the wage base stays separately visible');
+        $this->assertCount(2, $rate['additions']);
+        $this->assertSame('shillinq', $rate['additions'][0]['source']);
+
+    }//end testTotalIsWagePlusAdditions()
+
+
+    /**
+     * A caller that computes additions (Shillinq, from the ledger) can pass
+     * them in, and they merge with the employee's own stored ones.
+     *
+     * @return void
+     */
+    public function testCallerSuppliedAdditionsMergeWithStoredOnes(): void
+    {
+        $rate = $this->makeService()->resolve(
+            employee: [
+                'grossMonthlySalary'  => 4000.00,
+                'hourlyCostAdditions' => [
+                    ['key' => 'equipment', 'centsPerHour' => 210, 'source' => 'manual', 'basis' => 'Laptop'],
+                ],
+            ],
+            contract: self::CONTRACT,
+            period: self::PERIOD,
+            extraAdditions: [
+                ['key' => 'overhead', 'centsPerHour' => 850, 'source' => 'shillinq', 'basis' => 'Pool/hours'],
+            ]
+        );
+
+        $this->assertCount(2, $rate['additions']);
+        $this->assertSame((3169 + 210 + 850), $rate['totalCentsPerHour']);
+
+    }//end testCallerSuppliedAdditionsMergeWithStoredOnes()
+
+
+    /**
+     * A set override wins over the derived value and carries its reason as the
+     * basis.
      *
      * @return void
      */
     public function testOverrideWinsOverDerivedValue(): void
     {
-        $rate = $this->service->resolve(
+        $rate = $this->makeService()->resolve(
             employee: [
+                'grossMonthlySalary'           => 4000.00,
                 'hourlyCostRateOverrideCents'  => 4500,
                 'hourlyCostRateOverrideReason' => 'Seconded — billed at the partner rate',
             ],
-            payslip: [
-                'grossPay'                => 4000.00,
-                'werknemersverzekeringen' => 700.00,
-                'zvw'                     => 244.00,
-                'hoursWorked'             => 160,
-            ]
+            contract: self::CONTRACT,
+            period: self::PERIOD
         );
 
         $this->assertSame(4500, $rate['totalCentsPerHour']);
@@ -179,9 +356,10 @@ class EmployeeCostRateServiceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/must say why it exists/');
 
-        $this->service->resolve(
+        $this->makeService()->resolve(
             employee: ['hourlyCostRateOverrideCents' => 4500],
-            payslip: ['grossPay' => 4000.00, 'hoursWorked' => 160]
+            contract: self::CONTRACT,
+            period: self::PERIOD
         );
 
     }//end testUnexplainedOverrideIsRefused()
@@ -196,7 +374,7 @@ class EmployeeCostRateServiceTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        $this->service->resolve(
+        $this->makeService()->resolve(
             employee: [
                 'hourlyCostRateOverrideCents'  => 4500,
                 'hourlyCostRateOverrideReason' => '   ',
@@ -204,53 +382,6 @@ class EmployeeCostRateServiceTest extends TestCase
         );
 
     }//end testWhitespaceOnlyOverrideReasonIsRefused()
-
-
-    /**
-     * No payslip and no override yields null — an explicit "cannot cost this
-     * yet". A zero would book the work as free, which is worse than an
-     * absence because it looks like an answer.
-     *
-     * @return void
-     */
-    public function testReturnsNullWhenNothingToDeriveFrom(): void
-    {
-        $this->assertNull($this->service->resolve(employee: []));
-
-    }//end testReturnsNullWhenNothingToDeriveFrom()
-
-
-    /**
-     * Zero hours must not divide — a payslip with no hours and no contract
-     * yields null rather than an infinity or a division warning.
-     *
-     * @return void
-     */
-    public function testZeroHoursYieldsNullRatherThanDividingByZero(): void
-    {
-        $rate = $this->service->resolve(
-            employee: [],
-            payslip: ['grossPay' => 4000.00, 'hoursWorked' => 0],
-            hoursPerWeek: 0.0
-        );
-
-        $this->assertNull($rate);
-
-    }//end testZeroHoursYieldsNullRatherThanDividingByZero()
-
-
-    /**
-     * A payslip with no gross pay cannot yield a rate.
-     *
-     * @return void
-     */
-    public function testZeroGrossYieldsNull(): void
-    {
-        $this->assertNull(
-            $this->service->resolve(employee: [], payslip: ['grossPay' => 0, 'hoursWorked' => 160])
-        );
-
-    }//end testZeroGrossYieldsNull()
 
 
     /**
@@ -263,7 +394,7 @@ class EmployeeCostRateServiceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/must not be negative/');
 
-        $this->service->resolve(
+        $this->makeService()->resolve(
             employee: [
                 'hourlyCostRateOverrideCents'  => -100,
                 'hourlyCostRateOverrideReason' => 'typo',
@@ -274,207 +405,97 @@ class EmployeeCostRateServiceTest extends TestCase
 
 
     /**
-     * A missing Zvw line is treated as zero rather than voiding the rate:
-     * 4000.00 + 700.00 = 4700.00 over 160h = 29.375 -> 2938 cents (half-up).
+     * No contract and no override yields null — an explicit "cannot cost this
+     * yet". A zero would book the work as free, which is worse than an absence
+     * because it looks like an answer.
      *
      * @return void
      */
-    public function testMissingEmployerChargeLineIsTreatedAsZero(): void
+    public function testReturnsNullWithoutAContract(): void
     {
-        $rate = $this->service->resolve(
-            employee: [],
-            payslip: [
-                'grossPay'                => 4000.00,
-                'werknemersverzekeringen' => 700.00,
-                'hoursWorked'             => 160,
-            ]
+        $this->assertNull(
+            $this->makeService()->resolve(employee: ['grossMonthlySalary' => 4000.00], period: self::PERIOD)
         );
 
-        $this->assertSame(2938, $rate['totalCentsPerHour']);
-
-    }//end testMissingEmployerChargeLineIsTreatedAsZero()
+    }//end testReturnsNullWithoutAContract()
 
 
     /**
-     * The employee's gross hourly WAGE is never consulted — passing one that
-     * would produce a different, wrong answer must not change the result.
+     * Zero contracted hours must not divide.
+     *
+     * @return void
+     */
+    public function testZeroContractedHoursYieldsNull(): void
+    {
+        $this->assertNull(
+            $this->makeService()->resolve(
+                employee: ['grossMonthlySalary' => 4000.00],
+                contract: ['hoursPerWeek' => 0],
+                period: self::PERIOD
+            )
+        );
+
+    }//end testZeroContractedHoursYieldsNull()
+
+
+    /**
+     * A contract the calculator cannot price yields null, not a zero — for
+     * instance a period whose tax tables are not published yet.
+     *
+     * @return void
+     */
+    public function testProformaFailureYieldsNullNotZero(): void
+    {
+        $this->assertNull(
+            $this->makeService(breakdown: [])->resolve(
+                employee: ['grossMonthlySalary' => 4000.00],
+                contract: self::CONTRACT,
+                period: '2099-01'
+            )
+        );
+
+    }//end testProformaFailureYieldsNullNotZero()
+
+
+    /**
+     * With no recorded monthly salary the contract's gross hourly wage
+     * reconstitutes one, so an hourly-paid employment still costs out:
+     * 25.00 x 156 = 3900.00 priced by the proforma.
+     *
+     * @return void
+     */
+    public function testHourlyWageReconstitutesAMonthlySalaryForPricing(): void
+    {
+        $rate = $this->makeService()->resolve(
+            employee: [],
+            contract: ['hoursPerWeek' => 36.0, 'hourlyWage' => 25.00],
+            period: self::PERIOD
+        );
+
+        $this->assertNotNull($rate);
+        $this->assertSame(3900.00, $this->lastProformaParams['gross']);
+
+    }//end testHourlyWageReconstitutesAMonthlySalaryForPricing()
+
+
+    /**
+     * The gross hourly WAGE is never used as the cost rate. 25.00/h would be
+     * 2500 cents; the loaded cost is materially higher.
      *
      * @return void
      */
     public function testGrossHourlyWageIsNeverUsedAsACostRate(): void
     {
-        $payslip = [
-            'grossPay'                => 4000.00,
-            'werknemersverzekeringen' => 700.00,
-            'zvw'                     => 244.00,
-            'hoursWorked'             => 160,
-        ];
-
-        $withWage = $this->service->resolve(
-            employee: ['hourlyWage' => 25.00, 'grossMonthlySalary' => 4000.00],
-            payslip: $payslip
+        $rate = $this->makeService()->resolve(
+            employee: ['grossMonthlySalary' => 4000.00],
+            contract: ['hoursPerWeek' => 36.0, 'hourlyWage' => 25.00],
+            period: self::PERIOD
         );
-        $without  = $this->service->resolve(employee: [], payslip: $payslip);
 
-        $this->assertSame($without['totalCentsPerHour'], $withWage['totalCentsPerHour']);
-        $this->assertSame(3090, $withWage['totalCentsPerHour']);
+        $this->assertNotSame(2500, $rate['totalCentsPerHour']);
+        $this->assertSame(3169, $rate['totalCentsPerHour']);
 
     }//end testGrossHourlyWageIsNeverUsedAsACostRate()
-
-
-    /**
-     * The total is the wage base PLUS every addition, and the wage base stays
-     * separately visible so a cost can be explained line by line.
-     * 3090 + 850 (overhead) + 210 (equipment) = 4150.
-     *
-     * @return void
-     */
-    public function testTotalIsWagePlusAdditions(): void
-    {
-        $rate = $this->service->resolve(
-            employee: [
-                'hourlyCostAdditions' => [
-                    [
-                        'key'          => 'overhead',
-                        'centsPerHour' => 850,
-                        'source'       => 'shillinq',
-                        'basis'        => 'Overhead pool 4900 over billable hours 2026-Q2',
-                    ],
-                    [
-                        'key'          => 'equipment',
-                        'centsPerHour' => 210,
-                        'source'       => 'manual',
-                        'basis'        => 'Laptop + phone, amortised over 3 years',
-                    ],
-                ],
-            ],
-            payslip: [
-                'grossPay'                => 4000.00,
-                'werknemersverzekeringen' => 700.00,
-                'zvw'                     => 244.00,
-                'hoursWorked'             => 160,
-            ]
-        );
-
-        $this->assertSame(4150, $rate['totalCentsPerHour']);
-        $this->assertSame(3090, $rate['wageCostCents'], 'the wage base stays separately visible');
-        $this->assertCount(2, $rate['additions']);
-        $this->assertSame('shillinq', $rate['additions'][0]['source']);
-
-    }//end testTotalIsWagePlusAdditions()
-
-
-    /**
-     * A caller that computes additions (Shillinq, from the ledger) can pass
-     * them in, and they merge with the employee's own stored ones.
-     *
-     * @return void
-     */
-    public function testCallerSuppliedAdditionsMergeWithStoredOnes(): void
-    {
-        $rate = $this->service->resolve(
-            employee: [
-                'hourlyCostAdditions' => [
-                    ['key' => 'equipment', 'centsPerHour' => 210, 'source' => 'manual', 'basis' => 'Laptop'],
-                ],
-            ],
-            payslip: ['grossPay' => 4000.00, 'hoursWorked' => 160],
-            hoursPerWeek: null,
-            extraAdditions: [
-                ['key' => 'overhead', 'centsPerHour' => 850, 'source' => 'shillinq', 'basis' => 'Pool/hours'],
-            ]
-        );
-
-        $this->assertCount(2, $rate['additions']);
-        $this->assertSame((2500 + 210 + 850), $rate['totalCentsPerHour']);
-
-    }//end testCallerSuppliedAdditionsMergeWithStoredOnes()
-
-
-    /**
-     * THE double-counting guard. A payslip divides total pay by total hours, so
-     * an overtime premium paid in that period is already averaged into every
-     * hour of the derived base. Adding an overtime component on top charges it
-     * twice — a wrong number that would reach a CBS submission looking entirely
-     * plausible.
-     *
-     * @return void
-     */
-    public function testOvertimeAdditionIsRefusedOnAnOvertimeBlendedBase(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessageMatches('/charged twice/');
-
-        $this->service->resolve(
-            employee: [],
-            payslip: ['grossPay' => 4000.00, 'hoursWorked' => 160],
-            hoursPerWeek: null,
-            extraAdditions: [
-                [
-                    'key'          => EmployeeCostRateService::ADDITION_OVERTIME,
-                    'centsPerHour' => 1200,
-                    'source'       => 'manual',
-                    'basis'        => '150% CAO overtime premium',
-                ],
-            ]
-        );
-
-    }//end testOvertimeAdditionIsRefusedOnAnOvertimeBlendedBase()
-
-
-    /**
-     * A payslip-derived base declares itself blended; a hand-set override does
-     * not, because it is whatever the administrator meant it to be.
-     *
-     * @return void
-     */
-    public function testWageBaseDeclaresWhetherItBlendsOvertime(): void
-    {
-        $derived = $this->service->resolve(
-            employee: [],
-            payslip: ['grossPay' => 4000.00, 'hoursWorked' => 160]
-        );
-        $this->assertTrue($derived['wageBaseBlendsOvertime']);
-
-        $override = $this->service->resolve(
-            employee: [
-                'hourlyCostRateOverrideCents'  => 4500,
-                'hourlyCostRateOverrideReason' => 'Base rate excluding overtime, per CAO',
-            ]
-        );
-        $this->assertFalse($override['wageBaseBlendsOvertime']);
-
-    }//end testWageBaseDeclaresWhetherItBlendsOvertime()
-
-
-    /**
-     * On a base that does NOT blend overtime, the overtime addition is
-     * legitimate and lands in the sum like any other. 4500 + 1200 = 5700.
-     *
-     * @return void
-     */
-    public function testOvertimeAdditionIsAllowedOnASeparatedBase(): void
-    {
-        $rate = $this->service->resolve(
-            employee: [
-                'hourlyCostRateOverrideCents'  => 4500,
-                'hourlyCostRateOverrideReason' => 'Base rate excluding overtime, per CAO',
-            ],
-            payslip: null,
-            hoursPerWeek: null,
-            extraAdditions: [
-                [
-                    'key'          => EmployeeCostRateService::ADDITION_OVERTIME,
-                    'centsPerHour' => 1200,
-                    'source'       => 'manual',
-                    'basis'        => '150% CAO overtime premium',
-                ],
-            ]
-        );
-
-        $this->assertSame(5700, $rate['totalCentsPerHour']);
-
-    }//end testOvertimeAdditionIsAllowedOnASeparatedBase()
 
 
     /**
@@ -488,9 +509,13 @@ class EmployeeCostRateServiceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/must carry a basis/');
 
-        $this->service->resolve(
-            employee: ['hourlyCostAdditions' => [['key' => 'overhead', 'centsPerHour' => 850]]],
-            payslip: ['grossPay' => 4000.00, 'hoursWorked' => 160]
+        $this->makeService()->resolve(
+            employee: [
+                'grossMonthlySalary'  => 4000.00,
+                'hourlyCostAdditions' => [['key' => 'overhead', 'centsPerHour' => 850]],
+            ],
+            contract: self::CONTRACT,
+            period: self::PERIOD
         );
 
     }//end testUnexplainedAdditionIsRefused()
@@ -505,7 +530,7 @@ class EmployeeCostRateServiceTest extends TestCase
     public function testAdditionsWithoutAWageBaseYieldNull(): void
     {
         $this->assertNull(
-            $this->service->resolve(
+            $this->makeService()->resolve(
                 employee: [
                     'hourlyCostAdditions' => [
                         ['key' => 'overhead', 'centsPerHour' => 850, 'source' => 'shillinq', 'basis' => 'Pool'],
