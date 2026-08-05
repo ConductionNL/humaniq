@@ -45,8 +45,15 @@
                                 },
                                 "centsPerHour": {
                                     "type": "integer",
-                                    "title": "Amount per hour (cents)",
-                                    "description": "Amount added per hour, in CENTS. Integer so that rate x hours cannot accumulate IEEE-754 drift across a quarter of allocations."
+                                    "nullable": true,
+                                    "title": "Fixed amount per hour (cents)",
+                                    "description": "A FIXED amount added per hour, in CENTS — the right shape for a cost that does not scale with the wage: rent, a workplace, a laptop, management fees. Integer so that rate x hours cannot accumulate IEEE-754 drift across a quarter of allocations. Set this OR percentageOfWage, never both."
+                                },
+                                "percentageOfWage": {
+                                    "type": "number",
+                                    "nullable": true,
+                                    "title": "Percentage of the wage base",
+                                    "description": "A RELATIVE amount, as a percentage of the wage base — the right shape for a cost that genuinely scales with pay, such as an overtime surcharge. Applied to the WAGE BASE ONLY, never to the running total: compounding one addition onto another would make the result depend on the order they happen to be listed in. Set this OR centsPerHour, never both."
                                 },
                                 "source": {
                                     "type": "string",
@@ -60,6 +67,83 @@
                                 }
                             }
                         }
+                    }
+                }
+            },
+            "CostAdditionPolicy": {
+                "slug": "costAdditionPolicy",
+                "icon": "CashPlus",
+                "version": "0.1.0",
+                "title": "Cost Addition Policy",
+                "description": "An employer cost that applies per worked hour on top of the wage — overhead, workplace, equipment, management fees — scoped to everyone under a given collective labour agreement, to a single contract, or to the whole organisation (ADR-081 decision 4). Deliberately NOT part of the CLA corpus: a collective labour agreement does not state what an employer's overhead is, and that corpus holds only figures transcribed from published CLA texts with a source citation. Scoping BY a CLA is a convenient way to select a group of employees ('everyone under the ICK CLA carries EUR 25/h for rent and management'), not a claim that the CLA says so. The most specific scope wins per key: contract beats cla beats organisation.",
+                "type": "object",
+                "required": ["key", "scope", "basis"],
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "title": "Cost factor",
+                        "description": "Short stable identifier for the cost factor — e.g. `overhead`, `equipment`, `workplace`. Not an enum: the set is deliberately open, so a new cost factor is data rather than a schema migration."
+                    },
+                    "scope": {
+                        "type": "string",
+                        "enum": ["organisation", "cla", "contract"],
+                        "title": "Scope",
+                        "description": "Which population this policy applies to. `organisation` — everyone; `cla` — everyone whose contract names claId; `contract` — one contract only. The most specific scope carrying a given key wins, so a contract-level figure overrides the CLA-wide one for that key without disturbing the others."
+                    },
+                    "claId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Collective labour agreement",
+                        "description": "The CLA (Dutch: CAO) whose population this policy covers. REQUIRED when scope is `cla`, ignored otherwise. Matches EmploymentContract.cao."
+                    },
+                    "contractId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Employment contract",
+                        "description": "UUID of the single EmploymentContract this policy covers. REQUIRED when scope is `contract`, ignored otherwise."
+                    },
+                    "centsPerHour": {
+                        "type": "integer",
+                        "nullable": true,
+                        "title": "Fixed amount per hour (cents)",
+                        "description": "A FIXED per-hour amount in CENTS. The shape most employer overheads actually have — rent and management fees do not scale with an individual's salary. Set this OR percentageOfWage, never both."
+                    },
+                    "percentageOfWage": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Percentage of the wage base",
+                        "description": "A RELATIVE per-hour amount, as a percentage of the wage base. Applied to the wage base only, never compounded onto other additions. Set this OR centsPerHour, never both."
+                    },
+                    "basis": {
+                        "type": "string",
+                        "title": "Basis",
+                        "description": "Why this amount, in words — what it covers and how it was arrived at. REQUIRED. An unexplained cost component reaches a statutory submission via Shillinq and cannot be defended there; 'EUR 25/h overhead' is a number, 'rent and management fees, FY2026 budget over billable hours' is an answer."
+                    },
+                    "source": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Source",
+                        "description": "Where the amount came from: `manual` when an administrator set it, or an app id such as `shillinq` when it was calculated from the ledger. Distinguishes a figure someone owns from one a system derives — they age differently and are reviewed differently."
+                    },
+                    "effectiveFrom": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Effective from",
+                        "description": "First date this policy applies. Null means it has always applied. Overheads are re-budgeted; costing last year's hours at this year's overhead would silently restate history."
+                    },
+                    "effectiveTo": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Effective until",
+                        "description": "Last date this policy applies. Null means currently in force. A superseded policy is closed by setting this rather than deleted, so a historical allocation stays explicable."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration this policy belongs to."
                     }
                 }
             },

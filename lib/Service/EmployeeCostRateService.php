@@ -176,7 +176,8 @@ class EmployeeCostRateService
             raw: array_merge(
                 (array) ($employee['hourlyCostAdditions'] ?? []),
                 $extraAdditions
-            )
+            ),
+            wageCents: $wage['centsPerHour']
         );
 
         $this->assertAdditionsCompatible(
@@ -184,6 +185,9 @@ class EmployeeCostRateService
             wageBaseBlendsOvertime: $wage['blendsOvertime']
         );
 
+        // Percentages resolve against the WAGE BASE ONLY, never against the
+        // running total: compounding one addition onto another would make the
+        // result depend on the order the additions happen to be listed in.
         $total = $wage['centsPerHour'];
         foreach ($additions as $addition) {
             $total += $addition['centsPerHour'];
@@ -246,13 +250,20 @@ class EmployeeCostRateService
      * Coerce raw addition entries into the canonical shape, dropping entries
      * that carry no amount.
      *
-     * @param array<int, mixed> $raw Raw addition entries.
+     * An addition states its amount EITHER as a fixed `centsPerHour` or as a
+     * `percentageOfWage`, never both — a figure carrying both would have two
+     * defensible readings and no way to choose. A percentage is resolved
+     * against the wage base here, so everything downstream sees plain cents
+     * and the composition stays a simple sum.
+     *
+     * @param array<int, mixed> $raw       Raw addition entries.
+     * @param int               $wageCents The wage base, for resolving percentages.
      *
      * @return array<int, array{key: string, centsPerHour: int, source: string, basis: string}>
      *
-     * @throws InvalidArgumentException When an addition carries no key or no basis.
+     * @throws InvalidArgumentException When an addition carries no key, no basis, or both amount forms.
      */
-    private function normaliseAdditions(array $raw): array
+    private function normaliseAdditions(array $raw, int $wageCents): array
     {
         $out = [];
         foreach ($raw as $entry) {
@@ -260,8 +271,8 @@ class EmployeeCostRateService
                 continue;
             }
 
-            $cents = ($entry['centsPerHour'] ?? null);
-            if ($cents === null || $cents === '' || is_numeric($cents) === false) {
+            $cents = $this->resolveAdditionCents(entry: $entry, wageCents: $wageCents);
+            if ($cents === null) {
                 continue;
             }
 
@@ -282,7 +293,7 @@ class EmployeeCostRateService
 
             $out[] = [
                 'key'          => $key,
-                'centsPerHour' => (int) $cents,
+                'centsPerHour' => $cents,
                 'source'       => (trim((string) ($entry['source'] ?? '')) ?: 'manual'),
                 'basis'        => $basis,
             ];
@@ -291,6 +302,45 @@ class EmployeeCostRateService
         return $out;
 
     }//end normaliseAdditions()
+
+
+    /**
+     * Resolve one addition's amount to integer cents, from whichever of the
+     * two forms it states.
+     *
+     * @param array<string, mixed> $entry     The raw addition entry.
+     * @param int                  $wageCents The wage base, for a percentage.
+     *
+     * @return int|null Null when the entry states no usable amount.
+     *
+     * @throws InvalidArgumentException When both forms are present.
+     */
+    private function resolveAdditionCents(array $entry, int $wageCents): ?int
+    {
+        $fixed      = ($entry['centsPerHour'] ?? null);
+        $percentage = ($entry['percentageOfWage'] ?? null);
+
+        $hasFixed      = ($fixed !== null && $fixed !== '' && is_numeric($fixed) === true);
+        $hasPercentage = ($percentage !== null && $percentage !== '' && is_numeric($percentage) === true);
+
+        if ($hasFixed === true && $hasPercentage === true) {
+            throw new InvalidArgumentException(
+                'the hourly cost addition "'.trim((string) ($entry['key'] ?? '')).'" states both a fixed '
+                .'centsPerHour and a percentageOfWage; an amount with two readings has no defensible value'
+            );
+        }
+
+        if ($hasFixed === true) {
+            return (int) $fixed;
+        }
+
+        if ($hasPercentage === true) {
+            return (int) round($wageCents * ((float) $percentage / 100.0));
+        }
+
+        return null;
+
+    }//end resolveAdditionCents()
 
 
     /**

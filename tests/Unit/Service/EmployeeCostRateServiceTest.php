@@ -522,6 +522,129 @@ class EmployeeCostRateServiceTest extends TestCase
 
 
     /**
+     * A FIXED addition is the shape most employer overheads actually have —
+     * rent and management fees do not scale with an individual's salary. The
+     * ICK example: EUR 25.00/h on top of the wage base.
+     *
+     * @return void
+     */
+    public function testFixedAdditionIsAddedVerbatim(): void
+    {
+        $rate = $this->makeService()->resolve(
+            employee: ['grossMonthlySalary' => 4000.00],
+            contract: self::CONTRACT,
+            period: self::PERIOD,
+            extraAdditions: [
+                [
+                    'key'          => 'overhead',
+                    'centsPerHour' => 2500,
+                    'source'       => 'manual',
+                    'basis'        => 'Huur en managementfee, ICK-populatie, FY2026-budget',
+                ],
+            ]
+        );
+
+        $this->assertSame((3169 + 2500), $rate['totalCentsPerHour']);
+
+    }//end testFixedAdditionIsAddedVerbatim()
+
+
+    /**
+     * A PERCENTAGE addition resolves against the wage base: 25% of 3169 = 792
+     * (792.25, rounded half-up).
+     *
+     * @return void
+     */
+    public function testPercentageAdditionResolvesAgainstTheWageBase(): void
+    {
+        $rate = $this->makeService()->resolve(
+            employee: ['grossMonthlySalary' => 4000.00],
+            contract: self::CONTRACT,
+            period: self::PERIOD,
+            extraAdditions: [
+                [
+                    'key'              => EmployeeCostRateService::ADDITION_OVERTIME,
+                    'percentageOfWage' => 25,
+                    'source'           => 'cao',
+                    'basis'            => 'Overwerktoeslag doordeweeks, cao-voorbeeld',
+                ],
+            ]
+        );
+
+        $this->assertSame(792, $rate['additions'][0]['centsPerHour']);
+        $this->assertSame((3169 + 792), $rate['totalCentsPerHour']);
+
+    }//end testPercentageAdditionResolvesAgainstTheWageBase()
+
+
+    /**
+     * Percentages resolve against the WAGE BASE, never against the running
+     * total. Compounding would make the result depend on the order the
+     * additions happen to be listed in — so the same set in either order must
+     * produce the same number.
+     *
+     * @return void
+     */
+    public function testPercentagesDoNotCompoundOnOtherAdditions(): void
+    {
+        $fixed      = ['key' => 'overhead', 'centsPerHour' => 2500, 'source' => 'manual', 'basis' => 'Huur'];
+        $percentage = [
+            'key'              => 'toeslag',
+            'percentageOfWage' => 25,
+            'source'           => 'cao',
+            'basis'            => 'Toeslag',
+        ];
+
+        $service = $this->makeService();
+        $one     = $service->resolve(
+            employee: ['grossMonthlySalary' => 4000.00],
+            contract: self::CONTRACT,
+            period: self::PERIOD,
+            extraAdditions: [$fixed, $percentage]
+        );
+        $other   = $service->resolve(
+            employee: ['grossMonthlySalary' => 4000.00],
+            contract: self::CONTRACT,
+            period: self::PERIOD,
+            extraAdditions: [$percentage, $fixed]
+        );
+
+        $this->assertSame($one['totalCentsPerHour'], $other['totalCentsPerHour']);
+        $this->assertSame((3169 + 2500 + 792), $one['totalCentsPerHour']);
+
+    }//end testPercentagesDoNotCompoundOnOtherAdditions()
+
+
+    /**
+     * An addition stating BOTH forms is refused — it has two defensible
+     * readings and no way to choose between them.
+     *
+     * @return void
+     */
+    public function testAdditionStatingBothAmountFormsIsRefused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/two readings/');
+
+        $this->makeService()->resolve(
+            employee: ['grossMonthlySalary' => 4000.00],
+            contract: self::CONTRACT,
+            period: self::PERIOD,
+            extraAdditions: [
+                [
+                    'key'              => 'overhead',
+                    'centsPerHour'     => 2500,
+                    'percentageOfWage' => 25,
+                    'source'           => 'manual',
+                    'basis'            => 'Beide vormen, moet geweigerd worden',
+                ],
+            ]
+        );
+
+    }//end testAdditionStatingBothAmountFormsIsRefused()
+
+
+    /**
      * Additions alone are never a cost rate — an hour carrying overhead but no
      * wage is not an hour anyone worked.
      *

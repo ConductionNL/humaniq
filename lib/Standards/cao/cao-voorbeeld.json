@@ -1,0 +1,62 @@
+{
+  "id": "cao-voorbeeld",
+  "name": "Voorbeeld-CAO (FICTIEF — demo en test)",
+  "sector": "Geen — fictief voorbeeld",
+  "version": "voorbeeld-1",
+  "effectiveDate": "2026-01-01",
+  "basedOn": [
+    {
+      "doc": "FICTIONAL EXAMPLE. This file is not a projection of any real collective labour agreement and cites no primary source, because it has none. It exists so the CLA machinery (inheritance, contract overrides, the favourability floor, the overtime uplift) can be demonstrated and tested against verified leaves without waiting for a real CAO text to be transcribed. NEVER run payroll or a statutory submission against it.",
+      "url": "https://conduction.nl"
+    }
+  ],
+  "payScales": {
+    "value": {
+      "A": 280000,
+      "B": 320000,
+      "C": 380000,
+      "D": 450000
+    },
+    "source": "FICTIONAL example pay scales, in integer cents. Invented for demonstration — not derived from any CAO text.",
+    "verified": true,
+    "note": "Verified only in the sense that these ARE the intended example figures. The CLA itself is fictional; the flag makes the resolvers usable in a demo, it does not claim the numbers describe reality."
+  },
+  "allowances": {
+    "value": {
+      "ploegentoeslag": {
+        "percentage": 10,
+        "note": "FICTIONAL example allowance."
+      }
+    },
+    "source": "FICTIONAL example allowances. Display-only, as with every other CLA in the corpus.",
+    "verified": true
+  },
+  "leaveEntitlement": {
+    "value": {
+      "vakantiedagenWettelijk": 20,
+      "vakantiedagenBovenwettelijk": 5
+    },
+    "source": "FICTIONAL example entitlement: 25 full-time days (20 wettelijk per BW art. 7:634 + 5 bovenwettelijk). The wettelijk figure matches the statutory minimum so the example is lawful; the bovenwettelijk 5 gives the favourability floor something above the statutory minimum to bite on.",
+    "verified": true
+  },
+  "workingTime": {
+    "value": {
+      "fulltimeHoursPerWeek": 40
+    },
+    "source": "FICTIONAL example working week. Display-only — not read by any CaoRegistry resolver.",
+    "verified": true
+  },
+  "overtime": {
+    "value": {
+      "toeslagPercentages": {
+        "doordeweeks": 25,
+        "zaterdag": 50,
+        "zondag": 100,
+        "feestdag": 100
+      },
+      "compensationPreference": "tijd-voor-tijd"
+    },
+    "source": "FICTIONAL example overwerktoeslag. Percentages are the SURCHARGE, not the total: 25 means 125% of the normal hourly wage is paid for that hour. Invented for demonstration — every REAL CLA in this corpus ships its overtime leaf as an unverified placeholder until its overwerkartikel is transcribed.",
+    "verified": true
+  }
+}

@@ -233,7 +233,15 @@ class CaoRegistryTest extends TestCase
             'cao-zorg-vvt',
         ];
 
-        $this->assertCount(10, $available, 'Expected three existing CAOs plus six new sector CAOs plus cao-abu.');
+        // 11 since 2026-08-05: the ten real CLAs plus `cao-voorbeeld`, the
+        // fictional example that ships VERIFIED leaves so the CLA machinery
+        // can be demonstrated and tested without a transcribed CAO text.
+        $this->assertCount(
+            11,
+            $available,
+            'Expected three existing CAOs plus six new sector CAOs plus cao-abu plus the cao-voorbeeld example.'
+        );
+        $this->assertArrayHasKey('cao-voorbeeld', $available, 'the example CLA must be listed by availableCaos().');
         $this->assertArrayHasKey('cao-abu', $available, 'cao-abu (uitzend-flexpool) must be listed by availableCaos().');
 
         foreach ($sixNew as $id) {

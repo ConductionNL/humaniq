@@ -37,6 +37,14 @@ class EmploymentTermsResolverTest extends TestCase
 {
 
     /**
+     * The corpus's fictional example CLA — the only one shipping VERIFIED
+     * leaves, so the only one that can act as a collective floor in a test.
+     *
+     * @var string
+     */
+    private const EXAMPLE_CAO = 'cao-voorbeeld';
+
+    /**
      * Resolver under test.
      *
      * @var EmploymentTermsResolver
@@ -233,25 +241,158 @@ class EmploymentTermsResolverTest extends TestCase
 
 
     /**
-     * A BELOW-statutory override is returned as given, not silently corrected
-     * up to the wettelijk minimum. Correcting it here would hide a violation
-     * that `nl-verlof-wettelijk-minimum` exists to raise.
+     * A BELOW-statutory override is REFUSED. No agreement of any kind may go
+     * under BW art. 7:634, so an unlawful term must never become a term of
+     * employment — storing it and reporting on it afterwards is not the same
+     * as not permitting it.
      *
      * @return void
      */
-    public function testBelowStatutoryLeaveOverrideIsNotSilentlyCorrected(): void
+    public function testBelowStatutoryLeaveOverrideIsRefused(): void
     {
-        $terms = $this->resolver->resolveLeaveEntitlementDays(
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/statutory minimum/');
+
+        $this->resolver->resolveLeaveEntitlementDays(
             [
                 'cao'                          => 'cao-gemeenten',
                 'leaveEntitlementOverrideDays' => ['vakantiedagenWettelijk' => 5],
-                'leaveTermsOverrideReason'     => 'Foutieve invoer die zichtbaar moet blijven',
+                'leaveTermsOverrideReason'     => 'Poging tot minder verlof dan de wet toestaat',
             ]
         );
 
-        $this->assertSame(5.0, $terms['days']['vakantiedagenWettelijk']);
+    }//end testBelowStatutoryLeaveOverrideIsRefused()
 
-    }//end testBelowStatutoryLeaveOverrideIsNotSilentlyCorrected()
+
+    /**
+     * An override AT the statutory floor but BELOW the collective agreement is
+     * refused too — a CLA is a floor an individual contract may improve on,
+     * never undercut.
+     *
+     * @return void
+     */
+    public function testLeaveOverrideBelowTheCollectiveAgreementIsRefused(): void
+    {
+        // cao-voorbeeld is the corpus's deliberate fixture: a fictional CLA
+        // with VERIFIED leaves, granting 25 full-time days — above the
+        // statutory 20 — so the collective floor has something to bite on.
+        // Every real CLA ships placeholder leaves, which are correctly not
+        // floors, so searching for "the first usable one" landed on a CLA at
+        // exactly the statutory minimum and quietly skipped.
+        $this->assertNotNull(
+            CaoRegistry::minLeaveHours(self::EXAMPLE_CAO, 40.0),
+            'the example CLA must carry a usable leaveEntitlement or this test proves nothing'
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/never undercut/');
+
+        $this->resolver->resolveLeaveEntitlementDays(
+            [
+                'cao'                          => self::EXAMPLE_CAO,
+                'leaveEntitlementOverrideDays' => [
+                    'vakantiedagenWettelijk'      => EmploymentTermsResolver::STATUTORY_LEAVE_DAYS_FULLTIME,
+                    'vakantiedagenBovenwettelijk' => 0,
+                ],
+                'leaveTermsOverrideReason'     => 'Minder dan de cao, moet geweigerd worden',
+            ]
+        );
+
+    }//end testLeaveOverrideBelowTheCollectiveAgreementIsRefused()
+
+
+    /**
+     * An overtime override that UNDERCUTS the collective agreement is refused.
+     *
+     * @return void
+     */
+    public function testOvertimeOverrideBelowTheCollectiveAgreementIsRefused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/never undercut/');
+
+        $this->resolver->resolveOvertimeToeslag(
+            [
+                'cao'                         => self::EXAMPLE_CAO,
+                // The example CLA pays 100% on Sunday.
+                'overtimeToeslagPercentages'  => [
+                    'doordeweeks' => 25,
+                    'zaterdag'    => 50,
+                    'zondag'      => 50,
+                    'feestdag'    => 100,
+                ],
+                'overtimeTermsOverrideReason' => 'Lagere zondagstoeslag, moet geweigerd worden',
+            ]
+        );
+
+    }//end testOvertimeOverrideBelowTheCollectiveAgreementIsRefused()
+
+
+    /**
+     * An override that OMITS a category the CLA pays for is refused too —
+     * dropping a surcharge entirely is the quietest way to be worse off, and
+     * because an override wins in full it would otherwise succeed silently.
+     *
+     * @return void
+     */
+    public function testOvertimeOverrideOmittingACollectiveCategoryIsRefused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/omits "zondag"/');
+
+        $this->resolver->resolveOvertimeToeslag(
+            [
+                'cao'                         => self::EXAMPLE_CAO,
+                'overtimeToeslagPercentages'  => ['doordeweeks' => 25, 'zaterdag' => 50, 'feestdag' => 100],
+                'overtimeTermsOverrideReason' => 'Zondag weggelaten, moet geweigerd worden',
+            ]
+        );
+
+    }//end testOvertimeOverrideOmittingACollectiveCategoryIsRefused()
+
+
+    /**
+     * A BETTER override is accepted — the point of the floor is that
+     * improvements remain possible.
+     *
+     * @return void
+     */
+    public function testBetterOverrideIsAccepted(): void
+    {
+        $terms = $this->resolver->resolveOvertimeToeslag(
+            [
+                'cao'                         => self::EXAMPLE_CAO,
+                'overtimeToeslagPercentages'  => [
+                    'doordeweeks' => 50,
+                    'zaterdag'    => 75,
+                    'zondag'      => 100,
+                    'feestdag'    => 150,
+                ],
+                'overtimeTermsOverrideReason' => 'Gunstiger dan de cao, individueel afgesproken',
+            ]
+        );
+
+        $this->assertSame(EmploymentTermsResolver::SOURCE_CONTRACT, $terms['source']);
+        $this->assertSame(150.0, $terms['percentages']['feestdag']);
+
+    }//end testBetterOverrideIsAccepted()
+
+
+    /**
+     * The example CLA resolves real overtime terms, so the machinery can be
+     * demonstrated without waiting on a transcribed CAO text.
+     *
+     * @return void
+     */
+    public function testExampleCaoResolvesUsableOvertimeTerms(): void
+    {
+        $terms = $this->resolver->resolveOvertimeToeslag(['cao' => self::EXAMPLE_CAO]);
+
+        $this->assertNotNull($terms);
+        $this->assertSame(EmploymentTermsResolver::SOURCE_CAO, $terms['source']);
+        $this->assertSame(100.0, $terms['percentages']['zondag']);
+
+    }//end testExampleCaoResolvesUsableOvertimeTerms()
 
 
     /**

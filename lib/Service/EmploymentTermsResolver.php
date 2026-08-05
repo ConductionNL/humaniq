@@ -89,6 +89,17 @@ class EmploymentTermsResolver
         'feestdag',
     ];
 
+    /**
+     * Statutory full-time vakantiedagen floor. BW art. 7:634 states the
+     * entitlement as 4 x the contractual weekly working time; at the 5-day
+     * week the corpus's day counts assume, that is 20 days. Expressed in days
+     * here because the CLA corpus and the contract override both speak days —
+     * `nl-verlof-wettelijk-minimum` evaluates the hours form independently.
+     *
+     * @var float
+     */
+    public const STATUTORY_LEAVE_DAYS_FULLTIME = 20.0;
+
 
     /**
      * Resolve the overwerktoeslag percentages that apply to one contract.
@@ -115,11 +126,17 @@ class EmploymentTermsResolver
                 );
             }
 
+            $caoId = $this->caoId(contract: $contract);
+            $this->assertOvertimeNotWorse(
+                override: $override,
+                collective: ($caoId === null ? null : CaoRegistry::overtimeToeslagPercentages($caoId))
+            );
+
             return [
                 'percentages' => $override,
                 'source'      => self::SOURCE_CONTRACT,
                 'basis'       => $reason,
-                'caoId'       => $this->caoId(contract: $contract),
+                'caoId'       => $caoId,
             ];
         }//end if
 
@@ -170,11 +187,14 @@ class EmploymentTermsResolver
                 );
             }
 
+            $caoId = $this->caoId(contract: $contract);
+            $this->assertLeaveNotWorse(override: $override, caoId: $caoId);
+
             return [
                 'days'   => $override,
                 'source' => self::SOURCE_CONTRACT,
                 'basis'  => $reason,
-                'caoId'  => $this->caoId(contract: $contract),
+                'caoId'  => $caoId,
             ];
         }//end if
 
@@ -207,6 +227,111 @@ class EmploymentTermsResolver
         ];
 
     }//end resolveLeaveEntitlementDays()
+
+
+    /**
+     * Refuse an overtime override that is LESS favourable than the collective
+     * terms it departs from.
+     *
+     * A collective labour agreement is a floor, not a menu: an individual
+     * contract may improve on it, never undercut it. Because an override wins
+     * in full rather than merging, this check also catches the quieter version
+     * of the same thing — an override that silently OMITS a category the CLA
+     * pays a surcharge for, which removes that surcharge entirely.
+     *
+     * @param array<string, float>      $override   The contract's percentages.
+     * @param array<string, float>|null $collective The CLA's percentages, when resolvable.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException When any category is absent or lower.
+     */
+    private function assertOvertimeNotWorse(array $override, ?array $collective): void
+    {
+        if ($collective === null) {
+            return;
+        }
+
+        foreach ($collective as $category => $collectivePercentage) {
+            if (array_key_exists($category, $override) === false) {
+                throw new InvalidArgumentException(
+                    'the overtime override omits "'.$category.'", which the collective labour agreement '
+                    .'pays '.$collectivePercentage.'% for; an individual contract may improve on '
+                    .'collective terms, never drop them'
+                );
+            }
+
+            if ($override[$category] < $collectivePercentage) {
+                throw new InvalidArgumentException(
+                    'the overtime override pays '.$override[$category].'% for "'.$category.'" where the '
+                    .'collective labour agreement pays '.$collectivePercentage.'%; an individual contract '
+                    .'may improve on collective terms, never undercut them'
+                );
+            }
+        }//end foreach
+
+    }//end assertOvertimeNotWorse()
+
+
+    /**
+     * Refuse a leave override that is LESS favourable than the collective
+     * terms or than the statutory floor.
+     *
+     * Two floors apply and the stricter one wins: BW art. 7:634's statutory
+     * minimum, which no agreement of any kind may go under, and the CLA's own
+     * entitlement where it is resolvable and higher.
+     *
+     * This REPLACES an earlier reading in which a below-minimum override was
+     * stored as given and left for `nl-verlof-wettelijk-minimum` to flag. That
+     * treated an unlawful term as data to be reported on; refusing the write
+     * means it never becomes a term of employment in the first place, which is
+     * what "may not be worse than the law" actually requires.
+     *
+     * @param array<string, float> $override The contract's day counts.
+     * @param string|null          $caoId    The CLA id, when the contract names one.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException When the override falls below either floor.
+     */
+    private function assertLeaveNotWorse(array $override, ?string $caoId): void
+    {
+        $overrideTotal = (($override['vakantiedagenWettelijk'] ?? 0.0)
+            + ($override['vakantiedagenBovenwettelijk'] ?? 0.0));
+
+        if ($overrideTotal < self::STATUTORY_LEAVE_DAYS_FULLTIME) {
+            throw new InvalidArgumentException(
+                'the leave override grants '.$overrideTotal.' full-time days, below the statutory minimum of '
+                .self::STATUTORY_LEAVE_DAYS_FULLTIME.' (BW art. 7:634); no agreement may go under the law'
+            );
+        }
+
+        if ($caoId === null) {
+            return;
+        }
+
+        $cao  = CaoRegistry::get($caoId);
+        $leaf = ($cao['leaveEntitlement'] ?? null);
+        // Only a usable (verified, non-placeholder) leaf is a floor. An
+        // unconfirmed figure must not block a legitimate override — the same
+        // lever that keeps it from raising a false violation.
+        if (CaoRegistry::minLeaveHours($caoId, 40.0) === null || is_array($leaf) === false) {
+            return;
+        }
+
+        $value          = (array) ($leaf['value'] ?? []);
+        $collectiveDays = ((float) ($value['vakantiedagenWettelijk'] ?? 0)
+            + (float) ($value['vakantiedagenBovenwettelijk'] ?? 0));
+
+        if ($overrideTotal < $collectiveDays) {
+            throw new InvalidArgumentException(
+                'the leave override grants '.$overrideTotal.' full-time days where the collective labour '
+                .'agreement grants '.$collectiveDays.'; an individual contract may improve on collective '
+                .'terms, never undercut them'
+            );
+        }
+
+    }//end assertLeaveNotWorse()
 
 
     /**
