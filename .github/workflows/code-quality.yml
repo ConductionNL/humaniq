@@ -48,6 +48,26 @@ jobs:
       # Standards). Note phpunit.xml sets `failOnRisky` AND `failOnWarning` —
       # this suite is stricter than the fleet default and a warning is red.
       enable-phpunit: true
+      # The coverage ratchet. Both of its prerequisites ship in this same
+      # change: `scripts/coverage-guard.php` (copied BYTE-IDENTICALLY from
+      # openregister, as softwarecatalog did — it is fleet-shared logic, not
+      # per-app logic, and a rewrite would silently fork the semantics) and
+      # `.coverage-baseline`.
+      #
+      # Without this input the shared workflow's default is FALSE, and BOTH
+      # coverage jobs — `Coverage Baseline Protection` (PR) and `Coverage
+      # Baseline Check` (push) — report `skipped` forever. A skipped gate is
+      # indistinguishable from a passing one on the checks list, so hrmq has
+      # been carrying two permanently-dead gates since the pipeline landed.
+      #
+      # The baseline is a bare number the ratchet compares EXACTLY: below it,
+      # the PHPUnit job's "Guard coverage baseline" step exits 1 (only on the
+      # canonical 8.3 / stable31 leg); above it, the push-only Coverage
+      # Baseline Check recomputes and fails demanding the new value be
+      # committed. So the committed value must EQUAL what CI measures on
+      # `development` — it was read off the guard step's own
+      # "Coverage current:" line, not estimated.
+      enable-coverage-guard: true
 
       # ── Frontend ─────────────────────────────────────────────────────────
       # package.json ships `lint` (eslint src) and `stylelint`, with
@@ -189,10 +209,6 @@ jobs:
       # enable-playwright-coverage: needs a defensible threshold; there is no
       #   measured V8 baseline for hrmq yet. Set it after this pipeline has a
       #   few green runs to measure from, not before.
-      #
-      # enable-coverage-guard: the ratchet compares against a committed
-      #   `.coverage-baseline`, which this repo does not have. With no baseline
-      #   there is nothing to ratchet.
       #
       # enable-journeydoc-capture: per ADR-030 this belongs in its own
       #   scheduled docs-capture.yml, not on every push — it re-shoots every
