@@ -155,6 +155,7 @@
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Standards/Checks/NlAttendanceChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlCaoChecks.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Standards/Checks/NlCaoChecks.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/EmploymentTermsResolver.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlDgaChecks.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Standards/Checks/NlDgaChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlDocumentChecks.php"/>

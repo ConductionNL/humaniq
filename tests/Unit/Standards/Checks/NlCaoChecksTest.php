@@ -488,10 +488,15 @@ class NlCaoChecksTest extends TestCase
         $rows   = NlCaoChecks::seedObjects()['Cao'];
         $caoIds = array_column($rows, 'caoId');
 
-        $this->assertCount(10, $rows, 'Expected one Cao row per corpus CAO (three existing + six sector CAOs + cao-abu).');
-        $this->assertSame(10, count(array_unique($caoIds)), 'caoId must be unique across all ten seeded rows.');
+        // 11 since 2026-08-05: seedObjects() derives from the corpus, so the
+        // fictional `cao-voorbeeld` example ships as a seeded Cao row too —
+        // which is the point of it, since it is the only CLA with verified
+        // leaves and therefore the only one that demonstrates the machinery
+        // out of the box.
+        $this->assertCount(11, $rows, 'Expected one Cao row per corpus CAO (three existing + six sector CAOs + cao-abu + the cao-voorbeeld example).');
+        $this->assertSame(11, count(array_unique($caoIds)), 'caoId must be unique across all eleven seeded rows.');
 
-        foreach (['cao-rijk', 'cao-gemeenten', 'cao-onderwijs-po', 'cao-onderwijs-vo', 'cao-ziekenhuizen', 'cao-zorg-vvt', 'cao-abu'] as $id) {
+        foreach (['cao-rijk', 'cao-gemeenten', 'cao-onderwijs-po', 'cao-onderwijs-vo', 'cao-ziekenhuizen', 'cao-zorg-vvt', 'cao-abu', 'cao-voorbeeld'] as $id) {
             $this->assertContains($id, $caoIds, $id.' must be seeded as a Cao object.');
         }
 

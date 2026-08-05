@@ -5,14 +5,27 @@
   "version": null,
   "effectiveDate": null,
   "basedOn": [
-    {"doc": "NVZ, Salarisschalen, premies & vergoedingen (CAO Ziekenhuizen)", "url": "https://www.cao-ziekenhuizen.nl/"}
+    {
+      "doc": "NVZ, Salarisschalen, premies & vergoedingen (CAO Ziekenhuizen)",
+      "url": "https://www.cao-ziekenhuizen.nl/"
+    }
   ],
   "payScales": {
     "value": {
-      "FWG-15": 210000, "FWG-20": 230000, "FWG-25": 250000, "FWG-30": 270000,
-      "FWG-35": 290000, "FWG-40": 310000, "FWG-45": 335000, "FWG-50": 360000,
-      "FWG-55": 390000, "FWG-60": 420000, "FWG-65": 460000, "FWG-70": 500000,
-      "FWG-75": 550000, "FWG-80": 600000
+      "FWG-15": 210000,
+      "FWG-20": 230000,
+      "FWG-25": 250000,
+      "FWG-30": 270000,
+      "FWG-35": 290000,
+      "FWG-40": 310000,
+      "FWG-45": 335000,
+      "FWG-50": 360000,
+      "FWG-55": 390000,
+      "FWG-60": 420000,
+      "FWG-65": 460000,
+      "FWG-70": 500000,
+      "FWG-75": 550000,
+      "FWG-80": 600000
     },
     "source": "Illustrative FWG 3.0 functiegroepen shape (14 salarisschalen, FWG-15 t/m FWG-80, per the current NVZ CAO) pending confirmation against the official CAO-tekst — not transcribed from the primary document in this pass.",
     "verified": false,
@@ -22,10 +35,18 @@
   "allowances": {
     "value": {
       "ort": {
-        "avond": {"pct": 20},
-        "nacht": {"pct": 40},
-        "zaterdag": {"pct": 35},
-        "zondagFeestdag": {"pct": 65}
+        "avond": {
+          "pct": 20
+        },
+        "nacht": {
+          "pct": 40
+        },
+        "zaterdag": {
+          "pct": 35
+        },
+        "zondagFeestdag": {
+          "pct": 65
+        }
       }
     },
     "source": "Illustrative ORT (onregelmatigheidstoeslag) reference-rate shape pending confirmation against the official CAO-tekst — day/time bands and stacking rules not transcribed in this pass. Display-only: no check, resolver, or payroll-calculator hook applies these rates to an actual worked shift (design.md Named gap 2 — no shift/roster object exists in hrmq's schema).",
@@ -51,5 +72,20 @@
     "verified": false,
     "placeholder": true,
     "checkAgainst": "cao-ziekenhuizen.nl CAO-tekst, arbeidsduurartikel"
+  },
+  "overtime": {
+    "value": {
+      "toeslagPercentages": {
+        "doordeweeks": 25,
+        "zaterdag": 50,
+        "zondag": 100,
+        "feestdag": 100
+      },
+      "compensationPreference": "tijd-voor-tijd"
+    },
+    "source": "Illustrative overwerktoeslag percentages (cao-ziekenhuizen) pending confirmation against the official CAO-tekst — NOT transcribed from the primary document. Placeholder, so CaoRegistry::overtimeToeslagPercentages() resolves to null and no overtime uplift is derived from this CAO until the figures are confirmed.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Official CAO-tekst, overwerkartikel"
   }
 }

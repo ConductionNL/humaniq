@@ -5,7 +5,10 @@
   "version": "2025-2026",
   "effectiveDate": "2025-01-01",
   "basedOn": [
-    {"doc": "CAO voor Uitzendkrachten (ABU), cao-tekst 2025-2026", "url": "https://www.abu.nl/cao/"}
+    {
+      "doc": "CAO voor Uitzendkrachten (ABU), cao-tekst 2025-2026",
+      "url": "https://www.abu.nl/cao/"
+    }
   ],
   "payScales": {
     "value": {
@@ -47,5 +50,20 @@
     "verified": false,
     "placeholder": true,
     "checkAgainst": "Official CAO voor Uitzendkrachten (ABU) arbeidsduurartikel (abu.nl/cao)"
+  },
+  "overtime": {
+    "value": {
+      "toeslagPercentages": {
+        "doordeweeks": 25,
+        "zaterdag": 50,
+        "zondag": 100,
+        "feestdag": 100
+      },
+      "compensationPreference": "tijd-voor-tijd"
+    },
+    "source": "Illustrative overwerktoeslag percentages (Uitzend (ABU)) pending confirmation against the official CAO-tekst — NOT transcribed from the primary document. Placeholder, so CaoRegistry::overtimeToeslagPercentages() resolves to null and no overtime uplift is derived from this CAO until the figures are confirmed.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "abu.nl CAO voor Uitzendkrachten, artikel toeslagen"
   }
 }

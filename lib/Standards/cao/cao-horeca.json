@@ -5,7 +5,10 @@
   "version": "2025-2026",
   "effectiveDate": "2025-04-01",
   "basedOn": [
-    {"doc": "CAO Horeca NL, cao-tekst 2025-2026", "url": "https://www.khn.nl/cao-horeca"}
+    {
+      "doc": "CAO Horeca NL, cao-tekst 2025-2026",
+      "url": "https://www.khn.nl/cao-horeca"
+    }
   ],
   "payScales": {
     "value": {
@@ -48,5 +51,20 @@
     "verified": false,
     "placeholder": true,
     "checkAgainst": "Official CAO Horeca NL arbeidsduurartikel (khn.nl/cao-horeca)"
+  },
+  "overtime": {
+    "value": {
+      "toeslagPercentages": {
+        "doordeweeks": 25,
+        "zaterdag": 50,
+        "zondag": 100,
+        "feestdag": 100
+      },
+      "compensationPreference": "tijd-voor-tijd"
+    },
+    "source": "Illustrative overwerktoeslag percentages (Horeca) pending confirmation against the official CAO-tekst — NOT transcribed from the primary document. Placeholder, so CaoRegistry::overtimeToeslagPercentages() resolves to null and no overtime uplift is derived from this CAO until the figures are confirmed.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "khn.nl CAO-tekst Horeca, artikel overwerk/toeslagen"
   }
 }
