@@ -223,12 +223,7 @@ class RuleTestDataSeeder
 
             $existingId = ($idByKey[$keyValue] ?? '');
             try {
-                if ($existingId !== '') {
-                    $os->saveObject(object: $sample, register: $register, schema: $objectType, uuid: $existingId, _rbac: false, _multitenancy: false, currentUser: $admin);
-                } else {
-                    $os->saveObject(object: $sample, register: $register, schema: $objectType, _rbac: false, _multitenancy: false, currentUser: $admin);
-                }
-
+                $this->writeSample($os, $register, $admin, $objectType, $sample, $existingId);
                 $written++;
             } catch (\Throwable $e) {
                 $this->logger->warning('RuleTestDataSeeder: upsert '.$objectType.' '.$keyValue.' failed: '.$e->getMessage());
@@ -238,6 +233,34 @@ class RuleTestDataSeeder
         return $written;
 
     }//end upsertSamples()
+
+
+    /**
+     * Write one sample, updating in place when a matching object already exists.
+     *
+     * Extracted from {@see self::upsertSamples()}: the update and create calls
+     * differ only in whether `uuid:` is supplied, so an early return expresses
+     * the choice without an else branch.
+     *
+     * @param mixed                $objectService OpenRegister ObjectService.
+     * @param string               $register      Register slug.
+     * @param IUser|null           $admin         Admin user for the write.
+     * @param string               $objectType    Schema name.
+     * @param array<string, mixed> $sample        The sample to write.
+     * @param string               $existingId    Existing object id, or '' to create.
+     *
+     * @return void
+     */
+    private function writeSample(mixed $objectService, string $register, ?IUser $admin, string $objectType, array $sample, string $existingId): void
+    {
+        if ($existingId !== '') {
+            $objectService->saveObject(object: $sample, register: $register, schema: $objectType, uuid: $existingId, _rbac: false, _multitenancy: false, currentUser: $admin);
+            return;
+        }
+
+        $objectService->saveObject(object: $sample, register: $register, schema: $objectType, _rbac: false, _multitenancy: false, currentUser: $admin);
+
+    }//end writeSample()
 
 
     /**

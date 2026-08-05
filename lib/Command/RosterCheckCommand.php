@@ -95,13 +95,7 @@ class RosterCheckCommand extends Command
 
         $jurisdiction = ['jurisdiction' => (string) $input->getOption('jurisdiction')];
 
-        if ($rosterId !== '') {
-            $report = $this->rosterCheckService->checkRoster($rosterId, $jurisdiction);
-        } else {
-            $administrationOption = $input->getOption('administration');
-            $administration       = (is_string($administrationOption) === true && trim($administrationOption) !== '') ? trim($administrationOption) : null;
-            $report               = $this->rosterCheckService->checkPeriod($period, $administration, $jurisdiction);
-        }
+        $report = $this->runCheck($input, $rosterId, $period, $jurisdiction);
 
         $output->writeln('<info>Hrmq roster check</info>');
         $output->writeln(sprintf('  rosters gecontroleerd    : %d', $report['rostersChecked']));
@@ -140,6 +134,35 @@ class RosterCheckCommand extends Command
         return $report['mandatoryViolations'] > 0 ? 1 : 0;
 
     }//end execute()
+
+
+    /**
+     * Run the roster check for whichever selector the caller supplied.
+     *
+     * A non-empty `--roster` wins; otherwise the check runs over `--period`,
+     * optionally narrowed to a single administration.
+     *
+     * @param InputInterface        $input        Console input.
+     * @param string                $rosterId     Trimmed `--roster` value ('' when absent).
+     * @param string                $period       Trimmed `--period` value ('' when absent).
+     * @param array<string, string> $jurisdiction Jurisdiction context passed to the service.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
+     */
+    private function runCheck(InputInterface $input, string $rosterId, string $period, array $jurisdiction): array
+    {
+        if ($rosterId !== '') {
+            return $this->rosterCheckService->checkRoster($rosterId, $jurisdiction);
+        }
+
+        $administrationOption = $input->getOption('administration');
+        $administration       = (is_string($administrationOption) === true && trim($administrationOption) !== '') ? trim($administrationOption) : null;
+
+        return $this->rosterCheckService->checkPeriod($period, $administration, $jurisdiction);
+
+    }//end runCheck()
 
 
 }//end class

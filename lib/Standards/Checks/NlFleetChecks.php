@@ -184,12 +184,15 @@ final class NlFleetChecks implements CheckProvider
         $bijtelling      = $tables->bijtellingPrivegebruikAuto();
         $standardPercent = $bijtelling['standardPercent'];
 
+        // Default: the flat standard-percentage bijtelling. The capped-EV
+        // category below overrides it; both branches are pure arithmetic, so
+        // initialising here is equivalent to the former if/else.
+        $baseCents = (($cataloguswaardeCents * $standardPercent) / 100);
+
         if ((string) ($vehicle['bijtellingCategorie'] ?? '') === 'elektrischGeplafonneerd') {
             $cap        = $bijtelling['evReducedCataloguswaardeCapCents'];
             $baseCents  = ((min($cataloguswaardeCents, $cap) * $bijtelling['evReducedPercent']) / 100);
             $baseCents += ((max(0, ($cataloguswaardeCents - $cap)) * $standardPercent) / 100);
-        } else {
-            $baseCents = (($cataloguswaardeCents * $standardPercent) / 100);
         }
 
         $eigenBijdrageCents = self::cents($carAssignment['eigenBijdrage'] ?? 0);

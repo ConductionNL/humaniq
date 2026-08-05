@@ -81,7 +81,7 @@ final class NlOffboardingChecks implements CheckProvider
                 // BW art. 7:641 — open leave balance paid out at afgerond.
                 'nl-offboarding-verlofsaldo-uitbetaling'  => static fn(array $o, array $c): bool => self::verlofsaldoSatisfied($o, $c),
                 // BW art. 7:656 — getuigschrift provided on request (advisory).
-                'nl-offboarding-getuigschrift'            => static fn(array $o): bool => self::getuigschriftSatisfied($o),
+                'nl-offboarding-getuigschrift'            => static fn(array $o): bool => self::hasGetuigschriftSatisfied($o),
                 // BW art. 7:667 — Employee.endDate matches lastWorkingDay at afgerond.
                 'nl-offboarding-einddatum-consistentie'   => static fn(array $o, array $c): bool => self::einddatumSatisfied($o, $c),
             ],
@@ -179,7 +179,7 @@ final class NlOffboardingChecks implements CheckProvider
      *
      * @return bool
      */
-    private static function getuigschriftSatisfied(array $o): bool
+    private static function hasGetuigschriftSatisfied(array $o): bool
     {
         if ((string) ($o['status'] ?? '') !== 'afgerond') {
             return true;
@@ -187,7 +187,7 @@ final class NlOffboardingChecks implements CheckProvider
 
         return ($o['getuigschriftVerstrekt'] ?? false) === true;
 
-    }//end getuigschriftSatisfied()
+    }//end hasGetuigschriftSatisfied()
 
 
     /**
