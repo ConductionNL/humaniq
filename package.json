@@ -15,7 +15,8 @@
     "stylelint": "stylelint src/**/*.vue src/**/*.scss src/**/*.css",
     "stylelint-fix": "stylelint src/**/*.vue src/**/*.scss src/**/*.css --fix",
     "check:manifest": "node tests/validate-manifest.js",
-    "check:widget-keys": "node tests/validate-widget-keys.js"
+    "check:widget-keys": "node tests/validate-widget-keys.js",
+    "test:e2e": "playwright test --project chromium"
   },
   "browserslist": [
     "extends @nextcloud/browserslist-config"
@@ -47,6 +48,7 @@
   },
   "devDependencies": {
     "@nextcloud/browserslist-config": "^3.0.1",
+    "@playwright/test": "^1.59.1",
     "@nextcloud/eslint-config": "^8.4.2",
     "@nextcloud/eslint-plugin": "^2.2.1",
     "@nextcloud/stylelint-config": "^2.4.0",

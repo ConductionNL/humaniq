@@ -31,3 +31,13 @@ psalm-output.json
 
 # Hydra builder internal state — emitted by run-hydra-gates.sh
 task-audit.json
+
+# Playwright e2e
+/tests/e2e/.auth/
+/tests/e2e/test-results/
+/tests/e2e/playwright-report/
+/test-results/
+/playwright-report/
+# Captured console output from a local run — nothing reads it, and committing it
+# would make every run show a diff in a file that is not source.
+/tests/e2e/.last-cj-run.txt
