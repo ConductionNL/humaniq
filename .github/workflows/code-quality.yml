@@ -146,17 +146,20 @@ jobs:
       # ordinary responder delegation — that is being fixed separately in
       # ConductionNL/.github#149. Revisit once #149 lands."
       #
-      # #149 has landed (`fc70ea6`), and it is in the pin below. The condition
-      # this repo set for itself is met, so the deferral is spent.
+      # #149 has landed (`fc70ea6`) and is in the package this repo now tracks.
+      # The condition this repo set for itself is met, so the deferral is spent.
       #
-      # The pin is set in the SAME change, and that is not cosmetic. The shared
-      # quality.yml now defaults `hydra-gates-require-full-coverage` to true
-      # (#164), and that flag requires a gate to DECLARE itself not-applicable.
-      # `v1.0.1` contains ZERO `_skip` calls; `v1.3.0` has 36. Enabling the
-      # gates while inheriting the fleet's old pin would therefore land this
-      # repo red on arrival — for gates it has no subject matter for — which is
-      # exactly the "red for a reason that is not hrmq's" the original comment
-      # was protecting against.
+      # No `hydra-gates-ref` here on purpose. The shared workflow defaults it
+      # to @main, and this workflow is itself consumed at @main, so the two
+      # sides move together and a gate fix reaches this repo without a commit
+      # in this repo. A pin is a silent expiry date: 22 repos sat on v1.0.1 and
+      # 16 gates were dead fleet-wide while every one reported PASS (.github#159),
+      # and a default flipped at @main later reached those old runners and made
+      # them red on gates they had no subject matter for (.github#173) — exactly
+      # the "red for a reason that is not hrmq's" this comment used to guard.
+      # To hold this repo still for a specific reason, set the input explicitly
+      # and say why — it is still honoured. To roll back for everyone, revert on
+      # ConductionNL/.github main.
       #
       # Measured before enabling, on this branch, diff-scoped against
       # origin/development exactly as CI scopes it, in a private mount
@@ -192,7 +195,6 @@ jobs:
       # diff-scoped to composer files so it reports NOT APPLICABLE on this PR,
       # but the gap is real and is filed separately.
       enable-hydra-gates: true
-      hydra-gates-ref: v1.3.0
 
       # ── Deliberately NOT enabled ─────────────────────────────────────────
       # enable-newman: there is no tests/integration/ and no Postman
