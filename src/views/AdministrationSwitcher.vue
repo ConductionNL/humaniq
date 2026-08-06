@@ -58,7 +58,7 @@
 			<li v-for="administration in administrations"
 				:key="administration.administrationId"
 				class="administration-switcher__item">
-				<NcButton :type="administration.administrationId === activeAdministrationId ? 'primary' : 'secondary'"
+				<NcButton :variant="administration.administrationId === activeAdministrationId ? 'primary' : 'secondary'"
 					:disabled="switching"
 					class="administration-switcher__button"
 					@click="switchTo(administration.administrationId)">
@@ -184,7 +184,9 @@ export default {
 				holder.value = { ...(holder.value || {}), activeAdministrationId: administrationId }
 				return
 			}
-			this.$set(holder, 'activeAdministrationId', administrationId)
+			// Vue 3 reactivity tracks property ADDITION on a reactive object
+			// directly, so `$set` is gone (and is a no-op shim at best).
+			holder.activeAdministrationId = administrationId
 		},
 	},
 }

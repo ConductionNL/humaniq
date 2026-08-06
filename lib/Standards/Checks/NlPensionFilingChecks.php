@@ -41,6 +41,8 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Standards\Checks;
 
+use DateTimeImmutable;
+
 /**
  * Dutch sector-pension (UPA) filing executable checks.
  */
@@ -187,7 +189,7 @@ final class NlPensionFilingChecks implements CheckProvider
             return true;
         }
 
-        $today         = (new \DateTimeImmutable('today'))->getTimestamp();
+        $today         = (new DateTimeImmutable('today'))->getTimestamp();
         $daysRemaining = (int) floor((($deadline - $today)) / 86400);
 
         return $daysRemaining > self::ALERT_WINDOW_DAYS;

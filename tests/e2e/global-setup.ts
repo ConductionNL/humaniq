@@ -8,6 +8,12 @@
  * setting in playwright.config.ts, so individual tests start from an
  * authenticated session without each one paying the login cost.
  *
+ * It also retires the overlays that would otherwise sit on top of the app and
+ * swallow the first click of every spec — nc-vue's support dialog and
+ * walkthrough, plus Nextcloud's own first-run wizard — using the shared
+ * helpers from `@conduction/nextcloud-vue/testing/playwright` rather than a
+ * hand-rolled dismissal loop per app.
+ *
  * Ported from docudesk/tests/e2e/global-setup.ts (NC34-safe login
  * selectors + status.php health poll). Pattern reference: ADR-030.
  */
@@ -16,6 +22,11 @@ import { chromium, request, type FullConfig } from '@playwright/test'
 import { execSync } from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs'
+import {
+	retireFirstRunWizard,
+	seedFirstVisitOverlaysSeen,
+} from '@conduction/nextcloud-vue/testing/playwright'
+import { ADMIN_CREDENTIALS, resolveBaseURL } from './base-url'
 
 const AUTH_DIR = path.resolve(__dirname, '.auth')
 const STORAGE_STATE = path.join(AUTH_DIR, 'admin.json')
@@ -43,13 +54,12 @@ function ensureBundleBuilt(): void {
 /**
  * Wait until Nextcloud is actually serving requests.
  *
- * A shared dev instance is routinely mid-flight: another deploy flips it
- * into maintenance mode, an app version bump sets needsDbUpgrade (which
- * makes NC answer 503 on every route), or the database is still finishing
- * crash recovery. All three are transient but a single-shot check turns
- * them into a hard suite failure. Poll until the instance reports
- * installed, out of maintenance and not awaiting a DB upgrade.
- * Tune with E2E_HEALTH_TIMEOUT_MS (default 10 min).
+ * An instance is routinely mid-flight: a deploy flips it into maintenance
+ * mode, an app version bump sets needsDbUpgrade (which makes NC answer 503 on
+ * every route), or the database is still finishing crash recovery. All three
+ * are transient but a single-shot check turns them into a hard suite failure.
+ * Poll until the instance reports installed, out of maintenance and not
+ * awaiting a DB upgrade. Tune with E2E_HEALTH_TIMEOUT_MS (default 10 min).
  *
  * @param baseURL Instance base URL.
  * @return Resolves once healthy; rejects on timeout.
@@ -90,12 +100,10 @@ async function ensureNextcloudReachable(baseURL: string): Promise<void> {
 }
 
 export default async function globalSetup(config: FullConfig): Promise<void> {
-	const baseURL = (config.projects[0]?.use?.baseURL as string | undefined)
-		?? process.env.NEXTCLOUD_URL
-		?? process.env.NC_BASE_URL
-		?? 'http://localhost:8080'
-	const username = process.env.NC_ADMIN_USER ?? 'admin'
-	const password = process.env.NC_ADMIN_PASS ?? 'admin'
+	// Single source of truth, and it THROWS rather than defaulting to the
+	// shared :8080 instance — see ./base-url.ts.
+	const baseURL = (config.projects[0]?.use?.baseURL as string | undefined) ?? resolveBaseURL()
+	const { username, password } = ADMIN_CREDENTIALS
 
 	ensureBundleBuilt()
 	await ensureNextcloudReachable(baseURL)
@@ -103,6 +111,16 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 
 	const browser = await chromium.launch()
 	const context = await browser.newContext({ baseURL })
+
+	// Seed nc-vue's first-visit overlays as already seen BEFORE any page is
+	// opened, on the CONTEXT rather than a page: only the context form writes
+	// real localStorage entries that survive into `storageState()` below. The
+	// page-scoped match-all (`'*'`) form installs a `getItem` shim that cannot
+	// serialise, so it would persist nothing at all — the app id must be
+	// explicit, and as of 2.1.0-vue3.12 the helper throws rather than silently
+	// seeding nothing.
+	await seedFirstVisitOverlaysSeen(context, 'hrmq')
+
 	const page = await context.newPage()
 
 	// The instance can flip back into maintenance between the health check and
@@ -140,7 +158,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 	])
 	// Wait for the authenticated shell. NC 34 no longer guarantees the legacy
 	// `#header` / `header.header` markup, so accept any banner-role header and
-	// give the (slow, shared) instance room to finish the post-login redirect.
+	// give the instance room to finish the post-login redirect.
 	await page.waitForURL((url) => /\/login(\?|$|\/)/.test(url.pathname) === false, { timeout: 60_000 })
 	await page.waitForSelector('#header, header.header, header, [role="banner"]', { timeout: 60_000 })
 	const currentUrl = page.url()
@@ -149,6 +167,15 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 			`Login appears to have failed — still on ${currentUrl}. `
 			+ 'Check NC_ADMIN_USER / NC_ADMIN_PASS (defaults admin/admin).',
 		)
+	}
+
+	// Nextcloud's own first-run wizard is a separate overlay from the nc-vue
+	// ones seeded above and is retired server-side, per user — so it must
+	// happen after login. A 404 (app not installed) counts as cleared.
+	const wizard = await retireFirstRunWizard(page)
+	if (!wizard.cleared) {
+		// eslint-disable-next-line no-console
+		console.warn(`[playwright globalSetup] first-run wizard not retired (HTTP ${wizard.status}); it may intercept clicks`)
 	}
 
 	await context.storageState({ path: STORAGE_STATE })

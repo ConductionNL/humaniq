@@ -5,7 +5,10 @@
   "version": "2025-2026",
   "effectiveDate": "2025-07-01",
   "basedOn": [
-    {"doc": "CAO Metaal en Techniek (Metalektro/Techniek Nederland), cao-tekst 2025-2026", "url": "https://www.caometaalentechniek.nl/"}
+    {
+      "doc": "CAO Metaal en Techniek (Metalektro/Techniek Nederland), cao-tekst 2025-2026",
+      "url": "https://www.caometaalentechniek.nl/"
+    }
   ],
   "payScales": {
     "value": {
@@ -49,5 +52,20 @@
     "verified": false,
     "placeholder": true,
     "checkAgainst": "Official CAO Metaal & Techniek arbeidsduurartikel (caometaalentechniek.nl)"
+  },
+  "overtime": {
+    "value": {
+      "toeslagPercentages": {
+        "doordeweeks": 25,
+        "zaterdag": 50,
+        "zondag": 100,
+        "feestdag": 100
+      },
+      "compensationPreference": "tijd-voor-tijd"
+    },
+    "source": "Illustrative overwerktoeslag percentages (Metaal & Techniek) pending confirmation against the official CAO-tekst — NOT transcribed from the primary document. Placeholder, so CaoRegistry::overtimeToeslagPercentages() resolves to null and no overtime uplift is derived from this CAO until the figures are confirmed.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "cao-metaalentechniek.nl CAO-tekst, artikel overwerk"
   }
 }

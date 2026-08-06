@@ -25,22 +25,52 @@
  */
 
 import { test, expect, request, type APIRequestContext, type Page } from '@playwright/test'
+import { appDialog } from '@conduction/nextcloud-vue/testing/playwright'
+import { ADMIN_CREDENTIALS, resolveBaseURL } from '../base-url'
 
-// PATH-form base: the hrmq router runs in HISTORY mode (`mode: 'history'`,
-// src/main.js:83). Hash-form deep links are silently ignored and land on
+// PATH-form base: the hrmq router runs in HISTORY mode (`createWebHistory`,
+// src/main.js). Hash-form deep links are silently ignored and land on
 // the default page — observed live 2026-07-26.
-const APP_BASE = '/apps/hrmq'
+//
+// ⚠️ The base is NOT a constant. `src/main.js` builds the router with
+// `createWebHistory(generateUrl('/apps/hrmq'))`, which returns `/apps/hrmq` when
+// the front controller is inactive and `/index.php/apps/hrmq` when it is. This
+// file used to hardcode `/apps/hrmq`; on CI `generateUrl` returns the
+// `/index.php` form, so every `page.goto` here addressed a path OUTSIDE the
+// router base, matched nothing, and fell through main.js's `/:pathMatch(.*)*`
+// catch-all to its default page. Measured on run 30919961510 (job 92028085860):
+// every route assertion failed with `Received string:
+// "/index.php/apps/hrmq/timesheets"` — including `/employees`, whose page is
+// fine. Resolve it from the running app instead, per page.
+let _appBase: string | null = null
+async function appBase(page: Page): Promise<string> {
+	if (_appBase) return _appBase
+	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
+	const resolved = await page.evaluate(
+		() => (window as unknown as { OC?: { generateUrl?: (p: string) => string } }).OC?.generateUrl?.('/apps/hrmq'),
+	)
+	if (!resolved) {
+		throw new Error(
+			'OC.generateUrl is not available on the hrmq page, so the router base cannot be '
+			+ 'resolved — every route assertion below would be measuring the wrong URL.',
+		)
+	}
+	_appBase = resolved.replace(/\/+$/, '')
+	return _appBase
+}
 
-const NC_URL = process.env.NEXTCLOUD_URL || 'http://localhost:8080'
+// This spec SEEDS AND DELETES OpenRegister objects, so its absolute base URL
+// must be the same instance the relative `page.goto`s below hit. It previously
+// recomputed `process.env.NEXTCLOUD_URL || 'http://localhost:8080'` locally,
+// which pointed those writes at the SHARED dev container whenever the env var
+// was unset. One resolver, no fallback — see ../base-url.ts.
+const NC_URL = resolveBaseURL()
 const OR_BASE = `${NC_URL}/index.php/apps/openregister/api/objects`
 
 /** hrmq's OpenRegister register slug (manifest config.register). */
 const REGISTER = 'hrmq'
 
-const AUTH = {
-	username: process.env.NC_ADMIN_USER || 'admin',
-	password: process.env.NC_ADMIN_PASS || 'admin',
-}
+const AUTH = ADMIN_CREDENTIALS
 
 const HEADERS = { 'OCS-APIRequest': 'true', 'Content-Type': 'application/json' }
 
@@ -77,7 +107,8 @@ async function resolveEmployeeSchema(api: APIRequestContext): Promise<string> {
  * for the SPA shell, asserting the router stayed on the requested route.
  */
 async function gotoRoute(page: Page, route: string): Promise<void> {
-	await page.goto(`${APP_BASE}${route}`, { waitUntil: 'domcontentloaded' })
+	const base = await appBase(page)
+	await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' })
 	await expect(page.locator('#app-content, .app-content').first()).toBeVisible({ timeout: 15_000 })
 	expect(new URL(page.url()).pathname, `router must stay on ${route}`).toContain(route)
 }
@@ -136,7 +167,11 @@ test.describe('core journeys — primary HR surfaces', () => {
 		const addBtn = page.getByRole('button', { name: /Add Employee/i }).first()
 		await expect(addBtn).toBeVisible({ timeout: 15_000 })
 		await addBtn.click()
-		const dialog = page.getByRole('dialog').first()
+		// `appDialog()` excludes the `[role="dialog"]` nodes that are NC / nc-vue
+		// CHROME (support dialog, walkthrough, first-run wizard) rather than the
+		// app's own modal — a bare `getByRole('dialog').first()` can latch onto
+		// one of those and pass without the create dialog ever opening.
+		const dialog = appDialog(page)
 		await expect(dialog, 'create dialog must open').toBeVisible({ timeout: 10_000 })
 		// Dismiss without saving — unconditional: a cancel/close control (or
 		// Escape) must return the page to its dialog-less state.

@@ -47,6 +47,8 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Standards\Checks;
 
+use DateTimeImmutable;
+
 /**
  * Asset-custody integrity executable checks (assignment consistency +
  * offboarding asset return).
@@ -182,7 +184,7 @@ final class NlAssetChecks implements CheckProvider
             return true;
         }
 
-        $today = (new \DateTimeImmutable('today'))->getTimestamp();
+        $today = (new DateTimeImmutable('today'))->getTimestamp();
 
         return $completion >= $today;
 

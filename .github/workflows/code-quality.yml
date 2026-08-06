@@ -1,0 +1,223 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main, development, feature/**, bugfix/**, hotfix/**]
+  pull_request:
+    branches: [main, master, development, beta]
+  workflow_dispatch:
+
+jobs:
+  quality:
+    # hrmq's FIRST repo-level workflow. Before this, `.github/workflows/` did
+    # not exist at all — the only things running were GitHub's two DYNAMIC
+    # workflows (`dynamic/github-code-scanning/codeql` and
+    # `dynamic/dependabot/dependabot-updates`), which have no file in the repo.
+    # That is what the run list's "Push on development" / "PR #64" /
+    # "Scheduled" entries are: CodeQL default setup naming its runs after the
+    # trigger. They are semantic-analysis runs, not a quality pipeline — no
+    # PHPCS, no PHPStan, no Psalm, no PHPUnit, no ESLint, no license or SBOM
+    # check has ever run against this repo.
+    uses: ConductionNL/.github/.github/workflows/quality.yml@main
+    with:
+      app-name: hrmq
+
+      # composer.json pins `platform.php: 8.3` and requires `php: ^8.3`;
+      # appinfo/info.xml declares <php min-version="8.3"/>.
+      php-version: "8.3"
+      php-test-versions: '["8.3", "8.4"]'
+      # appinfo/info.xml declares <nextcloud min-version="28" max-version="34"/>,
+      # but the floor that actually binds is `nextcloud/ocp: ^31.0` in
+      # require-dev — the stubs the analysers resolve against. stable31..33 is
+      # the fleet-standard span (identical to nextcloud-app-template).
+      nextcloud-test-refs: '["stable31", "stable32", "stable33"]'
+
+      # ── PHP toolchain ────────────────────────────────────────────────────
+      # Every one of these has its config committed at the repo root, so none
+      # of them is being switched on speculatively:
+      #   phpcs.xml · phpmd.xml + phpmd.baseline.xml · psalm.xml +
+      #   psalm-baseline.xml · phpstan.neon + phpstan-baseline.neon +
+      #   phpstan-bootstrap.php · phpunit.xml + tests/bootstrap.php
+      # and composer.json already exposes the fleet-standard `check:strict`
+      # (lint → phpcs → phpmd → psalm → phpstan → test:all).
+      enable-psalm: true
+      enable-phpstan: true
+      enable-phpmetrics: true
+      # tests/Unit mirrors lib/ one package at a time (AppInfo, BackgroundJob,
+      # Command, Controller, Lifecycle, Payroll, Portal, Service, Settings,
+      # Standards). Note phpunit.xml sets `failOnRisky` AND `failOnWarning` —
+      # this suite is stricter than the fleet default and a warning is red.
+      enable-phpunit: true
+      # The coverage ratchet. Both of its prerequisites ship in this same
+      # change: `scripts/coverage-guard.php` (copied BYTE-IDENTICALLY from
+      # openregister, as softwarecatalog did — it is fleet-shared logic, not
+      # per-app logic, and a rewrite would silently fork the semantics) and
+      # `.coverage-baseline`.
+      #
+      # Without this input the shared workflow's default is FALSE, and BOTH
+      # coverage jobs — `Coverage Baseline Protection` (PR) and `Coverage
+      # Baseline Check` (push) — report `skipped` forever. A skipped gate is
+      # indistinguishable from a passing one on the checks list, so hrmq has
+      # been carrying two permanently-dead gates since the pipeline landed.
+      #
+      # The baseline is a bare number the ratchet compares EXACTLY: below it,
+      # the PHPUnit job's "Guard coverage baseline" step exits 1 (only on the
+      # canonical 8.3 / stable31 leg); above it, the push-only Coverage
+      # Baseline Check recomputes and fails demanding the new value be
+      # committed. So the committed value must EQUAL what CI measures on
+      # `development` — it was read off the guard step's own
+      # "Coverage current:" line, not estimated.
+      enable-coverage-guard: true
+
+      # ── Frontend ─────────────────────────────────────────────────────────
+      # package.json ships `lint` (eslint src) and `stylelint`, with
+      # eslint.config.js + stylelint.config.js committed.
+      enable-frontend: true
+      enable-eslint: true
+      # Two repo-specific validators that already exist as self-contained node
+      # scripts (tests/validate-manifest.js, tests/validate-widget-keys.js) and
+      # until now had no runner. hrmq is the fleet's manifest-purity flagship —
+      # 113 of its 115 pages come out of src/manifest.json — so a malformed
+      # manifest or a widget key that resolves to nothing is not a cosmetic
+      # defect here, it is most of the app failing to render.
+      #
+      # Deliberately NON-EMPTY: an empty `frontend-checks` list does not skip
+      # the job, it DELETES it from the run (see the shared workflow's comment,
+      # and ConductionNL/.github#150).
+      frontend-checks: '["check:manifest", "check:widget-keys"]'
+
+      # ── E2E browser tests ────────────────────────────────────────────────
+      # tests/e2e has existed and been maintained for a while — a parametrised
+      # manifest smoke spec (generated FROM src/manifest.json, so it covers all
+      # 60 non-parameterised page routes) plus a deep core-journeys spec that
+      # seeds an Employee through OpenRegister's REST API and asserts the
+      # values render on the detail page. It has simply never had a runner.
+      #
+      # `playwright-test-path` stays at its default `tests/e2e`. There is no
+      # config at that path, so the shared workflow falls back to the ROOT
+      # playwright.config.ts — which is the intended one: its `testDir` is
+      # './tests/e2e', its single `chromium` project has no siblings to
+      # accidentally run, and the "Validate Playwright tests exist" step's
+      # `find` is recursive, so the two specs under tests/e2e/spec-coverage/
+      # are counted. Setting the input WITHOUT shipping a config at that path
+      # would change nothing except make the reader think it had.
+      enable-playwright: true
+      # Provision the hrmq register in OpenRegister BEFORE the specs run, and
+      # verify it is really there.
+      #
+      # The first run of this pipeline (run 30904454063, E2E job 91976455533)
+      # was 68 failed / 2 passed because the `hrmq` register did not exist:
+      # `occ app:enable hrmq` never ran the register-import repair step at all
+      # (it was declared `<post-migration>` only, and Nextcloud skips that block
+      # on a fresh install), and `hrmq_register.json` declared no
+      # `components.registers` section for it to import even if it had. Both are
+      # fixed in the app in this same change.
+      #
+      # This step exists anyway because a repair step cannot GATE: it swallows
+      # \Throwable and `app:enable` exits 0 regardless, and it runs with no user
+      # session so OpenRegister `main` evaluates the import as anonymous. The
+      # script does the import over the admin HTTP API and then verifies the
+      # register, all 54 schema slugs and the object collections the specs read
+      # — so a missing register is ONE loud step failure, not 68 spec failures
+      # blaming the selectors. It also logs whether the register was already
+      # there BEFORE it acted, which is the only evidence that the two app-side
+      # fixes work on their own.
+      #
+      # cwd for this step is the Nextcloud server root, hence the apps/ prefix.
+      playwright-seed-command: 'bash apps/hrmq/tests/e2e/ci-seed.sh'
+      # src/manifest.json declares `"dependencies": ["openregister"]`, and
+      # nc-vue's CnAppRoot honours that at runtime: with the dependency absent
+      # it renders the "Required apps are missing" gate INSTEAD of the router
+      # outlet, so every shell assertion fails with "element(s) not found"
+      # while the app is behaving exactly as designed. Beyond the gate, hrmq is
+      # a THIN CLIENT — Employee, EmploymentContract, PayrollRun, Payslip and
+      # WageTaxFiling are all OpenRegister objects — so core-journeys.spec.ts
+      # has nothing to seed against either.
+      #
+      # Pinned to `main` rather than `development` (larpingapp uses the latter)
+      # only because this is hrmq's first CI run ever and the foundation app
+      # should not be a moving confound while we read the baseline.
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"main"}]'
+
+      # ── Hydra mechanical gates ───────────────────────────────────────────
+      # Enabled here for the FIRST time. This repo previously left
+      # `enable-hydra-gates` at its default `false` on purpose, with a stated
+      # precondition: "gate-7 (no-admin-idor) currently false-positives on
+      # ordinary responder delegation — that is being fixed separately in
+      # ConductionNL/.github#149. Revisit once #149 lands."
+      #
+      # #149 has landed (`fc70ea6`), and it is in the pin below. The condition
+      # this repo set for itself is met, so the deferral is spent.
+      #
+      # The pin is set in the SAME change, and that is not cosmetic. The shared
+      # quality.yml now defaults `hydra-gates-require-full-coverage` to true
+      # (#164), and that flag requires a gate to DECLARE itself not-applicable.
+      # `v1.0.1` contains ZERO `_skip` calls; `v1.3.0` has 36. Enabling the
+      # gates while inheriting the fleet's old pin would therefore land this
+      # repo red on arrival — for gates it has no subject matter for — which is
+      # exactly the "red for a reason that is not hrmq's" the original comment
+      # was protecting against.
+      #
+      # Measured before enabling, on this branch, diff-scoped against
+      # origin/development exactly as CI scopes it, in a private mount
+      # namespace with a private tmpfs:
+      #   exit 0 — ALL 58 APPLICABLE GATES PASSED, and all 58 of them ran.
+      #   NOT APPLICABLE: 4 6 7 24 33 — each naming itself and its reason.
+      #
+      # Whole-tree debt, which future PRs touching those files WILL meet — 10
+      # gates, stated here so this enablement is not a surprise later:
+      #   gate-46 spec-anchor-existence   642 unresolved @spec targets
+      #   gate-51 schema-property-titles  289 properties without a title
+      #   gate-8  unsafe-auth-resolver     13 — ALL FALSE POSITIVES, read below
+      #   gate-40 form-label-association    3
+      #   gate-54 relation-dialect          2
+      #   gate-4/7/38/49/58                 1 each
+      #
+      # gate-8's 13 findings were triaged by reading every call path, and all
+      # 13 are the multi-tenant tenancy-guard shape, not a fail-open. The gate
+      # flags `catch (\Throwable) { return null; }` in an `authorize*` method
+      # without reading what the CALLER does with the null. Here every caller
+      # is fail-CLOSED, e.g. LeaveController::authorizeTransaction ->
+      # `if ($transaction === null) { return 404; }`. The null is deliberate:
+      # "does not exist" and "RBAC denied" collapse to the same 404 so the
+      # endpoint is not an existence oracle for other tenants. That is the
+      # OPPOSITE of the decidesk#45 defect gate-8 was built for
+      # (`if ($auth !== null) { check }`, which SKIPS the check when the
+      # resolver fails). Reported to ConductionNL/.github#160, not suppressed.
+      #
+      # gate-4 is REAL and worth naming: this repo ships composer.json but no
+      # composer.lock, so `composer audit --locked` cannot run at all
+      # ("Valid composer.json and composer.lock files are required"). Its
+      # dependencies have therefore never been CVE-audited. gate-4 is
+      # diff-scoped to composer files so it reports NOT APPLICABLE on this PR,
+      # but the gap is real and is filed separately.
+      enable-hydra-gates: true
+      hydra-gates-ref: v1.3.0
+
+      # ── Deliberately NOT enabled ─────────────────────────────────────────
+      # enable-newman: there is no tests/integration/ and no Postman
+      #   collection anywhere in the repo. The Newman job's own validation step
+      #   hard-fails on a missing collection directory, so switching it on buys
+      #   a guaranteed red job and zero assertions.
+      #
+      #
+      # enable-axe: requires enable-hydra-gates to be consumed at all (gate-33
+      #   reads tests/axe/report.json), so it would produce an artifact nothing
+      #   reads. Also measured red against vanilla NC34 before any app is
+      #   installed.
+      #
+      # enable-playwright-coverage: needs a defensible threshold; there is no
+      #   measured V8 baseline for hrmq yet. Set it after this pipeline has a
+      #   few green runs to measure from, not before.
+      #
+      # enable-journeydoc-capture: per ADR-030 this belongs in its own
+      #   scheduled docs-capture.yml, not on every push — it re-shoots every
+      #   documentation screenshot and commits back.
+      #
+      # Left at their `true` defaults and therefore active, all satisfiable:
+      #   enable-php / enable-npm (composer.json + package.json both present)
+      #   enable-phpcs / enable-phpmd / enable-stylelint (configs + scripts)
+      #   enable-license-check · enable-sbom (cyclonedx/cyclonedx-php-composer
+      #     is already in require-dev) · enable-features-extract (docs/features.json
+      #     is generated from the 55 specs under openspec/specs/ and committed
+      #     in this same change — without it that gate is stale on arrival).

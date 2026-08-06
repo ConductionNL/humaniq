@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Standards\Checks;
 
+use DateTimeImmutable;
 use OCA\Hrmq\Standards\RuleCatalogue;
 
 /**
@@ -258,14 +259,15 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects
         $period  = (string) ($o['period'] ?? '');
 
         if ($tijdvak === 'maand' && preg_match('/^(\d{4})-(\d{2})$/', $period, $m) === 1) {
-            $expected = self::expectedDeadline((int) $m[1], (int) $m[2]);
-        } else if ($tijdvak === 'jaar' && preg_match('/^(\d{4})/', $period, $m) === 1) {
-            $expected = self::expectedDeadline((int) $m[1], 12);
-        } else {
-            return true;
+            return (string) ($o['deadline'] ?? '') === self::expectedDeadline((int) $m[1], (int) $m[2]);
         }
 
-        return (string) ($o['deadline'] ?? '') === $expected;
+        if ($tijdvak === 'jaar' && preg_match('/^(\d{4})/', $period, $m) === 1) {
+            return (string) ($o['deadline'] ?? '') === self::expectedDeadline((int) $m[1], 12);
+        }
+
+        // Any other tijdvak/period shape has no derivable deadline to check.
+        return true;
 
     }//end deadlineDerivationCorrect()
 
@@ -314,7 +316,7 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects
             return true;
         }
 
-        $today         = (new \DateTimeImmutable('today'))->getTimestamp();
+        $today         = (new DateTimeImmutable('today'))->getTimestamp();
         $daysRemaining = (int) floor((($deadline - $today)) / 86400);
 
         return $daysRemaining > self::ALERT_WINDOW_DAYS;

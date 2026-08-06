@@ -5,15 +5,36 @@
   "version": "2025-2027",
   "effectiveDate": "2026-01-01",
   "basedOn": [
-    {"doc": "VNG, Eindresultaat Cao Gemeenten en Cao SGO 2025-2027", "url": "https://www.vng.nl/"},
-    {"doc": "LOGA salarisbrief (salaristabellen gemeenten)", "url": "https://www.caogemeenten.nl/"}
+    {
+      "doc": "VNG, Eindresultaat Cao Gemeenten en Cao SGO 2025-2027",
+      "url": "https://www.vng.nl/"
+    },
+    {
+      "doc": "LOGA salarisbrief (salaristabellen gemeenten)",
+      "url": "https://www.caogemeenten.nl/"
+    }
   ],
   "payScales": {
     "value": {
-      "1": 175000, "2": 210000, "3": 245000, "4": 280000, "5": 315000,
-      "6": 350000, "7": 385000, "8": 420000, "9": 455000, "10": 490000,
-      "11": 525000, "12": 560000, "13": 595000, "14": 630000, "15": 665000,
-      "16": 700000, "17": 735000, "18": 770000, "19": 805000
+      "1": 175000,
+      "2": 210000,
+      "3": 245000,
+      "4": 280000,
+      "5": 315000,
+      "6": 350000,
+      "7": 385000,
+      "8": 420000,
+      "9": 455000,
+      "10": 490000,
+      "11": 525000,
+      "12": 560000,
+      "13": 595000,
+      "14": 630000,
+      "15": 665000,
+      "16": 700000,
+      "17": 735000,
+      "18": 770000,
+      "19": 805000
     },
     "source": "Illustrative VNG/HR21 numeric schalen 1-19 shape. A search-derived corroboration confirms a 2025-2027 CAO akkoord with a EUR 16/uur wettelijk-uurloon vloer effective 2026-01-01 (vng.nl 'Eindresultaat Cao Gemeenten en Cao SGO 2025-2027', LOGA salarisbrief, both fetched as search results 2026-07-17) — the exact per-schaal-per-periodiek table was not independently fetched from a primary document, hence placeholder.",
     "verified": false,
@@ -45,5 +66,20 @@
     "verified": false,
     "placeholder": true,
     "checkAgainst": "caogemeenten.nl CAO-tekst, arbeidsduurartikel"
+  },
+  "overtime": {
+    "value": {
+      "toeslagPercentages": {
+        "doordeweeks": 25,
+        "zaterdag": 50,
+        "zondag": 100,
+        "feestdag": 100
+      },
+      "compensationPreference": "tijd-voor-tijd"
+    },
+    "source": "Illustrative overwerktoeslag percentages (Gemeenten) pending confirmation against the official CAO-tekst — NOT transcribed from the primary document. Placeholder, so CaoRegistry::overtimeToeslagPercentages() resolves to null and no overtime uplift is derived from this CAO until the figures are confirmed.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "caogemeenten.nl CAO-tekst, hoofdstuk overwerk/onregelmatige dienst"
   }
 }

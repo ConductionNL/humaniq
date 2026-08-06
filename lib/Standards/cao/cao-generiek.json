@@ -5,8 +5,14 @@
   "version": "2026-1",
   "effectiveDate": "2026-01-01",
   "basedOn": [
-    {"doc": "Wet minimumloon en minimumvakantiebijslag (WML)", "url": "https://wetten.overheid.nl/BWBR0002638"},
-    {"doc": "BW art. 7:634 (wettelijke vakantiedagen)", "url": "https://wetten.overheid.nl/BWBR0005290"}
+    {
+      "doc": "Wet minimumloon en minimumvakantiebijslag (WML)",
+      "url": "https://wetten.overheid.nl/BWBR0002638"
+    },
+    {
+      "doc": "BW art. 7:634 (wettelijke vakantiedagen)",
+      "url": "https://wetten.overheid.nl/BWBR0005290"
+    }
   ],
   "payScales": {
     "value": {
@@ -34,5 +40,20 @@
     },
     "source": "Informational reference full-time week; no statutory maximum norm week is fixed by NL law. Display-only — not read by any CaoRegistry resolver.",
     "verified": true
+  },
+  "overtime": {
+    "value": {
+      "toeslagPercentages": {
+        "doordeweeks": 25,
+        "zaterdag": 50,
+        "zondag": 100,
+        "feestdag": 100
+      },
+      "compensationPreference": "tijd-voor-tijd"
+    },
+    "source": "Illustrative overwerktoeslag percentages (Generiek) pending confirmation against the official CAO-tekst — NOT transcribed from the primary document. Placeholder, so CaoRegistry::overtimeToeslagPercentages() resolves to null and no overtime uplift is derived from this CAO until the figures are confirmed.",
+    "verified": false,
+    "placeholder": true,
+    "checkAgainst": "Geen bron — generieke fallback zonder CAO-specifieke overwerkregeling"
   }
 }

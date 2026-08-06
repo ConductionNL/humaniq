@@ -57,6 +57,8 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Standards\Checks;
 
+use DateTimeImmutable;
+
 /**
  * Organisational-structure integrity executable checks (assignment
  * consistency + unit-cycle freedom).
@@ -183,7 +185,7 @@ final class NlOrgChecks implements CheckProvider
             return true;
         }
 
-        $today = (new \DateTimeImmutable('today'))->getTimestamp();
+        $today = (new DateTimeImmutable('today'))->getTimestamp();
         return $end >= $today;
 
     }//end isCurrentlyActive()
