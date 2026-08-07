@@ -92,6 +92,15 @@ return [
         // (design.md D6): resolve-first RBAC (ObjectService::find under
         // ambient RBAC) BEFORE any calendar write.
         ['name' => 'interview#sync', 'url' => '/api/interviews/sync', 'verb' => 'POST'],
+        // employer-cost-rate — the hrmq half of ADR-081's
+        // `hourlyCost = wageCost + Σ additions`. Read-only and derived: a rate
+        // is computed from the contract on every call rather than stored, so
+        // there is no second copy to go stale when a contract or CLA changes.
+        // POST rather than GET because the caller SENDS its own additions
+        // (Shillinq's ledger-derived overhead/equipment) in the body; nothing
+        // is written. Resolve-first RBAC (ObjectService::find under ambient
+        // RBAC) BEFORE any salary-derived figure is produced — ADR-005 Rule 3.
+        ['name' => 'employerCostRate#show', 'url' => '/api/employees/cost-rate', 'verb' => 'POST'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],
