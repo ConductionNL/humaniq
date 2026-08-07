@@ -116,7 +116,7 @@ class EmployerCostRateController extends Controller
         // any cost figure is produced. A salary-derived rate is exactly the
         // kind of value an unguarded id would leak, so an unresolvable or
         // unauthorised id must be indistinguishable from a missing one.
-        $employee = $this->authorizeEmployee($employeeId);
+        $employee = $this->findEmployeeForCaller($employeeId);
         if ($employee === null) {
             return new JSONResponse(['error' => 'Employee not found.'], Http::STATUS_NOT_FOUND);
         }
@@ -164,15 +164,33 @@ class EmployerCostRateController extends Controller
 
 
     /**
-     * Resolve the employee under the caller's RBAC, or null.
+     * Look the employee up under the caller's ambient RBAC.
+     *
+     * NAMED AS A LOOKUP, NOT A GUARD, BECAUSE THAT IS WHAT IT IS. This method
+     * makes no authorization decision — `ObjectService` does, by resolving (or
+     * refusing to resolve) the id under the caller's own RBAC. Calling it
+     * `authorizeEmployee` claimed a decision it does not make, and gate-8
+     * flagged the resulting `catch (\Throwable) { return null; }` in an
+     * auth-named method as a possible fail-open resolver.
+     *
+     * That gate is right to be suspicious of the shape. The defect it exists
+     * for is decidesk's `getAuthorizationService()`, which returned null on
+     * Throwable while its caller wrote `if ($auth !== null) { check }` — so an
+     * unavailable service silently meant NO CHECK.
+     *
+     * ⚠️ THE CONTRACT HERE IS THE OPPOSITE, AND CALLERS MUST KEEP IT THAT WAY:
+     * null means DENY. The only caller answers 404 on null, before any
+     * salary-derived figure is produced. A future caller that treats null as
+     * "skip the lookup and carry on" would turn this into the very fail-open
+     * the gate is named after.
      *
      * @param string $employeeId The Employee object id.
      *
-     * @return array<string, mixed>|null The employee, or null when absent/unauthorised.
+     * @return array<string, mixed>|null The employee, or null when absent OR unauthorised — the two are deliberately indistinguishable.
      *
      * @spec openspec/specs/employer-hourly-cost-rate/spec.md
      */
-    private function authorizeEmployee(string $employeeId): ?array
+    private function findEmployeeForCaller(string $employeeId): ?array
     {
         try {
             $employee = $this->objectService()->find(
@@ -190,7 +208,7 @@ class EmployerCostRateController extends Controller
         }
 
         return $this->toArray($employee);
-    }//end authorizeEmployee()
+    }//end findEmployeeForCaller()
 
 
     /**
