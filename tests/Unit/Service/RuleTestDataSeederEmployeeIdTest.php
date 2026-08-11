@@ -4,7 +4,7 @@
  * Unit test for the seeder's Employee-UUID resolution.
  *
  * Several CheckProviders' seed samples (NlPayrollChecks' EmploymentContract /
- * Payslip, NlLoonbeslagChecks' Loonbeslag) reference their anchor employee via
+ * Payslip, NlWageGarnishmentChecks' Loonbeslag) reference their anchor employee via
  * a synthetic `employeeNumber`-shaped placeholder in `employeeId`
  * ('EMP-NL-0001'). Every schema that types `employeeId` also requires
  * `format: 'uuid'`, so writing that literal placeholder always fails create

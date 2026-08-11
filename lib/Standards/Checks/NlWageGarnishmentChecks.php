@@ -46,7 +46,7 @@ namespace OCA\Hrmq\Standards\Checks;
 /**
  * Loonbeslag floor-enforcement + single-active-beslag executable checks.
  */
-final class NlLoonbeslagChecks implements CheckProvider, SeedsObjects
+final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects
 {
 
 

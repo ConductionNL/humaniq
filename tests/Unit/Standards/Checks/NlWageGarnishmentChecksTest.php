@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for NlLoonbeslagChecks.
+ * Unit tests for NlWageGarnishmentChecks.
  *
  * Pins both loonbeslag predicates (design.md D6, spec.md REQ-BESLAG-002/
  * -005/-007): `nl-loonbeslag-beslagvrije-voet-floor` (Payslip, vacuous when
@@ -35,17 +35,17 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlLoonbeslagChecks;
+use OCA\Hrmq\Standards\Checks\NlWageGarnishmentChecks;
 use OCA\Hrmq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for NlLoonbeslagChecks (raw predicates + through the REAL RuleEngine).
+ * Tests for NlWageGarnishmentChecks (raw predicates + through the REAL RuleEngine).
  *
  * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
  * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
  */
-class NlLoonbeslagChecksTest extends TestCase
+class NlWageGarnishmentChecksTest extends TestCase
 {
 
     /**
@@ -62,7 +62,7 @@ class NlLoonbeslagChecksTest extends TestCase
     protected function setUp(): void
     {
         RuleEngine::reset();
-        $this->checks = NlLoonbeslagChecks::checks();
+        $this->checks = NlWageGarnishmentChecks::checks();
 
     }//end setUp()
 

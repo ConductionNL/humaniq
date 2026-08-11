@@ -94,7 +94,7 @@ class RuleTestDataSeeder
 
         // 'Employee' is created FIRST, out of provider-declaration order: several
         // other providers' samples (NlPayrollChecks' EmploymentContract/Payslip,
-        // NlLoonbeslagChecks' Loonbeslag, ...) reference an employee via a
+        // NlWageGarnishmentChecks' Loonbeslag, ...) reference an employee via a
         // synthetic `employeeNumber`-shaped `employeeId` placeholder (e.g.
         // 'EMP-NL-0001') -- but the Employee schema types `employeeId` as
         // `format: 'uuid'` on every referencing schema, so writing that literal

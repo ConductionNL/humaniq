@@ -10,7 +10,7 @@
  * formula, re-derived from the referenced CarAssignment/Vehicle). The suite
  * closes with a REAL `RuleEngine::evaluate()` integration test proving the
  * rule is genuinely reachable via `occ hrmq:rules:audit`, not an orphaned
- * capability (the `NlLoonbeslagChecksTest` precedent).
+ * capability (the `NlWageGarnishmentChecksTest` precedent).
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Standards\Checks

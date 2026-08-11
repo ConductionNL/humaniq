@@ -33,16 +33,16 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlVerzuimChecks;
+use OCA\Hrmq\Standards\Checks\NlAbsenceChecks;
 use OCA\Hrmq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for NlVerzuimChecks.
+ * Tests for NlAbsenceChecks.
  *
  * @spec openspec/changes/leave-verzuim-mvp/specs/verzuim-wvp/spec.md
  */
-class NlVerzuimChecksTest extends TestCase
+class NlAbsenceChecksTest extends TestCase
 {
 
 
@@ -66,8 +66,8 @@ class NlVerzuimChecksTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->checks        = NlVerzuimChecks::checks()['SickLeaveCase'];
-        $this->payslipChecks = NlVerzuimChecks::checks()['Payslip'];
+        $this->checks        = NlAbsenceChecks::checks()['SickLeaveCase'];
+        $this->payslipChecks = NlAbsenceChecks::checks()['Payslip'];
 
     }//end setUp()
 
