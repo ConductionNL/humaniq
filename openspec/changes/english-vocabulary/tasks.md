@@ -1,6 +1,18 @@
 # Tasks — english-vocabulary (hrmq)
 
 Scan: **16 schemas / 25 Dutch properties**, **2 files / 2 classes / 9 methods**.
+
+⚠️ **Measured 2026-08-11, and the code figure above is wrong by roughly 37×.** A
+grep for the actual rename surface returns **921 occurrences across ~40 files** —
+`src/manifest.json` alone has 104, `hr-seed.json` 55, `PayrollRunService.php` 40,
+and eleven test files carry 20–35 each. The 2/2/9 figure counted only Dutch
+*identifiers*; it never counted the call sites and fixtures that read them.
+
+Plan the work against 921, not 25. This is also the most consequential app to get
+wrong: `cataloguswaarde` and the `eindheffing`/`loondoorbetaling` family feed the
+payroll calculators and the statutory tables in `lib/Standards/tables/nl-2026.json`,
+and `tests/fixtures/payroll-2026/bijtelling-anchor.json` pins payroll output. The
+acceptance criterion "payroll output byte-identical" is doing real work here.
 Nearly all of it is Dutch employment, payroll and social-security law. hrmq's `title`
 fields are **also Dutch**, so unlike most apps there is no recorded English intent to
 copy — every name here is a real translation decision.
