@@ -16,7 +16,7 @@ and no UI/manifest change.
 **OpenSpec changes**:
 - [mileage-rules](../../changes/archive/2026-07-14-mileage-rules/) _(archived 2026-07-14)_ —
   `Expense.travelType`/`distanceKm`, the `nl-reiskosten-onbelast-tarief` corpus rule
-  (`lib/Standards/rules/payroll.json`), `NlReiskostenChecks` (auto-discovered by `RuleEngine`), and
+  (`lib/Standards/rules/payroll.json`), `NlTravelExpenseChecks` (auto-discovered by `RuleEngine`), and
   one compliant mileage seed.
 
 ## Purpose
@@ -46,7 +46,7 @@ compliance signal (`occ hrmq:rules:audit`), never a write-time guard.
   own mid-2026 EUR 0,23 to EUR 0,25 increase) is a one-number JSON edit. **Delivered**
   (`RuleCatalogue::VERSION` bumped 2026-07.18 to 2026-07.19, one increment past the value the
   proposal was scoped against for the same reason as REQ-MILE-001).
-- **REQ-MILE-003** — `lib/Standards/Checks/NlReiskostenChecks.php` implements `CheckProvider`,
+- **REQ-MILE-003** — `lib/Standards/Checks/NlTravelExpenseChecks.php` implements `CheckProvider`,
   registering `checks()['Expense']['nl-reiskosten-onbelast-tarief']`: violates only when `category`
   is `travel`, `travelType` is `business`/`commute`, `distanceKm` is a positive number, `amount` is
   numeric, and `amount / distanceKm` exceeds the catalogue's `rateEurPerKm`; every other shape —
