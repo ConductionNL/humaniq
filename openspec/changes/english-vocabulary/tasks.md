@@ -59,16 +59,29 @@ copy — every name here is a real translation decision.
       `minMonthlyWageCents`, `einddatumSatisfied` → `endDateSatisfied`,
       `dossiervormingSatisfied` → `recordKeepingSatisfied`.
 
-## 7. Translations and verification
+## 7. Data migration
 
-- [ ] 7.1 Move the Dutch titles into `l10n/nl.json` so Dutch HR users see no change;
+- [ ] 7.1 Count live objects across all 16 affected schemas **before** renaming. Resolve
+      numeric register and schema ids through `oc_openregister_schemas`, read the
+      `oc_openregister_table_<reg>_<schema>` shards (name-matching them matches nothing
+      and reports zero for every app), exclude `_deleted`, and sum across every register
+      each schema is in. Prove the query can return non-zero before recording a zero.
+- [ ] 7.2 Migrate stored keys for every renamed property. ⚠️ hrmq holds **payroll and
+      filing history** — an orphaned key here is a lost statutory record, not a cosmetic
+      defect, so the migration is mandatory wherever the count is non-zero and must be
+      reversible until a filing has been produced from the migrated data.
+
+## 8. Translations and verification
+
+- [ ] 8.1 Move the Dutch titles into `l10n/nl.json` so Dutch HR users see no change;
       run `check-l10n`.
-- [ ] 7.2 Re-run the token-aware scan; require 0 Dutch schemas and 0 Dutch properties.
-- [ ] 7.3 Process identical payroll inputs before and after; require byte-identical
-      output. This change renames and touches no rate, threshold or formula.
-- [ ] 7.4 Exercise one filing end to end and confirm the submitted payload still carries
+- [ ] 8.2 Re-run the token-aware scan; require 0 Dutch schemas and 0 Dutch properties.
+- [ ] 8.3 Process identical payroll inputs before and after **on migrated data**; require
+      byte-identical output. This change renames and touches no rate, threshold or formula,
+      so any difference is a migration defect.
+- [ ] 8.4 Exercise one filing end to end and confirm the submitted payload still carries
       the published field names.
-- [ ] 7.5 Full test suite plus hydra gates 46 / 53 / 54 / 55 / 57 / 61, then land
+- [ ] 8.5 Full test suite plus hydra gates 46 / 53 / 54 / 55 / 57 / 61, then land
       together with the shillinq side from task 1.1.
 
 ## Acceptance criteria
@@ -76,6 +89,8 @@ copy — every name here is a real translation decision.
 - Token-aware scan reports hrmq at 0/0.
 - Every category (c) property carries a statute marker naming jurisdiction and instrument.
 - No property retains Dutch on the grounds of being the standardised legal term.
-- Payroll output is byte-identical across the rename.
+- Payroll output is byte-identical across the rename, measured on migrated data.
+- Stored-object count measured and proven by a positive control; migrated where non-zero,
+  reversibly, since an orphaned key here is a lost statutory record.
 - A filing payload still uses its published wire field names.
 - shillinq's reads are enumerated and land in the same window.
