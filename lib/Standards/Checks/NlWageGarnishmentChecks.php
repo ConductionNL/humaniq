@@ -34,9 +34,9 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
- * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
- * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-007
+ * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-002
+ * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
+ * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-007
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ namespace OCA\Hrmq\Standards\Checks;
 /**
  * Loonbeslag floor-enforcement + single-active-beslag executable checks.
  */
-final class NlLoonbeslagChecks implements CheckProvider, SeedsObjects
+final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects
 {
 
 
@@ -55,8 +55,8 @@ final class NlLoonbeslagChecks implements CheckProvider, SeedsObjects
      *
      * @return array<string, array<string, callable>>
      *
-     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
-     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
+     * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-002
+     * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
      */
     public static function checks(): array
     {
@@ -96,7 +96,7 @@ final class NlLoonbeslagChecks implements CheckProvider, SeedsObjects
      *
      * @return array<string, array<int, array<string, mixed>>>
      *
-     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-001
+     * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-001
      */
     public static function seedObjects(): array
     {
@@ -132,7 +132,7 @@ final class NlLoonbeslagChecks implements CheckProvider, SeedsObjects
      *
      * @return bool
      *
-     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
+     * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-002
      */
     private static function isFloorRespected(array $o, array $context): bool
     {
@@ -169,7 +169,7 @@ final class NlLoonbeslagChecks implements CheckProvider, SeedsObjects
      *
      * @return bool
      *
-     * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
+     * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
      */
     private static function isSingleActive(array $o, array $context): bool
     {

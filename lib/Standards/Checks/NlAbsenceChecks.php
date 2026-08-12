@@ -53,7 +53,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/leave-verzuim-mvp/specs/verzuim-wvp/spec.md
+ * @spec openspec/specs/verzuim-wvp/spec.md
  * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-006
  */
 
@@ -67,7 +67,7 @@ use OCA\Hrmq\Standards\RuleCatalogue;
 /**
  * Dutch sickness / Wet verbetering poortwachter executable checks.
  */
-final class NlVerzuimChecks implements CheckProvider
+final class NlAbsenceChecks implements CheckProvider
 {
 
     /**
@@ -111,13 +111,13 @@ final class NlVerzuimChecks implements CheckProvider
                 // overdue or approaching, not-yet-Done milestone is flagged.
                 'nl-wvp-milestone-overdue' => static fn(array $o): bool => self::overdueSatisfied($o),
                 // BW art. 7:629 lid 1 — at least 70% loondoorbetaling on open cases.
-                'nl-loondoorbetaling-minimum' => static fn(array $o): bool => self::loondoorbetalingSatisfied($o),
+                'nl-loondoorbetaling-minimum' => static fn(array $o): bool => self::continuedWagePaymentSatisfied($o),
             ],
             'Payslip'       => [
                 // BW art. 7:629 lid 1 jo. WML art. 12 — a sick-pay payslip's
                 // doorbetaald loon is at least the independently recomputed
                 // 70%/year-1-WML floor (sick-pay-calc design.md D5).
-                'nl-loondoorbetaling-floor' => static fn(array $o): bool => self::loondoorbetalingFloorSatisfied($o),
+                'nl-loondoorbetaling-floor' => static fn(array $o): bool => self::continuedWagePaymentFloorSatisfied($o),
             ],
         ];
 
@@ -236,7 +236,7 @@ final class NlVerzuimChecks implements CheckProvider
      *
      * @return bool
      */
-    private static function loondoorbetalingSatisfied(array $o): bool
+    private static function continuedWagePaymentSatisfied(array $o): bool
     {
         if ((string) ($o['status'] ?? 'gemeld') !== 'gemeld') {
             return true;
@@ -249,7 +249,7 @@ final class NlVerzuimChecks implements CheckProvider
 
         return (float) $percentage >= 70.0;
 
-    }//end loondoorbetalingSatisfied()
+    }//end continuedWagePaymentSatisfied()
 
 
     /**
@@ -296,14 +296,14 @@ final class NlVerzuimChecks implements CheckProvider
      *
      * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-006
      */
-    private static function loondoorbetalingFloorSatisfied(array $o): bool
+    private static function continuedWagePaymentFloorSatisfied(array $o): bool
     {
         $sickLeaveCaseId = trim((string) ($o['sickLeaveCaseId'] ?? ''));
         if ($sickLeaveCaseId === '') {
             return true;
         }
 
-        $parameters = self::loondoorbetalingFloorParameters();
+        $parameters = self::continuedWagePaymentFloorParameters();
         if ($parameters === null) {
             return true;
         }
@@ -327,7 +327,7 @@ final class NlVerzuimChecks implements CheckProvider
 
         return self::euroToCents((float) $doorbetaald) >= $floorCents;
 
-    }//end loondoorbetalingFloorSatisfied()
+    }//end continuedWagePaymentFloorSatisfied()
 
 
     /**
@@ -336,7 +336,7 @@ final class NlVerzuimChecks implements CheckProvider
      *
      * @return array<string, mixed>|null
      */
-    private static function loondoorbetalingFloorParameters(): ?array
+    private static function continuedWagePaymentFloorParameters(): ?array
     {
         foreach (RuleCatalogue::all() as $rule) {
             if ((string) ($rule['id'] ?? '') !== 'nl-loondoorbetaling-floor') {
@@ -349,7 +349,7 @@ final class NlVerzuimChecks implements CheckProvider
 
         return null;
 
-    }//end loondoorbetalingFloorParameters()
+    }//end continuedWagePaymentFloorParameters()
 
 
     /**

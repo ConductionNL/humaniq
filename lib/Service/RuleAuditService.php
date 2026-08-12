@@ -720,7 +720,7 @@ class RuleAuditService
      *
      * loonbeslag (design.md D6): also builds `loonbeslagenById`, the FULL
      * Loonbeslag row keyed by id -- the SAME `runsById` shape, consumed by
-     * `NlLoonbeslagChecks::checks()['Payslip']
+     * `NlWageGarnishmentChecks::checks()['Payslip']
      * ['nl-loonbeslag-beslagvrije-voet-floor']` (resolving a payslip's
      * `loonbeslagId` reference) and `['Loonbeslag']
      * ['nl-loonbeslag-single-active']` (scanning every OTHER Loonbeslag for

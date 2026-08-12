@@ -169,7 +169,7 @@
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Standards/Checks/NlGlPostChecks.php" method="linesBalance"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Standards/Checks/NlGlPostChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlLeaveChecks.php"/>
-  <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlLoonbeslagChecks.php"/>
+  <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlWageGarnishmentChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlNetPayChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlOffboardingChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\BooleanGetMethodName" file="lib/Standards/Checks/NlOffboardingChecks.php" method="getuigschriftSatisfied"/>
@@ -198,9 +198,9 @@
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlSignalChecks.php"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Standards/Checks/NlSignalChecks.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Standards/Checks/NlSignalChecks.php" method="hasSuccessor"/>
-  <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlVerzuimChecks.php"/>
-  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Standards/Checks/NlVerzuimChecks.php"/>
-  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Standards/Checks/NlVerzuimChecks.php"/>
+  <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlAbsenceChecks.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Standards/Checks/NlAbsenceChecks.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Standards/Checks/NlAbsenceChecks.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Standards/Checks/NlWageTaxFilingChecks.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Standards/Checks/NlWageTaxFilingChecks.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Standards/Checks/NlWageTaxFilingChecks.php" method="expectedTijdvakcode"/>

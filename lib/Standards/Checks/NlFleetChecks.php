@@ -15,7 +15,7 @@
  * cents-mismatch against the recorded `Payslip.bijtelling`. Vacuous also when
  * either reference is dangling (a different, pre-existing class of
  * data-integrity problem, not this rule's job) -- the
- * `NlLoonbeslagChecks::isFloorRespected()` precedent.
+ * `NlWageGarnishmentChecks::isFloorRespected()` precedent.
  *
  * @category Standards
  * @package  OCA\Hrmq\Standards\Checks
@@ -204,7 +204,7 @@ final class NlFleetChecks implements CheckProvider
 
     /**
      * Convert a euro-denominated value to integer cents (`round($euros *
-     * 100)`, the `NlLoonbeslagChecks::cents()` precedent). Non-numeric/null
+     * 100)`, the `NlWageGarnishmentChecks::cents()` precedent). Non-numeric/null
      * values convert to 0.
      *
      * @param mixed $euros The raw field value.
