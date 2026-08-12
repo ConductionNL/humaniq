@@ -73,7 +73,7 @@ provider referenced throughout this documentation —
 `NlOnboardingChecks`, `NlOffboardingChecks`, `NlAtsChecks`,
 `NlPerformanceChecks`, `NlOrgChecks`, `NlAssetChecks`,
 `NlDocumentChecks`, `NlSignalChecks`, `NlFleetChecks`, `NlDgaChecks`,
-`NlWkrChecks`, `NlWageGarnishmentChecks`, `NlReiskostenChecks`,
+`NlWkrChecks`, `NlWageGarnishmentChecks`, `NlTravelExpenseChecks`,
 `NlRosterChecks`, `CompChecks` — is one of these providers.
 
 The corpus has grown well past its original payroll/labour/privacy
