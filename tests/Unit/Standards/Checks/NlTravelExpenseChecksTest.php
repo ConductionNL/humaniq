@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for the onbelaste-kilometervergoeding check (NlReiskostenChecks).
+ * Unit tests for the onbelaste-kilometervergoeding check (NlTravelExpenseChecks).
  *
  * Drives the nl-reiskosten-onbelast-tarief predicate through the REAL
  * RuleEngine + RuleCatalogue corpus (not the raw closure) so the test also
@@ -32,17 +32,17 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlReiskostenChecks;
+use OCA\Hrmq\Standards\Checks\NlTravelExpenseChecks;
 use OCA\Hrmq\Standards\RuleCatalogue;
 use OCA\Hrmq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for NlReiskostenChecks, driven through the real RuleEngine.
+ * Tests for NlTravelExpenseChecks, driven through the real RuleEngine.
  *
  * @spec openspec/changes/mileage-rules/specs/mileage-rules/spec.md#REQ-MILE-003
  */
-class NlReiskostenChecksTest extends TestCase
+class NlTravelExpenseChecksTest extends TestCase
 {
 
     private const RULE_ID = 'nl-reiskosten-onbelast-tarief';
@@ -127,7 +127,7 @@ class NlReiskostenChecksTest extends TestCase
      */
     public function testRuleIsReachableFromTheEngine(): void
     {
-        $this->assertArrayHasKey(self::RULE_ID, (NlReiskostenChecks::checks()['Expense'] ?? []));
+        $this->assertArrayHasKey(self::RULE_ID, (NlTravelExpenseChecks::checks()['Expense'] ?? []));
         $this->assertContains(self::RULE_ID, RuleEngine::checkedRuleIds());
         $this->assertContains('Expense', RuleEngine::supportedTypes());
 
@@ -352,7 +352,7 @@ class NlReiskostenChecksTest extends TestCase
      */
     public function testPredicateContractToleratesMissingContext(): void
     {
-        $checks  = NlReiskostenChecks::checks()['Expense'][self::RULE_ID];
+        $checks  = NlTravelExpenseChecks::checks()['Expense'][self::RULE_ID];
         $expense = [
             'category'   => 'travel',
             'travelType' => 'business',

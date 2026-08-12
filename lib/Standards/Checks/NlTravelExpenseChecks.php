@@ -47,7 +47,7 @@ use OCA\Hrmq\Standards\RuleCatalogue;
 /**
  * Dutch onbelaste-kilometervergoeding executable check for Expense.
  */
-final class NlReiskostenChecks implements CheckProvider
+final class NlTravelExpenseChecks implements CheckProvider
 {
 
     /**
