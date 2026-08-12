@@ -26,9 +26,9 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
- * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
- * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-007
+ * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-002
+ * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
+ * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-007
  */
 
 declare(strict_types=1);
@@ -42,8 +42,8 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for NlWageGarnishmentChecks (raw predicates + through the REAL RuleEngine).
  *
- * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-002
- * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
+ * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-002
+ * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
  */
 class NlWageGarnishmentChecksTest extends TestCase
 {

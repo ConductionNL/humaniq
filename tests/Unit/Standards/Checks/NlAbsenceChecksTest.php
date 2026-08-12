@@ -25,7 +25,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/leave-verzuim-mvp/specs/verzuim-wvp/spec.md
+ * @spec openspec/specs/verzuim-wvp/spec.md
  * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-006
  */
 
@@ -40,7 +40,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for NlAbsenceChecks.
  *
- * @spec openspec/changes/leave-verzuim-mvp/specs/verzuim-wvp/spec.md
+ * @spec openspec/specs/verzuim-wvp/spec.md
  */
 class NlAbsenceChecksTest extends TestCase
 {
