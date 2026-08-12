@@ -26,11 +26,13 @@ jobs:
       # appinfo/info.xml declares <php min-version="8.3"/>.
       php-version: "8.3"
       php-test-versions: '["8.3", "8.4"]'
-      # appinfo/info.xml declares <nextcloud min-version="28" max-version="34"/>,
-      # but the floor that actually binds is `nextcloud/ocp: ^31.0` in
-      # require-dev — the stubs the analysers resolve against. stable31..33 is
-      # the fleet-standard span (identical to nextcloud-app-template).
-      nextcloud-test-refs: '["stable31", "stable32", "stable33"]'
+      # appinfo/info.xml declares <nextcloud min-version="32" max-version="34"/>
+      # and `nextcloud/ocp` is now `^34.0` in require-dev — the stubs the
+      # analysers resolve against. Both sides now name the same server, so the
+      # test matrix names it too. Previously this ran stable31..33 against an
+      # ocp pinned at ^31: every leg tested a server the type checker had never
+      # been shown.
+      nextcloud-test-refs: '["stable34"]'
 
       # ── PHP toolchain ────────────────────────────────────────────────────
       # Every one of these has its config committed at the repo root, so none
