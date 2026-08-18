@@ -57,151 +57,138 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-002
  * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-004
  */
-class PayrollControllerProformaTest extends TestCase
-{
+class PayrollControllerProformaTest extends TestCase {
 
+	/**
+	 * REQ-PRO-004 "An HR caller reaches the simulation" scenario.
+	 *
+	 * @return void
+	 */
+	public function testAuthorizedCallerReceivesTheFullBreakdown(): void {
+		$controller = $this->buildController(rbacAllowed: true);
 
-    /**
-     * REQ-PRO-004 "An HR caller reaches the simulation" scenario.
-     *
-     * @return void
-     */
-    public function testAuthorizedCallerReceivesTheFullBreakdown(): void
-    {
-        $controller = $this->buildController(rbacAllowed: true);
+		$response = $controller->proforma(gross: 3800, table: 'wit', dateOfBirth: '1990-04-12', period: '2026-02', aof: 'laag', whk: 1.52);
 
-        $response = $controller->proforma(gross: 3800, table: 'wit', dateOfBirth: '1990-04-12', period: '2026-02', aof: 'laag', whk: 1.52);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame(3081.17, $data['nettoPay']);
+		$this->assertArrayHasKey('loonheffing', $data);
+		$this->assertArrayHasKey('werknemersverzekeringen', $data);
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $data = $response->getData();
-        $this->assertSame(3081.17, $data['nettoPay']);
-        $this->assertArrayHasKey('loonheffing', $data);
-        $this->assertArrayHasKey('werknemersverzekeringen', $data);
+	}//end testAuthorizedCallerReceivesTheFullBreakdown()
 
-    }//end testAuthorizedCallerReceivesTheFullBreakdown()
+	/**
+	 * REQ-PRO-004 "A non-HR caller cannot reach the engine" scenario: RBAC
+	 * cannot resolve the payroll register -> 404, no calculation performed
+	 * (asserted by the response carrying no breakdown fields).
+	 *
+	 * @return void
+	 */
+	public function testUnauthorizedCallerReceives404(): void {
+		$controller = $this->buildController(rbacAllowed: false);
 
+		$response = $controller->proforma(gross: 3800, table: 'wit', period: '2026-02');
 
-    /**
-     * REQ-PRO-004 "A non-HR caller cannot reach the engine" scenario: RBAC
-     * cannot resolve the payroll register -> 404, no calculation performed
-     * (asserted by the response carrying no breakdown fields).
-     *
-     * @return void
-     */
-    public function testUnauthorizedCallerReceives404(): void
-    {
-        $controller = $this->buildController(rbacAllowed: false);
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertArrayNotHasKey('nettoPay', $response->getData());
 
-        $response = $controller->proforma(gross: 3800, table: 'wit', period: '2026-02');
+	}//end testUnauthorizedCallerReceives404()
 
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
-        $this->assertArrayNotHasKey('nettoPay', $response->getData());
+	/**
+	 * REQ-PRO-002 "Malformed input is refused" scenario: RBAC passes but the
+	 * gross is non-numeric -> 400, nothing computed.
+	 *
+	 * @return void
+	 */
+	public function testMalformedGrossReturns400(): void {
+		$controller = $this->buildController(rbacAllowed: true);
 
-    }//end testUnauthorizedCallerReceives404()
+		$response = $controller->proforma(gross: 'n/a');
 
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertArrayHasKey('error', $response->getData());
+		$this->assertArrayNotHasKey('nettoPay', $response->getData());
 
-    /**
-     * REQ-PRO-002 "Malformed input is refused" scenario: RBAC passes but the
-     * gross is non-numeric -> 400, nothing computed.
-     *
-     * @return void
-     */
-    public function testMalformedGrossReturns400(): void
-    {
-        $controller = $this->buildController(rbacAllowed: true);
+	}//end testMalformedGrossReturns400()
 
-        $response = $controller->proforma(gross: 'n/a');
+	/**
+	 * Build a `PayrollController` with a fake container-resolved
+	 * ObjectService whose `findAll()` either succeeds (RBAC ok) or throws
+	 * (RBAC denies / register unresolvable).
+	 *
+	 * @param bool $rbacAllowed Whether the fake ObjectService allows the capability probe.
+	 *
+	 * @return PayrollController
+	 */
+	private function buildController(bool $rbacAllowed): PayrollController {
+		$request = $this->createMock(IRequest::class);
 
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
-        $this->assertArrayHasKey('error', $response->getData());
-        $this->assertArrayNotHasKey('nettoPay', $response->getData());
+		$objectService = new class($rbacAllowed) {
 
-    }//end testMalformedGrossReturns400()
+			/**
+			 * @param bool $allowed Whether findAll() should succeed.
+			 */
+			public function __construct(
+				private readonly bool $allowed,
+			) {
+			}
 
+			/**
+			 * @param string $register Ignored; chainable.
+			 *
+			 * @return self
+			 */
+			public function setRegister(string $register): self {
+				return $this;
+			}
 
-    /**
-     * Build a `PayrollController` with a fake container-resolved
-     * ObjectService whose `findAll()` either succeeds (RBAC ok) or throws
-     * (RBAC denies / register unresolvable).
-     *
-     * @param bool $rbacAllowed Whether the fake ObjectService allows the capability probe.
-     *
-     * @return PayrollController
-     */
-    private function buildController(bool $rbacAllowed): PayrollController
-    {
-        $request = $this->createMock(IRequest::class);
+			/**
+			 * @param string $schema Ignored; chainable.
+			 *
+			 * @return self
+			 */
+			public function setSchema(string $schema): self {
+				return $this;
+			}
 
-        $objectService = new class ($rbacAllowed) {
+			/**
+			 * @param array<string, mixed> $options Ignored.
+			 *
+			 * @return array<int, mixed>
+			 */
+			public function findAll(array $options): array {
+				if ($this->allowed === false) {
+					throw new \RuntimeException('RBAC denied.');
+				}
 
-            /**
-             * @param bool $allowed Whether findAll() should succeed.
-             */
-            public function __construct(private readonly bool $allowed)
-            {
-            }
+				return [];
+			}
+		};
 
-            /**
-             * @param string $register Ignored; chainable.
-             *
-             * @return self
-             */
-            public function setRegister(string $register): self
-            {
-                return $this;
-            }
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($objectService);
 
-            /**
-             * @param string $schema Ignored; chainable.
-             *
-             * @return self
-             */
-            public function setSchema(string $schema): self
-            {
-                return $this;
-            }
+		$payrollRunService = $this->createMock(PayrollRunService::class);
 
-            /**
-             * @param array<string, mixed> $options Ignored.
-             *
-             * @return array<int, mixed>
-             */
-            public function findAll(array $options): array
-            {
-                if ($this->allowed === false) {
-                    throw new \RuntimeException('RBAC denied.');
-                }
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getPayrollAofTariff')->willReturn('laag');
+		$settings->method('getPayrollWhkPercentage')->willReturnArgument(0);
 
-                return [];
-            }
-        };
+		$proformaService = new ProformaPayslipService(new PayrollCalculator(), $settings);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($objectService);
+		// Not exercised by proforma(); present only to satisfy the merged
+		// constructor (payroll-mutation-reports/retro-adjustments/
+		// wkr-administration coexist on this controller).
+		$payrollMutationService = $this->createMock(PayrollMutationService::class);
+		$retroAdjustmentService = $this->createMock(RetroAdjustmentService::class);
+		$wkrService = $this->createMock(WkrService::class);
+		$userSession = $this->createMock(IUserSession::class);
+		$groupManager = $this->createMock(IGroupManager::class);
 
-        $payrollRunService = $this->createMock(PayrollRunService::class);
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $settings = $this->createMock(SettingsService::class);
-        $settings->method('getRegisterSlug')->willReturn('hrmq');
-        $settings->method('getPayrollAofTariff')->willReturn('laag');
-        $settings->method('getPayrollWhkPercentage')->willReturnArgument(0);
-
-        $proformaService = new ProformaPayslipService(new PayrollCalculator(), $settings);
-
-        // Not exercised by proforma(); present only to satisfy the merged
-        // constructor (payroll-mutation-reports/retro-adjustments/
-        // wkr-administration coexist on this controller).
-        $payrollMutationService = $this->createMock(PayrollMutationService::class);
-        $retroAdjustmentService = $this->createMock(RetroAdjustmentService::class);
-        $wkrService             = $this->createMock(WkrService::class);
-        $userSession            = $this->createMock(IUserSession::class);
-        $groupManager           = $this->createMock(IGroupManager::class);
-
-        $logger = $this->createMock(LoggerInterface::class);
-
-        return new PayrollController($request, $container, $payrollRunService, $payrollMutationService, $proformaService, $retroAdjustmentService, $wkrService, $settings, $userSession, $groupManager, $logger);
-
-    }//end buildController()
-
+		return new PayrollController($request, $container, $payrollRunService, $payrollMutationService, $proformaService, $retroAdjustmentService, $wkrService, $settings, $userSession, $groupManager, $logger);
+	}//end buildController()
 
 }//end class

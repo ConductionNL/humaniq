@@ -40,379 +40,322 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/offboarding-wizard-mvp/specs/offboarding-wizard/spec.md
  */
-class NlOffboardingChecksTest extends TestCase
-{
-
-
-    /**
-     * The registered Offboarding predicates, keyed by rule id.
-     *
-     * @var array<string, callable>
-     */
-    private array $checks;
-
-
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $this->checks = NlOffboardingChecks::checks()['Offboarding'];
-
-    }//end setUp()
-
-
-    /**
-     * A minimal Offboarding fixture; each test overrides the fields it exercises.
-     *
-     * @param array<string, mixed> $overrides Fields to override.
-     *
-     * @return array<string, mixed>
-     */
-    private function offboarding(array $overrides=[]): array
-    {
-        return array_merge(
-            [
-                'employeeId'                => 'employee-jansen',
-                'lastWorkingDay'             => '2026-08-31',
-                'reason'                     => 'opzegging-werkgever',
-                'status'                     => 'aangekondigd',
-                'exitGesprekDone'            => null,
-                'assetsIngeleverd'           => false,
-                'toegangIngetrokken'         => false,
-                'verlofsaldoUitbetaald'      => false,
-                'vakantiegeldAfgerekend'     => false,
-                'transitievergoedingBedrag'  => null,
-                'getuigschriftVerstrekt'     => false,
-                'notes'                      => null,
-            ],
-            $overrides
-        );
+class NlOffboardingChecksTest extends TestCase {
+
+	/**
+	 * The registered Offboarding predicates, keyed by rule id.
+	 *
+	 * @var array<string, callable>
+	 */
+	private array $checks;
+
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$this->checks = NlOffboardingChecks::checks()['Offboarding'];
+
+	}//end setUp()
+
+	/**
+	 * A minimal Offboarding fixture; each test overrides the fields it exercises.
+	 *
+	 * @param array<string, mixed> $overrides Fields to override.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function offboarding(array $overrides = []): array {
+		return array_merge(
+			[
+				'employeeId' => 'employee-jansen',
+				'lastWorkingDay' => '2026-08-31',
+				'reason' => 'opzegging-werkgever',
+				'status' => 'aangekondigd',
+				'exitGesprekDone' => null,
+				'assetsIngeleverd' => false,
+				'toegangIngetrokken' => false,
+				'verlofsaldoUitbetaald' => false,
+				'vakantiegeldAfgerekend' => false,
+				'transitievergoedingBedrag' => null,
+				'getuigschriftVerstrekt' => false,
+				'notes' => null,
+			],
+			$overrides
+		);
+
+	}//end offboarding()
+
+	/**
+	 * A minimal `context['related']` fixture matching RuleAuditService's
+	 * pre-pass shape.
+	 *
+	 * @param array<string, array<string, mixed>> $employeesById Employee index by id.
+	 * @param array<string, array<int, array<string, mixed>>> $leaveBalancesByEmployeeId LeaveBalance index by employeeId.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function context(array $employeesById = [], array $leaveBalancesByEmployeeId = []): array {
+		return [
+			'related' => [
+				'Employee' => ['byId' => $employeesById],
+				'LeaveBalance' => ['byEmployeeId' => $leaveBalancesByEmployeeId],
+			],
+		];
+
+	}//end context()
+
+	// -- nl-offboarding-transitievergoeding -----------------------------------
+
+	/**
+	 * @return void
+	 */
+	public function testTransitievergoedingSatisfiedBeforeEindafrekeningGereed(): void {
+		$case = $this->offboarding(['status' => 'afronding_gepland', 'transitievergoedingBedrag' => null]);
+
+		$this->assertTrue(($this->checks['nl-offboarding-transitievergoeding'])($case));
+
+	}//end testTransitievergoedingSatisfiedBeforeEindafrekeningGereed()
+
+	/**
+	 * @return void
+	 */
+	public function testTransitievergoedingViolatedWhenMissingAtEindafrekeningGereed(): void {
+		$case = $this->offboarding(['status' => 'eindafrekening_gereed', 'reason' => 'opzegging-werkgever', 'transitievergoedingBedrag' => null]);
+
+		$this->assertFalse(($this->checks['nl-offboarding-transitievergoeding'])($case));
+
+	}//end testTransitievergoedingViolatedWhenMissingAtEindafrekeningGereed()
+
+	/**
+	 * @return void
+	 */
+	public function testTransitievergoedingViolatedWhenMissingAtAfgerondForEindeContract(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'reason' => 'einde-contract', 'transitievergoedingBedrag' => null]);
+
+		$this->assertFalse(($this->checks['nl-offboarding-transitievergoeding'])($case));
+
+	}//end testTransitievergoedingViolatedWhenMissingAtAfgerondForEindeContract()
+
+	/**
+	 * @return void
+	 */
+	public function testTransitievergoedingSatisfiedWhenRecordedAsZeroOrMore(): void {
+		$case = $this->offboarding(['status' => 'eindafrekening_gereed', 'reason' => 'opzegging-werkgever', 'transitievergoedingBedrag' => 4200.50]);
 
-    }//end offboarding()
+		$this->assertTrue(($this->checks['nl-offboarding-transitievergoeding'])($case));
 
+	}//end testTransitievergoedingSatisfiedWhenRecordedAsZeroOrMore()
 
-    /**
-     * A minimal `context['related']` fixture matching RuleAuditService's
-     * pre-pass shape.
-     *
-     * @param array<string, array<string, mixed>>            $employeesById         Employee index by id.
-     * @param array<string, array<int, array<string, mixed>>> $leaveBalancesByEmployeeId LeaveBalance index by employeeId.
-     *
-     * @return array<string, mixed>
-     */
-    private function context(array $employeesById=[], array $leaveBalancesByEmployeeId=[]): array
-    {
-        return [
-            'related' => [
-                'Employee'     => ['byId' => $employeesById],
-                'LeaveBalance' => ['byEmployeeId' => $leaveBalancesByEmployeeId],
-            ],
-        ];
+	/**
+	 * @return void
+	 */
+	public function testTransitievergoedingViolatedWhenNegative(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'reason' => 'opzegging-werkgever', 'transitievergoedingBedrag' => -1.0]);
 
-    }//end context()
+		$this->assertFalse(($this->checks['nl-offboarding-transitievergoeding'])($case));
 
+	}//end testTransitievergoedingViolatedWhenNegative()
 
-    // -- nl-offboarding-transitievergoeding -----------------------------------
+	/**
+	 * @return void
+	 */
+	public function testResignationNeverRequiresATransitievergoeding(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'reason' => 'opzegging-werknemer', 'transitievergoedingBedrag' => null]);
 
+		$this->assertTrue(($this->checks['nl-offboarding-transitievergoeding'])($case));
 
-    /**
-     * @return void
-     */
-    public function testTransitievergoedingSatisfiedBeforeEindafrekeningGereed(): void
-    {
-        $case = $this->offboarding(['status' => 'afronding_gepland', 'transitievergoedingBedrag' => null]);
+	}//end testResignationNeverRequiresATransitievergoeding()
+
+	/**
+	 * @return void
+	 */
+	public function testPensionAndDeathNeverRequireATransitievergoeding(): void {
+		$pension = $this->offboarding(['status' => 'afgerond', 'reason' => 'pensioen', 'transitievergoedingBedrag' => null]);
+		$overleden = $this->offboarding(['status' => 'afgerond', 'reason' => 'overlijden', 'transitievergoedingBedrag' => null]);
 
-        $this->assertTrue(($this->checks['nl-offboarding-transitievergoeding'])($case));
+		$this->assertTrue(($this->checks['nl-offboarding-transitievergoeding'])($pension));
+		$this->assertTrue(($this->checks['nl-offboarding-transitievergoeding'])($overleden));
 
-    }//end testTransitievergoedingSatisfiedBeforeEindafrekeningGereed()
+	}//end testPensionAndDeathNeverRequireATransitievergoeding()
 
+	/**
+	 * @return void
+	 */
+	public function testVsoNeverRequiresAStatutoryTransitievergoeding(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'reason' => 'vso', 'transitievergoedingBedrag' => null]);
 
-    /**
-     * @return void
-     */
-    public function testTransitievergoedingViolatedWhenMissingAtEindafrekeningGereed(): void
-    {
-        $case = $this->offboarding(['status' => 'eindafrekening_gereed', 'reason' => 'opzegging-werkgever', 'transitievergoedingBedrag' => null]);
+		$this->assertTrue(($this->checks['nl-offboarding-transitievergoeding'])($case));
 
-        $this->assertFalse(($this->checks['nl-offboarding-transitievergoeding'])($case));
+	}//end testVsoNeverRequiresAStatutoryTransitievergoeding()
 
-    }//end testTransitievergoedingViolatedWhenMissingAtEindafrekeningGereed()
+	// -- nl-offboarding-verlofsaldo-uitbetaling -------------------------------
 
+	/**
+	 * @return void
+	 */
+	public function testVerlofsaldoSatisfiedBeforeAfgerond(): void {
+		$case = $this->offboarding(['status' => 'eindafrekening_gereed', 'verlofsaldoUitbetaald' => false]);
 
-    /**
-     * @return void
-     */
-    public function testTransitievergoedingViolatedWhenMissingAtAfgerondForEindeContract(): void
-    {
-        $case = $this->offboarding(['status' => 'afgerond', 'reason' => 'einde-contract', 'transitievergoedingBedrag' => null]);
+		$this->assertTrue(($this->checks['nl-offboarding-verlofsaldo-uitbetaling'])($case, $this->context()));
 
-        $this->assertFalse(($this->checks['nl-offboarding-transitievergoeding'])($case));
+	}//end testVerlofsaldoSatisfiedBeforeAfgerond()
 
-    }//end testTransitievergoedingViolatedWhenMissingAtAfgerondForEindeContract()
+	/**
+	 * @return void
+	 */
+	public function testVerlofsaldoViolatedWhenOpenBalanceAndNotPaid(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'verlofsaldoUitbetaald' => false]);
+		$context = $this->context(
+			[],
+			['employee-jansen' => [['leaveType' => 'holiday', 'year' => 2026, 'entitledHours' => 160, 'bovenwettelijkHours' => 40, 'usedHours' => 56]]]
+		);
 
+		$this->assertFalse(($this->checks['nl-offboarding-verlofsaldo-uitbetaling'])($case, $context));
 
-    /**
-     * @return void
-     */
-    public function testTransitievergoedingSatisfiedWhenRecordedAsZeroOrMore(): void
-    {
-        $case = $this->offboarding(['status' => 'eindafrekening_gereed', 'reason' => 'opzegging-werkgever', 'transitievergoedingBedrag' => 4200.50]);
+	}//end testVerlofsaldoViolatedWhenOpenBalanceAndNotPaid()
 
-        $this->assertTrue(($this->checks['nl-offboarding-transitievergoeding'])($case));
+	/**
+	 * @return void
+	 */
+	public function testVerlofsaldoSatisfiedWhenOpenBalanceButPaid(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'verlofsaldoUitbetaald' => true]);
+		$context = $this->context(
+			[],
+			['employee-jansen' => [['leaveType' => 'holiday', 'year' => 2026, 'entitledHours' => 160, 'bovenwettelijkHours' => 40, 'usedHours' => 56]]]
+		);
 
-    }//end testTransitievergoedingSatisfiedWhenRecordedAsZeroOrMore()
+		$this->assertTrue(($this->checks['nl-offboarding-verlofsaldo-uitbetaling'])($case, $context));
 
+	}//end testVerlofsaldoSatisfiedWhenOpenBalanceButPaid()
 
-    /**
-     * @return void
-     */
-    public function testTransitievergoedingViolatedWhenNegative(): void
-    {
-        $case = $this->offboarding(['status' => 'afgerond', 'reason' => 'opzegging-werkgever', 'transitievergoedingBedrag' => -1.0]);
+	/**
+	 * @return void
+	 */
+	public function testVerlofsaldoSkipsWhenNoBalanceRowsResolve(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'verlofsaldoUitbetaald' => false]);
 
-        $this->assertFalse(($this->checks['nl-offboarding-transitievergoeding'])($case));
+		$this->assertTrue(($this->checks['nl-offboarding-verlofsaldo-uitbetaling'])($case, $this->context()));
 
-    }//end testTransitievergoedingViolatedWhenNegative()
+	}//end testVerlofsaldoSkipsWhenNoBalanceRowsResolve()
 
+	/**
+	 * @return void
+	 */
+	public function testVerlofsaldoSatisfiedWhenBalanceIsFullyDepleted(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'verlofsaldoUitbetaald' => false]);
+		$context = $this->context(
+			[],
+			['employee-jansen' => [['leaveType' => 'holiday', 'year' => 2026, 'entitledHours' => 160, 'bovenwettelijkHours' => 0, 'usedHours' => 160]]]
+		);
 
-    /**
-     * @return void
-     */
-    public function testResignationNeverRequiresATransitievergoeding(): void
-    {
-        $case = $this->offboarding(['status' => 'afgerond', 'reason' => 'opzegging-werknemer', 'transitievergoedingBedrag' => null]);
+		$this->assertTrue(($this->checks['nl-offboarding-verlofsaldo-uitbetaling'])($case, $context));
 
-        $this->assertTrue(($this->checks['nl-offboarding-transitievergoeding'])($case));
+	}//end testVerlofsaldoSatisfiedWhenBalanceIsFullyDepleted()
 
-    }//end testResignationNeverRequiresATransitievergoeding()
+	/**
+	 * @return void
+	 */
+	public function testVerlofsaldoSumsMultipleRowsAcrossLeaveTypes(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'verlofsaldoUitbetaald' => false]);
+		$context = $this->context(
+			[],
+			[
+				'employee-jansen' => [
+					['leaveType' => 'holiday', 'year' => 2026, 'entitledHours' => 160, 'bovenwettelijkHours' => 0, 'usedHours' => 160],
+					['leaveType' => 'special', 'year' => 2026, 'entitledHours' => 8, 'bovenwettelijkHours' => 0, 'usedHours' => 0],
+				],
+			]
+		);
 
+		$this->assertFalse(($this->checks['nl-offboarding-verlofsaldo-uitbetaling'])($case, $context));
 
-    /**
-     * @return void
-     */
-    public function testPensionAndDeathNeverRequireATransitievergoeding(): void
-    {
-        $pension = $this->offboarding(['status' => 'afgerond', 'reason' => 'pensioen', 'transitievergoedingBedrag' => null]);
-        $overleden = $this->offboarding(['status' => 'afgerond', 'reason' => 'overlijden', 'transitievergoedingBedrag' => null]);
+	}//end testVerlofsaldoSumsMultipleRowsAcrossLeaveTypes()
 
-        $this->assertTrue(($this->checks['nl-offboarding-transitievergoeding'])($pension));
-        $this->assertTrue(($this->checks['nl-offboarding-transitievergoeding'])($overleden));
+	// -- nl-offboarding-getuigschrift ------------------------------------------
 
-    }//end testPensionAndDeathNeverRequireATransitievergoeding()
+	/**
+	 * @return void
+	 */
+	public function testGetuigschriftSatisfiedBeforeAfgerond(): void {
+		$case = $this->offboarding(['status' => 'eindafrekening_gereed', 'getuigschriftVerstrekt' => false]);
 
+		$this->assertTrue(($this->checks['nl-offboarding-getuigschrift'])($case));
 
-    /**
-     * @return void
-     */
-    public function testVsoNeverRequiresAStatutoryTransitievergoeding(): void
-    {
-        $case = $this->offboarding(['status' => 'afgerond', 'reason' => 'vso', 'transitievergoedingBedrag' => null]);
+	}//end testGetuigschriftSatisfiedBeforeAfgerond()
 
-        $this->assertTrue(($this->checks['nl-offboarding-transitievergoeding'])($case));
+	/**
+	 * @return void
+	 */
+	public function testGetuigschriftViolatedWhenAfgerondWithoutOne(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'getuigschriftVerstrekt' => false]);
 
-    }//end testVsoNeverRequiresAStatutoryTransitievergoeding()
+		$this->assertFalse(($this->checks['nl-offboarding-getuigschrift'])($case));
 
+	}//end testGetuigschriftViolatedWhenAfgerondWithoutOne()
 
-    // -- nl-offboarding-verlofsaldo-uitbetaling -------------------------------
+	/**
+	 * @return void
+	 */
+	public function testGetuigschriftSatisfiedWhenProvided(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'getuigschriftVerstrekt' => true]);
 
+		$this->assertTrue(($this->checks['nl-offboarding-getuigschrift'])($case));
 
-    /**
-     * @return void
-     */
-    public function testVerlofsaldoSatisfiedBeforeAfgerond(): void
-    {
-        $case = $this->offboarding(['status' => 'eindafrekening_gereed', 'verlofsaldoUitbetaald' => false]);
+	}//end testGetuigschriftSatisfiedWhenProvided()
 
-        $this->assertTrue(($this->checks['nl-offboarding-verlofsaldo-uitbetaling'])($case, $this->context()));
+	// -- nl-offboarding-einddatum-consistentie ---------------------------------
 
-    }//end testVerlofsaldoSatisfiedBeforeAfgerond()
+	/**
+	 * @return void
+	 */
+	public function testEinddatumSatisfiedBeforeAfgerond(): void {
+		$case = $this->offboarding(['status' => 'eindafrekening_gereed', 'lastWorkingDay' => '2026-08-31']);
 
+		$this->assertTrue(($this->checks['nl-offboarding-einddatum-consistentie'])($case, $this->context()));
 
-    /**
-     * @return void
-     */
-    public function testVerlofsaldoViolatedWhenOpenBalanceAndNotPaid(): void
-    {
-        $case    = $this->offboarding(['status' => 'afgerond', 'verlofsaldoUitbetaald' => false]);
-        $context = $this->context(
-            [],
-            ['employee-jansen' => [['leaveType' => 'holiday', 'year' => 2026, 'entitledHours' => 160, 'bovenwettelijkHours' => 40, 'usedHours' => 56]]]
-        );
+	}//end testEinddatumSatisfiedBeforeAfgerond()
 
-        $this->assertFalse(($this->checks['nl-offboarding-verlofsaldo-uitbetaling'])($case, $context));
+	/**
+	 * @return void
+	 */
+	public function testEinddatumViolatedWhenEmployeeEndDateMismatches(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'lastWorkingDay' => '2026-05-31']);
+		$context = $this->context(['employee-jansen' => ['endDate' => '2026-06-30']]);
 
-    }//end testVerlofsaldoViolatedWhenOpenBalanceAndNotPaid()
+		$this->assertFalse(($this->checks['nl-offboarding-einddatum-consistentie'])($case, $context));
 
+	}//end testEinddatumViolatedWhenEmployeeEndDateMismatches()
 
-    /**
-     * @return void
-     */
-    public function testVerlofsaldoSatisfiedWhenOpenBalanceButPaid(): void
-    {
-        $case    = $this->offboarding(['status' => 'afgerond', 'verlofsaldoUitbetaald' => true]);
-        $context = $this->context(
-            [],
-            ['employee-jansen' => [['leaveType' => 'holiday', 'year' => 2026, 'entitledHours' => 160, 'bovenwettelijkHours' => 40, 'usedHours' => 56]]]
-        );
+	/**
+	 * @return void
+	 */
+	public function testEinddatumViolatedWhenEmployeeEndDateIsMissing(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'lastWorkingDay' => '2026-05-31']);
+		$context = $this->context(['employee-jansen' => ['endDate' => '']]);
 
-        $this->assertTrue(($this->checks['nl-offboarding-verlofsaldo-uitbetaling'])($case, $context));
+		$this->assertFalse(($this->checks['nl-offboarding-einddatum-consistentie'])($case, $context));
 
-    }//end testVerlofsaldoSatisfiedWhenOpenBalanceButPaid()
+	}//end testEinddatumViolatedWhenEmployeeEndDateIsMissing()
 
+	/**
+	 * @return void
+	 */
+	public function testEinddatumSatisfiedWhenEmployeeEndDateMatches(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'lastWorkingDay' => '2026-05-31']);
+		$context = $this->context(['employee-jansen' => ['endDate' => '2026-05-31']]);
 
-    /**
-     * @return void
-     */
-    public function testVerlofsaldoSkipsWhenNoBalanceRowsResolve(): void
-    {
-        $case = $this->offboarding(['status' => 'afgerond', 'verlofsaldoUitbetaald' => false]);
+		$this->assertTrue(($this->checks['nl-offboarding-einddatum-consistentie'])($case, $context));
 
-        $this->assertTrue(($this->checks['nl-offboarding-verlofsaldo-uitbetaling'])($case, $this->context()));
+	}//end testEinddatumSatisfiedWhenEmployeeEndDateMatches()
 
-    }//end testVerlofsaldoSkipsWhenNoBalanceRowsResolve()
+	/**
+	 * @return void
+	 */
+	public function testEinddatumFailsClosedWhenEmployeeIdDangling(): void {
+		$case = $this->offboarding(['status' => 'afgerond', 'employeeId' => 'no-such-employee', 'lastWorkingDay' => '2026-05-31']);
 
+		$this->assertFalse(($this->checks['nl-offboarding-einddatum-consistentie'])($case, $this->context()));
 
-    /**
-     * @return void
-     */
-    public function testVerlofsaldoSatisfiedWhenBalanceIsFullyDepleted(): void
-    {
-        $case    = $this->offboarding(['status' => 'afgerond', 'verlofsaldoUitbetaald' => false]);
-        $context = $this->context(
-            [],
-            ['employee-jansen' => [['leaveType' => 'holiday', 'year' => 2026, 'entitledHours' => 160, 'bovenwettelijkHours' => 0, 'usedHours' => 160]]]
-        );
-
-        $this->assertTrue(($this->checks['nl-offboarding-verlofsaldo-uitbetaling'])($case, $context));
-
-    }//end testVerlofsaldoSatisfiedWhenBalanceIsFullyDepleted()
-
-
-    /**
-     * @return void
-     */
-    public function testVerlofsaldoSumsMultipleRowsAcrossLeaveTypes(): void
-    {
-        $case    = $this->offboarding(['status' => 'afgerond', 'verlofsaldoUitbetaald' => false]);
-        $context = $this->context(
-            [],
-            [
-                'employee-jansen' => [
-                    ['leaveType' => 'holiday', 'year' => 2026, 'entitledHours' => 160, 'bovenwettelijkHours' => 0, 'usedHours' => 160],
-                    ['leaveType' => 'special', 'year' => 2026, 'entitledHours' => 8, 'bovenwettelijkHours' => 0, 'usedHours' => 0],
-                ],
-            ]
-        );
-
-        $this->assertFalse(($this->checks['nl-offboarding-verlofsaldo-uitbetaling'])($case, $context));
-
-    }//end testVerlofsaldoSumsMultipleRowsAcrossLeaveTypes()
-
-
-    // -- nl-offboarding-getuigschrift ------------------------------------------
-
-
-    /**
-     * @return void
-     */
-    public function testGetuigschriftSatisfiedBeforeAfgerond(): void
-    {
-        $case = $this->offboarding(['status' => 'eindafrekening_gereed', 'getuigschriftVerstrekt' => false]);
-
-        $this->assertTrue(($this->checks['nl-offboarding-getuigschrift'])($case));
-
-    }//end testGetuigschriftSatisfiedBeforeAfgerond()
-
-
-    /**
-     * @return void
-     */
-    public function testGetuigschriftViolatedWhenAfgerondWithoutOne(): void
-    {
-        $case = $this->offboarding(['status' => 'afgerond', 'getuigschriftVerstrekt' => false]);
-
-        $this->assertFalse(($this->checks['nl-offboarding-getuigschrift'])($case));
-
-    }//end testGetuigschriftViolatedWhenAfgerondWithoutOne()
-
-
-    /**
-     * @return void
-     */
-    public function testGetuigschriftSatisfiedWhenProvided(): void
-    {
-        $case = $this->offboarding(['status' => 'afgerond', 'getuigschriftVerstrekt' => true]);
-
-        $this->assertTrue(($this->checks['nl-offboarding-getuigschrift'])($case));
-
-    }//end testGetuigschriftSatisfiedWhenProvided()
-
-
-    // -- nl-offboarding-einddatum-consistentie ---------------------------------
-
-
-    /**
-     * @return void
-     */
-    public function testEinddatumSatisfiedBeforeAfgerond(): void
-    {
-        $case = $this->offboarding(['status' => 'eindafrekening_gereed', 'lastWorkingDay' => '2026-08-31']);
-
-        $this->assertTrue(($this->checks['nl-offboarding-einddatum-consistentie'])($case, $this->context()));
-
-    }//end testEinddatumSatisfiedBeforeAfgerond()
-
-
-    /**
-     * @return void
-     */
-    public function testEinddatumViolatedWhenEmployeeEndDateMismatches(): void
-    {
-        $case    = $this->offboarding(['status' => 'afgerond', 'lastWorkingDay' => '2026-05-31']);
-        $context = $this->context(['employee-jansen' => ['endDate' => '2026-06-30']]);
-
-        $this->assertFalse(($this->checks['nl-offboarding-einddatum-consistentie'])($case, $context));
-
-    }//end testEinddatumViolatedWhenEmployeeEndDateMismatches()
-
-
-    /**
-     * @return void
-     */
-    public function testEinddatumViolatedWhenEmployeeEndDateIsMissing(): void
-    {
-        $case    = $this->offboarding(['status' => 'afgerond', 'lastWorkingDay' => '2026-05-31']);
-        $context = $this->context(['employee-jansen' => ['endDate' => '']]);
-
-        $this->assertFalse(($this->checks['nl-offboarding-einddatum-consistentie'])($case, $context));
-
-    }//end testEinddatumViolatedWhenEmployeeEndDateIsMissing()
-
-
-    /**
-     * @return void
-     */
-    public function testEinddatumSatisfiedWhenEmployeeEndDateMatches(): void
-    {
-        $case    = $this->offboarding(['status' => 'afgerond', 'lastWorkingDay' => '2026-05-31']);
-        $context = $this->context(['employee-jansen' => ['endDate' => '2026-05-31']]);
-
-        $this->assertTrue(($this->checks['nl-offboarding-einddatum-consistentie'])($case, $context));
-
-    }//end testEinddatumSatisfiedWhenEmployeeEndDateMatches()
-
-
-    /**
-     * @return void
-     */
-    public function testEinddatumFailsClosedWhenEmployeeIdDangling(): void
-    {
-        $case = $this->offboarding(['status' => 'afgerond', 'employeeId' => 'no-such-employee', 'lastWorkingDay' => '2026-05-31']);
-
-        $this->assertFalse(($this->checks['nl-offboarding-einddatum-consistentie'])($case, $this->context()));
-
-    }//end testEinddatumFailsClosedWhenEmployeeIdDangling()
-
+	}//end testEinddatumFailsClosedWhenEmployeeIdDangling()
 
 }//end class

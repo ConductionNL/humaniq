@@ -45,69 +45,59 @@ namespace OCA\Hrmq\Standards\Checks;
 /**
  * Payslip-to-employee-IBAN-presence executable check.
  */
-final class NlNetPayChecks implements CheckProvider
-{
+final class NlNetPayChecks implements CheckProvider {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 */
+	public static function checks(): array {
+		return [
+			'Payslip' => [
+				'nl-netpay-iban-present' => static fn (array $o, array $context): bool => self::isCompliant($o, $context),
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     */
-    public static function checks(): array
-    {
-        return [
-            'Payslip' => [
-                'nl-netpay-iban-present' => static fn(array $o, array $context): bool => self::isCompliant($o, $context),
-            ],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * The `nl-netpay-iban-present` predicate (spec.md REQ-PNP-008).
+	 *
+	 * @param array<string, mixed> $o The Payslip object.
+	 * @param array<string, mixed> $context Evaluation context; reads `netpay.ibanByEmployeeKey`/`netpay.payablePeriods`.
+	 *
+	 * @return bool
+	 */
+	private static function isCompliant(array $o, array $context): bool {
+		$period = (string)($o['period'] ?? '');
+		$payablePeriods = (array)($context['netpay']['payablePeriods'] ?? []);
+		if (in_array($period, $payablePeriods, true) === false) {
+			// Nothing is payable yet on this period's run -- not a violation (design.md D4).
+			return true;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		$employeeKey = trim((string)($o['employeeId'] ?? ''));
+		if ($employeeKey === '') {
+			return false;
+		}
 
-    }//end seedSpec()
+		$ibanByEmployeeKey = (array)($context['netpay']['ibanByEmployeeKey'] ?? []);
+		if (array_key_exists($employeeKey, $ibanByEmployeeKey) === false) {
+			// Employee does not resolve at all -- treated the same as missing IBAN.
+			return false;
+		}
 
-
-    /**
-     * The `nl-netpay-iban-present` predicate (spec.md REQ-PNP-008).
-     *
-     * @param array<string, mixed> $o       The Payslip object.
-     * @param array<string, mixed> $context Evaluation context; reads `netpay.ibanByEmployeeKey`/`netpay.payablePeriods`.
-     *
-     * @return bool
-     */
-    private static function isCompliant(array $o, array $context): bool
-    {
-        $period = (string) ($o['period'] ?? '');
-        $payablePeriods = (array) ($context['netpay']['payablePeriods'] ?? []);
-        if (in_array($period, $payablePeriods, true) === false) {
-            // Nothing is payable yet on this period's run -- not a violation (design.md D4).
-            return true;
-        }
-
-        $employeeKey = trim((string) ($o['employeeId'] ?? ''));
-        if ($employeeKey === '') {
-            return false;
-        }
-
-        $ibanByEmployeeKey = (array) ($context['netpay']['ibanByEmployeeKey'] ?? []);
-        if (array_key_exists($employeeKey, $ibanByEmployeeKey) === false) {
-            // Employee does not resolve at all -- treated the same as missing IBAN.
-            return false;
-        }
-
-        return $ibanByEmployeeKey[$employeeKey] === true;
-
-    }//end isCompliant()
-
+		return $ibanByEmployeeKey[$employeeKey] === true;
+	}//end isCompliant()
 
 }//end class

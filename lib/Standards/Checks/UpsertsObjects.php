@@ -35,15 +35,14 @@ namespace OCA\Hrmq\Standards\Checks;
 /**
  * Optional capability: declare the natural-key field samples upsert on.
  */
-interface UpsertsObjects
-{
-    /**
-     * The natural-key field name to upsert seeded samples on, keyed by object
-     * type. Only object types declared here get upsert-by-key seeding; any
-     * `SeedsObjects` sample for a type NOT declared here keeps the default
-     * create-once-when-empty behaviour.
-     *
-     * @return array<string, string>
-     */
-    public static function upsertKeys(): array;
+interface UpsertsObjects {
+	/**
+	 * The natural-key field name to upsert seeded samples on, keyed by object
+	 * type. Only object types declared here get upsert-by-key seeding; any
+	 * `SeedsObjects` sample for a type NOT declared here keeps the default
+	 * create-once-when-empty behaviour.
+	 *
+	 * @return array<string, string>
+	 */
+	public static function upsertKeys(): array;
 }//end interface

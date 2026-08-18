@@ -40,207 +40,186 @@ use InvalidArgumentException;
 /**
  * Validates and totals the per-hour cost additions.
  */
-class HourlyCostAdditions
-{
+class HourlyCostAdditions {
 
-    /**
-     * The addition key reserved for the overtime uplift — the one key with a
-     * correctness rule attached.
-     *
-     * @var string
-     */
-    public const KEY_OVERTIME = 'overtime';
+	/**
+	 * The addition key reserved for the overtime uplift — the one key with a
+	 * correctness rule attached.
+	 *
+	 * @var string
+	 */
+	public const KEY_OVERTIME = 'overtime';
 
+	/**
+	 * Coerce raw addition entries into the canonical shape, resolving each to
+	 * plain cents so everything downstream sees a simple sum.
+	 *
+	 * @param array<int, mixed> $raw Raw addition entries.
+	 * @param int $wageCents The wage base, for resolving percentages.
+	 *
+	 * @return array<int, array{key: string, centsPerHour: int, source: string, basis: string}>
+	 *
+	 * @throws InvalidArgumentException When an addition carries no key, no basis, or both amount forms.
+	 */
+	public function normalise(array $raw, int $wageCents): array {
+		$out = [];
+		foreach ($raw as $entry) {
+			if (is_array($entry) === false) {
+				continue;
+			}
 
-    /**
-     * Coerce raw addition entries into the canonical shape, resolving each to
-     * plain cents so everything downstream sees a simple sum.
-     *
-     * @param array<int, mixed> $raw       Raw addition entries.
-     * @param int               $wageCents The wage base, for resolving percentages.
-     *
-     * @return array<int, array{key: string, centsPerHour: int, source: string, basis: string}>
-     *
-     * @throws InvalidArgumentException When an addition carries no key, no basis, or both amount forms.
-     */
-    public function normalise(array $raw, int $wageCents): array
-    {
-        $out = [];
-        foreach ($raw as $entry) {
-            if (is_array($entry) === false) {
-                continue;
-            }
+			$cents = $this->resolveCents(entry: $entry, wageCents: $wageCents);
+			if ($cents === null) {
+				continue;
+			}
 
-            $cents = $this->resolveCents(entry: $entry, wageCents: $wageCents);
-            if ($cents === null) {
-                continue;
-            }
+			$out[] = [
+				'key' => $this->requireKey(entry: $entry),
+				'centsPerHour' => $cents,
+				'source' => (trim((string)($entry['source'] ?? '')) ?: 'manual'),
+				'basis' => $this->requireBasis(entry: $entry),
+			];
+		}
 
-            $out[] = [
-                'key'          => $this->requireKey(entry: $entry),
-                'centsPerHour' => $cents,
-                'source'       => (trim((string) ($entry['source'] ?? '')) ?: 'manual'),
-                'basis'        => $this->requireBasis(entry: $entry),
-            ];
-        }
+		return $out;
+	}//end normalise()
 
-        return $out;
+	/**
+	 * Refuse an overtime addition on a wage base that already blends overtime.
+	 *
+	 * A base that divides total pay by total hours has any overtime premium
+	 * already averaged across every hour; adding an overtime component on top
+	 * charges it twice — a wrong number that would reach a CBS submission
+	 * looking entirely plausible. Contract-derived bases never blend, which is
+	 * one reason the contract is the basis; an imported one might.
+	 *
+	 * @param array<int, array<string, mixed>> $additions Normalised additions.
+	 * @param bool $wageBaseBlendsOvertime Whether the base already includes overtime pay.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When both are true.
+	 */
+	public function assertCompatible(array $additions, bool $wageBaseBlendsOvertime): void {
+		if ($wageBaseBlendsOvertime === false) {
+			return;
+		}
 
-    }//end normalise()
+		foreach ($additions as $addition) {
+			if (($addition['key'] ?? '') === self::KEY_OVERTIME) {
+				throw new InvalidArgumentException(
+					'an "' . self::KEY_OVERTIME . '" addition cannot be applied to a wage base that '
+					. 'already blends overtime: the base divides total pay by total hours, so the '
+					. 'premium is already averaged into every hour and would be charged twice'
+				);
+			}
+		}
 
+	}//end assertCompatible()
 
-    /**
-     * Refuse an overtime addition on a wage base that already blends overtime.
-     *
-     * A base that divides total pay by total hours has any overtime premium
-     * already averaged across every hour; adding an overtime component on top
-     * charges it twice — a wrong number that would reach a CBS submission
-     * looking entirely plausible. Contract-derived bases never blend, which is
-     * one reason the contract is the basis; an imported one might.
-     *
-     * @param array<int, array<string, mixed>> $additions             Normalised additions.
-     * @param bool                             $wageBaseBlendsOvertime Whether the base already includes overtime pay.
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException When both are true.
-     */
-    public function assertCompatible(array $additions, bool $wageBaseBlendsOvertime): void
-    {
-        if ($wageBaseBlendsOvertime === false) {
-            return;
-        }
+	/**
+	 * Sum normalised additions.
+	 *
+	 * @param array<int, array<string, mixed>> $additions Normalised additions.
+	 *
+	 * @return int Total cents per hour.
+	 */
+	public function total(array $additions): int {
+		$total = 0;
+		foreach ($additions as $addition) {
+			$total += (int)$addition['centsPerHour'];
+		}
 
-        foreach ($additions as $addition) {
-            if (($addition['key'] ?? '') === self::KEY_OVERTIME) {
-                throw new InvalidArgumentException(
-                    'an "'.self::KEY_OVERTIME.'" addition cannot be applied to a wage base that '
-                    .'already blends overtime: the base divides total pay by total hours, so the '
-                    .'premium is already averaged into every hour and would be charged twice'
-                );
-            }
-        }
+		return $total;
+	}//end total()
 
-    }//end assertCompatible()
+	/**
+	 * The addition's key, refusing an unnamed one.
+	 *
+	 * @param array<string, mixed> $entry The raw addition entry.
+	 *
+	 * @return string
+	 *
+	 * @throws InvalidArgumentException When absent.
+	 */
+	private function requireKey(array $entry): string {
+		$key = trim((string)($entry['key'] ?? ''));
+		if ($key === '') {
+			throw new InvalidArgumentException('an hourly cost addition must carry a key');
+		}
 
+		return $key;
+	}//end requireKey()
 
-    /**
-     * Sum normalised additions.
-     *
-     * @param array<int, array<string, mixed>> $additions Normalised additions.
-     *
-     * @return int Total cents per hour.
-     */
-    public function total(array $additions): int
-    {
-        $total = 0;
-        foreach ($additions as $addition) {
-            $total += (int) $addition['centsPerHour'];
-        }
+	/**
+	 * The addition's basis, refusing an unexplained one.
+	 *
+	 * Same reasoning as an unexplained override: this figure reaches a
+	 * statutory submission, and "+ EUR 12/h from somewhere" cannot be audited
+	 * or defended.
+	 *
+	 * @param array<string, mixed> $entry The raw addition entry.
+	 *
+	 * @return string
+	 *
+	 * @throws InvalidArgumentException When absent.
+	 */
+	private function requireBasis(array $entry): string {
+		$basis = trim((string)($entry['basis'] ?? ''));
+		if ($basis === '') {
+			throw new InvalidArgumentException(
+				'the hourly cost addition "' . trim((string)($entry['key'] ?? '')) . '" must carry a '
+				. 'basis explaining the amount'
+			);
+		}
 
-        return $total;
+		return $basis;
+	}//end requireBasis()
 
-    }//end total()
+	/**
+	 * Resolve one addition's amount to integer cents, from whichever of the
+	 * two forms it states.
+	 *
+	 * @param array<string, mixed> $entry The raw addition entry.
+	 * @param int $wageCents The wage base, for a percentage.
+	 *
+	 * @return int|null Null when the entry states no usable amount.
+	 *
+	 * @throws InvalidArgumentException When both forms are present.
+	 */
+	private function resolveCents(array $entry, int $wageCents): ?int {
+		$fixed = ($entry['centsPerHour'] ?? null);
+		$percentage = ($entry['percentageOfWage'] ?? null);
 
+		$hasFixed = $this->isNumeric(value: $fixed);
+		$hasPercentage = $this->isNumeric(value: $percentage);
 
-    /**
-     * The addition's key, refusing an unnamed one.
-     *
-     * @param array<string, mixed> $entry The raw addition entry.
-     *
-     * @return string
-     *
-     * @throws InvalidArgumentException When absent.
-     */
-    private function requireKey(array $entry): string
-    {
-        $key = trim((string) ($entry['key'] ?? ''));
-        if ($key === '') {
-            throw new InvalidArgumentException('an hourly cost addition must carry a key');
-        }
+		if ($hasFixed === true && $hasPercentage === true) {
+			throw new InvalidArgumentException(
+				'the hourly cost addition "' . trim((string)($entry['key'] ?? '')) . '" states both a fixed '
+				. 'centsPerHour and a percentageOfWage; an amount with two readings has no defensible value'
+			);
+		}
 
-        return $key;
+		if ($hasFixed === true) {
+			return (int)$fixed;
+		}
 
-    }//end requireKey()
+		if ($hasPercentage === true) {
+			return (int)round($wageCents * ((float)$percentage / 100.0));
+		}
 
+		return null;
+	}//end resolveCents()
 
-    /**
-     * The addition's basis, refusing an unexplained one.
-     *
-     * Same reasoning as an unexplained override: this figure reaches a
-     * statutory submission, and "+ EUR 12/h from somewhere" cannot be audited
-     * or defended.
-     *
-     * @param array<string, mixed> $entry The raw addition entry.
-     *
-     * @return string
-     *
-     * @throws InvalidArgumentException When absent.
-     */
-    private function requireBasis(array $entry): string
-    {
-        $basis = trim((string) ($entry['basis'] ?? ''));
-        if ($basis === '') {
-            throw new InvalidArgumentException(
-                'the hourly cost addition "'.trim((string) ($entry['key'] ?? '')).'" must carry a '
-                .'basis explaining the amount'
-            );
-        }
-
-        return $basis;
-
-    }//end requireBasis()
-
-
-    /**
-     * Resolve one addition's amount to integer cents, from whichever of the
-     * two forms it states.
-     *
-     * @param array<string, mixed> $entry     The raw addition entry.
-     * @param int                  $wageCents The wage base, for a percentage.
-     *
-     * @return int|null Null when the entry states no usable amount.
-     *
-     * @throws InvalidArgumentException When both forms are present.
-     */
-    private function resolveCents(array $entry, int $wageCents): ?int
-    {
-        $fixed      = ($entry['centsPerHour'] ?? null);
-        $percentage = ($entry['percentageOfWage'] ?? null);
-
-        $hasFixed      = $this->isNumeric(value: $fixed);
-        $hasPercentage = $this->isNumeric(value: $percentage);
-
-        if ($hasFixed === true && $hasPercentage === true) {
-            throw new InvalidArgumentException(
-                'the hourly cost addition "'.trim((string) ($entry['key'] ?? '')).'" states both a fixed '
-                .'centsPerHour and a percentageOfWage; an amount with two readings has no defensible value'
-            );
-        }
-
-        if ($hasFixed === true) {
-            return (int) $fixed;
-        }
-
-        if ($hasPercentage === true) {
-            return (int) round($wageCents * ((float) $percentage / 100.0));
-        }
-
-        return null;
-
-    }//end resolveCents()
-
-
-    /**
-     * Whether a raw field carries a usable number.
-     *
-     * @param mixed $value Raw field value.
-     *
-     * @return bool
-     */
-    private function isNumeric(mixed $value): bool
-    {
-        return ($value !== null && $value !== '' && is_numeric($value) === true);
-
-    }//end isNumeric()
+	/**
+	 * Whether a raw field carries a usable number.
+	 *
+	 * @param mixed $value Raw field value.
+	 *
+	 * @return bool
+	 */
+	private function isNumeric(mixed $value): bool {
+		return ($value !== null && $value !== '' && is_numeric($value) === true);
+	}//end isNumeric()
 }//end class

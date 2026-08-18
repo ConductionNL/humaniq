@@ -37,226 +37,199 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
  */
-class CompChecksTest extends TestCase
-{
+class CompChecksTest extends TestCase {
 
+	/**
+	 * Reset every statically-memoised layer so each test loads the real
+	 * catalogue/corpus fresh.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		RuleEngine::reset();
+		RuleCatalogue::reset();
 
-    /**
-     * Reset every statically-memoised layer so each test loads the real
-     * catalogue/corpus fresh.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        RuleEngine::reset();
-        RuleCatalogue::reset();
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * @return void
+	 */
+	protected function tearDown(): void {
+		RuleEngine::reset();
+		RuleCatalogue::reset();
 
+	}//end tearDown()
 
-    /**
-     * @return void
-     */
-    protected function tearDown(): void
-    {
-        RuleEngine::reset();
-        RuleCatalogue::reset();
+	/**
+	 * Whether the evaluated violations contain a given rule id.
+	 *
+	 * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
+	 * @param string $ruleId The rule id to look for.
+	 *
+	 * @return bool
+	 */
+	private function hasViolation(array $violations, string $ruleId): bool {
+		foreach ($violations as $violation) {
+			if ($violation->ruleId === $ruleId) {
+				return true;
+			}
+		}
 
-    }//end tearDown()
+		return false;
+	}//end hasViolation()
 
+	/**
+	 * A comp context with one SalaryBand's [minSalary, maxSalary].
+	 *
+	 * @param string $bandId The band id.
+	 * @param int $minSalary Minimum salary, in cents.
+	 * @param int $maxSalary Maximum salary, in cents.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function context(string $bandId, int $minSalary, int $maxSalary): array {
+		return [
+			'comp' => [
+				'salaryBandsById' => [
+					$bandId => ['minSalary' => $minSalary, 'maxSalary' => $maxSalary],
+				],
+			],
+		];
 
-    /**
-     * Whether the evaluated violations contain a given rule id.
-     *
-     * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
-     * @param string                                    $ruleId     The rule id to look for.
-     *
-     * @return bool
-     */
-    private function hasViolation(array $violations, string $ruleId): bool
-    {
-        foreach ($violations as $violation) {
-            if ($violation->ruleId === $ruleId) {
-                return true;
-            }
-        }
+	}//end context()
 
-        return false;
+	/**
+	 * The rule is registered against CompAdjustment AND wired to the corpus —
+	 * i.e. reachable, not an orphaned predicate.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
+	 */
+	public function testWithinBandCheckIsReachableFromTheEngine(): void {
+		$this->assertArrayHasKey('comp-adjustment-within-band', (CompChecks::checks()['CompAdjustment'] ?? []));
+		$this->assertContains('comp-adjustment-within-band', RuleEngine::checkedRuleIds());
 
-    }//end hasViolation()
+	}//end testWithinBandCheckIsReachableFromTheEngine()
 
+	/**
+	 * A proposal above the band maximum violates.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
+	 */
+	public function testAboveMaxRaisesMandatoryViolation(): void {
+		$adjustment = ['status' => 'proposed', 'targetBandId' => 'band-a', 'proposedSalary' => 500000];
+		$violations = RuleEngine::evaluate('CompAdjustment', $adjustment, $this->context('band-a', 300000, 420000));
 
-    /**
-     * A comp context with one SalaryBand's [minSalary, maxSalary].
-     *
-     * @param string $bandId    The band id.
-     * @param int    $minSalary Minimum salary, in cents.
-     * @param int    $maxSalary Maximum salary, in cents.
-     *
-     * @return array<string, mixed>
-     */
-    private function context(string $bandId, int $minSalary, int $maxSalary): array
-    {
-        return [
-            'comp' => [
-                'salaryBandsById' => [
-                    $bandId => ['minSalary' => $minSalary, 'maxSalary' => $maxSalary],
-                ],
-            ],
-        ];
+		$this->assertTrue($this->hasViolation($violations, 'comp-adjustment-within-band'));
 
-    }//end context()
+		$rule = null;
+		foreach ($violations as $violation) {
+			if ($violation->ruleId === 'comp-adjustment-within-band') {
+				$rule = $violation;
+			}
+		}
 
+		$this->assertNotNull($rule);
+		$this->assertSame('mandatory', $rule->severity);
 
-    /**
-     * The rule is registered against CompAdjustment AND wired to the corpus —
-     * i.e. reachable, not an orphaned predicate.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
-     */
-    public function testWithinBandCheckIsReachableFromTheEngine(): void
-    {
-        $this->assertArrayHasKey('comp-adjustment-within-band', (CompChecks::checks()['CompAdjustment'] ?? []));
-        $this->assertContains('comp-adjustment-within-band', RuleEngine::checkedRuleIds());
+	}//end testAboveMaxRaisesMandatoryViolation()
 
-    }//end testWithinBandCheckIsReachableFromTheEngine()
+	/**
+	 * A proposal below the band minimum violates.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
+	 */
+	public function testBelowMinRaisesMandatoryViolation(): void {
+		$adjustment = ['status' => 'approved', 'targetBandId' => 'band-a', 'proposedSalary' => 100000];
+		$violations = RuleEngine::evaluate('CompAdjustment', $adjustment, $this->context('band-a', 300000, 420000));
 
+		$this->assertTrue($this->hasViolation($violations, 'comp-adjustment-within-band'));
 
-    /**
-     * A proposal above the band maximum violates.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
-     */
-    public function testAboveMaxRaisesMandatoryViolation(): void
-    {
-        $adjustment = ['status' => 'proposed', 'targetBandId' => 'band-a', 'proposedSalary' => 500000];
-        $violations = RuleEngine::evaluate('CompAdjustment', $adjustment, $this->context('band-a', 300000, 420000));
+	}//end testBelowMinRaisesMandatoryViolation()
 
-        $this->assertTrue($this->hasViolation($violations, 'comp-adjustment-within-band'));
+	/**
+	 * A proposal within the band range passes.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
+	 */
+	public function testWithinBandPasses(): void {
+		$adjustment = ['status' => 'effective', 'targetBandId' => 'band-a', 'proposedSalary' => 360000];
+		$violations = RuleEngine::evaluate('CompAdjustment', $adjustment, $this->context('band-a', 300000, 420000));
 
-        $rule = null;
-        foreach ($violations as $violation) {
-            if ($violation->ruleId === 'comp-adjustment-within-band') {
-                $rule = $violation;
-            }
-        }
+		$this->assertFalse($this->hasViolation($violations, 'comp-adjustment-within-band'));
 
-        $this->assertNotNull($rule);
-        $this->assertSame('mandatory', $rule->severity);
+	}//end testWithinBandPasses()
 
-    }//end testAboveMaxRaisesMandatoryViolation()
+	/**
+	 * The band boundaries themselves are inclusive.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
+	 */
+	public function testBoundaryValuesPass(): void {
+		$context = $this->context('band-a', 300000, 420000);
 
+		$atMin = RuleEngine::evaluate('CompAdjustment', ['status' => 'approved', 'targetBandId' => 'band-a', 'proposedSalary' => 300000], $context);
+		$atMax = RuleEngine::evaluate('CompAdjustment', ['status' => 'approved', 'targetBandId' => 'band-a', 'proposedSalary' => 420000], $context);
 
-    /**
-     * A proposal below the band minimum violates.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
-     */
-    public function testBelowMinRaisesMandatoryViolation(): void
-    {
-        $adjustment = ['status' => 'approved', 'targetBandId' => 'band-a', 'proposedSalary' => 100000];
-        $violations = RuleEngine::evaluate('CompAdjustment', $adjustment, $this->context('band-a', 300000, 420000));
+		$this->assertFalse($this->hasViolation($atMin, 'comp-adjustment-within-band'));
+		$this->assertFalse($this->hasViolation($atMax, 'comp-adjustment-within-band'));
 
-        $this->assertTrue($this->hasViolation($violations, 'comp-adjustment-within-band'));
+	}//end testBoundaryValuesPass()
 
-    }//end testBelowMinRaisesMandatoryViolation()
+	/**
+	 * A band-less proposal (targetBandId null) is out of scope — vacuous.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
+	 */
+	public function testNullTargetBandIsVacuous(): void {
+		$adjustment = ['status' => 'approved', 'targetBandId' => null, 'proposedSalary' => 999999999];
+		$violations = RuleEngine::evaluate('CompAdjustment', $adjustment, $this->context('band-a', 300000, 420000));
 
+		$this->assertFalse($this->hasViolation($violations, 'comp-adjustment-within-band'));
 
-    /**
-     * A proposal within the band range passes.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
-     */
-    public function testWithinBandPasses(): void
-    {
-        $adjustment = ['status' => 'effective', 'targetBandId' => 'band-a', 'proposedSalary' => 360000];
-        $violations = RuleEngine::evaluate('CompAdjustment', $adjustment, $this->context('band-a', 300000, 420000));
+	}//end testNullTargetBandIsVacuous()
 
-        $this->assertFalse($this->hasViolation($violations, 'comp-adjustment-within-band'));
+	/**
+	 * A still-draft proposal is out of scope — vacuous (nothing proposed
+	 * yet).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
+	 */
+	public function testDraftStatusIsVacuous(): void {
+		$adjustment = ['status' => 'draft', 'targetBandId' => 'band-a', 'proposedSalary' => 999999999];
+		$violations = RuleEngine::evaluate('CompAdjustment', $adjustment, $this->context('band-a', 300000, 420000));
 
-    }//end testWithinBandPasses()
+		$this->assertFalse($this->hasViolation($violations, 'comp-adjustment-within-band'));
 
+	}//end testDraftStatusIsVacuous()
 
-    /**
-     * The band boundaries themselves are inclusive.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
-     */
-    public function testBoundaryValuesPass(): void
-    {
-        $context = $this->context('band-a', 300000, 420000);
+	/**
+	 * An unresolvable band (not present in the audit context) is vacuous —
+	 * nothing decidable from this object alone.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
+	 */
+	public function testUnresolvableBandIsVacuous(): void {
+		$adjustment = ['status' => 'approved', 'targetBandId' => 'no-such-band', 'proposedSalary' => 999999999];
+		$violations = RuleEngine::evaluate('CompAdjustment', $adjustment, $this->context('band-a', 300000, 420000));
 
-        $atMin = RuleEngine::evaluate('CompAdjustment', ['status' => 'approved', 'targetBandId' => 'band-a', 'proposedSalary' => 300000], $context);
-        $atMax = RuleEngine::evaluate('CompAdjustment', ['status' => 'approved', 'targetBandId' => 'band-a', 'proposedSalary' => 420000], $context);
+		$this->assertFalse($this->hasViolation($violations, 'comp-adjustment-within-band'));
 
-        $this->assertFalse($this->hasViolation($atMin, 'comp-adjustment-within-band'));
-        $this->assertFalse($this->hasViolation($atMax, 'comp-adjustment-within-band'));
-
-    }//end testBoundaryValuesPass()
-
-
-    /**
-     * A band-less proposal (targetBandId null) is out of scope — vacuous.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
-     */
-    public function testNullTargetBandIsVacuous(): void
-    {
-        $adjustment = ['status' => 'approved', 'targetBandId' => null, 'proposedSalary' => 999999999];
-        $violations = RuleEngine::evaluate('CompAdjustment', $adjustment, $this->context('band-a', 300000, 420000));
-
-        $this->assertFalse($this->hasViolation($violations, 'comp-adjustment-within-band'));
-
-    }//end testNullTargetBandIsVacuous()
-
-
-    /**
-     * A still-draft proposal is out of scope — vacuous (nothing proposed
-     * yet).
-     *
-     * @return void
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
-     */
-    public function testDraftStatusIsVacuous(): void
-    {
-        $adjustment = ['status' => 'draft', 'targetBandId' => 'band-a', 'proposedSalary' => 999999999];
-        $violations = RuleEngine::evaluate('CompAdjustment', $adjustment, $this->context('band-a', 300000, 420000));
-
-        $this->assertFalse($this->hasViolation($violations, 'comp-adjustment-within-band'));
-
-    }//end testDraftStatusIsVacuous()
-
-
-    /**
-     * An unresolvable band (not present in the audit context) is vacuous —
-     * nothing decidable from this object alone.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
-     */
-    public function testUnresolvableBandIsVacuous(): void
-    {
-        $adjustment = ['status' => 'approved', 'targetBandId' => 'no-such-band', 'proposedSalary' => 999999999];
-        $violations = RuleEngine::evaluate('CompAdjustment', $adjustment, $this->context('band-a', 300000, 420000));
-
-        $this->assertFalse($this->hasViolation($violations, 'comp-adjustment-within-band'));
-
-    }//end testUnresolvableBandIsVacuous()
-
+	}//end testUnresolvableBandIsVacuous()
 
 }//end class

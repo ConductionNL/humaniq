@@ -33,66 +33,58 @@ use OCA\Hrmq\Payroll\Dsl\StepContext;
 /**
  * Base class carrying the reference resolver and param helpers.
  */
-abstract class AbstractOp implements StepOpInterface
-{
+abstract class AbstractOp implements StepOpInterface {
 
+	/**
+	 * @param RefResolver $refs The reference resolver.
+	 */
+	public function __construct(
+		protected readonly RefResolver $refs,
+	) {
 
-    /**
-     * @param RefResolver $refs The reference resolver.
-     */
-    public function __construct(protected readonly RefResolver $refs)
-    {
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * Resolve a required numeric param.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 * @param string $key The param name.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return int|float
+	 *
+	 * @throws DslException When the param is absent or non-numeric.
+	 */
+	protected function num(array $spec, string $key, StepContext $ctx): int|float {
+		if (array_key_exists($key, $spec) === false) {
+			throw new DslException('Pack: op "' . $this->name() . '" mist de verplichte parameter "' . $key . '".');
+		}
 
+		$value = $this->refs->value($spec[$key], $ctx);
 
-    /**
-     * Resolve a required numeric param.
-     *
-     * @param array<string, mixed> $spec The declared spec.
-     * @param string               $key  The param name.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return int|float
-     *
-     * @throws DslException When the param is absent or non-numeric.
-     */
-    protected function num(array $spec, string $key, StepContext $ctx): int|float
-    {
-        if (array_key_exists($key, $spec) === false) {
-            throw new DslException('Pack: op "'.$this->name().'" mist de verplichte parameter "'.$key.'".');
-        }
+		if (is_int($value) === true || is_float($value) === true) {
+			return $value;
+		}
 
-        $value = $this->refs->value($spec[$key], $ctx);
+		throw new DslException('Pack: parameter "' . $key . '" van op "' . $this->name() . '" levert geen getal op.');
+	}//end num()
 
-        if (is_int($value) === true || is_float($value) === true) {
-            return $value;
-        }
+	/**
+	 * Resolve an optional numeric param.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 * @param string $key The param name.
+	 * @param StepContext $ctx The run context.
+	 * @param int|float|null $fallback The value when the param is absent.
+	 *
+	 * @return int|float|null
+	 */
+	protected function optionalNum(array $spec, string $key, StepContext $ctx, int|float|null $fallback = null): int|float|null {
+		if (array_key_exists($key, $spec) === false) {
+			return $fallback;
+		}
 
-        throw new DslException('Pack: parameter "'.$key.'" van op "'.$this->name().'" levert geen getal op.');
-
-    }//end num()
-
-
-    /**
-     * Resolve an optional numeric param.
-     *
-     * @param array<string, mixed> $spec     The declared spec.
-     * @param string               $key      The param name.
-     * @param StepContext          $ctx      The run context.
-     * @param int|float|null       $fallback The value when the param is absent.
-     *
-     * @return int|float|null
-     */
-    protected function optionalNum(array $spec, string $key, StepContext $ctx, int|float|null $fallback=null): int|float|null
-    {
-        if (array_key_exists($key, $spec) === false) {
-            return $fallback;
-        }
-
-        return $this->num($spec, $key, $ctx);
-
-    }//end optionalNum()
-
+		return $this->num($spec, $key, $ctx);
+	}//end optionalNum()
 
 }//end class

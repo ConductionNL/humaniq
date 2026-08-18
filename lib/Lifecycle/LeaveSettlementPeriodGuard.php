@@ -54,48 +54,43 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
  * Fails closed: an empty or malformed `settlementPeriod` denies the
  * transition rather than allowing it on a guess.
  */
-final class LeaveSettlementPeriodGuard implements LifecycleGuardInterface
-{
+final class LeaveSettlementPeriodGuard implements LifecycleGuardInterface {
 
+	/**
+	 * Authorise the `settle` transition by checking the transaction's own
+	 * `settlementPeriod`.
+	 *
+	 * @param array<string, mixed> $object The LeaveTransaction payload at its current state.
+	 * @param string $action The transition action ('settle').
+	 * @param string $userId The uid of the caller.
+	 *
+	 * @return GuardResult Allow when `settlementPeriod` is present and shaped
+	 *                     `YYYY-MM`; deny otherwise (fail-closed).
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
+	 *  static allow()/deny() factories mandated by OpenRegister's contract.
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action/$userId are part of
+	 *  the LifecycleGuardInterface signature; the gate depends only on the
+	 *  transaction's own settlementPeriod, not on who is acting.
+	 *
+	 * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-004
+	 */
+	public function check(array $object, string $action, string $userId): GuardResult {
+		$settlementPeriod = trim((string)($object['settlementPeriod'] ?? ''));
+		if ($settlementPeriod === '') {
+			return GuardResult::deny(
+				'Deze transactie heeft geen verrekenperiode; verrekenen is geweigerd.'
+			);
+		}
 
-    /**
-     * Authorise the `settle` transition by checking the transaction's own
-     * `settlementPeriod`.
-     *
-     * @param array<string, mixed> $object The LeaveTransaction payload at its current state.
-     * @param string               $action The transition action ('settle').
-     * @param string               $userId The uid of the caller.
-     *
-     * @return GuardResult Allow when `settlementPeriod` is present and shaped
-     *                     `YYYY-MM`; deny otherwise (fail-closed).
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
-     *  static allow()/deny() factories mandated by OpenRegister's contract.
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action/$userId are part of
-     *  the LifecycleGuardInterface signature; the gate depends only on the
-     *  transaction's own settlementPeriod, not on who is acting.
-     *
-     * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-004
-     */
-    public function check(array $object, string $action, string $userId): GuardResult
-    {
-        $settlementPeriod = trim((string) ($object['settlementPeriod'] ?? ''));
-        if ($settlementPeriod === '') {
-            return GuardResult::deny(
-                'Deze transactie heeft geen verrekenperiode; verrekenen is geweigerd.'
-            );
-        }
+		if (preg_match('/^\d{4}-\d{2}$/', $settlementPeriod) !== 1) {
+			return GuardResult::deny(sprintf(
+				'De verrekenperiode ("%s") heeft niet de vorm JJJJ-MM; verrekenen is geweigerd.',
+				$settlementPeriod
+			));
+		}
 
-        if (preg_match('/^\d{4}-\d{2}$/', $settlementPeriod) !== 1) {
-            return GuardResult::deny(sprintf(
-                'De verrekenperiode ("%s") heeft niet de vorm JJJJ-MM; verrekenen is geweigerd.',
-                $settlementPeriod
-            ));
-        }
-
-        return GuardResult::allow();
-
-    }//end check()
-
+		return GuardResult::allow();
+	}//end check()
 
 }//end class

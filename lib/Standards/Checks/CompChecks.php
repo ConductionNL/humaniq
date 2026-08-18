@@ -37,92 +37,82 @@ namespace OCA\Hrmq\Standards\Checks;
 /**
  * Within-band executable check for compensation-review adjustments.
  */
-final class CompChecks implements CheckProvider
-{
+final class CompChecks implements CheckProvider {
 
-    /**
-     * CompAdjustment statuses the within-band rule applies to — a still-draft
-     * proposal has nothing decided yet (design.md D7).
-     *
-     * @var string[]
-     */
-    private const APPLICABLE_STATUSES = ['proposed', 'approved', 'effective'];
+	/**
+	 * CompAdjustment statuses the within-band rule applies to — a still-draft
+	 * proposal has nothing decided yet (design.md D7).
+	 *
+	 * @var string[]
+	 */
+	private const APPLICABLE_STATUSES = ['proposed', 'approved', 'effective'];
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
+	 */
+	public static function checks(): array {
+		return [
+			'CompAdjustment' => [
+				'comp-adjustment-within-band' => static fn (array $o, array $context): bool => self::withinBandSatisfied($o, $context),
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
-     */
-    public static function checks(): array
-    {
-        return [
-            'CompAdjustment' => [
-                'comp-adjustment-within-band' => static fn(array $o, array $context): bool => self::withinBandSatisfied($o, $context),
-            ],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * The `comp-adjustment-within-band` predicate (spec.md REQ-COMP-007):
+	 * vacuous when the adjustment is still `draft`, when `targetBandId` is
+	 * absent, or when the referenced SalaryBand cannot be resolved (nothing
+	 * decidable from this object alone — the `NlCaoChecks` "unresolvable
+	 * sibling -> vacuous" precedent). Otherwise requires
+	 * `minSalary <= proposedSalary <= maxSalary`.
+	 *
+	 * @param array<string, mixed> $o The CompAdjustment.
+	 * @param array<string, mixed> $context Evaluation context; reads `comp.salaryBandsById`.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
+	 */
+	private static function withinBandSatisfied(array $o, array $context): bool {
+		if (in_array((string)($o['status'] ?? ''), self::APPLICABLE_STATUSES, true) === false) {
+			// Still draft -- nothing proposed yet, out of scope.
+			return true;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		$bandId = trim((string)($o['targetBandId'] ?? ''));
+		if ($bandId === '') {
+			// No band targeted -- vacuous (the payScalesVerified precedent).
+			return true;
+		}
 
-    }//end seedSpec()
+		$band = ($context['comp']['salaryBandsById'][$bandId] ?? null);
+		if (is_array($band) === false) {
+			// Unresolvable band -- nothing decidable from this object alone.
+			return true;
+		}
 
+		$proposedSalary = ($o['proposedSalary'] ?? null);
+		$minSalary = ($band['minSalary'] ?? null);
+		$maxSalary = ($band['maxSalary'] ?? null);
+		if (is_numeric($proposedSalary) === false || is_numeric($minSalary) === false || is_numeric($maxSalary) === false) {
+			return true;
+		}
 
-    /**
-     * The `comp-adjustment-within-band` predicate (spec.md REQ-COMP-007):
-     * vacuous when the adjustment is still `draft`, when `targetBandId` is
-     * absent, or when the referenced SalaryBand cannot be resolved (nothing
-     * decidable from this object alone — the `NlCaoChecks` "unresolvable
-     * sibling -> vacuous" precedent). Otherwise requires
-     * `minSalary <= proposedSalary <= maxSalary`.
-     *
-     * @param array<string, mixed> $o       The CompAdjustment.
-     * @param array<string, mixed> $context Evaluation context; reads `comp.salaryBandsById`.
-     *
-     * @return bool
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-007
-     */
-    private static function withinBandSatisfied(array $o, array $context): bool
-    {
-        if (in_array((string) ($o['status'] ?? ''), self::APPLICABLE_STATUSES, true) === false) {
-            // Still draft -- nothing proposed yet, out of scope.
-            return true;
-        }
-
-        $bandId = trim((string) ($o['targetBandId'] ?? ''));
-        if ($bandId === '') {
-            // No band targeted -- vacuous (the payScalesVerified precedent).
-            return true;
-        }
-
-        $band = ($context['comp']['salaryBandsById'][$bandId] ?? null);
-        if (is_array($band) === false) {
-            // Unresolvable band -- nothing decidable from this object alone.
-            return true;
-        }
-
-        $proposedSalary = ($o['proposedSalary'] ?? null);
-        $minSalary      = ($band['minSalary'] ?? null);
-        $maxSalary      = ($band['maxSalary'] ?? null);
-        if (is_numeric($proposedSalary) === false || is_numeric($minSalary) === false || is_numeric($maxSalary) === false) {
-            return true;
-        }
-
-        return ((float) $proposedSalary) >= ((float) $minSalary) && ((float) $proposedSalary) <= ((float) $maxSalary);
-
-    }//end withinBandSatisfied()
-
+		return ((float)$proposedSalary) >= ((float)$minSalary) && ((float)$proposedSalary) <= ((float)$maxSalary);
+	}//end withinBandSatisfied()
 
 }//end class

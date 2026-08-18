@@ -34,73 +34,61 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-004
  */
-class LeaveSettlementPeriodGuardTest extends TestCase
-{
+class LeaveSettlementPeriodGuardTest extends TestCase {
 
+	/**
+	 * @return void
+	 */
+	public function testValidSettlementPeriodAllows(): void {
+		$guard = new LeaveSettlementPeriodGuard();
+		$result = $guard->check(['settlementPeriod' => '2026-06'], 'settle', 'alice');
 
-    /**
-     * @return void
-     */
-    public function testValidSettlementPeriodAllows(): void
-    {
-        $guard  = new LeaveSettlementPeriodGuard();
-        $result = $guard->check(['settlementPeriod' => '2026-06'], 'settle', 'alice');
+		$this->assertTrue($result->isAllowed());
 
-        $this->assertTrue($result->isAllowed());
+	}//end testValidSettlementPeriodAllows()
 
-    }//end testValidSettlementPeriodAllows()
+	/**
+	 * @return void
+	 */
+	public function testEmptySettlementPeriodDenies(): void {
+		$guard = new LeaveSettlementPeriodGuard();
+		$result = $guard->check(['settlementPeriod' => ''], 'settle', 'alice');
 
+		$this->assertFalse($result->isAllowed());
 
-    /**
-     * @return void
-     */
-    public function testEmptySettlementPeriodDenies(): void
-    {
-        $guard  = new LeaveSettlementPeriodGuard();
-        $result = $guard->check(['settlementPeriod' => ''], 'settle', 'alice');
+	}//end testEmptySettlementPeriodDenies()
 
-        $this->assertFalse($result->isAllowed());
+	/**
+	 * @return void
+	 */
+	public function testMissingSettlementPeriodKeyDenies(): void {
+		$guard = new LeaveSettlementPeriodGuard();
+		$result = $guard->check([], 'settle', 'alice');
 
-    }//end testEmptySettlementPeriodDenies()
+		$this->assertFalse($result->isAllowed());
 
+	}//end testMissingSettlementPeriodKeyDenies()
 
-    /**
-     * @return void
-     */
-    public function testMissingSettlementPeriodKeyDenies(): void
-    {
-        $guard  = new LeaveSettlementPeriodGuard();
-        $result = $guard->check([], 'settle', 'alice');
+	/**
+	 * @return void
+	 */
+	public function testMalformedSettlementPeriodDenies(): void {
+		$guard = new LeaveSettlementPeriodGuard();
+		$result = $guard->check(['settlementPeriod' => '2026/06'], 'settle', 'alice');
 
-        $this->assertFalse($result->isAllowed());
+		$this->assertFalse($result->isAllowed());
 
-    }//end testMissingSettlementPeriodKeyDenies()
+	}//end testMalformedSettlementPeriodDenies()
 
+	/**
+	 * @return void
+	 */
+	public function testFullDateInsteadOfPeriodDenies(): void {
+		$guard = new LeaveSettlementPeriodGuard();
+		$result = $guard->check(['settlementPeriod' => '2026-06-15'], 'settle', 'alice');
 
-    /**
-     * @return void
-     */
-    public function testMalformedSettlementPeriodDenies(): void
-    {
-        $guard  = new LeaveSettlementPeriodGuard();
-        $result = $guard->check(['settlementPeriod' => '2026/06'], 'settle', 'alice');
+		$this->assertFalse($result->isAllowed());
 
-        $this->assertFalse($result->isAllowed());
-
-    }//end testMalformedSettlementPeriodDenies()
-
-
-    /**
-     * @return void
-     */
-    public function testFullDateInsteadOfPeriodDenies(): void
-    {
-        $guard  = new LeaveSettlementPeriodGuard();
-        $result = $guard->check(['settlementPeriod' => '2026-06-15'], 'settle', 'alice');
-
-        $this->assertFalse($result->isAllowed());
-
-    }//end testFullDateInsteadOfPeriodDenies()
-
+	}//end testFullDateInsteadOfPeriodDenies()
 
 }//end class

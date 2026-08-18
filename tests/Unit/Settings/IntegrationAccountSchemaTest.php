@@ -38,117 +38,102 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/hris-api-public/specs/hris-api-public/spec.md#REQ-HRIS-003
  */
-class IntegrationAccountSchemaTest extends TestCase
-{
+class IntegrationAccountSchemaTest extends TestCase {
 
+	/**
+	 * The decoded IntegrationAccount schema definition.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $schema;
 
-    /**
-     * The decoded IntegrationAccount schema definition.
-     *
-     * @var array<string, mixed>
-     */
-    private array $schema;
+	/**
+	 * Load and decode the IntegrationAccount schema from its fragment.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$path = dirname(__DIR__, 3) . '/lib/Settings/register.d/hr-integrations.json';
+		$this->assertFileExists($path, 'The hr-integrations.json fragment must exist.');
 
+		$decoded = json_decode(file_get_contents($path), true);
+		$this->assertIsArray($decoded, 'The fragment must be valid JSON.');
+		$this->assertArrayHasKey('IntegrationAccount', $decoded['components']['schemas'] ?? [], 'The fragment must define an IntegrationAccount schema.');
 
-    /**
-     * Load and decode the IntegrationAccount schema from its fragment.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $path = dirname(__DIR__, 3).'/lib/Settings/register.d/hr-integrations.json';
-        $this->assertFileExists($path, 'The hr-integrations.json fragment must exist.');
+		$this->schema = $decoded['components']['schemas']['IntegrationAccount'];
 
-        $decoded = json_decode(file_get_contents($path), true);
-        $this->assertIsArray($decoded, 'The fragment must be valid JSON.');
-        $this->assertArrayHasKey('IntegrationAccount', $decoded['components']['schemas'] ?? [], 'The fragment must define an IntegrationAccount schema.');
+	}//end setUp()
 
-        $this->schema = $decoded['components']['schemas']['IntegrationAccount'];
+	/**
+	 * The required fields are exactly name, purpose, nextcloudUserId,
+	 * grantedSchemas — matching the "a catalog record validates" scenario.
+	 *
+	 * @return void
+	 */
+	public function testRequiredFields(): void {
+		$this->assertSame(
+			['name', 'purpose', 'nextcloudUserId', 'grantedSchemas'],
+			$this->schema['required'],
+			'IntegrationAccount must require name, purpose, nextcloudUserId and grantedSchemas.'
+		);
 
-    }//end setUp()
+	}//end testRequiredFields()
 
+	/**
+	 * status is an enum of exactly actief/ingetrokken and defaults to actief.
+	 *
+	 * @return void
+	 */
+	public function testStatusEnumAndDefault(): void {
+		$status = $this->schema['properties']['status'];
+		$this->assertSame(['actief', 'ingetrokken'], $status['enum'], 'status enum must be actief/ingetrokken.');
+		$this->assertSame('actief', $status['default'], 'status must default to actief.');
 
-    /**
-     * The required fields are exactly name, purpose, nextcloudUserId,
-     * grantedSchemas — matching the "a catalog record validates" scenario.
-     *
-     * @return void
-     */
-    public function testRequiredFields(): void
-    {
-        $this->assertSame(
-            ['name', 'purpose', 'nextcloudUserId', 'grantedSchemas'],
-            $this->schema['required'],
-            'IntegrationAccount must require name, purpose, nextcloudUserId and grantedSchemas.'
-        );
+	}//end testStatusEnumAndDefault()
 
-    }//end testRequiredFields()
+	/**
+	 * nextcloudUserId is a plain string, never a $ref (ADR-062 rule 7).
+	 *
+	 * @return void
+	 */
+	public function testNextcloudUserIdIsPlainString(): void {
+		$property = $this->schema['properties']['nextcloudUserId'];
+		$this->assertSame('string', $property['type'], 'nextcloudUserId must be a plain string.');
+		$this->assertArrayNotHasKey('$ref', $property, 'nextcloudUserId must never be a $ref.');
 
+	}//end testNextcloudUserIdIsPlainString()
 
-    /**
-     * status is an enum of exactly actief/ingetrokken and defaults to actief.
-     *
-     * @return void
-     */
-    public function testStatusEnumAndDefault(): void
-    {
-        $status = $this->schema['properties']['status'];
-        $this->assertSame(['actief', 'ingetrokken'], $status['enum'], 'status enum must be actief/ingetrokken.');
-        $this->assertSame('actief', $status['default'], 'status must default to actief.');
+	/**
+	 * grantedSchemas is a string array whose description states plainly that
+	 * it does NOT grant or enforce access (design.md D2 — gate-28).
+	 *
+	 * @return void
+	 */
+	public function testGrantedSchemasIsInformationalStringArray(): void {
+		$property = $this->schema['properties']['grantedSchemas'];
+		$this->assertSame('array', $property['type'], 'grantedSchemas must be an array.');
+		$this->assertSame('string', $property['items']['type'], 'grantedSchemas items must be strings.');
 
-    }//end testStatusEnumAndDefault()
+		$description = strtolower($property['description']);
+		$this->assertStringContainsString('does not', $description, 'grantedSchemas description must state it does not grant/enforce access.');
+		$this->assertStringContainsString('enforce', $description, 'grantedSchemas description must mention enforcement.');
+		$this->assertStringContainsString('rbac', $description, 'grantedSchemas description must point to OpenRegister RBAC as the real grant.');
 
+	}//end testGrantedSchemasIsInformationalStringArray()
 
-    /**
-     * nextcloudUserId is a plain string, never a $ref (ADR-062 rule 7).
-     *
-     * @return void
-     */
-    public function testNextcloudUserIdIsPlainString(): void
-    {
-        $property = $this->schema['properties']['nextcloudUserId'];
-        $this->assertSame('string', $property['type'], 'nextcloudUserId must be a plain string.');
-        $this->assertArrayNotHasKey('$ref', $property, 'nextcloudUserId must never be a $ref.');
+	/**
+	 * Gate-28: every property carries a non-empty title and description.
+	 *
+	 * @return void
+	 */
+	public function testEveryPropertyHasTitleAndDescription(): void {
+		foreach ($this->schema['properties'] as $name => $property) {
+			$this->assertArrayHasKey('title', $property, "Property {$name} must have a title.");
+			$this->assertArrayHasKey('description', $property, "Property {$name} must have a description.");
+			$this->assertNotEmpty($property['title'], "Property {$name} title must be non-empty.");
+			$this->assertNotEmpty($property['description'], "Property {$name} description must be non-empty.");
+		}
 
-    }//end testNextcloudUserIdIsPlainString()
-
-
-    /**
-     * grantedSchemas is a string array whose description states plainly that
-     * it does NOT grant or enforce access (design.md D2 — gate-28).
-     *
-     * @return void
-     */
-    public function testGrantedSchemasIsInformationalStringArray(): void
-    {
-        $property = $this->schema['properties']['grantedSchemas'];
-        $this->assertSame('array', $property['type'], 'grantedSchemas must be an array.');
-        $this->assertSame('string', $property['items']['type'], 'grantedSchemas items must be strings.');
-
-        $description = strtolower($property['description']);
-        $this->assertStringContainsString('does not', $description, 'grantedSchemas description must state it does not grant/enforce access.');
-        $this->assertStringContainsString('enforce', $description, 'grantedSchemas description must mention enforcement.');
-        $this->assertStringContainsString('rbac', $description, 'grantedSchemas description must point to OpenRegister RBAC as the real grant.');
-
-    }//end testGrantedSchemasIsInformationalStringArray()
-
-
-    /**
-     * Gate-28: every property carries a non-empty title and description.
-     *
-     * @return void
-     */
-    public function testEveryPropertyHasTitleAndDescription(): void
-    {
-        foreach ($this->schema['properties'] as $name => $property) {
-            $this->assertArrayHasKey('title', $property, "Property {$name} must have a title.");
-            $this->assertArrayHasKey('description', $property, "Property {$name} must have a description.");
-            $this->assertNotEmpty($property['title'], "Property {$name} title must be non-empty.");
-            $this->assertNotEmpty($property['description'], "Property {$name} description must be non-empty.");
-        }
-
-    }//end testEveryPropertyHasTitleAndDescription()
-
+	}//end testEveryPropertyHasTitleAndDescription()
 
 }//end class

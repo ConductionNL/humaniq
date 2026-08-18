@@ -40,91 +40,75 @@ use OCA\Hrmq\Payroll\Dsl\DslException;
 /**
  * The allow-list of escape-hatch handlers that ship inside hrmq.
  */
-final class StepHandlerRegistry
-{
+final class StepHandlerRegistry {
 
-    /**
-     * The registered handlers, by allow-list name.
-     *
-     * @var array<string, JurisdictionStepHandlerInterface>
-     */
-    private array $handlers = [];
+	/**
+	 * The registered handlers, by allow-list name.
+	 *
+	 * @var array<string, JurisdictionStepHandlerInterface>
+	 */
+	private array $handlers = [];
 
+	/**
+	 * @param array<int, JurisdictionStepHandlerInterface> $handlers The handlers hrmq ships (empty by design).
+	 */
+	public function __construct(array $handlers = []) {
+		foreach ($handlers as $handler) {
+			$this->handlers[$handler->name()] = $handler;
+		}
 
-    /**
-     * @param array<int, JurisdictionStepHandlerInterface> $handlers The handlers hrmq ships (empty by design).
-     */
-    public function __construct(array $handlers=[])
-    {
-        foreach ($handlers as $handler) {
-            $this->handlers[$handler->name()] = $handler;
-        }
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * Whether a handler name is on the allow-list.
+	 *
+	 * @param string $name The pack-declared handler name.
+	 *
+	 * @return bool
+	 */
+	public function has(string $name): bool {
+		return array_key_exists($name, $this->handlers);
+	}//end has()
 
+	/**
+	 * Resolve a handler by name.
+	 *
+	 * @param string $name The pack-declared handler name.
+	 *
+	 * @return JurisdictionStepHandlerInterface
+	 *
+	 * @throws DslException When the name is not on the allow-list. This is
+	 *                      never reached at runtime for a validated pack —
+	 *                      `PackValidator` rejects the upload first.
+	 */
+	public function get(string $name): JurisdictionStepHandlerInterface {
+		if ($this->has($name) === false) {
+			throw new DslException('Pack: onbekende phpStep-handler "' . $name . '" — niet op de allow-list (' . $this->describe() . ').');
+		}
 
-    /**
-     * Whether a handler name is on the allow-list.
-     *
-     * @param string $name The pack-declared handler name.
-     *
-     * @return bool
-     */
-    public function has(string $name): bool
-    {
-        return array_key_exists($name, $this->handlers);
+		return $this->handlers[$name];
+	}//end get()
 
-    }//end has()
+	/**
+	 * Every allow-listed handler name.
+	 *
+	 * @return array<int, string>
+	 */
+	public function names(): array {
+		return array_keys($this->handlers);
+	}//end names()
 
+	/**
+	 * A human-readable rendering of the allow-list, for rejection messages.
+	 *
+	 * @return string
+	 */
+	private function describe(): string {
+		if ($this->handlers === []) {
+			return 'de allow-list is leeg: hrmq levert geen enkele handler mee';
+		}
 
-    /**
-     * Resolve a handler by name.
-     *
-     * @param string $name The pack-declared handler name.
-     *
-     * @return JurisdictionStepHandlerInterface
-     *
-     * @throws DslException When the name is not on the allow-list. This is
-     *                      never reached at runtime for a validated pack —
-     *                      `PackValidator` rejects the upload first.
-     */
-    public function get(string $name): JurisdictionStepHandlerInterface
-    {
-        if ($this->has($name) === false) {
-            throw new DslException('Pack: onbekende phpStep-handler "'.$name.'" — niet op de allow-list ('.$this->describe().').');
-        }
-
-        return $this->handlers[$name];
-
-    }//end get()
-
-
-    /**
-     * Every allow-listed handler name.
-     *
-     * @return array<int, string>
-     */
-    public function names(): array
-    {
-        return array_keys($this->handlers);
-
-    }//end names()
-
-
-    /**
-     * A human-readable rendering of the allow-list, for rejection messages.
-     *
-     * @return string
-     */
-    private function describe(): string
-    {
-        if ($this->handlers === []) {
-            return 'de allow-list is leeg: hrmq levert geen enkele handler mee';
-        }
-
-        return 'toegestaan: '.implode(', ', $this->names());
-
-    }//end describe()
-
+		return 'toegestaan: ' . implode(', ', $this->names());
+	}//end describe()
 
 }//end class

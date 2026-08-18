@@ -71,162 +71,143 @@ use Psr\Container\ContainerInterface;
  * Fails closed: an unresolvable balance on a sell denies rather than allows
  * on a guess.
  */
-final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface
-{
+final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 
+	/**
+	 * Max LeaveBalance rows loaded when scanning for a match.
+	 *
+	 * @var int
+	 */
+	private const LIMIT = 10000;
 
-    /**
-     * Max LeaveBalance rows loaded when scanning for a match.
-     *
-     * @var int
-     */
-    private const LIMIT = 10000;
+	/**
+	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
+	 * @param IAppConfig $appConfig App config for the register slug.
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+		private readonly IAppConfig $appConfig,
+	) {
 
+	}//end __construct()
 
-    /**
-     * @param ContainerInterface $container DI container for lazy ObjectService resolution.
-     * @param IAppConfig         $appConfig App config for the register slug.
-     */
-    public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly IAppConfig $appConfig,
-    ) {
+	/**
+	 * Authorise the `approve` transition: separation of duties first, then
+	 * (for a sell) the bovenwettelijk-hours sufficiency check.
+	 *
+	 * @param array<string, mixed> $object The LeaveTransaction payload at its current state.
+	 * @param string $action The transition action ('approve').
+	 * @param string $userId The uid of the manager performing the transition.
+	 *
+	 * @return GuardResult Allow when separation of duties holds AND (buy, or a
+	 *                     sell with a sufficient resolvable balance); deny
+	 *                     otherwise (fail-closed).
+	 *
+	 * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-001
+	 * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-002
+	 */
+	public function check(array $object, string $action, string $userId): GuardResult {
+		$selfApproval = (new NoSelfApprovalGuard())->check($object, $action, $userId);
+		if ($selfApproval->isAllowed() === false) {
+			return $selfApproval;
+		}
 
-    }//end __construct()
+		$transactionType = (string)($object['transactionType'] ?? '');
+		if ($transactionType !== 'sell') {
+			// Buying hours cannot push a balance negative -- no sufficiency
+			// check needed to approve (the settlement step still requires the
+			// balance to exist to know what to add to).
+			return GuardResult::allow();
+		}
 
+		$balance = $this->resolveBalance($object);
+		if ($balance === null) {
+			return GuardResult::deny(
+				'Er is geen verlofsaldo gevonden voor deze medewerker/jaar/verloftype; goedkeuring is geweigerd.'
+			);
+		}
 
-    /**
-     * Authorise the `approve` transition: separation of duties first, then
-     * (for a sell) the bovenwettelijk-hours sufficiency check.
-     *
-     * @param array<string, mixed> $object The LeaveTransaction payload at its current state.
-     * @param string               $action The transition action ('approve').
-     * @param string               $userId The uid of the manager performing the transition.
-     *
-     * @return GuardResult Allow when separation of duties holds AND (buy, or a
-     *                     sell with a sufficient resolvable balance); deny
-     *                     otherwise (fail-closed).
-     *
-     * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-001
-     * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-002
-     */
-    public function check(array $object, string $action, string $userId): GuardResult
-    {
-        $selfApproval = (new NoSelfApprovalGuard())->check($object, $action, $userId);
-        if ($selfApproval->isAllowed() === false) {
-            return $selfApproval;
-        }
+		$hours = (float)($object['hours'] ?? 0);
+		$bovenwettelijkHours = (float)($balance['bovenwettelijkHours'] ?? 0);
+		if ($bovenwettelijkHours < $hours) {
+			return GuardResult::deny(sprintf(
+				'Onvoldoende bovenwettelijke verlofuren (%s beschikbaar, %s aangevraagd om te verkopen); goedkeuring is geweigerd.',
+				$bovenwettelijkHours,
+				$hours
+			));
+		}
 
-        $transactionType = (string) ($object['transactionType'] ?? '');
-        if ($transactionType !== 'sell') {
-            // Buying hours cannot push a balance negative -- no sufficiency
-            // check needed to approve (the settlement step still requires the
-            // balance to exist to know what to add to).
-            return GuardResult::allow();
-        }
+		return GuardResult::allow();
+	}//end check()
 
-        $balance = $this->resolveBalance($object);
-        if ($balance === null) {
-            return GuardResult::deny(
-                'Er is geen verlofsaldo gevonden voor deze medewerker/jaar/verloftype; goedkeuring is geweigerd.'
-            );
-        }
+	/**
+	 * Resolve the LeaveBalance matching this transaction's
+	 * (employeeId, year, leaveType), or null when none resolves.
+	 *
+	 * @param array<string, mixed> $object The LeaveTransaction payload.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function resolveBalance(array $object): ?array {
+		$employeeId = (string)($object['employeeId'] ?? '');
+		$year = (int)($object['year'] ?? 0);
+		$leaveType = (string)($object['leaveType'] ?? '');
 
-        $hours               = (float) ($object['hours'] ?? 0);
-        $bovenwettelijkHours = (float) ($balance['bovenwettelijkHours'] ?? 0);
-        if ($bovenwettelijkHours < $hours) {
-            return GuardResult::deny(sprintf(
-                'Onvoldoende bovenwettelijke verlofuren (%s beschikbaar, %s aangevraagd om te verkopen); goedkeuring is geweigerd.',
-                $bovenwettelijkHours,
-                $hours
-            ));
-        }
+		if ($employeeId === '' || $year <= 0 || $leaveType === '') {
+			return null;
+		}
 
-        return GuardResult::allow();
+		try {
+			$rows = $this->objectService()->setRegister($this->register())->setSchema('LeaveBalance')->findAll(['limit' => self::LIMIT]);
+		} catch (\Throwable $e) {
+			return null;
+		}
 
-    }//end check()
+		foreach ((is_array($rows) === true ? $rows : []) as $row) {
+			$balance = $this->toArray($row);
+			if ((string)($balance['employeeId'] ?? '') === $employeeId
+				&& (int)($balance['year'] ?? 0) === $year
+				&& (string)($balance['leaveType'] ?? '') === $leaveType
+			) {
+				return $balance;
+			}
+		}
 
+		return null;
+	}//end resolveBalance()
 
-    /**
-     * Resolve the LeaveBalance matching this transaction's
-     * (employeeId, year, leaveType), or null when none resolves.
-     *
-     * @param array<string, mixed> $object The LeaveTransaction payload.
-     *
-     * @return array<string, mixed>|null
-     */
-    private function resolveBalance(array $object): ?array
-    {
-        $employeeId = (string) ($object['employeeId'] ?? '');
-        $year       = (int) ($object['year'] ?? 0);
-        $leaveType  = (string) ($object['leaveType'] ?? '');
+	/**
+	 * Normalise an ObjectService row (entity or array) to an array.
+	 *
+	 * @param mixed $row The row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function toArray(mixed $row): array {
+		if (is_array($row) === true) {
+			return $row;
+		}
 
-        if ($employeeId === '' || $year <= 0 || $leaveType === '') {
-            return null;
-        }
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			return (array)$row->jsonSerialize();
+		}
 
-        try {
-            $rows = $this->objectService()->setRegister($this->register())->setSchema('LeaveBalance')->findAll(['limit' => self::LIMIT]);
-        } catch (\Throwable $e) {
-            return null;
-        }
+		return [];
+	}//end toArray()
 
-        foreach ((is_array($rows) === true ? $rows : []) as $row) {
-            $balance = $this->toArray($row);
-            if ((string) ($balance['employeeId'] ?? '') === $employeeId
-                && (int) ($balance['year'] ?? 0) === $year
-                && (string) ($balance['leaveType'] ?? '') === $leaveType
-            ) {
-                return $balance;
-            }
-        }
+	/**
+	 * @return mixed The OpenRegister ObjectService.
+	 */
+	private function objectService(): mixed {
+		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+	}//end objectService()
 
-        return null;
-
-    }//end resolveBalance()
-
-
-    /**
-     * Normalise an ObjectService row (entity or array) to an array.
-     *
-     * @param mixed $row The row.
-     *
-     * @return array<string, mixed>
-     */
-    private function toArray(mixed $row): array
-    {
-        if (is_array($row) === true) {
-            return $row;
-        }
-
-        if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-            return (array) $row->jsonSerialize();
-        }
-
-        return [];
-
-    }//end toArray()
-
-
-    /**
-     * @return mixed The OpenRegister ObjectService.
-     */
-    private function objectService(): mixed
-    {
-        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-    }//end objectService()
-
-
-    /**
-     * @return string The configured register slug.
-     */
-    private function register(): string
-    {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');
-        return $register === '' ? 'hrmq' : $register;
-
-    }//end register()
-
+	/**
+	 * @return string The configured register slug.
+	 */
+	private function register(): string {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');
+		return $register === '' ? 'hrmq' : $register;
+	}//end register()
 
 }//end class

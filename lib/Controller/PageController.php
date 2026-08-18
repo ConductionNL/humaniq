@@ -55,120 +55,108 @@ use OCP\IUserSession;
  *
  * @spec exclude framework glue — SPA shell + manifest passthrough; no business behaviour
  */
-class PageController extends Controller
-{
+class PageController extends Controller {
 
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request object.
+	 * @param IUserSession $userSession The user session.
+	 * @param IInitialState $initialState The initial-state service.
+	 * @param AdministrationService $administrationService The active-administration pointer service.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly IUserSession $userSession,
+		private readonly IInitialState $initialState,
+		private readonly AdministrationService $administrationService,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
 
-    /**
-     * Constructor.
-     *
-     * @param IRequest              $request               The request object.
-     * @param IUserSession          $userSession           The user session.
-     * @param IInitialState         $initialState          The initial-state service.
-     * @param AdministrationService $administrationService The active-administration pointer service.
-     *
-     * @return void
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly IUserSession $userSession,
-        private readonly IInitialState $initialState,
-        private readonly AdministrationService $administrationService,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * Render the main SPA page.
+	 *
+	 * Stamps the caller's active administratie id (when set) as initial
+	 * state under the `activeAdministrationId` key BEFORE the template
+	 * renders, so the frontend's `loadState('hrmq', 'activeAdministrationId',
+	 * '')` seeds the `cnWorkspaceContext` it provides at the SPA root with
+	 * the right value on first paint (REQ-MULTI-004). Unset (never switched)
+	 * intentionally stamps nothing — `loadState()` then falls back to `''`
+	 * and the `@workspace.activeAdministrationId?` manifest filters drop the
+	 * clause, matching the documented no-regression default for
+	 * single-administratie installs.
+	 *
+	 * single-person-modes (REQ-SPM-002/D2): additionally stamps the caller's
+	 * active administratie's resolved `mode` under `activeAdministrationMode`
+	 * (the exact `activeAdministrationId` mechanism, applied to a second key),
+	 * so `App.vue` can seed `manifest.runtime.user.administrationMode` on first
+	 * paint and nc-vue's `visibleIf` primitive hides the mode-scoped menus.
+	 * Unlike the id (which stamps nothing when unset so the `?`-optional
+	 * filters drop), the mode ALWAYS resolves to a concrete value
+	 * (`standard` by default), so it is always stamped -- a `visibleIf`
+	 * predicate keyed on `administrationMode` needs a value present to
+	 * evaluate, and `standard` is the no-menu-change default.
+	 *
+	 * @return TemplateResponse
+	 *
+	 * @spec openspec/specs/multi-administratie/spec.md#REQ-MULTI-004
+	 * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function index(): TemplateResponse {
+		$user = $this->userSession->getUser();
+		if ($user !== null) {
+			$administrationId = $this->administrationService->getActiveAdministrationId($user->getUID());
+			if ($administrationId !== null) {
+				$this->initialState->provideInitialState('activeAdministrationId', $administrationId);
+			}
 
+			$this->initialState->provideInitialState(
+				'activeAdministrationMode',
+				$this->administrationService->getActiveAdministrationMode($user->getUID())
+			);
+		}
 
-    /**
-     * Render the main SPA page.
-     *
-     * Stamps the caller's active administratie id (when set) as initial
-     * state under the `activeAdministrationId` key BEFORE the template
-     * renders, so the frontend's `loadState('hrmq', 'activeAdministrationId',
-     * '')` seeds the `cnWorkspaceContext` it provides at the SPA root with
-     * the right value on first paint (REQ-MULTI-004). Unset (never switched)
-     * intentionally stamps nothing — `loadState()` then falls back to `''`
-     * and the `@workspace.activeAdministrationId?` manifest filters drop the
-     * clause, matching the documented no-regression default for
-     * single-administratie installs.
-     *
-     * single-person-modes (REQ-SPM-002/D2): additionally stamps the caller's
-     * active administratie's resolved `mode` under `activeAdministrationMode`
-     * (the exact `activeAdministrationId` mechanism, applied to a second key),
-     * so `App.vue` can seed `manifest.runtime.user.administrationMode` on first
-     * paint and nc-vue's `visibleIf` primitive hides the mode-scoped menus.
-     * Unlike the id (which stamps nothing when unset so the `?`-optional
-     * filters drop), the mode ALWAYS resolves to a concrete value
-     * (`standard` by default), so it is always stamped -- a `visibleIf`
-     * predicate keyed on `administrationMode` needs a value present to
-     * evaluate, and `standard` is the no-menu-change default.
-     *
-     * @return TemplateResponse
-     *
-     * @spec openspec/specs/multi-administratie/spec.md#REQ-MULTI-004
-     * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
-     */
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function index(): TemplateResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user !== null) {
-            $administrationId = $this->administrationService->getActiveAdministrationId($user->getUID());
-            if ($administrationId !== null) {
-                $this->initialState->provideInitialState('activeAdministrationId', $administrationId);
-            }
+		return new TemplateResponse(Application::APP_ID, 'index');
+	}//end index()
 
-            $this->initialState->provideInitialState(
-                'activeAdministrationMode',
-                $this->administrationService->getActiveAdministrationMode($user->getUID())
-            );
-        }
+	/**
+	 * Serve the SPA for deep links (Vue history mode). Delegates to index().
+	 *
+	 * @return TemplateResponse
+	 *
+	 * @spec exclude framework glue — deep-link catch-all delegating to index() so Vue Router resolves the path
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function catchAll(): TemplateResponse {
+		return $this->index();
+	}//end catchAll()
 
-        return new TemplateResponse(Application::APP_ID, 'index');
+	/**
+	 * Return the bundled app manifest as JSON (ADR-024 §4).
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec exclude framework glue — returns the bundled src/manifest.json blob unchanged
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function manifest(): JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return new JSONResponse(data: ['error' => 'Not authenticated'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
 
-    }//end index()
+		$manifestPath = __DIR__ . '/../../src/manifest.json';
+		$manifestJson = file_get_contents($manifestPath);
+		$manifest = json_decode($manifestJson, associative: true);
 
-
-    /**
-     * Serve the SPA for deep links (Vue history mode). Delegates to index().
-     *
-     * @return TemplateResponse
-     *
-     * @spec exclude framework glue — deep-link catch-all delegating to index() so Vue Router resolves the path
-     */
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function catchAll(): TemplateResponse
-    {
-        return $this->index();
-
-    }//end catchAll()
-
-
-    /**
-     * Return the bundled app manifest as JSON (ADR-024 §4).
-     *
-     * @return JSONResponse
-     *
-     * @spec exclude framework glue — returns the bundled src/manifest.json blob unchanged
-     */
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function manifest(): JSONResponse
-    {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(data: ['error' => 'Not authenticated'], statusCode: Http::STATUS_UNAUTHORIZED);
-        }
-
-        $manifestPath = __DIR__.'/../../src/manifest.json';
-        $manifestJson = file_get_contents($manifestPath);
-        $manifest     = json_decode($manifestJson, associative: true);
-
-        return new JSONResponse($manifest);
-
-    }//end manifest()
-
+		return new JSONResponse($manifest);
+	}//end manifest()
 
 }//end class

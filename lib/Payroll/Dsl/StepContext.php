@@ -42,231 +42,195 @@ use OCA\Hrmq\Payroll\TaxTables;
 /**
  * The pure per-run binding/step store handed to every op.
  */
-final class StepContext
-{
+final class StepContext {
 
-    /**
-     * Resolved bindings, by id.
-     *
-     * @var array<string, mixed>
-     */
-    private array $bindings = [];
+	/**
+	 * Resolved bindings, by id.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $bindings = [];
 
-    /**
-     * Resolved step amounts, by id.
-     *
-     * @var array<string, int|float>
-     */
-    private array $steps = [];
+	/**
+	 * Resolved step amounts, by id.
+	 *
+	 * @var array<string, int|float>
+	 */
+	private array $steps = [];
 
-    /**
-     * Provenance of every table leaf this run resolved, keyed by leaf path.
-     *
-     * @var array<string, array<string, mixed>>
-     */
-    private array $provenance = [];
+	/**
+	 * Provenance of every table leaf this run resolved, keyed by leaf path.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private array $provenance = [];
 
+	/**
+	 * @param array<string, mixed> $inputs The validated input map, in the pack's own input vocabulary.
+	 * @param TaxTables $tables The injected tax-year parameter set.
+	 * @param string $period The wage period, `YYYY-MM` (supplied, never read from a clock).
+	 * @param array<string, mixed> $meta The pack metadata (`currency`, `taxYear`, ...).
+	 */
+	public function __construct(
+		private readonly array $inputs,
+		private readonly TaxTables $tables,
+		private readonly string $period,
+		private readonly array $meta,
+	) {
 
-    /**
-     * @param array<string, mixed> $inputs  The validated input map, in the pack's own input vocabulary.
-     * @param TaxTables            $tables  The injected tax-year parameter set.
-     * @param string               $period  The wage period, `YYYY-MM` (supplied, never read from a clock).
-     * @param array<string, mixed> $meta    The pack metadata (`currency`, `taxYear`, ...).
-     */
-    public function __construct(
-        private readonly array $inputs,
-        private readonly TaxTables $tables,
-        private readonly string $period,
-        private readonly array $meta,
-    ) {
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * A declared input's value.
+	 *
+	 * @param string $name The input name.
+	 *
+	 * @return mixed
+	 *
+	 * @throws DslException When the input was not supplied or declared.
+	 */
+	public function input(string $name): mixed {
+		if (array_key_exists($name, $this->inputs) === false) {
+			throw new DslException('Pack: onbekende invoer "@input.' . $name . '".');
+		}
 
+		return $this->inputs[$name];
+	}//end input()
 
-    /**
-     * A declared input's value.
-     *
-     * @param string $name The input name.
-     *
-     * @return mixed
-     *
-     * @throws DslException When the input was not supplied or declared.
-     */
-    public function input(string $name): mixed
-    {
-        if (array_key_exists($name, $this->inputs) === false) {
-            throw new DslException('Pack: onbekende invoer "@input.'.$name.'".');
-        }
+	/**
+	 * The injected tax tables.
+	 *
+	 * @return TaxTables
+	 */
+	public function tables(): TaxTables {
+		return $this->tables;
+	}//end tables()
 
-        return $this->inputs[$name];
+	/**
+	 * The run period, `YYYY-MM`.
+	 *
+	 * @return string
+	 */
+	public function period(): string {
+		return $this->period;
+	}//end period()
 
-    }//end input()
+	/**
+	 * A pack metadata field (`@pack.*`).
+	 *
+	 * @param string $name The metadata field name.
+	 *
+	 * @return mixed
+	 *
+	 * @throws DslException When the field is not declared.
+	 */
+	public function meta(string $name): mixed {
+		if (array_key_exists($name, $this->meta) === false) {
+			throw new DslException('Pack: onbekend pack-veld "@pack.' . $name . '".');
+		}
 
+		return $this->meta[$name];
+	}//end meta()
 
-    /**
-     * The injected tax tables.
-     *
-     * @return TaxTables
-     */
-    public function tables(): TaxTables
-    {
-        return $this->tables;
+	/**
+	 * An earlier binding's value.
+	 *
+	 * @param string $id The binding id.
+	 *
+	 * @return mixed
+	 *
+	 * @throws DslException When the binding was not declared earlier.
+	 */
+	public function binding(string $id): mixed {
+		if (array_key_exists($id, $this->bindings) === false) {
+			throw new DslException('Pack: verwijzing naar niet-eerder-gedeclareerde binding "@binding.' . $id . '".');
+		}
 
-    }//end tables()
+		return $this->bindings[$id];
+	}//end binding()
 
+	/**
+	 * An earlier step's amount.
+	 *
+	 * @param string $id The step id.
+	 *
+	 * @return int|float
+	 *
+	 * @throws DslException When the step was not declared earlier.
+	 */
+	public function step(string $id): int|float {
+		if (array_key_exists($id, $this->steps) === false) {
+			throw new DslException('Pack: verwijzing naar niet-eerder-gedeclareerde stap "@step.' . $id . '".');
+		}
 
-    /**
-     * The run period, `YYYY-MM`.
-     *
-     * @return string
-     */
-    public function period(): string
-    {
-        return $this->period;
+		return $this->steps[$id];
+	}//end step()
 
-    }//end period()
+	/**
+	 * Record a resolved binding.
+	 *
+	 * @param string $id The binding id.
+	 * @param mixed $value The resolved value.
+	 *
+	 * @return void
+	 */
+	public function setBinding(string $id, mixed $value): void {
+		$this->bindings[$id] = $value;
 
+	}//end setBinding()
 
-    /**
-     * A pack metadata field (`@pack.*`).
-     *
-     * @param string $name The metadata field name.
-     *
-     * @return mixed
-     *
-     * @throws DslException When the field is not declared.
-     */
-    public function meta(string $name): mixed
-    {
-        if (array_key_exists($name, $this->meta) === false) {
-            throw new DslException('Pack: onbekend pack-veld "@pack.'.$name.'".');
-        }
+	/**
+	 * Record a resolved step amount.
+	 *
+	 * @param string $id The step id.
+	 * @param int|float $value The resolved amount.
+	 *
+	 * @return void
+	 */
+	public function setStep(string $id, int|float $value): void {
+		$this->steps[$id] = $value;
 
-        return $this->meta[$name];
+	}//end setStep()
 
-    }//end meta()
+	/**
+	 * Record the provenance of a table leaf this run resolved (design.md D11
+	 * gate 6: `verified: false` / `placeholder: true` do not block, they are
+	 * stamped onto the run).
+	 *
+	 * @param array<string, mixed> $leaf The leaf's provenance stamp.
+	 *
+	 * @return void
+	 */
+	public function setProvenance(array $leaf): void {
+		$this->provenance[(string)$leaf['path']] = $leaf;
 
+	}//end setProvenance()
 
-    /**
-     * An earlier binding's value.
-     *
-     * @param string $id The binding id.
-     *
-     * @return mixed
-     *
-     * @throws DslException When the binding was not declared earlier.
-     */
-    public function binding(string $id): mixed
-    {
-        if (array_key_exists($id, $this->bindings) === false) {
-            throw new DslException('Pack: verwijzing naar niet-eerder-gedeclareerde binding "@binding.'.$id.'".');
-        }
+	/**
+	 * Every binding resolved so far.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function allBindings(): array {
+		return $this->bindings;
+	}//end allBindings()
 
-        return $this->bindings[$id];
+	/**
+	 * Every step amount resolved so far.
+	 *
+	 * @return array<string, int|float>
+	 */
+	public function allSteps(): array {
+		return $this->steps;
+	}//end allSteps()
 
-    }//end binding()
-
-
-    /**
-     * An earlier step's amount.
-     *
-     * @param string $id The step id.
-     *
-     * @return int|float
-     *
-     * @throws DslException When the step was not declared earlier.
-     */
-    public function step(string $id): int|float
-    {
-        if (array_key_exists($id, $this->steps) === false) {
-            throw new DslException('Pack: verwijzing naar niet-eerder-gedeclareerde stap "@step.'.$id.'".');
-        }
-
-        return $this->steps[$id];
-
-    }//end step()
-
-
-    /**
-     * Record a resolved binding.
-     *
-     * @param string $id    The binding id.
-     * @param mixed  $value The resolved value.
-     *
-     * @return void
-     */
-    public function setBinding(string $id, mixed $value): void
-    {
-        $this->bindings[$id] = $value;
-
-    }//end setBinding()
-
-
-    /**
-     * Record a resolved step amount.
-     *
-     * @param string    $id    The step id.
-     * @param int|float $value The resolved amount.
-     *
-     * @return void
-     */
-    public function setStep(string $id, int|float $value): void
-    {
-        $this->steps[$id] = $value;
-
-    }//end setStep()
-
-
-    /**
-     * Record the provenance of a table leaf this run resolved (design.md D11
-     * gate 6: `verified: false` / `placeholder: true` do not block, they are
-     * stamped onto the run).
-     *
-     * @param array<string, mixed> $leaf The leaf's provenance stamp.
-     *
-     * @return void
-     */
-    public function setProvenance(array $leaf): void
-    {
-        $this->provenance[(string) $leaf['path']] = $leaf;
-
-    }//end setProvenance()
-
-
-    /**
-     * Every binding resolved so far.
-     *
-     * @return array<string, mixed>
-     */
-    public function allBindings(): array
-    {
-        return $this->bindings;
-
-    }//end allBindings()
-
-
-    /**
-     * Every step amount resolved so far.
-     *
-     * @return array<string, int|float>
-     */
-    public function allSteps(): array
-    {
-        return $this->steps;
-
-    }//end allSteps()
-
-
-    /**
-     * The provenance of every table leaf this run resolved.
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public function allProvenance(): array
-    {
-        return $this->provenance;
-
-    }//end allProvenance()
-
+	/**
+	 * The provenance of every table leaf this run resolved.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public function allProvenance(): array {
+		return $this->provenance;
+	}//end allProvenance()
 
 }//end class

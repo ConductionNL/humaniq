@@ -44,138 +44,121 @@ namespace OCA\Hrmq\Standards\Checks;
 /**
  * Payroll-to-GL posting idempotency executable check.
  */
-final class NlGlPostChecks implements CheckProvider
-{
+final class NlGlPostChecks implements CheckProvider {
 
+	/**
+	 * PayrollGLPost statuses that count toward the at-most-one-per-run
+	 * invariant.
+	 *
+	 * @var string[]
+	 */
+	private const ACTIVE_STATUSES = ['pending', 'posted'];
 
-    /**
-     * PayrollGLPost statuses that count toward the at-most-one-per-run
-     * invariant.
-     *
-     * @var string[]
-     */
-    private const ACTIVE_STATUSES = ['pending', 'posted'];
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 */
+	public static function checks(): array {
+		return [
+			'PayrollGLPost' => [
+				'nl-glpost-idempotent-per-run' => static fn (array $o, array $context): bool => self::isCompliant($o, $context),
+			],
+		];
 
+	}//end checks()
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     */
-    public static function checks(): array
-    {
-        return [
-            'PayrollGLPost' => [
-                'nl-glpost-idempotent-per-run' => static fn(array $o, array $context): bool => self::isCompliant($o, $context),
-            ],
-        ];
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
-    }//end checks()
+	/**
+	 * The `nl-glpost-idempotent-per-run` predicate (spec.md REQ-PGP-007).
+	 *
+	 * @param array<string, mixed> $o The PayrollGLPost object.
+	 * @param array<string, mixed> $context Evaluation context; reads `glpost.activeCountByRun`.
+	 *
+	 * @return bool
+	 */
+	private static function isCompliant(array $o, array $context): bool {
+		$status = (string)($o['status'] ?? '');
+		if (in_array($status, self::ACTIVE_STATUSES, true) === false) {
+			// failed / skipped-no-shillinq attempts are superseded, never a violation.
+			return true;
+		}
 
+		$runId = (string)($o['payrollRunId'] ?? '');
+		$activeCount = (int)($context['glpost']['activeCountByRun'][$runId] ?? 0);
+		if ($activeCount > 1) {
+			return false;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		if ($status !== 'posted') {
+			return true;
+		}
 
-    }//end seedSpec()
+		if (self::present($o, 'journalEntryId') === false || self::present($o, 'postedAt') === false) {
+			return false;
+		}
 
+		return self::linesBalance($o['lines'] ?? []);
+	}//end isCompliant()
 
-    /**
-     * The `nl-glpost-idempotent-per-run` predicate (spec.md REQ-PGP-007).
-     *
-     * @param array<string, mixed> $o       The PayrollGLPost object.
-     * @param array<string, mixed> $context Evaluation context; reads `glpost.activeCountByRun`.
-     *
-     * @return bool
-     */
-    private static function isCompliant(array $o, array $context): bool
-    {
-        $status = (string) ($o['status'] ?? '');
-        if (in_array($status, self::ACTIVE_STATUSES, true) === false) {
-            // failed / skipped-no-shillinq attempts are superseded, never a violation.
-            return true;
-        }
+	/**
+	 * True when a posted record's `lines` snapshot is non-empty, well-shaped,
+	 * and its debit total equals its credit total to the cent.
+	 *
+	 * @param mixed $lines The `lines` field value.
+	 *
+	 * @return bool
+	 */
+	private static function linesBalance(mixed $lines): bool {
+		if (is_array($lines) === false || $lines === []) {
+			return false;
+		}
 
-        $runId       = (string) ($o['payrollRunId'] ?? '');
-        $activeCount = (int) ($context['glpost']['activeCountByRun'][$runId] ?? 0);
-        if ($activeCount > 1) {
-            return false;
-        }
+		$debitCents = 0;
+		$creditCents = 0;
+		foreach ($lines as $line) {
+			if (is_array($line) === false
+				|| isset($line['side'], $line['amount']) === false
+				|| is_numeric($line['amount']) === false
+			) {
+				return false;
+			}
 
-        if ($status !== 'posted') {
-            return true;
-        }
+			if ($line['side'] !== 'debit' && $line['side'] !== 'credit') {
+				return false;
+			}
 
-        if (self::present($o, 'journalEntryId') === false || self::present($o, 'postedAt') === false) {
-            return false;
-        }
+			$cents = (int)round(((float)$line['amount']) * 100);
+			if ($line['side'] === 'debit') {
+				$debitCents += $cents;
+			}
 
-        return self::linesBalance($o['lines'] ?? []);
+			if ($line['side'] === 'credit') {
+				$creditCents += $cents;
+			}
+		}
 
-    }//end isCompliant()
+		return $debitCents === $creditCents && $debitCents > 0;
+	}//end linesBalance()
 
-
-    /**
-     * True when a posted record's `lines` snapshot is non-empty, well-shaped,
-     * and its debit total equals its credit total to the cent.
-     *
-     * @param mixed $lines The `lines` field value.
-     *
-     * @return bool
-     */
-    private static function linesBalance(mixed $lines): bool
-    {
-        if (is_array($lines) === false || $lines === []) {
-            return false;
-        }
-
-        $debitCents  = 0;
-        $creditCents = 0;
-        foreach ($lines as $line) {
-            if (is_array($line) === false
-                || isset($line['side'], $line['amount']) === false
-                || is_numeric($line['amount']) === false
-            ) {
-                return false;
-            }
-
-            if ($line['side'] !== 'debit' && $line['side'] !== 'credit') {
-                return false;
-            }
-
-            $cents = (int) round(((float) $line['amount']) * 100);
-            if ($line['side'] === 'debit') {
-                $debitCents += $cents;
-            }
-
-            if ($line['side'] === 'credit') {
-                $creditCents += $cents;
-            }
-        }
-
-        return $debitCents === $creditCents && $debitCents > 0;
-
-    }//end linesBalance()
-
-
-    /**
-     * True when an object field holds a non-empty value.
-     *
-     * @param array<string, mixed> $o   Object.
-     * @param string               $key Field.
-     *
-     * @return bool
-     */
-    private static function present(array $o, string $key): bool
-    {
-        return isset($o[$key]) === true && trim((string) $o[$key]) !== '';
-
-    }//end present()
-
+	/**
+	 * True when an object field holds a non-empty value.
+	 *
+	 * @param array<string, mixed> $o Object.
+	 * @param string $key Field.
+	 *
+	 * @return bool
+	 */
+	private static function present(array $o, string $key): bool {
+		return isset($o[$key]) === true && trim((string)$o[$key]) !== '';
+	}//end present()
 
 }//end class

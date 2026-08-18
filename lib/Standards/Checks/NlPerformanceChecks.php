@@ -39,61 +39,51 @@ namespace OCA\Hrmq\Standards\Checks;
  * Performance-review dossiervorming completeness check (rating + afspraken
  * on a vastgesteld beoordeling).
  */
-final class NlPerformanceChecks implements CheckProvider
-{
+final class NlPerformanceChecks implements CheckProvider {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 */
+	public static function checks(): array {
+		return [
+			'PerformanceReview' => [
+				// BW art. 7:669 lid 3 sub d -- a vastgesteld beoordeling must
+				// carry a rating and concrete afspraken (ontslagdossier).
+				'nl-performance-dossiervorming' => static fn (array $o): bool => self::dossiervormingSatisfied($o),
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     */
-    public static function checks(): array
-    {
-        return [
-            'PerformanceReview' => [
-                // BW art. 7:669 lid 3 sub d -- a vastgesteld beoordeling must
-                // carry a rating and concrete afspraken (ontslagdossier).
-                'nl-performance-dossiervorming' => static fn(array $o): bool => self::dossiervormingSatisfied($o),
-            ],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * True unless `status` is `vastgesteld` and either `rating` is null/empty
+	 * or `afspraken` is null/empty. All other statuses pass vacuously -- an
+	 * unfinished review legitimately has no rating or afspraken yet.
+	 *
+	 * @param array<string, mixed> $o The PerformanceReview.
+	 *
+	 * @return bool
+	 */
+	private static function dossiervormingSatisfied(array $o): bool {
+		if ((string)($o['status'] ?? '') !== 'vastgesteld') {
+			return true;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		$rating = trim((string)($o['rating'] ?? ''));
+		$afspraken = trim((string)($o['afspraken'] ?? ''));
 
-    }//end seedSpec()
-
-
-    /**
-     * True unless `status` is `vastgesteld` and either `rating` is null/empty
-     * or `afspraken` is null/empty. All other statuses pass vacuously -- an
-     * unfinished review legitimately has no rating or afspraken yet.
-     *
-     * @param array<string, mixed> $o The PerformanceReview.
-     *
-     * @return bool
-     */
-    private static function dossiervormingSatisfied(array $o): bool
-    {
-        if ((string) ($o['status'] ?? '') !== 'vastgesteld') {
-            return true;
-        }
-
-        $rating    = trim((string) ($o['rating'] ?? ''));
-        $afspraken = trim((string) ($o['afspraken'] ?? ''));
-
-        return $rating !== '' && $afspraken !== '';
-
-    }//end dossiervormingSatisfied()
-
+		return $rating !== '' && $afspraken !== '';
+	}//end dossiervormingSatisfied()
 
 }//end class

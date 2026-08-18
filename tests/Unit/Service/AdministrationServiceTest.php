@@ -49,300 +49,274 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-003
  * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
  */
-class AdministrationServiceTest extends TestCase
-{
+class AdministrationServiceTest extends TestCase {
 
+	/**
+	 * REQ-MULTI-002 "An accountant has access to multiple administraties"
+	 * scenario: two AdministrationAccess rows for the caller resolve to both
+	 * administraties, each enriched with its catalog name.
+	 *
+	 * @return void
+	 */
+	public function testAccountantResolvesBothAccessibleAdministraties(): void {
+		$service = $this->buildService();
 
-    /**
-     * REQ-MULTI-002 "An accountant has access to multiple administraties"
-     * scenario: two AdministrationAccess rows for the caller resolve to both
-     * administraties, each enriched with its catalog name.
-     *
-     * @return void
-     */
-    public function testAccountantResolvesBothAccessibleAdministraties(): void
-    {
-        $service = $this->buildService();
+		$administrations = $service->accessibleAdministrations('admin');
 
-        $administrations = $service->accessibleAdministrations('admin');
+		$this->assertCount(2, $administrations);
+		$this->assertSame('ADM-001', $administrations[0]['administrationId']);
+		$this->assertSame('Example: Conduction Demo B.V.', $administrations[0]['name']);
+		$this->assertSame('accountant', $administrations[0]['role']);
+		$this->assertSame('ADM-002', $administrations[1]['administrationId']);
+		$this->assertSame('Example: Tweede Klant B.V.', $administrations[1]['name']);
 
-        $this->assertCount(2, $administrations);
-        $this->assertSame('ADM-001', $administrations[0]['administrationId']);
-        $this->assertSame('Example: Conduction Demo B.V.', $administrations[0]['name']);
-        $this->assertSame('accountant', $administrations[0]['role']);
-        $this->assertSame('ADM-002', $administrations[1]['administrationId']);
-        $this->assertSame('Example: Tweede Klant B.V.', $administrations[1]['name']);
+	}//end testAccountantResolvesBothAccessibleAdministraties()
 
-    }//end testAccountantResolvesBothAccessibleAdministraties()
+	/**
+	 * REQ-SPM-002 response shape: every accessible-administratie entry carries
+	 * its resolved `mode` — the standard default for a legacy/absent value
+	 * (ADM-001), the set value for one that has it (ADM-002).
+	 *
+	 * @return void
+	 */
+	public function testAccessibleAdministrationsCarryResolvedMode(): void {
+		$service = $this->buildService();
 
+		$administrations = $service->accessibleAdministrations('admin');
 
-    /**
-     * REQ-SPM-002 response shape: every accessible-administratie entry carries
-     * its resolved `mode` — the standard default for a legacy/absent value
-     * (ADM-001), the set value for one that has it (ADM-002).
-     *
-     * @return void
-     */
-    public function testAccessibleAdministrationsCarryResolvedMode(): void
-    {
-        $service = $this->buildService();
+		$this->assertSame('standard', $administrations[0]['mode']);
+		$this->assertSame('dga_single_person', $administrations[1]['mode']);
 
-        $administrations = $service->accessibleAdministrations('admin');
+	}//end testAccessibleAdministrationsCarryResolvedMode()
 
-        $this->assertSame('standard', $administrations[0]['mode']);
-        $this->assertSame('dga_single_person', $administrations[1]['mode']);
+	/**
+	 * REQ-SPM-002 "Switching administratie updates the stamped mode": the
+	 * active administratie's `mode` resolves from the catalog (ADM-002 →
+	 * dga_single_person).
+	 *
+	 * @return void
+	 */
+	public function testActiveAdministrationModeResolvesFromCatalog(): void {
+		$store = ['admin' => ['active_administration_id' => 'ADM-002']];
+		$config = $this->createMock(IConfig::class);
+		$config->method('getUserValue')
+			->willReturnCallback(static function (string $userId, string $appName, string $key, string $default) use (&$store): string {
+				return $store[$userId][$key] ?? $default;
+			});
 
-    }//end testAccessibleAdministrationsCarryResolvedMode()
+		$service = $this->buildService($config);
 
+		$this->assertSame('dga_single_person', $service->getActiveAdministrationMode('admin'));
 
-    /**
-     * REQ-SPM-002 "Switching administratie updates the stamped mode": the
-     * active administratie's `mode` resolves from the catalog (ADM-002 →
-     * dga_single_person).
-     *
-     * @return void
-     */
-    public function testActiveAdministrationModeResolvesFromCatalog(): void
-    {
-        $store  = ['admin' => ['active_administration_id' => 'ADM-002']];
-        $config = $this->createMock(IConfig::class);
-        $config->method('getUserValue')
-            ->willReturnCallback(static function (string $userId, string $appName, string $key, string $default) use (&$store): string {
-                return $store[$userId][$key] ?? $default;
-            });
+	}//end testActiveAdministrationModeResolvesFromCatalog()
 
-        $service = $this->buildService($config);
+	/**
+	 * REQ-SPM-002 default: a caller with NO active administratie (never
+	 * switched) resolves the standard mode — the no-regression default, so no
+	 * visibleIf predicate hides a menu for them.
+	 *
+	 * @return void
+	 */
+	public function testActiveAdministrationModeDefaultsToStandardWhenUnresolved(): void {
+		$config = $this->createMock(IConfig::class);
+		$config->method('getUserValue')
+			->willReturnCallback(static fn (string $u, string $a, string $k, string $default): string => $default);
 
-        $this->assertSame('dga_single_person', $service->getActiveAdministrationMode('admin'));
+		$service = $this->buildService($config);
 
-    }//end testActiveAdministrationModeResolvesFromCatalog()
+		$this->assertSame('standard', $service->getActiveAdministrationMode('admin'));
 
+	}//end testActiveAdministrationModeDefaultsToStandardWhenUnresolved()
 
-    /**
-     * REQ-SPM-002 default: a caller with NO active administratie (never
-     * switched) resolves the standard mode — the no-regression default, so no
-     * visibleIf predicate hides a menu for them.
-     *
-     * @return void
-     */
-    public function testActiveAdministrationModeDefaultsToStandardWhenUnresolved(): void
-    {
-        $config = $this->createMock(IConfig::class);
-        $config->method('getUserValue')
-            ->willReturnCallback(static fn(string $u, string $a, string $k, string $default): string => $default);
+	/**
+	 * An active administratie with no `mode` value set (ADM-001) resolves the
+	 * standard default — a legacy administratie never hides a menu by accident.
+	 *
+	 * @return void
+	 */
+	public function testActiveAdministrationModeDefaultsToStandardForLegacyAdministratie(): void {
+		$store = ['admin' => ['active_administration_id' => 'ADM-001']];
+		$config = $this->createMock(IConfig::class);
+		$config->method('getUserValue')
+			->willReturnCallback(static function (string $userId, string $appName, string $key, string $default) use (&$store): string {
+				return $store[$userId][$key] ?? $default;
+			});
 
-        $service = $this->buildService($config);
+		$service = $this->buildService($config);
 
-        $this->assertSame('standard', $service->getActiveAdministrationMode('admin'));
+		$this->assertSame('standard', $service->getActiveAdministrationMode('admin'));
 
-    }//end testActiveAdministrationModeDefaultsToStandardWhenUnresolved()
+	}//end testActiveAdministrationModeDefaultsToStandardForLegacyAdministratie()
 
+	/**
+	 * A user with no AdministrationAccess rows resolves an empty accessible
+	 * set.
+	 *
+	 * @return void
+	 */
+	public function testUserWithoutAccessRowsResolvesEmpty(): void {
+		$service = $this->buildService();
 
-    /**
-     * An active administratie with no `mode` value set (ADM-001) resolves the
-     * standard default — a legacy administratie never hides a menu by accident.
-     *
-     * @return void
-     */
-    public function testActiveAdministrationModeDefaultsToStandardForLegacyAdministratie(): void
-    {
-        $store  = ['admin' => ['active_administration_id' => 'ADM-001']];
-        $config = $this->createMock(IConfig::class);
-        $config->method('getUserValue')
-            ->willReturnCallback(static function (string $userId, string $appName, string $key, string $default) use (&$store): string {
-                return $store[$userId][$key] ?? $default;
-            });
+		$this->assertSame([], $service->accessibleAdministrations('nobody'));
 
-        $service = $this->buildService($config);
+	}//end testUserWithoutAccessRowsResolvesEmpty()
 
-        $this->assertSame('standard', $service->getActiveAdministrationMode('admin'));
+	/**
+	 * REQ-MULTI-003 "Activating an accessible administratie" precondition:
+	 * `hasAccess()` is true for a row the caller has, false otherwise —
+	 * the exact set `AdministrationController::setActive` guards on.
+	 *
+	 * @return void
+	 */
+	public function testHasAccessReflectsMembershipRowsOnly(): void {
+		$service = $this->buildService();
 
-    }//end testActiveAdministrationModeDefaultsToStandardForLegacyAdministratie()
+		$this->assertTrue($service->hasAccess('admin', 'ADM-001'));
+		$this->assertTrue($service->hasAccess('admin', 'ADM-002'));
+		$this->assertFalse($service->hasAccess('admin', 'ADM-099'));
+		$this->assertFalse($service->hasAccess('nobody', 'ADM-001'));
+		$this->assertFalse($service->hasAccess('admin', ''));
 
+	}//end testHasAccessReflectsMembershipRowsOnly()
 
-    /**
-     * A user with no AdministrationAccess rows resolves an empty accessible
-     * set.
-     *
-     * @return void
-     */
-    public function testUserWithoutAccessRowsResolvesEmpty(): void
-    {
-        $service = $this->buildService();
+	/**
+	 * The active-administration pointer round-trips through the per-user
+	 * `IConfig` value (design.md D4): unset resolves to null, then a set
+	 * value is read back exactly.
+	 *
+	 * @return void
+	 */
+	public function testActiveAdministrationRoundTripsThroughUserConfig(): void {
+		$store = [];
 
-        $this->assertSame([], $service->accessibleAdministrations('nobody'));
+		$config = $this->createMock(IConfig::class);
+		$config->method('getUserValue')
+			->willReturnCallback(static function (string $userId, string $appName, string $key, string $default) use (&$store): string {
+				return $store[$userId][$key] ?? $default;
+			});
+		$config->method('setUserValue')
+			->willReturnCallback(static function (string $userId, string $appName, string $key, string $value) use (&$store): void {
+				$store[$userId][$key] = $value;
+			});
 
-    }//end testUserWithoutAccessRowsResolvesEmpty()
+		$service = $this->buildService($config);
 
+		$this->assertNull($service->getActiveAdministrationId('admin'));
 
-    /**
-     * REQ-MULTI-003 "Activating an accessible administratie" precondition:
-     * `hasAccess()` is true for a row the caller has, false otherwise —
-     * the exact set `AdministrationController::setActive` guards on.
-     *
-     * @return void
-     */
-    public function testHasAccessReflectsMembershipRowsOnly(): void
-    {
-        $service = $this->buildService();
+		$service->setActiveAdministrationId('admin', 'ADM-002');
 
-        $this->assertTrue($service->hasAccess('admin', 'ADM-001'));
-        $this->assertTrue($service->hasAccess('admin', 'ADM-002'));
-        $this->assertFalse($service->hasAccess('admin', 'ADM-099'));
-        $this->assertFalse($service->hasAccess('nobody', 'ADM-001'));
-        $this->assertFalse($service->hasAccess('admin', ''));
+		$this->assertSame('ADM-002', $service->getActiveAdministrationId('admin'));
 
-    }//end testHasAccessReflectsMembershipRowsOnly()
+	}//end testActiveAdministrationRoundTripsThroughUserConfig()
 
+	/**
+	 * REQ-MULTI-004 `context()` combines the active pointer + the accessible
+	 * set into the one payload the switcher/topbar indicator consumes.
+	 *
+	 * @return void
+	 */
+	public function testContextCombinesActivePointerAndAccessibleSet(): void {
+		$store = ['admin' => ['active_administration_id' => 'ADM-002']];
+		$config = $this->createMock(IConfig::class);
+		$config->method('getUserValue')
+			->willReturnCallback(static function (string $userId, string $appName, string $key, string $default) use (&$store): string {
+				return $store[$userId][$key] ?? $default;
+			});
 
-    /**
-     * The active-administration pointer round-trips through the per-user
-     * `IConfig` value (design.md D4): unset resolves to null, then a set
-     * value is read back exactly.
-     *
-     * @return void
-     */
-    public function testActiveAdministrationRoundTripsThroughUserConfig(): void
-    {
-        $store = [];
+		$service = $this->buildService($config);
 
-        $config = $this->createMock(IConfig::class);
-        $config->method('getUserValue')
-            ->willReturnCallback(static function (string $userId, string $appName, string $key, string $default) use (&$store): string {
-                return $store[$userId][$key] ?? $default;
-            });
-        $config->method('setUserValue')
-            ->willReturnCallback(static function (string $userId, string $appName, string $key, string $value) use (&$store): void {
-                $store[$userId][$key] = $value;
-            });
+		$context = $service->context('admin');
 
-        $service = $this->buildService($config);
+		$this->assertSame('ADM-002', $context['activeAdministrationId']);
+		$this->assertCount(2, $context['administrations']);
 
-        $this->assertNull($service->getActiveAdministrationId('admin'));
+	}//end testContextCombinesActivePointerAndAccessibleSet()
 
-        $service->setActiveAdministrationId('admin', 'ADM-002');
+	/**
+	 * Build an `AdministrationService` with a fake container-resolved
+	 * ObjectService pre-loaded with two Administration rows and three
+	 * AdministrationAccess rows (admin -> ADM-001/ADM-002 accountant,
+	 * hr-devries -> ADM-001 hr) — the hr-seed.json seed shape.
+	 *
+	 * @param IConfig|null $config Optional IConfig mock; a default no-op mock is used when omitted.
+	 *
+	 * @return AdministrationService
+	 */
+	private function buildService(?IConfig $config = null): AdministrationService {
+		$administrations = [
+			// ADM-001 has no `mode` value set — proves the standard default
+			// resolves for a legacy/pre-change administratie (REQ-SPM-001).
+			['administrationId' => 'ADM-001', 'name' => 'Example: Conduction Demo B.V.'],
+			['administrationId' => 'ADM-002', 'name' => 'Example: Tweede Klant B.V.', 'mode' => 'dga_single_person'],
+		];
 
-        $this->assertSame('ADM-002', $service->getActiveAdministrationId('admin'));
+		$access = [
+			['userId' => 'admin', 'administrationId' => 'ADM-001', 'role' => 'accountant'],
+			['userId' => 'admin', 'administrationId' => 'ADM-002', 'role' => 'accountant'],
+			['userId' => 'hr-devries', 'administrationId' => 'ADM-001', 'role' => 'hr'],
+		];
 
-    }//end testActiveAdministrationRoundTripsThroughUserConfig()
+		$objectService = new class($administrations, $access) {
 
+			/**
+			 * @param array<int, array<string, mixed>> $administrations Canned Administration rows.
+			 * @param array<int, array<string, mixed>> $access Canned AdministrationAccess rows.
+			 */
+			public function __construct(
+				private readonly array $administrations,
+				private readonly array $access,
+			) {
+			}
 
-    /**
-     * REQ-MULTI-004 `context()` combines the active pointer + the accessible
-     * set into the one payload the switcher/topbar indicator consumes.
-     *
-     * @return void
-     */
-    public function testContextCombinesActivePointerAndAccessibleSet(): void
-    {
-        $store  = ['admin' => ['active_administration_id' => 'ADM-002']];
-        $config = $this->createMock(IConfig::class);
-        $config->method('getUserValue')
-            ->willReturnCallback(static function (string $userId, string $appName, string $key, string $default) use (&$store): string {
-                return $store[$userId][$key] ?? $default;
-            });
+			/**
+			 * @var string
+			 */
+			private string $schema = '';
 
-        $service = $this->buildService($config);
+			/**
+			 * @param string $register Ignored; chainable.
+			 *
+			 * @return self
+			 */
+			public function setRegister(string $register): self {
+				return $this;
+			}
 
-        $context = $service->context('admin');
+			/**
+			 * @param string $schema The schema to load on the next findAll().
+			 *
+			 * @return self
+			 */
+			public function setSchema(string $schema): self {
+				$this->schema = $schema;
+				return $this;
+			}
 
-        $this->assertSame('ADM-002', $context['activeAdministrationId']);
-        $this->assertCount(2, $context['administrations']);
+			/**
+			 * @param array<string, mixed> $options Ignored.
+			 *
+			 * @return array<int, mixed>
+			 */
+			public function findAll(array $options): array {
+				return match ($this->schema) {
+					'Administration' => $this->administrations,
+					'AdministrationAccess' => $this->access,
+					default => [],
+				};
 
-    }//end testContextCombinesActivePointerAndAccessibleSet()
+			}
+		};
 
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($objectService);
 
-    /**
-     * Build an `AdministrationService` with a fake container-resolved
-     * ObjectService pre-loaded with two Administration rows and three
-     * AdministrationAccess rows (admin -> ADM-001/ADM-002 accountant,
-     * hr-devries -> ADM-001 hr) — the hr-seed.json seed shape.
-     *
-     * @param IConfig|null $config Optional IConfig mock; a default no-op mock is used when omitted.
-     *
-     * @return AdministrationService
-     */
-    private function buildService(?IConfig $config=null): AdministrationService
-    {
-        $administrations = [
-            // ADM-001 has no `mode` value set — proves the standard default
-            // resolves for a legacy/pre-change administratie (REQ-SPM-001).
-            ['administrationId' => 'ADM-001', 'name' => 'Example: Conduction Demo B.V.'],
-            ['administrationId' => 'ADM-002', 'name' => 'Example: Tweede Klant B.V.', 'mode' => 'dga_single_person'],
-        ];
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('hrmq');
 
-        $access = [
-            ['userId' => 'admin', 'administrationId' => 'ADM-001', 'role' => 'accountant'],
-            ['userId' => 'admin', 'administrationId' => 'ADM-002', 'role' => 'accountant'],
-            ['userId' => 'hr-devries', 'administrationId' => 'ADM-001', 'role' => 'hr'],
-        ];
+		$config ??= $this->createMock(IConfig::class);
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $objectService = new class ($administrations, $access) {
-
-            /**
-             * @param array<int, array<string, mixed>> $administrations Canned Administration rows.
-             * @param array<int, array<string, mixed>> $access          Canned AdministrationAccess rows.
-             */
-            public function __construct(
-                private readonly array $administrations,
-                private readonly array $access,
-            ) {
-            }
-
-            /**
-             * @var string
-             */
-            private string $schema = '';
-
-            /**
-             * @param string $register Ignored; chainable.
-             *
-             * @return self
-             */
-            public function setRegister(string $register): self
-            {
-                return $this;
-            }
-
-            /**
-             * @param string $schema The schema to load on the next findAll().
-             *
-             * @return self
-             */
-            public function setSchema(string $schema): self
-            {
-                $this->schema = $schema;
-                return $this;
-            }
-
-            /**
-             * @param array<string, mixed> $options Ignored.
-             *
-             * @return array<int, mixed>
-             */
-            public function findAll(array $options): array
-            {
-                return match ($this->schema) {
-                    'Administration' => $this->administrations,
-                    'AdministrationAccess' => $this->access,
-                    default => [],
-                };
-
-            }
-        };
-
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($objectService);
-
-        $settings = $this->createMock(SettingsService::class);
-        $settings->method('getRegisterSlug')->willReturn('hrmq');
-
-        $config ??= $this->createMock(IConfig::class);
-        $logger  = $this->createMock(LoggerInterface::class);
-
-        return new AdministrationService($container, $config, $settings, $logger);
-
-    }//end buildService()
-
+		return new AdministrationService($container, $config, $settings, $logger);
+	}//end buildService()
 
 }//end class

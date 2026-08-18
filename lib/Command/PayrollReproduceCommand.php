@@ -40,75 +40,67 @@ use Symfony\Component\Console\Output\OutputInterface;
  * occ command that recomputes a sealed Payslip from its stored snapshot and
  * compares it cents-exact against the archived figures.
  */
-class PayrollReproduceCommand extends Command
-{
+class PayrollReproduceCommand extends Command {
 
+	/**
+	 * @param PayrollReproduceService $service The recompute-and-compare service.
+	 */
+	public function __construct(
+		private readonly PayrollReproduceService $service,
+	) {
+		parent::__construct();
 
-    /**
-     * @param PayrollReproduceService $service The recompute-and-compare service.
-     */
-    public function __construct(
-        private readonly PayrollReproduceService $service,
-    ) {
-        parent::__construct();
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * @return void
+	 *
+	 * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-002
+	 */
+	protected function configure(): void {
+		$this->setName('hrmq:payroll:reproduce')
+			->setDescription('Recompute a sealed Payslip from its stored engineInputSnapshot and compare cents-exact against the archived figures.')
+			->addOption('payslip', null, InputOption::VALUE_REQUIRED, 'The Payslip id (uuid) to reproduce.');
 
+	}//end configure()
 
-    /**
-     * @return void
-     *
-     * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-002
-     */
-    protected function configure(): void
-    {
-        $this->setName('hrmq:payroll:reproduce')
-            ->setDescription('Recompute a sealed Payslip from its stored engineInputSnapshot and compare cents-exact against the archived figures.')
-            ->addOption('payslip', null, InputOption::VALUE_REQUIRED, 'The Payslip id (uuid) to reproduce.');
+	/**
+	 * @param InputInterface $input Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int 0 when every component reproduces cents-exact, 1 otherwise.
+	 *
+	 * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-002
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output): int {
+		$payslipOption = $input->getOption('payslip');
+		$payslipId = (is_string($payslipOption) === true) ? trim($payslipOption) : '';
+		if ($payslipId === '') {
+			$output->writeln('<error>--payslip is verplicht (uuid).</error>');
+			return 1;
+		}
 
-    }//end configure()
+		$result = $this->service->reproduce($payslipId);
 
+		$output->writeln('<info>Hrmq payroll reproduce</info>');
+		$output->writeln(sprintf('  loonstrook: %s', $result['payslipId']));
+		$output->writeln(sprintf('  status    : %s', $result['status']));
+		$output->writeln(sprintf('  bericht   : %s', $result['message']));
 
-    /**
-     * @param InputInterface  $input  Console input.
-     * @param OutputInterface $output Console output.
-     *
-     * @return int 0 when every component reproduces cents-exact, 1 otherwise.
-     *
-     * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-002
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        $payslipOption = $input->getOption('payslip');
-        $payslipId     = (is_string($payslipOption) === true) ? trim($payslipOption) : '';
-        if ($payslipId === '') {
-            $output->writeln('<error>--payslip is verplicht (uuid).</error>');
-            return 1;
-        }
+		if ($result['status'] === 'mismatch') {
+			foreach ($result['mismatches'] as $mismatch) {
+				$output->writeln(
+					sprintf(
+						'    <error>%s: gearchiveerd=%s, herberekend=%s</error>',
+						(string)$mismatch['component'],
+						json_encode($mismatch['stored']),
+						json_encode($mismatch['recomputed'])
+					)
+				);
+			}
+		}
 
-        $result = $this->service->reproduce($payslipId);
-
-        $output->writeln('<info>Hrmq payroll reproduce</info>');
-        $output->writeln(sprintf('  loonstrook: %s', $result['payslipId']));
-        $output->writeln(sprintf('  status    : %s', $result['status']));
-        $output->writeln(sprintf('  bericht   : %s', $result['message']));
-
-        if ($result['status'] === 'mismatch') {
-            foreach ($result['mismatches'] as $mismatch) {
-                $output->writeln(
-                    sprintf(
-                        '    <error>%s: gearchiveerd=%s, herberekend=%s</error>',
-                        (string) $mismatch['component'],
-                        json_encode($mismatch['stored']),
-                        json_encode($mismatch['recomputed'])
-                    )
-                );
-            }
-        }
-
-        return ($result['status'] === 'reproduced') ? 0 : 1;
-
-    }//end execute()
-
+		return ($result['status'] === 'reproduced') ? 0 : 1;
+	}//end execute()
 
 }//end class

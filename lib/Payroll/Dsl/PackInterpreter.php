@@ -65,321 +65,298 @@ use OCA\Hrmq\Payroll\TaxTables;
 /**
  * Executes a pack's declared chain and derives net from incidence.
  */
-final class PackInterpreter
-{
+final class PackInterpreter {
 
-    /**
-     * Subtracted from gross to reach net.
-     *
-     * @var string
-     */
-    public const REDUCES_NET = 'reduces-net';
+	/**
+	 * Subtracted from gross to reach net.
+	 *
+	 * @var string
+	 */
+	public const REDUCES_NET = 'reduces-net';
 
-    /**
-     * Paid by the employer; never touches net.
-     *
-     * @var string
-     */
-    public const EMPLOYER_COST = 'employer-cost';
+	/**
+	 * Paid by the employer; never touches net.
+	 *
+	 * @var string
+	 */
+	public const EMPLOYER_COST = 'employer-cost';
 
-    /**
-     * Reported on the payslip; no cash effect.
-     *
-     * @var string
-     */
-    public const INFORMATIVE = 'informative';
+	/**
+	 * Reported on the payslip; no cash effect.
+	 *
+	 * @var string
+	 */
+	public const INFORMATIVE = 'informative';
 
-    /**
-     * Accrued now, paid out later; not cash this period.
-     *
-     * @var string
-     */
-    public const RESERVE = 'reserve';
+	/**
+	 * Accrued now, paid out later; not cash this period.
+	 *
+	 * @var string
+	 */
+	public const RESERVE = 'reserve';
 
-    /**
-     * The complete, closed incidence vocabulary.
-     *
-     * @var array<int, string>
-     */
-    public const INCIDENCES = [self::REDUCES_NET, self::EMPLOYER_COST, self::INFORMATIVE, self::RESERVE];
+	/**
+	 * The complete, closed incidence vocabulary.
+	 *
+	 * @var array<int, string>
+	 */
+	public const INCIDENCES = [self::REDUCES_NET, self::EMPLOYER_COST, self::INFORMATIVE, self::RESERVE];
 
+	/**
+	 * @param Vocabulary $vocab The closed DSL vocabulary.
+	 */
+	public function __construct(
+		private readonly Vocabulary $vocab = new Vocabulary(),
+	) {
 
-    /**
-     * @param Vocabulary $vocab The closed DSL vocabulary.
-     */
-    public function __construct(private readonly Vocabulary $vocab=new Vocabulary())
-    {
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * Execute a pack's chain.
+	 *
+	 * @param array<string, mixed> $inputs The supplied inputs, in the pack's own input vocabulary.
+	 * @param JurisdictionPack $pack The pack to execute.
+	 * @param TaxTables $tables The injected tax-year parameter set.
+	 * @param string $period The wage period, `YYYY-MM` (supplied, never a clock read).
+	 *
+	 * @return PackRunResult
+	 *
+	 * @throws DslException When the pack or the inputs are invalid.
+	 *
+	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-002
+	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
+	 */
+	public function run(array $inputs, JurisdictionPack $pack, TaxTables $tables, string $period): PackRunResult {
+		$ctx = new StepContext($this->inputs($inputs, $pack), $tables, $period, $pack->meta());
 
+		foreach ($pack->bindings() as $binding) {
+			$ctx->setBinding((string)$binding['id'], $this->binding($binding, $ctx));
+		}
 
-    /**
-     * Execute a pack's chain.
-     *
-     * @param array<string, mixed> $inputs The supplied inputs, in the pack's own input vocabulary.
-     * @param JurisdictionPack     $pack   The pack to execute.
-     * @param TaxTables            $tables The injected tax-year parameter set.
-     * @param string               $period The wage period, `YYYY-MM` (supplied, never a clock read).
-     *
-     * @return PackRunResult
-     *
-     * @throws DslException When the pack or the inputs are invalid.
-     *
-     * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-002
-     * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
-     */
-    public function run(array $inputs, JurisdictionPack $pack, TaxTables $tables, string $period): PackRunResult
-    {
-        $ctx = new StepContext($this->inputs($inputs, $pack), $tables, $period, $pack->meta());
+		foreach ($pack->steps() as $step) {
+			$ctx->setStep((string)$step['id'], $this->step($step, $ctx));
+		}
 
-        foreach ($pack->bindings() as $binding) {
-            $ctx->setBinding((string) $binding['id'], $this->binding($binding, $ctx));
-        }
+		return $this->fold($pack, $ctx);
+	}//end run()
 
-        foreach ($pack->steps() as $step) {
-            $ctx->setStep((string) $step['id'], $this->step($step, $ctx));
-        }
+	/**
+	 * Derive net and employer charges by folding declared incidence. This is
+	 * the whole of the "net" rule: it names no jurisdiction and no step.
+	 *
+	 * @param JurisdictionPack $pack The pack.
+	 * @param StepContext $ctx The completed run context.
+	 *
+	 * @return PackRunResult
+	 *
+	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
+	 */
+	private function fold(JurisdictionPack $pack, StepContext $ctx): PackRunResult {
+		$gross = (int)$this->vocab->refs()->resolve($pack->grossRef(), $ctx);
+		$net = $gross;
+		$employerCharges = 0;
 
-        return $this->fold($pack, $ctx);
+		foreach ($pack->steps() as $step) {
+			$incidence = (string)$step['incidence'];
+			$amount = (int)$ctx->step((string)$step['id']);
 
-    }//end run()
+			if ($incidence === self::REDUCES_NET) {
+				$net -= $amount;
+			}
 
+			if ($incidence === self::EMPLOYER_COST) {
+				$employerCharges += $amount;
+			}
+		}
 
-    /**
-     * Derive net and employer charges by folding declared incidence. This is
-     * the whole of the "net" rule: it names no jurisdiction and no step.
-     *
-     * @param JurisdictionPack $pack The pack.
-     * @param StepContext      $ctx  The completed run context.
-     *
-     * @return PackRunResult
-     *
-     * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
-     */
-    private function fold(JurisdictionPack $pack, StepContext $ctx): PackRunResult
-    {
-        $gross           = (int) $this->vocab->refs()->resolve($pack->grossRef(), $ctx);
-        $net             = $gross;
-        $employerCharges = 0;
+		return new PackRunResult(
+			$ctx->allSteps(),
+			$ctx->allBindings(),
+			$gross,
+			$net,
+			$employerCharges,
+			$ctx->allProvenance()
+		);
 
-        foreach ($pack->steps() as $step) {
-            $incidence = (string) $step['incidence'];
-            $amount    = (int) $ctx->step((string) $step['id']);
+	}//end fold()
 
-            if ($incidence === self::REDUCES_NET) {
-                $net -= $amount;
-            }
+	/**
+	 * Evaluate one binding — a named intermediate with NO incidence (it is not
+	 * money out).
+	 *
+	 * @param array<string, mixed> $binding The declared binding.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return mixed
+	 *
+	 * @throws DslException When the binding is malformed.
+	 */
+	private function binding(array $binding, StepContext $ctx): mixed {
+		$using = ($binding['using'] ?? null);
+		if (is_array($using) === false) {
+			throw new DslException('Pack: binding "' . ($binding['id'] ?? '?') . '" mist het veld "using".');
+		}
 
-            if ($incidence === self::EMPLOYER_COST) {
-                $employerCharges += $amount;
-            }
-        }
+		$value = $this->apply($using, $ctx);
+		$round = ($binding['round'] ?? null);
 
-        return new PackRunResult(
-            $ctx->allSteps(),
-            $ctx->allBindings(),
-            $gross,
-            $net,
-            $employerCharges,
-            $ctx->allProvenance()
-        );
+		// A binding may hold a boolean or a string (NL's `aow` gate, its
+		// `schijvenSet` selection), so the rounding modifier is applied only
+		// when one is actually declared — and then the value must be a number.
+		if ($round === null) {
+			return $value;
+		}
 
-    }//end fold()
+		return $this->vocab->rounder()->apply($this->numeric($value, 'binding ' . ($binding['id'] ?? '?')), $round);
+	}//end binding()
 
+	/**
+	 * Evaluate one step. A step whose `when` gate is false yields 0 WITHOUT
+	 * resolving its params — so a step gated off may reference parameters that
+	 * do not exist in its inapplicable column (NL's OUK is AOW-age only).
+	 *
+	 * @param array<string, mixed> $step The declared step.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return int|float
+	 */
+	private function step(array $step, StepContext $ctx): int|float {
+		if (array_key_exists('when', $step) === true && $this->vocab->predicates()->truthy($step['when'], $ctx) === false) {
+			return 0;
+		}
 
-    /**
-     * Evaluate one binding — a named intermediate with NO incidence (it is not
-     * money out).
-     *
-     * @param array<string, mixed> $binding The declared binding.
-     * @param StepContext          $ctx     The run context.
-     *
-     * @return mixed
-     *
-     * @throws DslException When the binding is malformed.
-     */
-    private function binding(array $binding, StepContext $ctx): mixed
-    {
-        $using = ($binding['using'] ?? null);
-        if (is_array($using) === false) {
-            throw new DslException('Pack: binding "'.($binding['id'] ?? '?').'" mist het veld "using".');
-        }
+		$value = $this->apply($step, $ctx);
 
-        $value = $this->apply($using, $ctx);
-        $round = ($binding['round'] ?? null);
+		return $this->vocab->rounder()->apply($this->numeric($value, (string)$step['id']), ($step['round'] ?? null));
+	}//end step()
 
-        // A binding may hold a boolean or a string (NL's `aow` gate, its
-        // `schijvenSet` selection), so the rounding modifier is applied only
-        // when one is actually declared — and then the value must be a number.
-        if ($round === null) {
-            return $value;
-        }
+	/**
+	 * Dispatch a spec to its op, or to the predicate vocabulary.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return mixed
+	 *
+	 * @throws DslException When the op is in neither vocabulary.
+	 */
+	private function apply(array $spec, StepContext $ctx): mixed {
+		$op = (string)($spec['op'] ?? '');
 
-        return $this->vocab->rounder()->apply($this->numeric($value, 'binding '.($binding['id'] ?? '?')), $round);
+		if ($this->vocab->ops()->has($op) === true) {
+			return $this->vocab->ops()->get($op)->evaluate($spec, $ctx);
+		}
 
-    }//end binding()
+		if (in_array($op, $this->vocab->predicates()->vocabulary(), true) === true) {
+			return $this->vocab->predicates()->evaluate($spec, $ctx);
+		}
 
+		throw new DslException(
+			'Pack: onbekende op "' . $op . '" (stap-ops: ' . implode(', ', $this->vocab->ops()->names()) . '; predicaten: ' . implode(', ', $this->vocab->predicates()->vocabulary()) . ').'
+		);
 
-    /**
-     * Evaluate one step. A step whose `when` gate is false yields 0 WITHOUT
-     * resolving its params — so a step gated off may reference parameters that
-     * do not exist in its inapplicable column (NL's OUK is AOW-age only).
-     *
-     * @param array<string, mixed> $step The declared step.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return int|float
-     */
-    private function step(array $step, StepContext $ctx): int|float
-    {
-        if (array_key_exists('when', $step) === true && $this->vocab->predicates()->truthy($step['when'], $ctx) === false) {
-            return 0;
-        }
+	}//end apply()
 
-        $value = $this->apply($step, $ctx);
+	/**
+	 * Guard that a step produced a number — a step is money (or a rate), never
+	 * a string or a boolean.
+	 *
+	 * @param mixed $value The evaluated value.
+	 * @param string $id The step id (for errors).
+	 *
+	 * @return int|float
+	 *
+	 * @throws DslException When the step produced a non-number.
+	 */
+	private function numeric(mixed $value, string $id): int|float {
+		if (is_int($value) === true || is_float($value) === true) {
+			return $value;
+		}
 
-        return $this->vocab->rounder()->apply($this->numeric($value, (string) $step['id']), ($step['round'] ?? null));
+		if (is_bool($value) === true) {
+			throw new DslException('Pack: stap "' . $id . '" levert een boolean op; een stap moet een bedrag opleveren (gebruik een binding).');
+		}
 
-    }//end step()
+		throw new DslException('Pack: stap "' . $id . '" levert geen getal op.');
+	}//end numeric()
 
+	/**
+	 * Validate the supplied inputs against the pack's declared input contract
+	 * (design.md D6), applying declared defaults.
+	 *
+	 * @param array<string, mixed> $supplied The supplied inputs.
+	 * @param JurisdictionPack $pack The pack.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws DslException When a required input is missing or ill-typed.
+	 */
+	private function inputs(array $supplied, JurisdictionPack $pack): array {
+		$resolved = [];
 
-    /**
-     * Dispatch a spec to its op, or to the predicate vocabulary.
-     *
-     * @param array<string, mixed> $spec The declared spec.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return mixed
-     *
-     * @throws DslException When the op is in neither vocabulary.
-     */
-    private function apply(array $spec, StepContext $ctx): mixed
-    {
-        $op = (string) ($spec['op'] ?? '');
+		foreach ($pack->inputs() as $name => $declared) {
+			$present = array_key_exists($name, $supplied);
 
-        if ($this->vocab->ops()->has($op) === true) {
-            return $this->vocab->ops()->get($op)->evaluate($spec, $ctx);
-        }
+			if ($present === false && array_key_exists('default', $declared) === true) {
+				$resolved[$name] = $declared['default'];
+				continue;
+			}
 
-        if (in_array($op, $this->vocab->predicates()->vocabulary(), true) === true) {
-            return $this->vocab->predicates()->evaluate($spec, $ctx);
-        }
+			if ($present === false) {
+				if (($declared['required'] ?? false) === true) {
+					throw new DslException('Pack: verplichte invoer "' . $name . '" ontbreekt.');
+				}
 
-        throw new DslException(
-            'Pack: onbekende op "'.$op.'" (stap-ops: '.implode(', ', $this->vocab->ops()->names()).'; predicaten: '.implode(', ', $this->vocab->predicates()->vocabulary()).').'
-        );
+				$resolved[$name] = null;
+				continue;
+			}
 
-    }//end apply()
+			$resolved[$name] = $this->coerce($supplied[$name], (array)$declared, (string)$name);
+		}
 
+		return $resolved;
+	}//end inputs()
 
-    /**
-     * Guard that a step produced a number — a step is money (or a rate), never
-     * a string or a boolean.
-     *
-     * @param mixed  $value The evaluated value.
-     * @param string $id    The step id (for errors).
-     *
-     * @return int|float
-     *
-     * @throws DslException When the step produced a non-number.
-     */
-    private function numeric(mixed $value, string $id): int|float
-    {
-        if (is_int($value) === true || is_float($value) === true) {
-            return $value;
-        }
+	/**
+	 * Coerce and check one supplied input against its declaration.
+	 *
+	 * @param mixed $value The supplied value.
+	 * @param array<string, mixed> $declared The declaration.
+	 * @param string $name The input name.
+	 *
+	 * @return mixed
+	 *
+	 * @throws DslException When the value violates the declaration.
+	 */
+	private function coerce(mixed $value, array $declared, string $name): mixed {
+		$type = (string)($declared['type'] ?? 'string');
 
-        if (is_bool($value) === true) {
-            throw new DslException('Pack: stap "'.$id.'" levert een boolean op; een stap moet een bedrag opleveren (gebruik een binding).');
-        }
+		if ($value === null) {
+			if (($declared['nullable'] ?? false) === true) {
+				return null;
+			}
 
-        throw new DslException('Pack: stap "'.$id.'" levert geen getal op.');
+			throw new DslException('Pack: invoer "' . $name . '" mag niet null zijn.');
+		}
 
-    }//end numeric()
+		if ($type === 'enum') {
+			$values = (array)($declared['values'] ?? []);
+			if (in_array($value, $values, true) === false) {
+				throw new DslException('Pack: invoer "' . $name . '" moet één van [' . implode(', ', $values) . '] zijn, kreeg "' . (string)$value . '".');
+			}
 
+			return $value;
+		}
 
-    /**
-     * Validate the supplied inputs against the pack's declared input contract
-     * (design.md D6), applying declared defaults.
-     *
-     * @param array<string, mixed> $supplied The supplied inputs.
-     * @param JurisdictionPack     $pack     The pack.
-     *
-     * @return array<string, mixed>
-     *
-     * @throws DslException When a required input is missing or ill-typed.
-     */
-    private function inputs(array $supplied, JurisdictionPack $pack): array
-    {
-        $resolved = [];
+		return match ($type) {
+			'cents' => (int)$value,
+			'int' => (int)$value,
+			'percent' => (float)$value,
+			'boolean' => (bool)$value,
+			'date' => (string)$value,
+			default => (string)$value,
+		};
 
-        foreach ($pack->inputs() as $name => $declared) {
-            $present = array_key_exists($name, $supplied);
-
-            if ($present === false && array_key_exists('default', $declared) === true) {
-                $resolved[$name] = $declared['default'];
-                continue;
-            }
-
-            if ($present === false) {
-                if (($declared['required'] ?? false) === true) {
-                    throw new DslException('Pack: verplichte invoer "'.$name.'" ontbreekt.');
-                }
-
-                $resolved[$name] = null;
-                continue;
-            }
-
-            $resolved[$name] = $this->coerce($supplied[$name], (array) $declared, (string) $name);
-        }
-
-        return $resolved;
-
-    }//end inputs()
-
-
-    /**
-     * Coerce and check one supplied input against its declaration.
-     *
-     * @param mixed                $value    The supplied value.
-     * @param array<string, mixed> $declared The declaration.
-     * @param string               $name     The input name.
-     *
-     * @return mixed
-     *
-     * @throws DslException When the value violates the declaration.
-     */
-    private function coerce(mixed $value, array $declared, string $name): mixed
-    {
-        $type = (string) ($declared['type'] ?? 'string');
-
-        if ($value === null) {
-            if (($declared['nullable'] ?? false) === true) {
-                return null;
-            }
-
-            throw new DslException('Pack: invoer "'.$name.'" mag niet null zijn.');
-        }
-
-        if ($type === 'enum') {
-            $values = (array) ($declared['values'] ?? []);
-            if (in_array($value, $values, true) === false) {
-                throw new DslException('Pack: invoer "'.$name.'" moet één van ['.implode(', ', $values).'] zijn, kreeg "'.(string) $value.'".');
-            }
-
-            return $value;
-        }
-
-        return match ($type) {
-            'cents'   => (int) $value,
-            'int'     => (int) $value,
-            'percent' => (float) $value,
-            'boolean' => (bool) $value,
-            'date'    => (string) $value,
-            default   => (string) $value,
-        };
-
-    }//end coerce()
-
+	}//end coerce()
 
 }//end class

@@ -50,170 +50,152 @@ use Psr\Log\LoggerInterface;
 /**
  * Guarded endpoint that triggers a single receipt-extraction attempt.
  */
-class ExpenseController extends Controller
-{
+class ExpenseController extends Controller {
 
+	/**
+	 * @param IRequest $request The request object.
+	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
+	 * @param ReceiptExtractionService $receiptExtractionService The receipt-extraction service.
+	 * @param SettingsService $settingsService The register-slug source.
+	 * @param IUserSession $userSession The current user session (acting/owning userId).
+	 * @param IGroupManager $groupManager To check the admin group (isAdminOrHr precedent).
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly ContainerInterface $container,
+		private readonly ReceiptExtractionService $receiptExtractionService,
+		private readonly SettingsService $settingsService,
+		private readonly IUserSession $userSession,
+		private readonly IGroupManager $groupManager,
+		private readonly LoggerInterface $logger,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
 
-    /**
-     * @param IRequest                 $request                 The request object.
-     * @param ContainerInterface       $container               DI container for the RBAC-guarded ObjectService resolve.
-     * @param ReceiptExtractionService $receiptExtractionService The receipt-extraction service.
-     * @param SettingsService          $settingsService         The register-slug source.
-     * @param IUserSession             $userSession             The current user session (acting/owning userId).
-     * @param IGroupManager            $groupManager            To check the admin group (isAdminOrHr precedent).
-     * @param LoggerInterface          $logger                  Logger.
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly ContainerInterface $container,
-        private readonly ReceiptExtractionService $receiptExtractionService,
-        private readonly SettingsService $settingsService,
-        private readonly IUserSession $userSession,
-        private readonly IGroupManager $groupManager,
-        private readonly LoggerInterface $logger,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * `POST /api/expenses/extract-receipt` -- resolves the posted
+	 * `expenseId` under the caller's ambient RBAC (unresolvable/unauthorized
+	 * -> 404) THEN an explicit ownership check (admin OR the caller owns the
+	 * claim -> else 403), and only then triggers a single extraction attempt.
+	 *
+	 * @param string $expenseId The Expense id (row-scoped, `@objectId` from the manifest action).
+	 *
+	 * @return JSONResponse The extraction outcome, 404 when the Expense does not resolve, or 403 when the caller is neither admin nor owner.
+	 *
+	 * @spec openspec/changes/receipt-ocr/specs/receipt-ocr/spec.md#REQ-RCPT-007
+	 */
+	#[NoAdminRequired]
+	public function extractReceipt(string $expenseId): JSONResponse {
+		$expenseId = trim($expenseId);
+		if ($expenseId === '') {
+			return new JSONResponse(['error' => 'expenseId is verplicht.'], Http::STATUS_BAD_REQUEST);
+		}
 
+		// No-admin-idor guard (ADR-005 Rule 3): the expense must resolve
+		// through OpenRegister's ObjectService under the caller's RBAC before
+		// any ownership decision or docudesk call -- an unresolvable/
+		// unauthorized id never reaches either.
+		$expense = $this->authorizeExpense($expenseId);
+		if ($expense === null) {
+			return new JSONResponse(['error' => 'Declaratie niet gevonden.'], Http::STATUS_NOT_FOUND);
+		}
 
-    /**
-     * `POST /api/expenses/extract-receipt` -- resolves the posted
-     * `expenseId` under the caller's ambient RBAC (unresolvable/unauthorized
-     * -> 404) THEN an explicit ownership check (admin OR the caller owns the
-     * claim -> else 403), and only then triggers a single extraction attempt.
-     *
-     * @param string $expenseId The Expense id (row-scoped, `@objectId` from the manifest action).
-     *
-     * @return JSONResponse The extraction outcome, 404 when the Expense does not resolve, or 403 when the caller is neither admin nor owner.
-     *
-     * @spec openspec/changes/receipt-ocr/specs/receipt-ocr/spec.md#REQ-RCPT-007
-     */
-    #[NoAdminRequired]
-    public function extractReceipt(string $expenseId): JSONResponse
-    {
-        $expenseId = trim($expenseId);
-        if ($expenseId === '') {
-            return new JSONResponse(['error' => 'expenseId is verplicht.'], Http::STATUS_BAD_REQUEST);
-        }
+		$uid = $this->userSession->getUser()?->getUID();
+		if ($this->isAdminOrOwner($uid, $expense) === false) {
+			return new JSONResponse(
+				['error' => 'Alleen beheerders/HR of de indiener mogen de receipt-extractie starten.'],
+				Http::STATUS_FORBIDDEN
+			);
+		}
 
-        // No-admin-idor guard (ADR-005 Rule 3): the expense must resolve
-        // through OpenRegister's ObjectService under the caller's RBAC before
-        // any ownership decision or docudesk call -- an unresolvable/
-        // unauthorized id never reaches either.
-        $expense = $this->authorizeExpense($expenseId);
-        if ($expense === null) {
-            return new JSONResponse(['error' => 'Declaratie niet gevonden.'], Http::STATUS_NOT_FOUND);
-        }
+		$result = $this->receiptExtractionService->extractForExpense($expenseId, $uid);
 
-        $uid = $this->userSession->getUser()?->getUID();
-        if ($this->isAdminOrOwner($uid, $expense) === false) {
-            return new JSONResponse(
-                ['error' => 'Alleen beheerders/HR of de indiener mogen de receipt-extractie starten.'],
-                Http::STATUS_FORBIDDEN
-            );
-        }
+		return new JSONResponse($result);
+	}//end extractReceipt()
 
-        $result = $this->receiptExtractionService->extractForExpense($expenseId, $uid);
+	/**
+	 * Resolve the posted expenseId through OpenRegister's ObjectService under
+	 * the caller's ambient RBAC (default $_rbac=true) -- the no-admin-idor
+	 * guard for this endpoint (mirrors `DocumentController::
+	 * authorizeContract()`). Returns null when the Expense does not exist OR
+	 * the caller's RBAC denies it (both collapse to the same 404 so existence
+	 * is never leaked to an unauthorized caller).
+	 *
+	 * @param string $expenseId The Expense id.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/receipt-ocr/specs/receipt-ocr/spec.md#REQ-RCPT-007
+	 */
+	private function authorizeExpense(string $expenseId): ?array {
+		try {
+			$expense = $this->objectService()->find(
+				id: $expenseId,
+				register: $this->settingsService->getRegisterSlug(),
+				schema: 'Expense'
+			);
+		} catch (\Throwable $e) {
+			$this->logger->info('ExpenseController: expense ' . $expenseId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			return null;
+		}
 
-        return new JSONResponse($result);
+		if ($expense === null) {
+			return null;
+		}
 
-    }//end extractReceipt()
+		return $this->toArray($expense);
+	}//end authorizeExpense()
 
+	/**
+	 * The explicit ownership check applied AFTER the object is confirmed to
+	 * exist and resolve under the caller's RBAC: a Nextcloud admin (the
+	 * `PayrollController::isAdminOrHr()` "no dedicated HR group yet" gate) OR
+	 * the caller's own claim (`Expense.userId` equals the caller's Nextcloud
+	 * user id, the `MijnDeclaraties` self-service convention).
+	 *
+	 * @param string|null $uid The caller's Nextcloud user id.
+	 * @param array<string, mixed> $expense The resolved Expense.
+	 *
+	 * @return bool
+	 */
+	private function isAdminOrOwner(?string $uid, array $expense): bool {
+		if ($uid === null || $uid === '') {
+			return false;
+		}
 
-    /**
-     * Resolve the posted expenseId through OpenRegister's ObjectService under
-     * the caller's ambient RBAC (default $_rbac=true) -- the no-admin-idor
-     * guard for this endpoint (mirrors `DocumentController::
-     * authorizeContract()`). Returns null when the Expense does not exist OR
-     * the caller's RBAC denies it (both collapse to the same 404 so existence
-     * is never leaked to an unauthorized caller).
-     *
-     * @param string $expenseId The Expense id.
-     *
-     * @return array<string, mixed>|null
-     *
-     * @spec openspec/changes/receipt-ocr/specs/receipt-ocr/spec.md#REQ-RCPT-007
-     */
-    private function authorizeExpense(string $expenseId): ?array
-    {
-        try {
-            $expense = $this->objectService()->find(
-                id: $expenseId,
-                register: $this->settingsService->getRegisterSlug(),
-                schema: 'Expense'
-            );
-        } catch (\Throwable $e) {
-            $this->logger->info('ExpenseController: expense '.$expenseId.' kon niet worden opgehaald: '.$e->getMessage());
-            return null;
-        }
+		if ($this->groupManager->isAdmin($uid) === true) {
+			return true;
+		}
 
-        if ($expense === null) {
-            return null;
-        }
+		return trim((string)($expense['userId'] ?? '')) === $uid;
+	}//end isAdminOrOwner()
 
-        return $this->toArray($expense);
+	/**
+	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
+	 */
+	private function objectService(): mixed {
+		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+	}//end objectService()
 
-    }//end authorizeExpense()
+	/**
+	 * Normalise an ObjectService row (entity or array) to an array.
+	 *
+	 * @param mixed $row The row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function toArray(mixed $row): array {
+		if (is_array($row) === true) {
+			return $row;
+		}
 
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			return (array)$row->jsonSerialize();
+		}
 
-    /**
-     * The explicit ownership check applied AFTER the object is confirmed to
-     * exist and resolve under the caller's RBAC: a Nextcloud admin (the
-     * `PayrollController::isAdminOrHr()` "no dedicated HR group yet" gate) OR
-     * the caller's own claim (`Expense.userId` equals the caller's Nextcloud
-     * user id, the `MijnDeclaraties` self-service convention).
-     *
-     * @param string|null           $uid     The caller's Nextcloud user id.
-     * @param array<string, mixed>  $expense The resolved Expense.
-     *
-     * @return bool
-     */
-    private function isAdminOrOwner(?string $uid, array $expense): bool
-    {
-        if ($uid === null || $uid === '') {
-            return false;
-        }
-
-        if ($this->groupManager->isAdmin($uid) === true) {
-            return true;
-        }
-
-        return trim((string) ($expense['userId'] ?? '')) === $uid;
-
-    }//end isAdminOrOwner()
-
-
-    /**
-     * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-     */
-    private function objectService(): mixed
-    {
-        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-    }//end objectService()
-
-
-    /**
-     * Normalise an ObjectService row (entity or array) to an array.
-     *
-     * @param mixed $row The row.
-     *
-     * @return array<string, mixed>
-     */
-    private function toArray(mixed $row): array
-    {
-        if (is_array($row) === true) {
-            return $row;
-        }
-
-        if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-            return (array) $row->jsonSerialize();
-        }
-
-        return [];
-
-    }//end toArray()
-
+		return [];
+	}//end toArray()
 
 }//end class

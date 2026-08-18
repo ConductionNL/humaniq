@@ -41,314 +41,289 @@ namespace OCA\Hrmq\Standards;
 /**
  * Evaluates objects against applicable machine-checkable rules.
  */
-final class RuleEngine
-{
+final class RuleEngine {
 
-    /**
-     * EU member states (ISO 3166-1 alpha-2) — used to decide whether an EU-wide
-     * obligation applies to a given jurisdiction.
-     *
-     * @var string[]
-     */
-    public const EU_MEMBER_STATES = [
-        'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR',
-        'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL',
-        'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
-    ];
+	/**
+	 * EU member states (ISO 3166-1 alpha-2) — used to decide whether an EU-wide
+	 * obligation applies to a given jurisdiction.
+	 *
+	 * @var string[]
+	 */
+	public const EU_MEMBER_STATES = [
+		'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR',
+		'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL',
+		'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
+	];
 
-    /**
-     * Memoised rule index (id => rule), built from RuleCatalogue.
-     *
-     * @var array<string, array<string, mixed>>|null
-     */
-    private static ?array $index = null;
+	/**
+	 * Memoised rule index (id => rule), built from RuleCatalogue.
+	 *
+	 * @var array<string, array<string, mixed>>|null
+	 */
+	private static ?array $index = null;
 
-    /**
-     * Memoised list of discovered per-domain CheckProvider class-strings.
-     *
-     * @var array<int, class-string>|null
-     */
-    private static ?array $providers = null;
+	/**
+	 * Memoised list of discovered per-domain CheckProvider class-strings.
+	 *
+	 * @var array<int, class-string>|null
+	 */
+	private static ?array $providers = null;
 
-    /**
-     * The registered predicates, keyed by object type then rule id. Each
-     * predicate is `fn(array $object, array $context): bool` — true = the rule is
-     * satisfied. Every key is a real RuleCatalogue id.
-     *
-     * The engine ships no built-in checks: the entire registry is assembled from
-     * the auto-discovered per-domain CheckProviders (lib/Standards/Checks/*.php).
-     * Each provider contributes [objectType => [ruleId => predicate]] and later
-     * providers add to (never silently overwrite) the merged registry, so the
-     * corpus can grow an executable check per domain without editing this file.
-     *
-     * @return array<string, array<string, callable>>
-     */
-    private static function checks(): array
-    {
-        $merged = [];
-        foreach (self::providers() as $provider) {
-            foreach ($provider::checks() as $objectType => $ruleChecks) {
-                $merged[$objectType] = array_merge(($merged[$objectType] ?? []), $ruleChecks);
-            }
-        }
+	/**
+	 * The registered predicates, keyed by object type then rule id. Each
+	 * predicate is `fn(array $object, array $context): bool` — true = the rule is
+	 * satisfied. Every key is a real RuleCatalogue id.
+	 *
+	 * The engine ships no built-in checks: the entire registry is assembled from
+	 * the auto-discovered per-domain CheckProviders (lib/Standards/Checks/*.php).
+	 * Each provider contributes [objectType => [ruleId => predicate]] and later
+	 * providers add to (never silently overwrite) the merged registry, so the
+	 * corpus can grow an executable check per domain without editing this file.
+	 *
+	 * @return array<string, array<string, callable>>
+	 */
+	private static function checks(): array {
+		$merged = [];
+		foreach (self::providers() as $provider) {
+			foreach ($provider::checks() as $objectType => $ruleChecks) {
+				$merged[$objectType] = array_merge(($merged[$objectType] ?? []), $ruleChecks);
+			}
+		}
 
-        return $merged;
+		return $merged;
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * The merged test-data field defaults declared by all providers, keyed by
+	 * object type then field name. Consumed by RuleTestDataSeeder.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function providerSeedSpecs(): array {
+		$specs = [];
+		foreach (self::providers() as $provider) {
+			foreach ($provider::seedSpec() as $objectType => $fields) {
+				$specs[$objectType] = array_merge(($specs[$objectType] ?? []), $fields);
+			}
+		}
 
-    /**
-     * The merged test-data field defaults declared by all providers, keyed by
-     * object type then field name. Consumed by RuleTestDataSeeder.
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function providerSeedSpecs(): array
-    {
-        $specs = [];
-        foreach (self::providers() as $provider) {
-            foreach ($provider::seedSpec() as $objectType => $fields) {
-                $specs[$objectType] = array_merge(($specs[$objectType] ?? []), $fields);
-            }
-        }
+		return $specs;
+	}//end providerSeedSpecs()
 
-        return $specs;
+	/**
+	 * The sample objects to create for empty object types, declared by providers
+	 * that implement the SeedsObjects capability. Keyed by object type.
+	 *
+	 * @return array<string, array<int, array<string, mixed>>>
+	 */
+	public static function providerSeedObjects(): array {
+		$objects = [];
+		foreach (self::providers() as $provider) {
+			if (in_array(\OCA\Hrmq\Standards\Checks\SeedsObjects::class, class_implements($provider), true) === false) {
+				continue;
+			}
 
-    }//end providerSeedSpecs()
+			foreach ($provider::seedObjects() as $objectType => $samples) {
+				$objects[$objectType] = array_merge(($objects[$objectType] ?? []), $samples);
+			}
+		}
 
-    /**
-     * The sample objects to create for empty object types, declared by providers
-     * that implement the SeedsObjects capability. Keyed by object type.
-     *
-     * @return array<string, array<int, array<string, mixed>>>
-     */
-    public static function providerSeedObjects(): array
-    {
-        $objects = [];
-        foreach (self::providers() as $provider) {
-            if (in_array(\OCA\Hrmq\Standards\Checks\SeedsObjects::class, class_implements($provider), true) === false) {
-                continue;
-            }
+		return $objects;
+	}//end providerSeedObjects()
 
-            foreach ($provider::seedObjects() as $objectType => $samples) {
-                $objects[$objectType] = array_merge(($objects[$objectType] ?? []), $samples);
-            }
-        }
+	/**
+	 * The natural-key field name to upsert seeded samples on, keyed by object
+	 * type, declared by providers that implement `UpsertsObjects` (cao-library
+	 * design.md D7). Only object types a provider declares here get
+	 * upsert-by-key seeding in `RuleTestDataSeeder`; every other `SeedsObjects`
+	 * sample keeps the default create-once-when-empty behaviour.
+	 *
+	 * @return array<string, string>
+	 *
+	 * @spec openspec/changes/cao-library/specs/cao-library/spec.md#REQ-CAO-006
+	 */
+	public static function providerUpsertKeys(): array {
+		$keys = [];
+		foreach (self::providers() as $provider) {
+			if (in_array(\OCA\Hrmq\Standards\Checks\UpsertsObjects::class, class_implements($provider), true) === false) {
+				continue;
+			}
 
-        return $objects;
+			foreach ($provider::upsertKeys() as $objectType => $field) {
+				$keys[$objectType] = $field;
+			}
+		}
 
-    }//end providerSeedObjects()
+		return $keys;
+	}//end providerUpsertKeys()
 
-    /**
-     * The natural-key field name to upsert seeded samples on, keyed by object
-     * type, declared by providers that implement `UpsertsObjects` (cao-library
-     * design.md D7). Only object types a provider declares here get
-     * upsert-by-key seeding in `RuleTestDataSeeder`; every other `SeedsObjects`
-     * sample keeps the default create-once-when-empty behaviour.
-     *
-     * @return array<string, string>
-     *
-     * @spec openspec/changes/cao-library/specs/cao-library/spec.md#REQ-CAO-006
-     */
-    public static function providerUpsertKeys(): array
-    {
-        $keys = [];
-        foreach (self::providers() as $provider) {
-            if (in_array(\OCA\Hrmq\Standards\Checks\UpsertsObjects::class, class_implements($provider), true) === false) {
-                continue;
-            }
+	/**
+	 * Discover the registered per-domain CheckProvider classes (memoised).
+	 *
+	 * @return array<int, class-string<\OCA\Hrmq\Standards\Checks\CheckProvider>>
+	 */
+	private static function providers(): array {
+		if (self::$providers !== null) {
+			return self::$providers;
+		}
 
-            foreach ($provider::upsertKeys() as $objectType => $field) {
-                $keys[$objectType] = $field;
-            }
-        }
+		$found = [];
+		foreach ((glob(__DIR__ . '/Checks/*.php') ?: []) as $file) {
+			$class = '\\OCA\\Hrmq\\Standards\\Checks\\' . basename($file, '.php');
+			if (class_exists($class) === true
+				&& in_array(\OCA\Hrmq\Standards\Checks\CheckProvider::class, class_implements($class), true) === true
+			) {
+				$found[] = $class;
+			}
+		}
 
-        return $keys;
+		self::$providers = $found;
+		return $found;
+	}//end providers()
 
-    }//end providerUpsertKeys()
+	/**
+	 * Evaluate an object of $objectType against its applicable machine-checkable
+	 * rules, returning the Violations (empty when compliant).
+	 *
+	 * @param string $objectType OpenRegister schema name (e.g. `EmploymentContract`).
+	 * @param array<string, mixed> $object The object being evaluated.
+	 * @param array<string, mixed> $context `{ jurisdiction?: string }` — defaults to NL.
+	 *
+	 * @return array<int, Violation>
+	 */
+	public static function evaluate(string $objectType, array $object, array $context = []): array {
+		$rules = self::index();
+		$violations = [];
 
-    /**
-     * Discover the registered per-domain CheckProvider classes (memoised).
-     *
-     * @return array<int, class-string<\OCA\Hrmq\Standards\Checks\CheckProvider>>
-     */
-    private static function providers(): array
-    {
-        if (self::$providers !== null) {
-            return self::$providers;
-        }
+		foreach ((self::checks()[$objectType] ?? []) as $ruleId => $predicate) {
+			$rule = ($rules[$ruleId] ?? null);
+			if ($rule === null || self::applies($rule, $context) === false) {
+				continue;
+			}
 
-        $found = [];
-        foreach ((glob(__DIR__.'/Checks/*.php') ?: []) as $file) {
-            $class = '\\OCA\\Hrmq\\Standards\\Checks\\'.basename($file, '.php');
-            if (class_exists($class) === true
-                && in_array(\OCA\Hrmq\Standards\Checks\CheckProvider::class, class_implements($class), true) === true
-            ) {
-                $found[] = $class;
-            }
-        }
+			$satisfied = false;
+			try {
+				$satisfied = (bool)$predicate($object, $context);
+			} catch (\Throwable $e) {
+				$satisfied = false;
+			}
 
-        self::$providers = $found;
-        return $found;
+			if ($satisfied === false) {
+				$violations[] = self::violationFor($ruleId);
+			}
+		}
 
-    }//end providers()
+		return $violations;
+	}//end evaluate()
 
-    /**
-     * Evaluate an object of $objectType against its applicable machine-checkable
-     * rules, returning the Violations (empty when compliant).
-     *
-     * @param string               $objectType OpenRegister schema name (e.g. `EmploymentContract`).
-     * @param array<string, mixed> $object     The object being evaluated.
-     * @param array<string, mixed> $context    `{ jurisdiction?: string }` — defaults to NL.
-     *
-     * @return array<int, Violation>
-     */
-    public static function evaluate(string $objectType, array $object, array $context=[]): array
-    {
-        $rules      = self::index();
-        $violations = [];
+	/**
+	 * True when any violation is `mandatory` (i.e. a lifecycle guard must block).
+	 *
+	 * @param array<int, Violation> $violations Violations to inspect.
+	 *
+	 * @return bool
+	 */
+	public static function hasMandatory(array $violations): bool {
+		foreach ($violations as $violation) {
+			if ($violation->severity === 'mandatory') {
+				return true;
+			}
+		}
 
-        foreach ((self::checks()[$objectType] ?? []) as $ruleId => $predicate) {
-            $rule = ($rules[$ruleId] ?? null);
-            if ($rule === null || self::applies($rule, $context) === false) {
-                continue;
-            }
+		return false;
+	}//end hasMandatory()
 
-            $satisfied = false;
-            try {
-                $satisfied = (bool) $predicate($object, $context);
-            } catch (\Throwable $e) {
-                $satisfied = false;
-            }
+	/**
+	 * Build a Violation for a rule id from the catalogue (severity/source/text).
+	 *
+	 * @param string $ruleId The catalogue rule id.
+	 *
+	 * @return Violation
+	 */
+	public static function violationFor(string $ruleId): Violation {
+		$rule = (self::index()[$ruleId] ?? null);
+		return new Violation(
+			$ruleId,
+			(string)($rule['severity'] ?? 'mandatory'),
+			(string)($rule['source'] ?? $ruleId),
+			(string)($rule['statement'] ?? '')
+		);
 
-            if ($satisfied === false) {
-                $violations[] = self::violationFor($ruleId);
-            }
-        }
+	}//end violationFor()
 
-        return $violations;
+	/**
+	 * Object types that have at least one registered executable check.
+	 *
+	 * @return array<int, string>
+	 */
+	public static function supportedTypes(): array {
+		return array_keys(self::checks());
+	}//end supportedTypes()
 
-    }//end evaluate()
+	/**
+	 * All catalogue rule ids that have a registered executable check (across all
+	 * object types) — i.e. the rules the engine can actually enforce today.
+	 *
+	 * @return array<int, string>
+	 */
+	public static function checkedRuleIds(): array {
+		$ids = [];
+		foreach (self::checks() as $byRule) {
+			foreach (array_keys($byRule) as $ruleId) {
+				$ids[$ruleId] = true;
+			}
+		}
 
-    /**
-     * True when any violation is `mandatory` (i.e. a lifecycle guard must block).
-     *
-     * @param array<int, Violation> $violations Violations to inspect.
-     *
-     * @return bool
-     */
-    public static function hasMandatory(array $violations): bool
-    {
-        foreach ($violations as $violation) {
-            if ($violation->severity === 'mandatory') {
-                return true;
-            }
-        }
+		return array_keys($ids);
+	}//end checkedRuleIds()
 
-        return false;
+	/**
+	 * Reset the memoised index (test hook).
+	 *
+	 * @return void
+	 */
+	public static function reset(): void {
+		self::$index = null;
+		self::$providers = null;
 
-    }//end hasMandatory()
+	}//end reset()
 
-    /**
-     * Build a Violation for a rule id from the catalogue (severity/source/text).
-     *
-     * @param string $ruleId The catalogue rule id.
-     *
-     * @return Violation
-     */
-    public static function violationFor(string $ruleId): Violation
-    {
-        $rule = (self::index()[$ruleId] ?? null);
-        return new Violation(
-            $ruleId,
-            (string) ($rule['severity'] ?? 'mandatory'),
-            (string) ($rule['source'] ?? $ruleId),
-            (string) ($rule['statement'] ?? '')
-        );
+	/**
+	 * Whether a rule applies to the context jurisdiction: its own country, plus
+	 * EU-wide rules for EU members and `global` rules everywhere.
+	 *
+	 * @param array<string, mixed> $rule The catalogue rule.
+	 * @param array<string, mixed> $context Evaluation context.
+	 *
+	 * @return bool
+	 */
+	private static function applies(array $rule, array $context): bool {
+		$ruleJ = strtoupper((string)($rule['jurisdiction'] ?? ''));
+		$code = strtoupper((string)($context['jurisdiction'] ?? 'NL'));
 
-    }//end violationFor()
+		if ($ruleJ === $code || $ruleJ === 'GLOBAL') {
+			return true;
+		}
 
-    /**
-     * Object types that have at least one registered executable check.
-     *
-     * @return array<int, string>
-     */
-    public static function supportedTypes(): array
-    {
-        return array_keys(self::checks());
+		return $ruleJ === 'EU' && in_array($code, self::EU_MEMBER_STATES, true);
+	}//end applies()
 
-    }//end supportedTypes()
+	/**
+	 * Build the id => rule index from RuleCatalogue (memoised).
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function index(): array {
+		if (self::$index !== null) {
+			return self::$index;
+		}
 
-    /**
-     * All catalogue rule ids that have a registered executable check (across all
-     * object types) — i.e. the rules the engine can actually enforce today.
-     *
-     * @return array<int, string>
-     */
-    public static function checkedRuleIds(): array
-    {
-        $ids = [];
-        foreach (self::checks() as $byRule) {
-            foreach (array_keys($byRule) as $ruleId) {
-                $ids[$ruleId] = true;
-            }
-        }
+		$index = [];
+		foreach (RuleCatalogue::all() as $rule) {
+			$index[(string)$rule['id']] = $rule;
+		}
 
-        return array_keys($ids);
-
-    }//end checkedRuleIds()
-
-    /**
-     * Reset the memoised index (test hook).
-     *
-     * @return void
-     */
-    public static function reset(): void
-    {
-        self::$index     = null;
-        self::$providers = null;
-
-    }//end reset()
-
-    /**
-     * Whether a rule applies to the context jurisdiction: its own country, plus
-     * EU-wide rules for EU members and `global` rules everywhere.
-     *
-     * @param array<string, mixed> $rule    The catalogue rule.
-     * @param array<string, mixed> $context Evaluation context.
-     *
-     * @return bool
-     */
-    private static function applies(array $rule, array $context): bool
-    {
-        $ruleJ = strtoupper((string) ($rule['jurisdiction'] ?? ''));
-        $code  = strtoupper((string) ($context['jurisdiction'] ?? 'NL'));
-
-        if ($ruleJ === $code || $ruleJ === 'GLOBAL') {
-            return true;
-        }
-
-        return $ruleJ === 'EU' && in_array($code, self::EU_MEMBER_STATES, true);
-
-    }//end applies()
-
-    /**
-     * Build the id => rule index from RuleCatalogue (memoised).
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    private static function index(): array
-    {
-        if (self::$index !== null) {
-            return self::$index;
-        }
-
-        $index = [];
-        foreach (RuleCatalogue::all() as $rule) {
-            $index[(string) $rule['id']] = $rule;
-        }
-
-        self::$index = $index;
-        return $index;
-
-    }//end index()
+		self::$index = $index;
+		return $index;
+	}//end index()
 }//end class

@@ -39,77 +39,70 @@ use Psr\Log\LoggerInterface;
 /**
  * Imports the hrmq register via SettingsService on install/upgrade.
  */
-class InitializeRegister implements IRepairStep
-{
+class InitializeRegister implements IRepairStep {
 
-    /**
-     * @param SettingsService $settingsService The register importer.
-     * @param LoggerInterface $logger          The logger.
-     */
-    public function __construct(
-        private readonly SettingsService $settingsService,
-        private readonly LoggerInterface $logger,
-    ) {
+	/**
+	 * @param SettingsService $settingsService The register importer.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		private readonly SettingsService $settingsService,
+		private readonly LoggerInterface $logger,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
+	/**
+	 * The repair step name.
+	 *
+	 * @return string
+	 */
+	public function getName(): string {
+		return 'Initialize hrmq register and schemas in OpenRegister';
+	}//end getName()
 
-    /**
-     * The repair step name.
-     *
-     * @return string
-     */
-    public function getName(): string
-    {
-        return 'Initialize hrmq register and schemas in OpenRegister';
+	/**
+	 * Run the repair step: import the hrmq register.
+	 *
+	 * @param IOutput $output The output interface for progress reporting.
+	 *
+	 * @return void
+	 */
+	public function run(IOutput $output): void {
+		$output->info('Initializing hrmq register...');
 
-    }//end getName()
+		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+			$output->warning('OpenRegister is not installed or enabled. Skipping hrmq register import.');
+			$this->logger->warning('Hrmq: OpenRegister not available, skipping register initialization');
+			return;
+		}
 
+		try {
+			// NOT forced. loadConfigurationForced() passes force:true, which bypasses
+			// OpenRegister's app-level import fast-skip (gated on `$force === false`), so this
+			// step re-parsed hrmq_register.json + the register.d fragments and walked every
+			// register/schema on EVERY upgrade, even when nothing changed. Forcing was never
+			// needed: the version passed to OR is content-addressed (`+frag.<md5 of the
+			// fragments>`), so a content change already bumps the version and re-imports;
+			// OpenRegister#426 additionally makes the gate content-aware.
+			$result = $this->settingsService->loadConfiguration();
 
-    /**
-     * Run the repair step: import the hrmq register.
-     *
-     * @param IOutput $output The output interface for progress reporting.
-     *
-     * @return void
-     */
-    public function run(IOutput $output): void
-    {
-        $output->info('Initializing hrmq register...');
+			if (($result['success'] ?? false) === true) {
+				if (($result['skipped'] ?? false) === true) {
+					$output->info('Hrmq register already up-to-date (version-unchanged skip).');
+					return;
+				}
 
-        if ($this->settingsService->isOpenRegisterAvailable() === false) {
-            $output->warning('OpenRegister is not installed or enabled. Skipping hrmq register import.');
-            $this->logger->warning('Hrmq: OpenRegister not available, skipping register initialization');
-            return;
-        }
+				$output->info('Hrmq register imported successfully (version: ' . ($result['version'] ?? 'unknown') . ').');
+				return;
+			}
 
-        try {
-            // NOT forced. loadConfigurationForced() passes force:true, which bypasses
-            // OpenRegister's app-level import fast-skip (gated on `$force === false`), so this
-            // step re-parsed hrmq_register.json + the register.d fragments and walked every
-            // register/schema on EVERY upgrade, even when nothing changed. Forcing was never
-            // needed: the version passed to OR is content-addressed (`+frag.<md5 of the
-            // fragments>`), so a content change already bumps the version and re-imports;
-            // OpenRegister#426 additionally makes the gate content-aware.
-            $result = $this->settingsService->loadConfiguration();
+			$output->warning('Hrmq register import issue: ' . ($result['message'] ?? 'unknown error'));
+		} catch (\Throwable $e) {
+			$output->warning('Could not initialize hrmq register: ' . $e->getMessage());
+			$this->logger->error('Hrmq register initialization failed', ['exception' => $e->getMessage()]);
+		}//end try
 
-            if (($result['success'] ?? false) === true) {
-                if (($result['skipped'] ?? false) === true) {
-                    $output->info('Hrmq register already up-to-date (version-unchanged skip).');
-                    return;
-                }
-
-                $output->info('Hrmq register imported successfully (version: '.($result['version'] ?? 'unknown').').');
-                return;
-            }
-
-            $output->warning('Hrmq register import issue: '.($result['message'] ?? 'unknown error'));
-        } catch (\Throwable $e) {
-            $output->warning('Could not initialize hrmq register: '.$e->getMessage());
-            $this->logger->error('Hrmq register initialization failed', ['exception' => $e->getMessage()]);
-        }//end try
-
-    }//end run()
-
+	}//end run()
 
 }//end class

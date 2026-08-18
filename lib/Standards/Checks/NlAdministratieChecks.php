@@ -54,166 +54,147 @@ namespace OCA\Hrmq\Standards\Checks;
 /**
  * Cross-object administratie-scope consistency checks.
  */
-final class NlAdministratieChecks implements CheckProvider
-{
+final class NlAdministratieChecks implements CheckProvider {
 
-    /**
-     * The shared rule id every registration below evaluates.
-     *
-     * @var string
-     */
-    private const RULE_ID = 'nl-administratie-scope-consistency';
+	/**
+	 * The shared rule id every registration below evaluates.
+	 *
+	 * @var string
+	 */
+	private const RULE_ID = 'nl-administratie-scope-consistency';
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 */
+	public static function checks(): array {
+		$viaEmployee = static fn (array $o, array $c): bool => self::consistentViaEmployee($o, $c);
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     */
-    public static function checks(): array
-    {
-        $viaEmployee = static fn(array $o, array $c): bool => self::consistentViaEmployee($o, $c);
+		return [
+			'Payslip' => [
+				self::RULE_ID => static fn (array $o, array $c): bool => self::consistentViaPayrollRun($o, $c),
+			],
+			'EmploymentContract' => [self::RULE_ID => $viaEmployee],
+			'Timesheet' => [self::RULE_ID => $viaEmployee],
+			'Expense' => [self::RULE_ID => $viaEmployee],
+			'LeaveRequest' => [self::RULE_ID => $viaEmployee],
+			'LeaveBalance' => [self::RULE_ID => $viaEmployee],
+			'SickLeaveCase' => [self::RULE_ID => $viaEmployee],
+			'Onboarding' => [self::RULE_ID => $viaEmployee],
+			'OrgAssignment' => [self::RULE_ID => $viaEmployee],
+			'AttendanceRecord' => [self::RULE_ID => $viaEmployee],
+			'AssetAssignment' => [self::RULE_ID => $viaEmployee],
+			'PerformanceReview' => [self::RULE_ID => $viaEmployee],
+		];
 
-        return [
-            'Payslip'            => [
-                self::RULE_ID => static fn(array $o, array $c): bool => self::consistentViaPayrollRun($o, $c),
-            ],
-            'EmploymentContract' => [self::RULE_ID => $viaEmployee],
-            'Timesheet'          => [self::RULE_ID => $viaEmployee],
-            'Expense'            => [self::RULE_ID => $viaEmployee],
-            'LeaveRequest'       => [self::RULE_ID => $viaEmployee],
-            'LeaveBalance'       => [self::RULE_ID => $viaEmployee],
-            'SickLeaveCase'      => [self::RULE_ID => $viaEmployee],
-            'Onboarding'         => [self::RULE_ID => $viaEmployee],
-            'OrgAssignment'      => [self::RULE_ID => $viaEmployee],
-            'AttendanceRecord'   => [self::RULE_ID => $viaEmployee],
-            'AssetAssignment'    => [self::RULE_ID => $viaEmployee],
-            'PerformanceReview'  => [self::RULE_ID => $viaEmployee],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * True (satisfied/vacuous) unless the Payslip's own `administrationId`
+	 * and its producing PayrollRun's `administrationId` both resolve to
+	 * non-empty values that differ. Vacuous when either is absent/empty, or
+	 * `payrollRunId` is empty/unresolvable (a hand-entered payslip, or the
+	 * run not yet loaded).
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 * @param array<string, mixed> $c Evaluation context (carries `payroll.runsById`).
+	 *
+	 * @return bool
+	 */
+	private static function consistentViaPayrollRun(array $o, array $c): bool {
+		$own = trim((string)($o['administrationId'] ?? ''));
+		if ($own === '') {
+			return true;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		$runId = trim((string)($o['payrollRunId'] ?? ''));
+		if ($runId === '') {
+			return true;
+		}
 
-    }//end seedSpec()
+		$run = (self::runsById($c)[$runId] ?? null);
+		if (is_array($run) === false) {
+			return true;
+		}
 
+		$parent = trim((string)($run['administrationId'] ?? ''));
+		if ($parent === '') {
+			return true;
+		}
 
-    /**
-     * True (satisfied/vacuous) unless the Payslip's own `administrationId`
-     * and its producing PayrollRun's `administrationId` both resolve to
-     * non-empty values that differ. Vacuous when either is absent/empty, or
-     * `payrollRunId` is empty/unresolvable (a hand-entered payslip, or the
-     * run not yet loaded).
-     *
-     * @param array<string, mixed> $o The Payslip.
-     * @param array<string, mixed> $c Evaluation context (carries `payroll.runsById`).
-     *
-     * @return bool
-     */
-    private static function consistentViaPayrollRun(array $o, array $c): bool
-    {
-        $own = trim((string) ($o['administrationId'] ?? ''));
-        if ($own === '') {
-            return true;
-        }
+		return $own === $parent;
+	}//end consistentViaPayrollRun()
 
-        $runId = trim((string) ($o['payrollRunId'] ?? ''));
-        if ($runId === '') {
-            return true;
-        }
+	/**
+	 * True (satisfied/vacuous) unless the record's own `administrationId` and
+	 * its `employeeId`'s Employee `administrationId` both resolve to
+	 * non-empty values that differ. Vacuous when either is absent/empty, or
+	 * `employeeId` is empty/unresolvable.
+	 *
+	 * @param array<string, mixed> $o The Employee-anchored record.
+	 * @param array<string, mixed> $c Evaluation context (carries `related.Employee.byId`).
+	 *
+	 * @return bool
+	 */
+	private static function consistentViaEmployee(array $o, array $c): bool {
+		$own = trim((string)($o['administrationId'] ?? ''));
+		if ($own === '') {
+			return true;
+		}
 
-        $run = (self::runsById($c)[$runId] ?? null);
-        if (is_array($run) === false) {
-            return true;
-        }
+		$employeeId = trim((string)($o['employeeId'] ?? ''));
+		if ($employeeId === '') {
+			return true;
+		}
 
-        $parent = trim((string) ($run['administrationId'] ?? ''));
-        if ($parent === '') {
-            return true;
-        }
+		$employee = (self::employeesById($c)[$employeeId] ?? null);
+		if (is_array($employee) === false) {
+			return true;
+		}
 
-        return $own === $parent;
+		$parent = trim((string)($employee['administrationId'] ?? ''));
+		if ($parent === '') {
+			return true;
+		}
 
-    }//end consistentViaPayrollRun()
+		return $own === $parent;
+	}//end consistentViaEmployee()
 
+	/**
+	 * The `payroll.runsById` index from the context (payroll-core-engine's
+	 * full-PayrollRun-row index, reused as-is), or an empty array when the
+	 * pre-pass has not populated it.
+	 *
+	 * @param array<string, mixed> $c Evaluation context.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function runsById(array $c): array {
+		$byId = ($c['payroll']['runsById'] ?? []);
+		return is_array($byId) === true ? $byId : [];
+	}//end runsById()
 
-    /**
-     * True (satisfied/vacuous) unless the record's own `administrationId` and
-     * its `employeeId`'s Employee `administrationId` both resolve to
-     * non-empty values that differ. Vacuous when either is absent/empty, or
-     * `employeeId` is empty/unresolvable.
-     *
-     * @param array<string, mixed> $o The Employee-anchored record.
-     * @param array<string, mixed> $c Evaluation context (carries `related.Employee.byId`).
-     *
-     * @return bool
-     */
-    private static function consistentViaEmployee(array $o, array $c): bool
-    {
-        $own = trim((string) ($o['administrationId'] ?? ''));
-        if ($own === '') {
-            return true;
-        }
-
-        $employeeId = trim((string) ($o['employeeId'] ?? ''));
-        if ($employeeId === '') {
-            return true;
-        }
-
-        $employee = (self::employeesById($c)[$employeeId] ?? null);
-        if (is_array($employee) === false) {
-            return true;
-        }
-
-        $parent = trim((string) ($employee['administrationId'] ?? ''));
-        if ($parent === '') {
-            return true;
-        }
-
-        return $own === $parent;
-
-    }//end consistentViaEmployee()
-
-
-    /**
-     * The `payroll.runsById` index from the context (payroll-core-engine's
-     * full-PayrollRun-row index, reused as-is), or an empty array when the
-     * pre-pass has not populated it.
-     *
-     * @param array<string, mixed> $c Evaluation context.
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    private static function runsById(array $c): array
-    {
-        $byId = ($c['payroll']['runsById'] ?? []);
-        return is_array($byId) === true ? $byId : [];
-
-    }//end runsById()
-
-
-    /**
-     * The `related.Employee.byId` index from the context, or an empty array
-     * when the pre-pass has not populated it.
-     *
-     * @param array<string, mixed> $c Evaluation context.
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    private static function employeesById(array $c): array
-    {
-        $byId = ($c['related']['Employee']['byId'] ?? []);
-        return is_array($byId) === true ? $byId : [];
-
-    }//end employeesById()
-
+	/**
+	 * The `related.Employee.byId` index from the context, or an empty array
+	 * when the pre-pass has not populated it.
+	 *
+	 * @param array<string, mixed> $c Evaluation context.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function employeesById(array $c): array {
+		$byId = ($c['related']['Employee']['byId'] ?? []);
+		return is_array($byId) === true ? $byId : [];
+	}//end employeesById()
 
 }//end class

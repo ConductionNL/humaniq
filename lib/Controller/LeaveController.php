@@ -52,145 +52,130 @@ use Psr\Log\LoggerInterface;
 /**
  * Guarded endpoint that settles one approved LeaveTransaction.
  */
-class LeaveController extends Controller
-{
+class LeaveController extends Controller {
 
+	/**
+	 * @param IRequest $request The request object.
+	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
+	 * @param LeaveBuySellSettlementService $leaveBuySellSettlementService The balance-mutating settlement service.
+	 * @param SettingsService $settingsService The register-slug source.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly ContainerInterface $container,
+		private readonly LeaveBuySellSettlementService $leaveBuySellSettlementService,
+		private readonly SettingsService $settingsService,
+		private readonly LoggerInterface $logger,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
 
-    /**
-     * @param IRequest                      $request                       The request object.
-     * @param ContainerInterface            $container                     DI container for the RBAC-guarded ObjectService resolve.
-     * @param LeaveBuySellSettlementService $leaveBuySellSettlementService The balance-mutating settlement service.
-     * @param SettingsService               $settingsService               The register-slug source.
-     * @param LoggerInterface               $logger                        Logger.
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly ContainerInterface $container,
-        private readonly LeaveBuySellSettlementService $leaveBuySellSettlementService,
-        private readonly SettingsService $settingsService,
-        private readonly LoggerInterface $logger,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * `POST /api/leave/settle` — settle one approved LeaveTransaction (buy or
+	 * sell leave hours). The posted `transactionId` must resolve through
+	 * ObjectService under the caller's RBAC before anything is written
+	 * (unknown/unauthorized -> 404); a non-approved transaction is refused
+	 * (400) before the service is invoked — the deeper
+	 * approved+settlementPeriod+sufficiency predicate is re-checked by
+	 * `LeaveBuySellSettlementService::settle()` regardless.
+	 *
+	 * @param string|null $transactionId The LeaveTransaction id (row-scoped, `@objectId` from the manifest action).
+	 *
+	 * @return JSONResponse The settlement outcome, 400 on a missing/non-approved transaction, 404 when it does not resolve.
+	 *
+	 * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-004
+	 */
+	#[NoAdminRequired]
+	public function settle(?string $transactionId = null): JSONResponse {
+		$transactionId = trim((string)$transactionId);
+		if ($transactionId === '') {
+			return new JSONResponse(['error' => 'transactionId is verplicht.'], Http::STATUS_BAD_REQUEST);
+		}
 
+		// No-admin-idor guard (ADR-005 Rule 3): the transaction must resolve
+		// through OpenRegister's ObjectService under the caller's RBAC before
+		// any write -- an unresolvable/unauthorized id never reaches the
+		// settlement service.
+		$transaction = $this->authorizeTransaction($transactionId);
+		if ($transaction === null) {
+			return new JSONResponse(['error' => 'Transactie niet gevonden.'], Http::STATUS_NOT_FOUND);
+		}
 
-    /**
-     * `POST /api/leave/settle` — settle one approved LeaveTransaction (buy or
-     * sell leave hours). The posted `transactionId` must resolve through
-     * ObjectService under the caller's RBAC before anything is written
-     * (unknown/unauthorized -> 404); a non-approved transaction is refused
-     * (400) before the service is invoked — the deeper
-     * approved+settlementPeriod+sufficiency predicate is re-checked by
-     * `LeaveBuySellSettlementService::settle()` regardless.
-     *
-     * @param string|null $transactionId The LeaveTransaction id (row-scoped, `@objectId` from the manifest action).
-     *
-     * @return JSONResponse The settlement outcome, 400 on a missing/non-approved transaction, 404 when it does not resolve.
-     *
-     * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-004
-     */
-    #[NoAdminRequired]
-    public function settle(?string $transactionId=null): JSONResponse
-    {
-        $transactionId = trim((string) $transactionId);
-        if ($transactionId === '') {
-            return new JSONResponse(['error' => 'transactionId is verplicht.'], Http::STATUS_BAD_REQUEST);
-        }
+		if ((string)($transaction['status'] ?? '') !== 'approved') {
+			return new JSONResponse(
+				['error' => 'Transactie heeft status "' . ((string)($transaction['status'] ?? 'onbekend')) . '" — alleen goedgekeurde transacties kunnen worden verrekend.'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
 
-        // No-admin-idor guard (ADR-005 Rule 3): the transaction must resolve
-        // through OpenRegister's ObjectService under the caller's RBAC before
-        // any write -- an unresolvable/unauthorized id never reaches the
-        // settlement service.
-        $transaction = $this->authorizeTransaction($transactionId);
-        if ($transaction === null) {
-            return new JSONResponse(['error' => 'Transactie niet gevonden.'], Http::STATUS_NOT_FOUND);
-        }
+		$result = $this->leaveBuySellSettlementService->settle($transactionId);
 
-        if ((string) ($transaction['status'] ?? '') !== 'approved') {
-            return new JSONResponse(
-                ['error' => 'Transactie heeft status "'.((string) ($transaction['status'] ?? 'onbekend')).'" — alleen goedgekeurde transacties kunnen worden verrekend.'],
-                Http::STATUS_BAD_REQUEST
-            );
-        }
+		if ((string)$result['status'] === 'failed') {
+			return new JSONResponse($result, Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
 
-        $result = $this->leaveBuySellSettlementService->settle($transactionId);
+		return new JSONResponse($result);
+	}//end settle()
 
-        if ((string) $result['status'] === 'failed') {
-            return new JSONResponse($result, Http::STATUS_INTERNAL_SERVER_ERROR);
-        }
+	/**
+	 * Resolve the posted transactionId through OpenRegister's ObjectService
+	 * under the caller's ambient RBAC (default $_rbac=true) — the
+	 * no-admin-idor guard for `settle()` (the `PayrollController::authorizeRun()`
+	 * precedent). Returns null when the transaction does not exist OR the
+	 * caller's RBAC denies it (both collapse to the same 404 so existence is
+	 * never leaked).
+	 *
+	 * @param string $transactionId The LeaveTransaction id.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-004
+	 */
+	private function authorizeTransaction(string $transactionId): ?array {
+		try {
+			$transaction = $this->objectService()->find(
+				id: $transactionId,
+				register: $this->settingsService->getRegisterSlug(),
+				schema: 'LeaveTransaction'
+			);
+		} catch (\Throwable $e) {
+			$this->logger->info('LeaveController: transactie ' . $transactionId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			return null;
+		}
 
-        return new JSONResponse($result);
+		if ($transaction === null) {
+			return null;
+		}
 
-    }//end settle()
+		return $this->toArray($transaction);
+	}//end authorizeTransaction()
 
+	/**
+	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
+	 */
+	private function objectService(): mixed {
+		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+	}//end objectService()
 
-    /**
-     * Resolve the posted transactionId through OpenRegister's ObjectService
-     * under the caller's ambient RBAC (default $_rbac=true) — the
-     * no-admin-idor guard for `settle()` (the `PayrollController::authorizeRun()`
-     * precedent). Returns null when the transaction does not exist OR the
-     * caller's RBAC denies it (both collapse to the same 404 so existence is
-     * never leaked).
-     *
-     * @param string $transactionId The LeaveTransaction id.
-     *
-     * @return array<string, mixed>|null
-     *
-     * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-004
-     */
-    private function authorizeTransaction(string $transactionId): ?array
-    {
-        try {
-            $transaction = $this->objectService()->find(
-                id: $transactionId,
-                register: $this->settingsService->getRegisterSlug(),
-                schema: 'LeaveTransaction'
-            );
-        } catch (\Throwable $e) {
-            $this->logger->info('LeaveController: transactie '.$transactionId.' kon niet worden opgehaald: '.$e->getMessage());
-            return null;
-        }
+	/**
+	 * Normalise an ObjectService row (entity or array) to an array.
+	 *
+	 * @param mixed $row The row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function toArray(mixed $row): array {
+		if (is_array($row) === true) {
+			return $row;
+		}
 
-        if ($transaction === null) {
-            return null;
-        }
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			return (array)$row->jsonSerialize();
+		}
 
-        return $this->toArray($transaction);
-
-    }//end authorizeTransaction()
-
-
-    /**
-     * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-     */
-    private function objectService(): mixed
-    {
-        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-    }//end objectService()
-
-
-    /**
-     * Normalise an ObjectService row (entity or array) to an array.
-     *
-     * @param mixed $row The row.
-     *
-     * @return array<string, mixed>
-     */
-    private function toArray(mixed $row): array
-    {
-        if (is_array($row) === true) {
-            return $row;
-        }
-
-        if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-            return (array) $row->jsonSerialize();
-        }
-
-        return [];
-
-    }//end toArray()
-
+		return [];
+	}//end toArray()
 
 }//end class

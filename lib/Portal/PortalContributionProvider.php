@@ -52,329 +52,320 @@ namespace OCA\Hrmq\Portal;
  *
  * @spec openspec/changes/portal-contribution/tasks.md#task-1
  */
-class PortalContributionProvider
-{
-    /**
-     * The audiences this provider contributes to (contract v2, preferred).
-     *
-     * The registry probes for this method first; the audience vocabulary is an
-     * open string set (amendment A2). hrmq serves external employees (the HR
-     * self-service story) and clients (billable-hours review).
-     *
-     * @return array<int, string> The audience identifiers.
-     *
-     * @spec openspec/changes/portal-contribution/tasks.md#task-2
-     */
-    public function getAudiences(): array
-    {
-        return [
-            'external-employee',
-            'client',
-            'manager',
-        ];
+class PortalContributionProvider {
+	/**
+	 * The audiences this provider contributes to (contract v2, preferred).
+	 *
+	 * The registry probes for this method first; the audience vocabulary is an
+	 * open string set (amendment A2). hrmq serves external employees (the HR
+	 * self-service story) and clients (billable-hours review).
+	 *
+	 * @return array<int, string> The audience identifiers.
+	 *
+	 * @spec openspec/changes/portal-contribution/tasks.md#task-2
+	 */
+	public function getAudiences(): array {
+		return [
+			'external-employee',
+			'client',
+			'manager',
+		];
 
-    }//end getAudiences()
+	}//end getAudiences()
 
-    /**
-     * The primary audience this provider contributes to (contract v1 fallback).
-     *
-     * Kept alongside getAudiences() so the provider also works against a v1
-     * registry that predates multi-audience support. A v1 registry only sees
-     * the external-employee contribution — the client view requires v2.
-     *
-     * @return string The primary audience identifier.
-     *
-     * @spec openspec/changes/portal-contribution/tasks.md#task-2
-     */
-    public function getAudience(): string
-    {
-        return 'external-employee';
+	/**
+	 * The primary audience this provider contributes to (contract v1 fallback).
+	 *
+	 * Kept alongside getAudiences() so the provider also works against a v1
+	 * registry that predates multi-audience support. A v1 registry only sees
+	 * the external-employee contribution — the client view requires v2.
+	 *
+	 * @return string The primary audience identifier.
+	 *
+	 * @spec openspec/changes/portal-contribution/tasks.md#task-2
+	 */
+	public function getAudience(): string {
+		return 'external-employee';
+	}//end getAudience()
 
-    }//end getAudience()
+	/**
+	 * Build the declarative portal manifest for one resolved subject.
+	 *
+	 * The subject array is server-derived by portaliq (subjectRef UUID,
+	 * audience, organisation, trust level low|substantial|high, claim map).
+	 * Returns null when hrmq has nothing for the subject — any audience other
+	 * than external-employee or client (fail-closed; the registry already
+	 * filters by audience, but a provider must not rely on that).
+	 *
+	 * Manifest vocabulary (amendment A2–A6): `collections` are read surfaces
+	 * portaliq serves from OpenRegister, scoped by `scopeField` == the claim
+	 * selected by `scopeClaim` (bare names resolve under `claims.hrmq.*`);
+	 * `actions` of type `create` expose strict field whitelists — status and
+	 * approval-stamp fields are excluded because the declarative
+	 * x-openregister-lifecycle owns every transition, and the scoping
+	 * `employeeId` is excluded because portaliq stamps it server-side.
+	 * `minTrust` is `low` everywhere in Wave 1 (employer-issued password
+	 * accounts); the raise plan is documented in this change's design.md.
+	 *
+	 * @param array<string, mixed> $subject The resolved portal subject.
+	 *
+	 * @return array<string, mixed>|null The manifest, or null when not contributing.
+	 *
+	 * @spec openspec/changes/portal-contribution/tasks.md#task-3
+	 */
+	public function getContribution(array $subject): ?array {
+		$audience = ($subject['audience'] ?? '');
+		if ($audience === 'external-employee') {
+			return $this->externalEmployeeManifest();
+		}
 
-    /**
-     * Build the declarative portal manifest for one resolved subject.
-     *
-     * The subject array is server-derived by portaliq (subjectRef UUID,
-     * audience, organisation, trust level low|substantial|high, claim map).
-     * Returns null when hrmq has nothing for the subject — any audience other
-     * than external-employee or client (fail-closed; the registry already
-     * filters by audience, but a provider must not rely on that).
-     *
-     * Manifest vocabulary (amendment A2–A6): `collections` are read surfaces
-     * portaliq serves from OpenRegister, scoped by `scopeField` == the claim
-     * selected by `scopeClaim` (bare names resolve under `claims.hrmq.*`);
-     * `actions` of type `create` expose strict field whitelists — status and
-     * approval-stamp fields are excluded because the declarative
-     * x-openregister-lifecycle owns every transition, and the scoping
-     * `employeeId` is excluded because portaliq stamps it server-side.
-     * `minTrust` is `low` everywhere in Wave 1 (employer-issued password
-     * accounts); the raise plan is documented in this change's design.md.
-     *
-     * @param array<string, mixed> $subject The resolved portal subject.
-     *
-     * @return array<string, mixed>|null The manifest, or null when not contributing.
-     *
-     * @spec openspec/changes/portal-contribution/tasks.md#task-3
-     */
-    public function getContribution(array $subject): ?array
-    {
-        $audience = ($subject['audience'] ?? '');
-        if ($audience === 'external-employee') {
-            return $this->externalEmployeeManifest();
-        }
+		if ($audience === 'client') {
+			return $this->clientManifest();
+		}
 
-        if ($audience === 'client') {
-            return $this->clientManifest();
-        }
+		if ($audience === 'manager') {
+			return $this->managerManifest();
+		}
 
-        if ($audience === 'manager') {
-            return $this->managerManifest();
-        }
+		return null;
+	}//end getContribution()
 
-        return null;
+	/**
+	 * The external-employee manifest: HR self-service over the subject's own
+	 * records, scoped by the `employeeId` claim (the UUID of their Employee
+	 * domain object — the Employee schema has no Nextcloud-user link by
+	 * design, amendment A4).
+	 *
+	 * @return array<string, mixed> The manifest.
+	 *
+	 * @spec openspec/changes/portal-contribution/tasks.md#task-3
+	 */
+	private function externalEmployeeManifest(): array {
+		return [
+			'label' => 'HRMQ',
+			'collections' => [
+				[
+					'id' => 'myEmployeeRecord',
+					'register' => 'hrmq',
+					'schema' => 'Employee',
+					'scopeField' => 'id',
+					'scopeClaim' => 'employeeId',
+					'minTrust' => 'low',
+					'label' => 'My employee record',
+					'listable' => false,
+				],
+				[
+					'id' => 'payslips',
+					'register' => 'hrmq',
+					'schema' => 'Payslip',
+					'scopeField' => 'employeeId',
+					'scopeClaim' => 'employeeId',
+					'minTrust' => 'low',
+					'label' => 'My payslips',
+					'listable' => true,
+				],
+				[
+					'id' => 'employmentContracts',
+					'register' => 'hrmq',
+					'schema' => 'EmploymentContract',
+					'scopeField' => 'employeeId',
+					'scopeClaim' => 'employeeId',
+					'minTrust' => 'low',
+					'label' => 'My employment contracts',
+					'listable' => true,
+				],
+				[
+					'id' => 'timesheets',
+					'register' => 'hrmq',
+					'schema' => 'Timesheet',
+					'scopeField' => 'employeeId',
+					'scopeClaim' => 'employeeId',
+					'minTrust' => 'low',
+					'label' => 'My timesheets',
+					'listable' => true,
+				],
+				[
+					'id' => 'expenses',
+					'register' => 'hrmq',
+					'schema' => 'Expense',
+					'scopeField' => 'employeeId',
+					'scopeClaim' => 'employeeId',
+					'minTrust' => 'low',
+					'label' => 'My expenses',
+					'listable' => true,
+				],
+				[
+					'id' => 'leaveRequests',
+					'register' => 'hrmq',
+					'schema' => 'LeaveRequest',
+					'scopeField' => 'employeeId',
+					'scopeClaim' => 'employeeId',
+					'minTrust' => 'low',
+					'label' => 'My leave requests',
+					'listable' => true,
+				],
+			],
+			'actions' => [
+				[
+					'id' => 'createTimesheet',
+					'type' => 'create',
+					'label' => 'Log hours',
+					'register' => 'hrmq',
+					'schema' => 'Timesheet',
+					'fields' => [
+						'period',
+						'hours',
+						'description',
+						'projectId',
+						'costCenter',
+						'billable',
+						'clientRef',
+					],
+				],
+				[
+					'id' => 'createExpense',
+					'type' => 'create',
+					'label' => 'Submit an expense',
+					'register' => 'hrmq',
+					'schema' => 'Expense',
+					'fields' => [
+						'title',
+						'description',
+						'amount',
+						'currency',
+						'category',
+						'expenseDate',
+					],
+				],
+				[
+					'id' => 'createLeaveRequest',
+					'type' => 'create',
+					'label' => 'Request leave',
+					'register' => 'hrmq',
+					'schema' => 'LeaveRequest',
+					'fields' => [
+						'leaveType',
+						'startDate',
+						'endDate',
+						'hours',
+						'reason',
+					],
+				],
+			],
+			'notifications' => [],
+		];
 
-    }//end getContribution()
+	}//end externalEmployeeManifest()
 
-    /**
-     * The external-employee manifest: HR self-service over the subject's own
-     * records, scoped by the `employeeId` claim (the UUID of their Employee
-     * domain object — the Employee schema has no Nextcloud-user link by
-     * design, amendment A4).
-     *
-     * @return array<string, mixed> The manifest.
-     *
-     * @spec openspec/changes/portal-contribution/tasks.md#task-3
-     */
-    private function externalEmployeeManifest(): array
-    {
-        return [
-            'label'         => 'HRMQ',
-            'collections'   => [
-                [
-                    'id'         => 'myEmployeeRecord',
-                    'register'   => 'hrmq',
-                    'schema'     => 'Employee',
-                    'scopeField' => 'id',
-                    'scopeClaim' => 'employeeId',
-                    'minTrust'   => 'low',
-                    'label'      => 'My employee record',
-                    'listable'   => false,
-                ],
-                [
-                    'id'         => 'payslips',
-                    'register'   => 'hrmq',
-                    'schema'     => 'Payslip',
-                    'scopeField' => 'employeeId',
-                    'scopeClaim' => 'employeeId',
-                    'minTrust'   => 'low',
-                    'label'      => 'My payslips',
-                    'listable'   => true,
-                ],
-                [
-                    'id'         => 'employmentContracts',
-                    'register'   => 'hrmq',
-                    'schema'     => 'EmploymentContract',
-                    'scopeField' => 'employeeId',
-                    'scopeClaim' => 'employeeId',
-                    'minTrust'   => 'low',
-                    'label'      => 'My employment contracts',
-                    'listable'   => true,
-                ],
-                [
-                    'id'         => 'timesheets',
-                    'register'   => 'hrmq',
-                    'schema'     => 'Timesheet',
-                    'scopeField' => 'employeeId',
-                    'scopeClaim' => 'employeeId',
-                    'minTrust'   => 'low',
-                    'label'      => 'My timesheets',
-                    'listable'   => true,
-                ],
-                [
-                    'id'         => 'expenses',
-                    'register'   => 'hrmq',
-                    'schema'     => 'Expense',
-                    'scopeField' => 'employeeId',
-                    'scopeClaim' => 'employeeId',
-                    'minTrust'   => 'low',
-                    'label'      => 'My expenses',
-                    'listable'   => true,
-                ],
-                [
-                    'id'         => 'leaveRequests',
-                    'register'   => 'hrmq',
-                    'schema'     => 'LeaveRequest',
-                    'scopeField' => 'employeeId',
-                    'scopeClaim' => 'employeeId',
-                    'minTrust'   => 'low',
-                    'label'      => 'My leave requests',
-                    'listable'   => true,
-                ],
-            ],
-            'actions'       => [
-                [
-                    'id'       => 'createTimesheet',
-                    'type'     => 'create',
-                    'label'    => 'Log hours',
-                    'register' => 'hrmq',
-                    'schema'   => 'Timesheet',
-                    'fields'   => [
-                        'period',
-                        'hours',
-                        'description',
-                        'projectId',
-                        'costCenter',
-                        'billable',
-                        'clientRef',
-                    ],
-                ],
-                [
-                    'id'       => 'createExpense',
-                    'type'     => 'create',
-                    'label'    => 'Submit an expense',
-                    'register' => 'hrmq',
-                    'schema'   => 'Expense',
-                    'fields'   => [
-                        'title',
-                        'description',
-                        'amount',
-                        'currency',
-                        'category',
-                        'expenseDate',
-                    ],
-                ],
-                [
-                    'id'       => 'createLeaveRequest',
-                    'type'     => 'create',
-                    'label'    => 'Request leave',
-                    'register' => 'hrmq',
-                    'schema'   => 'LeaveRequest',
-                    'fields'   => [
-                        'leaveType',
-                        'startDate',
-                        'endDate',
-                        'hours',
-                        'reason',
-                    ],
-                ],
-            ],
-            'notifications' => [],
-        ];
+	/**
+	 * The client manifest: a read-only view over the timesheets whose billable
+	 * hours the client reviews, scoped by `Timesheet.clientRef` == the
+	 * `clientId` claim (the UUID of the client contact/organisation domain
+	 * object). The approve/reject action is deliberately absent — lifecycle
+	 * transitions by externals require the bearer-forwarded endpoint action
+	 * type (amendment A6), whose receiver-side verification hrmq does not
+	 * implement in Wave 1.
+	 *
+	 * @return array<string, mixed> The manifest.
+	 *
+	 * @spec openspec/changes/portal-contribution/tasks.md#task-3
+	 */
+	private function clientManifest(): array {
+		return [
+			'label' => 'HRMQ',
+			'collections' => [
+				[
+					'id' => 'clientTimesheets',
+					'register' => 'hrmq',
+					'schema' => 'Timesheet',
+					'scopeField' => 'clientRef',
+					'scopeClaim' => 'clientId',
+					'minTrust' => 'low',
+					'label' => 'Timesheets to review',
+					'listable' => true,
+				],
+			],
+			'actions' => [],
+			'notifications' => [],
+		];
 
-    }//end externalEmployeeManifest()
+	}//end clientManifest()
 
-    /**
-     * The client manifest: a read-only view over the timesheets whose billable
-     * hours the client reviews, scoped by `Timesheet.clientRef` == the
-     * `clientId` claim (the UUID of the client contact/organisation domain
-     * object). The approve/reject action is deliberately absent — lifecycle
-     * transitions by externals require the bearer-forwarded endpoint action
-     * type (amendment A6), whose receiver-side verification hrmq does not
-     * implement in Wave 1.
-     *
-     * @return array<string, mixed> The manifest.
-     *
-     * @spec openspec/changes/portal-contribution/tasks.md#task-3
-     */
-    private function clientManifest(): array
-    {
-        return [
-            'label'         => 'HRMQ',
-            'collections'   => [
-                [
-                    'id'         => 'clientTimesheets',
-                    'register'   => 'hrmq',
-                    'schema'     => 'Timesheet',
-                    'scopeField' => 'clientRef',
-                    'scopeClaim' => 'clientId',
-                    'minTrust'   => 'low',
-                    'label'      => 'Timesheets to review',
-                    'listable'   => true,
-                ],
-            ],
-            'actions'       => [],
-            'notifications' => [],
-        ];
+	/**
+	 * The manager manifest: an external team lead / department manager (no
+	 * Nextcloud account) reviews and approves/rejects the timesheets for their
+	 * cost centre, scoped by `Timesheet.costCenter` == the `costCenter` claim.
+	 *
+	 * The read is field-projected — only the review-relevant fields leave hrmq;
+	 * `costCenter` (the scope key), `billable`, `projectId` and `submittedAt`
+	 * stay internal.
+	 *
+	 * APPROVE/REJECT is deliberately NOT wired as a portal `type: update`
+	 * transition. Portaliq's claim-scoped update DOES support this (ownership is
+	 * re-verified by the resolved costCenter claim), but hrmq's Timesheet carries
+	 * a declarative lifecycle hook that requires an authenticated Nextcloud user
+	 * to change `status` ("U moet ingelogd zijn om goed te keuren of af te
+	 * keuren"). Portal writes bypass OpenRegister RBAC but NOT lifecycle hooks, so
+	 * an external approver (no NC account by premise) is stopped at the hook. The
+	 * external approve/reject therefore needs either the A6 bearer-forward action
+	 * (hrmq's own endpoint runs the transition with app context) or a
+	 * portal-subject-aware lifecycle hook — tracked as a follow-up. Until then
+	 * this manifest is READ-ONLY, matching the client manifest's stance.
+	 *
+	 * @return array<string, mixed> The manifest.
+	 *
+	 * @spec openspec/changes/portal-contribution/tasks.md#task-3
+	 */
+	private function managerManifest(): array {
+		return [
+			'label' => 'HRMQ',
+			'collections' => [
+				[
+					'id' => 'teamTimesheets',
+					'register' => 'hrmq',
+					'schema' => 'Timesheet',
+					'scopeField' => 'costCenter',
+					'scopeClaim' => 'costCenter',
+					'minTrust' => 'low',
+					'label' => 'Team timesheets',
+					'listable' => true,
+					// Read-side projection (the DATA authority): only review
+					// fields leave hrmq. costCenter (the scope key), billable,
+					// projectId and submittedAt are dropped.
+					'fields' => [
+						'employeeId',
+						'period',
+						'hours',
+						'status',
+						'description',
+					],
+					'columns' => [
+						['field' => 'employeeId', 'label' => 'Medewerker'],
+						['field' => 'period', 'label' => 'Periode'],
+						['field' => 'hours', 'label' => 'Uren'],
+						['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+					],
+					'detail' => ['layout' => 'card', 'fields' => ['employeeId', 'period', 'hours', 'status', 'description']],
+					'defaultSort' => ['field' => 'period', 'direction' => 'desc'],
+				],
+			],
+			'actions' => [],
+			'pages' => [
+				[
+					'id' => 'timesheets',
+					'label' => 'Urenbriefjes',
+					'icon' => 'ClockCheck',
+					'blocks' => [
+						[
+							'type' => 'richText',
+							'markdown' => '## Urenbriefjes van uw team' . "\n" . 'Bekijk de ingediende urenbriefjes van uw kostenplaats.',
+						],
+						['type' => 'collection', 'collection' => 'teamTimesheets'],
+					],
+				],
+			],
+			'notifications' => [],
+		];
 
-    }//end clientManifest()
-
-    /**
-     * The manager manifest: an external team lead / department manager (no
-     * Nextcloud account) reviews and approves/rejects the timesheets for their
-     * cost centre, scoped by `Timesheet.costCenter` == the `costCenter` claim.
-     *
-     * The read is field-projected — only the review-relevant fields leave hrmq;
-     * `costCenter` (the scope key), `billable`, `projectId` and `submittedAt`
-     * stay internal.
-     *
-     * APPROVE/REJECT is deliberately NOT wired as a portal `type: update`
-     * transition. Portaliq's claim-scoped update DOES support this (ownership is
-     * re-verified by the resolved costCenter claim), but hrmq's Timesheet carries
-     * a declarative lifecycle hook that requires an authenticated Nextcloud user
-     * to change `status` ("U moet ingelogd zijn om goed te keuren of af te
-     * keuren"). Portal writes bypass OpenRegister RBAC but NOT lifecycle hooks, so
-     * an external approver (no NC account by premise) is stopped at the hook. The
-     * external approve/reject therefore needs either the A6 bearer-forward action
-     * (hrmq's own endpoint runs the transition with app context) or a
-     * portal-subject-aware lifecycle hook — tracked as a follow-up. Until then
-     * this manifest is READ-ONLY, matching the client manifest's stance.
-     *
-     * @return array<string, mixed> The manifest.
-     *
-     * @spec openspec/changes/portal-contribution/tasks.md#task-3
-     */
-    private function managerManifest(): array
-    {
-        return [
-            'label'         => 'HRMQ',
-            'collections'   => [
-                [
-                    'id'          => 'teamTimesheets',
-                    'register'    => 'hrmq',
-                    'schema'      => 'Timesheet',
-                    'scopeField'  => 'costCenter',
-                    'scopeClaim'  => 'costCenter',
-                    'minTrust'    => 'low',
-                    'label'       => 'Team timesheets',
-                    'listable'    => true,
-                    // Read-side projection (the DATA authority): only review
-                    // fields leave hrmq. costCenter (the scope key), billable,
-                    // projectId and submittedAt are dropped.
-                    'fields'      => [
-                        'employeeId',
-                        'period',
-                        'hours',
-                        'status',
-                        'description',
-                    ],
-                    'columns'     => [
-                        ['field' => 'employeeId', 'label' => 'Medewerker'],
-                        ['field' => 'period', 'label' => 'Periode'],
-                        ['field' => 'hours', 'label' => 'Uren'],
-                        ['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
-                    ],
-                    'detail'      => ['layout' => 'card', 'fields' => ['employeeId', 'period', 'hours', 'status', 'description']],
-                    'defaultSort' => ['field' => 'period', 'direction' => 'desc'],
-                ],
-            ],
-            'actions'       => [],
-            'pages'         => [
-                [
-                    'id'     => 'timesheets',
-                    'label'  => 'Urenbriefjes',
-                    'icon'   => 'ClockCheck',
-                    'blocks' => [
-                        [
-                            'type'     => 'richText',
-                            'markdown' => '## Urenbriefjes van uw team'."\n".'Bekijk de ingediende urenbriefjes van uw kostenplaats.',
-                        ],
-                        ['type' => 'collection', 'collection' => 'teamTimesheets'],
-                    ],
-                ],
-            ],
-            'notifications' => [],
-        ];
-
-    }//end managerManifest()
+	}//end managerManifest()
 }//end class

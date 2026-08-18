@@ -53,95 +53,84 @@ use DateTimeImmutable;
  * Storage-limitation-ceiling check: an object still present past its own
  * OpenRegister-computed `retention.archiefactiedatum`.
  */
-final class NlDossierRetentionChecks implements CheckProvider
-{
+final class NlDossierRetentionChecks implements CheckProvider {
 
-    /**
-     * The payroll/loonadministratie schema family this check applies to,
-     * plus `GeneratedDocument` (hrmq#99 hole #1). Mirrors the deleted
-     * `AvgDsrRetentionClassifier::PAYROLL_FAMILY_SCHEMAS` scope.
-     *
-     * @var array<int, string>
-     */
-    private const SCOPED_SCHEMAS = [
-        'Payslip',
-        'PayrollRun',
-        'LoonaangifteFiling',
-        'PayrollMutationReport',
-        'WkrDeclaration',
-        'WkrAssessment',
-        'PensionFiling',
-        'GeneratedDocument',
-    ];
+	/**
+	 * The payroll/loonadministratie schema family this check applies to,
+	 * plus `GeneratedDocument` (hrmq#99 hole #1). Mirrors the deleted
+	 * `AvgDsrRetentionClassifier::PAYROLL_FAMILY_SCHEMAS` scope.
+	 *
+	 * @var array<int, string>
+	 */
+	private const SCOPED_SCHEMAS = [
+		'Payslip',
+		'PayrollRun',
+		'LoonaangifteFiling',
+		'PayrollMutationReport',
+		'WkrDeclaration',
+		'WkrAssessment',
+		'PensionFiling',
+		'GeneratedDocument',
+	];
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+	 */
+	public static function checks(): array {
+		$checks = [];
+		foreach (self::SCOPED_SCHEMAS as $schema) {
+			$checks[$schema] = [
+				'nl-bewaartermijn-verstreken' => static fn (array $object): bool => self::notPastCeiling($object),
+			];
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     *
-     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
-     */
-    public static function checks(): array
-    {
-        $checks = [];
-        foreach (self::SCOPED_SCHEMAS as $schema) {
-            $checks[$schema] = [
-                'nl-bewaartermijn-verstreken' => static fn(array $object): bool => self::notPastCeiling($object),
-            ];
-        }
+		return $checks;
+	}//end checks()
 
-        return $checks;
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
-    }//end checks()
+	/**
+	 * Vacuous when no `retention.archiefactiedatum` is populated, or when
+	 * the object's `archiefstatus` is already `vernietigd` (properly
+	 * destroyed -- not "still present"). Violates when a populated
+	 * `archiefactiedatum` date is before today and the object is not
+	 * `vernietigd`.
+	 *
+	 * @param array<string, mixed> $object The object (as `RuleAuditService` passes it -- `@self.retention` carries OpenRegister's archival metadata).
+	 *
+	 * @return bool
+	 */
+	private static function notPastCeiling(array $object): bool {
+		$self = (array)($object['@self'] ?? []);
+		$retention = (array)($self['retention'] ?? []);
 
+		$archiefstatus = (string)($retention['archiefstatus'] ?? '');
+		if ($archiefstatus === 'vernietigd') {
+			return true;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		$archiefactiedatum = trim((string)($retention['archiefactiedatum'] ?? ''));
+		if ($archiefactiedatum === '') {
+			return true;
+		}
 
-    }//end seedSpec()
+		$ceiling = strtotime($archiefactiedatum);
+		if ($ceiling === false) {
+			return true;
+		}
 
-
-    /**
-     * Vacuous when no `retention.archiefactiedatum` is populated, or when
-     * the object's `archiefstatus` is already `vernietigd` (properly
-     * destroyed -- not "still present"). Violates when a populated
-     * `archiefactiedatum` date is before today and the object is not
-     * `vernietigd`.
-     *
-     * @param array<string, mixed> $object The object (as `RuleAuditService` passes it -- `@self.retention` carries OpenRegister's archival metadata).
-     *
-     * @return bool
-     */
-    private static function notPastCeiling(array $object): bool
-    {
-        $self      = (array) ($object['@self'] ?? []);
-        $retention = (array) ($self['retention'] ?? []);
-
-        $archiefstatus = (string) ($retention['archiefstatus'] ?? '');
-        if ($archiefstatus === 'vernietigd') {
-            return true;
-        }
-
-        $archiefactiedatum = trim((string) ($retention['archiefactiedatum'] ?? ''));
-        if ($archiefactiedatum === '') {
-            return true;
-        }
-
-        $ceiling = strtotime($archiefactiedatum);
-        if ($ceiling === false) {
-            return true;
-        }
-
-        return $ceiling >= (new DateTimeImmutable('today'))->getTimestamp();
-
-    }//end notPastCeiling()
-
+		return $ceiling >= (new DateTimeImmutable('today'))->getTimestamp();
+	}//end notPastCeiling()
 
 }//end class

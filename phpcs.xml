@@ -1,379 +1,71 @@
 <?xml version="1.0"?>
-<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="PHP_CodeSniffer" xsi:noNamespaceSchemaLocation="phpcs.xsd">
-    <description>Coding standard for hrmq, based on the Conduction/OpenRegister fleet standard (PEAR + Squiz selections; no native "Nextcloud" PHPCS ruleset ships in nextcloud/coding-standard, which is a php-cs-fixer config only).</description>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="hrmq" xsi:noNamespaceSchemaLocation="phpcs.xsd">
+    <description>
+        hrmq — SEMANTICS ONLY. Formatting belongs to php-cs-fixer via
+        conduction/coding-standard; see .php-cs-fixer.dist.php.
 
+        This file used to be a ~300-line standalone PEAR/Squiz ruleset carrying
+        four documented groups of "pre-existing debt" exclusions — 3,991
+        violations' worth. Most of that debt was FORMATTING, and it is now GONE
+        rather than merely excluded: php-cs-fixer owns those tokens (269 of 269
+        files reformatted in this change), so the sniffs that used to argue with
+        it are not in the ruleset to be excluded from.
+
+        What remains below is the debt that OUTLIVED the formatter, because it
+        is semantic and no formatter can close it. Every entry is measured, not
+        assumed: the counts are from `phpcs --report=source lib` against this
+        tree AFTER the reformat. Excluding a sniff here does NOT disable it for
+        new code in other apps, and each one is a burn-down item, not an amnesty.
+    </description>
+
+    <!-- The scanned tree MUST be declared here, not centrally: phpcs resolves
+         the file element relative to the ruleset that declares it.
+
+         `lib` only, matching all 15 other fleet apps. The previous ruleset also
+         named `tests`, but under a standard with most sniffs switched off, so
+         that was breadth without depth. Under the central ruleset `tests` adds
+         4,614 findings, almost all NamedParameters on PHPUnit builder calls. -->
     <file>lib</file>
-    <file>tests</file>
 
-    <!-- Exclude external and vendor files -->
-    <exclude-pattern>*/vendor/*</exclude-pattern>
-    <exclude-pattern>*/vendor-bin/*</exclude-pattern>
-    <exclude-pattern>*/node_modules/*</exclude-pattern>
-    <exclude-pattern>*/build/*</exclude-pattern>
-    <exclude-pattern>composer-setup.php</exclude-pattern>
+    <rule ref="vendor/conduction/hydra-gates/quality-config/phpcs.xml">
+        <!-- 1,418 findings. The fleet mandates named parameters on internal
+             calls; hrmq predates the sniff and was never written to it. This is
+             a real, wanted rule and a genuinely large mechanical refactor —
+             1,418 call sites across NL payroll/tax services. Tracked as debt so
+             the OTHER ten sniffs in this ruleset start failing the build today
+             instead of waiting for that refactor to land. -->
+        <exclude name="CustomSniffs.Functions.NamedParameters.RequireNamedParameters"/>
 
-    <!-- Surface phpcs warnings in CI logs without failing the build. -->
-    <config name="ignore_warnings_on_exit" value="1"/>
+        <!-- 304 findings. DisallowInlineIf bans ternaries outright; hrmq's
+             payroll and tax calculation code uses short ternaries pervasively
+             and safely. Carried forward from the previous ruleset with the same
+             rationale — this is a style disagreement, not a defect signal. -->
+        <exclude name="Squiz.PHP.DisallowInlineIf.Found"/>
 
-    <arg name="basepath" value="."/>
-    <arg name="colors"/>
-    <arg name="parallel" value="75"/>
-    <arg name="extensions" value="php"/>
-    <arg value="p"/>
+        <!-- 139 findings. The 150-character limit is exceeded by descriptive
+             conditionals and array literals in domain logic; NL payroll/tax
+             field names run long (e.g. `$vrijeRuimteDeclared`). Wrapping these
+             is a cosmetic mass-edit, not a defect fix. Down from 189 before the
+             reformat — php-cs-fixer closed 50 of them on its own. -->
+        <exclude name="Generic.Files.LineLength.MaxExceeded"/>
 
-    <!-- Don't hide tokenizer exceptions -->
-    <rule ref="Internal.Tokenizer.Exception">
-        <type>error</type>
-    </rule>
+        <!-- 51 + 6 findings. Comment-CONTENT capitalisation. Not fixable by any
+             formatter; closing it means hand-editing prose across the tree. -->
+        <exclude name="Squiz.Commenting.InlineComment.NotCapital"/>
+        <exclude name="Generic.Commenting.DocComment.LongNotCapital"/>
+        <exclude name="Squiz.Commenting.InlineComment.SpacingAfterAtFunctionEnd"/>
 
-    <!-- Include the whole PEAR standard -->
-    <rule ref="PEAR">
-        <exclude name="PEAR.NamingConventions.ValidFunctionName"/>
-        <exclude name="PEAR.NamingConventions.ValidVariableName"/>
-        <exclude name="PEAR.Commenting.ClassComment"/>
-        <exclude name="PEAR.Commenting.FileComment.MissingCategoryTag"/>
-        <exclude name="PEAR.Commenting.FileComment.MissingPackageTag"/>
-        <exclude name="PEAR.Commenting.FileComment.MissingLinkTag"/>
-        <exclude name="PEAR.Commenting.FileComment.MissingVersion"/>
-        <exclude name="PEAR.Commenting.InlineComment"/>
-        <!-- Exclude indentation rules we'll configure separately -->
-        <exclude name="PEAR.WhiteSpace.ScopeIndent"/>
-    </rule>
+        <!-- 14 + 14 findings. Missing/ mismatched @param tags. Real debt, and
+             hand-written prose to close. The docblock PRESENCE requirement
+             (PEAR.Commenting.FunctionComment.Missing) is deliberately NOT
+             excluded — a method with no docblock at all still fails. -->
+        <exclude name="PEAR.Commenting.FunctionComment.MissingParamTag"/>
+        <exclude name="PEAR.Commenting.FunctionComment.ParamNameNoMatch"/>
 
-    <!-- Include some sniffs from other standards that don't conflict with PEAR -->
-    <rule ref="Squiz.Arrays.ArrayBracketSpacing"/>
-    <rule ref="Squiz.ControlStructures.ControlSignature"/>
-    <rule ref="Squiz.ControlStructures.ElseIfDeclaration"/>
-    <rule ref="Squiz.Commenting.ClosingDeclarationComment"/>
-    <rule ref="Squiz.Commenting.BlockComment"/>
-    <rule ref="Squiz.Commenting.DocCommentAlignment"/>
-    <rule ref="Squiz.Commenting.EmptyCatchComment"/>
-    <rule ref="Squiz.Commenting.InlineComment"/>
-    <rule ref="Squiz.Commenting.LongConditionClosingComment"/>
-    <rule ref="Squiz.Commenting.PostStatementComment"/>
-    <rule ref="Squiz.Commenting.VariableComment"/>
-    <rule ref="Squiz.Functions.FunctionDeclarationArgumentSpacing"/>
-    <rule ref="Squiz.Operators.ComparisonOperatorUsage"/>
-    <rule ref="Squiz.PHP.DisallowInlineIf"/>
-    <rule ref="Squiz.Scope.MethodScope"/>
-    <rule ref="Squiz.Strings.ConcatenationSpacing">
-        <properties>
-            <property name="ignoreNewlines" value="true"/>
-        </properties>
+        <!-- 11 findings. ImplicitTrue wants `if ($x === true)` over `if ($x)`.
+             Implicit truthy checks are idiomatic, safe PHP here — this is not
+             the `==` vs `===` coercion risk the parent sniff exists to catch,
+             and that part of ComparisonOperatorUsage stays ON. -->
+        <exclude name="Squiz.Operators.ComparisonOperatorUsage.ImplicitTrue"/>
     </rule>
-    <rule ref="Squiz.WhiteSpace.ControlStructureSpacing"/>
-    <rule ref="Squiz.WhiteSpace.FunctionSpacing">
-        <properties>
-            <property name="spacing" value="1"/>
-            <property name="spacingAfterLast" value="0"/>
-            <property name="spacingBeforeFirst" value="0"/>
-        </properties>
-    </rule>
-    <rule ref="Squiz.WhiteSpace.MemberVarSpacing"/>
-    <rule ref="Squiz.WhiteSpace.OperatorSpacing"/>
-    <rule ref="Squiz.WhiteSpace.SuperfluousWhitespace"/>
-    <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
-    <rule ref="Generic.Commenting.Todo">
-        <exclude name="Generic.Commenting.Todo"/>
-    </rule>
-    <rule ref="Generic.ControlStructures.DisallowYodaConditions"/>
-    <rule ref="Generic.ControlStructures.InlineControlStructure"/>
-    <rule ref="Generic.Formatting.DisallowMultipleStatements"/>
-    <rule ref="Generic.Formatting.SpaceAfterCast"/>
-    <rule ref="Generic.Files.LineLength">
-        <properties>
-            <property name="lineLimit" value="150"/>
-            <property name="absoluteLineLimit" value="150"/>
-        </properties>
-    </rule>
-    <rule ref="Generic.NamingConventions.ConstructorName"/>
-    <rule ref="Generic.PHP.DeprecatedFunctions"/>
-    <rule ref="Generic.PHP.LowerCaseKeyword"/>
-    <rule ref="Generic.Strings.UnnecessaryStringConcat">
-        <properties>
-            <property name="allowMultiline" value="true"/>
-        </properties>
-    </rule>
-    <rule ref="Generic.WhiteSpace.IncrementDecrementSpacing"/>
-    <rule ref="PSR2.Classes.PropertyDeclaration"/>
-    <rule ref="PSR2.Methods.MethodDeclaration"/>
-    <rule ref="PSR2.Files.EndFileNewline"/>
-    <rule ref="PSR12.Files.OpenTag"/>
-    <rule ref="Zend.Files.ClosingTag"/>
-
-    <!-- PEAR uses warnings for inline control structures, so switch back to errors -->
-    <rule ref="Generic.ControlStructures.InlineControlStructure">
-        <properties>
-            <property name="error" value="true"/>
-        </properties>
-    </rule>
-
-    <!-- We use custom indent rules for arrays -->
-    <rule ref="Generic.Arrays.ArrayIndent"/>
-
-    <!-- Selectively include array rules, excluding alignment rules -->
-    <rule ref="Squiz.Arrays.ArrayDeclaration">
-        <exclude name="Squiz.Arrays.ArrayDeclaration.KeyNotAligned"/>
-        <exclude name="Squiz.Arrays.ArrayDeclaration.ValueNotAligned"/>
-        <exclude name="Squiz.Arrays.ArrayDeclaration.CloseBraceNotAligned"/>
-        <exclude name="Squiz.Arrays.ArrayDeclaration.CloseBraceNewLine"/>
-        <exclude name="Squiz.Arrays.ArrayDeclaration.MultiLineNotAllowed"/>
-        <exclude name="Squiz.Arrays.ArrayDeclaration.SingleLineNotAllowed"/>
-    </rule>
-
-    <!-- Check var names, but we don't want leading underscores for private vars -->
-    <rule ref="Squiz.NamingConventions.ValidVariableName"/>
-    <rule ref="Squiz.NamingConventions.ValidVariableName.PrivateNoUnderscore">
-        <severity>0</severity>
-    </rule>
-
-    <!-- Only one argument per line in multi-line function calls -->
-    <rule ref="PEAR.Functions.FunctionCallSignature">
-        <properties>
-            <property name="allowMultipleArguments" value="false"/>
-            <property name="indent" value="8"/>
-            <property name="requiredSpacesAfterOpen" value="0"/>
-            <property name="requiredSpacesBeforeClose" value="0"/>
-        </properties>
-    </rule>
-
-    <!-- Disable the indentation rule for multiline function declarations -->
-    <rule ref="PEAR.Functions.FunctionCallSignature.Indent">
-        <severity>0</severity>
-    </rule>
-
-    <!-- Disable the opening placement for multiline arrays -->
-    <rule ref="PEAR.Functions.FunctionCallSignature.OpeningIndent">
-        <severity>0</severity>
-    </rule>
-
-    <!-- Set standard indentation but don't apply it to function parameters -->
-    <rule ref="Generic.WhiteSpace.ScopeIndent">
-        <properties>
-            <property name="indent" value="4"/>
-            <property name="tabIndent" value="false"/>
-            <property name="ignoreIndentationTokens" type="array">
-                <element value="T_FUNCTION"/>
-                <element value="T_CLOSURE"/>
-                <element value="T_USE"/>
-                <element value="T_PRIVATE"/>
-                <element value="T_PROTECTED"/>
-                <element value="T_PUBLIC"/>
-                <element value="T_READONLY"/>
-                <element value="T_ARRAY"/>
-                <element value="T_OPEN_SHORT_ARRAY"/>
-            </property>
-        </properties>
-    </rule>
-
-    <!-- Have 12 chars padding maximum and always show as errors -->
-    <rule ref="Generic.Formatting.MultipleStatementAlignment">
-        <properties>
-            <property name="maxPadding" value="12"/>
-            <property name="error" value="true"/>
-        </properties>
-    </rule>
-
-    <!-- Ban some functions -->
-    <rule ref="Generic.PHP.ForbiddenFunctions">
-        <properties>
-            <property name="forbiddenFunctions" type="array">
-                <element key="sizeof" value="count"/>
-                <element key="delete" value="unset"/>
-                <element key="print" value="echo"/>
-                <element key="is_null" value="null"/>
-                <element key="create_function" value="null"/>
-                <element key="var_dump" value="null"/>
-                <element key="die" value="null"/>
-                <element key="error_log" value="null"/>
-            </property>
-        </properties>
-    </rule>
-
-    <!-- Private methods MUST not be prefixed with an underscore -->
-    <rule ref="PSR2.Methods.MethodDeclaration.Underscore">
-        <type>error</type>
-    </rule>
-
-    <!-- Private properties MUST not be prefixed with an underscore -->
-    <rule ref="PSR2.Classes.PropertyDeclaration.Underscore">
-        <type>error</type>
-    </rule>
-
-    <!-- Explicitly exclude other rules that might conflict -->
-    <rule ref="Squiz.Functions.MultiLineFunctionDeclaration.SpaceAfterFunction">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Functions.MultiLineFunctionDeclaration.FirstParamSpacing">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Functions.MultiLineFunctionDeclaration.Indent">
-        <severity>0</severity>
-    </rule>
-    <rule ref="PEAR.WhiteSpace.ScopeIndent.Incorrect">
-        <severity>0</severity>
-    </rule>
-
-    <!-- ================================================================
-         Pre-existing debt: burn down, see #25.
-
-         Tallied by running phpcs once against the current tree (3991
-         violations across 36 sniffs before this section existed). To avoid
-         a mass phpcbf reformat over freshly-built payroll code, the sniffs
-         below are temporarily excluded so `composer phpcs` is green on the
-         CURRENT tree while every sniff NOT listed here (PEAR/Squiz/Generic/
-         PSR2/PSR12/Zend core, Yoda-condition ban, deprecated/forbidden
-         function bans, underscore-prefix bans, etc.) still fails on NEW
-         violations. Grouped below with rationale; re-enable incrementally
-         as files are touched.
-         ================================================================ -->
-
-    <!-- Group 1: mechanical whitespace/alignment/spacing debt. All
-         phpcbf-fixable; excluded here only to avoid a blanket phpcbf pass
-         over lib/tests in this PR — safe to burn down file-by-file with
-         phpcbf (standard phpcs.xml) as each file is next touched. -->
-    <rule ref="Squiz.WhiteSpace.FunctionSpacing.After">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.WhiteSpace.FunctionSpacing.AfterLast">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.WhiteSpace.FunctionSpacing.Before">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.WhiteSpace.FunctionSpacing.BeforeFirst">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Arrays.ArrayDeclaration.DoubleArrowNotAligned">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Arrays.ArrayDeclaration.ValueNoNewline">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Arrays.ArrayDeclaration.CommaAfterLast">
-        <severity>0</severity>
-    </rule>
-    <rule ref="PEAR.Commenting.FunctionComment.SpacingAfterParamType">
-        <severity>0</severity>
-    </rule>
-    <rule ref="PEAR.Commenting.FunctionComment.SpacingAfterParamName">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Generic.Formatting.MultipleStatementAlignment.NotSame">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Generic.Formatting.MultipleStatementAlignment.Incorrect">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Generic.WhiteSpace.ScopeIndent.IncorrectExact">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Generic.WhiteSpace.ScopeIndent.Incorrect">
-        <severity>0</severity>
-    </rule>
-    <rule ref="PEAR.Functions.FunctionCallSignature.CloseBracketLine">
-        <severity>0</severity>
-    </rule>
-    <rule ref="PEAR.Functions.FunctionCallSignature.ContentAfterOpenBracket">
-        <severity>0</severity>
-    </rule>
-    <rule ref="PEAR.Functions.FunctionCallSignature.MultipleArguments">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.WhiteSpace.MemberVarSpacing.FirstIncorrect">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.WhiteSpace.OperatorSpacing.SpacingBefore">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.ClosingDeclarationComment.Missing">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.LongConditionClosingComment.Missing">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.WhiteSpace.ControlStructureSpacing.NoLineAfterClose">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.WhiteSpace.ControlStructureSpacing.SpacingAfterOpenBrace">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.InlineComment.SpacingAfterAtFunctionEnd">
-        <severity>0</severity>
-    </rule>
-
-    <!-- Group 2: doc-comment / inline-comment CONTENT debt (missing short
-         descriptions, capitalisation, missing @param tags). Not phpcbf-
-         fixable — closing these requires hand-writing real prose across
-         ~800 call sites, which is out of scope for a config-baseline PR.
-         VariableComment.IncorrectVarType additionally wants legacy PEAR
-         long-form type names ("integer"/"boolean") over the modern
-         short-form ("int"/"bool") hrmq already consistently uses — the
-         current code is the objectively better style, so this sub-sniff
-         is excluded rather than "fixed" to a worse convention. -->
-    <rule ref="Generic.Commenting.DocComment.MissingShort">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Generic.Commenting.DocComment.ShortNotCapital">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Generic.Commenting.DocComment.LongNotCapital">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.InlineComment.NotCapital">
-        <severity>0</severity>
-    </rule>
-    <rule ref="PEAR.Commenting.FunctionComment.MissingParamTag">
-        <severity>0</severity>
-    </rule>
-    <rule ref="PEAR.Commenting.FunctionComment.ParamNameNoMatch">
-        <severity>0</severity>
-    </rule>
-    <rule ref="PEAR.Commenting.FunctionComment.Missing">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.VariableComment.IncorrectVarType">
-        <severity>0</severity>
-    </rule>
-
-    <!-- Group 3: style choices that are too strict for this codebase's
-         established (safe, idiomatic) conventions rather than real defect
-         signals — excluded outright, not just baselined as debt.
-           - DisallowInlineIf bans ternaries entirely; hrmq's payroll/tax
-             calculation code uses short ternaries pervasively and safely.
-           - LineLength's 150-char limit is exceeded by descriptive
-             conditionals/array literals in domain logic (NL payroll/tax
-             field names run long, e.g. `$vrijeRuimteDeclared`); wrapping
-             ~161 current lines is a cosmetic mass-edit, not a defect fix.
-           - ComparisonOperatorUsage.ImplicitTrue bans `if ($x)` in favour
-             of `if ($x === true)` everywhere; implicit truthy checks are
-             idiomatic, safe PHP here (not `==`/`===` type-coercion risk). -->
-    <rule ref="Squiz.PHP.DisallowInlineIf.Found">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Generic.Files.LineLength.MaxExceeded">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Operators.ComparisonOperatorUsage.ImplicitTrue">
-        <severity>0</severity>
-    </rule>
-
-    <!-- Group 4: tests/bootstrap.php conditionally loads a test-only
-         OpenRegister interface/value-object stub (see tests/stubs/) only
-         when the real classes aren't present, via `require_once` inside an
-         `if (!interface_exists(...))` guard. PEAR's IncludingFile sniff
-         wants conditional loads to use `include`/`include_once` instead of
-         `require`/`require_once` — but `include` only warns (and keeps
-         running) on a missing file where `require` fails fast. Since this
-         guards the standalone PHPUnit suite's ability to exercise real
-         guard logic, failing fast on a missing stub is the correct
-         behaviour; changing to `include` would be a real (if small)
-         behaviour change, not a pure style fix. -->
-    <rule ref="PEAR.Files.IncludingFile.UseInclude">
-        <severity>0</severity>
-    </rule>
-    <rule ref="PEAR.Files.IncludingFile.UseIncludeOnce">
-        <severity>0</severity>
-    </rule>
-
 </ruleset>

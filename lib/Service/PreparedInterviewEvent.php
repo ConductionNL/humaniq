@@ -29,32 +29,29 @@ namespace OCA\Hrmq\Service;
 /**
  * Immutable bundle of one Interview's rendered ICS + the UID identity it was rendered under.
  */
-final class PreparedInterviewEvent
-{
+final class PreparedInterviewEvent {
 
+	/**
+	 * @param string $storedUid The Interview's PRE-EXISTING `calendarEventUid` ('' when never synced).
+	 * @param string $uid The UID this render used (either `$storedUid` or a freshly-derived one).
+	 * @param string $objectUri The deterministic object URI (`{uid}.ics`).
+	 * @param string $ics The rendered RFC 5545 VCALENDAR/VEVENT text.
+	 * @param string $dtstart Compact UTC DATE-TIME (YYYYMMDDTHHMMSSZ), for diffing.
+	 * @param string $dtend Compact UTC DATE-TIME (YYYYMMDDTHHMMSSZ), for diffing.
+	 * @param string $summary The AVG-safe SUMMARY text (unescaped), for diffing.
+	 * @param string $location The LOCATION text (unescaped, '' means none), for diffing.
+	 */
+	public function __construct(
+		public readonly string $storedUid,
+		public readonly string $uid,
+		public readonly string $objectUri,
+		public readonly string $ics,
+		public readonly string $dtstart,
+		public readonly string $dtend,
+		public readonly string $summary,
+		public readonly string $location,
+	) {
 
-    /**
-     * @param string $storedUid The Interview's PRE-EXISTING `calendarEventUid` ('' when never synced).
-     * @param string $uid       The UID this render used (either `$storedUid` or a freshly-derived one).
-     * @param string $objectUri The deterministic object URI (`{uid}.ics`).
-     * @param string $ics       The rendered RFC 5545 VCALENDAR/VEVENT text.
-     * @param string $dtstart   Compact UTC DATE-TIME (YYYYMMDDTHHMMSSZ), for diffing.
-     * @param string $dtend     Compact UTC DATE-TIME (YYYYMMDDTHHMMSSZ), for diffing.
-     * @param string $summary   The AVG-safe SUMMARY text (unescaped), for diffing.
-     * @param string $location  The LOCATION text (unescaped, '' means none), for diffing.
-     */
-    public function __construct(
-        public readonly string $storedUid,
-        public readonly string $uid,
-        public readonly string $objectUri,
-        public readonly string $ics,
-        public readonly string $dtstart,
-        public readonly string $dtend,
-        public readonly string $summary,
-        public readonly string $location,
-    ) {
-
-    }//end __construct()
-
+	}//end __construct()
 
 }//end class

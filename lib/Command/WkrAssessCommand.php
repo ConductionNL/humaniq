@@ -38,117 +38,106 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * occ command that computes and persists the WKR vrije-ruimte assessment.
  */
-class WkrAssessCommand extends Command
-{
+class WkrAssessCommand extends Command {
 
+	/**
+	 * @param WkrService $service The idempotent cross-object roll-up service.
+	 */
+	public function __construct(
+		private readonly WkrService $service,
+	) {
+		parent::__construct();
 
-    /**
-     * @param WkrService $service The idempotent cross-object roll-up service.
-     */
-    public function __construct(
-        private readonly WkrService $service,
-    ) {
-        parent::__construct();
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * @return void
+	 *
+	 * @spec openspec/changes/wkr-administration/specs/wkr-administration/spec.md#REQ-WKR-005
+	 */
+	protected function configure(): void {
+		$this->setName('hrmq:wkr:assess')
+			->setDescription('Compute and persist the werkkostenregeling (WKR) vrije-ruimte assessment for one administration/year, or every distinct pair found across the payslips with --all.')
+			->addOption('administration', null, InputOption::VALUE_REQUIRED, 'The administration to assess.')
+			->addOption('year', null, InputOption::VALUE_REQUIRED, 'The fiscal year to assess.')
+			->addOption('all', null, InputOption::VALUE_NONE, 'Assess every distinct (administration, year) pair found across the payslips instead of a single pair.');
 
+	}//end configure()
 
-    /**
-     * @return void
-     *
-     * @spec openspec/changes/wkr-administration/specs/wkr-administration/spec.md#REQ-WKR-005
-     */
-    protected function configure(): void
-    {
-        $this->setName('hrmq:wkr:assess')
-            ->setDescription('Compute and persist the werkkostenregeling (WKR) vrije-ruimte assessment for one administration/year, or every distinct pair found across the payslips with --all.')
-            ->addOption('administration', null, InputOption::VALUE_REQUIRED, 'The administration to assess.')
-            ->addOption('year', null, InputOption::VALUE_REQUIRED, 'The fiscal year to assess.')
-            ->addOption('all', null, InputOption::VALUE_NONE, 'Assess every distinct (administration, year) pair found across the payslips instead of a single pair.');
+	/**
+	 * @param InputInterface $input Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int 0 on success, 1 on failure.
+	 *
+	 * @spec openspec/changes/wkr-administration/specs/wkr-administration/spec.md#REQ-WKR-005
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output): int {
+		if ((bool)$input->getOption('all') === true) {
+			$outcomes = $this->service->assessAll();
+			if ($outcomes === []) {
+				$output->writeln('<comment>Geen (administratie, jaar)-paren gevonden in de loonstroken.</comment>');
+				return 0;
+			}
 
-    }//end configure()
+			$failed = 0;
+			foreach ($outcomes as $outcome) {
+				if ($this->printOutcome($output, $outcome) === false) {
+					$failed++;
+				}
+			}
 
+			return ($failed > 0) ? 1 : 0;
+		}//end if
 
-    /**
-     * @param InputInterface  $input  Console input.
-     * @param OutputInterface $output Console output.
-     *
-     * @return int 0 on success, 1 on failure.
-     *
-     * @spec openspec/changes/wkr-administration/specs/wkr-administration/spec.md#REQ-WKR-005
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        if ((bool) $input->getOption('all') === true) {
-            $outcomes = $this->service->assessAll();
-            if ($outcomes === []) {
-                $output->writeln('<comment>Geen (administratie, jaar)-paren gevonden in de loonstroken.</comment>');
-                return 0;
-            }
+		$administrationOption = $input->getOption('administration');
+		$administrationId = (is_string($administrationOption) === true) ? trim($administrationOption) : '';
+		if ($administrationId === '') {
+			$output->writeln('<error>--administration is verplicht (of gebruik --all).</error>');
+			return 1;
+		}
 
-            $failed = 0;
-            foreach ($outcomes as $outcome) {
-                if ($this->printOutcome($output, $outcome) === false) {
-                    $failed++;
-                }
-            }
+		$yearOption = $input->getOption('year');
+		$year = (is_numeric($yearOption) === true) ? (int)$yearOption : 0;
+		if ($year <= 0) {
+			$output->writeln('<error>--year is verplicht en moet een geldig jaartal zijn.</error>');
+			return 1;
+		}
 
-            return ($failed > 0) ? 1 : 0;
-        }//end if
+		$outcome = $this->service->assess($administrationId, $year);
 
-        $administrationOption = $input->getOption('administration');
-        $administrationId     = (is_string($administrationOption) === true) ? trim($administrationOption) : '';
-        if ($administrationId === '') {
-            $output->writeln('<error>--administration is verplicht (of gebruik --all).</error>');
-            return 1;
-        }
+		return ($this->printOutcome($output, $outcome) === true) ? 0 : 1;
+	}//end execute()
 
-        $yearOption = $input->getOption('year');
-        $year       = (is_numeric($yearOption) === true) ? (int) $yearOption : 0;
-        if ($year <= 0) {
-            $output->writeln('<error>--year is verplicht en moet een geldig jaartal zijn.</error>');
-            return 1;
-        }
+	/**
+	 * Print one assessment outcome, returning whether it succeeded.
+	 *
+	 * @param OutputInterface $output Console output.
+	 * @param array<string, mixed> $outcome The service outcome ({status, message, assessment}).
+	 *
+	 * @return bool
+	 */
+	private function printOutcome(OutputInterface $output, array $outcome): bool {
+		if ((string)$outcome['status'] !== 'ok') {
+			$output->writeln('<error>' . (string)$outcome['message'] . '</error>');
+			return false;
+		}
 
-        $outcome = $this->service->assess($administrationId, $year);
+		$assessment = (array)$outcome['assessment'];
 
-        return ($this->printOutcome($output, $outcome) === true) ? 0 : 1;
+		$output->writeln('<info>Hrmq WKR-beoordeling</info>');
+		$output->writeln(sprintf('  administratie      : %s', (string)$assessment['administrationId']));
+		$output->writeln(sprintf('  jaar               : %d', (int)$assessment['year']));
+		$output->writeln(sprintf('  fiscale loonsom    : %.2f', (float)$assessment['fiscaleLoonsom']));
+		$output->writeln(sprintf('  vrije ruimte       : %.2f', (float)$assessment['vrijeRuimte']));
+		$output->writeln(sprintf('  vrije ruimte gebruikt: %.2f', (float)$assessment['vrijeRuimteUsed']));
+		$output->writeln(sprintf('  vrije ruimte resterend: %.2f', (float)$assessment['vrijeRuimteRemaining']));
+		$output->writeln(sprintf('  overschrijding      : %.2f', (float)$assessment['excess']));
+		$output->writeln(sprintf('  eindheffing verschuldigd: %.2f', (float)$assessment['eindheffingDue']));
+		$output->writeln(sprintf('  status             : %s', (string)$assessment['status']));
+		$output->writeln('');
 
-    }//end execute()
-
-
-    /**
-     * Print one assessment outcome, returning whether it succeeded.
-     *
-     * @param OutputInterface       $output  Console output.
-     * @param array<string, mixed> $outcome The service outcome ({status, message, assessment}).
-     *
-     * @return bool
-     */
-    private function printOutcome(OutputInterface $output, array $outcome): bool
-    {
-        if ((string) $outcome['status'] !== 'ok') {
-            $output->writeln('<error>'.(string) $outcome['message'].'</error>');
-            return false;
-        }
-
-        $assessment = (array) $outcome['assessment'];
-
-        $output->writeln('<info>Hrmq WKR-beoordeling</info>');
-        $output->writeln(sprintf('  administratie      : %s', (string) $assessment['administrationId']));
-        $output->writeln(sprintf('  jaar               : %d', (int) $assessment['year']));
-        $output->writeln(sprintf('  fiscale loonsom    : %.2f', (float) $assessment['fiscaleLoonsom']));
-        $output->writeln(sprintf('  vrije ruimte       : %.2f', (float) $assessment['vrijeRuimte']));
-        $output->writeln(sprintf('  vrije ruimte gebruikt: %.2f', (float) $assessment['vrijeRuimteUsed']));
-        $output->writeln(sprintf('  vrije ruimte resterend: %.2f', (float) $assessment['vrijeRuimteRemaining']));
-        $output->writeln(sprintf('  overschrijding      : %.2f', (float) $assessment['excess']));
-        $output->writeln(sprintf('  eindheffing verschuldigd: %.2f', (float) $assessment['eindheffingDue']));
-        $output->writeln(sprintf('  status             : %s', (string) $assessment['status']));
-        $output->writeln('');
-
-        return true;
-
-    }//end printOutcome()
-
+		return true;
+	}//end printOutcome()
 
 }//end class

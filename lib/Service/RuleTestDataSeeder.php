@@ -46,373 +46,351 @@ use Psr\Log\LoggerInterface;
 /**
  * Makes the local test data compliant with the enforced rules (idempotent).
  */
-class RuleTestDataSeeder
-{
-    /**
-     * @param ContainerInterface $container    DI container for lazy ObjectService resolution.
-     * @param IAppConfig         $appConfig    App config for the register slug.
-     * @param IUserManager       $userManager  To resolve an admin user for updates.
-     * @param IGroupManager      $groupManager To find an admin user.
-     * @param LoggerInterface    $logger       Logger.
-     */
-    public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly IAppConfig $appConfig,
-        private readonly IUserManager $userManager,
-        private readonly IGroupManager $groupManager,
-        private readonly LoggerInterface $logger,
-    ) {
+class RuleTestDataSeeder {
+	/**
+	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
+	 * @param IAppConfig $appConfig App config for the register slug.
+	 * @param IUserManager $userManager To resolve an admin user for updates.
+	 * @param IGroupManager $groupManager To find an admin user.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+		private readonly IAppConfig $appConfig,
+		private readonly IUserManager $userManager,
+		private readonly IGroupManager $groupManager,
+		private readonly LoggerInterface $logger,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Seed/backfill the local test data to satisfy the enforced HR/labour rules.
-     *
-     * @return array<string, int> Counts: providerObjectsCreated, providerFieldsAdded, alreadyCompliant.
-     *
-     * @spec exclude no spec target exists for this seeder. Every other method in
-     * this class anchors to openspec/changes/hrm-rule-testdata-seed/specs/hrm-rule-engine/spec.md,
-     * and that file is not in the repository — the change was never archived to a
-     * canonical openspec/specs/ home and `find openspec -path "*hrm-rule*"` returns
-     * nothing. Anchoring seed() to it would add a fourth dangling tag rather than
-     * coverage. Pointing the whole class at a real target is its own change.
-     */
-    public function seed(): array
-    {
-        $register = $this->register();
-        $admin    = $this->adminUser();
-        $os       = $this->objectService();
+	/**
+	 * Seed/backfill the local test data to satisfy the enforced HR/labour rules.
+	 *
+	 * @return array<string, int> Counts: providerObjectsCreated, providerFieldsAdded, alreadyCompliant.
+	 *
+	 * @spec exclude no spec target exists for this seeder. Every other method in
+	 * this class anchors to openspec/changes/hrm-rule-testdata-seed/specs/hrm-rule-engine/spec.md,
+	 * and that file is not in the repository — the change was never archived to a
+	 * canonical openspec/specs/ home and `find openspec -path "*hrm-rule*"` returns
+	 * nothing. Anchoring seed() to it would add a fourth dangling tag rather than
+	 * coverage. Pointing the whole class at a real target is its own change.
+	 */
+	public function seed(): array {
+		$register = $this->register();
+		$admin = $this->adminUser();
+		$os = $this->objectService();
 
-        $alreadyCompliant = 0;
+		$alreadyCompliant = 0;
 
-        // Provider object seeding: create compliant sample objects for new object
-        // types that have no rows yet, so the provider's checks actually evaluate
-        // (RuleEngine::providerSeedObjects, from the SeedsObjects capability).
-        //
-        // A type whose provider ALSO implements UpsertsObjects (cao-library) is
-        // upserted on its declared natural key instead: create when no row
-        // carries that key value, update the matching row in place otherwise, so
-        // re-seeding after a corpus edit converges the display objects rather
-        // than either duplicating them or skipping because the type is non-empty
-        // (REQ-CAO-006).
-        $upsertKeys             = RuleEngine::providerUpsertKeys();
-        $providerObjectsCreated = 0;
-        $providerSeedObjects    = RuleEngine::providerSeedObjects();
+		// Provider object seeding: create compliant sample objects for new object
+		// types that have no rows yet, so the provider's checks actually evaluate
+		// (RuleEngine::providerSeedObjects, from the SeedsObjects capability).
+		//
+		// A type whose provider ALSO implements UpsertsObjects (cao-library) is
+		// upserted on its declared natural key instead: create when no row
+		// carries that key value, update the matching row in place otherwise, so
+		// re-seeding after a corpus edit converges the display objects rather
+		// than either duplicating them or skipping because the type is non-empty
+		// (REQ-CAO-006).
+		$upsertKeys = RuleEngine::providerUpsertKeys();
+		$providerObjectsCreated = 0;
+		$providerSeedObjects = RuleEngine::providerSeedObjects();
 
-        // 'Employee' is created FIRST, out of provider-declaration order: several
-        // other providers' samples (NlPayrollChecks' EmploymentContract/Payslip,
-        // NlWageGarnishmentChecks' Loonbeslag, ...) reference an employee via a
-        // synthetic `employeeNumber`-shaped `employeeId` placeholder (e.g.
-        // 'EMP-NL-0001') -- but the Employee schema types `employeeId` as
-        // `format: 'uuid'` on every referencing schema, so writing that literal
-        // placeholder always fails create. Resolving 'Employee' first means the
-        // real employee row (and its generated UUID) exists before
-        // resolveEmployeeIdPlaceholder() below tries to substitute it into the
-        // samples that reference it.
-        if (isset($providerSeedObjects['Employee']) === true) {
-            $providerObjectsCreated += $this->createMissingSamples($os, $register, $admin, 'Employee', $providerSeedObjects['Employee'], $alreadyCompliant);
-            unset($providerSeedObjects['Employee']);
-        }
+		// 'Employee' is created FIRST, out of provider-declaration order: several
+		// other providers' samples (NlPayrollChecks' EmploymentContract/Payslip,
+		// NlWageGarnishmentChecks' Loonbeslag, ...) reference an employee via a
+		// synthetic `employeeNumber`-shaped `employeeId` placeholder (e.g.
+		// 'EMP-NL-0001') -- but the Employee schema types `employeeId` as
+		// `format: 'uuid'` on every referencing schema, so writing that literal
+		// placeholder always fails create. Resolving 'Employee' first means the
+		// real employee row (and its generated UUID) exists before
+		// resolveEmployeeIdPlaceholder() below tries to substitute it into the
+		// samples that reference it.
+		if (isset($providerSeedObjects['Employee']) === true) {
+			$providerObjectsCreated += $this->createMissingSamples($os, $register, $admin, 'Employee', $providerSeedObjects['Employee'], $alreadyCompliant);
+			unset($providerSeedObjects['Employee']);
+		}
 
-        $employeeUuidsByNumber = $this->employeeUuidsByNumber($os, $register);
+		$employeeUuidsByNumber = $this->employeeUuidsByNumber($os, $register);
 
-        foreach ($providerSeedObjects as $objectType => $samples) {
-            if ($samples === []) {
-                continue;
-            }
+		foreach ($providerSeedObjects as $objectType => $samples) {
+			if ($samples === []) {
+				continue;
+			}
 
-            $samples = array_map(
-                fn (array $sample): array => $this->resolveEmployeeIdPlaceholder($sample, $employeeUuidsByNumber),
-                $samples
-            );
+			$samples = array_map(
+				fn (array $sample): array => $this->resolveEmployeeIdPlaceholder($sample, $employeeUuidsByNumber),
+				$samples
+			);
 
-            if (isset($upsertKeys[$objectType]) === true) {
-                $providerObjectsCreated += $this->upsertSamples($os, $register, $admin, $objectType, $samples, $upsertKeys[$objectType]);
-                continue;
-            }
+			if (isset($upsertKeys[$objectType]) === true) {
+				$providerObjectsCreated += $this->upsertSamples($os, $register, $admin, $objectType, $samples, $upsertKeys[$objectType]);
+				continue;
+			}
 
-            $providerObjectsCreated += $this->createMissingSamples($os, $register, $admin, $objectType, $samples, $alreadyCompliant);
-        }//end foreach
+			$providerObjectsCreated += $this->createMissingSamples($os, $register, $admin, $objectType, $samples, $alreadyCompliant);
+		}//end foreach
 
-        // Generic per-domain provider seeding: each CheckProvider may declare the
-        // test-data field defaults its checks expect (RuleEngine::providerSeedSpecs).
-        // Backfill any missing/empty field on the existing objects of that type.
-        $providerFieldsAdded = 0;
-        foreach (RuleEngine::providerSeedSpecs() as $objectType => $fields) {
-            if ($fields === []) {
-                continue;
-            }
+		// Generic per-domain provider seeding: each CheckProvider may declare the
+		// test-data field defaults its checks expect (RuleEngine::providerSeedSpecs).
+		// Backfill any missing/empty field on the existing objects of that type.
+		$providerFieldsAdded = 0;
+		foreach (RuleEngine::providerSeedSpecs() as $objectType => $fields) {
+			if ($fields === []) {
+				continue;
+			}
 
-            try {
-                $rows = $os->setRegister($register)->setSchema($objectType)->findAll(['limit' => 10000]);
-            } catch (\Throwable $e) {
-                $this->logger->warning('RuleTestDataSeeder: cannot load '.$objectType.' for provider seeding: '.$e->getMessage());
-                continue;
-            }
+			try {
+				$rows = $os->setRegister($register)->setSchema($objectType)->findAll(['limit' => 10000]);
+			} catch (\Throwable $e) {
+				$this->logger->warning('RuleTestDataSeeder: cannot load ' . $objectType . ' for provider seeding: ' . $e->getMessage());
+				continue;
+			}
 
-            foreach ($rows as $row) {
-                $obj     = is_array($row) === true ? $row : $row->jsonSerialize();
-                $rowId   = (string) ($obj['id'] ?? $obj['@self']['id'] ?? '');
-                $changed = false;
-                foreach ($fields as $field => $default) {
-                    if (array_key_exists($field, $obj) === false || trim((string) ($obj[$field] ?? '')) === '') {
-                        $obj[$field] = $default;
-                        $changed     = true;
-                    }
-                }
+			foreach ($rows as $row) {
+				$obj = is_array($row) === true ? $row : $row->jsonSerialize();
+				$rowId = (string)($obj['id'] ?? $obj['@self']['id'] ?? '');
+				$changed = false;
+				foreach ($fields as $field => $default) {
+					if (array_key_exists($field, $obj) === false || trim((string)($obj[$field] ?? '')) === '') {
+						$obj[$field] = $default;
+						$changed = true;
+					}
+				}
 
-                if ($changed === false) {
-                    $alreadyCompliant++;
-                    continue;
-                }
+				if ($changed === false) {
+					$alreadyCompliant++;
+					continue;
+				}
 
-                unset($obj['@self']);
-                try {
-                    $os->saveObject(object: $obj, register: $register, schema: $objectType, uuid: $rowId, _rbac: false, _multitenancy: false, currentUser: $admin);
-                    $providerFieldsAdded++;
-                } catch (\Throwable $e) {
-                    $this->logger->warning('RuleTestDataSeeder: provider field backfill failed for '.$objectType.' '.$rowId.': '.$e->getMessage());
-                }
-            }//end foreach
-        }//end foreach
+				unset($obj['@self']);
+				try {
+					$os->saveObject(object: $obj, register: $register, schema: $objectType, uuid: $rowId, _rbac: false, _multitenancy: false, currentUser: $admin);
+					$providerFieldsAdded++;
+				} catch (\Throwable $e) {
+					$this->logger->warning('RuleTestDataSeeder: provider field backfill failed for ' . $objectType . ' ' . $rowId . ': ' . $e->getMessage());
+				}
+			}//end foreach
+		}//end foreach
 
-        return [
-            'providerObjectsCreated' => $providerObjectsCreated,
-            'providerFieldsAdded'    => $providerFieldsAdded,
-            'alreadyCompliant'       => $alreadyCompliant,
-        ];
+		return [
+			'providerObjectsCreated' => $providerObjectsCreated,
+			'providerFieldsAdded' => $providerFieldsAdded,
+			'alreadyCompliant' => $alreadyCompliant,
+		];
 
-    }//end seed()
+	}//end seed()
 
-    /**
-     * Upsert provider samples on a natural key (cao-library, REQ-CAO-006):
-     * for each sample, find the existing row whose `$keyField` equals the
-     * sample's key value and update it in place (preserving its object id);
-     * create a new object when none matches. Idempotent: re-running creates no
-     * duplicate and converges each row's fields to the sample. Returns the
-     * number of objects written (created or updated).
-     *
-     * @param mixed                                   $os         The ObjectService.
-     * @param string                                  $register   Register slug.
-     * @param IUser|null                              $admin      Admin user for the write.
-     * @param string                                  $objectType Schema name.
-     * @param array<int, array<string, mixed>>        $samples    The provider's samples.
-     * @param string                                  $keyField   The natural-key field name.
-     *
-     * @return int
-     */
-    private function upsertSamples(mixed $os, string $register, ?IUser $admin, string $objectType, array $samples, string $keyField): int
-    {
-        try {
-            $rows = $os->setRegister($register)->setSchema($objectType)->findAll(['limit' => 10000]);
-        } catch (\Throwable $e) {
-            $this->logger->warning('RuleTestDataSeeder: cannot load '.$objectType.' for upsert seeding: '.$e->getMessage());
-            return 0;
-        }
+	/**
+	 * Upsert provider samples on a natural key (cao-library, REQ-CAO-006):
+	 * for each sample, find the existing row whose `$keyField` equals the
+	 * sample's key value and update it in place (preserving its object id);
+	 * create a new object when none matches. Idempotent: re-running creates no
+	 * duplicate and converges each row's fields to the sample. Returns the
+	 * number of objects written (created or updated).
+	 *
+	 * @param mixed $os The ObjectService.
+	 * @param string $register Register slug.
+	 * @param IUser|null $admin Admin user for the write.
+	 * @param string $objectType Schema name.
+	 * @param array<int, array<string, mixed>> $samples The provider's samples.
+	 * @param string $keyField The natural-key field name.
+	 *
+	 * @return int
+	 */
+	private function upsertSamples(mixed $os, string $register, ?IUser $admin, string $objectType, array $samples, string $keyField): int {
+		try {
+			$rows = $os->setRegister($register)->setSchema($objectType)->findAll(['limit' => 10000]);
+		} catch (\Throwable $e) {
+			$this->logger->warning('RuleTestDataSeeder: cannot load ' . $objectType . ' for upsert seeding: ' . $e->getMessage());
+			return 0;
+		}
 
-        $idByKey = [];
-        foreach ((is_array($rows) === true ? $rows : []) as $row) {
-            $obj      = is_array($row) === true ? $row : $row->jsonSerialize();
-            $keyValue = trim((string) ($obj[$keyField] ?? ''));
-            if ($keyValue === '') {
-                continue;
-            }
+		$idByKey = [];
+		foreach ((is_array($rows) === true ? $rows : []) as $row) {
+			$obj = is_array($row) === true ? $row : $row->jsonSerialize();
+			$keyValue = trim((string)($obj[$keyField] ?? ''));
+			if ($keyValue === '') {
+				continue;
+			}
 
-            $idByKey[$keyValue] = (string) ($obj['id'] ?? $obj['@self']['id'] ?? '');
-        }
+			$idByKey[$keyValue] = (string)($obj['id'] ?? $obj['@self']['id'] ?? '');
+		}
 
-        $written = 0;
-        foreach ($samples as $sample) {
-            $keyValue = trim((string) ($sample[$keyField] ?? ''));
-            if ($keyValue === '') {
-                continue;
-            }
+		$written = 0;
+		foreach ($samples as $sample) {
+			$keyValue = trim((string)($sample[$keyField] ?? ''));
+			if ($keyValue === '') {
+				continue;
+			}
 
-            $existingId = ($idByKey[$keyValue] ?? '');
-            try {
-                $this->writeSample($os, $register, $admin, $objectType, $sample, $existingId);
-                $written++;
-            } catch (\Throwable $e) {
-                $this->logger->warning('RuleTestDataSeeder: upsert '.$objectType.' '.$keyValue.' failed: '.$e->getMessage());
-            }
-        }//end foreach
+			$existingId = ($idByKey[$keyValue] ?? '');
+			try {
+				$this->writeSample($os, $register, $admin, $objectType, $sample, $existingId);
+				$written++;
+			} catch (\Throwable $e) {
+				$this->logger->warning('RuleTestDataSeeder: upsert ' . $objectType . ' ' . $keyValue . ' failed: ' . $e->getMessage());
+			}
+		}//end foreach
 
-        return $written;
+		return $written;
+	}//end upsertSamples()
 
-    }//end upsertSamples()
+	/**
+	 * Write one sample, updating in place when a matching object already exists.
+	 *
+	 * Extracted from {@see self::upsertSamples()}: the update and create calls
+	 * differ only in whether `uuid:` is supplied, so an early return expresses
+	 * the choice without an else branch.
+	 *
+	 * @param mixed $objectService OpenRegister ObjectService.
+	 * @param string $register Register slug.
+	 * @param IUser|null $admin Admin user for the write.
+	 * @param string $objectType Schema name.
+	 * @param array<string, mixed> $sample The sample to write.
+	 * @param string $existingId Existing object id, or '' to create.
+	 *
+	 * @return void
+	 */
+	private function writeSample(mixed $objectService, string $register, ?IUser $admin, string $objectType, array $sample, string $existingId): void {
+		if ($existingId !== '') {
+			$objectService->saveObject(object: $sample, register: $register, schema: $objectType, uuid: $existingId, _rbac: false, _multitenancy: false, currentUser: $admin);
+			return;
+		}
 
+		$objectService->saveObject(object: $sample, register: $register, schema: $objectType, _rbac: false, _multitenancy: false, currentUser: $admin);
 
-    /**
-     * Write one sample, updating in place when a matching object already exists.
-     *
-     * Extracted from {@see self::upsertSamples()}: the update and create calls
-     * differ only in whether `uuid:` is supplied, so an early return expresses
-     * the choice without an else branch.
-     *
-     * @param mixed                $objectService OpenRegister ObjectService.
-     * @param string               $register      Register slug.
-     * @param IUser|null           $admin         Admin user for the write.
-     * @param string               $objectType    Schema name.
-     * @param array<string, mixed> $sample        The sample to write.
-     * @param string               $existingId    Existing object id, or '' to create.
-     *
-     * @return void
-     */
-    private function writeSample(mixed $objectService, string $register, ?IUser $admin, string $objectType, array $sample, string $existingId): void
-    {
-        if ($existingId !== '') {
-            $objectService->saveObject(object: $sample, register: $register, schema: $objectType, uuid: $existingId, _rbac: false, _multitenancy: false, currentUser: $admin);
-            return;
-        }
+	}//end writeSample()
 
-        $objectService->saveObject(object: $sample, register: $register, schema: $objectType, _rbac: false, _multitenancy: false, currentUser: $admin);
+	/**
+	 * Create the provider's sample objects for one object type when the type
+	 * currently has no rows (create-once-when-empty, the default SeedsObjects
+	 * behaviour for providers not also implementing UpsertsObjects).
+	 *
+	 * @param mixed $os The ObjectService.
+	 * @param string $register Register slug.
+	 * @param IUser|null $admin Admin user for the write.
+	 * @param string $objectType Schema name.
+	 * @param array<int, array<string, mixed>> $samples The provider's samples.
+	 * @param int $alreadyCompliant Incremented (by reference) when the type already has rows.
+	 *
+	 * @return int The number of objects created.
+	 */
+	private function createMissingSamples(mixed $os, string $register, ?IUser $admin, string $objectType, array $samples, int &$alreadyCompliant): int {
+		try {
+			$existing = $os->setRegister($register)->setSchema($objectType)->findAll(['limit' => 1]);
+		} catch (\Throwable $e) {
+			$this->logger->warning('RuleTestDataSeeder: cannot probe ' . $objectType . ' for object seeding: ' . $e->getMessage());
+			return 0;
+		}
 
-    }//end writeSample()
+		if (is_array($existing) === true && $existing !== []) {
+			$alreadyCompliant++;
+			return 0;
+		}
 
+		$created = 0;
+		foreach ($samples as $sample) {
+			try {
+				$os->saveObject(object: $sample, register: $register, schema: $objectType, _rbac: false, _multitenancy: false, currentUser: $admin);
+				$created++;
+			} catch (\Throwable $e) {
+				$this->logger->warning('RuleTestDataSeeder: sample ' . $objectType . ' create failed: ' . $e->getMessage());
+			}
+		}
 
-    /**
-     * Create the provider's sample objects for one object type when the type
-     * currently has no rows (create-once-when-empty, the default SeedsObjects
-     * behaviour for providers not also implementing UpsertsObjects).
-     *
-     * @param mixed                             $os               The ObjectService.
-     * @param string                            $register         Register slug.
-     * @param IUser|null                        $admin            Admin user for the write.
-     * @param string                            $objectType       Schema name.
-     * @param array<int, array<string, mixed>>  $samples          The provider's samples.
-     * @param int                               $alreadyCompliant Incremented (by reference) when the type already has rows.
-     *
-     * @return int The number of objects created.
-     */
-    private function createMissingSamples(mixed $os, string $register, ?IUser $admin, string $objectType, array $samples, int &$alreadyCompliant): int
-    {
-        try {
-            $existing = $os->setRegister($register)->setSchema($objectType)->findAll(['limit' => 1]);
-        } catch (\Throwable $e) {
-            $this->logger->warning('RuleTestDataSeeder: cannot probe '.$objectType.' for object seeding: '.$e->getMessage());
-            return 0;
-        }
+		return $created;
+	}//end createMissingSamples()
 
-        if (is_array($existing) === true && $existing !== []) {
-            $alreadyCompliant++;
-            return 0;
-        }
+	/**
+	 * Map every seeded Employee's `employeeNumber` to its real generated UUID.
+	 *
+	 * Several providers' seed samples reference an employee via that synthetic
+	 * natural key in an `employeeId` field (e.g. 'EMP-NL-0001'), but every
+	 * schema typing `employeeId` also requires `format: 'uuid'` -- writing the
+	 * natural key literally always fails create. This map lets
+	 * resolveEmployeeIdPlaceholder() substitute the real value.
+	 *
+	 * @param mixed $os The ObjectService.
+	 * @param string $register Register slug.
+	 *
+	 * @return array<string, string> employeeNumber => uuid.
+	 */
+	private function employeeUuidsByNumber(mixed $os, string $register): array {
+		try {
+			$rows = $os->setRegister($register)->setSchema('Employee')->findAll(['limit' => 10000]);
+		} catch (\Throwable $e) {
+			$this->logger->warning('RuleTestDataSeeder: cannot load Employee for employeeId resolution: ' . $e->getMessage());
+			return [];
+		}
 
-        $created = 0;
-        foreach ($samples as $sample) {
-            try {
-                $os->saveObject(object: $sample, register: $register, schema: $objectType, _rbac: false, _multitenancy: false, currentUser: $admin);
-                $created++;
-            } catch (\Throwable $e) {
-                $this->logger->warning('RuleTestDataSeeder: sample '.$objectType.' create failed: '.$e->getMessage());
-            }
-        }
+		$map = [];
+		foreach ((is_array($rows) === true ? $rows : []) as $row) {
+			$obj = is_array($row) === true ? $row : $row->jsonSerialize();
+			$employeeNumber = trim((string)($obj['employeeNumber'] ?? ''));
+			$uuid = (string)($obj['id'] ?? $obj['@self']['id'] ?? '');
+			if ($employeeNumber !== '' && $uuid !== '') {
+				$map[$employeeNumber] = $uuid;
+			}
+		}
 
-        return $created;
+		return $map;
+	}//end employeeUuidsByNumber()
 
-    }//end createMissingSamples()
+	/**
+	 * Substitute a sample's `employeeId` field when it carries a synthetic
+	 * employeeNumber-shaped placeholder (e.g. 'EMP-NL-0001') matching a real
+	 * seeded Employee, with that Employee's actual UUID.
+	 *
+	 * A sample with no `employeeId`, or one that does not match a known
+	 * placeholder (e.g. the EuUsPayrollChecks DE/FR/US samples, which
+	 * reference employees this seeder never creates), passes through
+	 * unchanged -- the create attempt then fails exactly as it did before this
+	 * resolution step existed.
+	 *
+	 * @param array<string, mixed> $sample The seed sample.
+	 * @param array<string, string> $employeeUuidsByNumber employeeNumber => uuid map.
+	 *
+	 * @return array<string, mixed> The sample, with `employeeId` resolved when possible.
+	 */
+	private function resolveEmployeeIdPlaceholder(array $sample, array $employeeUuidsByNumber): array {
+		$employeeId = ($sample['employeeId'] ?? null);
+		if (is_string($employeeId) === true && isset($employeeUuidsByNumber[$employeeId]) === true) {
+			$sample['employeeId'] = $employeeUuidsByNumber[$employeeId];
+		}
 
+		return $sample;
+	}//end resolveEmployeeIdPlaceholder()
 
-    /**
-     * Map every seeded Employee's `employeeNumber` to its real generated UUID.
-     *
-     * Several providers' seed samples reference an employee via that synthetic
-     * natural key in an `employeeId` field (e.g. 'EMP-NL-0001'), but every
-     * schema typing `employeeId` also requires `format: 'uuid'` -- writing the
-     * natural key literally always fails create. This map lets
-     * resolveEmployeeIdPlaceholder() substitute the real value.
-     *
-     * @param mixed  $os       The ObjectService.
-     * @param string $register Register slug.
-     *
-     * @return array<string, string> employeeNumber => uuid.
-     */
-    private function employeeUuidsByNumber(mixed $os, string $register): array
-    {
-        try {
-            $rows = $os->setRegister($register)->setSchema('Employee')->findAll(['limit' => 10000]);
-        } catch (\Throwable $e) {
-            $this->logger->warning('RuleTestDataSeeder: cannot load Employee for employeeId resolution: '.$e->getMessage());
-            return [];
-        }
+	/**
+	 * Resolve an admin user (needed to update seeded objects' folders), or null.
+	 *
+	 * @return IUser|null
+	 */
+	private function adminUser(): ?IUser {
+		$admins = $this->groupManager->get('admin');
+		if ($admins !== null) {
+			foreach ($admins->getUsers() as $user) {
+				return $user;
+			}
+		}
 
-        $map = [];
-        foreach ((is_array($rows) === true ? $rows : []) as $row) {
-            $obj            = is_array($row) === true ? $row : $row->jsonSerialize();
-            $employeeNumber = trim((string) ($obj['employeeNumber'] ?? ''));
-            $uuid           = (string) ($obj['id'] ?? $obj['@self']['id'] ?? '');
-            if ($employeeNumber !== '' && $uuid !== '') {
-                $map[$employeeNumber] = $uuid;
-            }
-        }
+		return $this->userManager->get('admin');
+	}//end adminUser()
 
-        return $map;
+	/**
+	 * @return mixed The OpenRegister ObjectService.
+	 */
+	private function objectService(): mixed {
+		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+	}//end objectService()
 
-    }//end employeeUuidsByNumber()
-
-
-    /**
-     * Substitute a sample's `employeeId` field when it carries a synthetic
-     * employeeNumber-shaped placeholder (e.g. 'EMP-NL-0001') matching a real
-     * seeded Employee, with that Employee's actual UUID.
-     *
-     * A sample with no `employeeId`, or one that does not match a known
-     * placeholder (e.g. the EuUsPayrollChecks DE/FR/US samples, which
-     * reference employees this seeder never creates), passes through
-     * unchanged -- the create attempt then fails exactly as it did before this
-     * resolution step existed.
-     *
-     * @param array<string, mixed>  $sample                The seed sample.
-     * @param array<string, string> $employeeUuidsByNumber employeeNumber => uuid map.
-     *
-     * @return array<string, mixed> The sample, with `employeeId` resolved when possible.
-     */
-    private function resolveEmployeeIdPlaceholder(array $sample, array $employeeUuidsByNumber): array
-    {
-        $employeeId = ($sample['employeeId'] ?? null);
-        if (is_string($employeeId) === true && isset($employeeUuidsByNumber[$employeeId]) === true) {
-            $sample['employeeId'] = $employeeUuidsByNumber[$employeeId];
-        }
-
-        return $sample;
-
-    }//end resolveEmployeeIdPlaceholder()
-
-
-    /**
-     * Resolve an admin user (needed to update seeded objects' folders), or null.
-     *
-     * @return IUser|null
-     */
-    private function adminUser(): ?IUser
-    {
-        $admins = $this->groupManager->get('admin');
-        if ($admins !== null) {
-            foreach ($admins->getUsers() as $user) {
-                return $user;
-            }
-        }
-
-        return $this->userManager->get('admin');
-
-    }//end adminUser()
-
-    /**
-     * @return mixed The OpenRegister ObjectService.
-     */
-    private function objectService(): mixed
-    {
-        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-    }//end objectService()
-
-    /**
-     * @return string The configured register slug.
-     */
-    private function register(): string
-    {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');
-        return $register === '' ? 'hrmq' : $register;
-
-    }//end register()
+	/**
+	 * @return string The configured register slug.
+	 */
+	private function register(): string {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');
+		return $register === '' ? 'hrmq' : $register;
+	}//end register()
 }//end class

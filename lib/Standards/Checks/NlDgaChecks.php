@@ -45,94 +45,84 @@ use OCA\Hrmq\Payroll\TaxTables;
  * The gebruikelijkloon-norm self-check: a DGA's annualised salary vs the
  * sourced 2026 floor.
  */
-final class NlDgaChecks implements CheckProvider
-{
+final class NlDgaChecks implements CheckProvider {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-004
+	 */
+	public static function checks(): array {
+		return [
+			'Employee' => [
+				'nl-gebruikelijkloon-norm' => static fn (array $o): bool => self::meetsGebruikelijkloonNorm($o),
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     *
-     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-004
-     */
-    public static function checks(): array
-    {
-        return [
-            'Employee' => [
-                'nl-gebruikelijkloon-norm' => static fn(array $o): bool => self::meetsGebruikelijkloonNorm($o),
-            ],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-004
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * The `nl-gebruikelijkloon-norm` predicate (spec.md REQ-DGA-004): vacuous
+	 * for a non-DGA employee, vacuous when justified, vacuous when there is
+	 * no salary to evaluate yet -- else the annualised
+	 * `grossMonthlySalary x 12` must reach the loaded tables'
+	 * gebruikelijkloon norm.
+	 *
+	 * single-person-modes (REQ-SPM-006/D5): exposed `public` so the
+	 * self-service `PayrollController::dgaStatus()` endpoint can REUSE this
+	 * exact predicate for its `met` verdict -- the ONE new caller. The norm
+	 * comparison is never reimplemented; only its invocation surface is new.
+	 * The predicate itself is unchanged.
+	 *
+	 * @param array<string, mixed> $o The Employee object.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-004
+	 * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-006
+	 */
+	public static function meetsGebruikelijkloonNorm(array $o): bool {
+		if (($o['isDga'] ?? false) !== true) {
+			// Vacuous: not a DGA, the norm does not apply.
+			return true;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     *
-     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-004
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		if (trim((string)($o['gebruikelijkloonJustification'] ?? '')) !== '') {
+			// MVP: presence-only exemption (Non-Goal: content validation).
+			return true;
+		}
 
-    }//end seedSpec()
+		$grossMonthly = ($o['grossMonthlySalary'] ?? null);
+		if (is_numeric($grossMonthly) === false) {
+			// No salary to evaluate yet -- the hourly/no-salary path is out
+			// of scope; never a false violation.
+			return true;
+		}
 
+		$annualCents = (int)round(((float)$grossMonthly) * 12 * 100);
 
-    /**
-     * The `nl-gebruikelijkloon-norm` predicate (spec.md REQ-DGA-004): vacuous
-     * for a non-DGA employee, vacuous when justified, vacuous when there is
-     * no salary to evaluate yet -- else the annualised
-     * `grossMonthlySalary x 12` must reach the loaded tables'
-     * gebruikelijkloon norm.
-     *
-     * single-person-modes (REQ-SPM-006/D5): exposed `public` so the
-     * self-service `PayrollController::dgaStatus()` endpoint can REUSE this
-     * exact predicate for its `met` verdict -- the ONE new caller. The norm
-     * comparison is never reimplemented; only its invocation surface is new.
-     * The predicate itself is unchanged.
-     *
-     * @param array<string, mixed> $o The Employee object.
-     *
-     * @return bool
-     *
-     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-004
-     * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-006
-     */
-    public static function meetsGebruikelijkloonNorm(array $o): bool
-    {
-        if (($o['isDga'] ?? false) !== true) {
-            // Vacuous: not a DGA, the norm does not apply.
-            return true;
-        }
+		$ids = TaxTables::availableIds();
+		if ($ids === []) {
+			// Defensive: no table loaded, never hit outside a broken install.
+			return true;
+		}
 
-        if (trim((string) ($o['gebruikelijkloonJustification'] ?? '')) !== '') {
-            // MVP: presence-only exemption (Non-Goal: content validation).
-            return true;
-        }
+		$norm = TaxTables::load(max($ids))->gebruikelijkloon()['jaarnormCents'];
 
-        $grossMonthly = ($o['grossMonthlySalary'] ?? null);
-        if (is_numeric($grossMonthly) === false) {
-            // No salary to evaluate yet -- the hourly/no-salary path is out
-            // of scope; never a false violation.
-            return true;
-        }
-
-        $annualCents = (int) round(((float) $grossMonthly) * 12 * 100);
-
-        $ids = TaxTables::availableIds();
-        if ($ids === []) {
-            // Defensive: no table loaded, never hit outside a broken install.
-            return true;
-        }
-
-        $norm = TaxTables::load(max($ids))->gebruikelijkloon()['jaarnormCents'];
-
-        return $annualCents >= $norm;
-
-    }//end meetsGebruikelijkloonNorm()
-
+		return $annualCents >= $norm;
+	}//end meetsGebruikelijkloonNorm()
 
 }//end class

@@ -47,284 +47,249 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/uitzend-flexpool/specs/uitzend-flexpool/spec.md
  */
-class NlUitzendChecksTest extends TestCase
-{
+class NlUitzendChecksTest extends TestCase {
 
-    /**
-     * The registered EmploymentContract predicates, keyed by rule id.
-     *
-     * @var array<string, callable>
-     */
-    private array $checks;
+	/**
+	 * The registered EmploymentContract predicates, keyed by rule id.
+	 *
+	 * @var array<string, callable>
+	 */
+	private array $checks;
 
+	/**
+	 * Reset the statically-memoised engine/catalogue so each test loads the
+	 * real corpus fresh.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		RuleEngine::reset();
+		RuleCatalogue::reset();
+		$this->checks = NlUitzendChecks::checks()['EmploymentContract'];
 
-    /**
-     * Reset the statically-memoised engine/catalogue so each test loads the
-     * real corpus fresh.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        RuleEngine::reset();
-        RuleCatalogue::reset();
-        $this->checks = NlUitzendChecks::checks()['EmploymentContract'];
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * @return void
+	 */
+	protected function tearDown(): void {
+		RuleEngine::reset();
+		RuleCatalogue::reset();
 
+	}//end tearDown()
 
-    /**
-     * @return void
-     */
-    protected function tearDown(): void
-    {
-        RuleEngine::reset();
-        RuleCatalogue::reset();
+	/**
+	 * A minimal agency EmploymentContract fixture; each test overrides the
+	 * fields it exercises.
+	 *
+	 * @param array<string, mixed> $overrides Fields to override.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function contract(array $overrides = []): array {
+		return array_merge(
+			[
+				'employeeId' => 'employee-uitzend-abu',
+				'type' => 'agency',
+				'uitzendFase' => 'A',
+				'uitzendbedingVanToepassing' => true,
+				'hourlyWage' => 16.50,
+				'inlenersbeloningReferentie' => 'Inlener loonschaal referentie, schaal 3',
+			],
+			$overrides
+		);
 
-    }//end tearDown()
+	}//end contract()
 
+	/**
+	 * Whether the evaluated violations contain a given rule id.
+	 *
+	 * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
+	 * @param string $ruleId The rule id to look for.
+	 *
+	 * @return bool
+	 */
+	private function hasViolation(array $violations, string $ruleId): bool {
+		foreach ($violations as $violation) {
+			if ($violation->ruleId === $ruleId) {
+				return true;
+			}
+		}
 
-    /**
-     * A minimal agency EmploymentContract fixture; each test overrides the
-     * fields it exercises.
-     *
-     * @param array<string, mixed> $overrides Fields to override.
-     *
-     * @return array<string, mixed>
-     */
-    private function contract(array $overrides=[]): array
-    {
-        return array_merge(
-            [
-                'employeeId'                 => 'employee-uitzend-abu',
-                'type'                       => 'agency',
-                'uitzendFase'                => 'A',
-                'uitzendbedingVanToepassing' => true,
-                'hourlyWage'                 => 16.50,
-                'inlenersbeloningReferentie' => 'Inlener loonschaal referentie, schaal 3',
-            ],
-            $overrides
-        );
+		return false;
+	}//end hasViolation()
 
-    }//end contract()
+	/**
+	 * The single violation for a given rule id, or null.
+	 *
+	 * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
+	 * @param string $ruleId The rule id.
+	 *
+	 * @return \OCA\Hrmq\Standards\Violation|null
+	 */
+	private function violationFor(array $violations, string $ruleId): mixed {
+		foreach ($violations as $violation) {
+			if ($violation->ruleId === $ruleId) {
+				return $violation;
+			}
+		}
 
+		return null;
+	}//end violationFor()
 
-    /**
-     * Whether the evaluated violations contain a given rule id.
-     *
-     * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
-     * @param string                                    $ruleId     The rule id to look for.
-     *
-     * @return bool
-     */
-    private function hasViolation(array $violations, string $ruleId): bool
-    {
-        foreach ($violations as $violation) {
-            if ($violation->ruleId === $ruleId) {
-                return true;
-            }
-        }
+	// -- reachability --
 
-        return false;
+	/**
+	 * Both rules are registered against EmploymentContract AND wired to the
+	 * corpus -- reachable, not orphaned predicates.
+	 *
+	 * @return void
+	 */
+	public function testBothChecksAreReachableFromTheEngine(): void {
+		$this->assertArrayHasKey('nl-uitzendbeding-alleen-fase-a', $this->checks);
+		$this->assertArrayHasKey('nl-inlenersbeloning-onderbouwing-vereist', $this->checks);
+		$this->assertContains('nl-uitzendbeding-alleen-fase-a', RuleEngine::checkedRuleIds());
+		$this->assertContains('nl-inlenersbeloning-onderbouwing-vereist', RuleEngine::checkedRuleIds());
 
-    }//end hasViolation()
+		$machineCheckable = array_column(RuleCatalogue::machineCheckable(), 'id');
+		$this->assertContains('nl-uitzendbeding-alleen-fase-a', $machineCheckable);
+		$this->assertContains('nl-inlenersbeloning-onderbouwing-vereist', $machineCheckable);
 
+	}//end testBothChecksAreReachableFromTheEngine()
 
-    /**
-     * The single violation for a given rule id, or null.
-     *
-     * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
-     * @param string                                    $ruleId     The rule id.
-     *
-     * @return \OCA\Hrmq\Standards\Violation|null
-     */
-    private function violationFor(array $violations, string $ruleId): mixed
-    {
-        foreach ($violations as $violation) {
-            if ($violation->ruleId === $ruleId) {
-                return $violation;
-            }
-        }
+	// -- nl-uitzendbeding-alleen-fase-a (REQ-UITZ-002) --
 
-        return null;
+	/**
+	 * @return void
+	 */
+	public function testBedingTrueInFaseAPasses(): void {
+		$this->assertTrue(($this->checks['nl-uitzendbeding-alleen-fase-a'])($this->contract(['uitzendFase' => 'A', 'uitzendbedingVanToepassing' => true])));
 
-    }//end violationFor()
+	}//end testBedingTrueInFaseAPasses()
 
+	/**
+	 * @return void
+	 */
+	public function testBedingTrueInFaseBViolatesAtMandatorySeverity(): void {
+		$contract = $this->contract(['uitzendFase' => 'B', 'uitzendbedingVanToepassing' => true]);
+		$this->assertFalse(($this->checks['nl-uitzendbeding-alleen-fase-a'])($contract));
 
-    // -- reachability --
+		$violations = RuleEngine::evaluate('EmploymentContract', $contract, ['jurisdiction' => 'NL']);
+		$violation = $this->violationFor($violations, 'nl-uitzendbeding-alleen-fase-a');
+		$this->assertNotNull($violation, 'Beding true past fase A must raise nl-uitzendbeding-alleen-fase-a.');
+		$this->assertSame('mandatory', $violation->severity);
 
+	}//end testBedingTrueInFaseBViolatesAtMandatorySeverity()
 
-    /**
-     * Both rules are registered against EmploymentContract AND wired to the
-     * corpus -- reachable, not orphaned predicates.
-     *
-     * @return void
-     */
-    public function testBothChecksAreReachableFromTheEngine(): void
-    {
-        $this->assertArrayHasKey('nl-uitzendbeding-alleen-fase-a', $this->checks);
-        $this->assertArrayHasKey('nl-inlenersbeloning-onderbouwing-vereist', $this->checks);
-        $this->assertContains('nl-uitzendbeding-alleen-fase-a', RuleEngine::checkedRuleIds());
-        $this->assertContains('nl-inlenersbeloning-onderbouwing-vereist', RuleEngine::checkedRuleIds());
+	/**
+	 * @return void
+	 */
+	public function testBedingFalseInAnyFasePassesVacuously(): void {
+		foreach (['A', 'B', 'C', null] as $fase) {
+			$contract = $this->contract(['uitzendFase' => $fase, 'uitzendbedingVanToepassing' => false]);
+			$this->assertTrue(
+				($this->checks['nl-uitzendbeding-alleen-fase-a'])($contract),
+				sprintf('beding false with fase %s must pass vacuously', var_export($fase, true))
+			);
+		}
 
-        $machineCheckable = array_column(RuleCatalogue::machineCheckable(), 'id');
-        $this->assertContains('nl-uitzendbeding-alleen-fase-a', $machineCheckable);
-        $this->assertContains('nl-inlenersbeloning-onderbouwing-vereist', $machineCheckable);
+	}//end testBedingFalseInAnyFasePassesVacuously()
 
-    }//end testBothChecksAreReachableFromTheEngine()
+	/**
+	 * The `type === 'agency'` guard: a NON-agency contract carrying
+	 * uitzendbedingVanToepassing:true past fase A is NEVER evaluated by
+	 * nl-uitzendbeding-alleen-fase-a -- neither the raw predicate nor the real
+	 * RuleEngine raises a violation (spec.md REQ-UITZ-002 "Non-agency contracts
+	 * are never evaluated").
+	 *
+	 * @return void
+	 */
+	public function testNonAgencyContractIsNeverEvaluatedByUitzendbedingRule(): void {
+		foreach (['permanent', 'temporary', 'minijob'] as $type) {
+			$contract = $this->contract(['type' => $type, 'uitzendFase' => 'B', 'uitzendbedingVanToepassing' => true]);
 
+			$this->assertTrue(
+				($this->checks['nl-uitzendbeding-alleen-fase-a'])($contract),
+				sprintf('a %s contract must never be evaluated by the uitzendbeding rule', $type)
+			);
 
-    // -- nl-uitzendbeding-alleen-fase-a (REQ-UITZ-002) --
+			$violations = RuleEngine::evaluate('EmploymentContract', $contract, ['jurisdiction' => 'NL']);
+			$this->assertFalse(
+				$this->hasViolation($violations, 'nl-uitzendbeding-alleen-fase-a'),
+				sprintf('a %s contract must raise no nl-uitzendbeding-alleen-fase-a violation', $type)
+			);
+		}
 
+	}//end testNonAgencyContractIsNeverEvaluatedByUitzendbedingRule()
 
-    /**
-     * @return void
-     */
-    public function testBedingTrueInFaseAPasses(): void
-    {
-        $this->assertTrue(($this->checks['nl-uitzendbeding-alleen-fase-a'])($this->contract(['uitzendFase' => 'A', 'uitzendbedingVanToepassing' => true])));
+	// -- nl-inlenersbeloning-onderbouwing-vereist (REQ-UITZ-003) --
 
-    }//end testBedingTrueInFaseAPasses()
+	/**
+	 * @return void
+	 */
+	public function testInlenersbeloningPresentPasses(): void {
+		$contract = $this->contract(['hourlyWage' => 16.50, 'inlenersbeloningReferentie' => 'Klant loonschaal referentie, functie magazijnmedewerker, schaal 3']);
+		$this->assertTrue(($this->checks['nl-inlenersbeloning-onderbouwing-vereist'])($contract));
 
+	}//end testInlenersbeloningPresentPasses()
 
-    /**
-     * @return void
-     */
-    public function testBedingTrueInFaseBViolatesAtMandatorySeverity(): void
-    {
-        $contract = $this->contract(['uitzendFase' => 'B', 'uitzendbedingVanToepassing' => true]);
-        $this->assertFalse(($this->checks['nl-uitzendbeding-alleen-fase-a'])($contract));
+	/**
+	 * @return void
+	 */
+	public function testInlenersbeloningAbsentWithWageViolatesAtMandatorySeverity(): void {
+		foreach ([null, '', '   '] as $ref) {
+			$contract = $this->contract(['hourlyWage' => 16.50, 'inlenersbeloningReferentie' => $ref]);
+			$this->assertFalse(
+				($this->checks['nl-inlenersbeloning-onderbouwing-vereist'])($contract),
+				sprintf('a set wage with reference %s must violate', var_export($ref, true))
+			);
+		}
 
-        $violations = RuleEngine::evaluate('EmploymentContract', $contract, ['jurisdiction' => 'NL']);
-        $violation  = $this->violationFor($violations, 'nl-uitzendbeding-alleen-fase-a');
-        $this->assertNotNull($violation, 'Beding true past fase A must raise nl-uitzendbeding-alleen-fase-a.');
-        $this->assertSame('mandatory', $violation->severity);
+		$contract = $this->contract(['hourlyWage' => 16.50, 'inlenersbeloningReferentie' => null]);
+		$violations = RuleEngine::evaluate('EmploymentContract', $contract, ['jurisdiction' => 'NL']);
+		$violation = $this->violationFor($violations, 'nl-inlenersbeloning-onderbouwing-vereist');
+		$this->assertNotNull($violation, 'A set wage with no reference must raise nl-inlenersbeloning-onderbouwing-vereist.');
+		$this->assertSame('mandatory', $violation->severity);
 
-    }//end testBedingTrueInFaseBViolatesAtMandatorySeverity()
+	}//end testInlenersbeloningAbsentWithWageViolatesAtMandatorySeverity()
 
+	/**
+	 * @return void
+	 */
+	public function testInlenersbeloningAbsentWithoutWageIsVacuous(): void {
+		foreach ([null, ''] as $wage) {
+			$contract = $this->contract(['hourlyWage' => $wage, 'inlenersbeloningReferentie' => null]);
+			$this->assertTrue(
+				($this->checks['nl-inlenersbeloning-onderbouwing-vereist'])($contract),
+				sprintf('no wage (%s) means nothing decidable -- must pass vacuously', var_export($wage, true))
+			);
+		}
 
-    /**
-     * @return void
-     */
-    public function testBedingFalseInAnyFasePassesVacuously(): void
-    {
-        foreach (['A', 'B', 'C', null] as $fase) {
-            $contract = $this->contract(['uitzendFase' => $fase, 'uitzendbedingVanToepassing' => false]);
-            $this->assertTrue(
-                ($this->checks['nl-uitzendbeding-alleen-fase-a'])($contract),
-                sprintf('beding false with fase %s must pass vacuously', var_export($fase, true))
-            );
-        }
+	}//end testInlenersbeloningAbsentWithoutWageIsVacuous()
 
-    }//end testBedingFalseInAnyFasePassesVacuously()
+	/**
+	 * The `type === 'agency'` guard: a NON-agency contract with a set wage and
+	 * no inlenersbeloningReferentie is NEVER evaluated by
+	 * nl-inlenersbeloning-onderbouwing-vereist.
+	 *
+	 * @return void
+	 */
+	public function testNonAgencyContractIsNeverEvaluatedByInlenersbeloningRule(): void {
+		foreach (['permanent', 'temporary', 'minijob'] as $type) {
+			$contract = $this->contract(['type' => $type, 'hourlyWage' => 16.50, 'inlenersbeloningReferentie' => null]);
 
+			$this->assertTrue(
+				($this->checks['nl-inlenersbeloning-onderbouwing-vereist'])($contract),
+				sprintf('a %s contract must never be evaluated by the inlenersbeloning rule', $type)
+			);
 
-    /**
-     * The `type === 'agency'` guard: a NON-agency contract carrying
-     * uitzendbedingVanToepassing:true past fase A is NEVER evaluated by
-     * nl-uitzendbeding-alleen-fase-a -- neither the raw predicate nor the real
-     * RuleEngine raises a violation (spec.md REQ-UITZ-002 "Non-agency contracts
-     * are never evaluated").
-     *
-     * @return void
-     */
-    public function testNonAgencyContractIsNeverEvaluatedByUitzendbedingRule(): void
-    {
-        foreach (['permanent', 'temporary', 'minijob'] as $type) {
-            $contract = $this->contract(['type' => $type, 'uitzendFase' => 'B', 'uitzendbedingVanToepassing' => true]);
+			$violations = RuleEngine::evaluate('EmploymentContract', $contract, ['jurisdiction' => 'NL']);
+			$this->assertFalse(
+				$this->hasViolation($violations, 'nl-inlenersbeloning-onderbouwing-vereist'),
+				sprintf('a %s contract must raise no nl-inlenersbeloning-onderbouwing-vereist violation', $type)
+			);
+		}
 
-            $this->assertTrue(
-                ($this->checks['nl-uitzendbeding-alleen-fase-a'])($contract),
-                sprintf('a %s contract must never be evaluated by the uitzendbeding rule', $type)
-            );
-
-            $violations = RuleEngine::evaluate('EmploymentContract', $contract, ['jurisdiction' => 'NL']);
-            $this->assertFalse(
-                $this->hasViolation($violations, 'nl-uitzendbeding-alleen-fase-a'),
-                sprintf('a %s contract must raise no nl-uitzendbeding-alleen-fase-a violation', $type)
-            );
-        }
-
-    }//end testNonAgencyContractIsNeverEvaluatedByUitzendbedingRule()
-
-
-    // -- nl-inlenersbeloning-onderbouwing-vereist (REQ-UITZ-003) --
-
-
-    /**
-     * @return void
-     */
-    public function testInlenersbeloningPresentPasses(): void
-    {
-        $contract = $this->contract(['hourlyWage' => 16.50, 'inlenersbeloningReferentie' => 'Klant loonschaal referentie, functie magazijnmedewerker, schaal 3']);
-        $this->assertTrue(($this->checks['nl-inlenersbeloning-onderbouwing-vereist'])($contract));
-
-    }//end testInlenersbeloningPresentPasses()
-
-
-    /**
-     * @return void
-     */
-    public function testInlenersbeloningAbsentWithWageViolatesAtMandatorySeverity(): void
-    {
-        foreach ([null, '', '   '] as $ref) {
-            $contract = $this->contract(['hourlyWage' => 16.50, 'inlenersbeloningReferentie' => $ref]);
-            $this->assertFalse(
-                ($this->checks['nl-inlenersbeloning-onderbouwing-vereist'])($contract),
-                sprintf('a set wage with reference %s must violate', var_export($ref, true))
-            );
-        }
-
-        $contract   = $this->contract(['hourlyWage' => 16.50, 'inlenersbeloningReferentie' => null]);
-        $violations = RuleEngine::evaluate('EmploymentContract', $contract, ['jurisdiction' => 'NL']);
-        $violation  = $this->violationFor($violations, 'nl-inlenersbeloning-onderbouwing-vereist');
-        $this->assertNotNull($violation, 'A set wage with no reference must raise nl-inlenersbeloning-onderbouwing-vereist.');
-        $this->assertSame('mandatory', $violation->severity);
-
-    }//end testInlenersbeloningAbsentWithWageViolatesAtMandatorySeverity()
-
-
-    /**
-     * @return void
-     */
-    public function testInlenersbeloningAbsentWithoutWageIsVacuous(): void
-    {
-        foreach ([null, ''] as $wage) {
-            $contract = $this->contract(['hourlyWage' => $wage, 'inlenersbeloningReferentie' => null]);
-            $this->assertTrue(
-                ($this->checks['nl-inlenersbeloning-onderbouwing-vereist'])($contract),
-                sprintf('no wage (%s) means nothing decidable -- must pass vacuously', var_export($wage, true))
-            );
-        }
-
-    }//end testInlenersbeloningAbsentWithoutWageIsVacuous()
-
-
-    /**
-     * The `type === 'agency'` guard: a NON-agency contract with a set wage and
-     * no inlenersbeloningReferentie is NEVER evaluated by
-     * nl-inlenersbeloning-onderbouwing-vereist.
-     *
-     * @return void
-     */
-    public function testNonAgencyContractIsNeverEvaluatedByInlenersbeloningRule(): void
-    {
-        foreach (['permanent', 'temporary', 'minijob'] as $type) {
-            $contract = $this->contract(['type' => $type, 'hourlyWage' => 16.50, 'inlenersbeloningReferentie' => null]);
-
-            $this->assertTrue(
-                ($this->checks['nl-inlenersbeloning-onderbouwing-vereist'])($contract),
-                sprintf('a %s contract must never be evaluated by the inlenersbeloning rule', $type)
-            );
-
-            $violations = RuleEngine::evaluate('EmploymentContract', $contract, ['jurisdiction' => 'NL']);
-            $this->assertFalse(
-                $this->hasViolation($violations, 'nl-inlenersbeloning-onderbouwing-vereist'),
-                sprintf('a %s contract must raise no nl-inlenersbeloning-onderbouwing-vereist violation', $type)
-            );
-        }
-
-    }//end testNonAgencyContractIsNeverEvaluatedByInlenersbeloningRule()
-
+	}//end testNonAgencyContractIsNeverEvaluatedByInlenersbeloningRule()
 
 }//end class
