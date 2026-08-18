@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrm-rule-audit/specs/hrm-rule-engine/spec.md
+ * @spec openspec/specs/hrm-rule-engine/spec.md
  */
 
 declare(strict_types=1);

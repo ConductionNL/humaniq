@@ -27,7 +27,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrm-rule-testdata-seed/specs/hrm-rule-engine/spec.md
+ * @spec openspec/specs/hrm-rule-engine/spec.md
  */
 
 declare(strict_types=1);
@@ -69,12 +69,16 @@ class RuleTestDataSeeder {
 	 *
 	 * @return array<string, int> Counts: providerObjectsCreated, providerFieldsAdded, alreadyCompliant.
 	 *
-	 * @spec exclude no spec target exists for this seeder. Every other method in
-	 * this class anchors to openspec/changes/hrm-rule-testdata-seed/specs/hrm-rule-engine/spec.md,
-	 * and that file is not in the repository — the change was never archived to a
-	 * canonical openspec/specs/ home and `find openspec -path "*hrm-rule*"` returns
-	 * nothing. Anchoring seed() to it would add a fourth dangling tag rather than
-	 * coverage. Pointing the whole class at a real target is its own change.
+	 * The exclusion that used to sit here said "no spec target exists for this
+	 * seeder", and it was true: the change was archived without its spec ever
+	 * being promoted to openspec/specs/, so fifteen anchors across this app
+	 * pointed at nothing. That is now fixed at the TARGET — the spec exists —
+	 * so this is a real anchor rather than a reasoned skip.
+	 *
+	 * A skip whose reason has quietly stopped being true is worse than no skip:
+	 * it reads as a considered decision and is an unnoticed hole.
+	 *
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-006
 	 */
 	public function seed(): array {
 		$register = $this->register();
