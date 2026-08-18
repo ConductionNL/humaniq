@@ -30,19 +30,41 @@
 import { expect, test, type Page } from '@playwright/test'
 
 /**
- * The app's base path, resolved the way the APP resolves it.
+ * The app's base path, resolved the way the APP resolves it — via
+ * `OC.generateUrl`, exactly as core-journeys.spec.ts does.
  *
- * The shared CI workflow serves Nextcloud from `php -S` with no mod_rewrite,
- * so the router's history base is the `/index.php/...` form. Hard-coding the
- * pretty form lands on a page whose router cannot strip its own base: it
- * matches nothing, falls through to the catch-all, and every route silently
- * renders the dashboard — which would make this spec pass while proving
- * nothing.
+ * NOT by reading the landed pathname after visiting the app root. The root
+ * REDIRECTS to the default route, so that reads back
+ * `/index.php/apps/hrmq/timesheets` and every route built on it becomes
+ * `…/timesheets/payroll/proforma`, which matches nothing, falls through to the
+ * catch-all, and lands back on the default route. The first version of this
+ * helper did exactly that and the failure looked like a broken PAGE rather
+ * than a broken base.
+ *
+ * The `/index.php/...` form matters too: the shared CI workflow serves
+ * Nextcloud from `php -S` with no mod_rewrite, so that is the router's real
+ * history base on the instance these specs run against.
  */
+let cachedBase: string | null = null
 async function appBase(page: Page): Promise<string> {
-	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
+	if (cachedBase) {
+		return cachedBase
+	}
 
-	return new URL(page.url()).pathname.replace(/\/$/, '')
+	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
+	const resolved = await page.evaluate(
+		() => (window as unknown as { OC?: { generateUrl?: (p: string) => string } })
+			.OC?.generateUrl?.('/apps/hrmq'),
+	)
+	if (!resolved) {
+		throw new Error(
+			'OC.generateUrl is not available on the hrmq page, so the router base cannot '
+			+ 'be resolved — every route assertion below would be measuring the wrong URL.',
+		)
+	}
+	cachedBase = resolved.replace(/\/+$/, '')
+
+	return cachedBase
 }
 
 /**
