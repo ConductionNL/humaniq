@@ -144,6 +144,15 @@ class PageController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @spec exclude framework glue — returns the bundled src/manifest.json blob unchanged
+	 *
+	 * @contract exclude this serves src/manifest.json back verbatim, so its
+	 * response shape IS that file and is already validated on every run by
+	 * `npm run check:manifest` against the app-manifest-v2 JSON Schema — a
+	 * far stronger check than an HTTP contract test asserting a couple of
+	 * keys. The only behaviour of this method's own is the 401 for an
+	 * unauthenticated caller, which is covered by PageControllerTest. A
+	 * contract test here would restate the schema check in a weaker form and
+	 * go stale the moment the manifest grows a page.
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
