@@ -53,7 +53,7 @@ async function appBase(page: Page): Promise<string> {
 
 	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
 	const resolved = await page.evaluate(
-		() => (window as unknown as { OC?: { generateUrl?: (p: string) => string } })
+		() => (window as unknown as { OC?: { generateUrl?: (_path: string) => string } })
 			.OC?.generateUrl?.('/apps/hrmq'),
 	)
 	if (!resolved) {
@@ -69,6 +69,11 @@ async function appBase(page: Page): Promise<string> {
 
 /**
  * Navigate to an in-app route and assert the router stayed on it.
+ *
+ * @param page  The Playwright page.
+ * @param route The in-app route to open, e.g. `/payroll/proforma`.
+ *
+ * @return {Promise<void>}
  */
 async function gotoRoute(page: Page, route: string): Promise<void> {
 	const base = await appBase(page)
