@@ -84,6 +84,13 @@
     "docsUrl": "openspec/specs/hr-signals/spec.md"
   },
   {
+    "slug": "hrm-rule-engine",
+    "title": "Hrm Rule Engine",
+    "summary": "Hrmq audits its HR, labour and payroll data against a versioned corpus of machine-checkable rules drawn from EU labour directives, ILO core conventions, GDPR for employee data, occupational health & safety, national labour law (NL first, then DE/FR/BE) and payroll / wage-tax & social-security compliance.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/hrm-rule-engine/spec.md"
+  },
+  {
     "slug": "hrmq-docudesk-documents",
     "title": "Hrmq Docudesk Documents",
     "summary": "Generate the standard Dutch HR documents (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift) from templates hosted in docudesk (namespace: hrmq), by calling docudesk's DocumentService::generateDocument() on the same instance (never HTTP), storing the returned PDF on a new GeneratedDocument record via OpenRegister's FileService, degrading gracefully to skipped-no-docudesk when docudesk is absent, and giving EmploymentContract.writtenContract machine-checked document evidence (nl-contract-schriftelijk).",
