@@ -83,8 +83,8 @@ case-management platform. Named mapping from old feature to this change's dispos
 | F-006 Escalatie naar college B&W | Out of scope — no case-management/agenda-integration capability |
 | F-007 Beroep bij CRvB | Out of scope — no external-tribunal dossier-bundling capability |
 | F-008 Termijnbewaking SLA dashboard | Out of scope — no case-management deadlines exist to bewaken; `hr-signals`'s existing termijn pattern (aanzegtermijn) is the closest precedent and is unrelated |
-| F-009 Vertrouwelijkheid & toegangsbeheer | Out of scope — moot without the case types F-003/F-004/F-006/F-007 assumed |
-| F-010 Bewaartermijnen & archivering | Out of scope — moot without the case types those retention schedules were for |
+| F-009 Vertrouwelijkheid & toegangsbeheer | **STOPPED (2026-08-19)** — not hrmq's to build at any point, not merely blocked on case management. OpenRegister owns confidentiality tiering (`GdprEntity` pii/sensitive_pii/business_data) and its enforcement (`PropertyRbacHandler`, schema `authorization` `{group, match}`), declared against `Verwerkingsactiviteit` (AVG Art 30). A gap here is a proposal against OpenRegister |
+| F-010 Bewaartermijnen & archivering | Out of scope — and probably the same call: OpenRegister ships `Gdpr/Retention/RetentionSweepService` + `DsarRetentionSweepJob`. Undecided on purpose, because a statutory ambtenaar retention *period* may be hrmq domain knowledge where a *tier* is not |
 
 ### Declarative vs imperative (ADR-031)
 
