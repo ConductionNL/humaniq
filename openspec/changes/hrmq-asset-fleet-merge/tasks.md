@@ -455,3 +455,37 @@ The standard fix avoids both gates without disabling anything — **expand/contr
   migration reports zero rows holding a legacy status, then re-import and re-verify.
 - [ ] 14.1a — pending the live run: assert zero live rows violate the current `category`/`status`
   enums.
+
+### Acceptance — MEASURED, orchestrator, 2026-08-19 (post-reset)
+
+- [x] **14.1a — zero live rows violate the current enums.** Measured directly against
+  `GET /api/objects/hrmq/Asset`:
+  ```
+  category='laptop'  status='issued'     category='phone'   status='available'
+  category='vehicle' status='issued'     category='vehicle' status='available'
+  ROWS VIOLATING CURRENT ENUMS: 0
+  ```
+  All four rows are fully in the new dialect, `status` included. Expand/contract cleared the
+  lifecycle gate that the earlier two-phase write could not.
+- [x] **13.4 — the rule discriminates.** `occ hrmq:rules:audit` →
+  `Asset checked=4 compliant=3 withViolations=1`.
+
+  **The target was written as `withViolations=2`, and 1 is the correct answer now — the data
+  changed, not the goalposts.** Verified from the rows rather than the count: there are two
+  `category: vehicle` Assets; `Ford Transit bedrijfsbus` now carries
+  `listPrice=45000 / fuelType=diesel / companyCarTaxCategory=standard` (the seed supplied them), so
+  it MUST NOT be flagged, and `Opel Vivaro bestelbus (fiscale gegevens onvolledig)` carries none of
+  the three, so it MUST be flagged. Expected = 1, actual = 1: one true positive and one true
+  negative, which is stronger evidence than either count alone. A bare "is it 2?" assertion would
+  now fail on correct behaviour — that is the hazard of pinning an acceptance test to a count
+  rather than to the invariant, and the invariant is: *every `category: vehicle` row missing a
+  fiscal field is flagged, and no complete one is.*
+- [x] **14.2c CONTRACT** — the four `migrateLegacyStatus_*` transitions are removed from
+  `hr-assets.json` and the `Asset` schema version bumped to 0.4.0. Safe because no row holds a
+  legacy status any more and none can re-enter one: the legacy values are not in the enum. Takes
+  effect on the live instance at the next register import.
+- [ ] One `AssetAssignment` row stays skipped, correctly: `uitgifteBonSigned (false)` vs
+  `issueReceiptSigned (true)` — genuinely contradictory seeded data, refused rather than guessed.
+  The row's live fields are already current; only the retired key lingers with a conflicting value.
+  Left as-is by design; resolving it means deciding which value is true, which is a data question,
+  not a migration one.
