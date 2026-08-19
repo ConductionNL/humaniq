@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "NODE_ENV=production webpack --config webpack.config.js --progress",
+    "postbuild": "node -e \"require('fs').writeFileSync('js/.build-stamp', new Date().toISOString()+'\\n')\"",
     "dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
     "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
     "lint": "eslint src",
@@ -16,6 +17,10 @@
     "stylelint-fix": "stylelint src/**/*.vue src/**/*.scss src/**/*.css --fix",
     "check:manifest": "node tests/validate-manifest.js",
     "check:widget-keys": "node tests/validate-widget-keys.js",
+    "check:deps-drift": "node scripts/check-node-deps-drift.js",
+    "check:manifest-sentinels": "node scripts/check-manifest-sentinels.mjs",
+    "check:bundle-freshness": "node scripts/check-bundle-freshness.js",
+    "check:boot-integrity": "npm run check:deps-drift && npm run check:manifest-sentinels && npm run check:bundle-freshness",
     "test:e2e": "playwright test --project chromium"
   },
   "browserslist": [
@@ -60,7 +65,6 @@
     "@nextcloud/eslint-plugin": "^2.2.1",
     "@nextcloud/stylelint-config": "^2.4.0",
     "@nextcloud/webpack-vue-config": "^7.0.4",
-    "@playwright/test": "^1.59.1",
     "@vue/compiler-sfc": "^3.5.13",
     "axe-core": "^4.13.0",
     "css-loader": "~7.1.1",
