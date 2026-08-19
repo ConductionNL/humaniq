@@ -5979,7 +5979,9 @@
 								"uwv42WeekMeldingDue",
 								"uwv42WeekMeldingDone",
 								"eerstejaarsevaluatieDue",
-								"eerstejaarsevaluatieDone"
+								"eerstejaarsevaluatieDone",
+								"currentAbsencePercentage",
+								"absenceProgression"
 							]
 						}
 					}
@@ -6022,10 +6024,29 @@
 					}
 				},
 				{
-					"widgetKey": "integration",
+					"widgetKey": "data",
 					"slot": "body",
 					"gridX": 0,
 					"gridY": 13,
+					"gridWidth": 12,
+					"gridHeight": 3,
+					"props": {
+						"title": "Work resumption",
+						"icon": "Timeline",
+						"content": {
+							"columns": 1,
+							"include": [
+								"currentAbsencePercentage",
+								"absenceProgression"
+							]
+						}
+					}
+				},
+				{
+					"widgetKey": "integration",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 16,
 					"gridWidth": 12,
 					"gridHeight": 4,
 					"props": {

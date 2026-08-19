@@ -5,7 +5,7 @@
             "SickLeaveCase": {
                 "slug": "SickLeaveCase",
                 "icon": "EmoticonSickOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Sick leave case",
                 "description": "An administrative sickness case (ziekmelding) tracking the Wet verbetering poortwachter (WVP) re-integration process and statutory loondoorbetaling — NEVER medical data. Per the AVG and the Autoriteit Persoonsgegevens beleidsregels \"De zieke werknemer\", an employer may record that and how long an employee is sick and the re-integration process facts, but never the nature or cause of the illness: this schema declares no diagnosis, symptom, cause, or medical-note field of any kind (leave-verzuim-mvp REQ-VWP-002). The gemeld<->hersteld lifecycle is fully declarative per ADR-031; a relapse within 4 weeks of recovery reopens the same case rather than starting a new one (samengesteld ziektegeval, BW 7:629 lid 10). The four WVP milestone Due dates (probleemanalyse week 6, plan van aanpak week 8, UWV 42-wekenmelding week 42, eerstejaarsevaluatie week 52) are derived from firstSickDay but stored, not computed on the fly — the loonaangifte-filing-lifecycle deadline precedent — so the dossier shows the clock actually worked against and a UWV-granted deferral stays editable; derivation correctness is enforced by the nl-wvp-milestone-derivation rule check (lib/Standards/rules/labour.json), not recomputed away.",
                 "type": "object",
@@ -141,6 +141,42 @@
                         "nullable": true,
                         "title": "Eerstejaarsevaluatie done",
                         "description": "Date the eerstejaarsevaluatie was actually completed."
+                    },
+                    "absenceProgression": {
+                        "type": "array",
+                        "title": "Absence progression",
+                        "description": "The time-resolved record of partial work resumption (gedeeltelijke werkhervatting) during this case: an ordered series of steps, each setting the percentage of contracted hours the employee is absent from `effectiveFrom` onward until the next step. This is the field a verzuimpercentage is computed from -- without it an absence can only be counted as whole calendar days, which overstates every case where the employee is partly back at work. ADMINISTRATIVE ONLY, and lawful for exactly that reason: the AP beleidsregels \"De zieke werknemer\" permit an employer to record TO WHAT EXTENT an employee can resume work (it drives loondoorbetaling and the WVP re-integration duty) while forbidding why -- so this array carries a date and a percentage and nothing else, and REQ-VWP-002's ban on diagnosis, symptom, cause and unconstrained free text holds unchanged. EMPTY OR ABSENT MEANS FULL ABSENCE for the whole case window: every case recorded before this field existed keeps counting exactly as it did, so adding the field regresses no figure. The euro-denominated `aangepastLoon` is the sibling of this field, not a duplicate of it -- that one carries what was still earned, this one carries when and how much was worked.",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "effectiveFrom",
+                                "absencePercentage"
+                            ],
+                            "properties": {
+                                "effectiveFrom": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "title": "Effective from",
+                                    "description": "First day on which this absence percentage applies. A step dated before firstSickDay is clipped to firstSickDay; a step dated after the case closed contributes nothing."
+                                },
+                                "absencePercentage": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "title": "Absence percentage",
+                                    "description": "Percentage of contracted hours the employee is absent from effectiveFrom onward. 100 = not working at all, 40 = working 60% of contracted hours. 0 records a full resumption, but it is NOT what closes the case: recoveredDate and the gemeld/hersteld lifecycle stay the single authority on that, and the calculation clips at recoveredDate regardless of what this array says."
+                                }
+                            }
+                        }
+                    },
+                    "currentAbsencePercentage": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100,
+                        "nullable": true,
+                        "title": "Current absence percentage",
+                        "description": "The absencePercentage of the latest absenceProgression step that has taken effect -- a stored projection, so an index column and a filter can read it without walking the array (the Jaaropgaaf aggregate precedent). NEVER read by AbsenceRateService: every rate is computed from absenceProgression itself, so a stale projection cannot corrupt a reported figure. Null on a case with no progression steps, which per that field's contract means fully absent, not unknown.",
+                        "example": 40
                     },
                     "administrationId": {
                         "type": "string",
