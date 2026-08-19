@@ -246,6 +246,20 @@ as manifest pages.
 
 ## Migration Plan
 
+**REWRITTEN 2026-08-19 (orchestrator review — blocking defect, tasks.md section 13).** The original
+text below said "no data migration," reasoning from a Context measurement that was true (0
+`category: voertuig` rows) but answered the wrong question: it asked whether the *seed* would
+re-apply onto an existing object (it will not — OpenRegister's seed import is create-only), and
+concluded that made a migration skippable, when create-only import is exactly why one is required.
+Live re-measurement after the schema/seed/rule rename shipped found three pre-existing `Asset` rows
+still in the old Dutch dialect, one of them a `category: voertuig` vehicle that `nl-asset-voertuig-
+fiscale-velden-compleet`'s literal `category === "vehicle"` match silently exempted from its own
+compliance rule. Original text preserved below for provenance; it no longer describes what this
+change does.
+
+<details>
+<summary>Original (superseded) Migration Plan</summary>
+
 No data migration (Context — 0 rows on every schema but Asset, and Asset has no `category: voertuig`
 rows to backfill fiscal fields onto). Deploy is: land the schema changes, the four PHP consumer
 files, the manifest changes, and the two spec deltas in one PR (they are not independently
@@ -256,6 +270,80 @@ with non-empty tables.
 
 **Rollback:** revert the PR. Because no data was migrated, a revert is exact — there is no
 forward-only state to reconcile.
+
+</details>
+
+### Data migration (added)
+
+`AssetDialectMigrationService::migrate()` rewrites every pre-existing `Asset`/`AssetAssignment`
+object from the old dialect to the new one (field/enum maps mirror D1's table exactly). It is
+invoked from **both** a repair step and an occ command, deliberately:
+
+- **`OCA\Hrmq\Repair\MigrateAssetDialect`**, registered as a `post-migration` repair step
+  (`appinfo/info.xml`, alongside `InitializeRegister`) — `\OC_App::upgradeApp()` runs
+  `post-migration` steps unconditionally on every real app upgrade, so a fresh instance that
+  installs this version of hrmq (or any instance that later upgrades past it) gets the rewrite for
+  free with no separate operator action. `post-migration` was chosen over `live-migration`
+  specifically because core's `occ maintenance:repair` command (`OC\Core\Command\Maintenance\
+  Repair::execute()`) ALSO loads and runs every enabled app's `post-migration` steps — a
+  `live-migration` step, by contrast, is queued as a one-shot background job only at the moment of
+  an app-version transition (`AppManager::upgradeApp()`), and would not be reachable on demand.
+  `post-migration` gives both: automatic on upgrade, AND re-runnable via `occ maintenance:repair`
+  without an app-version bump.
+- **`occ hrmq:assets:migrate-dialect`** (`OCA\Hrmq\Command\AssetsMigrateDialectCommand`) — the same
+  `migrate()` call, narrowly scoped to hrmq alone, for an operator who wants to re-run (or verify)
+  just this migration without also re-running every other enabled app's `post-migration` steps.
+
+Both are thin wrappers; `AssetDialectMigrationService` holds the mapping/idempotency/reporting logic
+once, matching the `RuleAuditService`/`RulesAuditCommand` and `RuleTestDataSeeder`/
+`RulesSeedTestDataCommand` precedents already in this codebase.
+
+**Idempotent and skip-with-reason, not guess.** A row is `alreadyCurrent` once every field it can
+reach holds its migrated value. An `Asset.category`/`Asset.status` value matching neither the
+old-dialect map nor the current enum, and a retired/renamed field pair present with two DIFFERENT
+non-null values, are both `skipped`, with the value(s) recorded verbatim as the reason — never
+guessed. Nothing is ever deleted.
+
+**Two OpenRegister gaps this surfaced, both undocumented before this change:**
+
+1. **Full-object schema validation cannot be scoped to only the changed fields, and `_validation:
+   false` does not disable it.** `ObjectService::saveObject()`'s `_validation` parameter gates a
+   different, internal validation step; the top-level enum/required check
+   (`validateObjectIfRequired()`) reads the SCHEMA's own persisted `hardValidation` flag instead,
+   unconditionally. Consequence: a row whose `Asset.status` still holds an old-dialect value cannot
+   be updated AT ALL through the normal path — not even to fix an unrelated field like `category` —
+   because the WHOLE payload is re-validated on every write, including the untouched, now-invalid
+   `status`. `AssetDialectMigrationService::withAssetHardValidationDisabled()` works around this: it
+   reads the Asset schema's current `hardValidation` via `ObjectService::getCurrentSchemaEntity()`,
+   flips it to `false` via `SchemaMapper::update()`, retries the single write, and restores the
+   original value in a `finally` block. This is a narrow, self-limiting fallback — it only engages
+   when a plain write is rejected (i.e., only for a row still carrying an old-dialect status), is a
+   no-op on every later run once that row's other fields are fixed, and the exposure window is one
+   PHP request's single write. **Trade-off accepted:** for that window, any OTHER concurrent write to
+   the `hrmq` register's `Asset` schema also skips hard validation. Given hrmq is the only writer of
+   its own register and the window is one synchronous write, this was judged acceptable for a
+   one-time data-quality fix; it would not be an acceptable default for routine writes.
+2. **A property removed from a schema can never be cleared from an existing object's stored data
+   through `saveObject()`, whether the payload omits the key or sends it as an explicit `null`.**
+   OpenRegister's magic-table UPDATE (`SaveObject::fillMissingSchemaPropertiesWithNull()`) generates
+   a SET clause only for properties the CURRENT schema still declares; a retired property (every old
+   Dutch field name here) is invisible to that mechanism entirely, so its stored value survives as
+   permanent, harmless debris no schema or consumer reads again. This is why the migration's field
+   rename is one-directional — it populates the renamed field, and deliberately does not attempt to
+   "clear" the retired one, because that attempt cannot succeed and would only turn into a wasted,
+   idempotency-breaking write repeated on every run (measured: this was the shape of the first cut's
+   bug, not a hypothetical).
+3. (Restated from D2, same family of gap.) OpenRegister's `LifecycleValidationListener` has no
+   migration-mode bypass: a write that changes a lifecycle field's value away from one no declared
+   transition's `from` list contains is rejected unconditionally, regardless of `_validation`,
+   `silent`, or `SystemOperationContext` (none of which the listener consults). `Asset.status` on the
+   three pre-existing rows is therefore permanently unmigratable through the API as it exists today —
+   recorded as skipped-with-reason, not silently left inconsistent. Filing both gaps against
+   OpenRegister is out of this change's scope; recording them here is not (D2's precedent).
+
+**Rollback:** revert the PR that adds the migration code; the repair step/command stop running,
+but any rows they already rewrote stay rewritten (population-only, one-directional — see gap 2 —
+so there is no forward-only STRUCTURAL state to reconcile, only already-correct data).
 
 ## Open Questions
 

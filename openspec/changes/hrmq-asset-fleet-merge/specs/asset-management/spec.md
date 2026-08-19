@@ -177,3 +177,51 @@ The `ExpensesGroup` menu's `Vehicles`/`CarAssignments` children, the `Vehicles`/
 - THEN exactly one `nl-asset-assignment-consistency` violation (the open jansen-telefoon uitgifte) and zero `nl-asset-inname-bij-offboarding` violations are reported, and no pre-existing check regresses
 
 Pinned by `RuleAuditServiceTest::testSeededAssetDataFlagsExactlyOneAssignmentConsistencyViolation` and `::testSeededOffboardingJansenLastWorkingDayInTheFutureDoesNotFlagTheOpenTelefoonUitgifte`, updated to the renamed field/enum names.
+
+## ADDED Requirements
+
+### Requirement: Pre-existing `Asset`/`AssetAssignment` objects SHALL be rewritten from the old Dutch dialect to the renamed one (REQ-AST-008)
+
+The rename in REQ-AST-001/REQ-AST-002 changed schema field names and enum values but, because OpenRegister's register-config seed import is create-only, never patches an object that already exists. Objects created before this change carry the old Dutch field names/enum values indefinitely unless something rewrites them. `AssetDialectMigrationService::migrate()` performs that rewrite for every existing `Asset`/`AssetAssignment` object, invoked by both the `MigrateAssetDialect` repair step (unconditional on upgrade, and on `occ maintenance:repair`) and the `occ hrmq:assets:migrate-dialect` command (on-demand re-run). It never deletes an object, and reports counts per schema: rows inspected, rewritten, already-current, and skipped-with-reason.
+
+#### Scenario: An old-dialect Asset is rewritten
+
+- GIVEN an `Asset` object with `category: voertuig`, `status: uitgegeven`, and a `kenteken` field
+- WHEN the migration runs
+- THEN `category` becomes `vehicle`, `kenteken` is renamed to `licencePlate`, and the row is counted as rewritten
+
+#### Scenario: Re-running is a no-op
+
+- GIVEN a run of the migration has already rewritten every reachable field on an object
+- WHEN the migration runs again
+- THEN no further write happens for that object and it is counted as already-current (or, for a field the migration cannot reach — Scenario below — the same skip recurs identically rather than escalating)
+
+#### Scenario: An unrecognised enum value is skipped, not guessed
+
+- GIVEN an `Asset.category` or `Asset.status` value that matches neither the old-dialect map nor the current schema enum
+- WHEN the migration runs
+- THEN that object is left untouched and counted as skipped, with the unrecognised value recorded as the reason
+
+#### Scenario: A conflicting renamed-field pair is skipped, not guessed
+
+- GIVEN an `AssetAssignment` object carrying both a retired field (e.g. `uitgifteBonSigned`) and its renamed replacement (`issueReceiptSigned`) with two DIFFERENT values
+- WHEN the migration runs
+- THEN neither value is chosen; the object is left untouched and counted as skipped, with both values recorded in the reason
+
+#### Scenario: `Asset.status` cannot be rewritten through the guarded save path
+
+- GIVEN an `Asset` object whose stored `status` is an old-dialect value (e.g. `uitgegeven`)
+- WHEN the migration attempts to rewrite `status` to its renamed value (`issued`)
+- THEN OpenRegister's `LifecycleValidationListener` rejects the write — the schema's `x-openregister-lifecycle` transitions only declare `from` states in the new dialect, so no declared transition matches the old value regardless of write order or count — and the migration records this as skipped-with-reason using the rejection's own message, while still rewriting every other field on the same object
+
+#### Scenario: A retired field name is never cleared, and re-running does not keep retrying it
+
+- GIVEN an `Asset`/`AssetAssignment` object whose renamed field is now populated (the previous scenario) while its retired field name still holds the old value
+- WHEN the migration runs again
+- THEN the row is counted as already-current, not rewritten, and not skipped — OpenRegister's magic-table UPDATE generates a SET clause only for properties the CURRENT schema still declares, so a retired field name can never actually be cleared through `saveObject()` once the schema stops declaring it (measured: true whether the retired key is omitted from the payload or sent as an explicit null); its stale value is permanent, harmless debris, and treating its mere presence as unfinished work would retry a write that can never converge
+
+#### Scenario: The fiscal-fields rule audit reaches migrated data
+
+- GIVEN a pre-existing `Asset` with `category: voertuig` and no `listPrice`/`fuelType`/`companyCarTaxCategory`, alongside a newly-seeded `Asset` with `category: vehicle` and the same gap
+- WHEN the migration runs and `occ hrmq:rules:audit` runs afterward
+- THEN `nl-asset-voertuig-fiscale-velden-compleet` flags BOTH vehicles (`Asset ... withViolations=2`), not just the one that was already in the new dialect

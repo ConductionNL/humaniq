@@ -1363,7 +1363,7 @@
       "jurisdiction": "NL",
       "framework": "nl-bijtelling-auto",
       "source": "Wet LB 1964 art. 13bis",
-      "statement": "Where an employee has a company car available for private use, the employer shall add the monthly bijtelling privegebruik auto to the taxable wage BEFORE loonheffing/premies are computed -- a percentage of the car's cataloguswaarde (standard rate, or a reduced rate up to a cataloguswaarde cap for zero-emission cars) less any eigen bijdrage the employee pays for private use, floored at zero.",
+      "statement": "Where an employee has a company car available for private use, the employer shall add the monthly bijtelling privegebruik auto to the taxable wage BEFORE loonheffing/premies are computed -- a percentage of the car's list price (standard rate, or a reduced rate up to a list-price cap for zero-emission cars) less any employee contribution the employee pays for private use, floored at zero.",
       "severity": "mandatory",
       "machineCheckable": true,
       "effectiveDate": "2026-01-01",

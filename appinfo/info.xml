@@ -105,6 +105,19 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  register.d/*.json fragments) into OpenRegister. Idempotent;
                  fails soft when OpenRegister is not installed. -->
             <step>OCA\Hrmq\Repair\InitializeRegister</step>
+            <!-- hrmq-asset-fleet-merge (tasks.md section 13, blocking defect):
+                 rewrite pre-existing Asset/AssetAssignment objects from the
+                 old Dutch dialect (category/status enum values, kenteken/
+                 serienummer/aanschafdatum/aanschafwaarde, uitgifteDatum/
+                 innameDatum/uitgifteBonSigned/eigenBijdrage) to the renamed
+                 one — the schema rename above never touches an object that
+                 already exists (OpenRegister's seed import is create-only).
+                 Runs AFTER InitializeRegister so the new-dialect schema is
+                 already imported. Idempotent; fails soft when OpenRegister is
+                 not installed. post-migration (not live-migration) so it also
+                 re-runs on `occ maintenance:repair`, not only on a real app
+                 upgrade — see the step's own docblock. -->
+            <step>OCA\Hrmq\Repair\MigrateAssetDialect</step>
         </post-migration>
         <install>
             <!-- SAME step as post-migration, and that duplication is the point.
@@ -137,6 +150,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <!-- Idempotently backfill local TEST data to satisfy the enforced rules
              (provider sample objects + provider field defaults). Test/dev. -->
         <command>OCA\Hrmq\Command\RulesSeedTestDataCommand</command>
+        <!-- On-demand, hrmq-only re-run of the Asset/AssetAssignment dialect
+             migration (hrmq-asset-fleet-merge, tasks.md section 13) also
+             wired as the MigrateAssetDialect post-migration repair step.
+             Idempotent; prints per-schema inspected/rewritten/alreadyCurrent/
+             skipped counts and every skip reason. -->
+        <command>OCA\Hrmq\Command\AssetsMigrateDialectCommand</command>
         <!-- Post each approved PayrollRun as a balanced loonjournaalpost into
              shillinq's JournalEntry register (payroll-glpost-shillinq MVP
              trigger). Duck-typed no-op when shillinq is absent. -->

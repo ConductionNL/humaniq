@@ -842,14 +842,15 @@
                 "@self": {
                     "register": "hrmq",
                     "schema": "Asset",
-                    "slug": "asset-laptop-latitude"
+                    "slug": "asset-laptop-latitude",
+                    "version": "1.1.0"
                 },
                 "name": "Dell Latitude 5450",
                 "category": "laptop",
-                "serienummer": "SN-PLACEHOLDER-0001",
-                "aanschafdatum": "2025-09-01",
-                "aanschafwaarde": 1249.00,
-                "status": "uitgegeven",
+                "serialNumber": "SN-PLACEHOLDER-0001",
+                "purchaseDate": "2025-09-01",
+                "purchaseValue": 1249.00,
+                "status": "issued",
                 "active": true,
                 "administrationId": "ADM-001"
             },
@@ -857,12 +858,13 @@
                 "@self": {
                     "register": "hrmq",
                     "schema": "Asset",
-                    "slug": "asset-telefoon-fairphone"
+                    "slug": "asset-telefoon-fairphone",
+                    "version": "1.1.0"
                 },
                 "name": "Fairphone 5",
-                "category": "telefoon",
-                "serienummer": "SN-PLACEHOLDER-0002",
-                "status": "beschikbaar",
+                "category": "phone",
+                "serialNumber": "SN-PLACEHOLDER-0002",
+                "status": "available",
                 "active": true,
                 "administrationId": "ADM-001"
             },
@@ -870,16 +872,37 @@
                 "@self": {
                     "register": "hrmq",
                     "schema": "Asset",
-                    "slug": "asset-bus-transit"
+                    "slug": "asset-bus-transit",
+                    "version": "1.1.0"
                 },
                 "name": "Ford Transit bedrijfsbus",
-                "category": "voertuig",
-                "kenteken": "V-000-XX",
-                "aanschafdatum": "2024-02-15",
-                "aanschafwaarde": 38500.00,
-                "status": "uitgegeven",
+                "category": "vehicle",
+                "licencePlate": "V-000-XX",
+                "purchaseDate": "2024-02-15",
+                "purchaseValue": 38500.00,
+                "status": "issued",
                 "active": true,
-                "administrationId": "ADM-001"
+                "administrationId": "ADM-001",
+                "listPrice": 45000.00,
+                "fuelType": "diesel",
+                "companyCarTaxCategory": "standard",
+                "_note": "hrmq-asset-fleet-merge: fiscal facts backfilled onto the pre-existing voertuig seed so it stays a clean pass for nl-asset-voertuig-fiscale-velden-compleet (1.5a) -- plausible placeholder figures, not a real vehicle's actual catalog value."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Asset",
+                    "slug": "asset-bus-incomplete-fiscal"
+                },
+                "name": "Opel Vivaro bestelbus (fiscale gegevens onvolledig)",
+                "category": "vehicle",
+                "licencePlate": "V-001-XX",
+                "purchaseDate": "2026-03-01",
+                "purchaseValue": 32000.00,
+                "status": "available",
+                "active": true,
+                "administrationId": "ADM-001",
+                "_note": "hrmq-asset-fleet-merge (design.md D2, tasks 1.5c/3.2b): deliberately missing listPrice/fuelType/companyCarTaxCategory -- the positive control proving nl-asset-voertuig-fiscale-velden-compleet can genuinely fail, not just report zero. Not referenced by any AssetAssignment seed."
             },
             {
                 "@self": {
@@ -887,13 +910,14 @@
                     "schema": "AssetAssignment",
                     "slug": "assetassignment-visser-bus"
                 },
-                "assetId": "asset-bus-transit",
-                "employeeId": "employee-visser",
-                "uitgifteDatum": "2025-01-06",
-                "innameDatum": "2025-12-19",
-                "uitgifteBonSigned": true,
+                "assetId": "@ref:asset-bus-transit",
+                "employeeId": "@ref:employee-visser",
+                "issuedOn": "2025-01-06",
+                "returnedOn": "2025-12-19",
+                "issueReceiptSigned": true,
                 "notes": "Winterperiode buitendienst.",
-                "administrationId": "ADM-001"
+                "administrationId": "ADM-001",
+                "employeeContribution": 325.00
             },
             {
                 "@self": {
@@ -901,11 +925,11 @@
                     "schema": "AssetAssignment",
                     "slug": "assetassignment-jansen-telefoon"
                 },
-                "assetId": "asset-telefoon-fairphone",
-                "employeeId": "employee-jansen",
-                "uitgifteDatum": "2026-06-15",
-                "innameDatum": null,
-                "uitgifteBonSigned": false,
+                "assetId": "@ref:asset-telefoon-fairphone",
+                "employeeId": "@ref:employee-jansen",
+                "issuedOn": "2026-06-15",
+                "returnedOn": null,
+                "issueReceiptSigned": false,
                 "notes": "Openstaande uitgifte op een asset dat als beschikbaar geregistreerd staat -- opzettelijke seed-inconsistentie voor nl-asset-assignment-consistency.",
                 "administrationId": "ADM-001"
             },

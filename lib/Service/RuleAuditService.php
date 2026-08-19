@@ -172,12 +172,15 @@ class RuleAuditService {
 		// the `buildPayrollContext()`/`buildGlPostContext()` precedent.
 		$context['wkr'] = $this->buildWkrContext();
 
-		// fleet-bijtelling: a Vehicle-by-id + CarAssignment-by-id index so
-		// NlFleetChecks::checks()['Payslip']['nl-bijtelling-auto-privegebruik']
-		// can re-derive a payslip's recorded bijtelling from its referenced
-		// CarAssignment/Vehicle without re-querying the register — the
-		// `buildPayrollContext()` `runsById`/`loonbeslagenById` precedent.
-		$context['fleet'] = $this->buildFleetContext();
+		// fleet-bijtelling: NlFleetChecks::checks()['Payslip']
+		// ['nl-bijtelling-auto-privegebruik'] and ['Asset']
+		// ['nl-asset-voertuig-fiscale-velden-compleet'] read
+		// `context['related']['AssetAssignment']['byId']` /
+		// `context['related']['Asset']['byId']` (built above by
+		// buildRelatedContext()) directly -- hrmq-asset-fleet-merge
+		// (design.md D4) retired the dedicated `context['fleet']` index
+		// (`buildFleetContext()`/`vehiclesById`/`carAssignmentsById`) as
+		// redundant with the general Asset/AssetAssignment indexes.
 
 		$corpusTotal = RuleCatalogue::count();
 		$machineCheckable = count(RuleCatalogue::machineCheckable());
@@ -301,6 +304,8 @@ class RuleAuditService {
 	 * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-007
 	 * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-003
 	 * @spec openspec/changes/wnt-disclosure/specs/wnt-disclosure/spec.md#REQ-WNT-003
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-005
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
 	 */
 	private function buildRelatedContext(): array {
 		$byId = [];
@@ -495,7 +500,13 @@ class RuleAuditService {
 		// asset-management-mvp: an Asset index (id, status, active), keyed by
 		// id, so NlAssetChecks::checks()['AssetAssignment']
 		// ['nl-asset-assignment-consistency'] can resolve an open assignment's
-		// asset status without re-querying the register.
+		// asset status without re-querying the register. hrmq-asset-fleet-merge
+		// (design.md D4) extends it with category/listPrice/fuelType/
+		// companyCarTaxCategory -- the fields NlFleetChecks::checks()['Payslip']
+		// ['nl-bijtelling-auto-privegebruik'] and ['Asset']
+		// ['nl-asset-voertuig-fiscale-velden-compleet'] need -- so the
+		// dedicated `context['fleet']['vehiclesById']` index this ONE index
+		// used to duplicate (`buildFleetContext()`) is no longer needed.
 		$assetsById = [];
 		foreach ($this->loadAll('Asset') as $asset) {
 			$id = (string)($asset['id'] ?? $asset['@self']['id'] ?? '');
@@ -507,6 +518,35 @@ class RuleAuditService {
 				'id' => $id,
 				'status' => (string)($asset['status'] ?? ''),
 				'active' => (bool)($asset['active'] ?? true),
+				'category' => (string)($asset['category'] ?? ''),
+				'listPrice' => ($asset['listPrice'] ?? null),
+				'fuelType' => ($asset['fuelType'] ?? null),
+				'companyCarTaxCategory' => ($asset['companyCarTaxCategory'] ?? null),
+			];
+		}
+
+		// hrmq-asset-fleet-merge (design.md D4): an AssetAssignment index
+		// (id, assetId, employeeId, issuedOn, returnedOn, employeeContribution),
+		// keyed by id -- the counterpart to `$assetsById` above, consumed by
+		// NlFleetChecks::checks()['Payslip']['nl-bijtelling-auto-privegebruik']
+		// to resolve a Payslip's `assetAssignmentId` -> AssetAssignment ->
+		// `assetId` -> Asset chain without re-querying the register. Replaces
+		// the dedicated `context['fleet']['carAssignmentsById']` index
+		// `buildFleetContext()` used to build.
+		$assetAssignmentsById = [];
+		foreach ($this->loadAll('AssetAssignment') as $assignment) {
+			$id = (string)($assignment['id'] ?? $assignment['@self']['id'] ?? '');
+			if ($id === '') {
+				continue;
+			}
+
+			$assetAssignmentsById[$id] = [
+				'id' => $id,
+				'assetId' => (string)($assignment['assetId'] ?? ''),
+				'employeeId' => (string)($assignment['employeeId'] ?? ''),
+				'issuedOn' => (string)($assignment['issuedOn'] ?? ''),
+				'returnedOn' => ($assignment['returnedOn'] ?? null),
+				'employeeContribution' => ($assignment['employeeContribution'] ?? 0),
 			];
 		}
 
@@ -575,6 +615,9 @@ class RuleAuditService {
 			'Asset' => [
 				'byId' => $assetsById,
 			],
+			'AssetAssignment' => [
+				'byId' => $assetAssignmentsById,
+			],
 			'Offboarding' => [
 				'plannedCompletionByEmployeeId' => $plannedCompletionByEmployeeId,
 			],
@@ -639,7 +682,6 @@ class RuleAuditService {
 		$context['cao'] = $this->buildCaoContext();
 		$context['retro'] = $this->buildRetroContext();
 		$context['wkr'] = $this->buildWkrContext();
-		$context['fleet'] = $this->buildFleetContext();
 
 		$runs = [];
 		$runIds = [];
@@ -761,44 +803,6 @@ class RuleAuditService {
 		];
 
 	}//end buildPayrollContext()
-
-	/**
-	 * Build the Vehicle-by-id + CarAssignment-by-id indexes consumed by
-	 * NlFleetChecks' `nl-bijtelling-auto-privegebruik` predicate
-	 * (fleet-bijtelling design.md D5, the `buildPayrollContext()`
-	 * `runsById`/`loonbeslagenById` precedent): the FULL row keyed by id for
-	 * each, so the predicate can resolve a Payslip's `carAssignmentId` ->
-	 * CarAssignment -> `vehicleId` -> Vehicle chain without re-querying the
-	 * register. Degrades gracefully to empty maps when the Vehicle/
-	 * CarAssignment schemas do not exist yet in the register.
-	 *
-	 * @return array<string, mixed>
-	 *
-	 * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
-	 */
-	private function buildFleetContext(): array {
-		$vehiclesById = [];
-		foreach ($this->loadAll('Vehicle') as $vehicle) {
-			$id = (string)($vehicle['id'] ?? $vehicle['@self']['id'] ?? '');
-			if ($id !== '') {
-				$vehiclesById[$id] = $vehicle;
-			}
-		}
-
-		$carAssignmentsById = [];
-		foreach ($this->loadAll('CarAssignment') as $assignment) {
-			$id = (string)($assignment['id'] ?? $assignment['@self']['id'] ?? '');
-			if ($id !== '') {
-				$carAssignmentsById[$id] = $assignment;
-			}
-		}
-
-		return [
-			'vehiclesById' => $vehiclesById,
-			'carAssignmentsById' => $carAssignmentsById,
-		];
-
-	}//end buildFleetContext()
 
 	/**
 	 * Build the CAO cross-object context consumed by NlCaoChecks

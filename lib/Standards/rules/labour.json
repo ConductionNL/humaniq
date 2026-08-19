@@ -299,7 +299,7 @@
       "jurisdiction": "NL",
       "framework": "hr-assets-core",
       "source": "HR-administration control (asset-custody integrity)",
-      "statement": "An open AssetAssignment (no innameDatum) must reference an existing Asset in status uitgegeven and an existing Employee, and uitgifteDatum <= innameDatum must hold whenever innameDatum is present.",
+      "statement": "An open AssetAssignment (no returnedOn) must reference an existing Asset in status issued and an existing Employee, and issuedOn <= returnedOn must hold whenever returnedOn is present.",
       "severity": "mandatory",
       "machineCheckable": true,
       "effectiveDate": null,
@@ -313,6 +313,18 @@
       "source": "HR-administration control (offboarding asset return; goed werkgeverschap/werknemerschap, BW 7:611 sfeer)",
       "statement": "An employee whose Offboarding is past its planned completion date SHOULD have no open AssetAssignments -- company property is returned as part of clean offboarding.",
       "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": null
+    },
+    {
+      "id": "nl-asset-voertuig-fiscale-velden-compleet",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-assets-core",
+      "source": "HR-administration control (fiscal-facts completeness for a company car, hrmq-asset-fleet-merge design.md D2 -- an audit-time replacement for the write-time guard the retired Vehicle schema's own unconditional required used to provide)",
+      "statement": "An Asset with category vehicle must carry a non-empty listPrice, fuelType and companyCarTaxCategory -- without all three the monthly bijtelling privegebruik auto calculation cannot run and silently degrades to EUR 0.",
+      "severity": "mandatory",
       "machineCheckable": true,
       "effectiveDate": null,
       "sourceUrl": null

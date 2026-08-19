@@ -5,14 +5,14 @@
  *
  * Executable checks for the two hr-assets-core asset-custody-integrity rules
  * of the labour corpus (lib/Standards/rules/labour.json), mapped onto the
- * AssetAssignment object type (asset-management-mvp): `nl-asset-assignment-
- * consistency` -- an open AssetAssignment (no innameDatum) must reference an
- * existing Asset in status `uitgegeven` and an existing Employee, and
- * `uitgifteDatum <= innameDatum` must hold whenever `innameDatum` is present;
- * and `nl-asset-inname-bij-offboarding` -- an open AssetAssignment whose
- * employee has a non-cancelled Offboarding case past its planned completion
- * date (lastWorkingDay) is flagged (asset return is part of clean
- * offboarding).
+ * AssetAssignment object type (asset-management-mvp; field names renamed by
+ * hrmq-asset-fleet-merge): `nl-asset-assignment-consistency` -- an open
+ * AssetAssignment (no returnedOn) must reference an existing Asset in status
+ * `issued` and an existing Employee, and `issuedOn <= returnedOn` must hold
+ * whenever `returnedOn` is present; and `nl-asset-inname-bij-offboarding` --
+ * an open AssetAssignment whose employee has a non-cancelled Offboarding case
+ * past its planned completion date (lastWorkingDay) is flagged (asset return
+ * is part of clean offboarding).
  *
  * Both predicates are cross-object: they read the `context['related']
  * ['Asset']['byId']`, `context['related']['Employee']['byId']` and
@@ -41,6 +41,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/asset-management-mvp/specs/asset-management/spec.md#REQ-AST-005
+ * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-005
  */
 
 declare(strict_types=1);
@@ -86,13 +87,13 @@ final class NlAssetChecks implements CheckProvider {
 	}//end seedSpec()
 
 	/**
-	 * True when the assignment's dates are coherent (no innameDatum, or
-	 * innameDatum on/after uitgifteDatum) AND, while the assignment is open
-	 * (no innameDatum), its `assetId` resolves in the context's Asset index
-	 * to an asset with `status: uitgegeven` AND its `employeeId` resolves in
-	 * the context's Employee index. Fail-closed on a dangling or missing
+	 * True when the assignment's dates are coherent (no returnedOn, or
+	 * returnedOn on/after issuedOn) AND, while the assignment is open (no
+	 * returnedOn), its `assetId` resolves in the context's Asset index to an
+	 * asset with `status: issued` AND its `employeeId` resolves in the
+	 * context's Employee index. Fail-closed on a dangling or missing
 	 * `assetId`/`employeeId` while open, and on an asset whose status is not
-	 * `uitgegeven`. A coherently-dated, already-closed assignment is never
+	 * `issued`. A coherently-dated, already-closed assignment is never
 	 * checked against the asset's current status -- historical uitgiftes may
 	 * reference re-stocked or written-off assets.
 	 *
@@ -102,13 +103,13 @@ final class NlAssetChecks implements CheckProvider {
 	 * @return bool
 	 */
 	private static function assignmentConsistent(array $o, array $c): bool {
-		$uitgifteDatum = trim((string)($o['uitgifteDatum'] ?? ''));
-		$innameDatum = trim((string)($o['innameDatum'] ?? ''));
+		$issuedOn = trim((string)($o['issuedOn'] ?? ''));
+		$returnedOn = trim((string)($o['returnedOn'] ?? ''));
 
-		if ($innameDatum !== '') {
-			$uitgifte = strtotime($uitgifteDatum);
-			$inname = strtotime($innameDatum);
-			if ($uitgifte !== false && $inname !== false && $inname < $uitgifte) {
+		if ($returnedOn !== '') {
+			$issued = strtotime($issuedOn);
+			$returned = strtotime($returnedOn);
+			if ($issued !== false && $returned !== false && $returned < $issued) {
 				return false;
 			}
 
@@ -123,7 +124,7 @@ final class NlAssetChecks implements CheckProvider {
 		}
 
 		$asset = (self::relatedAssetsById($c)[$assetId] ?? null);
-		if (is_array($asset) === false || ($asset['status'] ?? '') !== 'uitgegeven') {
+		if (is_array($asset) === false || ($asset['status'] ?? '') !== 'issued') {
 			return false;
 		}
 
@@ -136,7 +137,7 @@ final class NlAssetChecks implements CheckProvider {
 	}//end assignmentConsistent()
 
 	/**
-	 * True unless the assignment is open (no innameDatum) AND its
+	 * True unless the assignment is open (no returnedOn) AND its
 	 * `employeeId` resolves in the context's Offboarding
 	 * `plannedCompletionByEmployeeId` index to a date strictly before today
 	 * (the audit run date). Passes vacuously when the assignment is closed,
@@ -150,8 +151,8 @@ final class NlAssetChecks implements CheckProvider {
 	 * @return bool
 	 */
 	private static function innameBijOffboardingSatisfied(array $o, array $c): bool {
-		$innameDatum = trim((string)($o['innameDatum'] ?? ''));
-		if ($innameDatum !== '') {
+		$returnedOn = trim((string)($o['returnedOn'] ?? ''));
+		if ($returnedOn !== '') {
 			// Closed uitgifte — nothing outstanding to chase.
 			return true;
 		}

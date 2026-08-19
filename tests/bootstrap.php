@@ -70,3 +70,14 @@ if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleGuardInterface') ==
 if (class_exists('OCA\\OpenRegister\\Service\\ObjectService') === false) {
 	require __DIR__ . '/stubs/OpenRegisterObjectServiceStub.php';
 }
+
+// Same rule, different class: AssetDialectMigrationService::schemaMapper()
+// establishes availability with class_exists('OCA\OpenRegister\Db\SchemaMapper')
+// (hrmq-asset-fleet-merge tasks.md section 13's withAssetHardValidationDisabled()
+// fallback). Without the name present, that guard refuses every call here and
+// AssetDialectMigrationServiceTest fails on a missing app rather than on its
+// subject. The stub declares a NAME ONLY; the fake SchemaMapper the test
+// injects through the container is unchanged.
+if (class_exists('OCA\\OpenRegister\\Db\\SchemaMapper') === false) {
+	require __DIR__ . '/stubs/OpenRegisterSchemaMapperStub.php';
+}
