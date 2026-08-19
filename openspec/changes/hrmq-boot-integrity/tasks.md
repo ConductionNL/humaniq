@@ -99,3 +99,62 @@
   current bundle has `0.1.0` baked in. Not fixed by this change (Non-Goal) — recorded because
   design.md Decision 3 relies on this fact to justify not using `appVersion` as the freshness
   signal
+
+## 7. MEASURED — orchestrator, 2026-08-19
+
+### The P0 is fixed, verified with the positive control (task 5.5)
+
+```
+before:  GET …/Employee?…&administrationId=%40workspace.activeAdministrationId%3F  -> 200, total 0
+after:   GET …/Employee?_limit=20&_page=1&administrationId=ADM-001                  -> 200, total 10
+page:    "Showing 10 of 10"
+```
+
+Not merely "the literal token is gone" — that is equally satisfied by the clause being DROPPED, which
+would show all 16 rows across four administrations. The assertion is the resolved value and the
+count: `ADM-001`, 10 rows.
+
+- [x] 5.1 `npm ci` — `@conduction/nextcloud-vue` now `2.2.0-vue3.2`, matching the lockfile (was
+      `1.0.0-beta.215`).
+- [x] 5.3 Bundle rebuilt: md5 `a699e95b…` → `349b069c…`, 11,453,618 → 9,309,048 bytes.
+- [x] 5.4 `check-bundle-freshness` now PASSES (bundle 16:35Z, src last committed 16:18Z).
+- [x] 5.5 Live-verified above. Served bundle md5 == built bundle md5.
+- [ ] 5.2 `composer install` — still blocked, `vendor/` is root-owned. phpcs/phpstan still cannot run
+      locally; CI runs both.
+
+### 🔴 A FINDING BIGGER THAN THE ONE THIS CHANGE WAS WRITTEN FOR
+
+**`npm ci` does not determine what ships.** `webpack.config.js:42-48`:
+
+```js
+const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
+const useLocalLib = process.env.USE_LOCAL_LIB !== 'false' && fs.existsSync(localLib)
+…alias: { ...(useLocalLib ? { '@conduction/nextcloud-vue': localLib } : {}) }
+```
+
+The alias is **opt-OUT**. On any machine with the sibling checkout present — every fleet dev box —
+the bundle is compiled from **whatever branch that checkout happens to be on**, not from the locked
+npm package. Measured today: `../nextcloud-vue` was on `fix/flow-edge-dialect`, someone else's
+in-flight work.
+
+The consequence is not theoretical. Measured, same source, same machine, minutes apart:
+
+| Build | Result |
+| --- | --- |
+| `npm run build` (default → sibling checkout) | **13 errors, no bundle emitted** |
+| `USE_LOCAL_LIB=false npm run build` (locked package) | clean, 2 warnings, bundle emitted |
+
+And the failing build **exited 0** at the npm-script level, so a CI or developer flow that only
+checks the exit code reads "built fine" while `js/` still holds the previous bundle. That is exactly
+the shape of the incident this change exists to prevent, one layer further out: the deps-drift check
+I just added would have passed, because `node_modules` was correct — it simply was not what the
+build used.
+
+- [ ] 7.1 Flip the alias to opt-IN (`USE_LOCAL_LIB === 'true'`), so a build uses the declared
+      dependency unless a developer deliberately asks otherwise. Cross-repo: the same pattern is in
+      several fleet webpack configs and should move together.
+- [ ] 7.2 Make a webpack build with errors fail the npm script, rather than exiting 0 with a stale
+      `js/` on disk.
+- [ ] 7.3 Extend `check-node-deps-drift.js` to report WHICH source the last build resolved
+      `@conduction/nextcloud-vue` from — the check currently proves the tree is correct, not that
+      the bundle came from it.
