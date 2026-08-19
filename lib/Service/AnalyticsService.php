@@ -65,7 +65,13 @@ class AnalyticsService {
 	 *
 	 * @var array<int, string>
 	 */
-	public const ALLOWED_TREND_METRICS = ['absence-rate', 'payroll-cost', 'approval-lead-time'];
+	public const ALLOWED_TREND_METRICS = [
+		'absence-rate',
+		'payroll-cost',
+		'approval-lead-time',
+		'billable-ratio',
+		'headcount',
+	];
 
 	/**
 	 * Trailing-window period selectors, mirroring pipelinq's
@@ -160,6 +166,8 @@ class AnalyticsService {
 			'absence-rate' => $this->absenceRateSeries($periodKeys, $administrationId),
 			'payroll-cost' => $this->payrollCostSeries($periodKeys, $administrationId),
 			'approval-lead-time' => $this->approvalLeadTimeSeries($periodKeys, $administrationId),
+			'billable-ratio' => $this->billableRatioSeries($periodKeys, $administrationId),
+			'headcount' => $this->headcountSeries($periodKeys, $administrationId),
 		};
 
 		return ['metric' => $metric, 'period' => $period, 'series' => $series];
@@ -230,6 +238,137 @@ class AnalyticsService {
 
 		return $series;
 	}//end payrollCostSeries()
+
+	/**
+	 * Billable-ratio series (REQ-DSI-002): billable hours as a percentage of
+	 * ALL registered hours, per `Timesheet.period` bucket.
+	 *
+	 * Server-side and register-scoped on purpose. The first cut of this
+	 * widget bound to a raw-GraphQL `dataSource` — `{ Timesheet(filter:
+	 * {billable: true}, groupBy: …) }` — which resolves a type by NAME
+	 * across every register on the instance. Measured live: the sibling
+	 * Headcount widget's `Employee` root field resolved to schema 5050 in
+	 * an unrelated register (the GraphQL type is literally named
+	 * `Employee5050Connection`), not hrmq's Employee (1080), so
+	 * `startDate` came back "not a declared property" while
+	 * `employeeNumber` returned three rows from a register this app does
+	 * not own. A query that answers 200 with somebody else's data is worse
+	 * than one that fails. `loadFiltered()` scopes by register AND by the
+	 * caller's authorized administration, which the raw-GraphQL form also
+	 * could not do (`useDataSource` passes `graphql.query` through without
+	 * resolving `@workspace.*` tokens).
+	 *
+	 * A bucket with no registered hours at all yields `null`, never `0.0`:
+	 * "nobody logged any hours" is an absent measurement, and a 0% billable
+	 * ratio is a catastrophic reading — the two must not look alike.
+	 *
+	 * @param array<int, string> $periodKeys `YYYY-MM` buckets, oldest first.
+	 * @param string $administrationId The caller's active administration.
+	 *
+	 * @return array<int, array{date: string, value: float|null}>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-002
+	 */
+	private function billableRatioSeries(array $periodKeys, string $administrationId): array {
+		$billable = array_fill_keys($periodKeys, 0.0);
+		$total = array_fill_keys($periodKeys, 0.0);
+
+		foreach ($this->loadFiltered('Timesheet', $administrationId) as $row) {
+			$period = (string)($row['period'] ?? '');
+			if (array_key_exists($period, $total) === false) {
+				continue;
+			}
+
+			$hours = (float)($row['hours'] ?? 0);
+			$total[$period] += $hours;
+			if (($row['billable'] ?? false) === true) {
+				$billable[$period] += $hours;
+			}
+		}
+
+		$series = [];
+		foreach ($periodKeys as $period) {
+			$series[] = [
+				'date' => $period,
+				'value' => $total[$period] <= 0.0 ? null : round((($billable[$period] / $total[$period]) * 100), 1),
+			];
+		}
+
+		return $series;
+	}//end billableRatioSeries()
+
+	/**
+	 * Headcount-and-turnover series (REQ-DSI-003): active headcount at each
+	 * period's END, plus the starters and leavers within that period.
+	 *
+	 * Register-scoped and administration-scoped for the same reason
+	 * `billableRatioSeries()` is — see that method's docblock for the
+	 * measured cross-register resolution defect this replaces.
+	 *
+	 * An `Employee` with no parseable `startDate` cannot be placed on the
+	 * timeline at all, so it is excluded from every bucket rather than
+	 * assumed to have started at some convenient moment — the same refusal
+	 * `AbsenceRateService` makes for an absence with no covering contract.
+	 * The count is logged rather than silently dropped, because an
+	 * administration where many employees lack a start date produces a
+	 * headcount line that is real-looking and wrong.
+	 *
+	 * @param array<int, string> $periodKeys `YYYY-MM` buckets, oldest first.
+	 * @param string $administrationId The caller's active administration.
+	 *
+	 * @return array<int, array{date: string, headcount: int, starters: int, leavers: int}>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
+	 */
+	private function headcountSeries(array $periodKeys, string $administrationId): array {
+		$placeable = [];
+		$excluded = 0;
+		foreach ($this->loadFiltered('Employee', $administrationId) as $row) {
+			$start = $this->parseDate($row['startDate'] ?? null);
+			if ($start === null) {
+				$excluded++;
+				continue;
+			}
+
+			$placeable[] = ['start' => $start, 'end' => $this->parseDate($row['endDate'] ?? null)];
+		}
+
+		if ($excluded > 0) {
+			$this->logger->warning(
+				'AnalyticsService: ' . $excluded . ' employee(s) excluded from the headcount series — no parseable startDate'
+			);
+		}
+
+		$series = [];
+		foreach ($periodKeys as $period) {
+			[$start, $end] = $this->periodBounds($period);
+			$headcount = 0;
+			$starters = 0;
+			$leavers = 0;
+			foreach ($placeable as $employee) {
+				if ($employee['start'] <= $end && ($employee['end'] === null || $employee['end'] > $end)) {
+					$headcount++;
+				}
+
+				if ($employee['start'] >= $start && $employee['start'] <= $end) {
+					$starters++;
+				}
+
+				if ($employee['end'] !== null && $employee['end'] >= $start && $employee['end'] <= $end) {
+					$leavers++;
+				}
+			}
+
+			$series[] = [
+				'date' => $period,
+				'headcount' => $headcount,
+				'starters' => $starters,
+				'leavers' => $leavers,
+			];
+		}
+
+		return $series;
+	}//end headcountSeries()
 
 	/**
 	 * Approval-lead-time series (REQ-DSI-007): `Timesheet`/`Expense`/

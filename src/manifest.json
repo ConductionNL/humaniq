@@ -711,21 +711,27 @@
 					"gridY": 0,
 					"gridWidth": 4,
 					"gridHeight": 4,
-					"dataSource": {
-						"_note": "REQ-DSI-002. Categorical group-by (no interval) on Timesheet.period via OpenRegister's GraphQL groupBy argument -- confirmed server-side in TimeseriesRequestValidator::validate() (openregister lib/Service/Aggregation/TimeseriesRequestValidator.php): omitting `interval` yields `groupBy = ['field' => $field]`, a plain categorical bucket, no date-type restriction. Single series (billable hours), not the two-series (billable vs total) design.md D1 describes -- see the page config._note for why. No administrationId filter: raw-GraphQL dataSource bypasses useDataSource's token resolution entirely (also in that same _note) -- unscoped, matching (not exceeding) today's Timesheets index-page exposure.",
-						"graphql": {
-							"query": "{ Timesheet(filter: {billable: true}, groupBy: {field: \"period\", metric: SUM, metricField: \"hours\"}) { groups { key value } } }",
-							"selectors": {
-								"series": "Timesheet.groups[].value",
-								"categories": "Timesheet.groups[].key"
-							}
-						}
-					},
 					"props": {
+						"_note": "REQ-DSI-002. Bound to the GUARDED, register-scoped AnalyticsController::trends() endpoint, not to a raw-GraphQL dataSource. The dataSource form resolved a type by NAME across every register on the instance: measured live, the sibling Headcount widget's `Employee` root field resolved to schema 5050 in an unrelated register (the GraphQL type is named `Employee5050Connection`), NOT hrmq's Employee (1080) -- `startDate` answered 'not a declared property' while `employeeNumber` cheerfully returned three rows belonging to another app. It also could not carry an administrationId filter at all (useDataSource passes graphql.query through without resolving @workspace.* tokens), so it was unscoped across tenants. The endpoint is scoped by register AND by the caller's authorized administration, and emits null (never 0) for a period with no registered hours.",
 						"title": "Billable ratio",
-						"type": "bar",
+						"type": "line",
 						"height": "100%",
-						"legend": false
+						"valueFormat": "percent",
+						"endpointSource": {
+							"url": "/apps/hrmq/api/analytics/trends",
+							"params": {
+								"metric": "billable-ratio"
+							},
+							"responsePath": "series"
+						},
+						"labelsPath": "date",
+						"seriesFields": [
+							{
+								"name": "Billable ratio",
+								"path": "value"
+							}
+						],
+						"emptyLabel": "No hours registered yet"
 					}
 				},
 				{
@@ -764,25 +770,34 @@
 					"gridY": 0,
 					"gridWidth": 4,
 					"gridHeight": 4,
-					"dataSource": {
-						"_note": "REQ-DSI-003. Time-bucket group-by on Employee.startDate (interval MONTH) via OpenRegister's GraphQL groupBy argument. `from`/`to` are REQUIRED whenever `interval` is set (TimeseriesRequestValidator::validate()), so a generous static window covers every realistic hire date -- this dashboard has no date-range control to source a narrower one from. Single series (starters), not the two-series (starters vs leavers) design.md D1 describes -- see the page config._note. No administrationId filter -- same raw-GraphQL token-resolution gap as Billable ratio above.",
-						"graphql": {
-							"query": "query($from: String!, $to: String!) { Employee(groupBy: {field: \"startDate\", interval: MONTH, from: $from, to: $to}) { groups { key value } } }",
-							"variables": {
-								"from": "2015-01-01",
-								"to": "2035-12-31"
-							},
-							"selectors": {
-								"series": "Employee.groups[].value",
-								"categories": "Employee.groups[].key"
-							}
-						}
-					},
 					"props": {
+						"_note": "REQ-DSI-003. Bound to the GUARDED, register-scoped AnalyticsController::trends() endpoint. This is the widget that EXPOSED the cross-register resolution defect described on Billable ratio above: its raw-GraphQL `Employee` root field resolved to schema 5050 in another register, so `groupBy: {field: \"startDate\"}` returned `field \"startDate\" is not a declared property of the schema` and the widget threw `e.map is not a function` into the console on every Dashboard load. Now three honest series -- headcount at period END, starters and leavers WITHIN the period -- instead of the single starters series the dataSource form could produce (useGraphQL's selectors do one dot-path pluck per output key and cannot assemble two aliased root fields into one series array).",
 						"title": "Headcount and turnover",
 						"type": "bar",
 						"height": "100%",
-						"legend": false
+						"endpointSource": {
+							"url": "/apps/hrmq/api/analytics/trends",
+							"params": {
+								"metric": "headcount"
+							},
+							"responsePath": "series"
+						},
+						"labelsPath": "date",
+						"seriesFields": [
+							{
+								"name": "Headcount",
+								"path": "headcount"
+							},
+							{
+								"name": "Starters",
+								"path": "starters"
+							},
+							{
+								"name": "Leavers",
+								"path": "leavers"
+							}
+						],
+						"emptyLabel": "No employees with a start date yet"
 					}
 				},
 				{
@@ -811,7 +826,7 @@
 						"labelsPath": "date",
 						"seriesFields": [
 							{
-								"name": "Loonkosten",
+								"name": "Payroll cost",
 								"path": "value"
 							}
 						],
@@ -839,11 +854,11 @@
 						"labelsPath": "date",
 						"seriesFields": [
 							{
-								"name": "Mediaan (dagen)",
+								"name": "Median (days)",
 								"path": "median"
 							},
 							{
-								"name": "P90 (dagen)",
+								"name": "P90 (days)",
 								"path": "p90"
 							}
 						],
@@ -880,7 +895,7 @@
 								"key": "violations"
 							}
 						],
-						"emptyText": "Geen openstaande verplichtingen"
+						"emptyText": "No open obligations"
 					}
 				}
 			]
