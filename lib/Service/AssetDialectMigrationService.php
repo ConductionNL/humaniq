@@ -101,79 +101,16 @@ class AssetDialectMigrationService {
 	private const LIMIT = 10000;
 
 	/**
-	 * Old Dutch `Asset.category` value -> renamed value (design.md D1).
-	 *
-	 * @var array<string, string>
-	 */
-	private const ASSET_CATEGORY_MAP = [
-		'telefoon'    => 'phone',
-		'voertuig'    => 'vehicle',
-		'gereedschap' => 'tool',
-		'toegangspas' => 'accessPass',
-		'kleding'     => 'clothing',
-		'overig'      => 'other',
-	];
-
-	/**
-	 * Old Dutch `Asset.status` value -> renamed value (design.md D1).
-	 *
-	 * @var array<string, string>
-	 */
-	private const ASSET_STATUS_MAP = [
-		'beschikbaar' => 'available',
-		'uitgegeven'  => 'issued',
-		'ingenomen'   => 'checkedIn',
-		'afgeschreven' => 'writtenOff',
-	];
-
-	/**
-	 * Current schema `Asset.category` enum (a row already showing one of
-	 * these values needs no category rewrite).
-	 *
-	 * @var string[]
-	 */
-	private const ASSET_CATEGORY_CURRENT = ['laptop', 'phone', 'vehicle', 'tool', 'accessPass', 'clothing', 'other'];
-
-	/**
-	 * Current schema `Asset.status` enum.
-	 *
-	 * @var string[]
-	 */
-	private const ASSET_STATUS_CURRENT = ['available', 'issued', 'checkedIn', 'writtenOff'];
-
-	/**
-	 * Old Dutch `Asset` field name -> renamed field name (design.md D1).
-	 *
-	 * @var array<string, string>
-	 */
-	private const ASSET_FIELD_MAP = [
-		'kenteken'      => 'licencePlate',
-		'serienummer'   => 'serialNumber',
-		'aanschafdatum' => 'purchaseDate',
-		'aanschafwaarde' => 'purchaseValue',
-	];
-
-	/**
-	 * Old Dutch `AssetAssignment` field name -> renamed field name (design.md D1).
-	 *
-	 * @var array<string, string>
-	 */
-	private const ASSIGNMENT_FIELD_MAP = [
-		'uitgifteDatum'     => 'issuedOn',
-		'innameDatum'       => 'returnedOn',
-		'uitgifteBonSigned' => 'issueReceiptSigned',
-		'eigenBijdrage'     => 'employeeContribution',
-	];
-
-	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param IAppConfig $appConfig App config for the register slug.
 	 * @param LoggerInterface $logger Logger.
+	 * @param AssetDialectMapper $mapper Pure old->new dialect row mapping.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
+		private readonly AssetDialectMapper $mapper = new AssetDialectMapper(),
 	) {
 
 	}//end __construct()
@@ -216,7 +153,7 @@ class AssetDialectMigrationService {
 				continue;
 			}
 
-			$mapped = $this->mapAssetRow($row);
+			$mapped = $this->mapper->mapAssetRow($row);
 
 			if ($mapped['hardSkipReason'] !== null) {
 				$report['skipped']++;
@@ -224,66 +161,72 @@ class AssetDialectMigrationService {
 				continue;
 			}
 
-			$rowWritten = false;
-
-			// ONE write, carrying the fully-migrated payload -- fields AND
-			// status together. This clears both of OpenRegister's gates with
-			// validation fully ON, which is why no bypass is needed:
-			//
-			//  1. Full-object schema validation reads the PAYLOAD, and the
-			//     payload's status is already the new English value, so the
-			//     enum check passes. (The earlier two-phase approach failed
-			//     precisely because its first write left the legacy status in
-			//     the payload untouched.)
-			//  2. `LifecycleValidationListener` needs a DECLARED transition
-			//     whose `from` carries the old value. The schema now declares
-			//     four migration-only `migrateLegacyStatus_*` transitions for
-			//     exactly that -- the expand half of an expand/contract enum
-			//     migration. They are removed again once no row holds a legacy
-			//     status; nothing can re-enter one, because the legacy values
-			//     are not in the enum.
-			//
-			// This replaces a temporary global toggle of the Asset SCHEMA's
-			// persisted `hardValidation` flag. That worked, but it relaxed
-			// validation for every concurrent writer of Asset while it was
-			// off, and a fatal or SIGKILL between the toggle and its `finally`
-			// would have left validation off permanently and silently.
-			if ($mapped['nonStatusChanged'] === true || $mapped['statusChanged'] === true) {
-				try {
-					$this->objectService()->saveObject(
-						object: $this->stripSelf($mapped['final']),
-						register: $this->register(),
-						schema: 'Asset',
-						uuid: $id,
-						_rbac: false,
-						_multitenancy: false
-					);
-					$rowWritten = true;
-				} catch (\Throwable $e) {
-					$report['skipped']++;
-					$report['skipReasons'][] = [
-						'id' => $id,
-						'reason' => sprintf(
-							'dialect rewrite failed (status %s -> %s): %s',
-							(string)($row['status'] ?? ''),
-							(string)($mapped['final']['status'] ?? ''),
-							$e->getMessage()
-						),
-					];
-					continue;
-				}
-			}//end if
-
-			if ($rowWritten === true) {
-				$report['rewritten']++;
-			} elseif ($mapped['nonStatusChanged'] === false && $mapped['statusChanged'] === false) {
-				$report['alreadyCurrent']++;
-			}
+			$this->writeAssetRow(id: $id, row: $row, mapped: $mapped, report: $report);
 		}//end foreach
 
 		return $report;
 
 	}//end migrateAssets()
+
+	/**
+	 * Write one mapped Asset row and record the outcome on the report.
+	 *
+	 * ONE write, carrying the fully-migrated payload -- fields AND status
+	 * together. That clears both of OpenRegister's gates with validation fully
+	 * ON, which is why no bypass is needed:
+	 *
+	 *  1. Full-object schema validation reads the PAYLOAD, and the payload's
+	 *     status is already the new English value, so the enum check passes.
+	 *     The earlier two-phase approach failed precisely because its first
+	 *     write left the legacy status in the payload untouched.
+	 *  2. `LifecycleValidationListener` needs a DECLARED transition whose
+	 *     `from` carries the old value. The schema declares four
+	 *     migration-only `migrateLegacyStatus_*` transitions for exactly that
+	 *     -- the expand half of an expand/contract enum migration, removed
+	 *     again once no row holds a legacy status.
+	 *
+	 * This replaces a temporary global toggle of the Asset SCHEMA's persisted
+	 * `hardValidation` flag, which relaxed validation for every concurrent
+	 * writer of Asset while it was off, and which a fatal between toggle and
+	 * restore would have left off permanently and silently.
+	 *
+	 * @param string               $id     The object uuid.
+	 * @param array<string, mixed> $row    The row as read.
+	 * @param array<string, mixed> $mapped The mapper's result for that row.
+	 * @param array<string, mixed> $report The report, mutated in place.
+	 *
+	 * @return void
+	 */
+	private function writeAssetRow(string $id, array $row, array $mapped, array &$report): void {
+		if ($mapped['nonStatusChanged'] === false && $mapped['statusChanged'] === false) {
+			$report['alreadyCurrent']++;
+			return;
+		}
+
+		try {
+			$this->objectService()->saveObject(
+				object: $this->stripSelf($mapped['final']),
+				register: $this->register(),
+				schema: 'Asset',
+				uuid: $id,
+				_rbac: false,
+				_multitenancy: false
+			);
+			$report['rewritten']++;
+		} catch (\Throwable $e) {
+			$report['skipped']++;
+			$report['skipReasons'][] = [
+				'id' => $id,
+				'reason' => sprintf(
+					'dialect rewrite failed (status %s -> %s): %s',
+					(string)($row['status'] ?? ''),
+					(string)($mapped['final']['status'] ?? ''),
+					$e->getMessage()
+				),
+			];
+		}
+
+	}//end writeAssetRow()
 
 	/**
 	 * Migrate every `AssetAssignment` row (field renames only -- no enum,
@@ -303,7 +246,7 @@ class AssetDialectMigrationService {
 				continue;
 			}
 
-			$mapped = $this->mapFieldRenames($row, self::ASSIGNMENT_FIELD_MAP);
+			$mapped = $this->mapper->mapAssignmentRow($row);
 
 			if ($mapped['hardSkipReason'] !== null) {
 				$report['skipped']++;
@@ -337,222 +280,6 @@ class AssetDialectMigrationService {
 	}//end migrateAssignments()
 
 	/**
-	 * Compute the migrated shape of one `Asset` row, split into a
-	 * status-untouched write (category + field renames, always safe) and
-	 * the full target shape including the translated status (may be
-	 * rejected by the lifecycle guard -- see class docblock).
-	 *
-	 * @param array<string, mixed> $row The raw Asset row.
-	 *
-	 * @return array{hardSkipReason: string|null, nonStatusChanged: bool, statusChanged: bool, withoutStatusChange: array<string, mixed>, final: array<string, mixed>}
-	 */
-	private function mapAssetRow(array $row): array {
-		$withoutStatusChange = $row;
-		$nonStatusChanged = false;
-		$hardSkipReasons = [];
-
-		// category.
-		$category = $row['category'] ?? null;
-		if (is_string($category) === true && $category !== '') {
-			if (isset(self::ASSET_CATEGORY_MAP[$category]) === true) {
-				$withoutStatusChange['category'] = self::ASSET_CATEGORY_MAP[$category];
-				$nonStatusChanged = true;
-			} elseif (in_array($category, self::ASSET_CATEGORY_CURRENT, true) === false) {
-				$hardSkipReasons[] = "unrecognised category value '" . $category . "'";
-			}
-		}
-
-		// status (translated into $final only -- left untouched in
-		// $withoutStatusChange, see class docblock).
-		$statusChanged = false;
-		$newStatus = null;
-		$status = $row['status'] ?? null;
-		if (is_string($status) === true && $status !== '') {
-			if (isset(self::ASSET_STATUS_MAP[$status]) === true) {
-				$statusChanged = true;
-				$newStatus = self::ASSET_STATUS_MAP[$status];
-			} elseif (in_array($status, self::ASSET_STATUS_CURRENT, true) === false) {
-				$hardSkipReasons[] = "unrecognised status value '" . $status . "'";
-			}
-		}
-
-		// Field renames (kenteken/serienummer/aanschafdatum/aanschafwaarde).
-		$fieldResult = $this->applyFieldRenames($withoutStatusChange, self::ASSET_FIELD_MAP);
-		if ($fieldResult['hardSkipReason'] !== null) {
-			$hardSkipReasons[] = $fieldResult['hardSkipReason'];
-		}
-
-		if ($fieldResult['changed'] === true) {
-			$withoutStatusChange = $fieldResult['row'];
-			$nonStatusChanged = true;
-		}
-
-		// aanschafdatum carried a datetime ("YYYY-MM-DD HH:MM:SS"); purchaseDate
-		// is `format: date`. Normalise, but only when the rename actually fired.
-		if (isset($withoutStatusChange['purchaseDate']) === true && is_string($withoutStatusChange['purchaseDate']) === true) {
-			$withoutStatusChange['purchaseDate'] = substr($withoutStatusChange['purchaseDate'], 0, 10);
-		}
-
-		// aanschafwaarde came through as a numeric string ("1249.00");
-		// purchaseValue is `type: number`.
-		if (isset($withoutStatusChange['purchaseValue']) === true && is_numeric($withoutStatusChange['purchaseValue']) === true) {
-			$withoutStatusChange['purchaseValue'] = (float)$withoutStatusChange['purchaseValue'];
-		}
-
-		$final = $withoutStatusChange;
-		if ($statusChanged === true) {
-			$final['status'] = $newStatus;
-		}
-
-		return [
-			'hardSkipReason' => ($hardSkipReasons === [] ? null : implode('; ', $hardSkipReasons)),
-			'nonStatusChanged' => $nonStatusChanged,
-			'statusChanged' => $statusChanged,
-			'withoutStatusChange' => $withoutStatusChange,
-			'final' => $final,
-		];
-
-	}//end mapAssetRow()
-
-	/**
-	 * Apply a set of old-field -> new-field renames to a row. A row
-	 * carrying BOTH the old and new field with DIFFERENT values is not
-	 * guessed at -- it is reported via `hardSkipReason` and left untouched;
-	 * with EQUAL values, the old (redundant) key is simply dropped.
-	 *
-	 * @param array<string, mixed> $row The row.
-	 * @param array<string, string> $fieldMap Old field name => new field name.
-	 *
-	 * @return array{row: array<string, mixed>, changed: bool, hardSkipReason: string|null}
-	 */
-	private function mapFieldRenames(array $row, array $fieldMap): array {
-		$result = $this->applyFieldRenames($row, $fieldMap);
-		return [
-			'row' => $result['row'],
-			'changed' => $result['changed'],
-			'hardSkipReason' => $result['hardSkipReason'],
-		];
-
-	}//end mapFieldRenames()
-
-	/**
-	 * Shared field-rename engine used by both `mapAssetRow()` and
-	 * `mapFieldRenames()`.
-	 *
-	 * @param array<string, mixed> $row The row.
-	 * @param array<string, string> $fieldMap Old field name => new field name.
-	 *
-	 * @return array{row: array<string, mixed>, changed: bool, hardSkipReason: string|null}
-	 */
-	private function applyFieldRenames(array $row, array $fieldMap): array {
-		$updated = $row;
-		$changed = false;
-		$conflicts = [];
-
-		foreach ($fieldMap as $old => $new) {
-			if (array_key_exists($old, $row) === false || $row[$old] === null) {
-				// A null old-name key is an ABSENT value, not a value to
-				// migrate -- OpenRegister objects can carry a null-valued
-				// key left over from an earlier schema version that once
-				// declared it (measured: `kenteken`/`aanschafdatum`/
-				// `aanschafwaarde`/`uitgifteDatum` all appear as explicit
-				// nulls on rows that never held Dutch-dialect data in the
-				// first place). Treating a null as "present" would report a
-				// false conflict against a populated new-name field and
-				// block an already-current row from ever reaching
-				// alreadyCurrent.
-				continue;
-			}
-
-			$oldValue = $row[$old];
-			$newPresent = array_key_exists($new, $row) === true && $row[$new] !== null;
-
-			if ($newPresent === true) {
-				$newValue = $row[$new];
-				if ($this->valuesEquivalent($oldValue, $newValue) === true) {
-					// Both names hold the same value -- this field's job is
-					// done, and there is nothing left to WRITE: OpenRegister
-					// never generates a SET clause for a property the
-					// CURRENT schema no longer declares, so neither omitting
-					// the retired key NOR sending it as an explicit null
-					// clears it (both measured against the live instance --
-					// orchestrator review, 2026-08-19, Defect C's first
-					// "fix" assumed an explicit null would be written
-					// through; it is not even looked at). The retired key's
-					// stale value is permanent, harmless debris no schema or
-					// consumer reads any more -- treating its mere presence
-					// as still-unfinished work would make this field retry
-					// forever, which is what actually broke idempotency.
-					continue;
-				}
-
-				$conflicts[] = sprintf(
-					"both '%s' (%s) and '%s' (%s) present with different values, refusing to guess",
-					$old,
-					json_encode($oldValue),
-					$new,
-					json_encode($newValue)
-				);
-				continue;
-			}//end if
-
-			// Plain rename: the new name is not populated yet, so writing it
-			// is real, achievable progress -- the retired key is left
-			// exactly as-is in the payload (see the branch above for why
-			// touching it at all would be a wasted write).
-			$updated[$new] = $oldValue;
-			$changed = true;
-		}//end foreach
-
-		return [
-			'row' => $updated,
-			'changed' => $changed,
-			'hardSkipReason' => ($conflicts === [] ? null : implode('; ', $conflicts)),
-		];
-
-	}//end applyFieldRenames()
-
-	/**
-	 * Loose-but-safe equivalence for a duplicate old/new field pair (a
-	 * legacy string boolean and a real boolean, or a numeric string and a
-	 * float, should count as "already the same value").
-	 *
-	 * @param mixed $a First value.
-	 * @param mixed $b Second value.
-	 *
-	 * @return bool
-	 */
-	private function valuesEquivalent(mixed $a, mixed $b): bool {
-		if ($a === $b) {
-			return true;
-		}
-
-		if (is_numeric($a) === true && is_numeric($b) === true) {
-			return (float)$a === (float)$b;
-		}
-
-		if (is_bool($a) === true || is_bool($b) === true) {
-			return (bool)$a === (bool)$b;
-		}
-
-		// A datetime string ("YYYY-MM-DD HH:MM:SS", `aanschafdatum`'s old
-		// stored precision) and a date-only string ("YYYY-MM-DD",
-		// `purchaseDate`'s `format: date`) for the same calendar day are the
-		// same value at a different precision, not a conflict -- measured
-		// against the live instance (every pre-existing Asset date was
-		// always midnight).
-		if (is_string($a) === true && is_string($b) === true
-			&& preg_match('/^\d{4}-\d{2}-\d{2}/', $a) === 1
-			&& preg_match('/^\d{4}-\d{2}-\d{2}/', $b) === 1
-		) {
-			return substr($a, 0, 10) === substr($b, 0, 10);
-		}
-
-		return (string)$a === (string)$b;
-
-	}//end valuesEquivalent()
-
-	/**
 	 * @return array<string, mixed> An empty per-schema report shape.
 	 */
 	private function emptyReport(): array {
@@ -579,43 +306,6 @@ class AssetDialectMigrationService {
 
 	}//end stripSelf()
 
-	/**
-	 * The category/field-only Asset write (status deliberately left as
-	 * whatever the caller passed -- unchanged on the normal path, see
-	 * `migrateAssets()`).
-	 *
-	 * @param array<string, mixed> $object The row to save (already carrying its target category/field values).
-	 * @param string $id The object's uuid.
-	 *
-	 * @return void
-	 */
-	private function saveAssetBase(array $object, string $id): void {
-		$this->objectService()->saveObject(
-			object: $this->stripSelf($object),
-			register: $this->register(),
-			schema: 'Asset',
-			uuid: $id,
-			_rbac: false,
-			_multitenancy: false,
-			_validation: false
-		);
-
-	}//end saveAssetBase()
-
-
-	/**
-	 * @return mixed The OpenRegister SchemaMapper.
-	 */
-	private function schemaMapper(): mixed {
-		if (class_exists('OCA\OpenRegister\Db\SchemaMapper') === false) {
-			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
-
-	}//end schemaMapper()
 
 	/**
 	 * @param array<string, mixed> $row An object row.
