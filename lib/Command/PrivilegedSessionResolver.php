@@ -47,54 +47,48 @@ use OCP\IUserSession;
  * Resolves, validates, and establishes the `--as-user` privileged session
  * shared by every `occ hrmq:avg:*` command.
  */
-final class PrivilegedSessionResolver
-{
+final class PrivilegedSessionResolver {
 
+	/**
+	 * @param IUserManager $userManager Resolves the named uid to a real user.
+	 * @param IGroupManager $groupManager Validates the resolved user is an actual Nextcloud administrator.
+	 * @param IUserSession $userSession Session `DsarService::assertPrivileged()` reads via `getUser()`.
+	 */
+	public function __construct(
+		private readonly IUserManager $userManager,
+		private readonly IGroupManager $groupManager,
+		private readonly IUserSession $userSession,
+	) {
 
-    /**
-     * @param IUserManager  $userManager  Resolves the named uid to a real user.
-     * @param IGroupManager $groupManager Validates the resolved user is an actual Nextcloud administrator.
-     * @param IUserSession  $userSession  Session `DsarService::assertPrivileged()` reads via `getUser()`.
-     */
-    public function __construct(
-        private readonly IUserManager $userManager,
-        private readonly IGroupManager $groupManager,
-        private readonly IUserSession $userSession,
-    ) {
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * Resolve, validate, and establish the privileged session for `$uid`.
+	 *
+	 * @param string $uid The `--as-user` value.
+	 *
+	 * @return string|null A one-line controlled error message on failure, or null on success (the session is now established).
+	 *
+	 * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
+	 */
+	public function establish(string $uid): ?string {
+		$uid = trim($uid);
+		if ($uid === '') {
+			return '--as-user is verplicht.';
+		}
 
+		$user = $this->userManager->get($uid);
+		if ($user === null) {
+			return 'Onbekende gebruiker \'' . $uid . '\'.';
+		}
 
-    /**
-     * Resolve, validate, and establish the privileged session for `$uid`.
-     *
-     * @param string $uid The `--as-user` value.
-     *
-     * @return string|null A one-line controlled error message on failure, or null on success (the session is now established).
-     *
-     * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
-     */
-    public function establish(string $uid): ?string
-    {
-        $uid = trim($uid);
-        if ($uid === '') {
-            return '--as-user is verplicht.';
-        }
+		if ($this->groupManager->isAdmin($uid) === false) {
+			return '\'' . $uid . '\' is geen Nextcloud-beheerder; AVG data-subject-rights-bewerkingen vereisen een beheerderssessie.';
+		}
 
-        $user = $this->userManager->get($uid);
-        if ($user === null) {
-            return 'Onbekende gebruiker \''.$uid.'\'.';
-        }
+		$this->userSession->setUser($user);
 
-        if ($this->groupManager->isAdmin($uid) === false) {
-            return '\''.$uid.'\' is geen Nextcloud-beheerder; AVG data-subject-rights-bewerkingen vereisen een beheerderssessie.';
-        }
-
-        $this->userSession->setUser($user);
-
-        return null;
-
-    }//end establish()
-
+		return null;
+	}//end establish()
 
 }//end class

@@ -53,47 +53,43 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for appinfo/info.xml validity.
  */
-class AppInfoTest extends TestCase
-{
+class AppInfoTest extends TestCase {
 
+	/**
+	 * info.xml must be well-formed XML, or Nextcloud cannot enable the app.
+	 *
+	 * @return void
+	 */
+	public function testInfoXmlIsWellFormedXml(): void {
+		$path = __DIR__ . '/../../appinfo/info.xml';
 
-    /**
-     * info.xml must be well-formed XML, or Nextcloud cannot enable the app.
-     *
-     * @return void
-     */
-    public function testInfoXmlIsWellFormedXml(): void
-    {
-        $path = __DIR__.'/../../appinfo/info.xml';
+		$this->assertFileExists($path, 'appinfo/info.xml must exist.');
 
-        $this->assertFileExists($path, 'appinfo/info.xml must exist.');
+		// Suppress libxml warnings so a parse failure surfaces as a clean
+		// assertion failure instead of PHPUnit converting the warning into
+		// an error with a noisy stack trace.
+		$useInternalErrors = libxml_use_internal_errors(true);
+		// Mirrors OC\App\InfoParser::parse() exactly — see the class docblock
+		// for why load_file() cannot be used here.
+		$result = simplexml_load_string(file_get_contents($path));
+		$errors = libxml_get_errors();
+		libxml_clear_errors();
+		libxml_use_internal_errors($useInternalErrors);
 
-        // Suppress libxml warnings so a parse failure surfaces as a clean
-        // assertion failure instead of PHPUnit converting the warning into
-        // an error with a noisy stack trace.
-        $useInternalErrors = libxml_use_internal_errors(true);
-        // Mirrors OC\App\InfoParser::parse() exactly — see the class docblock
-        // for why load_file() cannot be used here.
-        $result            = simplexml_load_string(file_get_contents($path));
-        $errors            = libxml_get_errors();
-        libxml_clear_errors();
-        libxml_use_internal_errors($useInternalErrors);
+		$errorMessages = array_map(
+			static function ($error) {
+				return trim($error->message) . ' (line ' . $error->line . ')';
+			},
+			$errors
+		);
 
-        $errorMessages = array_map(
-            static function ($error) {
-                return trim($error->message).' (line '.$error->line.')';
-            },
-            $errors
-        );
-
-        $this->assertNotFalse(
-            $result,
-            "appinfo/info.xml failed to parse via simplexml_load_string() - the same call "
-            ."OC\\App\\InfoParser uses on app:enable, so this makes the app uninstallable. "
-            ."Parser errors:\n"
-            .implode("\n", $errorMessages)
-        );
-    }
-
+		$this->assertNotFalse(
+			$result,
+			'appinfo/info.xml failed to parse via simplexml_load_string() - the same call '
+			. 'OC\\App\\InfoParser uses on app:enable, so this makes the app uninstallable. '
+			. "Parser errors:\n"
+			. implode("\n", $errorMessages)
+		);
+	}
 
 }

@@ -39,44 +39,36 @@ use OCA\Hrmq\Payroll\Dsl\StepContext;
 /**
  * A linear phase-out above a threshold, bounded below by a floor.
  */
-final class TaperOp extends AbstractOp
-{
+final class TaperOp extends AbstractOp {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'taper';
+	}//end name()
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'taper';
+	/**
+	 * `max(floor, base - max(0, value - threshold) * rate)`.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return int|float
+	 */
+	public function evaluate(array $spec, StepContext $ctx): mixed {
+		$base = $this->num($spec, 'base', $ctx);
+		$value = $this->num($spec, 'value', $ctx);
+		$threshold = $this->num($spec, 'threshold', $ctx);
+		$rate = $this->num($spec, 'rate', $ctx);
+		$floor = $this->optionalNum($spec, 'floor', $ctx, 0);
 
-    }//end name()
+		$excess = max(0, ($value - $threshold));
+		$tapered = ($base - ($excess * $rate));
 
-
-    /**
-     * `max(floor, base - max(0, value - threshold) * rate)`.
-     *
-     * @param array<string, mixed> $spec The declared spec.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return int|float
-     */
-    public function evaluate(array $spec, StepContext $ctx): mixed
-    {
-        $base      = $this->num($spec, 'base', $ctx);
-        $value     = $this->num($spec, 'value', $ctx);
-        $threshold = $this->num($spec, 'threshold', $ctx);
-        $rate      = $this->num($spec, 'rate', $ctx);
-        $floor     = $this->optionalNum($spec, 'floor', $ctx, 0);
-
-        $excess  = max(0, ($value - $threshold));
-        $tapered = ($base - ($excess * $rate));
-
-        return max((float) $floor, (float) $tapered);
-
-    }//end evaluate()
-
+		return max((float)$floor, (float)$tapered);
+	}//end evaluate()
 
 }//end class

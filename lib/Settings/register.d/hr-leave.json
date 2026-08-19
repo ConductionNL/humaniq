@@ -54,6 +54,7 @@
                     "employeeId": {
                         "type": "string",
                         "format": "uuid",
+                        "$ref": "Employee",
                         "title": "Employee",
                         "description": "UUID reference to the Employee domain object who requests the leave (the requester) — a domain-object reference, never a Nextcloud user id (ADR-046 A4). Drives the self-approval guard and scopes the portaliq external-employee view."
                     },

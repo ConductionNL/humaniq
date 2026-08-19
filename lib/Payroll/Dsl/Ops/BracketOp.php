@@ -45,114 +45,100 @@ use OCA\Hrmq\Payroll\Dsl\StepContext;
 /**
  * Affine bracket-table lookup.
  */
-final class BracketOp extends AbstractOp
-{
+final class BracketOp extends AbstractOp {
 
-    /**
-     * The money units a bracket table may declare for its `tot`/`a`/`c` fields.
-     *
-     * @var array<int, string>
-     */
-    public const UNITS = ['euro', 'cent'];
+	/**
+	 * The money units a bracket table may declare for its `tot`/`a`/`c` fields.
+	 *
+	 * @var array<int, string>
+	 */
+	public const UNITS = ['euro', 'cent'];
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'bracket';
+	}//end name()
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'bracket';
+	/**
+	 * Pick the applicable row and apply the affine form.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return int|float
+	 *
+	 * @throws DslException When the mode/unit is unknown or the table is malformed.
+	 */
+	public function evaluate(array $spec, StepContext $ctx): mixed {
+		$mode = (string)($spec['mode'] ?? '');
+		if ($mode !== 'affine') {
+			throw new DslException('Pack: op "bracket" ondersteunt alleen mode "affine", niet "' . $mode . '" (progressive is een benoemde follow-up).');
+		}
 
-    }//end name()
+		$unit = (string)($spec['unit'] ?? '');
+		if (in_array($unit, self::UNITS, true) === false) {
+			throw new DslException('Pack: op "bracket" verwacht een gedeclareerde "unit" (' . implode('|', self::UNITS) . '); de tabelcorpus draagt zelf geen eenheid.');
+		}
 
+		$value = $this->num($spec, 'value', $ctx);
+		$rows = $this->refs->value(($spec['table'] ?? null), $ctx);
 
-    /**
-     * Pick the applicable row and apply the affine form.
-     *
-     * @param array<string, mixed> $spec The declared spec.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return int|float
-     *
-     * @throws DslException When the mode/unit is unknown or the table is malformed.
-     */
-    public function evaluate(array $spec, StepContext $ctx): mixed
-    {
-        $mode = (string) ($spec['mode'] ?? '');
-        if ($mode !== 'affine') {
-            throw new DslException('Pack: op "bracket" ondersteunt alleen mode "affine", niet "'.$mode.'" (progressive is een benoemde follow-up).');
-        }
+		if (is_array($rows) === false || $rows === []) {
+			throw new DslException('Pack: op "bracket" verwacht een niet-lege rijenlijst in "table".');
+		}
 
-        $unit = (string) ($spec['unit'] ?? '');
-        if (in_array($unit, self::UNITS, true) === false) {
-            throw new DslException('Pack: op "bracket" verwacht een gedeclareerde "unit" ('.implode('|', self::UNITS).'); de tabelcorpus draagt zelf geen eenheid.');
-        }
+		$row = $this->select($rows, $value, $unit, $ctx);
 
-        $value = $this->num($spec, 'value', $ctx);
-        $rows  = $this->refs->value(($spec['table'] ?? null), $ctx);
+		$a = $this->money($row['a'], $unit, $ctx);
+		$c = $this->money($row['c'], $unit, $ctx);
 
-        if (is_array($rows) === false || $rows === []) {
-            throw new DslException('Pack: op "bracket" verwacht een niet-lege rijenlijst in "table".');
-        }
+		return ((($value - $a) * (float)$row['percentage']) / 100) + $c;
+	}//end evaluate()
 
-        $row = $this->select($rows, $value, $unit, $ctx);
+	/**
+	 * The first row whose `tot` reaches or exceeds the value; a null `tot`
+	 * matches unconditionally. Falls back to the last row, as at HEAD.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The bracket rows, ascending.
+	 * @param int|float $value The subject value.
+	 * @param string $unit The declared money unit.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function select(array $rows, int|float $value, string $unit, StepContext $ctx): array {
+		foreach ($rows as $row) {
+			if (($row['tot'] ?? null) === null) {
+				return $row;
+			}
 
-        $a = $this->money($row['a'], $unit, $ctx);
-        $c = $this->money($row['c'], $unit, $ctx);
+			if ($value <= $this->money($row['tot'], $unit, $ctx)) {
+				return $row;
+			}
+		}
 
-        return ((($value - $a) * (float) $row['percentage']) / 100) + $c;
+		return end($rows);
+	}//end select()
 
-    }//end evaluate()
+	/**
+	 * Convert a declared row money field to cents per the declared unit.
+	 *
+	 * @param mixed $value The raw field value.
+	 * @param string $unit The declared money unit.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return int
+	 */
+	private function money(mixed $value, string $unit, StepContext $ctx): int {
+		if ($unit === 'cent') {
+			return (int)$value;
+		}
 
-
-    /**
-     * The first row whose `tot` reaches or exceeds the value; a null `tot`
-     * matches unconditionally. Falls back to the last row, as at HEAD.
-     *
-     * @param array<int, array<string, mixed>> $rows  The bracket rows, ascending.
-     * @param int|float                        $value The subject value.
-     * @param string                           $unit  The declared money unit.
-     * @param StepContext                      $ctx   The run context.
-     *
-     * @return array<string, mixed>
-     */
-    private function select(array $rows, int|float $value, string $unit, StepContext $ctx): array
-    {
-        foreach ($rows as $row) {
-            if (($row['tot'] ?? null) === null) {
-                return $row;
-            }
-
-            if ($value <= $this->money($row['tot'], $unit, $ctx)) {
-                return $row;
-            }
-        }
-
-        return end($rows);
-
-    }//end select()
-
-
-    /**
-     * Convert a declared row money field to cents per the declared unit.
-     *
-     * @param mixed       $value The raw field value.
-     * @param string      $unit  The declared money unit.
-     * @param StepContext $ctx   The run context.
-     *
-     * @return int
-     */
-    private function money(mixed $value, string $unit, StepContext $ctx): int
-    {
-        if ($unit === 'cent') {
-            return (int) $value;
-        }
-
-        return $ctx->tables()->toCents((float) $value);
-
-    }//end money()
-
+		return $ctx->tables()->toCents((float)$value);
+	}//end money()
 
 }//end class

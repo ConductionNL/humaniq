@@ -47,174 +47,157 @@ use Symfony\Component\Console\Output\BufferedOutput;
  *
  * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-002
  */
-class PayrollReproduceCommandTest extends TestCase
-{
+class PayrollReproduceCommandTest extends TestCase {
 
+	/**
+	 * A minimal fake `ObjectService`: `findAll()` returns the seeded rows
+	 * for the current schema (the PayrollReproduceServiceTest precedent,
+	 * trimmed to what a single lookup needs).
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
+	 *
+	 * @return object
+	 */
+	private function fakeObjectService(array $rowsBySchema): object {
+		return new class($rowsBySchema) {
+			/**
+			 * @var string
+			 */
+			private string $schema = '';
 
-    /**
-     * A minimal fake `ObjectService`: `findAll()` returns the seeded rows
-     * for the current schema (the PayrollReproduceServiceTest precedent,
-     * trimmed to what a single lookup needs).
-     *
-     * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
-     *
-     * @return object
-     */
-    private function fakeObjectService(array $rowsBySchema): object
-    {
-        return new class ($rowsBySchema) {
-            /**
-             * @var string
-             */
-            private string $schema = '';
+			/**
+			 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
+			 */
+			public function __construct(
+				private array $rowsBySchema,
+			) {
+			}
 
-            /**
-             * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
-             */
-            public function __construct(private array $rowsBySchema)
-            {
-            }
+			/**
+			 * @param string $register Unused by the fake.
+			 *
+			 * @return self
+			 */
+			public function setRegister(string $register): self {
+				return $this;
+			}//end setRegister()
 
-            /**
-             * @param string $register Unused by the fake.
-             *
-             * @return self
-             */
-            public function setRegister(string $register): self
-            {
-                return $this;
+			/**
+			 * @param string $schema Schema name.
+			 *
+			 * @return self
+			 */
+			public function setSchema(string $schema): self {
+				$this->schema = $schema;
+				return $this;
+			}//end setSchema()
 
-            }//end setRegister()
+			/**
+			 * @param array<string, mixed> $options Unused by the fake.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(array $options = []): array {
+				return $this->rowsBySchema[$this->schema] ?? [];
+			}//end findAll()
+		};
 
-            /**
-             * @param string $schema Schema name.
-             *
-             * @return self
-             */
-            public function setSchema(string $schema): self
-            {
-                $this->schema = $schema;
-                return $this;
+	}//end fakeObjectService()
 
-            }//end setSchema()
+	/**
+	 * Build a real `PayrollReproduceCommand` (its service is `final` and
+	 * cannot be mocked) backed by seeded PayrollRun/Payslip fixtures.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed PayrollRun/Payslip rows.
+	 *
+	 * @return PayrollReproduceCommand
+	 */
+	private function command(array $rowsBySchema): PayrollReproduceCommand {
+		$fake = $this->fakeObjectService($rowsBySchema);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($fake);
 
-            /**
-             * @param array<string, mixed> $options Unused by the fake.
-             *
-             * @return array<int, array<string, mixed>>
-             */
-            public function findAll(array $options=[]): array
-            {
-                return $this->rowsBySchema[$this->schema] ?? [];
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		// objectService() now establishes availability first (ADR-083). A bare
+		// createMock() answers a bool method with false, so without this the
+		// guard trips and the test fails on a missing app, not on its subject.
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 
-            }//end findAll()
-        };
+		$logger = $this->createMock(LoggerInterface::class);
+		$service = new PayrollReproduceService($container, $settings, new PayrollCalculator(), $logger);
 
-    }//end fakeObjectService()
+		return new PayrollReproduceCommand($service);
+	}//end command()
 
+	/**
+	 * @return void
+	 */
+	public function testMissingPayslipOptionRefusedBeforeAnyServiceCall(): void {
+		$command = $this->command(['PayrollRun' => [], 'Payslip' => []]);
+		$exit = $this->runCommand($command, []);
 
-    /**
-     * Build a real `PayrollReproduceCommand` (its service is `final` and
-     * cannot be mocked) backed by seeded PayrollRun/Payslip fixtures.
-     *
-     * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed PayrollRun/Payslip rows.
-     *
-     * @return PayrollReproduceCommand
-     */
-    private function command(array $rowsBySchema): PayrollReproduceCommand
-    {
-        $fake      = $this->fakeObjectService($rowsBySchema);
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($fake);
+		$this->assertSame(1, $exit);
 
-        $settings = $this->createMock(SettingsService::class);
-        $settings->method('getRegisterSlug')->willReturn('hrmq');
+	}//end testMissingPayslipOptionRefusedBeforeAnyServiceCall()
 
-        $logger  = $this->createMock(LoggerInterface::class);
-        $service = new PayrollReproduceService($container, $settings, new PayrollCalculator(), $logger);
+	/**
+	 * @return void
+	 */
+	public function testRefusedOutcomeExitsOneWithAMessage(): void {
+		$command = $this->command(
+			[
+				'PayrollRun' => [],
+				'Payslip' => [
+					['id' => 'hand-entered-1', 'payrollRunId' => null, 'engineInputSnapshot' => null],
+				],
+			]
+		);
 
-        return new PayrollReproduceCommand($service);
+		$output = new BufferedOutput();
+		$exit = $command->run(new ArrayInput(['--payslip' => 'hand-entered-1'], $command->getDefinition()), $output);
 
-    }//end command()
+		$this->assertSame(1, $exit);
+		$this->assertStringContainsString('refused', $output->fetch());
 
+	}//end testRefusedOutcomeExitsOneWithAMessage()
 
-    /**
-     * @return void
-     */
-    public function testMissingPayslipOptionRefusedBeforeAnyServiceCall(): void
-    {
-        $command = $this->command(['PayrollRun' => [], 'Payslip' => []]);
-        $exit    = $this->runCommand($command, []);
+	/**
+	 * A payslip whose stored `engineVersion` names an artefact that no
+	 * longer resolves (a deleted/renamed jurisdiction pack) is a `refused`
+	 * outcome too — exercised here purely for the CLI exit-code contract,
+	 * `PayrollReproduceServiceTest` owns the full match/mismatch matrix.
+	 *
+	 * @return void
+	 */
+	public function testUnknownRunIsRefusedWithExitOne(): void {
+		$command = $this->command(
+			[
+				'PayrollRun' => [],
+				'Payslip' => [
+					[
+						'id' => 'ps-1',
+						'payrollRunId' => 'run-does-not-exist',
+						'engineInputSnapshot' => '{"jurisdiction":"NL"}',
+					],
+				],
+			]
+		);
 
-        $this->assertSame(1, $exit);
+		$exit = $this->runCommand($command, ['--payslip' => 'ps-1']);
 
-    }//end testMissingPayslipOptionRefusedBeforeAnyServiceCall()
+		$this->assertSame(1, $exit);
 
+	}//end testUnknownRunIsRefusedWithExitOne()
 
-    /**
-     * @return void
-     */
-    public function testRefusedOutcomeExitsOneWithAMessage(): void
-    {
-        $command = $this->command(
-            [
-                'PayrollRun' => [],
-                'Payslip'    => [
-                    ['id' => 'hand-entered-1', 'payrollRunId' => null, 'engineInputSnapshot' => null],
-                ],
-            ]
-        );
-
-        $output = new BufferedOutput();
-        $exit   = $command->run(new ArrayInput(['--payslip' => 'hand-entered-1'], $command->getDefinition()), $output);
-
-        $this->assertSame(1, $exit);
-        $this->assertStringContainsString('refused', $output->fetch());
-
-    }//end testRefusedOutcomeExitsOneWithAMessage()
-
-
-    /**
-     * A payslip whose stored `engineVersion` names an artefact that no
-     * longer resolves (a deleted/renamed jurisdiction pack) is a `refused`
-     * outcome too — exercised here purely for the CLI exit-code contract,
-     * `PayrollReproduceServiceTest` owns the full match/mismatch matrix.
-     *
-     * @return void
-     */
-    public function testUnknownRunIsRefusedWithExitOne(): void
-    {
-        $command = $this->command(
-            [
-                'PayrollRun' => [],
-                'Payslip'    => [
-                    [
-                        'id'                  => 'ps-1',
-                        'payrollRunId'        => 'run-does-not-exist',
-                        'engineInputSnapshot' => '{"jurisdiction":"NL"}',
-                    ],
-                ],
-            ]
-        );
-
-        $exit = $this->runCommand($command, ['--payslip' => 'ps-1']);
-
-        $this->assertSame(1, $exit);
-
-    }//end testUnknownRunIsRefusedWithExitOne()
-
-
-    /**
-     * @param PayrollReproduceCommand $command The command under test.
-     * @param array<string, mixed>    $options CLI options.
-     *
-     * @return int
-     */
-    private function runCommand(PayrollReproduceCommand $command, array $options): int
-    {
-        return $command->run(new ArrayInput($options, $command->getDefinition()), new BufferedOutput());
-
-    }//end runCommand()
-
+	/**
+	 * @param PayrollReproduceCommand $command The command under test.
+	 * @param array<string, mixed> $options CLI options.
+	 *
+	 * @return int
+	 */
+	private function runCommand(PayrollReproduceCommand $command, array $options): int {
+		return $command->run(new ArrayInput($options, $command->getDefinition()), new BufferedOutput());
+	}//end runCommand()
 
 }//end class

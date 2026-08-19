@@ -35,137 +35,115 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/performance-reviews-mvp/specs/performance-reviews/spec.md#REQ-PRV-003
  */
-class NlPerformanceChecksTest extends TestCase
-{
+class NlPerformanceChecksTest extends TestCase {
 
+	/**
+	 * The registered PerformanceReview predicates, keyed by rule id.
+	 *
+	 * @var array<string, callable>
+	 */
+	private array $checks;
 
-    /**
-     * The registered PerformanceReview predicates, keyed by rule id.
-     *
-     * @var array<string, callable>
-     */
-    private array $checks;
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$this->checks = NlPerformanceChecks::checks()['PerformanceReview'];
 
+	}//end setUp()
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $this->checks = NlPerformanceChecks::checks()['PerformanceReview'];
+	/**
+	 * A minimal PerformanceReview fixture; each test overrides the fields it
+	 * exercises.
+	 *
+	 * @param array<string, mixed> $overrides Fields to override.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function review(array $overrides = []): array {
+		return array_merge(
+			[
+				'employeeId' => 'employee-visser',
+				'cycleId' => 'review-cycle-2026',
+				'status' => 'vastgesteld',
+				'rating' => 'goed',
+				'afspraken' => 'Volgt in Q3 de cursus Advanced Vue.',
+			],
+			$overrides
+		);
 
-    }//end setUp()
+	}//end review()
 
+	// -- nl-performance-dossiervorming ----------------------------------------
 
-    /**
-     * A minimal PerformanceReview fixture; each test overrides the fields it
-     * exercises.
-     *
-     * @param array<string, mixed> $overrides Fields to override.
-     *
-     * @return array<string, mixed>
-     */
-    private function review(array $overrides=[]): array
-    {
-        return array_merge(
-            [
-                'employeeId' => 'employee-visser',
-                'cycleId'    => 'review-cycle-2026',
-                'status'     => 'vastgesteld',
-                'rating'     => 'goed',
-                'afspraken'  => 'Volgt in Q3 de cursus Advanced Vue.',
-            ],
-            $overrides
-        );
+	/**
+	 * @return void
+	 */
+	public function testCompleteVastgesteldReviewSatisfied(): void {
+		$review = $this->review();
 
-    }//end review()
+		$this->assertTrue(($this->checks['nl-performance-dossiervorming'])($review));
 
+	}//end testCompleteVastgesteldReviewSatisfied()
 
-    // -- nl-performance-dossiervorming ----------------------------------------
+	/**
+	 * @return void
+	 */
+	public function testVastgesteldWithoutRatingViolates(): void {
+		$review = $this->review(['rating' => null]);
 
+		$this->assertFalse(($this->checks['nl-performance-dossiervorming'])($review));
 
-    /**
-     * @return void
-     */
-    public function testCompleteVastgesteldReviewSatisfied(): void
-    {
-        $review = $this->review();
+	}//end testVastgesteldWithoutRatingViolates()
 
-        $this->assertTrue(($this->checks['nl-performance-dossiervorming'])($review));
+	/**
+	 * @return void
+	 */
+	public function testVastgesteldWithEmptyAfsprakenViolates(): void {
+		$review = $this->review(['afspraken' => '']);
 
-    }//end testCompleteVastgesteldReviewSatisfied()
+		$this->assertFalse(($this->checks['nl-performance-dossiervorming'])($review));
 
+	}//end testVastgesteldWithEmptyAfsprakenViolates()
 
-    /**
-     * @return void
-     */
-    public function testVastgesteldWithoutRatingViolates(): void
-    {
-        $review = $this->review(['rating' => null]);
+	/**
+	 * @return void
+	 */
+	public function testVastgesteldWithWhitespaceOnlyAfsprakenViolates(): void {
+		$review = $this->review(['afspraken' => '   ']);
 
-        $this->assertFalse(($this->checks['nl-performance-dossiervorming'])($review));
+		$this->assertFalse(($this->checks['nl-performance-dossiervorming'])($review));
 
-    }//end testVastgesteldWithoutRatingViolates()
+	}//end testVastgesteldWithWhitespaceOnlyAfsprakenViolates()
 
+	/**
+	 * @return void
+	 */
+	public function testConceptWithoutRatingPassesVacuously(): void {
+		$review = $this->review(['status' => 'concept', 'rating' => null, 'afspraken' => null]);
 
-    /**
-     * @return void
-     */
-    public function testVastgesteldWithEmptyAfsprakenViolates(): void
-    {
-        $review = $this->review(['afspraken' => '']);
+		$this->assertTrue(($this->checks['nl-performance-dossiervorming'])($review));
 
-        $this->assertFalse(($this->checks['nl-performance-dossiervorming'])($review));
+	}//end testConceptWithoutRatingPassesVacuously()
 
-    }//end testVastgesteldWithEmptyAfsprakenViolates()
+	/**
+	 * @return void
+	 */
+	public function testIngediendWithoutRatingPassesVacuously(): void {
+		$review = $this->review(['status' => 'ingediend', 'rating' => null, 'afspraken' => null]);
 
+		$this->assertTrue(($this->checks['nl-performance-dossiervorming'])($review));
 
-    /**
-     * @return void
-     */
-    public function testVastgesteldWithWhitespaceOnlyAfsprakenViolates(): void
-    {
-        $review = $this->review(['afspraken' => '   ']);
+	}//end testIngediendWithoutRatingPassesVacuously()
 
-        $this->assertFalse(($this->checks['nl-performance-dossiervorming'])($review));
+	/**
+	 * @return void
+	 */
+	public function testBesprokenWithoutRatingPassesVacuously(): void {
+		$review = $this->review(['status' => 'besproken', 'rating' => null, 'afspraken' => null]);
 
-    }//end testVastgesteldWithWhitespaceOnlyAfsprakenViolates()
+		$this->assertTrue(($this->checks['nl-performance-dossiervorming'])($review));
 
-
-    /**
-     * @return void
-     */
-    public function testConceptWithoutRatingPassesVacuously(): void
-    {
-        $review = $this->review(['status' => 'concept', 'rating' => null, 'afspraken' => null]);
-
-        $this->assertTrue(($this->checks['nl-performance-dossiervorming'])($review));
-
-    }//end testConceptWithoutRatingPassesVacuously()
-
-
-    /**
-     * @return void
-     */
-    public function testIngediendWithoutRatingPassesVacuously(): void
-    {
-        $review = $this->review(['status' => 'ingediend', 'rating' => null, 'afspraken' => null]);
-
-        $this->assertTrue(($this->checks['nl-performance-dossiervorming'])($review));
-
-    }//end testIngediendWithoutRatingPassesVacuously()
-
-
-    /**
-     * @return void
-     */
-    public function testBesprokenWithoutRatingPassesVacuously(): void
-    {
-        $review = $this->review(['status' => 'besproken', 'rating' => null, 'afspraken' => null]);
-
-        $this->assertTrue(($this->checks['nl-performance-dossiervorming'])($review));
-
-    }//end testBesprokenWithoutRatingPassesVacuously()
-
+	}//end testBesprokenWithoutRatingPassesVacuously()
 
 }//end class

@@ -48,131 +48,112 @@ use OCA\Hrmq\Payroll\StepHandlerRegistry;
 /**
  * Builds and holds the closed DSL vocabulary.
  */
-final class Vocabulary
-{
+final class Vocabulary {
 
-    /**
-     * The reference resolver.
-     *
-     * @var RefResolver
-     */
-    private readonly RefResolver $refs;
+	/**
+	 * The reference resolver.
+	 *
+	 * @var RefResolver
+	 */
+	private readonly RefResolver $refs;
 
-    /**
-     * The rounding-modifier applier.
-     *
-     * @var Rounder
-     */
-    private readonly Rounder $rounder;
+	/**
+	 * The rounding-modifier applier.
+	 *
+	 * @var Rounder
+	 */
+	private readonly Rounder $rounder;
 
-    /**
-     * The closed-grammar expression evaluator.
-     *
-     * @var ExprEvaluator
-     */
-    private readonly ExprEvaluator $expr;
+	/**
+	 * The closed-grammar expression evaluator.
+	 *
+	 * @var ExprEvaluator
+	 */
+	private readonly ExprEvaluator $expr;
 
-    /**
-     * The predicate evaluator.
-     *
-     * @var PredicateEvaluator
-     */
-    private readonly PredicateEvaluator $predicates;
+	/**
+	 * The predicate evaluator.
+	 *
+	 * @var PredicateEvaluator
+	 */
+	private readonly PredicateEvaluator $predicates;
 
-    /**
-     * The closed step-op vocabulary.
-     *
-     * @var OpRegistry
-     */
-    private readonly OpRegistry $ops;
+	/**
+	 * The closed step-op vocabulary.
+	 *
+	 * @var OpRegistry
+	 */
+	private readonly OpRegistry $ops;
 
+	/**
+	 * @param StepHandlerRegistry|null $handlers The escape-hatch allow-list (defaults to the shipped, empty one).
+	 */
+	public function __construct(?StepHandlerRegistry $handlers = null) {
+		$this->refs = new RefResolver();
+		$this->rounder = new Rounder();
+		$this->expr = new ExprEvaluator();
+		$this->predicates = new PredicateEvaluator($this->refs);
 
-    /**
-     * @param StepHandlerRegistry|null $handlers The escape-hatch allow-list (defaults to the shipped, empty one).
-     */
-    public function __construct(?StepHandlerRegistry $handlers=null)
-    {
-        $this->refs       = new RefResolver();
-        $this->rounder    = new Rounder();
-        $this->expr       = new ExprEvaluator();
-        $this->predicates = new PredicateEvaluator($this->refs);
+		$this->ops = new OpRegistry(
+			[
+				new RateOp($this->refs),
+				new CappedRateOp($this->refs),
+				new BracketOp($this->refs),
+				new TaperOp($this->refs),
+				new PiecewiseAccrueOp($this->refs, $this->rounder),
+				new QuantizeOp($this->refs),
+				new ClampOp($this->refs),
+				new MatchOp($this->refs),
+				new ExprOp($this->refs, $this->expr),
+				new PhpStepOp($this->refs, ($handlers ?? new StepHandlerRegistry())),
+			]
+		);
 
-        $this->ops = new OpRegistry(
-            [
-                new RateOp($this->refs),
-                new CappedRateOp($this->refs),
-                new BracketOp($this->refs),
-                new TaperOp($this->refs),
-                new PiecewiseAccrueOp($this->refs, $this->rounder),
-                new QuantizeOp($this->refs),
-                new ClampOp($this->refs),
-                new MatchOp($this->refs),
-                new ExprOp($this->refs, $this->expr),
-                new PhpStepOp($this->refs, ($handlers ?? new StepHandlerRegistry())),
-            ]
-        );
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * The closed step-op vocabulary.
+	 *
+	 * @return OpRegistry
+	 */
+	public function ops(): OpRegistry {
+		return $this->ops;
+	}//end ops()
 
+	/**
+	 * The reference resolver.
+	 *
+	 * @return RefResolver
+	 */
+	public function refs(): RefResolver {
+		return $this->refs;
+	}//end refs()
 
-    /**
-     * The closed step-op vocabulary.
-     *
-     * @return OpRegistry
-     */
-    public function ops(): OpRegistry
-    {
-        return $this->ops;
+	/**
+	 * The predicate evaluator.
+	 *
+	 * @return PredicateEvaluator
+	 */
+	public function predicates(): PredicateEvaluator {
+		return $this->predicates;
+	}//end predicates()
 
-    }//end ops()
+	/**
+	 * The rounding-modifier applier.
+	 *
+	 * @return Rounder
+	 */
+	public function rounder(): Rounder {
+		return $this->rounder;
+	}//end rounder()
 
-
-    /**
-     * The reference resolver.
-     *
-     * @return RefResolver
-     */
-    public function refs(): RefResolver
-    {
-        return $this->refs;
-
-    }//end refs()
-
-
-    /**
-     * The predicate evaluator.
-     *
-     * @return PredicateEvaluator
-     */
-    public function predicates(): PredicateEvaluator
-    {
-        return $this->predicates;
-
-    }//end predicates()
-
-
-    /**
-     * The rounding-modifier applier.
-     *
-     * @return Rounder
-     */
-    public function rounder(): Rounder
-    {
-        return $this->rounder;
-
-    }//end rounder()
-
-
-    /**
-     * The closed-grammar expression evaluator.
-     *
-     * @return ExprEvaluator
-     */
-    public function expr(): ExprEvaluator
-    {
-        return $this->expr;
-
-    }//end expr()
-
+	/**
+	 * The closed-grammar expression evaluator.
+	 *
+	 * @return ExprEvaluator
+	 */
+	public function expr(): ExprEvaluator {
+		return $this->expr;
+	}//end expr()
 
 }//end class

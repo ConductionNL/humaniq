@@ -38,269 +38,237 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-007
  */
-class NlAdministratieChecksTest extends TestCase
-{
+class NlAdministratieChecksTest extends TestCase {
 
-    private const RULE_ID = 'nl-administratie-scope-consistency';
+	private const RULE_ID = 'nl-administratie-scope-consistency';
 
-    /**
-     * The registered Payslip predicates, keyed by rule id.
-     *
-     * @var array<string, callable>
-     */
-    private array $payslipChecks;
+	/**
+	 * The registered Payslip predicates, keyed by rule id.
+	 *
+	 * @var array<string, callable>
+	 */
+	private array $payslipChecks;
 
-    /**
-     * The registered Timesheet predicates, keyed by rule id (shared across
-     * every Employee-anchored schema — one registration suffices).
-     *
-     * @var array<string, callable>
-     */
-    private array $timesheetChecks;
+	/**
+	 * The registered Timesheet predicates, keyed by rule id (shared across
+	 * every Employee-anchored schema — one registration suffices).
+	 *
+	 * @var array<string, callable>
+	 */
+	private array $timesheetChecks;
 
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$checks = NlAdministratieChecks::checks();
+		$this->payslipChecks = $checks['Payslip'];
+		$this->timesheetChecks = $checks['Timesheet'];
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $checks              = NlAdministratieChecks::checks();
-        $this->payslipChecks   = $checks['Payslip'];
-        $this->timesheetChecks = $checks['Timesheet'];
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Every Employee-anchored schema this change denormalizes onto is
+	 * actually registered (no phantom-registered rule id).
+	 *
+	 * @return void
+	 */
+	public function testEveryEmployeeAnchoredSchemaIsRegistered(): void {
+		$checks = NlAdministratieChecks::checks();
 
+		foreach (
+			[
+				'EmploymentContract',
+				'Timesheet',
+				'Expense',
+				'LeaveRequest',
+				'LeaveBalance',
+				'SickLeaveCase',
+				'Onboarding',
+				'OrgAssignment',
+				'AttendanceRecord',
+				'AssetAssignment',
+				'PerformanceReview',
+			] as $type
+		) {
+			$this->assertArrayHasKey($type, $checks);
+			$this->assertArrayHasKey(self::RULE_ID, $checks[$type]);
+		}
 
-    /**
-     * Every Employee-anchored schema this change denormalizes onto is
-     * actually registered (no phantom-registered rule id).
-     *
-     * @return void
-     */
-    public function testEveryEmployeeAnchoredSchemaIsRegistered(): void
-    {
-        $checks = NlAdministratieChecks::checks();
+	}//end testEveryEmployeeAnchoredSchemaIsRegistered()
 
-        foreach (
-            [
-                'EmploymentContract',
-                'Timesheet',
-                'Expense',
-                'LeaveRequest',
-                'LeaveBalance',
-                'SickLeaveCase',
-                'Onboarding',
-                'OrgAssignment',
-                'AttendanceRecord',
-                'AssetAssignment',
-                'PerformanceReview',
-            ] as $type
-        ) {
-            $this->assertArrayHasKey($type, $checks);
-            $this->assertArrayHasKey(self::RULE_ID, $checks[$type]);
-        }
+	/**
+	 * REQ-MULTI-007 "A mismatched child administratie is flagged" scenario
+	 * (Payslip/PayrollRun variant): both sides non-empty and differing ->
+	 * violation.
+	 *
+	 * @return void
+	 */
+	public function testPayslipMismatchAgainstItsPayrollRunViolates(): void {
+		$payslip = ['payrollRunId' => 'payrollrun-2026-05', 'administrationId' => 'ADM-001'];
+		$context = ['payroll' => ['runsById' => ['payrollrun-2026-05' => ['administrationId' => 'ADM-002']]]];
 
-    }//end testEveryEmployeeAnchoredSchemaIsRegistered()
+		$this->assertFalse(($this->payslipChecks[self::RULE_ID])($payslip, $context));
 
+	}//end testPayslipMismatchAgainstItsPayrollRunViolates()
 
-    /**
-     * REQ-MULTI-007 "A mismatched child administratie is flagged" scenario
-     * (Payslip/PayrollRun variant): both sides non-empty and differing ->
-     * violation.
-     *
-     * @return void
-     */
-    public function testPayslipMismatchAgainstItsPayrollRunViolates(): void
-    {
-        $payslip = ['payrollRunId' => 'payrollrun-2026-05', 'administrationId' => 'ADM-001'];
-        $context = ['payroll' => ['runsById' => ['payrollrun-2026-05' => ['administrationId' => 'ADM-002']]]];
+	/**
+	 * The consistent path: both sides equal -> satisfied.
+	 *
+	 * @return void
+	 */
+	public function testPayslipMatchingItsPayrollRunIsSatisfied(): void {
+		$payslip = ['payrollRunId' => 'payrollrun-2026-05', 'administrationId' => 'ADM-001'];
+		$context = ['payroll' => ['runsById' => ['payrollrun-2026-05' => ['administrationId' => 'ADM-001']]]];
 
-        $this->assertFalse(($this->payslipChecks[self::RULE_ID])($payslip, $context));
+		$this->assertTrue(($this->payslipChecks[self::RULE_ID])($payslip, $context));
 
-    }//end testPayslipMismatchAgainstItsPayrollRunViolates()
+	}//end testPayslipMatchingItsPayrollRunIsSatisfied()
 
+	/**
+	 * REQ-MULTI-007 "An un-backfilled record is vacuous" scenario: no own
+	 * administrationId yet -> passes regardless of the parent.
+	 *
+	 * @return void
+	 */
+	public function testPayslipWithNoOwnAdministrationIdIsVacuous(): void {
+		$payslip = ['payrollRunId' => 'payrollrun-2026-05'];
+		$context = ['payroll' => ['runsById' => ['payrollrun-2026-05' => ['administrationId' => 'ADM-002']]]];
 
-    /**
-     * The consistent path: both sides equal -> satisfied.
-     *
-     * @return void
-     */
-    public function testPayslipMatchingItsPayrollRunIsSatisfied(): void
-    {
-        $payslip = ['payrollRunId' => 'payrollrun-2026-05', 'administrationId' => 'ADM-001'];
-        $context = ['payroll' => ['runsById' => ['payrollrun-2026-05' => ['administrationId' => 'ADM-001']]]];
+		$this->assertTrue(($this->payslipChecks[self::RULE_ID])($payslip, $context));
 
-        $this->assertTrue(($this->payslipChecks[self::RULE_ID])($payslip, $context));
+	}//end testPayslipWithNoOwnAdministrationIdIsVacuous()
 
-    }//end testPayslipMatchingItsPayrollRunIsSatisfied()
+	/**
+	 * A hand-entered payslip (no payrollRunId) is vacuous.
+	 *
+	 * @return void
+	 */
+	public function testPayslipWithNoPayrollRunIdIsVacuous(): void {
+		$payslip = ['administrationId' => 'ADM-001'];
 
+		$this->assertTrue(($this->payslipChecks[self::RULE_ID])($payslip, ['payroll' => ['runsById' => []]]));
 
-    /**
-     * REQ-MULTI-007 "An un-backfilled record is vacuous" scenario: no own
-     * administrationId yet -> passes regardless of the parent.
-     *
-     * @return void
-     */
-    public function testPayslipWithNoOwnAdministrationIdIsVacuous(): void
-    {
-        $payslip = ['payrollRunId' => 'payrollrun-2026-05'];
-        $context = ['payroll' => ['runsById' => ['payrollrun-2026-05' => ['administrationId' => 'ADM-002']]]];
+	}//end testPayslipWithNoPayrollRunIdIsVacuous()
 
-        $this->assertTrue(($this->payslipChecks[self::RULE_ID])($payslip, $context));
+	/**
+	 * An unresolvable payrollRunId (not yet loaded / dangling) is vacuous.
+	 *
+	 * @return void
+	 */
+	public function testPayslipWithUnresolvableRunIsVacuous(): void {
+		$payslip = ['payrollRunId' => 'no-such-run', 'administrationId' => 'ADM-001'];
 
-    }//end testPayslipWithNoOwnAdministrationIdIsVacuous()
+		$this->assertTrue(($this->payslipChecks[self::RULE_ID])($payslip, ['payroll' => ['runsById' => []]]));
 
+	}//end testPayslipWithUnresolvableRunIsVacuous()
 
-    /**
-     * A hand-entered payslip (no payrollRunId) is vacuous.
-     *
-     * @return void
-     */
-    public function testPayslipWithNoPayrollRunIdIsVacuous(): void
-    {
-        $payslip = ['administrationId' => 'ADM-001'];
+	/**
+	 * A resolvable run with no administrationId of its own is vacuous.
+	 *
+	 * @return void
+	 */
+	public function testPayslipWhoseRunHasNoAdministrationIdIsVacuous(): void {
+		$payslip = ['payrollRunId' => 'payrollrun-2026-05', 'administrationId' => 'ADM-001'];
+		$context = ['payroll' => ['runsById' => ['payrollrun-2026-05' => []]]];
 
-        $this->assertTrue(($this->payslipChecks[self::RULE_ID])($payslip, ['payroll' => ['runsById' => []]]));
+		$this->assertTrue(($this->payslipChecks[self::RULE_ID])($payslip, $context));
 
-    }//end testPayslipWithNoPayrollRunIdIsVacuous()
+	}//end testPayslipWhoseRunHasNoAdministrationIdIsVacuous()
 
+	/**
+	 * The Employee-anchored path (Timesheet stands in for every schema
+	 * sharing the registration): consistent stamp -> satisfied.
+	 *
+	 * @return void
+	 */
+	public function testEmployeeAnchoredRecordMatchingItsEmployeeIsSatisfied(): void {
+		$timesheet = ['employeeId' => 'employee-jansen', 'administrationId' => 'ADM-001'];
+		$context = ['related' => ['Employee' => ['byId' => ['employee-jansen' => ['administrationId' => 'ADM-001']]]]];
 
-    /**
-     * An unresolvable payrollRunId (not yet loaded / dangling) is vacuous.
-     *
-     * @return void
-     */
-    public function testPayslipWithUnresolvableRunIsVacuous(): void
-    {
-        $payslip = ['payrollRunId' => 'no-such-run', 'administrationId' => 'ADM-001'];
+		$this->assertTrue(($this->timesheetChecks[self::RULE_ID])($timesheet, $context));
 
-        $this->assertTrue(($this->payslipChecks[self::RULE_ID])($payslip, ['payroll' => ['runsById' => []]]));
+	}//end testEmployeeAnchoredRecordMatchingItsEmployeeIsSatisfied()
 
-    }//end testPayslipWithUnresolvableRunIsVacuous()
+	/**
+	 * REQ-MULTI-007 "A mismatched child administratie is flagged" scenario
+	 * (Employee-anchored variant): both sides non-empty and differing ->
+	 * violation.
+	 *
+	 * @return void
+	 */
+	public function testEmployeeAnchoredRecordMismatchingItsEmployeeViolates(): void {
+		$timesheet = ['employeeId' => 'employee-jansen', 'administrationId' => 'ADM-002'];
+		$context = ['related' => ['Employee' => ['byId' => ['employee-jansen' => ['administrationId' => 'ADM-001']]]]];
 
+		$this->assertFalse(($this->timesheetChecks[self::RULE_ID])($timesheet, $context));
 
-    /**
-     * A resolvable run with no administrationId of its own is vacuous.
-     *
-     * @return void
-     */
-    public function testPayslipWhoseRunHasNoAdministrationIdIsVacuous(): void
-    {
-        $payslip = ['payrollRunId' => 'payrollrun-2026-05', 'administrationId' => 'ADM-001'];
-        $context = ['payroll' => ['runsById' => ['payrollrun-2026-05' => []]]];
+	}//end testEmployeeAnchoredRecordMismatchingItsEmployeeViolates()
 
-        $this->assertTrue(($this->payslipChecks[self::RULE_ID])($payslip, $context));
+	/**
+	 * REQ-MULTI-001 "The addition is non-breaking" companion: an
+	 * un-backfilled record (no own administrationId) is vacuous.
+	 *
+	 * @return void
+	 */
+	public function testEmployeeAnchoredRecordWithNoOwnAdministrationIdIsVacuous(): void {
+		$timesheet = ['employeeId' => 'employee-jansen'];
+		$context = ['related' => ['Employee' => ['byId' => ['employee-jansen' => ['administrationId' => 'ADM-002']]]]];
 
-    }//end testPayslipWhoseRunHasNoAdministrationIdIsVacuous()
+		$this->assertTrue(($this->timesheetChecks[self::RULE_ID])($timesheet, $context));
 
+	}//end testEmployeeAnchoredRecordWithNoOwnAdministrationIdIsVacuous()
 
-    /**
-     * The Employee-anchored path (Timesheet stands in for every schema
-     * sharing the registration): consistent stamp -> satisfied.
-     *
-     * @return void
-     */
-    public function testEmployeeAnchoredRecordMatchingItsEmployeeIsSatisfied(): void
-    {
-        $timesheet = ['employeeId' => 'employee-jansen', 'administrationId' => 'ADM-001'];
-        $context   = ['related' => ['Employee' => ['byId' => ['employee-jansen' => ['administrationId' => 'ADM-001']]]]];
+	/**
+	 * An empty employeeId is vacuous.
+	 *
+	 * @return void
+	 */
+	public function testEmptyEmployeeIdIsVacuous(): void {
+		$timesheet = ['employeeId' => '', 'administrationId' => 'ADM-001'];
 
-        $this->assertTrue(($this->timesheetChecks[self::RULE_ID])($timesheet, $context));
+		$this->assertTrue(($this->timesheetChecks[self::RULE_ID])($timesheet, ['related' => ['Employee' => ['byId' => []]]]));
 
-    }//end testEmployeeAnchoredRecordMatchingItsEmployeeIsSatisfied()
+	}//end testEmptyEmployeeIdIsVacuous()
 
+	/**
+	 * An unresolvable employeeId (dangling reference, or the Employee index
+	 * not yet populated) is vacuous.
+	 *
+	 * @return void
+	 */
+	public function testUnresolvableEmployeeIsVacuous(): void {
+		$timesheet = ['employeeId' => 'no-such-employee', 'administrationId' => 'ADM-001'];
 
-    /**
-     * REQ-MULTI-007 "A mismatched child administratie is flagged" scenario
-     * (Employee-anchored variant): both sides non-empty and differing ->
-     * violation.
-     *
-     * @return void
-     */
-    public function testEmployeeAnchoredRecordMismatchingItsEmployeeViolates(): void
-    {
-        $timesheet = ['employeeId' => 'employee-jansen', 'administrationId' => 'ADM-002'];
-        $context   = ['related' => ['Employee' => ['byId' => ['employee-jansen' => ['administrationId' => 'ADM-001']]]]];
+		$this->assertTrue(($this->timesheetChecks[self::RULE_ID])($timesheet, ['related' => ['Employee' => ['byId' => []]]]));
 
-        $this->assertFalse(($this->timesheetChecks[self::RULE_ID])($timesheet, $context));
+	}//end testUnresolvableEmployeeIsVacuous()
 
-    }//end testEmployeeAnchoredRecordMismatchingItsEmployeeViolates()
+	/**
+	 * A resolvable Employee with no administrationId of its own is vacuous.
+	 *
+	 * @return void
+	 */
+	public function testEmployeeWithNoAdministrationIdIsVacuous(): void {
+		$timesheet = ['employeeId' => 'employee-jansen', 'administrationId' => 'ADM-001'];
+		$context = ['related' => ['Employee' => ['byId' => ['employee-jansen' => []]]]];
 
+		$this->assertTrue(($this->timesheetChecks[self::RULE_ID])($timesheet, $context));
 
-    /**
-     * REQ-MULTI-001 "The addition is non-breaking" companion: an
-     * un-backfilled record (no own administrationId) is vacuous.
-     *
-     * @return void
-     */
-    public function testEmployeeAnchoredRecordWithNoOwnAdministrationIdIsVacuous(): void
-    {
-        $timesheet = ['employeeId' => 'employee-jansen'];
-        $context   = ['related' => ['Employee' => ['byId' => ['employee-jansen' => ['administrationId' => 'ADM-002']]]]];
+	}//end testEmployeeWithNoAdministrationIdIsVacuous()
 
-        $this->assertTrue(($this->timesheetChecks[self::RULE_ID])($timesheet, $context));
+	/**
+	 * A missing context (schema not yet imported) degrades to vacuous, never
+	 * a fatal error.
+	 *
+	 * @return void
+	 */
+	public function testMissingContextDegradesToVacuous(): void {
+		$timesheet = ['employeeId' => 'employee-jansen', 'administrationId' => 'ADM-001'];
 
-    }//end testEmployeeAnchoredRecordWithNoOwnAdministrationIdIsVacuous()
+		$this->assertTrue(($this->timesheetChecks[self::RULE_ID])($timesheet, []));
+		$this->assertTrue(($this->payslipChecks[self::RULE_ID])(['payrollRunId' => 'run-1', 'administrationId' => 'ADM-001'], []));
 
-
-    /**
-     * An empty employeeId is vacuous.
-     *
-     * @return void
-     */
-    public function testEmptyEmployeeIdIsVacuous(): void
-    {
-        $timesheet = ['employeeId' => '', 'administrationId' => 'ADM-001'];
-
-        $this->assertTrue(($this->timesheetChecks[self::RULE_ID])($timesheet, ['related' => ['Employee' => ['byId' => []]]]));
-
-    }//end testEmptyEmployeeIdIsVacuous()
-
-
-    /**
-     * An unresolvable employeeId (dangling reference, or the Employee index
-     * not yet populated) is vacuous.
-     *
-     * @return void
-     */
-    public function testUnresolvableEmployeeIsVacuous(): void
-    {
-        $timesheet = ['employeeId' => 'no-such-employee', 'administrationId' => 'ADM-001'];
-
-        $this->assertTrue(($this->timesheetChecks[self::RULE_ID])($timesheet, ['related' => ['Employee' => ['byId' => []]]]));
-
-    }//end testUnresolvableEmployeeIsVacuous()
-
-
-    /**
-     * A resolvable Employee with no administrationId of its own is vacuous.
-     *
-     * @return void
-     */
-    public function testEmployeeWithNoAdministrationIdIsVacuous(): void
-    {
-        $timesheet = ['employeeId' => 'employee-jansen', 'administrationId' => 'ADM-001'];
-        $context   = ['related' => ['Employee' => ['byId' => ['employee-jansen' => []]]]];
-
-        $this->assertTrue(($this->timesheetChecks[self::RULE_ID])($timesheet, $context));
-
-    }//end testEmployeeWithNoAdministrationIdIsVacuous()
-
-
-    /**
-     * A missing context (schema not yet imported) degrades to vacuous, never
-     * a fatal error.
-     *
-     * @return void
-     */
-    public function testMissingContextDegradesToVacuous(): void
-    {
-        $timesheet = ['employeeId' => 'employee-jansen', 'administrationId' => 'ADM-001'];
-
-        $this->assertTrue(($this->timesheetChecks[self::RULE_ID])($timesheet, []));
-        $this->assertTrue(($this->payslipChecks[self::RULE_ID])(['payrollRunId' => 'run-1', 'administrationId' => 'ADM-001'], []));
-
-    }//end testMissingContextDegradesToVacuous()
-
+	}//end testMissingContextDegradesToVacuous()
 
 }//end class

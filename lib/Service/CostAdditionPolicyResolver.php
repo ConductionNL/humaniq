@@ -47,193 +47,175 @@ namespace OCA\Hrmq\Service;
 /**
  * Selects the cost-addition policies in force for a contract on a date.
  */
-class CostAdditionPolicyResolver
-{
+class CostAdditionPolicyResolver {
 
-    /**
-     * Scope precedence, least specific first. The index in this list IS the
-     * precedence, so adding a scope means adding it here in the right place
-     * rather than editing a comparison.
-     *
-     * @var string[]
-     */
-    private const SCOPE_PRECEDENCE = [
-        'organisation',
-        'cla',
-        'contract',
-    ];
+	/**
+	 * Scope precedence, least specific first. The index in this list IS the
+	 * precedence, so adding a scope means adding it here in the right place
+	 * rather than editing a comparison.
+	 *
+	 * @var string[]
+	 */
+	private const SCOPE_PRECEDENCE = [
+		'organisation',
+		'cla',
+		'contract',
+	];
 
+	/**
+	 * Resolve the additions that apply to one contract on one date.
+	 *
+	 * @param array<int, array<string, mixed>> $policies Every candidate CostAdditionPolicy, as arrays.
+	 * @param array<string, mixed> $contract The EmploymentContract as an array.
+	 * @param string $contractId The contract's own id, for `contract`-scoped policies.
+	 * @param string $onDate ISO date the costing applies to (`YYYY-MM-DD`).
+	 *
+	 * @return array<int, array{key: string, centsPerHour?: int, percentageOfWage?: float, source: string, basis: string}>
+	 *                                                                                                                     Additions in the shape EmployeeCostRateService::resolve() accepts.
+	 */
+	public function resolveFor(array $policies, array $contract, string $contractId, string $onDate): array {
+		$claId = trim((string)($contract['cao'] ?? ''));
 
-    /**
-     * Resolve the additions that apply to one contract on one date.
-     *
-     * @param array<int, array<string, mixed>> $policies   Every candidate CostAdditionPolicy, as arrays.
-     * @param array<string, mixed>             $contract   The EmploymentContract as an array.
-     * @param string                           $contractId The contract's own id, for `contract`-scoped policies.
-     * @param string                           $onDate     ISO date the costing applies to (`YYYY-MM-DD`).
-     *
-     * @return array<int, array{key: string, centsPerHour?: int, percentageOfWage?: float, source: string, basis: string}>
-     *         Additions in the shape EmployeeCostRateService::resolve() accepts.
-     */
-    public function resolveFor(array $policies, array $contract, string $contractId, string $onDate): array
-    {
-        $claId = trim((string) ($contract['cao'] ?? ''));
+		$winners = [];
+		foreach ($policies as $policy) {
+			if (is_array($policy) === false) {
+				continue;
+			}
 
-        $winners = [];
-        foreach ($policies as $policy) {
-            if (is_array($policy) === false) {
-                continue;
-            }
+			if ($this->applies(policy: $policy, claId: $claId, contractId: $contractId, onDate: $onDate) === false) {
+				continue;
+			}
 
-            if ($this->applies(policy: $policy, claId: $claId, contractId: $contractId, onDate: $onDate) === false) {
-                continue;
-            }
+			$key = trim((string)($policy['key'] ?? ''));
+			if ($key === '') {
+				continue;
+			}
 
-            $key = trim((string) ($policy['key'] ?? ''));
-            if ($key === '') {
-                continue;
-            }
+			$rank = $this->precedenceOf(scope: (string)($policy['scope'] ?? ''));
+			$current = ($winners[$key] ?? null);
+			// Strictly greater: an equally-specific later policy does NOT
+			// silently displace an earlier one. Two organisation-wide overhead
+			// policies in force on the same date is a data problem, and
+			// resolving it by array order would hide it behind a plausible
+			// number.
+			if ($current === null || $rank > $current['rank']) {
+				$winners[$key] = ['rank' => $rank, 'policy' => $policy];
+			}
+		}//end foreach
 
-            $rank    = $this->precedenceOf(scope: (string) ($policy['scope'] ?? ''));
-            $current = ($winners[$key] ?? null);
-            // Strictly greater: an equally-specific later policy does NOT
-            // silently displace an earlier one. Two organisation-wide overhead
-            // policies in force on the same date is a data problem, and
-            // resolving it by array order would hide it behind a plausible
-            // number.
-            if ($current === null || $rank > $current['rank']) {
-                $winners[$key] = ['rank' => $rank, 'policy' => $policy];
-            }
-        }//end foreach
+		$out = [];
+		foreach ($winners as $key => $winner) {
+			$out[] = $this->toAddition(key: $key, policy: $winner['policy']);
+		}
 
-        $out = [];
-        foreach ($winners as $key => $winner) {
-            $out[] = $this->toAddition(key: $key, policy: $winner['policy']);
-        }
+		return $out;
+	}//end resolveFor()
 
-        return $out;
+	/**
+	 * Whether a policy covers this contract on this date.
+	 *
+	 * @param array<string, mixed> $policy The policy.
+	 * @param string $claId The CLA the contract names, or ''.
+	 * @param string $contractId The contract id.
+	 * @param string $onDate ISO date.
+	 *
+	 * @return bool
+	 */
+	private function applies(array $policy, string $claId, string $contractId, string $onDate): bool {
+		if ($this->inWindow(policy: $policy, onDate: $onDate) === false) {
+			return false;
+		}
 
-    }//end resolveFor()
+		switch ((string)($policy['scope'] ?? '')) {
+			case 'organisation':
+				return true;
+			case 'cla':
+				// An empty claId on either side must never match: a policy
+				// scoped to "no CLA" would otherwise apply to every contract
+				// that names none, which is the opposite of scoping.
+				$policyCla = trim((string)($policy['claId'] ?? ''));
+				return ($policyCla !== '' && $claId !== '' && $policyCla === $claId);
+			case 'contract':
+				$policyContract = trim((string)($policy['contractId'] ?? ''));
+				return ($policyContract !== '' && $contractId !== '' && $policyContract === $contractId);
+			default:
+				return false;
+		}
 
+	}//end applies()
 
-    /**
-     * Whether a policy covers this contract on this date.
-     *
-     * @param array<string, mixed> $policy     The policy.
-     * @param string               $claId      The CLA the contract names, or ''.
-     * @param string               $contractId The contract id.
-     * @param string               $onDate     ISO date.
-     *
-     * @return bool
-     */
-    private function applies(array $policy, string $claId, string $contractId, string $onDate): bool
-    {
-        if ($this->inWindow(policy: $policy, onDate: $onDate) === false) {
-            return false;
-        }
+	/**
+	 * Whether `onDate` falls inside the policy's effective window. Both bounds
+	 * are inclusive; a missing bound is open.
+	 *
+	 * @param array<string, mixed> $policy The policy.
+	 * @param string $onDate ISO date.
+	 *
+	 * @return bool
+	 */
+	private function inWindow(array $policy, string $onDate): bool {
+		if ($onDate === '') {
+			return false;
+		}
 
-        switch ((string) ($policy['scope'] ?? '')) {
-            case 'organisation':
-                return true;
+		$from = substr(trim((string)($policy['effectiveFrom'] ?? '')), 0, 10);
+		if ($from !== '' && $onDate < $from) {
+			return false;
+		}
 
-            case 'cla':
-                // An empty claId on either side must never match: a policy
-                // scoped to "no CLA" would otherwise apply to every contract
-                // that names none, which is the opposite of scoping.
-                $policyCla = trim((string) ($policy['claId'] ?? ''));
-                return ($policyCla !== '' && $claId !== '' && $policyCla === $claId);
+		$to = substr(trim((string)($policy['effectiveTo'] ?? '')), 0, 10);
+		if ($to !== '' && $onDate > $to) {
+			return false;
+		}
 
-            case 'contract':
-                $policyContract = trim((string) ($policy['contractId'] ?? ''));
-                return ($policyContract !== '' && $contractId !== '' && $policyContract === $contractId);
+		return true;
+	}//end inWindow()
 
-            default:
-                return false;
-        }
+	/**
+	 * Precedence rank of a scope; -1 for an unknown scope, which therefore
+	 * never wins.
+	 *
+	 * @param string $scope The scope.
+	 *
+	 * @return int
+	 */
+	private function precedenceOf(string $scope): int {
+		$rank = array_search($scope, self::SCOPE_PRECEDENCE, true);
 
-    }//end applies()
+		return ($rank === false ? -1 : (int)$rank);
+	}//end precedenceOf()
 
+	/**
+	 * Project a policy into the addition shape the cost service accepts,
+	 * carrying whichever amount form it states.
+	 *
+	 * @param string $key The cost factor key.
+	 * @param array<string, mixed> $policy The winning policy.
+	 *
+	 * @return array{key: string, centsPerHour?: int, percentageOfWage?: float, source: string, basis: string}
+	 */
+	private function toAddition(string $key, array $policy): array {
+		$addition = [
+			'key' => $key,
+			'source' => (trim((string)($policy['source'] ?? '')) ?: 'manual'),
+			'basis' => (string)($policy['basis'] ?? ''),
+		];
 
-    /**
-     * Whether `onDate` falls inside the policy's effective window. Both bounds
-     * are inclusive; a missing bound is open.
-     *
-     * @param array<string, mixed> $policy The policy.
-     * @param string               $onDate ISO date.
-     *
-     * @return bool
-     */
-    private function inWindow(array $policy, string $onDate): bool
-    {
-        if ($onDate === '') {
-            return false;
-        }
+		// Pass through exactly ONE form, untouched. The cost service refuses an
+		// addition stating both, and forwarding both would turn a policy-level
+		// data error into a rate-level exception far from its cause.
+		$fixed = ($policy['centsPerHour'] ?? null);
+		if ($fixed !== null && $fixed !== '' && is_numeric($fixed) === true) {
+			$addition['centsPerHour'] = (int)$fixed;
 
-        $from = substr(trim((string) ($policy['effectiveFrom'] ?? '')), 0, 10);
-        if ($from !== '' && $onDate < $from) {
-            return false;
-        }
+			return $addition;
+		}
 
-        $to = substr(trim((string) ($policy['effectiveTo'] ?? '')), 0, 10);
-        if ($to !== '' && $onDate > $to) {
-            return false;
-        }
+		$percentage = ($policy['percentageOfWage'] ?? null);
+		if ($percentage !== null && $percentage !== '' && is_numeric($percentage) === true) {
+			$addition['percentageOfWage'] = (float)$percentage;
+		}
 
-        return true;
-
-    }//end inWindow()
-
-
-    /**
-     * Precedence rank of a scope; -1 for an unknown scope, which therefore
-     * never wins.
-     *
-     * @param string $scope The scope.
-     *
-     * @return int
-     */
-    private function precedenceOf(string $scope): int
-    {
-        $rank = array_search($scope, self::SCOPE_PRECEDENCE, true);
-
-        return ($rank === false ? -1 : (int) $rank);
-
-    }//end precedenceOf()
-
-
-    /**
-     * Project a policy into the addition shape the cost service accepts,
-     * carrying whichever amount form it states.
-     *
-     * @param string               $key    The cost factor key.
-     * @param array<string, mixed> $policy The winning policy.
-     *
-     * @return array{key: string, centsPerHour?: int, percentageOfWage?: float, source: string, basis: string}
-     */
-    private function toAddition(string $key, array $policy): array
-    {
-        $addition = [
-            'key'    => $key,
-            'source' => (trim((string) ($policy['source'] ?? '')) ?: 'manual'),
-            'basis'  => (string) ($policy['basis'] ?? ''),
-        ];
-
-        // Pass through exactly ONE form, untouched. The cost service refuses an
-        // addition stating both, and forwarding both would turn a policy-level
-        // data error into a rate-level exception far from its cause.
-        $fixed = ($policy['centsPerHour'] ?? null);
-        if ($fixed !== null && $fixed !== '' && is_numeric($fixed) === true) {
-            $addition['centsPerHour'] = (int) $fixed;
-
-            return $addition;
-        }
-
-        $percentage = ($policy['percentageOfWage'] ?? null);
-        if ($percentage !== null && $percentage !== '' && is_numeric($percentage) === true) {
-            $addition['percentageOfWage'] = (float) $percentage;
-        }
-
-        return $addition;
-
-    }//end toAddition()
+		return $addition;
+	}//end toAddition()
 }//end class

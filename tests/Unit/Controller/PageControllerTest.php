@@ -46,6 +46,8 @@ use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for PageController.
@@ -53,154 +55,164 @@ use PHPUnit\Framework\TestCase;
  * @spec openspec/specs/multi-administratie/spec.md#REQ-MULTI-004
  * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
  */
-class PageControllerTest extends TestCase
-{
+class PageControllerTest extends TestCase {
 
-    /**
-     * Recorded `provideInitialState` calls, as `key => value`, populated by
-     * the IInitialState mock built in `buildController()`.
-     *
-     * @var array<string, mixed>
-     */
-    private array $stamped = [];
+	/**
+	 * Recorded `provideInitialState` calls, as `key => value`, populated by
+	 * the IInitialState mock built in `buildController()`.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $stamped = [];
 
+	/**
+	 * REQ-MULTI-004 + REQ-SPM-002: a caller with an active administratie gets
+	 * BOTH the id and the resolved mode stamped as initial state before the
+	 * template renders.
+	 *
+	 * @return void
+	 */
+	public function testIndexStampsBothActiveAdministrationIdAndMode(): void {
+		$administrationService = $this->createMock(AdministrationService::class);
+		$administrationService->method('getActiveAdministrationId')->with('admin')->willReturn('ADM-002');
+		$administrationService->method('getActiveAdministrationMode')->with('admin')->willReturn('dga_single_person');
 
-    /**
-     * REQ-MULTI-004 + REQ-SPM-002: a caller with an active administratie gets
-     * BOTH the id and the resolved mode stamped as initial state before the
-     * template renders.
-     *
-     * @return void
-     */
-    public function testIndexStampsBothActiveAdministrationIdAndMode(): void
-    {
-        $administrationService = $this->createMock(AdministrationService::class);
-        $administrationService->method('getActiveAdministrationId')->with('admin')->willReturn('ADM-002');
-        $administrationService->method('getActiveAdministrationMode')->with('admin')->willReturn('dga_single_person');
+		$controller = $this->buildController($administrationService, 'admin');
 
-        $controller = $this->buildController($administrationService, 'admin');
+		$response = $controller->index();
 
-        $response = $controller->index();
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertSame('ADM-002', $this->stamped['activeAdministrationId']);
+		$this->assertSame('dga_single_person', $this->stamped['activeAdministrationMode']);
 
-        $this->assertInstanceOf(TemplateResponse::class, $response);
-        $this->assertSame('ADM-002', $this->stamped['activeAdministrationId']);
-        $this->assertSame('dga_single_person', $this->stamped['activeAdministrationMode']);
+	}//end testIndexStampsBothActiveAdministrationIdAndMode()
 
-    }//end testIndexStampsBothActiveAdministrationIdAndMode()
+	/**
+	 * REQ-MULTI-004 "unset active administratie stamps no id" + REQ-SPM-002
+	 * default: a caller who never switched gets NO `activeAdministrationId`
+	 * (the `?`-optional filters drop the clause) but STILL gets
+	 * `activeAdministrationMode` = `standard` — the no-regression default so
+	 * no visibleIf predicate hides a menu for them.
+	 *
+	 * @return void
+	 */
+	public function testIndexStampsStandardModeButNoIdWhenNoActiveAdministration(): void {
+		$administrationService = $this->createMock(AdministrationService::class);
+		$administrationService->method('getActiveAdministrationId')->with('admin')->willReturn(null);
+		$administrationService->method('getActiveAdministrationMode')->with('admin')->willReturn('standard');
 
+		$controller = $this->buildController($administrationService, 'admin');
 
-    /**
-     * REQ-MULTI-004 "unset active administratie stamps no id" + REQ-SPM-002
-     * default: a caller who never switched gets NO `activeAdministrationId`
-     * (the `?`-optional filters drop the clause) but STILL gets
-     * `activeAdministrationMode` = `standard` — the no-regression default so
-     * no visibleIf predicate hides a menu for them.
-     *
-     * @return void
-     */
-    public function testIndexStampsStandardModeButNoIdWhenNoActiveAdministration(): void
-    {
-        $administrationService = $this->createMock(AdministrationService::class);
-        $administrationService->method('getActiveAdministrationId')->with('admin')->willReturn(null);
-        $administrationService->method('getActiveAdministrationMode')->with('admin')->willReturn('standard');
+		$response = $controller->index();
 
-        $controller = $this->buildController($administrationService, 'admin');
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertArrayNotHasKey('activeAdministrationId', $this->stamped);
+		$this->assertSame('standard', $this->stamped['activeAdministrationMode']);
 
-        $response = $controller->index();
+	}//end testIndexStampsStandardModeButNoIdWhenNoActiveAdministration()
 
-        $this->assertInstanceOf(TemplateResponse::class, $response);
-        $this->assertArrayNotHasKey('activeAdministrationId', $this->stamped);
-        $this->assertSame('standard', $this->stamped['activeAdministrationMode']);
+	/**
+	 * An unauthenticated caller (no session user) never reaches the
+	 * administration lookup — `index()` degrades to the bare template with
+	 * nothing stamped.
+	 *
+	 * @return void
+	 */
+	public function testIndexSkipsInitialStateWhenNoUserIsLoggedIn(): void {
+		$administrationService = $this->createMock(AdministrationService::class);
+		$administrationService->expects($this->never())->method('getActiveAdministrationId');
+		$administrationService->expects($this->never())->method('getActiveAdministrationMode');
 
-    }//end testIndexStampsStandardModeButNoIdWhenNoActiveAdministration()
+		$request = $this->createMock(IRequest::class);
+		$initialState = $this->createMock(IInitialState::class);
+		$initialState->expects($this->never())->method('provideInitialState');
 
+		$userSession = $this->createMock(IUserSession::class);
+		$userSession->method('getUser')->willReturn(null);
 
-    /**
-     * An unauthenticated caller (no session user) never reaches the
-     * administration lookup — `index()` degrades to the bare template with
-     * nothing stamped.
-     *
-     * @return void
-     */
-    public function testIndexSkipsInitialStateWhenNoUserIsLoggedIn(): void
-    {
-        $administrationService = $this->createMock(AdministrationService::class);
-        $administrationService->expects($this->never())->method('getActiveAdministrationId');
-        $administrationService->expects($this->never())->method('getActiveAdministrationMode');
+		// AdministrationService is resolved from the CONTAINER now, not injected
+		// (ADR-083 rule 3 — the default route must render on an instance that
+		// has no OpenRegister). The expectations above are unchanged and still
+		// meaningful: with no user, neither method may be called at all.
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($administrationService);
 
-        $request      = $this->createMock(IRequest::class);
-        $initialState = $this->createMock(IInitialState::class);
-        $initialState->expects($this->never())->method('provideInitialState');
+		$controller = new PageController(
+			$request,
+			$userSession,
+			$initialState,
+			$container,
+			$this->createMock(LoggerInterface::class)
+		);
 
-        $userSession = $this->createMock(IUserSession::class);
-        $userSession->method('getUser')->willReturn(null);
+		$response = $controller->index();
 
-        $controller = new PageController($request, $userSession, $initialState, $administrationService);
+		$this->assertInstanceOf(TemplateResponse::class, $response);
 
-        $response = $controller->index();
+	}//end testIndexSkipsInitialStateWhenNoUserIsLoggedIn()
 
-        $this->assertInstanceOf(TemplateResponse::class, $response);
+	/**
+	 * `catchAll()` delegates to `index()` — the same initial-state stamping
+	 * (id + mode) applies to deep links (Vue history mode), not only the bare
+	 * app root.
+	 *
+	 * @return void
+	 */
+	public function testCatchAllAlsoStampsInitialStateViaIndex(): void {
+		$administrationService = $this->createMock(AdministrationService::class);
+		$administrationService->method('getActiveAdministrationId')->with('admin')->willReturn('ADM-001');
+		$administrationService->method('getActiveAdministrationMode')->with('admin')->willReturn('standard');
 
-    }//end testIndexSkipsInitialStateWhenNoUserIsLoggedIn()
+		$controller = $this->buildController($administrationService, 'admin');
 
+		$response = $controller->catchAll();
 
-    /**
-     * `catchAll()` delegates to `index()` — the same initial-state stamping
-     * (id + mode) applies to deep links (Vue history mode), not only the bare
-     * app root.
-     *
-     * @return void
-     */
-    public function testCatchAllAlsoStampsInitialStateViaIndex(): void
-    {
-        $administrationService = $this->createMock(AdministrationService::class);
-        $administrationService->method('getActiveAdministrationId')->with('admin')->willReturn('ADM-001');
-        $administrationService->method('getActiveAdministrationMode')->with('admin')->willReturn('standard');
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertSame('ADM-001', $this->stamped['activeAdministrationId']);
+		$this->assertSame('standard', $this->stamped['activeAdministrationMode']);
 
-        $controller = $this->buildController($administrationService, 'admin');
+	}//end testCatchAllAlsoStampsInitialStateViaIndex()
 
-        $response = $controller->catchAll();
+	/**
+	 * Build a `PageController` with the given (mocked) service and a session
+	 * resolving to `$userId`; the IInitialState mock records every stamped
+	 * key/value into `$this->stamped`.
+	 *
+	 * @param AdministrationService $administrationService The (mocked) administration service.
+	 * @param string $userId The acting user id.
+	 *
+	 * @return PageController
+	 */
+	private function buildController(
+		AdministrationService $administrationService,
+		string $userId,
+	): PageController {
+		$this->stamped = [];
 
-        $this->assertInstanceOf(TemplateResponse::class, $response);
-        $this->assertSame('ADM-001', $this->stamped['activeAdministrationId']);
-        $this->assertSame('standard', $this->stamped['activeAdministrationMode']);
+		$request = $this->createMock(IRequest::class);
 
-    }//end testCatchAllAlsoStampsInitialStateViaIndex()
+		$initialState = $this->createMock(IInitialState::class);
+		$initialState->method('provideInitialState')
+			->willReturnCallback(function (string $key, mixed $value): void {
+				$this->stamped[$key] = $value;
+			});
 
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn($userId);
 
-    /**
-     * Build a `PageController` with the given (mocked) service and a session
-     * resolving to `$userId`; the IInitialState mock records every stamped
-     * key/value into `$this->stamped`.
-     *
-     * @param AdministrationService $administrationService The (mocked) administration service.
-     * @param string                $userId                The acting user id.
-     *
-     * @return PageController
-     */
-    private function buildController(
-        AdministrationService $administrationService,
-        string $userId
-    ): PageController {
-        $this->stamped = [];
+		$userSession = $this->createMock(IUserSession::class);
+		$userSession->method('getUser')->willReturn($user);
 
-        $request = $this->createMock(IRequest::class);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($administrationService);
 
-        $initialState = $this->createMock(IInitialState::class);
-        $initialState->method('provideInitialState')
-            ->willReturnCallback(function (string $key, mixed $value): void {
-                $this->stamped[$key] = $value;
-            });
-
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn($userId);
-
-        $userSession = $this->createMock(IUserSession::class);
-        $userSession->method('getUser')->willReturn($user);
-
-        return new PageController($request, $userSession, $initialState, $administrationService);
-
-    }//end buildController()
-
+		return new PageController(
+			$request,
+			$userSession,
+			$initialState,
+			$container,
+			$this->createMock(LoggerInterface::class)
+		);
+	}//end buildController()
 
 }//end class

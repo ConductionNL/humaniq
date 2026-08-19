@@ -56,56 +56,51 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
  * Fails closed: an empty or unparsable `effectiveDate` denies the transition
  * rather than allowing it on a guess.
  */
-final class CompEffectiveDateGuard implements LifecycleGuardInterface
-{
+final class CompEffectiveDateGuard implements LifecycleGuardInterface {
 
+	/**
+	 * Authorise the `effectuate` transition by checking the adjustment's own
+	 * `effectiveDate`.
+	 *
+	 * @param array<string, mixed> $object The CompAdjustment payload at its current state.
+	 * @param string $action The transition action ('effectuate').
+	 * @param string $userId The uid of the caller.
+	 *
+	 * @return GuardResult Allow when `effectiveDate` is present and on or
+	 *                     before today; deny otherwise (fail-closed).
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
+	 *  static allow()/deny() factories mandated by OpenRegister's contract.
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action/$userId are part of
+	 *  the LifecycleGuardInterface signature; the gate depends only on the
+	 *  adjustment's own effectiveDate, not on who is acting or which action fired.
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-005
+	 */
+	public function check(array $object, string $action, string $userId): GuardResult {
+		$effectiveDate = trim((string)($object['effectiveDate'] ?? ''));
+		if ($effectiveDate === '') {
+			return GuardResult::deny(
+				'Deze aanpassing heeft geen ingangsdatum; effectueren is geweigerd.'
+			);
+		}
 
-    /**
-     * Authorise the `effectuate` transition by checking the adjustment's own
-     * `effectiveDate`.
-     *
-     * @param array<string, mixed> $object The CompAdjustment payload at its current state.
-     * @param string               $action The transition action ('effectuate').
-     * @param string               $userId The uid of the caller.
-     *
-     * @return GuardResult Allow when `effectiveDate` is present and on or
-     *                     before today; deny otherwise (fail-closed).
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
-     *  static allow()/deny() factories mandated by OpenRegister's contract.
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action/$userId are part of
-     *  the LifecycleGuardInterface signature; the gate depends only on the
-     *  adjustment's own effectiveDate, not on who is acting or which action fired.
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-005
-     */
-    public function check(array $object, string $action, string $userId): GuardResult
-    {
-        $effectiveDate = trim((string) ($object['effectiveDate'] ?? ''));
-        if ($effectiveDate === '') {
-            return GuardResult::deny(
-                'Deze aanpassing heeft geen ingangsdatum; effectueren is geweigerd.'
-            );
-        }
+		$effectiveTimestamp = strtotime($effectiveDate);
+		if ($effectiveTimestamp === false) {
+			return GuardResult::deny(
+				'De ingangsdatum van deze aanpassing kon niet worden gelezen; effectueren is geweigerd.'
+			);
+		}
 
-        $effectiveTimestamp = strtotime($effectiveDate);
-        if ($effectiveTimestamp === false) {
-            return GuardResult::deny(
-                'De ingangsdatum van deze aanpassing kon niet worden gelezen; effectueren is geweigerd.'
-            );
-        }
+		$today = strtotime('today');
+		if ($effectiveTimestamp > $today) {
+			return GuardResult::deny(sprintf(
+				'De ingangsdatum (%s) ligt in de toekomst; effectueren kan pas op of na deze datum.',
+				$effectiveDate
+			));
+		}
 
-        $today = strtotime('today');
-        if ($effectiveTimestamp > $today) {
-            return GuardResult::deny(sprintf(
-                'De ingangsdatum (%s) ligt in de toekomst; effectueren kan pas op of na deze datum.',
-                $effectiveDate
-            ));
-        }
-
-        return GuardResult::allow();
-
-    }//end check()
-
+		return GuardResult::allow();
+	}//end check()
 
 }//end class

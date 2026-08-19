@@ -44,253 +44,216 @@ use PHPUnit\Framework\TestCase;
  * @spec openspec/changes/leave-verzuim-mvp/specs/leave-management/spec.md
  * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-003
  */
-class NlLeaveChecksTest extends TestCase
-{
+class NlLeaveChecksTest extends TestCase {
 
+	/**
+	 * The registered LeaveBalance predicates, keyed by rule id.
+	 *
+	 * @var array<string, callable>
+	 */
+	private array $checks;
 
-    /**
-     * The registered LeaveBalance predicates, keyed by rule id.
-     *
-     * @var array<string, callable>
-     */
-    private array $checks;
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$this->checks = NlLeaveChecks::checks()['LeaveBalance'];
 
+	}//end setUp()
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $this->checks = NlLeaveChecks::checks()['LeaveBalance'];
+	/**
+	 * A minimal, fully-compliant LeaveBalance fixture; each test overrides
+	 * the fields it exercises (matches the seeded employee-jansen balance).
+	 *
+	 * @param array<string, mixed> $overrides Fields to override.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function balance(array $overrides = []): array {
+		return array_merge(
+			[
+				'employeeId' => 'employee-jansen',
+				'year' => 2026,
+				'leaveType' => 'holiday',
+				'entitledHours' => 160,
+				'bovenwettelijkHours' => 40,
+				'usedHours' => 56,
+				'contractHoursPerWeek' => 40,
+				'expiryDate' => '2027-07-01',
+			],
+			$overrides
+		);
 
-    }//end setUp()
+	}//end balance()
 
+	/**
+	 * @return void
+	 */
+	public function testCompliantBalancePassesAllFourChecks(): void {
+		$balance = $this->balance();
+		foreach ($this->checks as $ruleId => $predicate) {
+			$this->assertTrue((bool)$predicate($balance), sprintf('compliant balance violates %s', $ruleId));
+		}
 
-    /**
-     * A minimal, fully-compliant LeaveBalance fixture; each test overrides
-     * the fields it exercises (matches the seeded employee-jansen balance).
-     *
-     * @param array<string, mixed> $overrides Fields to override.
-     *
-     * @return array<string, mixed>
-     */
-    private function balance(array $overrides=[]): array
-    {
-        return array_merge(
-            [
-                'employeeId'           => 'employee-jansen',
-                'year'                 => 2026,
-                'leaveType'            => 'holiday',
-                'entitledHours'        => 160,
-                'bovenwettelijkHours'  => 40,
-                'usedHours'            => 56,
-                'contractHoursPerWeek' => 40,
-                'expiryDate'           => '2027-07-01',
-            ],
-            $overrides
-        );
+	}//end testCompliantBalancePassesAllFourChecks()
 
-    }//end balance()
+	/**
+	 * @return void
+	 */
+	public function testWettelijkMinimumViolatedWhenEntitledBelowFourTimesWeekly(): void {
+		// Seeded scenario from REQ-LVM-005: contractHoursPerWeek 36, entitledHours
+		// 120 — 4x36 = 144, so 120 is under-granted.
+		$balance = $this->balance(['contractHoursPerWeek' => 36, 'entitledHours' => 120, 'usedHours' => 16, 'bovenwettelijkHours' => 0]);
+		$this->assertFalse(($this->checks['nl-verlof-wettelijk-minimum'])($balance));
 
+	}//end testWettelijkMinimumViolatedWhenEntitledBelowFourTimesWeekly()
 
-    /**
-     * @return void
-     */
-    public function testCompliantBalancePassesAllFourChecks(): void
-    {
-        $balance = $this->balance();
-        foreach ($this->checks as $ruleId => $predicate) {
-            $this->assertTrue((bool) $predicate($balance), sprintf('compliant balance violates %s', $ruleId));
-        }
+	/**
+	 * @return void
+	 */
+	public function testWettelijkMinimumSatisfiedAtExactlyFourTimesWeekly(): void {
+		$balance = $this->balance(['contractHoursPerWeek' => 36, 'entitledHours' => 144]);
+		$this->assertTrue(($this->checks['nl-verlof-wettelijk-minimum'])($balance));
 
-    }//end testCompliantBalancePassesAllFourChecks()
+	}//end testWettelijkMinimumSatisfiedAtExactlyFourTimesWeekly()
 
+	/**
+	 * @return void
+	 */
+	public function testWettelijkMinimumVacuouslyPassesWhenSnapshotNull(): void {
+		$balance = $this->balance(['contractHoursPerWeek' => null, 'entitledHours' => 8]);
+		$this->assertTrue(($this->checks['nl-verlof-wettelijk-minimum'])($balance));
 
-    /**
-     * @return void
-     */
-    public function testWettelijkMinimumViolatedWhenEntitledBelowFourTimesWeekly(): void
-    {
-        // Seeded scenario from REQ-LVM-005: contractHoursPerWeek 36, entitledHours
-        // 120 — 4x36 = 144, so 120 is under-granted.
-        $balance = $this->balance(['contractHoursPerWeek' => 36, 'entitledHours' => 120, 'usedHours' => 16, 'bovenwettelijkHours' => 0]);
-        $this->assertFalse(($this->checks['nl-verlof-wettelijk-minimum'])($balance));
+	}//end testWettelijkMinimumVacuouslyPassesWhenSnapshotNull()
 
-    }//end testWettelijkMinimumViolatedWhenEntitledBelowFourTimesWeekly()
+	/**
+	 * @return void
+	 */
+	public function testSaldoNietNegatiefViolatedWhenUsedExceedsTotal(): void {
+		// Seeded scenario from REQ-LVM-005: entitledHours 128, bovenwettelijk 0,
+		// usedHours 140 — 140 > 128.
+		$balance = $this->balance(['entitledHours' => 128, 'bovenwettelijkHours' => 0, 'usedHours' => 140]);
+		$this->assertFalse(($this->checks['nl-verlof-saldo-niet-negatief'])($balance));
 
+	}//end testSaldoNietNegatiefViolatedWhenUsedExceedsTotal()
 
-    /**
-     * @return void
-     */
-    public function testWettelijkMinimumSatisfiedAtExactlyFourTimesWeekly(): void
-    {
-        $balance = $this->balance(['contractHoursPerWeek' => 36, 'entitledHours' => 144]);
-        $this->assertTrue(($this->checks['nl-verlof-wettelijk-minimum'])($balance));
+	/**
+	 * @return void
+	 */
+	public function testSaldoNietNegatiefSatisfiedWhenUsedEqualsTotal(): void {
+		$balance = $this->balance(['entitledHours' => 100, 'bovenwettelijkHours' => 0, 'usedHours' => 100]);
+		$this->assertTrue(($this->checks['nl-verlof-saldo-niet-negatief'])($balance));
 
-    }//end testWettelijkMinimumSatisfiedAtExactlyFourTimesWeekly()
+	}//end testSaldoNietNegatiefSatisfiedWhenUsedEqualsTotal()
 
+	/**
+	 * @return void
+	 */
+	public function testVervaltermijnViolatedWhenExpiryDateWrong(): void {
+		$balance = $this->balance(['year' => 2026, 'expiryDate' => '2026-07-01']);
+		$this->assertFalse(($this->checks['nl-verlof-vervaltermijn'])($balance));
 
-    /**
-     * @return void
-     */
-    public function testWettelijkMinimumVacuouslyPassesWhenSnapshotNull(): void
-    {
-        $balance = $this->balance(['contractHoursPerWeek' => null, 'entitledHours' => 8]);
-        $this->assertTrue(($this->checks['nl-verlof-wettelijk-minimum'])($balance));
+	}//end testVervaltermijnViolatedWhenExpiryDateWrong()
 
-    }//end testWettelijkMinimumVacuouslyPassesWhenSnapshotNull()
+	/**
+	 * @return void
+	 */
+	public function testVervaltermijnViolatedWhenExpiryDateMissing(): void {
+		$balance = $this->balance(['year' => 2026, 'expiryDate' => null]);
+		$this->assertFalse(($this->checks['nl-verlof-vervaltermijn'])($balance));
 
+	}//end testVervaltermijnViolatedWhenExpiryDateMissing()
 
-    /**
-     * @return void
-     */
-    public function testSaldoNietNegatiefViolatedWhenUsedExceedsTotal(): void
-    {
-        // Seeded scenario from REQ-LVM-005: entitledHours 128, bovenwettelijk 0,
-        // usedHours 140 — 140 > 128.
-        $balance = $this->balance(['entitledHours' => 128, 'bovenwettelijkHours' => 0, 'usedHours' => 140]);
-        $this->assertFalse(($this->checks['nl-verlof-saldo-niet-negatief'])($balance));
+	/**
+	 * @return void
+	 */
+	public function testVervaltermijnSatisfiedForCorrectFollowingYear(): void {
+		$balance = $this->balance(['year' => 2026, 'expiryDate' => '2027-07-01']);
+		$this->assertTrue(($this->checks['nl-verlof-vervaltermijn'])($balance));
 
-    }//end testSaldoNietNegatiefViolatedWhenUsedExceedsTotal()
+	}//end testVervaltermijnSatisfiedForCorrectFollowingYear()
 
+	/**
+	 * @return void
+	 */
+	public function testVervaltermijnVacuouslyPassesWhenNoEntitlement(): void {
+		$balance = $this->balance(['entitledHours' => 0, 'expiryDate' => null]);
+		$this->assertTrue(($this->checks['nl-verlof-vervaltermijn'])($balance));
 
-    /**
-     * @return void
-     */
-    public function testSaldoNietNegatiefSatisfiedWhenUsedEqualsTotal(): void
-    {
-        $balance = $this->balance(['entitledHours' => 100, 'bovenwettelijkHours' => 0, 'usedHours' => 100]);
-        $this->assertTrue(($this->checks['nl-verlof-saldo-niet-negatief'])($balance));
+	}//end testVervaltermijnVacuouslyPassesWhenNoEntitlement()
 
-    }//end testSaldoNietNegatiefSatisfiedWhenUsedEqualsTotal()
+	/**
+	 * @return void
+	 */
+	public function testAllFourRuleIdsAreRegistered(): void {
+		$this->assertArrayHasKey('nl-verlof-wettelijk-minimum', $this->checks);
+		$this->assertArrayHasKey('nl-verlof-saldo-niet-negatief', $this->checks);
+		$this->assertArrayHasKey('nl-verlof-vervaltermijn', $this->checks);
+		$this->assertArrayHasKey('nl-verlof-bovenwettelijk-niet-negatief', $this->checks);
 
+	}//end testAllFourRuleIdsAreRegistered()
 
-    /**
-     * @return void
-     */
-    public function testVervaltermijnViolatedWhenExpiryDateWrong(): void
-    {
-        $balance = $this->balance(['year' => 2026, 'expiryDate' => '2026-07-01']);
-        $this->assertFalse(($this->checks['nl-verlof-vervaltermijn'])($balance));
+	/**
+	 * leave-buy-sell REQ-BUYSELL-003 (raw predicate): a negative
+	 * bovenwettelijkHours violates the backstop.
+	 *
+	 * @return void
+	 */
+	public function testBovenwettelijkNietNegatiefViolatedWhenNegative(): void {
+		$balance = $this->balance(['bovenwettelijkHours' => -4]);
+		$this->assertFalse(($this->checks['nl-verlof-bovenwettelijk-niet-negatief'])($balance));
 
-    }//end testVervaltermijnViolatedWhenExpiryDateWrong()
+	}//end testBovenwettelijkNietNegatiefViolatedWhenNegative()
 
+	/**
+	 * leave-buy-sell REQ-BUYSELL-003 (raw predicate): zero or positive
+	 * bovenwettelijkHours satisfies the backstop.
+	 *
+	 * @return void
+	 */
+	public function testBovenwettelijkNietNegatiefSatisfiedWhenZeroOrPositive(): void {
+		$this->assertTrue(($this->checks['nl-verlof-bovenwettelijk-niet-negatief'])($this->balance(['bovenwettelijkHours' => 0])));
+		$this->assertTrue(($this->checks['nl-verlof-bovenwettelijk-niet-negatief'])($this->balance(['bovenwettelijkHours' => 40])));
 
-    /**
-     * @return void
-     */
-    public function testVervaltermijnViolatedWhenExpiryDateMissing(): void
-    {
-        $balance = $this->balance(['year' => 2026, 'expiryDate' => null]);
-        $this->assertFalse(($this->checks['nl-verlof-vervaltermijn'])($balance));
+	}//end testBovenwettelijkNietNegatiefSatisfiedWhenZeroOrPositive()
 
-    }//end testVervaltermijnViolatedWhenExpiryDateMissing()
+	/**
+	 * leave-buy-sell REQ-BUYSELL-003: a negative bovenwettelijkHours produces
+	 * the `nl-verlof-bovenwettelijk-niet-negatief` Violation at `mandatory`
+	 * severity, driven through the REAL `RuleEngine::evaluate()` -- exercising
+	 * the auto-discovery + rule-index wiring, not just the raw callable.
+	 *
+	 * @return void
+	 */
+	public function testNegativeBovenwettelijkProducesViolationThroughRuleEngine(): void {
+		$balance = $this->balance(['bovenwettelijkHours' => -4]);
+		$violations = RuleEngine::evaluate('LeaveBalance', $balance, ['jurisdiction' => 'NL']);
 
+		$ruleIds = array_map(static fn ($v) => $v->ruleId, $violations);
+		$this->assertContains('nl-verlof-bovenwettelijk-niet-negatief', $ruleIds);
 
-    /**
-     * @return void
-     */
-    public function testVervaltermijnSatisfiedForCorrectFollowingYear(): void
-    {
-        $balance = $this->balance(['year' => 2026, 'expiryDate' => '2027-07-01']);
-        $this->assertTrue(($this->checks['nl-verlof-vervaltermijn'])($balance));
+		foreach ($violations as $violation) {
+			if ($violation->ruleId === 'nl-verlof-bovenwettelijk-niet-negatief') {
+				$this->assertSame('mandatory', $violation->severity);
+			}
+		}
 
-    }//end testVervaltermijnSatisfiedForCorrectFollowingYear()
+	}//end testNegativeBovenwettelijkProducesViolationThroughRuleEngine()
 
+	/**
+	 * leave-buy-sell REQ-BUYSELL-003: a compliant balance produces no
+	 * `nl-verlof-bovenwettelijk-niet-negatief` violation through
+	 * RuleEngine::evaluate().
+	 *
+	 * @return void
+	 */
+	public function testCompliantBalanceProducesNoBovenwettelijkViolationThroughRuleEngine(): void {
+		$balance = $this->balance();
+		$violations = RuleEngine::evaluate('LeaveBalance', $balance, ['jurisdiction' => 'NL']);
 
-    /**
-     * @return void
-     */
-    public function testVervaltermijnVacuouslyPassesWhenNoEntitlement(): void
-    {
-        $balance = $this->balance(['entitledHours' => 0, 'expiryDate' => null]);
-        $this->assertTrue(($this->checks['nl-verlof-vervaltermijn'])($balance));
+		$ruleIds = array_map(static fn ($v) => $v->ruleId, $violations);
+		$this->assertNotContains('nl-verlof-bovenwettelijk-niet-negatief', $ruleIds);
 
-    }//end testVervaltermijnVacuouslyPassesWhenNoEntitlement()
-
-
-    /**
-     * @return void
-     */
-    public function testAllFourRuleIdsAreRegistered(): void
-    {
-        $this->assertArrayHasKey('nl-verlof-wettelijk-minimum', $this->checks);
-        $this->assertArrayHasKey('nl-verlof-saldo-niet-negatief', $this->checks);
-        $this->assertArrayHasKey('nl-verlof-vervaltermijn', $this->checks);
-        $this->assertArrayHasKey('nl-verlof-bovenwettelijk-niet-negatief', $this->checks);
-
-    }//end testAllFourRuleIdsAreRegistered()
-
-
-    /**
-     * leave-buy-sell REQ-BUYSELL-003 (raw predicate): a negative
-     * bovenwettelijkHours violates the backstop.
-     *
-     * @return void
-     */
-    public function testBovenwettelijkNietNegatiefViolatedWhenNegative(): void
-    {
-        $balance = $this->balance(['bovenwettelijkHours' => -4]);
-        $this->assertFalse(($this->checks['nl-verlof-bovenwettelijk-niet-negatief'])($balance));
-
-    }//end testBovenwettelijkNietNegatiefViolatedWhenNegative()
-
-
-    /**
-     * leave-buy-sell REQ-BUYSELL-003 (raw predicate): zero or positive
-     * bovenwettelijkHours satisfies the backstop.
-     *
-     * @return void
-     */
-    public function testBovenwettelijkNietNegatiefSatisfiedWhenZeroOrPositive(): void
-    {
-        $this->assertTrue(($this->checks['nl-verlof-bovenwettelijk-niet-negatief'])($this->balance(['bovenwettelijkHours' => 0])));
-        $this->assertTrue(($this->checks['nl-verlof-bovenwettelijk-niet-negatief'])($this->balance(['bovenwettelijkHours' => 40])));
-
-    }//end testBovenwettelijkNietNegatiefSatisfiedWhenZeroOrPositive()
-
-
-    /**
-     * leave-buy-sell REQ-BUYSELL-003: a negative bovenwettelijkHours produces
-     * the `nl-verlof-bovenwettelijk-niet-negatief` Violation at `mandatory`
-     * severity, driven through the REAL `RuleEngine::evaluate()` -- exercising
-     * the auto-discovery + rule-index wiring, not just the raw callable.
-     *
-     * @return void
-     */
-    public function testNegativeBovenwettelijkProducesViolationThroughRuleEngine(): void
-    {
-        $balance    = $this->balance(['bovenwettelijkHours' => -4]);
-        $violations = RuleEngine::evaluate('LeaveBalance', $balance, ['jurisdiction' => 'NL']);
-
-        $ruleIds = array_map(static fn($v) => $v->ruleId, $violations);
-        $this->assertContains('nl-verlof-bovenwettelijk-niet-negatief', $ruleIds);
-
-        foreach ($violations as $violation) {
-            if ($violation->ruleId === 'nl-verlof-bovenwettelijk-niet-negatief') {
-                $this->assertSame('mandatory', $violation->severity);
-            }
-        }
-
-    }//end testNegativeBovenwettelijkProducesViolationThroughRuleEngine()
-
-
-    /**
-     * leave-buy-sell REQ-BUYSELL-003: a compliant balance produces no
-     * `nl-verlof-bovenwettelijk-niet-negatief` violation through
-     * RuleEngine::evaluate().
-     *
-     * @return void
-     */
-    public function testCompliantBalanceProducesNoBovenwettelijkViolationThroughRuleEngine(): void
-    {
-        $balance    = $this->balance();
-        $violations = RuleEngine::evaluate('LeaveBalance', $balance, ['jurisdiction' => 'NL']);
-
-        $ruleIds = array_map(static fn($v) => $v->ruleId, $violations);
-        $this->assertNotContains('nl-verlof-bovenwettelijk-niet-negatief', $ruleIds);
-
-    }//end testCompliantBalanceProducesNoBovenwettelijkViolationThroughRuleEngine()
-
+	}//end testCompliantBalanceProducesNoBovenwettelijkViolationThroughRuleEngine()
 
 }//end class

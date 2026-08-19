@@ -59,7 +59,7 @@
                     }
                 },
                 "properties": {
-                    "employeeId": {
+                    "employeeId": {"title": "Employee ID", 
                         "type": "string",
                         "format": "uuid",
                         "$ref": "Employee",
@@ -67,28 +67,29 @@
                     },
                     "title": {
                         "type": "string",
+                        "title": "Title",
                         "description": "Short title for the expense (schema:name).",
                         "maxLength": 255,
                         "minLength": 1
                     },
-                    "description": {
+                    "description": {"title": "Description", 
                         "type": "string",
                         "description": "Free-text description of the expense.",
                         "maxLength": 2000
                     },
-                    "amount": {
+                    "amount": {"title": "Amount", 
                         "type": "number",
                         "description": "Claimed amount in the configured currency. Reused by OpenRegister aggregations for per-employee and per-status totals.",
                         "minimum": 0
                     },
-                    "currency": {
+                    "currency": {"title": "Currency", 
                         "type": "string",
                         "description": "ISO 4217 currency code.",
                         "default": "EUR",
                         "maxLength": 3,
                         "minLength": 3
                     },
-                    "category": {
+                    "category": {"title": "Category", 
                         "type": "string",
                         "description": "Expense category.",
                         "enum": [
@@ -101,28 +102,28 @@
                             "other"
                         ]
                     },
-                    "expenseDate": {
+                    "expenseDate": {"title": "Expense date", 
                         "type": "string",
                         "format": "date",
                         "description": "The date the expense was incurred (ISO 8601)."
                     },
-                    "receiptFile": {
+                    "receiptFile": {"title": "Receipt file", 
                         "type": "string",
                         "nullable": true,
                         "description": "Reference (Nextcloud Files path or OpenRegister file id) to the attached receipt / bon."
                     },
-                    "vendor": {
+                    "vendor": {"title": "Vendor", 
                         "type": "string",
                         "nullable": true,
                         "description": "Vendor / leverancier name, either typed by the employee or prefilled by receipt-OCR extraction (receipt-ocr, REQ-RCPT-001)."
                     },
-                    "vatAmount": {
+                    "vatAmount": {"title": "VAT amount", 
                         "type": "number",
                         "nullable": true,
                         "minimum": 0,
                         "description": "VAT / BTW amount on the receipt, either typed by the employee or prefilled by receipt-OCR extraction (receipt-ocr, REQ-RCPT-001)."
                     },
-                    "status": {
+                    "status": {"title": "Status", 
                         "type": "string",
                         "description": "Reimbursement workflow status. Governed by the x-openregister-lifecycle state machine.",
                         "enum": [
@@ -134,36 +135,36 @@
                         ],
                         "default": "draft"
                     },
-                    "submittedAt": {
+                    "submittedAt": {"title": "Submitted at", 
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
                         "description": "ISO 8601 UTC timestamp the employee submitted the claim."
                     },
-                    "approvedBy": {
+                    "approvedBy": {"title": "Approved by", 
                         "type": "string",
                         "nullable": true,
                         "description": "Nextcloud user ID of the manager who approved (or rejected) the claim — an NC user id, not an object FK, so it stays plain per ADR-046. Must differ from the claiming employee (no self-approval)."
                     },
-                    "approvedAt": {
+                    "approvedAt": {"title": "Approved at", 
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
                         "description": "ISO 8601 UTC timestamp of approval or rejection."
                     },
-                    "rejectionReason": {
+                    "rejectionReason": {"title": "Rejection reason", 
                         "type": "string",
                         "nullable": true,
                         "description": "Reason the manager rejected the claim, shown to the employee so it can be corrected and re-submitted.",
                         "maxLength": 2000
                     },
-                    "reimbursedAt": {
+                    "reimbursedAt": {"title": "Reimbursed at", 
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
                         "description": "ISO 8601 UTC timestamp the approved claim was paid out to the employee."
                     },
-                    "userId": {
+                    "userId": {"title": "User ID", 
                         "type": "string",
                         "nullable": true,
                         "description": "Denormalized Nextcloud user id of the employee this expense claim belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the approvedBy convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnDeclaraties self-service page filters on it with the @me token."
@@ -212,13 +213,13 @@
                     "status"
                 ],
                 "properties": {
-                    "expenseId": {
+                    "expenseId": {"title": "Expense ID", 
                         "type": "string",
                         "format": "uuid",
                         "$ref": "Expense",
                         "description": "Reference to the Expense this extraction attempt is for."
                     },
-                    "status": {
+                    "status": {"title": "Status", 
                         "type": "string",
                         "description": "The outcome of this extraction attempt.",
                         "enum": [
@@ -228,50 +229,50 @@
                             "skipped-no-docudesk"
                         ]
                     },
-                    "overallConfidence": {
+                    "overallConfidence": {"title": "Overall confidence", 
                         "type": "number",
                         "nullable": true,
                         "minimum": 0,
                         "maximum": 1,
                         "description": "docudesk's overall confidence score for this extraction; null until an attempt completes."
                     },
-                    "extractedAmount": {
+                    "extractedAmount": {"title": "Extracted amount", 
                         "type": "number",
                         "nullable": true,
                         "description": "The raw amount docudesk extracted (VAT-inclusive total), recorded even when NOT applied because Expense.amount was already set."
                     },
-                    "extractedDate": {
+                    "extractedDate": {"title": "Extracted date", 
                         "type": "string",
                         "format": "date",
                         "nullable": true,
                         "description": "The raw receipt/invoice date docudesk extracted, recorded even when NOT applied."
                     },
-                    "extractedVendor": {
+                    "extractedVendor": {"title": "Extracted vendor", 
                         "type": "string",
                         "nullable": true,
                         "description": "The raw vendor/leverancier name docudesk extracted, recorded even when NOT applied."
                     },
-                    "extractedVatAmount": {
+                    "extractedVatAmount": {"title": "Extracted VAT amount", 
                         "type": "number",
                         "nullable": true,
                         "description": "The raw VAT amount docudesk extracted, recorded even when NOT applied."
                     },
-                    "appliedFields": {
+                    "appliedFields": {"title": "Applied fields", 
                         "type": "string",
                         "nullable": true,
                         "description": "Comma-separated Expense field names this attempt actually wrote (a field extracted-but-skipped-because-already-filled does not appear here, even though its raw value is still recorded)."
                     },
-                    "requestedBy": {
+                    "requestedBy": {"title": "Requested by", 
                         "type": "string",
                         "nullable": true,
                         "description": "Nextcloud user ID that requested this extraction, plain string per ADR-046 (mirrors Expense.approvedBy), or null for 'system' (occ context)."
                     },
-                    "errorMessage": {
+                    "errorMessage": {"title": "Error message", 
                         "type": "string",
                         "nullable": true,
                         "description": "Set on failed/skipped-no-docudesk; the diagnostic shown to the requester."
                     },
-                    "extractedAt": {
+                    "extractedAt": {"title": "Extracted at", 
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,

@@ -36,39 +36,31 @@ use OCA\Hrmq\Payroll\Dsl\StepContext;
 /**
  * A percentage of a base, capped at a ceiling.
  */
-final class CappedRateOp extends AbstractOp
-{
+final class CappedRateOp extends AbstractOp {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'cappedRate';
+	}//end name()
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'cappedRate';
+	/**
+	 * `min(base, cap) * rate / 100`.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return int|float
+	 */
+	public function evaluate(array $spec, StepContext $ctx): mixed {
+		$base = $this->num($spec, 'base', $ctx);
+		$rate = $this->num($spec, 'rate', $ctx);
+		$cap = $this->num($spec, 'cap', $ctx);
 
-    }//end name()
-
-
-    /**
-     * `min(base, cap) * rate / 100`.
-     *
-     * @param array<string, mixed> $spec The declared spec.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return int|float
-     */
-    public function evaluate(array $spec, StepContext $ctx): mixed
-    {
-        $base = $this->num($spec, 'base', $ctx);
-        $rate = $this->num($spec, 'rate', $ctx);
-        $cap  = $this->num($spec, 'cap', $ctx);
-
-        return ((min($base, $cap) * $rate) / 100);
-
-    }//end evaluate()
-
+		return ((min($base, $cap) * $rate) / 100);
+	}//end evaluate()
 
 }//end class

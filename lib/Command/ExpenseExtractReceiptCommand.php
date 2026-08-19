@@ -51,103 +51,95 @@ use Symfony\Component\Console\Output\OutputInterface;
  * occ command that extracts receipt fields via docudesk and prefills empty
  * Expense fields.
  */
-class ExpenseExtractReceiptCommand extends Command
-{
+class ExpenseExtractReceiptCommand extends Command {
 
-    /**
-     * Outcome statuses that count as a failure for the command's exit code.
-     *
-     * @var string[]
-     */
-    private const FAILURE_STATUSES = ['failed'];
+	/**
+	 * Outcome statuses that count as a failure for the command's exit code.
+	 *
+	 * @var string[]
+	 */
+	private const FAILURE_STATUSES = ['failed'];
 
+	/**
+	 * @param ReceiptExtractionService $service The receipt-extraction service.
+	 * @param PrivilegedSessionResolver $sessionResolver The shared --as-user session establishment mechanism (the hrmq:avg:* precedent).
+	 */
+	public function __construct(
+		private readonly ReceiptExtractionService $service,
+		private readonly PrivilegedSessionResolver $sessionResolver,
+	) {
+		parent::__construct();
 
-    /**
-     * @param ReceiptExtractionService  $service         The receipt-extraction service.
-     * @param PrivilegedSessionResolver $sessionResolver The shared --as-user session establishment mechanism (the hrmq:avg:* precedent).
-     */
-    public function __construct(
-        private readonly ReceiptExtractionService $service,
-        private readonly PrivilegedSessionResolver $sessionResolver,
-    ) {
-        parent::__construct();
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * @return void
+	 */
+	protected function configure(): void {
+		$this->setName('hrmq:expense:extract-receipt')
+			->setDescription(
+				'Extract receipt fields via docudesk and prefill empty Expense fields '
+				. '(default: backlog of Expenses with a receipt and no active extraction).'
+			)
+			->addOption('expense', null, InputOption::VALUE_REQUIRED, 'Restrict to one Expense id.')
+			->addOption('as-user', null, InputOption::VALUE_REQUIRED, 'The Nextcloud administrator uid establishing the privileged session docudesk/OpenRegister require.');
 
+	}//end configure()
 
-    /**
-     * @return void
-     */
-    protected function configure(): void
-    {
-        $this->setName('hrmq:expense:extract-receipt')
-            ->setDescription(
-                'Extract receipt fields via docudesk and prefill empty Expense fields '
-                .'(default: backlog of Expenses with a receipt and no active extraction).'
-            )
-            ->addOption('expense', null, InputOption::VALUE_REQUIRED, 'Restrict to one Expense id.')
-            ->addOption('as-user', null, InputOption::VALUE_REQUIRED, 'The Nextcloud administrator uid establishing the privileged session docudesk/OpenRegister require.');
+	/**
+	 * @param InputInterface $input Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int 0 when every attempt ends extracted/already-extracted/skipped-no-docudesk, 1 when any ends failed or --as-user is refused.
+	 *
+	 * @spec openspec/changes/receipt-ocr/specs/receipt-ocr/spec.md#REQ-RCPT-006
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output): int {
+		// Privileged-session establishment BEFORE any ReceiptExtractionService/
+		// docudesk/OpenRegister call (the hrmq:avg:* precedent, avg-dsr
+		// design.md D3-D4): an unknown/non-admin --as-user is refused here,
+		// with the service never invoked.
+		$asUser = trim((string)$input->getOption('as-user'));
+		$sessionError = $this->sessionResolver->establish($asUser);
+		if ($sessionError !== null) {
+			$output->writeln('<error>' . $sessionError . '</error>');
+			return 1;
+		}
 
-    }//end configure()
+		$expenseOption = $input->getOption('expense');
+		$expenseId = (is_string($expenseOption) === true && trim($expenseOption) !== '') ? trim($expenseOption) : null;
 
+		$results = $this->service->backlog($expenseId, $asUser);
 
-    /**
-     * @param InputInterface  $input  Console input.
-     * @param OutputInterface $output Console output.
-     *
-     * @return int 0 when every attempt ends extracted/already-extracted/skipped-no-docudesk, 1 when any ends failed or --as-user is refused.
-     *
-     * @spec openspec/changes/receipt-ocr/specs/receipt-ocr/spec.md#REQ-RCPT-006
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        // Privileged-session establishment BEFORE any ReceiptExtractionService/
-        // docudesk/OpenRegister call (the hrmq:avg:* precedent, avg-dsr
-        // design.md D3-D4): an unknown/non-admin --as-user is refused here,
-        // with the service never invoked.
-        $asUser       = trim((string) $input->getOption('as-user'));
-        $sessionError = $this->sessionResolver->establish($asUser);
-        if ($sessionError !== null) {
-            $output->writeln('<error>'.$sessionError.'</error>');
-            return 1;
-        }
+		$output->writeln('<info>Hrmq receipt-extractie</info>');
 
-        $expenseOption = $input->getOption('expense');
-        $expenseId     = (is_string($expenseOption) === true && trim($expenseOption) !== '') ? trim($expenseOption) : null;
+		if ($results === []) {
+			$output->writeln('  geen declaraties geselecteerd voor de backlog.');
+			return 0;
+		}
 
-        $results = $this->service->backlog($expenseId, $asUser);
+		$failed = 0;
+		foreach ($results as $result) {
+			$status = (string)$result['status'];
+			$line = sprintf(
+				'  expense %s: %s — %s',
+				(string)$result['expenseId'],
+				$status,
+				(string)$result['message']
+			);
 
-        $output->writeln('<info>Hrmq receipt-extractie</info>');
+			if (in_array($status, self::FAILURE_STATUSES, true) === true) {
+				$failed++;
+				$output->writeln('<error>' . $line . '</error>');
+				continue;
+			}
 
-        if ($results === []) {
-            $output->writeln('  geen declaraties geselecteerd voor de backlog.');
-            return 0;
-        }
+			$output->writeln($line);
+		}
 
-        $failed = 0;
-        foreach ($results as $result) {
-            $status = (string) $result['status'];
-            $line   = sprintf(
-                '  expense %s: %s — %s',
-                (string) $result['expenseId'],
-                $status,
-                (string) $result['message']
-            );
+		$output->writeln(sprintf('  %d poging(en) verwerkt, %d mislukt.', count($results), $failed));
 
-            if (in_array($status, self::FAILURE_STATUSES, true) === true) {
-                $failed++;
-                $output->writeln('<error>'.$line.'</error>');
-                continue;
-            }
-
-            $output->writeln($line);
-        }
-
-        $output->writeln(sprintf('  %d poging(en) verwerkt, %d mislukt.', count($results), $failed));
-
-        return $failed > 0 ? 1 : 0;
-
-    }//end execute()
-
+		return $failed > 0 ? 1 : 0;
+	}//end execute()
 
 }//end class

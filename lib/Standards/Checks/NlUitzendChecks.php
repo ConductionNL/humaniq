@@ -44,107 +44,94 @@ namespace OCA\Hrmq\Standards\Checks;
 /**
  * Agency-worker (uitzendkracht) executable checks -- both agency-scoped.
  */
-final class NlUitzendChecks implements CheckProvider
-{
+final class NlUitzendChecks implements CheckProvider {
 
-    /**
-     * The EmploymentContract.type value both checks are exclusively scoped to.
-     *
-     * @var string
-     */
-    private const AGENCY_TYPE = 'agency';
+	/**
+	 * The EmploymentContract.type value both checks are exclusively scoped to.
+	 *
+	 * @var string
+	 */
+	private const AGENCY_TYPE = 'agency';
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/uitzend-flexpool/specs/uitzend-flexpool/spec.md
+	 */
+	public static function checks(): array {
+		return [
+			'EmploymentContract' => [
+				// BW art. 7:691 lid 2 -- the uitzendbeding only holds in fase A.
+				'nl-uitzendbeding-alleen-fase-a' => static fn (array $contract): bool => self::uitzendbedingAlleenFaseASatisfied($contract),
+				// WAADI art. 8 -- an agency wage needs an inlenersbeloning reference.
+				'nl-inlenersbeloning-onderbouwing-vereist' => static fn (array $contract): bool => self::inlenersbeloningOnderbouwingSatisfied($contract),
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     *
-     * @spec openspec/changes/uitzend-flexpool/specs/uitzend-flexpool/spec.md
-     */
-    public static function checks(): array
-    {
-        return [
-            'EmploymentContract' => [
-                // BW art. 7:691 lid 2 -- the uitzendbeding only holds in fase A.
-                'nl-uitzendbeding-alleen-fase-a'          => static fn(array $contract): bool => self::uitzendbedingAlleenFaseASatisfied($contract),
-                // WAADI art. 8 -- an agency wage needs an inlenersbeloning reference.
-                'nl-inlenersbeloning-onderbouwing-vereist' => static fn(array $contract): bool => self::inlenersbeloningOnderbouwingSatisfied($contract),
-            ],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * The `nl-uitzendbeding-alleen-fase-a` predicate (spec.md REQ-UITZ-002):
+	 * vacuous pass for any non-agency contract (the guard is `type === 'agency'`
+	 * only) and when `uitzendbedingVanToepassing` is not strictly true.
+	 * Otherwise the beding applies, so `uitzendFase` must equal `A`.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/uitzend-flexpool/specs/uitzend-flexpool/spec.md
+	 */
+	private static function uitzendbedingAlleenFaseASatisfied(array $contract): bool {
+		if ((string)($contract['type'] ?? '') !== self::AGENCY_TYPE) {
+			// Not an agency contract -- out of scope, never evaluated.
+			return true;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		if (($contract['uitzendbedingVanToepassing'] ?? null) !== true) {
+			// The beding does not apply -- any (or no) fase is fine.
+			return true;
+		}
 
-    }//end seedSpec()
+		return (string)($contract['uitzendFase'] ?? '') === 'A';
+	}//end uitzendbedingAlleenFaseASatisfied()
 
+	/**
+	 * The `nl-inlenersbeloning-onderbouwing-vereist` predicate (spec.md
+	 * REQ-UITZ-003): vacuous pass for any non-agency contract (the guard is
+	 * `type === 'agency'` only) and when `hourlyWage` is absent/non-numeric
+	 * (nothing to substantiate). Otherwise `inlenersbeloningReferentie` must be
+	 * a non-empty string -- presence only, the figure is never validated.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/uitzend-flexpool/specs/uitzend-flexpool/spec.md
+	 */
+	private static function inlenersbeloningOnderbouwingSatisfied(array $contract): bool {
+		if ((string)($contract['type'] ?? '') !== self::AGENCY_TYPE) {
+			// Not an agency contract -- out of scope, never evaluated.
+			return true;
+		}
 
-    /**
-     * The `nl-uitzendbeding-alleen-fase-a` predicate (spec.md REQ-UITZ-002):
-     * vacuous pass for any non-agency contract (the guard is `type === 'agency'`
-     * only) and when `uitzendbedingVanToepassing` is not strictly true.
-     * Otherwise the beding applies, so `uitzendFase` must equal `A`.
-     *
-     * @param array<string, mixed> $contract The EmploymentContract.
-     *
-     * @return bool
-     *
-     * @spec openspec/changes/uitzend-flexpool/specs/uitzend-flexpool/spec.md
-     */
-    private static function uitzendbedingAlleenFaseASatisfied(array $contract): bool
-    {
-        if ((string) ($contract['type'] ?? '') !== self::AGENCY_TYPE) {
-            // Not an agency contract -- out of scope, never evaluated.
-            return true;
-        }
+		if (is_numeric($contract['hourlyWage'] ?? null) === false) {
+			// No wage set -- nothing decidable to substantiate.
+			return true;
+		}
 
-        if (($contract['uitzendbedingVanToepassing'] ?? null) !== true) {
-            // The beding does not apply -- any (or no) fase is fine.
-            return true;
-        }
-
-        return (string) ($contract['uitzendFase'] ?? '') === 'A';
-
-    }//end uitzendbedingAlleenFaseASatisfied()
-
-
-    /**
-     * The `nl-inlenersbeloning-onderbouwing-vereist` predicate (spec.md
-     * REQ-UITZ-003): vacuous pass for any non-agency contract (the guard is
-     * `type === 'agency'` only) and when `hourlyWage` is absent/non-numeric
-     * (nothing to substantiate). Otherwise `inlenersbeloningReferentie` must be
-     * a non-empty string -- presence only, the figure is never validated.
-     *
-     * @param array<string, mixed> $contract The EmploymentContract.
-     *
-     * @return bool
-     *
-     * @spec openspec/changes/uitzend-flexpool/specs/uitzend-flexpool/spec.md
-     */
-    private static function inlenersbeloningOnderbouwingSatisfied(array $contract): bool
-    {
-        if ((string) ($contract['type'] ?? '') !== self::AGENCY_TYPE) {
-            // Not an agency contract -- out of scope, never evaluated.
-            return true;
-        }
-
-        if (is_numeric($contract['hourlyWage'] ?? null) === false) {
-            // No wage set -- nothing decidable to substantiate.
-            return true;
-        }
-
-        return trim((string) ($contract['inlenersbeloningReferentie'] ?? '')) !== '';
-
-    }//end inlenersbeloningOnderbouwingSatisfied()
-
+		return trim((string)($contract['inlenersbeloningReferentie'] ?? '')) !== '';
+	}//end inlenersbeloningOnderbouwingSatisfied()
 
 }//end class

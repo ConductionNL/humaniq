@@ -40,103 +40,90 @@ use OCA\Hrmq\Payroll\Dsl\StepContext;
 /**
  * Round a value to a multiple of a declared step.
  */
-final class QuantizeOp extends AbstractOp
-{
+final class QuantizeOp extends AbstractOp {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'quantize';
+	}//end name()
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'quantize';
+	/**
+	 * Round `value` to a multiple of `step`.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return int|float
+	 *
+	 * @throws DslException When the step is not positive or the mode is unknown.
+	 */
+	public function evaluate(array $spec, StepContext $ctx): mixed {
+		$value = $this->num($spec, 'value', $ctx);
+		$step = $this->num($spec, 'step', $ctx);
+		$mode = (string)($spec['mode'] ?? '');
 
-    }//end name()
+		if (in_array($mode, Rounder::MODES, true) === false) {
+			throw new DslException('Pack: op "quantize" kent de modus "' . $mode . '" niet (toegestaan: ' . implode(', ', Rounder::MODES) . ').');
+		}
 
+		if ($step <= 0) {
+			throw new DslException('Pack: op "quantize" verwacht een positieve "step".');
+		}
 
-    /**
-     * Round `value` to a multiple of `step`.
-     *
-     * @param array<string, mixed> $spec The declared spec.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return int|float
-     *
-     * @throws DslException When the step is not positive or the mode is unknown.
-     */
-    public function evaluate(array $spec, StepContext $ctx): mixed
-    {
-        $value = $this->num($spec, 'value', $ctx);
-        $step  = $this->num($spec, 'step', $ctx);
-        $mode  = (string) ($spec['mode'] ?? '');
+		if (is_int($value) === true && is_int($step) === true) {
+			return $this->exact($value, $step, $mode);
+		}
 
-        if (in_array($mode, Rounder::MODES, true) === false) {
-            throw new DslException('Pack: op "quantize" kent de modus "'.$mode.'" niet (toegestaan: '.implode(', ', Rounder::MODES).').');
-        }
+		return ($this->quotient(($value / $step), $mode) * $step);
+	}//end evaluate()
 
-        if ($step <= 0) {
-            throw new DslException('Pack: op "quantize" verwacht een positieve "step".');
-        }
+	/**
+	 * The exact integer path — no float division, so no precision loss.
+	 *
+	 * @param int $value The value.
+	 * @param int $step The step.
+	 * @param string $mode One of floor/ceil/nearest.
+	 *
+	 * @return int
+	 */
+	private function exact(int $value, int $step, string $mode): int {
+		$quotient = intdiv($value, $step);
+		$exact = (($quotient * $step) === $value);
 
-        if (is_int($value) === true && is_int($step) === true) {
-            return $this->exact($value, $step, $mode);
-        }
+		if ($mode === 'floor' && $exact === false && $value < 0) {
+			$quotient--;
+		}
 
-        return ($this->quotient(($value / $step), $mode) * $step);
+		if ($mode === 'ceil' && $exact === false && $value > 0) {
+			$quotient++;
+		}
 
-    }//end evaluate()
+		if ($mode === 'nearest') {
+			return ((int)round($value / $step) * $step);
+		}
 
+		return ($quotient * $step);
+	}//end exact()
 
-    /**
-     * The exact integer path — no float division, so no precision loss.
-     *
-     * @param int    $value The value.
-     * @param int    $step  The step.
-     * @param string $mode  One of floor/ceil/nearest.
-     *
-     * @return int
-     */
-    private function exact(int $value, int $step, string $mode): int
-    {
-        $quotient = intdiv($value, $step);
-        $exact    = (($quotient * $step) === $value);
+	/**
+	 * Apply the mode to a float quotient.
+	 *
+	 * @param float $quotient The raw quotient.
+	 * @param string $mode One of floor/ceil/nearest.
+	 *
+	 * @return float
+	 */
+	private function quotient(float $quotient, string $mode): float {
+		return match ($mode) {
+			'floor' => floor($quotient),
+			'ceil' => ceil($quotient),
+			default => round($quotient),
+		};
 
-        if ($mode === 'floor' && $exact === false && $value < 0) {
-            $quotient--;
-        }
-
-        if ($mode === 'ceil' && $exact === false && $value > 0) {
-            $quotient++;
-        }
-
-        if ($mode === 'nearest') {
-            return ((int) round($value / $step) * $step);
-        }
-
-        return ($quotient * $step);
-
-    }//end exact()
-
-
-    /**
-     * Apply the mode to a float quotient.
-     *
-     * @param float  $quotient The raw quotient.
-     * @param string $mode     One of floor/ceil/nearest.
-     *
-     * @return float
-     */
-    private function quotient(float $quotient, string $mode): float
-    {
-        return match ($mode) {
-            'floor'  => floor($quotient),
-            'ceil'   => ceil($quotient),
-            default  => round($quotient),
-        };
-
-    }//end quotient()
-
+	}//end quotient()
 
 }//end class

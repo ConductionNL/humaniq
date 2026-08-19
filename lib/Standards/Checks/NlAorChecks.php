@@ -48,114 +48,98 @@ namespace OCA\Hrmq\Standards\Checks;
 /**
  * The two ambtenarenwet-2017 presence-only obligations that survived Wnra.
  */
-final class NlAorChecks implements CheckProvider
-{
+final class NlAorChecks implements CheckProvider {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/aor-ambtenarenrecht/specs/aor-ambtenarenrecht/spec.md
+	 */
+	public static function checks(): array {
+		return [
+			'Employee' => [
+				// Ambtenarenwet 2017 art. 5 -- the ambtseed/-belofte must be
+				// recorded for every ambtenaar.
+				'nl-ambtenaar-eed-vereist' => static fn (array $object): bool => self::eedAfgelegd($object),
+				// Ambtenarenwet 2017 art. 9 -- the nevenwerkzaamheden
+				// integrity-disclosure attestation must be on file.
+				'nl-ambtenaar-nevenwerkzaamheden-melding' => static fn (array $object): bool => self::nevenwerkzaamhedenGemeld($object),
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     *
-     * @spec openspec/changes/aor-ambtenarenrecht/specs/aor-ambtenarenrecht/spec.md
-     */
-    public static function checks(): array
-    {
-        return [
-            'Employee' => [
-                // Ambtenarenwet 2017 art. 5 -- the ambtseed/-belofte must be
-                // recorded for every ambtenaar.
-                'nl-ambtenaar-eed-vereist'                => static fn(array $object): bool => self::eedAfgelegd($object),
-                // Ambtenarenwet 2017 art. 9 -- the nevenwerkzaamheden
-                // integrity-disclosure attestation must be on file.
-                'nl-ambtenaar-nevenwerkzaamheden-melding' => static fn(array $object): bool => self::nevenwerkzaamhedenGemeld($object),
-            ],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/aor-ambtenarenrecht/specs/aor-ambtenarenrecht/spec.md
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * True unless this employee is an ambtenaar (a non-null
+	 * `publicSectorRegime`, one of an enumerated set of live regimes).
+	 * A null/absent/empty regime is an ordinary private-sector employee for
+	 * whom the ambtenaar obligations carry no meaning.
+	 *
+	 * @param array<string, mixed> $object The Employee object.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/aor-ambtenarenrecht/specs/aor-ambtenarenrecht/spec.md
+	 */
+	private static function isAmbtenaar(array $object): bool {
+		return trim((string)($object['publicSectorRegime'] ?? '')) !== '';
+	}//end isAmbtenaar()
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     *
-     * @spec openspec/changes/aor-ambtenarenrecht/specs/aor-ambtenarenrecht/spec.md
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+	/**
+	 * `nl-ambtenaar-eed-vereist` predicate (spec.md REQ-AOR-002): vacuous when
+	 * `publicSectorRegime` is null (a private-sector employee, the majority of
+	 * the population, must never fire this rule); otherwise satisfied only when
+	 * a non-empty `ambtseedAfgelegdOp` date is on file. Presence-only -- the
+	 * content or validity of the oath ceremony is never verified (the
+	 * `nl-gebruikelijkloon-norm` MVP precedent).
+	 *
+	 * @param array<string, mixed> $object The Employee object.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/aor-ambtenarenrecht/specs/aor-ambtenarenrecht/spec.md#REQ-AOR-002
+	 */
+	private static function eedAfgelegd(array $object): bool {
+		if (self::isAmbtenaar($object) === false) {
+			// Vacuous: not an ambtenaar, the ambtseed obligation does not apply.
+			return true;
+		}
 
-    }//end seedSpec()
+		return trim((string)($object['ambtseedAfgelegdOp'] ?? '')) !== '';
+	}//end eedAfgelegd()
 
+	/**
+	 * `nl-ambtenaar-nevenwerkzaamheden-melding` predicate (spec.md
+	 * REQ-AOR-003): vacuous when `publicSectorRegime` is null; otherwise
+	 * satisfied only when the `nevenwerkzaamhedenGemeld` attestation is exactly
+	 * `true`. Presence-only -- the disclosed content is never validated.
+	 *
+	 * @param array<string, mixed> $object The Employee object.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/aor-ambtenarenrecht/specs/aor-ambtenarenrecht/spec.md#REQ-AOR-003
+	 */
+	private static function nevenwerkzaamhedenGemeld(array $object): bool {
+		if (self::isAmbtenaar($object) === false) {
+			// Vacuous: not an ambtenaar, the disclosure obligation does not apply.
+			return true;
+		}
 
-    /**
-     * True unless this employee is an ambtenaar (a non-null
-     * `publicSectorRegime`, one of an enumerated set of live regimes).
-     * A null/absent/empty regime is an ordinary private-sector employee for
-     * whom the ambtenaar obligations carry no meaning.
-     *
-     * @param array<string, mixed> $object The Employee object.
-     *
-     * @return bool
-     *
-     * @spec openspec/changes/aor-ambtenarenrecht/specs/aor-ambtenarenrecht/spec.md
-     */
-    private static function isAmbtenaar(array $object): bool
-    {
-        return trim((string) ($object['publicSectorRegime'] ?? '')) !== '';
-
-    }//end isAmbtenaar()
-
-
-    /**
-     * `nl-ambtenaar-eed-vereist` predicate (spec.md REQ-AOR-002): vacuous when
-     * `publicSectorRegime` is null (a private-sector employee, the majority of
-     * the population, must never fire this rule); otherwise satisfied only when
-     * a non-empty `ambtseedAfgelegdOp` date is on file. Presence-only -- the
-     * content or validity of the oath ceremony is never verified (the
-     * `nl-gebruikelijkloon-norm` MVP precedent).
-     *
-     * @param array<string, mixed> $object The Employee object.
-     *
-     * @return bool
-     *
-     * @spec openspec/changes/aor-ambtenarenrecht/specs/aor-ambtenarenrecht/spec.md#REQ-AOR-002
-     */
-    private static function eedAfgelegd(array $object): bool
-    {
-        if (self::isAmbtenaar($object) === false) {
-            // Vacuous: not an ambtenaar, the ambtseed obligation does not apply.
-            return true;
-        }
-
-        return trim((string) ($object['ambtseedAfgelegdOp'] ?? '')) !== '';
-
-    }//end eedAfgelegd()
-
-
-    /**
-     * `nl-ambtenaar-nevenwerkzaamheden-melding` predicate (spec.md
-     * REQ-AOR-003): vacuous when `publicSectorRegime` is null; otherwise
-     * satisfied only when the `nevenwerkzaamhedenGemeld` attestation is exactly
-     * `true`. Presence-only -- the disclosed content is never validated.
-     *
-     * @param array<string, mixed> $object The Employee object.
-     *
-     * @return bool
-     *
-     * @spec openspec/changes/aor-ambtenarenrecht/specs/aor-ambtenarenrecht/spec.md#REQ-AOR-003
-     */
-    private static function nevenwerkzaamhedenGemeld(array $object): bool
-    {
-        if (self::isAmbtenaar($object) === false) {
-            // Vacuous: not an ambtenaar, the disclosure obligation does not apply.
-            return true;
-        }
-
-        return ($object['nevenwerkzaamhedenGemeld'] ?? false) === true;
-
-    }//end nevenwerkzaamhedenGemeld()
-
+		return ($object['nevenwerkzaamhedenGemeld'] ?? false) === true;
+	}//end nevenwerkzaamhedenGemeld()
 
 }//end class
