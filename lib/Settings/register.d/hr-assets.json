@@ -5,9 +5,9 @@
             "Asset": {
                 "slug": "Asset",
                 "icon": "PackageVariantClosed",
-                "version": "0.2.0",
+                "version": "0.4.0",
                 "title": "Asset",
-                "description": "A company-owned item issued to employees (laptop, telefoon, voertuig, gereedschap, toegangspas, kleding, overig): identity fields (serienummer, kenteken for vehicles), acquisition fields, and a guarded custody state machine (asset-management-mvp). A voertuig Asset carries its kenteken and nothing fiscal -- bijtelling automation is explicitly out of scope (engine-blocked per Spectr hrmq-canon-fleet-bijtelling; follow-up spec fleet-bijtelling). No AssetHistoryEntry: OpenRegister's object audit trail already records every mutation.",
+                "description": "A company-owned item issued to employees (laptop, phone, vehicle, tool, accessPass, clothing, other): identity fields (serialNumber, licencePlate for vehicles), acquisition fields, and a guarded custody state machine (asset-management-mvp). A vehicle Asset additionally carries the fiscal facts (listPrice, fuelType, companyCarTaxCategory) the monthly bijtelling privegebruik auto calculation needs (hrmq-asset-fleet-merge, absorbed from the retired Vehicle schema) -- required exactly when category is vehicle, enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet (a schema-level conditional cannot express this: Schema::getSchemaObject() never emits allOf/if/then to the validator, design.md D2). No AssetHistoryEntry: OpenRegister's object audit trail already records every mutation.",
                 "type": "object",
                 "x-schema-org": "schema:IndividualProduct",
                 "required": [
@@ -18,39 +18,39 @@
                 "configuration": {
                     "x-openregister-lifecycle": {
                         "field": "status",
-                        "initial": "beschikbaar",
+                        "initial": "available",
                         "terminal": [
-                            "afgeschreven"
+                            "writtenOff"
                         ],
                         "transitions": {
-                            "uitgeven": {
+                            "issue": {
                                 "from": [
-                                    "beschikbaar"
+                                    "available"
                                 ],
-                                "to": "uitgegeven",
-                                "description": "The asset is handed to an employee (recorded by an AssetAssignment with a matching uitgifteDatum)."
+                                "to": "issued",
+                                "description": "The asset is handed to an employee (recorded by an AssetAssignment with a matching issuedOn)."
                             },
-                            "innemen": {
+                            "checkIn": {
                                 "from": [
-                                    "uitgegeven"
+                                    "issued"
                                 ],
-                                "to": "ingenomen",
-                                "description": "The asset is returned and awaiting check. Deliberately the only exit from uitgegeven -- an issued asset must be taken in (or its loss recorded here) before it can be written off."
+                                "to": "checkedIn",
+                                "description": "The asset is returned and awaiting check. Deliberately the only exit from issued -- an issued asset must be checked in (or its loss recorded here) before it can be written off."
                             },
-                            "vrijgeven": {
+                            "release": {
                                 "from": [
-                                    "ingenomen"
+                                    "checkedIn"
                                 ],
-                                "to": "beschikbaar",
-                                "description": "Checked and back in stock, re-issuable via uitgeven."
+                                "to": "available",
+                                "description": "Checked and back in stock, re-issuable via issue."
                             },
-                            "afschrijven": {
+                            "writeOff": {
                                 "from": [
-                                    "beschikbaar",
-                                    "ingenomen"
+                                    "available",
+                                    "checkedIn"
                                 ],
-                                "to": "afgeschreven",
-                                "description": "Written off. Terminal. Not reachable from uitgegeven by design (design.md D1)."
+                                "to": "writtenOff",
+                                "description": "Written off. Terminal. Not reachable from issued by design (design.md D1)."
                             }
                         }
                     }
@@ -65,52 +65,52 @@
                         "type": "string",
                         "enum": [
                             "laptop",
-                            "telefoon",
-                            "voertuig",
-                            "gereedschap",
-                            "toegangspas",
-                            "kleding",
-                            "overig"
+                            "phone",
+                            "vehicle",
+                            "tool",
+                            "accessPass",
+                            "clothing",
+                            "other"
                         ],
                         "title": "Category",
                         "description": "Kind of asset. Enum append-only: renaming a value later is breaking, adding one is not."
                     },
-                    "serienummer": {
+                    "serialNumber": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Serienummer",
-                        "description": "Serial number; null for uncoded items (kleding, toegangspas)."
+                        "title": "Serial number",
+                        "description": "Serial number; null for uncoded items (clothing, accessPass)."
                     },
-                    "kenteken": {
+                    "licencePlate": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Kenteken",
-                        "description": "Dutch licence plate -- meaningful for category voertuig. Carries no fiscal semantics; bijtelling is an explicit non-goal (Spectr hrmq-canon-fleet-bijtelling)."
+                        "title": "Licence plate",
+                        "description": "Dutch licence plate -- meaningful for category vehicle. Carries no fiscal semantics by itself; the fiscal facts live in listPrice/fuelType/companyCarTaxCategory below."
                     },
-                    "aanschafdatum": {
+                    "purchaseDate": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Aanschafdatum",
+                        "title": "Purchase date",
                         "description": "Acquisition date."
                     },
-                    "aanschafwaarde": {
+                    "purchaseValue": {
                         "type": "number",
                         "nullable": true,
-                        "title": "Aanschafwaarde",
+                        "title": "Purchase value",
                         "description": "Acquisition value in EUR."
                     },
                     "status": {
                         "type": "string",
                         "enum": [
-                            "beschikbaar",
-                            "uitgegeven",
-                            "ingenomen",
-                            "afgeschreven"
+                            "available",
+                            "issued",
+                            "checkedIn",
+                            "writtenOff"
                         ],
-                        "default": "beschikbaar",
+                        "default": "available",
                         "title": "Status",
-                        "description": "Custody lifecycle status. Governed by the x-openregister-lifecycle state machine (beschikbaar -> uitgegeven -> ingenomen -> beschikbaar, or beschikbaar/ingenomen -> afgeschreven, terminal)."
+                        "description": "Custody lifecycle status. Governed by the x-openregister-lifecycle state machine (available -> issued -> checkedIn -> available, or available/checkedIn -> writtenOff, terminal)."
                     },
                     "active": {
                         "type": "boolean",
@@ -123,21 +123,51 @@
                         "nullable": true,
                         "title": "Administration",
                         "description": "Denormalized administratie key this Asset is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); an Asset has no single owning employee, so nl-administratie-scope-consistency does not evaluate this schema. Maintained by HR/back-office; the implicit page scoping (REQ-MULTI-004) filters on it."
+                    },
+                    "listPrice": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "List price",
+                        "description": "The fiscal catalog value in EUR -- the base the monthly bijtelling percentage is applied against (hrmq-asset-fleet-merge, absorbed from the retired Vehicle.cataloguswaarde). Meaningful only for category vehicle; null on every other category. Its completeness when category is vehicle is enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet, not by a schema-level required (design.md D2)."
+                    },
+                    "fuelType": {
+                        "type": "string",
+                        "enum": [
+                            "gasoline",
+                            "diesel",
+                            "hybrid",
+                            "fullyElectric",
+                            "hydrogen",
+                            "other"
+                        ],
+                        "nullable": true,
+                        "title": "Fuel type",
+                        "description": "Descriptive fuel type. Does not by itself select the bijtelling rate -- companyCarTaxCategory does. Meaningful only for category vehicle. Enum append-only: renaming a value later is breaking, adding one is not."
+                    },
+                    "companyCarTaxCategory": {
+                        "type": "string",
+                        "enum": [
+                            "standard",
+                            "evReducedCapped"
+                        ],
+                        "nullable": true,
+                        "title": "Company car tax category",
+                        "description": "The fiscal classification selecting which nl-{year}.json bijtellingPrivegebruikAuto rate/cap row applies: standard = the flat standardPercent rate over the full listPrice; evReducedCapped = the reduced evReducedPercent rate up to evReducedCataloguswaardeCap, standardPercent on the excess (fleet-bijtelling design.md D3). Meaningful only for category vehicle. Enum append-only -- the hydrogen/fully-solar uncapped rate and grijs-kenteken/bestelauto regimes are named non-goals, not modelled by an enum value here yet."
                     }
                 }
             },
             "AssetAssignment": {
                 "slug": "AssetAssignment",
                 "icon": "HandshakeOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Asset assignment",
-                "description": "An effective-dated uitgifte of one Asset to one Employee (the OrgAssignment pattern, hr-org.json): uitgifteDatum required, innameDatum nullable = the asset is still out. No x-openregister-lifecycle: a plain effective-dated record, no workflow. Consistency (coherent dates, the asset in status uitgegeven while the uitgifte is open) is enforced by nl-asset-assignment-consistency (lib/Standards/rules/labour.json / lib/Standards/Checks/NlAssetChecks.php), not by a write-time guard.",
+                "description": "An effective-dated custody assignment of one Asset to one Employee (the OrgAssignment pattern, hr-org.json): issuedOn required, returnedOn nullable = the asset is still out. For a vehicle Asset this is also the private-use holding period the bijtelling calculation resolves (hrmq-asset-fleet-merge, absorbed from the retired CarAssignment schema) -- employeeContribution is the employee's own monthly contribution for private use, meaningless (and harmlessly defaulted to 0) on a non-vehicle assignment. No x-openregister-lifecycle: a plain effective-dated record, no workflow. Consistency (coherent dates, the asset in status issued while the assignment is open) is enforced by nl-asset-assignment-consistency (lib/Standards/rules/labour.json / lib/Standards/Checks/NlAssetChecks.php), not by a write-time guard.",
                 "type": "object",
                 "x-schema-org": "schema:OwnershipInfo",
                 "required": [
                     "assetId",
                     "employeeId",
-                    "uitgifteDatum"
+                    "issuedOn"
                 ],
                 "properties": {
                     "assetId": {
@@ -154,29 +184,29 @@
                         "title": "Employee",
                         "description": "UUID reference to the receiving Employee."
                     },
-                    "uitgifteDatum": {
+                    "issuedOn": {
                         "type": "string",
                         "format": "date",
-                        "title": "Uitgiftedatum",
+                        "title": "Issued on",
                         "description": "Issued on (effective-dating per the OrgAssignment pattern)."
                     },
-                    "innameDatum": {
+                    "returnedOn": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Innamedatum",
-                        "description": "Returned on; null while the asset is out. Must be on/after uitgifteDatum when present (nl-asset-assignment-consistency)."
+                        "title": "Returned on",
+                        "description": "Returned on; null while the asset is out. Must be on/after issuedOn when present (nl-asset-assignment-consistency)."
                     },
-                    "uitgifteBonSigned": {
+                    "issueReceiptSigned": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Uitgiftebon getekend",
-                        "description": "Whether a signed uitgiftebon is on file (the document itself lives in AssetDetail's Files widget)."
+                        "title": "Issue receipt signed",
+                        "description": "Whether a signed issue receipt is on file (the document itself lives in AssetDetail's Files widget)."
                     },
                     "notes": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Notities",
+                        "title": "Notes",
                         "description": "Free-form notes (condition at handout/return)."
                     },
                     "administrationId": {
@@ -184,6 +214,12 @@
                         "nullable": true,
                         "title": "Administration",
                         "description": "Denormalized administratie key this AssetAssignment is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring the receiving employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+                    },
+                    "employeeContribution": {
+                        "type": "number",
+                        "default": 0,
+                        "title": "Employee contribution",
+                        "description": "The employee's own monthly contribution (EUR) for private use of a company car (Wet LB 1964 art. 13bis lid 5; hrmq-asset-fleet-merge, absorbed from the retired CarAssignment.eigenBijdrage). Subtracted from the computed monthly bijtelling, floored at zero -- never a negative bijtelling (fleet-bijtelling design.md D3). Meaningless -- and harmless at its default 0 -- for any non-vehicle assignment."
                     }
                 }
             }

@@ -6,7 +6,10 @@ built_by: openspec/changes/archive/2026-07-14-multi-administratie
 
 # multi-administratie Specification
 
-**Status**: done (automatic per-page scoping delivered — see #64 correction under Delivered scope)
+**Status**: done (automatic per-page scoping delivered — see #64 correction under Delivered scope;
+REQ-MULTI-004's "Delivered" status is further corrected 2026-08-19 — see `hrmq-boot-integrity` below
+and the requirement's own MODIFIED delta — it is live-conditional on the boot-integrity guards
+passing, not unconditionally delivered)
 **Scope**: hrmq (`kind: code+config`) — the accountant multi-client / multi-company tenant model.
 Reuses the `PayrollRun` plain-string `administrationId` convention (ADR-062 rule 7: never a `$ref`),
 the `userId`/`managerUserId` denormalization precedent, and ADR-001 Rule 3 (tenant switch, no menu
@@ -17,6 +20,10 @@ duplication). Adds zero payroll-engine logic.
   the HR/payroll schemas, an access-guarded per-user active-administratie selection
   (`GET/POST /api/administration/*`), a `Configuratie › Administraties` switcher, a
   `nl-administratie-scope-consistency` corpus rule, and seeds proving the switch.
+- [hrmq-boot-integrity](../../changes/hrmq-boot-integrity/) — **Status**: in-progress — corrects
+  REQ-MULTI-004's "Delivered" status (live-verified false: the token reaches the API unresolved on
+  the currently-deployed bundle) and ties its status to the new `boot-integrity` capability's
+  bundle-freshness and manifest-sentinel-resolution guards passing.
 
 ## Purpose
 

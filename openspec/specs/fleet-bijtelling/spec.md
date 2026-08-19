@@ -16,6 +16,10 @@ built_by: openspec/changes/archive/2026-07-14-fleet-bijtelling
   engine-input change, unlike the post-tax folds of `retro-adjustments`/`leave-buy-sell`/
   `loonbeslag`), the `Payslip.bijtelling` record, and machine-checkable corpus enforcement via
   `NlFleetChecks`.
+- [hrmq-asset-fleet-merge](../../changes/hrmq-asset-fleet-merge/) — **Status**: in-progress —
+  retires `Vehicle`/`CarAssignment` as standalone schemas; their fields move onto `Asset`/
+  `AssetAssignment` (asset-management) in English names; `PayrollRunService`/`NlFleetChecks`/
+  `RuleAuditService` are rewired to the merged shape with the same formula and rule id
 
 ## Purpose
 

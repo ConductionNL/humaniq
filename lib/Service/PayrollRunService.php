@@ -81,22 +81,26 @@
  * deduction from scratch every time -- no accumulator anywhere on
  * `Loonbeslag`.
  *
- * fleet-bijtelling (design.md D3/D4): UNLIKE the three post-tax folds above,
- * this is a genuine engine-INPUT change. Immediately after the sick-pay
- * substitution (`$grossMonthlySalaryCents = $sickResult->payableGrossCents`)
- * and immediately before `CalculationInput` is constructed, the employee's
- * open `CarAssignment` covering the period (resolved via the same
- * id/slug/employeeNumber key convention as `coveringContract()`/
- * `openSickCaseFor()`, first match wins -- no overlap guard in the MVP)
- * contributes `monthlyBijtelling = max(0, round(base_cents / 12) -
- * eigenBijdrageCents)`, where `base` is the referenced `Vehicle`'s
- * cataloguswaarde times the applicable `nl-{year}.json`
+ * fleet-bijtelling (design.md D3/D4; hrmq-asset-fleet-merge): UNLIKE the
+ * three post-tax folds above, this is a genuine engine-INPUT change.
+ * Immediately after the sick-pay substitution
+ * (`$grossMonthlySalaryCents = $sickResult->payableGrossCents`) and
+ * immediately before `CalculationInput` is constructed, the employee's open
+ * `AssetAssignment` covering the period whose referenced `Asset.category` is
+ * `vehicle` (resolved via the same id/slug/employeeNumber key convention as
+ * `coveringContract()`/`openSickCaseFor()`, first match wins -- no overlap
+ * guard in the MVP) contributes `monthlyBijtelling = max(0,
+ * round(base_cents / 12) - employeeContributionCents)`, where `base` is the
+ * referenced `Asset`'s listPrice times the applicable `nl-{year}.json`
  * `bijtellingPrivegebruikAuto` percentage (a two-tier blend for
- * `elektrischGeplafonneerd`), ADDED to `grossMonthlySalaryCents` -- so
+ * `evReducedCapped`), ADDED to `grossMonthlySalaryCents` -- so
  * `PayrollCalculator` receives a larger `tvl` and is otherwise never touched.
- * `Payslip.bijtelling`/`carAssignmentId` record the amount and the assignment
- * it came from. No covering CarAssignment -> both stay null and the gross is
- * unchanged (byte-identical to before this change).
+ * `Payslip.bijtelling`/`assetAssignmentId` record the amount and the
+ * assignment it came from. No covering vehicle AssetAssignment -> both stay
+ * null and the gross is unchanged (byte-identical to before this change).
+ * `Vehicle`/`CarAssignment` (hr-fleet.json) retired into `Asset`/
+ * `AssetAssignment` -- the fiscal facts and holding period are the same
+ * fields under new English names, not a new concept.
  *
  * dga-payroll-mode (design.md D3): `CalculationInput.verzekeringsplichtig`
  * is derived from `!($employee['isDga'] ?? false)` right at construction --
@@ -145,6 +149,7 @@
  * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-004
  * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
  * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+ * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
  * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
  * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
  */
@@ -395,8 +400,8 @@ class PayrollRunService {
 		$retroAdjustmentsByEmployeeId = $this->appliedRetroAdjustmentsByEmployeeId($period);
 		$leaveBuySellByEmployeeId = $this->settledLeaveTransactionsByEmployeeId($period);
 		$loonbeslagenByEmployeeKey = $this->activeLoonbeslagenByEmployeeKey();
-		$carAssignmentsByEmployeeKey = $this->openCarAssignmentsByEmployeeKey();
-		$vehiclesById = $this->vehiclesById();
+		$assetAssignmentsByEmployeeKey = $this->openAssetAssignmentsByEmployeeKey();
+		$vehicleAssetsById = $this->vehicleAssetsById();
 
 		$computed = [];
 		$skipped = [];
@@ -457,19 +462,20 @@ class PayrollRunService {
 				$grossMonthlySalaryCents = $sickResult->payableGrossCents;
 			}
 
-			// fleet-bijtelling (design.md D3/D4): a genuine engine-INPUT
-			// change -- unlike sick-pay-calc's substitution above (which
-			// still lands here as the "gross fed to the calculator"), this
-			// ADDS to that gross rather than replacing it. An open
-			// CarAssignment covering the period contributes its monthly
-			// bijtelling; PayrollCalculator is never touched -- it only ever
-			// sees the (possibly larger) tvl. No covering assignment ->
-			// $bijtellingCents stays 0 and the gross is unchanged.
-			$carAssignment = $this->openCarAssignmentFor($employee, $carAssignmentsByEmployeeKey, $period);
+			// fleet-bijtelling (design.md D3/D4; hrmq-asset-fleet-merge): a
+			// genuine engine-INPUT change -- unlike sick-pay-calc's
+			// substitution above (which still lands here as the "gross fed
+			// to the calculator"), this ADDS to that gross rather than
+			// replacing it. An open AssetAssignment on a category: vehicle
+			// Asset, covering the period, contributes its monthly bijtelling;
+			// PayrollCalculator is never touched -- it only ever sees the
+			// (possibly larger) tvl. No covering assignment -> $bijtellingCents
+			// stays 0 and the gross is unchanged.
+			$assetAssignment = $this->openVehicleAssignmentFor($employee, $assetAssignmentsByEmployeeKey, $vehicleAssetsById, $period);
 			$bijtellingCents = 0;
-			if ($carAssignment !== null) {
-				$vehicle = ($vehiclesById[(string)($carAssignment['vehicleId'] ?? '')] ?? null);
-				$bijtellingCents = $this->bijtellingCentsFor($vehicle, $carAssignment, $tables);
+			if ($assetAssignment !== null) {
+				$vehicleAsset = ($vehicleAssetsById[(string)($assetAssignment['assetId'] ?? '')] ?? null);
+				$bijtellingCents = $this->bijtellingCentsFor($vehicleAsset, $assetAssignment, $tables);
 
 				$grossMonthlySalaryCents += $bijtellingCents;
 			}
@@ -533,7 +539,7 @@ class PayrollRunService {
 
 			$payload = $this->payslipPayload($runId, $employee, $contract, $period, $result);
 			$payload = array_merge($payload, $this->sickPayFields($sickCase, $sickResult));
-			$payload = array_merge($payload, $this->bijtellingFields($carAssignment, $bijtellingCents));
+			$payload = array_merge($payload, $this->bijtellingFields($assetAssignment, $bijtellingCents));
 			$payload = array_merge($payload, $this->thirtyPercentRulingFields($thirtyPercentExemptionCents));
 			$payload = array_merge($payload, $this->retroAdjustmentFields($retroAdjustmentCents, $result->nettoPayCents));
 			$payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents, ($result->nettoPayCents + $retroAdjustmentCents)));
@@ -1027,22 +1033,25 @@ class PayrollRunService {
 	}//end sickPayFields()
 
 	/**
-	 * All open (no `effectiveTo`, or `effectiveTo` in the future -- resolved
-	 * per-period by `coversPeriod()`) CarAssignments, indexed by every
+	 * All open (no `returnedOn`, or `returnedOn` in the future -- resolved
+	 * per-period by `coversPeriod()`) AssetAssignments, indexed by every
 	 * employee-reference key (fleet-bijtelling, the
 	 * `contractsByEmployeeKey()`/`openSickCasesByEmployeeKey()` precedent).
-	 * Each key maps to the LIST of that employee's CarAssignments; period
-	 * coverage itself is resolved by `openCarAssignmentFor()`, not here.
-	 * Degrades gracefully to an empty map when the CarAssignment schema does
-	 * not exist yet in the register.
+	 * Loads every AssetAssignment regardless of the referenced Asset's
+	 * category (laptops/phones/etc. included) -- the category filter is
+	 * applied by `openVehicleAssignmentFor()`, not here. Each key maps to the
+	 * LIST of that employee's AssetAssignments; period coverage itself is
+	 * resolved by `openVehicleAssignmentFor()`. Degrades gracefully to an
+	 * empty map when the AssetAssignment schema does not exist yet in the
+	 * register.
 	 *
 	 * @return array<string, array<int, array<string, mixed>>>
 	 *
-	 * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
-	private function openCarAssignmentsByEmployeeKey(): array {
+	private function openAssetAssignmentsByEmployeeKey(): array {
 		$out = [];
-		foreach ($this->loadAll('CarAssignment') as $assignment) {
+		foreach ($this->loadAll('AssetAssignment') as $assignment) {
 			$key = trim((string)($assignment['employeeId'] ?? ''));
 			if ($key !== '') {
 				$out[$key][] = $assignment;
@@ -1050,24 +1059,27 @@ class PayrollRunService {
 		}
 
 		return $out;
-	}//end openCarAssignmentsByEmployeeKey()
+	}//end openAssetAssignmentsByEmployeeKey()
 
 	/**
-	 * The employee's CarAssignment covering the period, resolved via the
-	 * id/slug/employeeNumber keys (the `coveringContract()`/
-	 * `openSickCaseFor()` precedent) -- first match wins; no overlap guard in
-	 * the MVP (design.md Non-goals). Null when none covers it -- the
-	 * bijtelling fold stays a no-op.
+	 * The employee's AssetAssignment covering the period whose referenced
+	 * Asset resolves in `$vehicleAssetsById` (i.e. `category: vehicle` --
+	 * design.md REQ-FLEET-003: a laptop/phone/etc. AssetAssignment must never
+	 * contribute a bijtelling fold), resolved via the id/slug/employeeNumber
+	 * keys (the `coveringContract()`/`openSickCaseFor()` precedent) -- first
+	 * match wins; no overlap guard in the MVP (design.md Non-goals). Null
+	 * when none covers it -- the bijtelling fold stays a no-op.
 	 *
 	 * @param array<string, mixed> $employee The Employee.
-	 * @param array<string, array<int, array<string, mixed>>> $carAssignmentsByEmployeeKey The open-assignment index.
+	 * @param array<string, array<int, array<string, mixed>>> $assetAssignmentsByEmployeeKey The open-assignment index (every category).
+	 * @param array<string, array<string, mixed>> $vehicleAssetsById The category: vehicle Asset index -- membership is the category filter.
 	 * @param string $period Wage period (YYYY-MM).
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
-	private function openCarAssignmentFor(array $employee, array $carAssignmentsByEmployeeKey, string $period): ?array {
+	private function openVehicleAssignmentFor(array $employee, array $assetAssignmentsByEmployeeKey, array $vehicleAssetsById, string $period): ?array {
 		$keys = array_filter(
 			[
 				$this->idOf($employee),
@@ -1078,111 +1090,125 @@ class PayrollRunService {
 		);
 
 		foreach ($keys as $key) {
-			foreach (($carAssignmentsByEmployeeKey[$key] ?? []) as $assignment) {
-				if ($this->coversPeriod((string)($assignment['effectiveFrom'] ?? ''), (string)($assignment['effectiveTo'] ?? ''), $period) === true) {
+			foreach (($assetAssignmentsByEmployeeKey[$key] ?? []) as $assignment) {
+				if ($this->coversPeriod((string)($assignment['issuedOn'] ?? ''), (string)($assignment['returnedOn'] ?? ''), $period) === false) {
+					continue;
+				}
+
+				if (isset($vehicleAssetsById[(string)($assignment['assetId'] ?? '')]) === true) {
 					return $assignment;
 				}
 			}
 		}
 
 		return null;
-	}//end openCarAssignmentFor()
+	}//end openVehicleAssignmentFor()
 
 	/**
-	 * Every Vehicle, keyed by id (the `enginePayslipsByEmployeeId()`-adjacent
-	 * simple by-id index precedent). Degrades gracefully to an empty map when
-	 * the Vehicle schema does not exist yet in the register.
+	 * Every Asset whose `category` is `vehicle`, keyed by id (the
+	 * `enginePayslipsByEmployeeId()`-adjacent simple by-id index precedent;
+	 * hrmq-asset-fleet-merge, renamed from `vehiclesById()` which loaded the
+	 * now-retired `Vehicle` schema). Degrades gracefully to an empty map when
+	 * the Asset schema does not exist yet in the register.
 	 *
 	 * @return array<string, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
-	private function vehiclesById(): array {
+	private function vehicleAssetsById(): array {
 		$out = [];
-		foreach ($this->loadAll('Vehicle') as $vehicle) {
-			$id = $this->idOf($vehicle);
+		foreach ($this->loadAll('Asset') as $asset) {
+			if ((string)($asset['category'] ?? '') !== 'vehicle') {
+				continue;
+			}
+
+			$id = $this->idOf($asset);
 			if ($id !== '') {
-				$out[$id] = $vehicle;
+				$out[$id] = $asset;
 			}
 		}
 
 		return $out;
-	}//end vehiclesById()
+	}//end vehicleAssetsById()
 
 	/**
-	 * The monthly bijtelling for one covering CarAssignment + its referenced
-	 * Vehicle (design.md D3): `base = cataloguswaarde x standardPercent/100`
-	 * for `bijtellingCategorie: standaard`, or the two-tier blend
-	 * `min(cataloguswaarde, evReducedCataloguswaardeCap) x
-	 * evReducedPercent/100 + max(0, cataloguswaarde -
-	 * evReducedCataloguswaardeCap) x standardPercent/100` for
-	 * `elektrischGeplafonneerd`; `monthlyBijtellingCents = max(0,
-	 * round(base_cents / 12) - eigenBijdrageCents)` -- floored at zero, never
-	 * negative. A dangling/missing Vehicle reference defensively yields 0
-	 * (never a guessed figure).
+	 * The monthly bijtelling for one covering AssetAssignment + its
+	 * referenced (category: vehicle) Asset (design.md D3; hrmq-asset-fleet-merge):
+	 * `base = listPrice x standardPercent/100` for
+	 * `companyCarTaxCategory: standard`, or the two-tier blend
+	 * `min(listPrice, evReducedCataloguswaardeCap) x evReducedPercent/100 +
+	 * max(0, listPrice - evReducedCataloguswaardeCap) x standardPercent/100`
+	 * for `evReducedCapped`; `monthlyBijtellingCents = max(0,
+	 * round(base_cents / 12) - employeeContributionCents)` -- floored at
+	 * zero, never negative. A dangling/missing Asset reference, or a resolved
+	 * Asset whose `listPrice` is not numeric (the non-vehicle-category case:
+	 * REQ-AST-001's conditional-required rule guarantees a vehicle Asset
+	 * missing this would already be flagged, and every non-vehicle Asset
+	 * simply never carries it), defensively yields 0 (never a guessed
+	 * figure).
 	 *
-	 * @param array<string, mixed>|null $vehicle The referenced Vehicle, or null when dangling.
-	 * @param array<string, mixed> $assignment The covering CarAssignment.
+	 * @param array<string, mixed>|null $asset The referenced (category: vehicle) Asset, or null when dangling.
+	 * @param array<string, mixed> $assignment The covering AssetAssignment.
 	 * @param TaxTables $tables The tax-year parameter set.
 	 *
-	 * @return int The monthly bijtelling, in cents (0 when there is no Vehicle or no headroom above eigenBijdrage).
+	 * @return int The monthly bijtelling, in cents (0 when there is no Asset, no numeric listPrice, or no headroom above employeeContribution).
 	 *
-	 * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
-	private function bijtellingCentsFor(?array $vehicle, array $assignment, TaxTables $tables): int {
-		if ($vehicle === null) {
+	private function bijtellingCentsFor(?array $asset, array $assignment, TaxTables $tables): int {
+		if ($asset === null) {
 			return 0;
 		}
 
-		$cataloguswaarde = ($vehicle['cataloguswaarde'] ?? null);
-		if (is_numeric($cataloguswaarde) === false) {
+		$listPrice = ($asset['listPrice'] ?? null);
+		if (is_numeric($listPrice) === false) {
 			return 0;
 		}
 
-		$cataloguswaardeCents = (int)round(((float)$cataloguswaarde) * 100);
+		$listPriceCents = (int)round(((float)$listPrice) * 100);
 		$params = $tables->bijtellingPrivegebruikAuto();
 
 		// Default: the flat standard-percentage bijtelling. The capped-EV
 		// category below overrides it; both branches are pure arithmetic, so
 		// initialising here is equivalent to the former if/else.
-		$baseCents = (($cataloguswaardeCents * $params['standardPercent']) / 100);
+		$baseCents = (($listPriceCents * $params['standardPercent']) / 100);
 
-		if ((string)($vehicle['bijtellingCategorie'] ?? '') === 'elektrischGeplafonneerd') {
+		if ((string)($asset['companyCarTaxCategory'] ?? '') === 'evReducedCapped') {
 			$cap = $params['evReducedCataloguswaardeCapCents'];
-			$baseCents = ((min($cataloguswaardeCents, $cap) * $params['evReducedPercent']) / 100);
-			$baseCents += ((max(0, ($cataloguswaardeCents - $cap)) * $params['standardPercent']) / 100);
+			$baseCents = ((min($listPriceCents, $cap) * $params['evReducedPercent']) / 100);
+			$baseCents += ((max(0, ($listPriceCents - $cap)) * $params['standardPercent']) / 100);
 		}
 
-		$eigenBijdrage = ($assignment['eigenBijdrage'] ?? 0);
-		$eigenBijdrageCents = is_numeric($eigenBijdrage) === true ? (int)round(((float)$eigenBijdrage) * 100) : 0;
+		$employeeContribution = ($assignment['employeeContribution'] ?? 0);
+		$employeeContributionCents = is_numeric($employeeContribution) === true ? (int)round(((float)$employeeContribution) * 100) : 0;
 
-		return max(0, ((int)round($baseCents / 12)) - $eigenBijdrageCents);
+		return max(0, ((int)round($baseCents / 12)) - $employeeContributionCents);
 	}//end bijtellingCentsFor()
 
 	/**
-	 * The bijtelling + carAssignmentId Payslip fields to merge onto the
-	 * payload (design.md D3): both null when no CarAssignment covers this
-	 * period -- a normal payslip stays byte-identical to the pre-change
-	 * shape. `grossPay` already carries the bijtelling (it was folded into
-	 * `grossMonthlySalaryCents` before the calculator ran, design.md D3) --
-	 * this only records the amount and its source, it does not fold anything
-	 * further into `nettoPay`.
+	 * The bijtelling + assetAssignmentId Payslip fields to merge onto the
+	 * payload (design.md D3; hrmq-asset-fleet-merge): both null when no
+	 * covering vehicle AssetAssignment exists -- a normal payslip stays
+	 * byte-identical to the pre-change shape. `grossPay` already carries the
+	 * bijtelling (it was folded into `grossMonthlySalaryCents` before the
+	 * calculator ran, design.md D3) -- this only records the amount and its
+	 * source, it does not fold anything further into `nettoPay`.
 	 *
-	 * @param array<string, mixed>|null $carAssignment The covering CarAssignment, or null.
+	 * @param array<string, mixed>|null $assetAssignment The covering AssetAssignment, or null.
 	 * @param int $bijtellingCents The computed monthly bijtelling, in cents.
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
-	private function bijtellingFields(?array $carAssignment, int $bijtellingCents): array {
-		if ($carAssignment === null) {
-			return ['bijtelling' => null, 'carAssignmentId' => null];
+	private function bijtellingFields(?array $assetAssignment, int $bijtellingCents): array {
+		if ($assetAssignment === null) {
+			return ['bijtelling' => null, 'assetAssignmentId' => null];
 		}
 
 		return [
 			'bijtelling' => $this->euros($bijtellingCents),
-			'carAssignmentId' => $this->idOf($carAssignment),
+			'assetAssignmentId' => $this->idOf($assetAssignment),
 		];
 
 	}//end bijtellingFields()

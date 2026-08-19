@@ -81,6 +81,16 @@ function routesFromManifest(manifest) {
 		component: RoutePageRenderer,
 		props: page.route.includes(':'),
 	}))
+	// hrmq-asset-fleet-merge (design.md D6): the retired Vehicle/CarAssignment
+	// pages' URL patterns redirect to their merged Asset/AssetAssignment
+	// detail routes, so a stale bookmark or external link resolves instead of
+	// 404ing. Manifest v2's page `type` enum has no redirect variant, so these
+	// are hand-written routes (the catch-all below is the existing precedent
+	// for a hand-written route living outside the manifest), added BEFORE the
+	// catch-all so they take priority over it.
+	routes.push({ path: '/vehicles/:id', redirect: (to) => '/assets/' + to.params.id })
+	routes.push({ path: '/car-assignments/:id', redirect: (to) => '/asset-assignments/' + to.params.id })
+
 	// Catch-all redirect to the first page. vue-router 4 REMOVED the bare
 	// `path: '*'` wildcard: it matches nothing and raises no error, so any
 	// unmatched route renders the shell with an empty <main>. The named

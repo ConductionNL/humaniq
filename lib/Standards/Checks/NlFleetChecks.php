@@ -3,19 +3,37 @@
 /**
  * NL Fleet Bijtelling Check Provider
  *
- * The one fleet-bijtelling executable check (design.md D5), auto-discovered
- * by `RuleEngine::providers()` with zero manual registration:
- * `nl-bijtelling-auto-privegebruik` (Payslip): vacuous when `carAssignmentId`
- * is null (no company car covered this payslip's period). Else re-derives
- * `monthlyBijtellingCents` from the referenced `CarAssignment.eigenBijdrage`
- * and `Vehicle.cataloguswaarde`/`bijtellingCategorie` -- resolved via
- * `$context['fleet']['carAssignmentsById']` / `$context['fleet']
- * ['vehiclesById']` (`RuleAuditService::audit()`'s `payroll.runsById`
- * precedent) -- using the REQ-FLEET-003 formula, and flags a violation on any
- * cents-mismatch against the recorded `Payslip.bijtelling`. Vacuous also when
- * either reference is dangling (a different, pre-existing class of
- * data-integrity problem, not this rule's job) -- the
- * `NlWageGarnishmentChecks::isFloorRespected()` precedent.
+ * Two fleet-bijtelling executable checks, auto-discovered by
+ * `RuleEngine::providers()` with zero manual registration:
+ *
+ * - `nl-bijtelling-auto-privegebruik` (Payslip, design.md D5): vacuous when
+ *   `assetAssignmentId` is null (no company car covered this payslip's
+ *   period). Else re-derives `monthlyBijtellingCents` from the referenced
+ *   `AssetAssignment.employeeContribution` and `Asset.listPrice`/
+ *   `companyCarTaxCategory` -- resolved via
+ *   `$context['related']['AssetAssignment']['byId']` /
+ *   `$context['related']['Asset']['byId']` (`RuleAuditService::
+ *   buildRelatedContext()`'s `payroll.runsById` precedent) -- using the
+ *   REQ-FLEET-003 formula, and flags a violation on any cents-mismatch
+ *   against the recorded `Payslip.bijtelling`. Vacuous also when either
+ *   reference is dangling (a different, pre-existing class of
+ *   data-integrity problem, not this rule's job) -- the
+ *   `NlWageGarnishmentChecks::isFloorRespected()` precedent.
+ * - `nl-asset-voertuig-fiscale-velden-compleet` (Asset, hrmq-asset-fleet-merge
+ *   design.md D2): fires when `category === "vehicle"` and any of
+ *   `listPrice`/`fuelType`/`companyCarTaxCategory` is absent. Audit-time
+ *   replacement for the write-time guard the retired `Vehicle` schema's own
+ *   unconditional `required` used to provide -- a JSON Schema
+ *   `allOf`/`if`/`then` conditional-required cannot work here
+ *   (`Schema::getSchemaObject()` never emits composition keywords to the
+ *   validator, measured).
+ *
+ * hrmq-asset-fleet-merge: `Vehicle`/`CarAssignment` (hr-fleet.json) retired
+ * into `Asset`/`AssetAssignment` -- the `context['fleet']` dedicated index
+ * this predicate used to read is gone (`RuleAuditService::buildFleetContext()`
+ * removed, design.md D4); the general `related.Asset.byId`/
+ * `related.AssetAssignment.byId` indexes carry everything this predicate
+ * needs instead.
  *
  * @category Standards
  * @package  OCA\Hrmq\Standards\Checks
@@ -30,6 +48,8 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
+ * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
+ * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-001
  */
 
 declare(strict_types=1);
@@ -39,7 +59,8 @@ namespace OCA\Hrmq\Standards\Checks;
 use OCA\Hrmq\Payroll\TaxTables;
 
 /**
- * Fleet bijtelling arithmetic-consistency executable check.
+ * Fleet bijtelling arithmetic-consistency + vehicle-fiscal-completeness
+ * executable checks.
  */
 final class NlFleetChecks implements CheckProvider {
 
@@ -49,11 +70,15 @@ final class NlFleetChecks implements CheckProvider {
 	 * @return array<string, array<string, callable>>
 	 *
 	 * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-001
 	 */
 	public static function checks(): array {
 		return [
 			'Payslip' => [
 				'nl-bijtelling-auto-privegebruik' => static fn (array $o, array $context): bool => self::bijtellingMatchesFormula($o, $context),
+			],
+			'Asset' => [
+				'nl-asset-voertuig-fiscale-velden-compleet' => static fn (array $o, array $context): bool => self::vehicleFiscalFieldsComplete($o),
 			],
 		];
 
@@ -70,36 +95,36 @@ final class NlFleetChecks implements CheckProvider {
 
 	/**
 	 * The `nl-bijtelling-auto-privegebruik` predicate (spec.md REQ-FLEET-004,
-	 * design.md D5): vacuous when `carAssignmentId` is null or either
+	 * design.md D5): vacuous when `assetAssignmentId` is null or either
 	 * reference is dangling; else asserts cents-exact `Payslip.bijtelling ===
 	 * recomputed monthly bijtelling` (REQ-FLEET-003's formula).
 	 *
 	 * @param array<string, mixed> $o The Payslip object.
-	 * @param array<string, mixed> $context Evaluation context; reads `fleet.carAssignmentsById` / `fleet.vehiclesById`.
+	 * @param array<string, mixed> $context Evaluation context; reads `related.AssetAssignment.byId` / `related.Asset.byId`.
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
 	 */
 	private static function bijtellingMatchesFormula(array $o, array $context): bool {
-		$carAssignmentId = trim((string)($o['carAssignmentId'] ?? ''));
-		if ($carAssignmentId === '') {
+		$assetAssignmentId = trim((string)($o['assetAssignmentId'] ?? ''));
+		if ($assetAssignmentId === '') {
 			// No company car covered this payslip's period -- out of scope
 			// (vacuous pass).
 			return true;
 		}
 
-		$carAssignment = ($context['fleet']['carAssignmentsById'][$carAssignmentId] ?? null);
-		if (is_array($carAssignment) === false) {
+		$assetAssignment = ($context['related']['AssetAssignment']['byId'][$assetAssignmentId] ?? null);
+		if (is_array($assetAssignment) === false) {
 			// Dangling reference -- a different, pre-existing class of
 			// data-integrity problem, not this rule's job.
 			return true;
 		}
 
-		$vehicleId = trim((string)($carAssignment['vehicleId'] ?? ''));
-		$vehicle = ($context['fleet']['vehiclesById'][$vehicleId] ?? null);
-		if (is_array($vehicle) === false) {
-			// Dangling Vehicle reference -- same vacuous-on-dangling posture.
+		$assetId = trim((string)($assetAssignment['assetId'] ?? ''));
+		$asset = ($context['related']['Asset']['byId'][$assetId] ?? null);
+		if (is_array($asset) === false) {
+			// Dangling Asset reference -- same vacuous-on-dangling posture.
 			return true;
 		}
 
@@ -111,11 +136,39 @@ final class NlFleetChecks implements CheckProvider {
 			return true;
 		}
 
-		$expectedCents = self::monthlyBijtellingCents($vehicle, $carAssignment, $tables);
+		$expectedCents = self::monthlyBijtellingCents($asset, $assetAssignment, $tables);
 		$recordedCents = self::cents($o['bijtelling'] ?? null);
 
 		return $expectedCents === $recordedCents;
 	}//end bijtellingMatchesFormula()
+
+	/**
+	 * The `nl-asset-voertuig-fiscale-velden-compleet` predicate
+	 * (hrmq-asset-fleet-merge design.md D2, spec.md REQ-AST-001): violates
+	 * when `category === "vehicle"` and any of `listPrice`/`fuelType`/
+	 * `companyCarTaxCategory` is absent (null, missing, or an empty string).
+	 * Vacuously satisfied for every non-`vehicle` category -- the three
+	 * fields are meaningless there and are never required.
+	 *
+	 * @param array<string, mixed> $o The Asset object.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-001
+	 */
+	private static function vehicleFiscalFieldsComplete(array $o): bool {
+		if ((string)($o['category'] ?? '') !== 'vehicle') {
+			return true;
+		}
+
+		foreach (['listPrice', 'fuelType', 'companyCarTaxCategory'] as $field) {
+			if (array_key_exists($field, $o) === false || $o[$field] === null || trim((string)$o[$field]) === '') {
+				return false;
+			}
+		}
+
+		return true;
+	}//end vehicleFiscalFieldsComplete()
 
 	/**
 	 * Load the versioned tax-year table for a Payslip's `period` (`YYYY-MM`
@@ -141,28 +194,28 @@ final class NlFleetChecks implements CheckProvider {
 	}//end tablesFor()
 
 	/**
-	 * Re-derive the monthly bijtelling from a Vehicle + CarAssignment
+	 * Re-derive the monthly bijtelling from an Asset + AssetAssignment
 	 * (REQ-FLEET-003's formula, mirrored from `PayrollRunService::
-	 * bijtellingCentsFor()`): `base = cataloguswaarde x standardPercent/100`
-	 * for `bijtellingCategorie: standaard`, or the two-tier
-	 * `elektrischGeplafonneerd` blend; `monthlyBijtellingCents = max(0,
-	 * round(base_cents / 12) - eigenBijdrageCents)`.
+	 * bijtellingCentsFor()`): `base = listPrice x standardPercent/100` for
+	 * `companyCarTaxCategory: standard`, or the two-tier `evReducedCapped`
+	 * blend; `monthlyBijtellingCents = max(0, round(base_cents / 12) -
+	 * employeeContributionCents)`.
 	 *
-	 * @param array<string, mixed> $vehicle The referenced Vehicle.
-	 * @param array<string, mixed> $carAssignment The referenced CarAssignment.
+	 * @param array<string, mixed> $asset The referenced (category: vehicle) Asset.
+	 * @param array<string, mixed> $assetAssignment The referenced AssetAssignment.
 	 * @param TaxTables $tables The tax-year parameter set for this payslip's period.
 	 *
 	 * @return int The expected monthly bijtelling, in cents.
 	 *
-	 * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
-	private static function monthlyBijtellingCents(array $vehicle, array $carAssignment, TaxTables $tables): int {
-		$cataloguswaarde = ($vehicle['cataloguswaarde'] ?? null);
-		if (is_numeric($cataloguswaarde) === false) {
+	private static function monthlyBijtellingCents(array $asset, array $assetAssignment, TaxTables $tables): int {
+		$listPrice = ($asset['listPrice'] ?? null);
+		if (is_numeric($listPrice) === false) {
 			return 0;
 		}
 
-		$cataloguswaardeCents = self::cents($cataloguswaarde);
+		$listPriceCents = self::cents($listPrice);
 
 		// The 2026 rate/cap: sourced from `nl-2026.json`'s
 		// bijtellingPrivegebruikAuto group (REQ-FLEET-002). The check
@@ -174,17 +227,17 @@ final class NlFleetChecks implements CheckProvider {
 		// Default: the flat standard-percentage bijtelling. The capped-EV
 		// category below overrides it; both branches are pure arithmetic, so
 		// initialising here is equivalent to the former if/else.
-		$baseCents = (($cataloguswaardeCents * $standardPercent) / 100);
+		$baseCents = (($listPriceCents * $standardPercent) / 100);
 
-		if ((string)($vehicle['bijtellingCategorie'] ?? '') === 'elektrischGeplafonneerd') {
+		if ((string)($asset['companyCarTaxCategory'] ?? '') === 'evReducedCapped') {
 			$cap = $bijtelling['evReducedCataloguswaardeCapCents'];
-			$baseCents = ((min($cataloguswaardeCents, $cap) * $bijtelling['evReducedPercent']) / 100);
-			$baseCents += ((max(0, ($cataloguswaardeCents - $cap)) * $standardPercent) / 100);
+			$baseCents = ((min($listPriceCents, $cap) * $bijtelling['evReducedPercent']) / 100);
+			$baseCents += ((max(0, ($listPriceCents - $cap)) * $standardPercent) / 100);
 		}
 
-		$eigenBijdrageCents = self::cents($carAssignment['eigenBijdrage'] ?? 0);
+		$employeeContributionCents = self::cents($assetAssignment['employeeContribution'] ?? 0);
 
-		return max(0, ((int)round($baseCents / 12)) - $eigenBijdrageCents);
+		return max(0, ((int)round($baseCents / 12)) - $employeeContributionCents);
 	}//end monthlyBijtellingCents()
 
 	/**

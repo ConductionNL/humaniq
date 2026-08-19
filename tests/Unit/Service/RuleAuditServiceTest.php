@@ -695,14 +695,14 @@ class RuleAuditServiceTest extends TestCase {
 	 */
 	private function seededAssetRows(): array {
 		$assets = [
-			['id' => 'asset-laptop-latitude', 'name' => 'Dell Latitude 5450', 'category' => 'laptop', 'status' => 'uitgegeven', 'active' => true],
-			['id' => 'asset-telefoon-fairphone', 'name' => 'Fairphone 5', 'category' => 'telefoon', 'status' => 'beschikbaar', 'active' => true],
-			['id' => 'asset-bus-transit', 'name' => 'Ford Transit bedrijfsbus', 'category' => 'voertuig', 'status' => 'uitgegeven', 'active' => true],
+			['id' => 'asset-laptop-latitude', 'name' => 'Dell Latitude 5450', 'category' => 'laptop', 'status' => 'issued', 'active' => true],
+			['id' => 'asset-telefoon-fairphone', 'name' => 'Fairphone 5', 'category' => 'phone', 'status' => 'available', 'active' => true],
+			['id' => 'asset-bus-transit', 'name' => 'Ford Transit bedrijfsbus', 'category' => 'vehicle', 'status' => 'issued', 'active' => true, 'listPrice' => 45000.00, 'fuelType' => 'diesel', 'companyCarTaxCategory' => 'standard'],
 		];
 
 		$assignments = [
-			['id' => 'assetassignment-visser-bus', 'assetId' => 'asset-bus-transit', 'employeeId' => 'employee-visser', 'uitgifteDatum' => '2025-01-06', 'innameDatum' => '2025-12-19', 'uitgifteBonSigned' => true],
-			['id' => 'assetassignment-jansen-telefoon', 'assetId' => 'asset-telefoon-fairphone', 'employeeId' => 'employee-jansen', 'uitgifteDatum' => '2026-06-15', 'innameDatum' => null, 'uitgifteBonSigned' => false],
+			['id' => 'assetassignment-visser-bus', 'assetId' => 'asset-bus-transit', 'employeeId' => 'employee-visser', 'issuedOn' => '2025-01-06', 'returnedOn' => '2025-12-19', 'issueReceiptSigned' => true],
+			['id' => 'assetassignment-jansen-telefoon', 'assetId' => 'asset-telefoon-fairphone', 'employeeId' => 'employee-jansen', 'issuedOn' => '2026-06-15', 'returnedOn' => null, 'issueReceiptSigned' => false],
 		];
 
 		return [
@@ -736,7 +736,7 @@ class RuleAuditServiceTest extends TestCase {
 		$rows = [
 			'Asset' => [],
 			'AssetAssignment' => [
-				['id' => 'assetassignment-x', 'assetId' => 'no-such-asset', 'employeeId' => 'employee-x', 'uitgifteDatum' => '2026-01-01', 'innameDatum' => null],
+				['id' => 'assetassignment-x', 'assetId' => 'no-such-asset', 'employeeId' => 'employee-x', 'issuedOn' => '2026-01-01', 'returnedOn' => null],
 			],
 		];
 

@@ -226,18 +226,6 @@
 			"schemaSlug": "Loonbeslag",
 			"urlTemplate": "/apps/hrmq/loonbeslagen/{uuid}",
 			"displayName": "Loonbeslag"
-		},
-		{
-			"registerSlug": "hrmq",
-			"schemaSlug": "Vehicle",
-			"urlTemplate": "/apps/hrmq/vehicles/{uuid}",
-			"displayName": "Vehicle"
-		},
-		{
-			"registerSlug": "hrmq",
-			"schemaSlug": "CarAssignment",
-			"urlTemplate": "/apps/hrmq/car-assignments/{uuid}",
-			"displayName": "Car Assignment"
 		}
 	],
 	"runtime": {
@@ -553,18 +541,6 @@
 					"label": "Uitgiftes",
 					"icon": "HandshakeOutline",
 					"route": "AssetAssignments"
-				},
-				{
-					"id": "Vehicles",
-					"label": "Wagenpark",
-					"icon": "CarOutline",
-					"route": "Vehicles"
-				},
-				{
-					"id": "CarAssignments",
-					"label": "Autotoewijzingen",
-					"icon": "CarKey",
-					"route": "CarAssignments"
 				}
 			]
 		},
@@ -7581,7 +7557,7 @@
 					"name",
 					"category",
 					"status",
-					"serienummer"
+					"serialNumber"
 				],
 				"filters": [
 					"category",
@@ -7601,7 +7577,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Asset",
-				"_note": "asset-management-mvp (2026-07-13): a company-owned item with a guarded custody lifecycle (beschikbaar -> uitgegeven -> ingenomen -> beschikbaar, or beschikbaar/ingenomen -> afgeschreven, terminal -- the Expense precedent). The data widget shows all fields (no $ref to exclude -- Asset has no outbound relations); lifecycleActions expose exactly the four fragment transitions (uitgeven/innemen/vrijgeven/afschrijven), never invented. An FK-scoped 'Uitgiftes' object-list (AssetAssignment.assetId = @objectId) is the inbound-relation direction (D2) -- who has held this asset, ordered most-recent-first, rowRoute to AssetAssignmentDetail. The Files widget (signed uitgiftebonnen) runs full-width after the domain cards, the ExpenseDetail receipt placement. Audit history is a sidebar tab.",
+				"_note": "asset-management-mvp (2026-07-13), field/enum names renamed to English and three vehicle-only fiscal fields added by hrmq-asset-fleet-merge (2026-08-19): a company-owned item with a guarded custody lifecycle (available -> issued -> checkedIn -> available, or available/checkedIn -> writtenOff, terminal -- the Expense precedent). The data widget shows every field including the three fiscal ones (listPrice/fuelType/companyCarTaxCategory) absorbed from the retired Vehicle schema, with hideEmpty so a non-vehicle Asset's detail page does not render them as empty (design.md D3); lifecycleActions expose exactly the four fragment transitions (issue/checkIn/release/writeOff), never invented. An FK-scoped 'Uitgiftes' object-list (AssetAssignment.assetId = @objectId) is the inbound-relation direction (D2) -- who has held this asset, ordered most-recent-first, rowRoute to AssetAssignmentDetail. The Files widget (signed uitgiftebonnen) runs full-width after the domain cards, the ExpenseDetail receipt placement. Audit history is a sidebar tab.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -7620,36 +7596,36 @@
 							"field": "status",
 							"transitions": [
 								{
-									"action": "uitgeven",
+									"action": "issue",
 									"from": [
-										"beschikbaar"
+										"available"
 									],
-									"to": "uitgegeven",
+									"to": "issued",
 									"label": "Uitgeven"
 								},
 								{
-									"action": "innemen",
+									"action": "checkIn",
 									"from": [
-										"uitgegeven"
+										"issued"
 									],
-									"to": "ingenomen",
+									"to": "checkedIn",
 									"label": "Innemen"
 								},
 								{
-									"action": "vrijgeven",
+									"action": "release",
 									"from": [
-										"ingenomen"
+										"checkedIn"
 									],
-									"to": "beschikbaar",
+									"to": "available",
 									"label": "Vrijgeven"
 								},
 								{
-									"action": "afschrijven",
+									"action": "writeOff",
 									"from": [
-										"beschikbaar",
-										"ingenomen"
+										"available",
+										"checkedIn"
 									],
-									"to": "afgeschreven",
+									"to": "writtenOff",
 									"label": "Afschrijven"
 								}
 							]
@@ -7668,15 +7644,19 @@
 						"icon": "PackageVariantClosed",
 						"content": {
 							"columns": 2,
+							"hideEmpty": true,
 							"include": [
 								"name",
 								"category",
-								"serienummer",
-								"kenteken",
-								"aanschafdatum",
-								"aanschafwaarde",
+								"serialNumber",
+								"licencePlate",
+								"purchaseDate",
+								"purchaseValue",
 								"status",
-								"active"
+								"active",
+								"listPrice",
+								"fuelType",
+								"companyCarTaxCategory"
 							]
 						}
 					}
@@ -7710,7 +7690,7 @@
 								"assetId": "@objectId"
 							},
 							"sort": {
-								"field": "uitgifteDatum",
+								"field": "issuedOn",
 								"dir": "desc"
 							},
 							"columns": [
@@ -7719,15 +7699,15 @@
 									"label": "Employee"
 								},
 								{
-									"key": "uitgifteDatum",
+									"key": "issuedOn",
 									"label": "Uitgifte"
 								},
 								{
-									"key": "innameDatum",
+									"key": "returnedOn",
 									"label": "Inname"
 								},
 								{
-									"key": "uitgifteBonSigned",
+									"key": "issueReceiptSigned",
 									"label": "Bon getekend"
 								}
 							],
@@ -7780,12 +7760,12 @@
 				"columns": [
 					"assetId",
 					"employeeId",
-					"uitgifteDatum",
-					"innameDatum",
-					"uitgifteBonSigned"
+					"issuedOn",
+					"returnedOn",
+					"issueReceiptSigned"
 				],
 				"sort": {
-					"field": "uitgifteDatum",
+					"field": "issuedOn",
 					"order": "desc"
 				}
 			}
@@ -7798,7 +7778,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "AssetAssignment",
-				"_note": "asset-management-mvp (2026-07-13): a simple two-panel leaf like OrgAssignmentDetail -- the data widget (uitgifteDatum/innameDatum/uitgifteBonSigned/notes) excludes assetId/employeeId since Related already resolves and links both the issued Asset and the receiving Employee by name. No child lists (nothing references an AssetAssignment by FK). No lifecycleActions: AssetAssignment carries no x-openregister-lifecycle -- effective-dating lives on uitgifteDatum/innameDatum, not a workflow status (design.md D1). Audit history is a sidebar tab.",
+				"_note": "asset-management-mvp (2026-07-13), field names renamed and employeeContribution absorbed from the retired CarAssignment schema by hrmq-asset-fleet-merge (2026-08-19): a simple two-panel leaf like OrgAssignmentDetail -- the data widget (issuedOn/returnedOn/issueReceiptSigned/notes/employeeContribution, the last meaningful only when the referenced Asset is category vehicle) excludes assetId/employeeId since Related already resolves and links both the issued Asset and the receiving Employee by name; employeeContribution needs no explicit include -- the widget's exclude-only content shows every other property by default. No child lists (nothing references an AssetAssignment by FK). No lifecycleActions: AssetAssignment carries no x-openregister-lifecycle -- effective-dating lives on issuedOn/returnedOn, not a workflow status (design.md D1). Audit history is a sidebar tab.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -7819,228 +7799,6 @@
 							"columns": 2,
 							"exclude": [
 								"assetId",
-								"employeeId"
-							]
-						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 5,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
-		},
-		{
-			"id": "Vehicles",
-			"route": "/vehicles",
-			"type": "index",
-			"title": "Wagenpark",
-			"config": {
-				"register": "hrmq",
-				"schema": "Vehicle",
-				"filter": {
-					"administrationId": "@workspace.activeAdministrationId?"
-				},
-				"description": "Bedrijfsauto's met hun fiscale gegevens (cataloguswaarde, brandstoftype, bijtellingcategorie) -- fleet-bijtelling.",
-				"columns": [
-					"name",
-					"kenteken",
-					"cataloguswaarde",
-					"fuelType",
-					"bijtellingCategorie",
-					"active"
-				],
-				"filters": [
-					"fuelType",
-					"bijtellingCategorie",
-					"active"
-				],
-				"sort": {
-					"field": "name",
-					"order": "asc"
-				}
-			}
-		},
-		{
-			"id": "VehicleDetail",
-			"route": "/vehicles/:id",
-			"type": "detail",
-			"title": "Vehicle",
-			"config": {
-				"register": "hrmq",
-				"schema": "Vehicle",
-				"_note": "fleet-bijtelling (2026-07-15): a company car's fiscal facts, deliberately decoupled from the custody-tracking Asset (hr-assets.json) -- the AssetDetail precedent, minus the custody lifecycle (no x-openregister-lifecycle on Vehicle). The data widget shows all fields (no $ref to exclude -- Vehicle has no outbound relations). An FK-scoped 'Toewijzingen' object-list (CarAssignment.vehicleId = @objectId) is the inbound-relation direction, ordered most-recent-first, rowRoute to CarAssignmentDetail. Audit history is a sidebar tab.",
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
-						"title": "Vehicle",
-						"icon": "CarSide",
-						"content": {
-							"columns": 2,
-							"include": [
-								"name",
-								"kenteken",
-								"cataloguswaarde",
-								"fuelType",
-								"bijtellingCategorie",
-								"active"
-							]
-						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 6,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 6,
-					"gridWidth": 12,
-					"gridHeight": 5,
-					"props": {
-						"title": "Toewijzingen",
-						"icon": "CarKey",
-						"content": {
-							"register": "hrmq",
-							"schema": "CarAssignment",
-							"filter": {
-								"vehicleId": "@objectId"
-							},
-							"sort": {
-								"field": "effectiveFrom",
-								"dir": "desc"
-							},
-							"columns": [
-								{
-									"key": "employeeId",
-									"label": "Employee"
-								},
-								{
-									"key": "effectiveFrom",
-									"label": "Vanaf"
-								},
-								{
-									"key": "effectiveTo",
-									"label": "Tot"
-								},
-								{
-									"key": "eigenBijdrage",
-									"label": "Eigen bijdrage"
-								}
-							],
-							"limit": 25,
-							"rowRoute": "CarAssignmentDetail",
-							"viewAllRoute": "CarAssignments",
-							"viewAllQuery": {
-								"vehicleId": "@objectId"
-							},
-							"emptyText": "No toewijzingen yet"
-						}
-					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
-		},
-		{
-			"id": "CarAssignments",
-			"route": "/car-assignments",
-			"type": "index",
-			"title": "Autotoewijzingen",
-			"config": {
-				"register": "hrmq",
-				"schema": "CarAssignment",
-				"filter": {
-					"administrationId": "@workspace.activeAdministrationId?"
-				},
-				"description": "Effectief-gedateerde toewijzingen van bedrijfsauto's aan werknemers voor privegebruik (fleet-bijtelling).",
-				"columns": [
-					"vehicleId",
-					"employeeId",
-					"effectiveFrom",
-					"effectiveTo",
-					"eigenBijdrage"
-				],
-				"sort": {
-					"field": "effectiveFrom",
-					"order": "desc"
-				}
-			}
-		},
-		{
-			"id": "CarAssignmentDetail",
-			"route": "/car-assignments/:id",
-			"type": "detail",
-			"title": "Autotoewijzing",
-			"config": {
-				"register": "hrmq",
-				"schema": "CarAssignment",
-				"_note": "fleet-bijtelling (2026-07-15): a simple two-panel leaf like AssetAssignmentDetail/OrgAssignmentDetail -- the data widget (effectiveFrom/effectiveTo/eigenBijdrage) excludes vehicleId/employeeId since Related already resolves and links both the assigned Vehicle and the receiving Employee by name. No child lists. No lifecycleActions: CarAssignment carries no x-openregister-lifecycle -- effective-dating lives on effectiveFrom/effectiveTo, not a workflow status (design.md D1). Audit history is a sidebar tab.",
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 5,
-					"props": {
-						"title": "Toewijzing",
-						"icon": "CarKey",
-						"content": {
-							"columns": 2,
-							"exclude": [
-								"vehicleId",
 								"employeeId"
 							]
 						}

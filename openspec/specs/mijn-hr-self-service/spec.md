@@ -10,6 +10,7 @@ built_by: openspec/changes/archive/2026-07-12-mijn-hr-self-service
 **Scope**: hrmq
 **OpenSpec changes**:
 - [mijn-hr-self-service](../../changes/archive/2026-07-12-mijn-hr-self-service/) _(archived 2026-07-12)_ — `Mijn HR` menu group (ADR-001 menu 2) with four `@me`-scoped employee index pages (uren / declaraties / verlof / loonstroken), a `Dashboard` page (ADR-001 menu 1) with self-service + approver KPI widgets, `Employee.nextcloudUserId` account link, and the denormalized `userId` scoping property on Timesheet/Expense/LeaveRequest/Payslip (kind: config)
+- [hrmq-dashboard-steering-indicators](../../changes/hrmq-dashboard-steering-indicators/) — **Status**: in-progress — removes REQ-MHS-005 (the Dashboard self/approver KPI widgets); the menu group, the four self-service pages, and the account link are unchanged
 
 ## Purpose
 
