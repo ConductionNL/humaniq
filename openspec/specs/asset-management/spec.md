@@ -10,6 +10,7 @@ built_by: openspec/changes/archive/2026-07-13-asset-management-mvp
 **Scope**: hrmq
 **OpenSpec changes**:
 - [asset-management-mvp](../../changes/archive/2026-07-13-asset-management-mvp/) _(archived 2026-07-13)_ — new `Asset` (category/serienummer/kenteken, declarative `beschikbaar`→`uitgegeven`→`ingenomen`→`beschikbaar`/`afgeschreven` custody lifecycle) and effective-dated `AssetAssignment` schemas in a new `hr-assets` fragment, `$ref`-driven related surfaces, 2 new machine-checkable asset-custody rules (framework `hr-assets-core`, defensive against the parallel offboarding-wizard-mvp), asset pages under the expenses group and seed data (kind: config)
+- [hrmq-asset-fleet-merge](../../changes/hrmq-asset-fleet-merge/) — **Status**: in-progress — merges the retired `Vehicle`/`CarAssignment` schemas (fleet-bijtelling) into `Asset`/`AssetAssignment`, renames every Dutch field/enum on both schemas to English, adds a schema-level conditional-required guard for the three vehicle-only fiscal fields, and retires the `Vehicles`/`CarAssignments` menu entries and pages
 
 ## Purpose
 
