@@ -33,32 +33,34 @@
  * conflicting value -- both are counted as skipped, with the value(s)
  * recorded as the reason.
  *
- * `Asset.status` is a documented, unavoidable partial case, with TWO
- * independent gates:
+ * `Asset.status` has TWO independent gates in OpenRegister, and both are
+ * cleared by ONE write of the fully-migrated payload -- with validation
+ * fully on:
  *  1. Full-object schema validation runs on every `saveObject()` call
  *     regardless of the `_validation` parameter (that parameter gates a
  *     DIFFERENT, internal step -- the top-level enum/required check reads
- *     the SCHEMA's own persisted `hardValidation` flag instead, measured),
- *     so a payload whose `status` is still a legacy Dutch value is rejected
- *     even when the write does not otherwise touch `status` at all --
- *     `withAssetHardValidationDisabled()` is the narrowly-scoped,
- *     temporarily-toggled-and-restored fallback this forces for the
- *     category/field write (see `migrateAssets()`).
- *  2. OpenRegister's `LifecycleValidationListener` rejects a direct
- *     old-value -> new-value status write outright -- the schema's
- *     `x-openregister-lifecycle` block only declares `from` states in the
- *     NEW dialect, so no declared transition has an old-dialect `from`
- *     entry, regardless of write order, `_validation`, `silent`, or
- *     `SystemOperationContext` (none of which the listener consults; it
- *     fires on every `ObjectUpdatingEvent`, unconditionally, before the
- *     write) -- and gate 1's bypass does not help here, because it only
- *     relaxes schema validation, not this separate, unconditional listener.
- * Every OTHER field still migrates on the same object; the status attempt
- * is caught and recorded as skipped-with-reason using the listener's own
- * rejection message. Both are OpenRegister gaps (no migration-mode bypass
- * for the lifecycle guard; full-object validation with no way to validate
- * only the changed fields), not an hrmq defect -- worth filing against
- * OpenRegister, recorded here so the next author does not re-derive them.
+ *     the SCHEMA's own persisted `hardValidation` flag instead, measured).
+ *     It validates the PAYLOAD, so sending the new English status satisfies
+ *     it. A two-phase write that rewrites fields first, leaving the legacy
+ *     status in the payload untouched, is rejected on that untouched field
+ *     -- which is why this service writes everything at once.
+ *  2. OpenRegister's `LifecycleValidationListener` needs a DECLARED
+ *     transition whose `from` carries the old value. It consults neither
+ *     `_validation`, `silent`, nor `SystemOperationContext`; it fires on
+ *     every `ObjectUpdatingEvent`, unconditionally, before the write. The
+ *     Asset schema therefore declares four migration-only
+ *     `migrateLegacyStatus_*` transitions -- the EXPAND half of an
+ *     expand/contract enum migration. They are removed (the CONTRACT half)
+ *     once no row holds a legacy status; nothing can re-enter one, because
+ *     the legacy values are not in the enum.
+ *
+ * An earlier revision instead toggled the Asset schema's persisted
+ * `hardValidation` flag off around the write and restored it in a `finally`.
+ * It worked, and it is recorded here because the measurements behind it are
+ * correct and hard-won -- but the flag is GLOBAL, so every concurrent writer
+ * of Asset skipped validation while it was off, and a fatal or SIGKILL
+ * between toggle and restore would have left validation off permanently and
+ * silently. Expand/contract needs no bypass at all.
  *
  * @category Service
  * @package  OCA\Hrmq\Service
@@ -224,52 +226,29 @@ class AssetDialectMigrationService {
 
 			$rowWritten = false;
 
-			if ($mapped['nonStatusChanged'] === true) {
-				try {
-					$this->saveAssetBase($mapped['withoutStatusChange'], $id);
-					$rowWritten = true;
-				} catch (\Throwable $e) {
-					// The row's status still holds a legacy value the CURRENT
-					// schema's enum no longer accepts. OpenRegister validates
-					// the WHOLE object on every saveObject() call regardless
-					// of `_validation` (that parameter gates a different,
-					// internal step -- the top-level enum/required check
-					// reads the SCHEMA's own persisted `hardValidation` flag,
-					// not a per-call override, measured), so this write is
-					// rejected purely because of a field deliberately left
-					// untouched here (status is handled separately below;
-					// writing it directly hits the lifecycle guard instead --
-					// class docblock). Retry exactly once with the Asset
-					// schema's hard validation narrowly and temporarily
-					// disabled, restored in a finally block even on
-					// exception (self::withAssetHardValidationDisabled()).
-					// This is an OpenRegister gap -- full-object validation
-					// plus an unconditional, un-bypassable lifecycle guard
-					// makes a legacy-invalid enum value otherwise permanently
-					// unwritable through the API -- not a routine migration
-					// step: it engages only for a row still carrying an
-					// old-dialect status, and is a no-op on every later run
-					// once that is fixed (nonStatusChanged becomes false).
-					try {
-						$this->withAssetHardValidationDisabled(function () use ($mapped, $id) {
-							$this->saveAssetBase($mapped['withoutStatusChange'], $id);
-						});
-						$rowWritten = true;
-					} catch (\Throwable $retry) {
-						$report['skipped']++;
-						$report['skipReasons'][] = [
-							'id' => $id,
-							'reason' => 'category/field rewrite failed even with hard validation temporarily relaxed: ' . $retry->getMessage(),
-						];
-						// A failed base write means the status-only follow-up
-						// below would be writing on top of an unknown state --
-						// skip it for this row and move on.
-						continue;
-					}
-				}//end try
-			}//end if
-
-			if ($mapped['statusChanged'] === true) {
+			// ONE write, carrying the fully-migrated payload -- fields AND
+			// status together. This clears both of OpenRegister's gates with
+			// validation fully ON, which is why no bypass is needed:
+			//
+			//  1. Full-object schema validation reads the PAYLOAD, and the
+			//     payload's status is already the new English value, so the
+			//     enum check passes. (The earlier two-phase approach failed
+			//     precisely because its first write left the legacy status in
+			//     the payload untouched.)
+			//  2. `LifecycleValidationListener` needs a DECLARED transition
+			//     whose `from` carries the old value. The schema now declares
+			//     four migration-only `migrateLegacyStatus_*` transitions for
+			//     exactly that -- the expand half of an expand/contract enum
+			//     migration. They are removed again once no row holds a legacy
+			//     status; nothing can re-enter one, because the legacy values
+			//     are not in the enum.
+			//
+			// This replaces a temporary global toggle of the Asset SCHEMA's
+			// persisted `hardValidation` flag. That worked, but it relaxed
+			// validation for every concurrent writer of Asset while it was
+			// off, and a fatal or SIGKILL between the toggle and its `finally`
+			// would have left validation off permanently and silently.
+			if ($mapped['nonStatusChanged'] === true || $mapped['statusChanged'] === true) {
 				try {
 					$this->objectService()->saveObject(
 						object: $this->stripSelf($mapped['final']),
@@ -285,12 +264,13 @@ class AssetDialectMigrationService {
 					$report['skipReasons'][] = [
 						'id' => $id,
 						'reason' => sprintf(
-							'status %s -> %s blocked by OpenRegister lifecycle guard: %s',
+							'dialect rewrite failed (status %s -> %s): %s',
 							(string)($row['status'] ?? ''),
 							(string)($mapped['final']['status'] ?? ''),
 							$e->getMessage()
 						),
 					];
+					continue;
 				}
 			}//end if
 
@@ -622,66 +602,6 @@ class AssetDialectMigrationService {
 
 	}//end saveAssetBase()
 
-	/**
-	 * Run `$operation` with the Asset schema's `hardValidation` narrowly and
-	 * temporarily disabled, restored in a `finally` block even when
-	 * `$operation` throws. See the call site in `migrateAssets()` for why
-	 * this exists: OpenRegister validates a saveObject() payload in full
-	 * regardless of `_validation`, so a row still holding one legacy-invalid
-	 * enum value cannot be written at all -- not even to fix an unrelated
-	 * field. Scoped to the single retry that needs it; every other write in
-	 * this service never touches this method.
-	 *
-	 * @param callable $operation The write to attempt with validation relaxed.
-	 *
-	 * @return void
-	 *
-	 * @throws \Throwable Whatever `$operation` throws, after validation is restored.
-	 */
-	private function withAssetHardValidationDisabled(callable $operation): void {
-		$schema = $this->objectService()->setRegister($this->register())->setSchema('Asset')->getCurrentSchemaEntity();
-		if ($schema === null) {
-			// No schema entity to toggle -- let the operation run as-is; its
-			// own exception (if any) propagates unchanged.
-			$operation();
-			return;
-		}
-
-		$original = $schema->getHardValidation();
-		if ($original === false) {
-			// Already permissive -- nothing to toggle, nothing to restore.
-			$operation();
-			return;
-		}
-
-		$this->setAssetHardValidation($schema, false);
-		try {
-			$operation();
-		} finally {
-			$this->setAssetHardValidation($schema, true);
-		}
-
-	}//end withAssetHardValidationDisabled()
-
-	/**
-	 * @param mixed $schema The OpenRegister `Schema` entity (from `getCurrentSchemaEntity()`).
-	 * @param bool $enabled The `hardValidation` value to persist.
-	 *
-	 * @return void
-	 */
-	private function setAssetHardValidation(mixed $schema, bool $enabled): void {
-		$schema->setHardValidation($enabled);
-
-		try {
-			$this->schemaMapper()->update($schema);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'AssetDialectMigrationService: could not set Asset schema hardValidation=' . ($enabled === true ? 'true' : 'false') . ': ' . $e->getMessage()
-			);
-			throw $e;
-		}
-
-	}//end setAssetHardValidation()
 
 	/**
 	 * @return mixed The OpenRegister SchemaMapper.

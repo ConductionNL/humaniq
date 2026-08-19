@@ -51,6 +51,34 @@
                                 ],
                                 "to": "writtenOff",
                                 "description": "Written off. Terminal. Not reachable from issued by design (design.md D1)."
+                            },
+                            "migrateLegacyStatus_beschikbaar": {
+                                "from": [
+                                    "beschikbaar"
+                                ],
+                                "to": "available",
+                                "description": "MIGRATION-ONLY (hrmq-asset-fleet-merge, expand/contract step 1 of 2). Accepts the pre-merge Dutch status value so a legacy row can be written to its English equivalent through the ordinary API, with schema validation fully ON. Without a declared transition carrying an old-dialect `from`, OpenRegister's LifecycleValidationListener rejects the write unconditionally -- it consults neither `_validation`, `silent`, nor SystemOperationContext. REMOVE THIS (the contract step) once `occ hrmq:assets:migrate-dialect` reports zero rows holding a legacy status; no object can legally re-enter one, because the value is not in the enum."
+                            },
+                            "migrateLegacyStatus_uitgegeven": {
+                                "from": [
+                                    "uitgegeven"
+                                ],
+                                "to": "issued",
+                                "description": "MIGRATION-ONLY (hrmq-asset-fleet-merge, expand/contract step 1 of 2). Accepts the pre-merge Dutch status value so a legacy row can be written to its English equivalent through the ordinary API, with schema validation fully ON. Without a declared transition carrying an old-dialect `from`, OpenRegister's LifecycleValidationListener rejects the write unconditionally -- it consults neither `_validation`, `silent`, nor SystemOperationContext. REMOVE THIS (the contract step) once `occ hrmq:assets:migrate-dialect` reports zero rows holding a legacy status; no object can legally re-enter one, because the value is not in the enum."
+                            },
+                            "migrateLegacyStatus_ingenomen": {
+                                "from": [
+                                    "ingenomen"
+                                ],
+                                "to": "checkedIn",
+                                "description": "MIGRATION-ONLY (hrmq-asset-fleet-merge, expand/contract step 1 of 2). Accepts the pre-merge Dutch status value so a legacy row can be written to its English equivalent through the ordinary API, with schema validation fully ON. Without a declared transition carrying an old-dialect `from`, OpenRegister's LifecycleValidationListener rejects the write unconditionally -- it consults neither `_validation`, `silent`, nor SystemOperationContext. REMOVE THIS (the contract step) once `occ hrmq:assets:migrate-dialect` reports zero rows holding a legacy status; no object can legally re-enter one, because the value is not in the enum."
+                            },
+                            "migrateLegacyStatus_afgeschreven": {
+                                "from": [
+                                    "afgeschreven"
+                                ],
+                                "to": "writtenOff",
+                                "description": "MIGRATION-ONLY (hrmq-asset-fleet-merge, expand/contract step 1 of 2). Accepts the pre-merge Dutch status value so a legacy row can be written to its English equivalent through the ordinary API, with schema validation fully ON. Without a declared transition carrying an old-dialect `from`, OpenRegister's LifecycleValidationListener rejects the write unconditionally -- it consults neither `_validation`, `silent`, nor SystemOperationContext. REMOVE THIS (the contract step) once `occ hrmq:assets:migrate-dialect` reports zero rows holding a legacy status; no object can legally re-enter one, because the value is not in the enum."
                             }
                         }
                     }

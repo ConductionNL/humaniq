@@ -99,7 +99,24 @@ class AssetDialectMigrationServiceTest extends TestCase {
 	 *
 	 * @var string[]
 	 */
-	private const LEGACY_STATUSES = ['beschikbaar', 'uitgegeven', 'ingenomen', 'afgeschreven'];
+	public const LEGACY_STATUSES = ['beschikbaar', 'uitgegeven', 'ingenomen', 'afgeschreven'];
+
+	/**
+	 * The legacy -> English status moves the schema's four migration-only
+	 * `migrateLegacyStatus_*` lifecycle transitions declare (the EXPAND half
+	 * of the expand/contract enum migration). Mirrors
+	 * `hr-assets.json`'s `x-openregister-lifecycle.transitions`; the fake's
+	 * gate 2 permits exactly these and refuses every other move out of a
+	 * legacy state.
+	 *
+	 * @var array<string, string>
+	 */
+	public const LEGACY_STATUS_MAP = [
+		'beschikbaar'  => 'available',
+		'uitgegeven'   => 'issued',
+		'ingenomen'    => 'checkedIn',
+		'afgeschreven' => 'writtenOff',
+	];
 
 	/**
 	 * Build a fake ObjectService (+ fake SchemaMapper/Schema entity) double
@@ -276,10 +293,19 @@ class AssetDialectMigrationServiceTest extends TestCase {
 						));
 					}
 
-					// Gate 2: lifecycle transition guard (never bypassable).
+					// Gate 2: lifecycle transition guard. Unconditional (it
+					// consults no _validation/silent/context flag), but it
+					// permits any DECLARED transition — and the Asset schema
+					// now declares four migration-only
+					// `migrateLegacyStatus_<legacy>` transitions, the EXPAND
+					// half of the expand/contract enum migration. So a legacy
+					// -> mapped-English move is allowed; anything else from a
+					// legacy state is still refused.
 					if ($existing !== null) {
 						$oldStatus = (string)($existing['status'] ?? '');
-						if ($oldStatus !== $payloadStatus && in_array($oldStatus, AssetDialectMigrationServiceTest::LEGACY_STATUSES, true) === true) {
+						$isLegacy = in_array($oldStatus, AssetDialectMigrationServiceTest::LEGACY_STATUSES, true);
+						$declared = (AssetDialectMigrationServiceTest::LEGACY_STATUS_MAP[$oldStatus] ?? null);
+						if ($oldStatus !== $payloadStatus && $isLegacy === true && $declared !== $payloadStatus) {
 							throw new \RuntimeException(sprintf(
 								'No transition allows moving "status" from "%s" to "%s".',
 								$oldStatus,
@@ -353,7 +379,7 @@ class AssetDialectMigrationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testOldDialectAssetIsRewrittenExceptStatus(): void {
+	public function testOldDialectAssetIsRewrittenIncludingStatus(): void {
 		[$service, $fake, $schemaMapper] = $this->service(['Asset' => [$this->oldDialectBus()], 'AssetAssignment' => []]);
 
 		$report = $service->migrate();
@@ -361,10 +387,8 @@ class AssetDialectMigrationServiceTest extends TestCase {
 		self::assertSame(1, $report['Asset']['inspected']);
 		self::assertSame(1, $report['Asset']['rewritten']);
 		self::assertSame(0, $report['Asset']['alreadyCurrent']);
-		self::assertSame(1, $report['Asset']['skipped']);
-		self::assertCount(1, $report['Asset']['skipReasons']);
-		self::assertStringContainsString('uitgegeven', $report['Asset']['skipReasons'][0]['reason']);
-		self::assertStringContainsString('issued', $report['Asset']['skipReasons'][0]['reason']);
+		self::assertSame(0, $report['Asset']['skipped'], 'expand/contract clears both gates — nothing is left behind');
+		self::assertCount(0, $report['Asset']['skipReasons']);
 
 		$saved = $fake->rowsBySchema['Asset'][0];
 		self::assertSame('vehicle', $saved['category']);
@@ -382,15 +406,20 @@ class AssetDialectMigrationServiceTest extends TestCase {
 		self::assertSame(38500.0, $saved['purchaseValue']);
 		self::assertIsFloat($saved['purchaseValue']);
 		self::assertSame('38500.00', $saved['aanschafwaarde']);
-		// status could not be migrated -- the lifecycle guard blocked it.
-		self::assertSame('uitgegeven', $saved['status']);
+		// status IS migrated now: the schema's migrateLegacyStatus_uitgegeven
+		// transition declares the move, so the lifecycle guard permits it.
+		self::assertSame('issued', $saved['status']);
 
-		// The hard-validation bypass fired (disable, retry, restore) and
-		// left the schema back at its original, strict setting.
-		self::assertSame(2, $schemaMapper->updateCalls, 'exactly one disable + one restore');
-		self::assertTrue($fake->getCurrentSchemaEntity()->getHardValidation(), 'hardValidation restored to its original value');
+		// And no schema was mutated to achieve it. This is the regression
+		// guard on the removed `hardValidation` toggle: a global, persisted
+		// flag that relaxed validation for every concurrent writer of Asset,
+		// and that a fatal between toggle and restore would have left off
+		// permanently and silently. Expand/contract needs no schema write at
+		// all, so any update call here is that mechanism creeping back.
+		self::assertSame(0, $schemaMapper->updateCalls, 'the migration must never write to the schema');
+		self::assertTrue($fake->getCurrentSchemaEntity()->getHardValidation(), 'hardValidation untouched, never toggled');
 
-	}//end testOldDialectAssetIsRewrittenExceptStatus()
+	}//end testOldDialectAssetIsRewrittenIncludingStatus()
 
 	/**
 	 * Re-running converges: the fields already migrated on the first run
@@ -405,17 +434,17 @@ class AssetDialectMigrationServiceTest extends TestCase {
 
 		$service->migrate();
 		$firstRunSavedCount = count($fake->saved);
-		self::assertSame(1, $firstRunSavedCount, 'exactly one successful save on the first run (the status attempt throws, not saves)');
-		$firstRunUpdateCalls = $schemaMapper->updateCalls;
-		self::assertSame(2, $firstRunUpdateCalls, 'the bypass toggled the schema exactly once (disable + restore) on the first run');
+		self::assertSame(1, $firstRunSavedCount, 'one write carries fields AND status together');
+		self::assertSame(0, $schemaMapper->updateCalls, 'no schema write — expand/contract needs no toggle');
 
 		$secondReport = $service->migrate();
 
 		self::assertSame(1, $secondReport['Asset']['inspected']);
-		self::assertSame(0, $secondReport['Asset']['rewritten'], 'nothing left to rewrite -- category/fields already migrated');
-		self::assertSame(1, $secondReport['Asset']['skipped'], 'status is still blocked, every run');
-		self::assertCount($firstRunSavedCount, $fake->saved, 'no additional successful save happened on the second run');
-		self::assertSame($firstRunUpdateCalls, $schemaMapper->updateCalls, 'the bypass does not fire again once category/fields are already correct');
+		self::assertSame(0, $secondReport['Asset']['rewritten'], 'nothing left to rewrite — the first run converged fully');
+		self::assertSame(0, $secondReport['Asset']['skipped'], 'and nothing left blocked');
+		self::assertSame(1, $secondReport['Asset']['alreadyCurrent'], 'the row is now recognised as current');
+		self::assertCount($firstRunSavedCount, $fake->saved, 'no additional save happened on the second run');
+		self::assertSame(0, $schemaMapper->updateCalls, 'still no schema write on a re-run');
 
 	}//end testSecondRunIsIdempotent()
 

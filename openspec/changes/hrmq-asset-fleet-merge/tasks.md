@@ -415,13 +415,13 @@ genuinely is unconditional. But the mechanism has two problems the docblock does
 
 The standard fix avoids both gates without disabling anything — **expand/contract**:
 
-- [ ] 14.2a EXPAND: add the legacy Dutch values to `Asset.status`'s enum and to the
+- [x] 14.2a EXPAND: add the legacy Dutch values to `Asset.status`'s enum and to the
       `x-openregister-lifecycle` `from` arrays, marked deprecated in their descriptions. Both gates
       now accept the old dialect, so an ordinary write succeeds with validation fully on.
-- [ ] 14.2b MIGRATE: rewrite `status` through the normal API, no bypass.
+- [x] 14.2b MIGRATE: rewrite `status` through the normal API, no bypass.
 - [ ] 14.2c CONTRACT: remove the legacy values from the enum and the `from` arrays.
-- [ ] 14.2d Delete `withAssetHardValidationDisabled()` and its call site.
-- [ ] 14.2e Keep the measured findings about `_validation` and `LifecycleValidationListener` in the
+- [x] 14.2d Delete `withAssetHardValidationDisabled()` and its call site.
+- [x] 14.2e Keep the measured findings about `_validation` and `LifecycleValidationListener` in the
       docblock — they are correct and hard-won, and they are what justifies expand/contract over a
       naive retry. Only the bypass goes.
 
@@ -431,3 +431,27 @@ The standard fix avoids both gates without disabling anything — **expand/contr
       another agent's in-flight `scholiq`→`learniq` rename, not by this change. Do not run
       `occ upgrade` from inside this change — it would apply another agent's half-finished migration
       fleet-wide. Hand it back to whoever owns that work.
+
+### Progress — orchestrator, 2026-08-19 (expand/contract landed)
+
+- **14.2a/b/d/e done.** `hr-assets.json` now declares four migration-only
+  `migrateLegacyStatus_<legacy>` transitions (`beschikbaar→available`,
+  `uitgegeven→issued`, `ingenomen→checkedIn`, `afgeschreven→writtenOff`). The service writes the
+  fully-migrated payload — fields AND status — in ONE `saveObject()` call, which clears both gates
+  with validation fully on: gate 1 validates the payload, and the payload's status is already
+  English; gate 2 now has a declared transition to match. `withAssetHardValidationDisabled()` and
+  `setAssetHardValidation()` are deleted (60 lines).
+- **The regression guard is an assertion, not a comment.** `testOldDialectAssetIsRewrittenIncludingStatus`
+  asserts `schemaMapper->updateCalls === 0` — the migration must never write to a schema. If the
+  toggle ever creeps back, that fails.
+- Suite green at **1124** with the bypass removed.
+- ⚠️ **A trap worth recording:** the test's fake gates live in an anonymous class, which cannot read
+  the outer test class's `private const`. The resulting `Error` was swallowed by the service's own
+  `catch (\Throwable)` and surfaced as a *skip reason* — "dialect rewrite failed … Cannot access
+  private constant" — i.e. a test-harness bug wearing the costume of a domain failure. Both
+  constants are now `public`. A broad `catch (\Throwable)` around a write will do this to any
+  programming error in the payload path.
+- [ ] 14.2c CONTRACT — pending: remove the four `migrateLegacyStatus_*` transitions once the live
+  migration reports zero rows holding a legacy status, then re-import and re-verify.
+- [ ] 14.1a — pending the live run: assert zero live rows violate the current `category`/`status`
+  enums.
