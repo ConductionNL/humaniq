@@ -122,6 +122,7 @@ class AnalyticsService {
 	 * @param AbsenceRateService $absenceRateService The FTE-weighted verzuimpercentage calculator (absence-rate, landed on this branch).
 	 * @param Percentile $percentile The median/p90 calculator (injected, never called statically — the phpmd StaticAccess fix).
 	 * @param LoggerInterface $logger Logger.
+	 * @param EmployeeTimeline $timeline Places employees on a timeline and counts them per period (the AbsenceProgression split precedent — see that class for why).
 	 *
 	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
@@ -131,6 +132,7 @@ class AnalyticsService {
 		private readonly AbsenceRateService $absenceRateService,
 		private readonly Percentile $percentile,
 		private readonly LoggerInterface $logger,
+		private readonly EmployeeTimeline $timeline = new EmployeeTimeline(),
 	) {
 
 	}//end __construct()
@@ -321,50 +323,18 @@ class AnalyticsService {
 	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
 	 */
 	private function headcountSeries(array $periodKeys, string $administrationId): array {
-		$placeable = [];
-		$excluded = 0;
-		foreach ($this->loadFiltered('Employee', $administrationId) as $row) {
-			$start = $this->parseDate($row['startDate'] ?? null);
-			if ($start === null) {
-				$excluded++;
-				continue;
-			}
+		$timeline = $this->timeline->place($this->loadFiltered('Employee', $administrationId));
 
-			$placeable[] = ['start' => $start, 'end' => $this->parseDate($row['endDate'] ?? null)];
-		}
-
-		if ($excluded > 0) {
+		if ($timeline['excluded'] > 0) {
 			$this->logger->warning(
-				'AnalyticsService: ' . $excluded . ' employee(s) excluded from the headcount series — no parseable startDate'
+				'AnalyticsService: ' . $timeline['excluded'] . ' employee(s) excluded from the headcount series — no parseable startDate'
 			);
 		}
 
 		$series = [];
 		foreach ($periodKeys as $period) {
 			[$start, $end] = $this->periodBounds($period);
-			$headcount = 0;
-			$starters = 0;
-			$leavers = 0;
-			foreach ($placeable as $employee) {
-				if ($employee['start'] <= $end && ($employee['end'] === null || $employee['end'] > $end)) {
-					$headcount++;
-				}
-
-				if ($employee['start'] >= $start && $employee['start'] <= $end) {
-					$starters++;
-				}
-
-				if ($employee['end'] !== null && $employee['end'] >= $start && $employee['end'] <= $end) {
-					$leavers++;
-				}
-			}
-
-			$series[] = [
-				'date' => $period,
-				'headcount' => $headcount,
-				'starters' => $starters,
-				'leavers' => $leavers,
-			];
+			$series[] = (['date' => $period] + $this->timeline->countOver($timeline['placed'], $start, $end));
 		}
 
 		return $series;
