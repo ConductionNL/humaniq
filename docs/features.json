@@ -7,6 +7,13 @@
     "docsUrl": "openspec/specs/abp-aansluiting/spec.md"
   },
   {
+    "slug": "absence-rate",
+    "title": "Absence Rate",
+    "summary": "Give hrmq the FTE-weighted verzuimpercentage the sector reports, by recording partial work resumption on SickLeaveCase and computing a rate from it.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/absence-rate/spec.md"
+  },
+  {
     "slug": "asset-management",
     "title": "Asset Management",
     "summary": "Give hrmq its first asset register: company property (laptops, phones, vehicles, tools, access passes, clothing) as Asset records with a declarative custody lifecycle, and effective-dated AssetAssignment uitgiftes linking assets to employees.",

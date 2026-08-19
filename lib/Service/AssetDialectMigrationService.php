@@ -105,6 +105,8 @@ class AssetDialectMigrationService {
 	 * @param IAppConfig $appConfig App config for the register slug.
 	 * @param LoggerInterface $logger Logger.
 	 * @param AssetDialectMapper $mapper Pure old->new dialect row mapping.
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -140,6 +142,8 @@ class AssetDialectMigrationService {
 	 * Migrate every `Asset` row.
 	 *
 	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function migrateAssets(): array {
 		$report = $this->emptyReport();
@@ -196,6 +200,8 @@ class AssetDialectMigrationService {
 	 * @param array<string, mixed> $report The report, mutated in place.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function writeAssetRow(string $id, array $row, array $mapped, array &$report): void {
 		if ($mapped['nonStatusChanged'] === false && $mapped['statusChanged'] === false) {
@@ -233,6 +239,8 @@ class AssetDialectMigrationService {
 	 * no lifecycle guard on this schema).
 	 *
 	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function migrateAssignments(): array {
 		$report = $this->emptyReport();
@@ -281,6 +289,8 @@ class AssetDialectMigrationService {
 
 	/**
 	 * @return array<string, mixed> An empty per-schema report shape.
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function emptyReport(): array {
 		return [
@@ -299,6 +309,8 @@ class AssetDialectMigrationService {
 	 * @param array<string, mixed> $row The row.
 	 *
 	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function stripSelf(array $row): array {
 		unset($row['@self']);
@@ -311,6 +323,8 @@ class AssetDialectMigrationService {
 	 * @param array<string, mixed> $row An object row.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function idOf(array $row): string {
 		return (string)($row['id'] ?? $row['@self']['id'] ?? '');
@@ -325,6 +339,8 @@ class AssetDialectMigrationService {
 	 * @param string $schema The schema name.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function loadAll(string $schema): array {
 		try {
@@ -355,6 +371,8 @@ class AssetDialectMigrationService {
 
 	/**
 	 * @return mixed The OpenRegister ObjectService.
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function objectService(): mixed {
 		// ADR-083: establish availability before reaching. class_exists() rather
@@ -374,6 +392,8 @@ class AssetDialectMigrationService {
 
 	/**
 	 * @return string The configured register slug.
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function register(): string {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');

@@ -61,6 +61,8 @@ class MigrateAssetDialect implements IRepairStep {
 	 * @param AssetDialectMigrationService $migrationService The migration.
 	 * @param SettingsService $settingsService Availability check.
 	 * @param LoggerInterface $logger The logger.
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function __construct(
 		private readonly AssetDialectMigrationService $migrationService,
@@ -74,6 +76,8 @@ class MigrateAssetDialect implements IRepairStep {
 	 * The repair step name.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function getName(): string {
 		return 'Rewrite pre-existing hrmq Asset/AssetAssignment objects to the renamed English dialect';
@@ -85,6 +89,8 @@ class MigrateAssetDialect implements IRepairStep {
 	 * @param IOutput $output The output interface for progress reporting.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function run(IOutput $output): void {
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
