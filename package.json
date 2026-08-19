@@ -16,6 +16,10 @@
     "stylelint-fix": "stylelint src/**/*.vue src/**/*.scss src/**/*.css --fix",
     "check:manifest": "node tests/validate-manifest.js",
     "check:widget-keys": "node tests/validate-widget-keys.js",
+    "check:deps-drift": "node scripts/check-node-deps-drift.js",
+    "check:manifest-sentinels": "node scripts/check-manifest-sentinels.mjs",
+    "check:bundle-freshness": "node scripts/check-bundle-freshness.js",
+    "check:boot-integrity": "npm run check:deps-drift && npm run check:manifest-sentinels && npm run check:bundle-freshness",
     "test:e2e": "playwright test --project chromium"
   },
   "browserslist": [
