@@ -312,6 +312,12 @@ class AdministrationServiceTest extends TestCase {
 
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		// objectService() now establishes availability before reaching for
+		// OpenRegister (ADR-083). A bare createMock() answers a bool method
+		// with false, so without this the guard trips and every test that
+		// touches the register fails on a missing app rather than on its
+		// subject.
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 
 		$config ??= $this->createMock(IConfig::class);
 		$logger = $this->createMock(LoggerInterface::class);

@@ -59,6 +59,7 @@ namespace OCA\Hrmq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Effectuates approved, due CompAdjustments: within-band validation, the
@@ -78,11 +79,13 @@ class CompAdjustmentService {
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param SettingsService $settingsService Register slug source.
 	 * @param LoggerInterface $logger Logger.
+	 * @param CompBandValidator $bandValidator The within-band predicate over a resolved SalaryBand.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
+		private readonly CompBandValidator $bandValidator,
 	) {
 
 	}//end __construct()
@@ -272,8 +275,10 @@ class CompAdjustmentService {
 	/**
 	 * The comp-adjustment-within-band predicate, evaluated inline (belt and
 	 * braces alongside the corpus CheckProvider, design.md D7): vacuous when
-	 * `targetBandId` is null; refused when the band cannot be resolved or the
-	 * proposed salary sits outside `[minSalary, maxSalary]`.
+	 * `targetBandId` is null; otherwise the target band is resolved here and
+	 * the decision over it is `CompBandValidator::evaluate()`, which refuses
+	 * when the band cannot be loaded, carries no numeric `[minSalary,
+	 * maxSalary]`, or does not contain the proposed salary.
 	 *
 	 * @param array<string, mixed> $adjustment The CompAdjustment.
 	 * @param int $proposedSalaryCents The proposed salary, in integer cents.
@@ -289,31 +294,9 @@ class CompAdjustmentService {
 			return null;
 		}
 
-		$band = $this->findById('SalaryBand', $targetBandId);
-		if ($band === null) {
-			return [
-				'status' => 'refused-band-unresolvable',
-				'message' => 'De gekoppelde salarisschaal kon niet worden geladen; effectueren is geweigerd.',
-			];
-		}
-
-		$minSalary = ($band['minSalary'] ?? null);
-		$maxSalary = ($band['maxSalary'] ?? null);
-		if (is_numeric($minSalary) === false || is_numeric($maxSalary) === false) {
-			return [
-				'status' => 'refused-band-unresolvable',
-				'message' => 'De gekoppelde salarisschaal heeft geen geldig min/max-bereik; effectueren is geweigerd.',
-			];
-		}
-
-		if ($proposedSalaryCents < (int)$minSalary || $proposedSalaryCents > (int)$maxSalary) {
-			return [
-				'status' => 'refused-out-of-band',
-				'message' => 'Het voorgestelde salaris valt buiten de schaal (' . ((int)$minSalary) . '-' . ((int)$maxSalary) . ' cent); effectueren is geweigerd.',
-			];
-		}
-
-		return null;
+		// The band is RESOLVED here, because this class owns every OpenRegister
+		// lookup; the DECISION over it lives in CompBandValidator.
+		return $this->bandValidator->evaluate($this->findById('SalaryBand', $targetBandId), $proposedSalaryCents);
 	}//end withinBand()
 
 	/**
@@ -428,6 +411,17 @@ class CompAdjustmentService {
 	 * @return mixed The OpenRegister ObjectService.
 	 */
 	private function objectService(): mixed {
+		// ADR-083: establish availability before reaching. Unguarded, an
+		// instance without OpenRegister gets a container exception naming a
+		// class the admin has never heard of; guarded, it is told which app to
+		// install — which is rule 3's promise that the app still explains
+		// itself.
+		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+			throw new RuntimeException(
+				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+			);
+		}
+
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 

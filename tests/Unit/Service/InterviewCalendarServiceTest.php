@@ -486,6 +486,10 @@ class InterviewCalendarServiceTest extends TestCase {
 
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		// objectService() now establishes availability first (ADR-083). A bare
+		// createMock() answers a bool method with false, so without this the
+		// guard trips and the test fails on a missing app, not on its subject.
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 		$settings->method('getInterviewCalendarPrincipal')->willReturn($principal);
 		$settings->method('getInterviewCalendarUri')->willReturn($calendarUri);
 

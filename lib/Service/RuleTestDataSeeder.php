@@ -42,6 +42,7 @@ use OCP\IUser;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Makes the local test data compliant with the enforced rules (idempotent).
@@ -53,6 +54,7 @@ class RuleTestDataSeeder {
 	 * @param IUserManager $userManager To resolve an admin user for updates.
 	 * @param IGroupManager $groupManager To find an admin user.
 	 * @param LoggerInterface $logger Logger.
+	 * @param RuleTestDataEmployeeIndex $employeeIndex employeeNumber => uuid resolution for seed samples.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -60,6 +62,7 @@ class RuleTestDataSeeder {
 		private readonly IUserManager $userManager,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,
+		private readonly RuleTestDataEmployeeIndex $employeeIndex,
 	) {
 
 	}//end __construct()
@@ -109,14 +112,14 @@ class RuleTestDataSeeder {
 		// `format: 'uuid'` on every referencing schema, so writing that literal
 		// placeholder always fails create. Resolving 'Employee' first means the
 		// real employee row (and its generated UUID) exists before
-		// resolveEmployeeIdPlaceholder() below tries to substitute it into the
+		// RuleTestDataEmployeeIndex below tries to substitute it into the
 		// samples that reference it.
 		if (isset($providerSeedObjects['Employee']) === true) {
 			$providerObjectsCreated += $this->createMissingSamples($os, $register, $admin, 'Employee', $providerSeedObjects['Employee'], $alreadyCompliant);
 			unset($providerSeedObjects['Employee']);
 		}
 
-		$employeeUuidsByNumber = $this->employeeUuidsByNumber($os, $register);
+		$employeeUuidsByNumber = $this->employeeIndex->byNumber($os, $register);
 
 		foreach ($providerSeedObjects as $objectType => $samples) {
 			if ($samples === []) {
@@ -124,7 +127,7 @@ class RuleTestDataSeeder {
 			}
 
 			$samples = array_map(
-				fn (array $sample): array => $this->resolveEmployeeIdPlaceholder($sample, $employeeUuidsByNumber),
+				fn (array $sample): array => $this->employeeIndex->resolvePlaceholder($sample, $employeeUuidsByNumber),
 				$samples
 			);
 
@@ -308,66 +311,6 @@ class RuleTestDataSeeder {
 	}//end createMissingSamples()
 
 	/**
-	 * Map every seeded Employee's `employeeNumber` to its real generated UUID.
-	 *
-	 * Several providers' seed samples reference an employee via that synthetic
-	 * natural key in an `employeeId` field (e.g. 'EMP-NL-0001'), but every
-	 * schema typing `employeeId` also requires `format: 'uuid'` -- writing the
-	 * natural key literally always fails create. This map lets
-	 * resolveEmployeeIdPlaceholder() substitute the real value.
-	 *
-	 * @param mixed $os The ObjectService.
-	 * @param string $register Register slug.
-	 *
-	 * @return array<string, string> employeeNumber => uuid.
-	 */
-	private function employeeUuidsByNumber(mixed $os, string $register): array {
-		try {
-			$rows = $os->setRegister($register)->setSchema('Employee')->findAll(['limit' => 10000]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('RuleTestDataSeeder: cannot load Employee for employeeId resolution: ' . $e->getMessage());
-			return [];
-		}
-
-		$map = [];
-		foreach ((is_array($rows) === true ? $rows : []) as $row) {
-			$obj = is_array($row) === true ? $row : $row->jsonSerialize();
-			$employeeNumber = trim((string)($obj['employeeNumber'] ?? ''));
-			$uuid = (string)($obj['id'] ?? $obj['@self']['id'] ?? '');
-			if ($employeeNumber !== '' && $uuid !== '') {
-				$map[$employeeNumber] = $uuid;
-			}
-		}
-
-		return $map;
-	}//end employeeUuidsByNumber()
-
-	/**
-	 * Substitute a sample's `employeeId` field when it carries a synthetic
-	 * employeeNumber-shaped placeholder (e.g. 'EMP-NL-0001') matching a real
-	 * seeded Employee, with that Employee's actual UUID.
-	 *
-	 * A sample with no `employeeId`, or one that does not match a known
-	 * placeholder (e.g. the EuUsPayrollChecks DE/FR/US samples, which
-	 * reference employees this seeder never creates), passes through
-	 * unchanged -- the create attempt then fails exactly as it did before this
-	 * resolution step existed.
-	 *
-	 * @param array<string, mixed> $sample The seed sample.
-	 * @param array<string, string> $employeeUuidsByNumber employeeNumber => uuid map.
-	 *
-	 * @return array<string, mixed> The sample, with `employeeId` resolved when possible.
-	 */
-	private function resolveEmployeeIdPlaceholder(array $sample, array $employeeUuidsByNumber): array {
-		$employeeId = ($sample['employeeId'] ?? null);
-		if (is_string($employeeId) === true && isset($employeeUuidsByNumber[$employeeId]) === true) {
-			$sample['employeeId'] = $employeeUuidsByNumber[$employeeId];
-		}
-
-		return $sample;
-	}//end resolveEmployeeIdPlaceholder()
-
-	/**
 	 * Resolve an admin user (needed to update seeded objects' folders), or null.
 	 *
 	 * @return IUser|null
@@ -387,6 +330,17 @@ class RuleTestDataSeeder {
 	 * @return mixed The OpenRegister ObjectService.
 	 */
 	private function objectService(): mixed {
+		// ADR-083: establish availability before reaching. class_exists() rather
+		// than SettingsService::isOpenRegisterAvailable(), because this class
+		// does not inject SettingsService and adding a constructor dependency
+		// purely to ask a yes/no question is the wrong trade. It answers the
+		// same question the container would otherwise have answered fatally.
+		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
+			throw new RuntimeException(
+				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+			);
+		}
+
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 

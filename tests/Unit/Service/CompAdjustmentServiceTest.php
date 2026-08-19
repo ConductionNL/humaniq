@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Hrmq\Tests\Unit\Service;
 
 use OCA\Hrmq\Service\CompAdjustmentService;
+use OCA\Hrmq\Service\CompBandValidator;
 use OCA\Hrmq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -187,10 +188,14 @@ class CompAdjustmentServiceTest extends TestCase {
 
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		// objectService() now establishes availability first (ADR-083). A bare
+		// createMock() answers a bool method with false, so without this the
+		// guard trips and the test fails on a missing app, not on its subject.
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new CompAdjustmentService($container, $settings, $logger), $fake];
+		return [new CompAdjustmentService($container, $settings, $logger, new CompBandValidator()), $fake];
 	}//end service()
 
 	/**

@@ -67,6 +67,7 @@ namespace OCA\Hrmq\Service;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Orchestrates AVG data-subject-rights operations over OpenRegister's
@@ -343,6 +344,17 @@ class AvgDsrService {
 	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
 	 */
 	private function objectService(): mixed {
+		// ADR-083: establish availability before reaching. Unguarded, an
+		// instance without OpenRegister gets a container exception naming a
+		// class the admin has never heard of; guarded, it is told which app to
+		// install — which is rule 3's promise that the app still explains
+		// itself.
+		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+			throw new RuntimeException(
+				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+			);
+		}
+
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 

@@ -150,6 +150,16 @@ class OfferController extends Controller {
 	 * @spec openspec/changes/offer-esign/specs/offer-esign/spec.md#REQ-OFFR-007
 	 */
 	private function authorizeApplication(string $applicationId): ?array {
+		// ADR-083: establish availability before reaching, and degrade into the
+		// 404 this method already documents. A controller is the wrong place to
+		// turn a missing optional app into a 500 — the caller of an HTTP
+		// endpoint cannot install anything, and "cannot be resolved" is exactly
+		// the outcome the catch below already collapses to.
+		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+			$this->logger->info('OfferController: OpenRegister is niet beschikbaar; application ' . $applicationId . ' kan niet worden opgehaald.');
+			return null;
+		}
+
 		try {
 			$application = $this->objectService()->find(
 				id: $applicationId,
@@ -172,6 +182,8 @@ class OfferController extends Controller {
 	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
 	 */
 	private function objectService(): mixed {
+		// Availability is established by the sole caller,
+		// authorizeApplication(), before it reaches here (ADR-083).
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 

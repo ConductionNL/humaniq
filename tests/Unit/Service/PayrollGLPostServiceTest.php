@@ -196,6 +196,10 @@ class PayrollGLPostServiceTest extends TestCase {
 
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		// objectService() now establishes availability first (ADR-083). A bare
+		// createMock() answers a bool method with false, so without this the
+		// guard trips and the test fails on a missing app, not on its subject.
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 		$settings->method('getGlPostAccountGross')->willReturn('4001');
 		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
 		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');

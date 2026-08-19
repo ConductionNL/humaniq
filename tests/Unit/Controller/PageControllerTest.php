@@ -46,6 +46,8 @@ use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Tests for PageController.
@@ -128,7 +130,20 @@ class PageControllerTest extends TestCase {
 		$userSession = $this->createMock(IUserSession::class);
 		$userSession->method('getUser')->willReturn(null);
 
-		$controller = new PageController($request, $userSession, $initialState, $administrationService);
+		// AdministrationService is resolved from the CONTAINER now, not injected
+		// (ADR-083 rule 3 — the default route must render on an instance that
+		// has no OpenRegister). The expectations above are unchanged and still
+		// meaningful: with no user, neither method may be called at all.
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($administrationService);
+
+		$controller = new PageController(
+			$request,
+			$userSession,
+			$initialState,
+			$container,
+			$this->createMock(LoggerInterface::class)
+		);
 
 		$response = $controller->index();
 
@@ -188,7 +203,16 @@ class PageControllerTest extends TestCase {
 		$userSession = $this->createMock(IUserSession::class);
 		$userSession->method('getUser')->willReturn($user);
 
-		return new PageController($request, $userSession, $initialState, $administrationService);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($administrationService);
+
+		return new PageController(
+			$request,
+			$userSession,
+			$initialState,
+			$container,
+			$this->createMock(LoggerInterface::class)
+		);
 	}//end buildController()
 
 }//end class

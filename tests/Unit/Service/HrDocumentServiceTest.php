@@ -394,6 +394,10 @@ class HrDocumentServiceTest extends TestCase {
 
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		// objectService() now establishes availability first (ADR-083). A bare
+		// createMock() answers a bool method with false, so without this the
+		// guard trips and the test fails on a missing app, not on its subject.
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 		$settings->method('getDocumentsTemplateId')->willReturn($configuredTemplateId);
 		$settings->method('getDocumentsEmployerBlock')->willReturn(
 			['name' => 'Voorbeeld Werkgever B.V.', 'address' => 'Voorbeeldstraat 1', 'kvkNumber' => '12345678']

@@ -50,6 +50,7 @@ use OCA\Hrmq\Standards\RuleEngine;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * On-demand Arbeidstijdenwet cross-check over one roster's RosterAssignments.
@@ -349,6 +350,18 @@ class RosterCheckService {
 	 * @return mixed The OpenRegister ObjectService.
 	 */
 	private function objectService(): mixed {
+		// ADR-083: establish availability before reaching. class_exists() rather
+		// than SettingsService::isOpenRegisterAvailable(), because this class
+		// does not inject SettingsService and adding a constructor dependency
+		// purely to ask a yes/no question is the wrong trade. It answers the
+		// same question the container would otherwise have answered fatally,
+		// with a message that names the app the admin has to install.
+		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
+			throw new RuntimeException(
+				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+			);
+		}
+
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 

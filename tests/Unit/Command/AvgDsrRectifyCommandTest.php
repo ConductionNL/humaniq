@@ -139,6 +139,10 @@ class AvgDsrRectifyCommandTest extends TestCase {
 
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		// objectService() now establishes availability first (ADR-083). A bare
+		// createMock() answers a bool method with false, so without this the
+		// guard trips and the test fails on a missing app, not on its subject.
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 
 		$command = new AvgDsrRectifyCommand($service, $this->succeedingSessionResolver(), $container, $settings);
 		$exit = $this->runCommand(

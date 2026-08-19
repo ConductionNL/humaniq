@@ -60,3 +60,13 @@ if (file_exists(__DIR__ . '/../../../lib/base.php') === true) {
 if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleGuardInterface') === false) {
 	require __DIR__ . '/stubs/OpenRegisterLifecycleStub.php';
 }
+
+// Same rule, different class. Five classes establish OpenRegister's
+// availability with class_exists() instead of SettingsService (they do not
+// inject it — see the stub's header). Without the name present, that guard
+// refuses every call here and those tests fail on a missing app rather than on
+// their subject. The stub declares a NAME ONLY; the doubles the tests inject
+// through the container are unchanged.
+if (class_exists('OCA\\OpenRegister\\Service\\ObjectService') === false) {
+	require __DIR__ . '/stubs/OpenRegisterObjectServiceStub.php';
+}

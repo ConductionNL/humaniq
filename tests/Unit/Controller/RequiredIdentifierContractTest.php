@@ -115,7 +115,7 @@ class RequiredIdentifierContractTest extends TestCase {
 		$objectService = new class {
 
 			/**
-			 * @param string            $name The called method.
+			 * @param string $name The called method.
 			 * @param array<int, mixed> $args The call arguments.
 			 *
 			 * @return mixed
@@ -131,7 +131,6 @@ class RequiredIdentifierContractTest extends TestCase {
 		$container->method('get')->willReturn($objectService);
 
 		return $container;
-
 	}//end hostileContainer()
 
 	/**
@@ -142,9 +141,12 @@ class RequiredIdentifierContractTest extends TestCase {
 	private function settings(): SettingsService {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		// objectService() now establishes availability first (ADR-083). A bare
+		// createMock() answers a bool method with false, so without this the
+		// guard trips and the test fails on a missing app, not on its subject.
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 
 		return $settings;
-
 	}//end settings()
 
 }//end class

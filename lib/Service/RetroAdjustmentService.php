@@ -54,6 +54,7 @@ use OCA\Hrmq\Payroll\PayrollCalculator;
 use OCA\Hrmq\Payroll\TaxTables;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Computes + settles TWK delta corrections against sealed payslips.
@@ -725,6 +726,17 @@ class RetroAdjustmentService {
 	 * @return mixed The OpenRegister ObjectService.
 	 */
 	private function objectService(): mixed {
+		// ADR-083: establish availability before reaching. Unguarded, an
+		// instance without OpenRegister gets a container exception naming a
+		// class the admin has never heard of; guarded, it is told which app to
+		// install — which is rule 3's promise that the app still explains
+		// itself.
+		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+			throw new RuntimeException(
+				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+			);
+		}
+
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 

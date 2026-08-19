@@ -137,8 +137,8 @@ class PayrollControllerContractTest extends TestCase {
 		$objectService = new class {
 
 			/**
-			 * @param string             $name The called method.
-			 * @param array<int, mixed>  $args The call arguments.
+			 * @param string $name The called method.
+			 * @param array<int, mixed> $args The call arguments.
 			 *
 			 * @return mixed
 			 */
@@ -154,6 +154,10 @@ class PayrollControllerContractTest extends TestCase {
 
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		// objectService() now establishes availability first (ADR-083). A bare
+		// createMock() answers a bool method with false, so without this the
+		// guard trips and the test fails on a missing app, not on its subject.
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('tester');

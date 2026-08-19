@@ -49,6 +49,8 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Renders the main SPA template and serves the bundled app manifest.
@@ -60,10 +62,24 @@ class PageController extends Controller {
 	/**
 	 * Constructor.
 	 *
+	 * ADR-083 rule 3: THE START SCREEN MUST BOOT WITHOUT OPENREGISTER.
+	 *
+	 * AdministrationService was constructor-injected here, and it reaches
+	 * OpenRegister. Nextcloud resolves a controller's constructor before the
+	 * method runs, so on an instance without OpenRegister the DEFAULT ROUTE
+	 * 500s — the one page that could have told the admin which app to install
+	 * is the page that cannot render. The failure is total and silent-looking:
+	 * an empty app with a server error, not a message.
+	 *
+	 * It is resolved lazily from the container inside index() instead, and its
+	 * absence degrades to "no administratie stamped" rather than to a 500. The
+	 * pointer is a scoping convenience; the shell renders fine without it.
+	 *
 	 * @param IRequest $request The request object.
 	 * @param IUserSession $userSession The user session.
 	 * @param IInitialState $initialState The initial-state service.
-	 * @param AdministrationService $administrationService The active-administration pointer service.
+	 * @param ContainerInterface $container DI container for lazy AdministrationService resolution.
+	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @return void
 	 */
@@ -71,7 +87,8 @@ class PageController extends Controller {
 		IRequest $request,
 		private readonly IUserSession $userSession,
 		private readonly IInitialState $initialState,
-		private readonly AdministrationService $administrationService,
+		private readonly ContainerInterface $container,
+		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -111,15 +128,41 @@ class PageController extends Controller {
 	public function index(): TemplateResponse {
 		$user = $this->userSession->getUser();
 		if ($user !== null) {
-			$administrationId = $this->administrationService->getActiveAdministrationId($user->getUID());
-			if ($administrationId !== null) {
-				$this->initialState->provideInitialState('activeAdministrationId', $administrationId);
-			}
+			// Resolved here, not in the constructor, and allowed to fail:
+			// AdministrationService reaches OpenRegister, and this is the route
+			// that has to render on an instance that does not have it (ADR-083
+			// rule 3). Without the try, an admin whose OpenRegister is missing
+			// or broken gets a 500 on the app's front page instead of the shell
+			// that would have explained it.
+			//
+			// Degrading here is safe because these two values are a SCOPING
+			// CONVENIENCE. `activeAdministrationId` is consumed by
+			// `@workspace.activeAdministrationId?` — the `?` makes it optional,
+			// and an unset pointer drops the filter clause and shows all
+			// accessible rows, which is exactly the single-administratie case
+			// (REQ-MULTI-004).
+			try {
+				$administrationService = $this->container->get(AdministrationService::class);
 
-			$this->initialState->provideInitialState(
-				'activeAdministrationMode',
-				$this->administrationService->getActiveAdministrationMode($user->getUID())
-			);
+				$administrationId = $administrationService->getActiveAdministrationId($user->getUID());
+				if ($administrationId !== null) {
+					$this->initialState->provideInitialState('activeAdministrationId', $administrationId);
+				}
+
+				$this->initialState->provideInitialState(
+					'activeAdministrationMode',
+					$administrationService->getActiveAdministrationMode($user->getUID())
+				);
+			} catch (\Throwable $e) {
+				// Deliberately swallowed, and deliberately NOT a fail-open in the
+				// gate-8 sense: nothing here is an authorization decision. The
+				// page renders unscoped, which is the same state a fresh install
+				// is in before an administratie has been chosen.
+				$this->logger->debug(
+					'hrmq: active-administratie state not stamped; rendering the shell unscoped.',
+					['exception' => $e]
+				);
+			}
 		}
 
 		return new TemplateResponse(Application::APP_ID, 'index');

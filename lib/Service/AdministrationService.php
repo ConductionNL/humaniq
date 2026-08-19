@@ -46,6 +46,7 @@ use OCA\Hrmq\AppInfo\Application;
 use OCP\IConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Accountant multi-client access resolution + per-user active-administration
@@ -360,9 +361,28 @@ class AdministrationService {
 	}//end normaliseRows()
 
 	/**
+	 * The OpenRegister ObjectService, once availability has been established.
+	 *
+	 * ADR-083: the reach is guarded rather than blind. hrmq owns no database
+	 * tables — every object it manages lives in OpenRegister — so this is not
+	 * an optional capability in the sense of a feature that degrades. What the
+	 * guard buys is the ADR's rule 3 promise: an instance without OpenRegister
+	 * must still reach a start screen that EXPLAINS ITSELF. Unguarded, the
+	 * container raises `NotFoundExceptionInterface` naming a class the admin
+	 * has never heard of; guarded, they are told which app to install.
+	 *
 	 * @return mixed The OpenRegister ObjectService.
+	 *
+	 * @throws \RuntimeException When OpenRegister is not installed.
 	 */
 	private function objectService(): mixed {
+		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+			throw new RuntimeException(
+				'hrmq requires the OpenRegister app, which is not installed on this instance. '
+				. 'Install and enable it, then reload.'
+			);
+		}
+
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 

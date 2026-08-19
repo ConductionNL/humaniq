@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Tests\Unit\Service;
 
+use OCA\Hrmq\Service\RuleTestDataEmployeeIndex;
 use OCA\Hrmq\Service\RuleTestDataSeeder;
 use OCA\Hrmq\Standards\CaoRegistry;
 use OCA\Hrmq\Standards\RuleEngine;
@@ -189,7 +190,8 @@ class RuleTestDataSeederEmployeeIdTest extends TestCase {
 			$appConfig,
 			$userManager,
 			$groupManager,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			new RuleTestDataEmployeeIndex($this->createMock(LoggerInterface::class))
 		);
 
 	}//end seederWith()

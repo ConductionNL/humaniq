@@ -199,6 +199,10 @@ class PayrollNetPayServiceTest extends TestCase {
 
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		// objectService() now establishes availability first (ADR-083). A bare
+		// createMock() answers a bool method with false, so without this the
+		// guard trips and the test fails on a missing app, not on its subject.
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 		$settings->method('getNetPayExecutionDay')->willReturn(25);
 		$settings->method('getNetPayDebtorIban')->willReturn($debtorIban);
 

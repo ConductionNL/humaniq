@@ -130,6 +130,16 @@ class ExpenseController extends Controller {
 	 * @spec openspec/changes/receipt-ocr/specs/receipt-ocr/spec.md#REQ-RCPT-007
 	 */
 	private function authorizeExpense(string $expenseId): ?array {
+		// ADR-083: establish availability before reaching, and degrade into the
+		// 404 this method already documents. A controller is the wrong place to
+		// turn a missing optional app into a 500 — the caller of an HTTP
+		// endpoint cannot install anything, and "cannot be resolved" is exactly
+		// the outcome the catch below already collapses to.
+		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+			$this->logger->info('ExpenseController: OpenRegister is niet beschikbaar; expense ' . $expenseId . ' kan niet worden opgehaald.');
+			return null;
+		}
+
 		try {
 			$expense = $this->objectService()->find(
 				id: $expenseId,
@@ -176,6 +186,8 @@ class ExpenseController extends Controller {
 	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
 	 */
 	private function objectService(): mixed {
+		// Availability is established by the sole caller, authorizeExpense(),
+		// before it reaches here (ADR-083).
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 	}//end objectService()
 
