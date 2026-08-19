@@ -76,6 +76,8 @@ class AnalyticsController extends Controller {
 	 * @param AdministrationService $administrationService Resolves the caller's active administration + role.
 	 * @param IUserSession $userSession The current user session (acting userId).
 	 * @param LoggerInterface $logger Logger.
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	public function __construct(
 		IRequest $request,
@@ -175,6 +177,8 @@ class AnalyticsController extends Controller {
 	 * @param string $userId The Nextcloud user id.
 	 *
 	 * @return string|null The authorized active administration id, or null when unauthorized.
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function authorizeCaller(string $userId): ?string {
 		$administrationId = $this->administrationService->getActiveAdministrationId($userId);

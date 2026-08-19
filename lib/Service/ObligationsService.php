@@ -109,6 +109,8 @@ class ObligationsService {
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param RuleAuditService $ruleAuditService Supplies the per-row mandatory-violation badge.
 	 * @param LoggerInterface $logger Logger.
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -158,6 +160,8 @@ class ObligationsService {
 	 * @param string $administrationId The caller's active administration.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function sickLeaveMilestoneRows(string $administrationId): array {
 		$rows = [];
@@ -190,6 +194,8 @@ class ObligationsService {
 	 * @param string $administrationId The caller's active administration.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function expiringContractRows(string $administrationId): array {
 		$rows = [];
@@ -224,6 +230,8 @@ class ObligationsService {
 	 * @param string $administrationId The caller's active administration.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function expiringBhvRows(string $administrationId): array {
 		$rows = [];
@@ -254,6 +262,8 @@ class ObligationsService {
 	 * @param int $days Window length in days.
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function expiryWindow(int $days): array {
 		$today = new DateTimeImmutable('today');
@@ -278,6 +288,8 @@ class ObligationsService {
 	 * @param mixed $value The raw value.
 	 *
 	 * @return DateTimeImmutable|null Null when absent, blank, or unparseable.
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function parseDate(mixed $value): ?DateTimeImmutable {
 		if (is_string($value) === false || trim($value) === '') {
@@ -301,6 +313,8 @@ class ObligationsService {
 	 * @param string $administrationId The caller's active administration.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function loadFiltered(string $schema, string $administrationId): array {
 		$rows = [];
@@ -320,6 +334,8 @@ class ObligationsService {
 	 * @param string $schema The schema name.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function loadAll(string $schema): array {
 		try {
@@ -341,6 +357,8 @@ class ObligationsService {
 	 * @param mixed $rows Raw rows.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function normaliseRows(mixed $rows): array {
 		$out = [];
@@ -365,6 +383,8 @@ class ObligationsService {
 	 * @return mixed The OpenRegister ObjectService.
 	 *
 	 * @throws \RuntimeException When OpenRegister is not installed.
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function objectService(): mixed {
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {

@@ -116,6 +116,8 @@ class AnalyticsService {
 	 * @param AbsenceRateService $absenceRateService The FTE-weighted verzuimpercentage calculator (absence-rate, landed on this branch).
 	 * @param Percentile $percentile The median/p90 calculator (injected, never called statically — the phpmd StaticAccess fix).
 	 * @param LoggerInterface $logger Logger.
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -172,6 +174,8 @@ class AnalyticsService {
 	 * @param string $administrationId The caller's active administration.
 	 *
 	 * @return array<int, array{date: string, value: float|null}>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function absenceRateSeries(array $periodKeys, string $administrationId): array {
 		$cases = $this->loadFiltered('SickLeaveCase', $administrationId);
@@ -199,6 +203,8 @@ class AnalyticsService {
 	 * @param string $administrationId The caller's active administration.
 	 *
 	 * @return array<int, array{date: string, value: float|null}>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function payrollCostSeries(array $periodKeys, string $administrationId): array {
 		$sums = array_fill_keys($periodKeys, null);
@@ -237,6 +243,8 @@ class AnalyticsService {
 	 * @param string $administrationId The caller's active administration.
 	 *
 	 * @return array<int, array{date: string, median: float|null, p90: float|null}>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function approvalLeadTimeSeries(array $periodKeys, string $administrationId): array {
 		$durationsByPeriod = array_fill_keys($periodKeys, []);
@@ -272,6 +280,8 @@ class AnalyticsService {
 	 * @param array<string, array<int, float>> $durationsByPeriod Bucket => duration list, keyed by the REQUESTED periods only.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function collectApprovalDuration(array $record, array &$durationsByPeriod): void {
 		$approvedAt = $this->parseDate($record['approvedAt'] ?? null);
@@ -295,6 +305,8 @@ class AnalyticsService {
 	 * @param int $months Number of trailing monthly buckets.
 	 *
 	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function trailingPeriodKeys(int $months): array {
 		$keys = [];
@@ -315,6 +327,8 @@ class AnalyticsService {
 	 * @param string $period `YYYY-MM`.
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function periodBounds(string $period): array {
 		$start = new DateTimeImmutable($period . '-01');
@@ -327,6 +341,8 @@ class AnalyticsService {
 	 * @param mixed $value The raw value.
 	 *
 	 * @return DateTimeImmutable|null Null when absent, blank, or unparseable.
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function parseDate(mixed $value): ?DateTimeImmutable {
 		if (is_string($value) === false || trim($value) === '') {
@@ -350,6 +366,8 @@ class AnalyticsService {
 	 * @param string $administrationId The caller's active administration.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function loadFiltered(string $schema, string $administrationId): array {
 		$rows = [];
@@ -369,6 +387,8 @@ class AnalyticsService {
 	 * @param string $schema The schema name.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function loadAll(string $schema): array {
 		try {
@@ -390,6 +410,8 @@ class AnalyticsService {
 	 * @param mixed $rows Raw rows.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function normaliseRows(mixed $rows): array {
 		$out = [];
@@ -414,6 +436,8 @@ class AnalyticsService {
 	 * @return mixed The OpenRegister ObjectService.
 	 *
 	 * @throws \RuntimeException When OpenRegister is not installed.
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function objectService(): mixed {
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
