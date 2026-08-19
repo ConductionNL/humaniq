@@ -101,6 +101,14 @@ return [
         // is written. Resolve-first RBAC (ObjectService::find under ambient
         // RBAC) BEFORE any salary-derived figure is produced — ADR-005 Rule 3.
         ['name' => 'employerCostRate#show', 'url' => '/api/employees/cost-rate', 'verb' => 'POST'],
+        // hrmq-dashboard-steering-indicators — guarded read-only analytics
+        // for the Dashboard's five trend widgets + Obligations list
+        // (design.md D3/D4): both actions resolve the caller's active
+        // administration server-side and require an hr/accountant
+        // AdministrationAccess role — no administrationId request
+        // parameter is ever read. BEFORE the SPA catch-all.
+        ['name' => 'analytics#trends', 'url' => '/api/analytics/trends', 'verb' => 'GET'],
+        ['name' => 'analytics#obligations', 'url' => '/api/analytics/obligations', 'verb' => 'GET'],
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],

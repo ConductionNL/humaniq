@@ -75,6 +75,27 @@
  * detail context's own `or-object-{id}` live-update subscription is the
  * primary refresh path; see that file's docblock).
  *
+ * `chart` (kind: "widget") — hrmq-dashboard-steering-indicators: the SAME
+ * `effectiveRegistry`-wins-over-catalog override mechanism as `stat`, but
+ * for a DIFFERENT reason. `CnChartWidget` IS reachable via the dashboard
+ * catalog (`registerDashboardWidget('chart', …)` is called directly inside
+ * `CnWidgetGrid/registerDashboardWidgets.js`'s own module body, not behind a
+ * second bare side-effect import the way `CnStatWidget`'s registration was —
+ * so it does not share `stat`'s specific tree-shaking defect). The problem
+ * is chrome, not resolution: `CnChartWidget` was built to be embedded inside
+ * `CnDashboardPage`'s own per-widget template, which supplies `title`/the
+ * shared Actions menu from the SURROUNDING markup — it declares no `title`
+ * prop and does not self-wrap in `CnWidgetWrapper` the way `CnStatWidget` /
+ * `CnWidgetObjectTable` do. `CnWidgetGrid` (the only renderer hrmq's pages
+ * take, since every page has a `slot:"body"` widget) mounts it bare, so an
+ * un-bridged `widgetKey:"chart"` would render as an unlabelled canvas.
+ * `./widgets/TrendChartWidget.vue` bridges it — a title bar identical to
+ * every object-table widget's, everything else forwarded through
+ * `v-bind="$attrs"` unchanged. Remove this override (point `component`
+ * straight at the library's `CnChartWidget`) once a future
+ * `@conduction/nextcloud-vue` release gives the catalog's chart widget its
+ * own chrome the way `CnWidgetObjectTable` already has.
+ *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  */
@@ -83,6 +104,7 @@ import { CnActionButtons, CnStatWidget } from '@conduction/nextcloud-vue'
 import AdministrationSwitcher from './views/AdministrationSwitcher.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
 import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
+import TrendChartWidget from './widgets/TrendChartWidget.vue'
 
 export default {
 	ProformaPayslip: {
@@ -104,6 +126,16 @@ export default {
 		allowedSlots: ['body', 'sidebar'],
 		propsSchema: null,
 		_note: 'Explicit override for the library\'s CnStatWidget — see the module docblock above. Manifest widgets already pass the exact { title, icon, content } shape CnStatWidget expects, so no wrapper is needed.',
+	},
+	chart: {
+		kind: 'widget',
+		component: TrendChartWidget,
+		defaultSize: { w: 6, h: 4 },
+		minSize: { w: 3, h: 3 },
+		maxSize: { w: 12, h: 8 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'Chrome bridge for the library\'s CnChartWidget — see the module docblock above (`./widgets/TrendChartWidget.vue`: title bar via CnWidgetWrapper, everything else forwarded through v-bind="$attrs").',
 	},
 	actions: {
 		kind: 'widget',
