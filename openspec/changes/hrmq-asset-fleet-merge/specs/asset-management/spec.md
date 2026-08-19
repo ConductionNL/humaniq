@@ -182,6 +182,8 @@ Pinned by `RuleAuditServiceTest::testSeededAssetDataFlagsExactlyOneAssignmentCon
 
 ### Requirement: Pre-existing `Asset`/`AssetAssignment` objects SHALL be rewritten from the old Dutch dialect to the renamed one (REQ-AST-008)
 
+Every pre-existing `Asset` and `AssetAssignment` object SHALL be rewritten from the old Dutch dialect to the renamed one, and the rewrite MUST NOT delete any object.
+
 The rename in REQ-AST-001/REQ-AST-002 changed schema field names and enum values but, because OpenRegister's register-config seed import is create-only, never patches an object that already exists. Objects created before this change carry the old Dutch field names/enum values indefinitely unless something rewrites them. `AssetDialectMigrationService::migrate()` performs that rewrite for every existing `Asset`/`AssetAssignment` object, invoked by both the `MigrateAssetDialect` repair step (unconditional on upgrade, and on `occ maintenance:repair`) and the `occ hrmq:assets:migrate-dialect` command (on-demand re-run). It never deletes an object, and reports counts per schema: rows inspected, rewritten, already-current, and skipped-with-reason.
 
 #### Scenario: An old-dialect Asset is rewritten
