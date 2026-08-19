@@ -90,10 +90,18 @@ test.describe('host-app SFC pages', () => {
 
 		const content = page.locator('#app-content, .app-content').first()
 
-		// Its own title, not the shell's. A catch-all fallthrough renders the
-		// dashboard, which is visible and non-empty and would satisfy a mere
-		// "something rendered" check.
-		await expect(content).toContainText(/Simuleer loonstrook|Proforma/i)
+		// Its own heading, not the shell's. A catch-all fallthrough renders the
+		// default route, which is visible and non-empty and would satisfy a
+		// mere "something rendered" check.
+		//
+		// BOTH LANGUAGES ON PURPOSE. The manifest titles this page in Dutch
+		// ("Simuleer loonstrook") but the CI instance runs in English and
+		// renders "Simulate payslip". Asserting only the manifest's language
+		// pins the spec to whichever locale the instance happens to boot in,
+		// which is not what this test is about.
+		await expect(content).toContainText(
+			/Simuleer loonstrook|Simulate payslip|Proforma/i,
+		)
 
 		// The page's REASON to exist is that it gathers inputs and computes.
 		// A mounted-but-inert component still renders its heading, so assert
@@ -112,7 +120,11 @@ test.describe('host-app SFC pages', () => {
 
 		const content = page.locator('#app-content, .app-content').first()
 
-		await expect(content).toContainText(/Administratie/i)
+		// "Administratie" (nl) or "Administration" (en) — see the note on the
+		// previous test. `Administrations` does NOT contain `Administratie`,
+		// which is exactly how the first version of this assertion failed
+		// against a correctly-rendering page.
+		await expect(content).toContainText(/Administratie|Administration/i)
 
 		// Either a list of accessible administraties or an explicit empty
 		// state — never a blank shell. On a freshly seeded CI instance the
