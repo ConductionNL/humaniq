@@ -14,7 +14,15 @@
       this shared dev instance from a PRIOR install. See the implementation report for the
       consequence (OpenRegister's seed-object importer is version-gated and will not overwrite it in
       place) and why proceeding without a schema-level migration was still judged safe here.
-- [ ] 0.2 Run `occ hrmq:rules:audit` (or the standalone RuleEngine-against-fixtures path) and record
+- [x] 0.2 **AFTER figure measured live 2026-08-19** via `occ hrmq:rules:audit` on the shared dev
+      instance: `nl-asset-assignment-consistency` = **1**, `nl-bijtelling-auto-privegebruik` =
+      **0** (absent from the violated-rules table). Both equal the reconstructed before-figures
+      below, which is the equality D5 asks for. The caveat below still stands and is not retracted
+      by this line: the BEFORE was reconstructed from a pre-edit read, not measured, so this is an
+      equality against a reconstruction — weaker evidence than a measured pair, and recorded as such.
+      (Positive control that the audit can report a non-zero: the same run shows
+      `nl-ambtenaar-eed-vereist` = 1, the AOR seed's deliberate violation branch.) Original task text:
+      Run `occ hrmq:rules:audit` (or the standalone RuleEngine-against-fixtures path) and record
       the current violation counts for `nl-asset-assignment-consistency` and
       `nl-bijtelling-auto-privegebruik` — this is the "before" figure D5/the specs' final scenarios
       require for the after-merge equality assertion. NOT CAPTURED before editing began (a process
@@ -396,8 +404,11 @@ This also exposes that the §13 acceptance criterion was too narrow. `nl-asset-v
 keys on `category`, which did migrate — so `withViolations=2` can be satisfied while `status` is
 still broken. The criterion measured the rule, not the data.
 
-- [ ] 14.1a Add an acceptance assertion on the DATA, not only the rule: every live `Asset.status`
-      and `Asset.category` value is a member of the current enum. Zero non-members.
+- [x] 14.1a Acceptance assertion on the DATA, run live 2026-08-19: **4 Asset rows, 0 values outside
+      the current `status`/`category` enums** (`status`: 2 issued, 2 available; `category`: 2 vehicle,
+      1 laptop, 1 phone). **Negative control on the same checker**: a fabricated legacy-dialect row
+      (`status: uitgegeven`, `category: voertuig`) is flagged with 2 violations, so the zero above is
+      a measurement and not a checker that cannot say no.
 
 ### 14.2 Replace the `hardValidation` toggle with an expand/contract enum migration
 
@@ -419,7 +430,10 @@ The standard fix avoids both gates without disabling anything — **expand/contr
       `x-openregister-lifecycle` `from` arrays, marked deprecated in their descriptions. Both gates
       now accept the old dialect, so an ordinary write succeeds with validation fully on.
 - [x] 14.2b MIGRATE: rewrite `status` through the normal API, no bypass.
-- [ ] 14.2c CONTRACT: remove the legacy values from the enum and the `from` arrays.
+- [x] 14.2c CONTRACT: legacy values removed from `Asset.status`'s enum and from every
+      `x-openregister-lifecycle` `from` array; the four migration-only `migrateLegacyStatus_*`
+      transitions are gone (grep returns nothing). Safe to contract because 14.1a measured zero live
+      rows still carrying the old dialect.
 - [x] 14.2d Delete `withAssetHardValidationDisabled()` and its call site.
 - [x] 14.2e Keep the measured findings about `_validation` and `LifecycleValidationListener` in the
       docblock — they are correct and hard-won, and they are what justifies expand/contract over a
@@ -451,10 +465,14 @@ The standard fix avoids both gates without disabling anything — **expand/contr
   private constant" — i.e. a test-harness bug wearing the costume of a domain failure. Both
   constants are now `public`. A broad `catch (\Throwable)` around a write will do this to any
   programming error in the payload path.
-- [ ] 14.2c CONTRACT — pending: remove the four `migrateLegacyStatus_*` transitions once the live
-  migration reports zero rows holding a legacy status, then re-import and re-verify.
-- [ ] 14.1a — pending the live run: assert zero live rows violate the current `category`/`status`
-  enums.
+These two lines were this section's running notes on 14.2c and 14.1a; both are now DONE and their
+outcomes are recorded on the canonical task entries above (no task ids repeated here, so the two
+lines no longer read as a second, still-open copy of the same work):
+
+- CONTRACT — **done**: the four `migrateLegacyStatus_*` transitions are removed (grep returns
+  nothing), after the live migration reported zero rows holding a legacy status.
+- Live enum assertion — **done**: 4 Asset rows, 0 outside the current `category`/`status` enums,
+  with a fabricated legacy-dialect row flagged 2× as the negative control.
 
 ### Acceptance — MEASURED, orchestrator, 2026-08-19 (post-reset)
 

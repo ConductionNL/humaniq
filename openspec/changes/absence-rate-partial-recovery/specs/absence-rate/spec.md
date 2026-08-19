@@ -10,7 +10,7 @@ Give hrmq the FTE-weighted verzuimpercentage the sector reports, by recording pa
 resumption on `SickLeaveCase` and computing a rate from it — rather than counting whole calendar
 days, which overstates every case where the employee is partly back at work.
 
-## Requirements
+## ADDED Requirements
 
 ### Requirement: `SickLeaveCase` SHALL record partial work resumption over time (REQ-ABSRATE-003)
 

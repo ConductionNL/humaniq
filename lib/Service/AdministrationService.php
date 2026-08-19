@@ -148,6 +148,37 @@ class AdministrationService {
 	}//end getActiveAdministrationMode()
 
 	/**
+	 * The caller's active administratie's `AdministrationAccess.role` for
+	 * the caller, or null when no active administratie is resolved or no
+	 * matching access row exists (hrmq-dashboard-steering-indicators
+	 * REQ-DSI-005/design.md D3): the first reader of this field past row
+	 * presence. Reuses `accessibleAdministrations()` rather than
+	 * re-querying `AdministrationAccess` directly, so the two callers never
+	 * disagree on which row is "the" access row for an administratie.
+	 *
+	 * @param string $userId The Nextcloud user id.
+	 *
+	 * @return string|null One of `accountant`/`hr`/`employee`, or null.
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
+	 */
+	public function getActiveAdministrationRole(string $userId): ?string {
+		$activeId = $this->getActiveAdministrationId($userId);
+		if ($activeId === null) {
+			return null;
+		}
+
+		foreach ($this->accessibleAdministrations($userId) as $administration) {
+			if ($administration['administrationId'] === $activeId) {
+				$role = trim($administration['role']);
+				return $role === '' ? null : $role;
+			}
+		}
+
+		return null;
+	}//end getActiveAdministrationRole()
+
+	/**
 	 * Persist the caller's active administratie id. The CALLER (the
 	 * controller) MUST have already verified `hasAccess($userId,
 	 * $administrationId)` — this method performs no authorization check of

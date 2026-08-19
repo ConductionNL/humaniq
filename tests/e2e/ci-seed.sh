@@ -412,6 +412,186 @@ do
 	echo "[ci-seed] warm ${path} -> ${code}"
 done
 
+# ---------------------------------------------------------------------------
+# Administration + AdministrationAccess for the e2e caller.
+#
+# WHY THIS EXISTS
+# ---------------
+# The Dashboard's analytics widgets call `/apps/hrmq/api/analytics/*`, and that
+# controller requires the caller to hold an `AdministrationAccess` row with role
+# `hr` or `accountant` — the first surface in hrmq that actually enforces that
+# field. Without one the endpoints correctly answer 403, four of the six
+# dashboard widgets fail to load, and `manifest-pages.spec.ts` fails the
+# Dashboard on "emitted console errors".
+#
+# That failure was RIGHT: the guard did its job and the seed was incomplete. An
+# e2e run with no access row cannot exercise any tenant-scoped surface at all,
+# so seeding one is provisioning the fixture, not weakening the check.
+#
+# Both writes are idempotent-by-tolerance: a duplicate simply fails and is
+# ignored, because this script may run against an instance seeded by a previous
+# job.
+# ---------------------------------------------------------------------------
+ADM_ID="E2E-ADM-001"
+for payload in \
+	"{\"administrationId\":\"${ADM_ID}\",\"name\":\"E2E Administration\",\"active\":true,\"mode\":\"standard\"}|Administration" \
+	"{\"userId\":\"${USER_NAME}\",\"administrationId\":\"${ADM_ID}\",\"role\":\"hr\"}|AdministrationAccess"
+do
+	body="${payload%|*}"
+	schema="${payload##*|}"
+	code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+		-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+		-H 'Content-Type: application/json' -d "${body}" \
+		"${BASE}/index.php/apps/openregister/api/objects/hrmq/${schema}" || true)"
+	echo "[ci-seed] seed ${schema} -> ${code}"
+done
+
+# The access row alone is not enough: `AnalyticsController::authorizeCaller()`
+# reads the caller's ACTIVE administration, which `AdministrationService` stores
+# as a per-USER config value — not derived from the access rows. Without this
+# pointer `getActiveAdministrationId()` returns null and every analytics
+# endpoint answers 403, which is what the first cut of this seed missed: both
+# objects were created (201/201) and the Dashboard still failed on eight 403s.
+# Two URL forms, because they do not behave identically across environments:
+# `/index.php/apps/...` answers 200 on the docker dev instance and 404 on the
+# CI runner's `php -S`. Rather than guess which one CI has, try both and report
+# BOTH codes — a seed step that silently fails is how the first two cuts of this
+# fix looked like they had worked (Administration 201, AdministrationAccess 201,
+# and the Dashboard still 403).
+# `occ` FIRST, and VERIFY BY READING THE VALUE BACK.
+#
+# The pointer is nothing but a per-user config value —
+# `AdministrationService::getActiveAdministrationId()` reads
+# `getUserValue($userId, 'hrmq', 'active_administration_id')`. Setting it over
+# HTTP made the seed depend on route-prefix form, session auth and CSRF, none of
+# which this fixture needs: `/index.php/apps/hrmq/api/administration/active`
+# answers 200 on the docker dev instance and 404 on the CI runner. `occ` writes
+# the same value directly, with no routing involved.
+#
+# The read-back is the point. A write that reports success and a write that
+# happened are different facts, and the previous two cuts of this seed differed
+# exactly there: both objects created (201/201), the pointer never set, and the
+# Dashboard failing on eight 403s four minutes later. This asserts the value the
+# guard will actually read, from the same place it reads it.
+ACT_KEY='active_administration_id'
+ACT_OK=0
+OCC=''
+for cand in "${NEXTCLOUD_ROOT:-}/occ" "${PWD}/occ" "${APP_DIR}/../../occ" "${APP_DIR}/../../../occ"; do
+	if [ -n "$cand" ] && [ -f "$cand" ]; then OCC="$cand"; break; fi
+done
+
+if [ -n "$OCC" ]; then
+	echo "[ci-seed] occ: ${OCC}"
+	# `user:setting <uid> <app> <key> <value>` — NOT `config:user:set`, which
+	# does not exist ("There are no commands defined in the \"config:user\"
+	# namespace"), and NOT `--value=`, which is parsed as the positional value
+	# argument only by accident on some versions. Round-tripped against a live
+	# instance: writes, reads back byte-identical, and reports
+	# 'The setting does not exist for user "..."' once deleted — so the
+	# comparison below can genuinely fail.
+	php "$OCC" user:setting "${USER_NAME}" hrmq "${ACT_KEY}" "${ADM_ID}" >/dev/null 2>&1 || true
+	READBACK="$(php "$OCC" user:setting "${USER_NAME}" hrmq "${ACT_KEY}" 2>/dev/null | tr -d '\r\n' || true)"
+	echo "[ci-seed] active administration read back as: '${READBACK}' (want '${ADM_ID}')"
+	if [ "$READBACK" = "$ADM_ID" ]; then ACT_OK=1; fi
+else
+	echo "[ci-seed] occ not found (looked in NEXTCLOUD_ROOT, cwd, and two levels above the app dir)."
+fi
+
+# HTTP fallback, only if occ could not do it. Both prefix forms, both codes
+# reported — never one silent attempt.
+if [ "$ACT_OK" != "1" ]; then
+	for form in "/index.php/apps/hrmq/api/administration/active" "/apps/hrmq/api/administration/active"; do
+		code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+			-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+			-H 'Content-Type: application/json' -d "{\"administrationId\":\"${ADM_ID}\"}" \
+			"${BASE}${form}" || true)"
+		echo "[ci-seed] set active administration ${ADM_ID} via ${form} -> ${code}"
+		case "$code" in 2*) ACT_OK=1; break ;; esac
+	done
+fi
+
+if [ "$ACT_OK" != "1" ]; then
+	# Not fatal: only the analytics endpoints need it, and the rest of the suite
+	# is still worth running. But say so loudly rather than leaving a reader to
+	# infer it from a Dashboard failure 4 minutes later.
+	echo "[ci-seed] WARNING: no active administration set — AnalyticsController will answer 403 and the Dashboard spec will fail on console errors."
+fi
+
+# ---------------------------------------------------------------------------
+# Prove the guard the Dashboard depends on actually opens.
+#
+# Seeding the two objects and the pointer is necessary but demonstrably not
+# sufficient: run 32304177761 seeded Administration 201, AdministrationAccess
+# 201, AND read the pointer back as the exact value it wrote — and the
+# Dashboard still failed on six 403s four minutes later. Every input the seed
+# controls looked right while the thing that matters, whether
+# AnalyticsController::authorizeCaller() opens for this caller, was never
+# asked.
+#
+# So ask it here, against the same endpoint the widgets call. This turns an
+# unexplained spec failure into a one-line seed diagnosis naming which half of
+# the guard refused:
+#
+#   * `authorizeCaller()` needs BOTH the per-user active-administration
+#     pointer AND an AdministrationAccess row for THIS user whose role is
+#     `hr`/`accountant` (AdministrationService::accessRowsForUser() matches on
+#     `userId` exactly).
+#   * a 403 here with the pointer read back OK above therefore isolates the
+#     failure to the access row / role half.
+#
+# Non-fatal, like the pointer step: the rest of the suite is still worth
+# running. But it will no longer be silent.
+# ---------------------------------------------------------------------------
+GUARD_BODY="${WORK}/guard.json"
+GUARD_CODE="$(http_get_code "$GUARD_BODY" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${BASE}/index.php/apps/hrmq/api/analytics/trends?metric=absence-rate")"
+echo "[ci-seed] guard probe: GET /api/analytics/trends -> ${GUARD_CODE}"
+if [ "$GUARD_CODE" != "200" ]; then
+	echo "[ci-seed] WARNING: the analytics guard did NOT open for '${USER_NAME}' (HTTP ${GUARD_CODE})."
+	echo "[ci-seed]   The Dashboard spec will fail on console errors. Diagnosis:"
+	echo "[ci-seed]   - active-administration pointer: see the read-back line above."
+	echo "[ci-seed]   - AdministrationAccess rows visible to this caller:"
+	ACC_BODY="${WORK}/access.json"
+	ACC_CODE="$(http_get_code "$ACC_BODY" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+		"${BASE}/index.php/apps/openregister/api/objects/hrmq/AdministrationAccess?_limit=50")"
+	echo "[ci-seed]     listing HTTP ${ACC_CODE}"
+	# The app log is the ONLY place the real reason can appear.
+	# `AdministrationService::loadAll()` wraps its ObjectService call in
+	# `catch (\Throwable) { logger->warning(...); return []; }` — so a failing
+	# load is indistinguishable from "this user has no access rows", and the
+	# difference is written to nextcloud.log and nowhere else. Without this,
+	# a run where the rows exist AND the pointer is set AND the guard still
+	# refuses (observed: run 32304177761) has no visible cause at all.
+	if [ -n "$OCC" ]; then
+		NC_LOG="$(dirname "$OCC")/data/nextcloud.log"
+		if [ -f "$NC_LOG" ]; then
+			echo "[ci-seed]   - last hrmq/AdministrationService lines in nextcloud.log:"
+			grep -aiE "administrationservice|analyticsservice|hrmq" "$NC_LOG" 2>/dev/null \
+				| tail -8 | cut -c1-400 | sed 's/^/[ci-seed]     /' || true
+		else
+			echo "[ci-seed]   - nextcloud.log not found at ${NC_LOG}"
+		fi
+	fi
+	if [ -s "$ACC_BODY" ]; then
+		python3 - "$ACC_BODY" "$USER_NAME" <<'PY' || true
+import json, sys
+try:
+    doc = json.load(open(sys.argv[1], encoding='utf-8'))
+except Exception as exc:
+    print(f'[ci-seed]     could not parse the listing: {exc}')
+    raise SystemExit(0)
+rows = doc.get('results') or []
+print(f'[ci-seed]     total={doc.get("total")} rows_returned={len(rows)}')
+for row in rows:
+    print(f'[ci-seed]       userId={row.get("userId")!r} '
+          f'administrationId={row.get("administrationId")!r} role={row.get("role")!r}')
+mine = [r for r in rows if r.get('userId') == sys.argv[2]]
+print(f'[ci-seed]     rows matching userId={sys.argv[2]!r}: {len(mine)} '
+      f'(authorizeCaller needs >=1 with role hr/accountant)')
+PY
+	fi
+fi
+
 APP_HTML="${WORK}/app.html"
 curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	"${BASE}/index.php/apps/hrmq/" -o "$APP_HTML" || true

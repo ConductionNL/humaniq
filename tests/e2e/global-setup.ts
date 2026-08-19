@@ -123,11 +123,38 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 
 	const page = await context.newPage()
 
+	// `globalSetup` builds its OWN browser, context and page, so NOTHING in
+	// playwright.config.ts's `use` block reaches it — `navigationTimeout:
+	// 60_000` and `actionTimeout: 20_000` apply to tests only. This page was
+	// silently running on Playwright's 30s/no-limit defaults instead, which is
+	// why setup could fail with "Timeout 30000ms exceeded" on an instance the
+	// config had already been told to allow 60s for. Mirror the config here
+	// rather than leaving the two to disagree.
+	page.setDefaultNavigationTimeout(60_000)
+	page.setDefaultTimeout(20_000)
+
 	// The instance can flip back into maintenance between the health check and
 	// this navigation; re-check health and retry rather than failing the suite.
 	for (let attempt = 1; ; attempt++) {
 		try {
-			await page.goto('/index.php/login')
+			// `domcontentloaded`, not the default `load`. The next statement
+			// after this loop is already `waitForLoadState('domcontentloaded')`,
+			// so that was always the condition this setup depends on — the
+			// default was simply never revisited.
+			//
+			// It matters on a real instance: against NC 34.0.0 with a large app
+			// set the login HTML returns 200 in ~3.8s, while the full `load`
+			// event (every stylesheet, icon and app bundle the login chrome
+			// pulls) took long enough that globalSetup threw before a single
+			// spec ran. Waiting for the document rather than for every
+			// subresource is both faster and the condition actually required to
+			// fill the form.
+			//
+			// HONESTY NOTE: that run was on a host at ~4x CPU oversubscription,
+			// so the absolute timings are not a clean measurement of the
+			// instance. The change stands on the logic above, not on those
+			// numbers.
+			await page.goto('/index.php/login', { waitUntil: 'domcontentloaded' })
 			break
 		} catch (err) {
 			if (attempt >= 3) {
@@ -163,14 +190,44 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 	await passwordField.fill(password)
 	// Bind the navigation wait BEFORE clicking, so a fast redirect cannot be
 	// missed between the click returning and the wait starting.
+	//
+	// Playwright's click has its own built-in "wait for scheduled navigations
+	// to finish" step that runs AFTER the click lands. Observed against a live
+	// NC 34.0.0 instance: the call log reaches `click action done` and then
+	// sits on `waiting for scheduled navigations to finish` until the action
+	// timeout, throwing from globalSetup — while the login has in fact
+	// SUCCEEDED (navigating manually afterwards lands authenticated). The
+	// `.catch(() => {})` on the sibling waitForNavigation cannot save it,
+	// because it is the CLICK that throws, not the wait.
+	//
+	// HONESTY NOTE: that observation was made on a host running at ~4x CPU
+	// oversubscription, so it is NOT established that the hang is inherent to
+	// NC 34 rather than a symptom of a slow machine. This opt-out is kept
+	// because it is correct either way — the explicit `waitForNavigation`
+	// above and the `waitForURL` / `waitForSelector` below are what should
+	// decide whether login worked, not a click's implicit side-wait — but it
+	// should not be cited as a proven NC 34 defect until it is reproduced on
+	// an idle host.
 	await Promise.all([
 		page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60_000 }).catch(() => {}),
-		page.locator('button[type="submit"]').first().click(),
+		page.locator('button[type="submit"]').first().click({ noWaitAfter: true }),
 	])
 	// Wait for the authenticated shell. NC 34 no longer guarantees the legacy
 	// `#header` / `header.header` markup, so accept any banner-role header and
 	// give the instance room to finish the post-login redirect.
-	await page.waitForURL((url) => /\/login(\?|$|\/)/.test(url.pathname) === false, { timeout: 60_000 })
+	// `waitForURL` defaults to `waitUntil: 'load'`, and that is the same trap
+	// this file already documents for `networkidle` a few lines up: on
+	// Nextcloud the post-login page keeps enough in flight that the wait runs
+	// its full timeout and throws `waiting for navigation until "load"` — even
+	// though the URL condition itself was satisfied almost immediately. The
+	// thing being waited on here is the REDIRECT OFF /login, which the
+	// predicate expresses; whether every subresource of the destination has
+	// finished is a different question, and `waitForSelector` on the next line
+	// is what actually establishes the authenticated shell is up.
+	await page.waitForURL(
+		(url) => /\/login(\?|$|\/)/.test(url.pathname) === false,
+		{ timeout: 60_000, waitUntil: 'domcontentloaded' },
+	)
 	await page.waitForSelector('#header, header.header, header, [role="banner"]', { timeout: 60_000 })
 	const currentUrl = page.url()
 	if (/\/login(\?|$|\/)/.test(currentUrl)) {

@@ -16,6 +16,7 @@ import Account from 'vue-material-design-icons/Account.vue'
 import AccountArrowRightOutline from 'vue-material-design-icons/AccountArrowRightOutline.vue'
 import AccountBoxOutline from 'vue-material-design-icons/AccountBoxOutline.vue'
 import AccountClockOutline from 'vue-material-design-icons/AccountClockOutline.vue'
+import AccountGroupOutline from 'vue-material-design-icons/AccountGroupOutline.vue'
 import AccountKeyOutline from 'vue-material-design-icons/AccountKeyOutline.vue'
 import AccountMinus from 'vue-material-design-icons/AccountMinus.vue'
 import AccountMinusOutline from 'vue-material-design-icons/AccountMinusOutline.vue'
@@ -55,6 +56,7 @@ import CheckDecagramOutline from 'vue-material-design-icons/CheckDecagramOutline
 import ClipboardAccountOutline from 'vue-material-design-icons/ClipboardAccountOutline.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
 import ClipboardList from 'vue-material-design-icons/ClipboardList.vue'
+import ClipboardListOutline from 'vue-material-design-icons/ClipboardListOutline.vue'
 import ClipboardPulseOutline from 'vue-material-design-icons/ClipboardPulseOutline.vue'
 import ClockCheckOutline from 'vue-material-design-icons/ClockCheckOutline.vue'
 import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
@@ -86,6 +88,7 @@ import Magnify from 'vue-material-design-icons/Magnify.vue'
 import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
 import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
+import PercentOutline from 'vue-material-design-icons/PercentOutline.vue'
 import PiggyBankOutline from 'vue-material-design-icons/PiggyBankOutline.vue'
 import PlusCircleOutline from 'vue-material-design-icons/PlusCircleOutline.vue'
 import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
@@ -106,6 +109,7 @@ import TargetVariant from 'vue-material-design-icons/TargetVariant.vue'
 import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
 import Timeline from 'vue-material-design-icons/Timeline.vue'
 import TimelineClockOutline from 'vue-material-design-icons/TimelineClockOutline.vue'
+import TimerSand from 'vue-material-design-icons/TimerSand.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 
 export default {
@@ -113,6 +117,7 @@ export default {
 	AccountArrowRightOutline,
 	AccountBoxOutline,
 	AccountClockOutline,
+	AccountGroupOutline,
 	AccountKeyOutline,
 	AccountMinus,
 	AccountMinusOutline,
@@ -152,6 +157,7 @@ export default {
 	ClipboardAccountOutline,
 	ClipboardCheckOutline,
 	ClipboardList,
+	ClipboardListOutline,
 	ClipboardPulseOutline,
 	ClockCheckOutline,
 	ClockOutline,
@@ -183,6 +189,7 @@ export default {
 	OfficeBuildingOutline,
 	PackageVariantClosed,
 	PencilOutline,
+	PercentOutline,
 	PiggyBankOutline,
 	PlusCircleOutline,
 	PowerPlugOutline,
@@ -203,5 +210,6 @@ export default {
 	TextRecognition,
 	Timeline,
 	TimelineClockOutline,
+	TimerSand,
 	ViewDashboardOutline,
 }

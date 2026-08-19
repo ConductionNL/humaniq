@@ -67,6 +67,37 @@ class RuleAuditService {
 	}//end __construct()
 
 	/**
+	 * Mandatory-severity `RuleEngine::evaluate()` violation ids for ONE
+	 * already-loaded object — hrmq-dashboard-steering-indicators REQ-DSI-009's
+	 * best-effort Obligations-row badge. Deliberately NOT `audit()`: no
+	 * full-corpus walk, no cross-object context built, just the same static
+	 * `RuleEngine::evaluate()` call every other method on this service
+	 * already makes (`RuleAuditService.php` already carries this file's
+	 * phpmd `StaticAccess` debt — homing this one-line new caller here keeps
+	 * that debt from spreading to a second, otherwise-clean file). A
+	 * predicate needing context this caller does not build degrades to a
+	 * vacuous pass inside `RuleEngine` itself (the design D5 fail-safe
+	 * direction), so it is silently absent here rather than fabricated.
+	 *
+	 * @param string $type OpenRegister schema name.
+	 * @param array<string, mixed> $object The object, already loaded by the caller.
+	 *
+	 * @return array<int, string> Rule ids of any mandatory violation.
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-009
+	 */
+	public function mandatoryViolationIds(string $type, array $object): array {
+		$ruleIds = [];
+		foreach (RuleEngine::evaluate($type, $object) as $violation) {
+			if ($violation->severity === 'mandatory') {
+				$ruleIds[] = $violation->ruleId;
+			}
+		}
+
+		return $ruleIds;
+	}//end mandatoryViolationIds()
+
+	/**
 	 * Run the audit and return the structured report.
 	 *
 	 * @param array<string, mixed> $context Evaluation context (e.g. jurisdiction).
