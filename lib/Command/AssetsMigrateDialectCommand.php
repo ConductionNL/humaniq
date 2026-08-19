@@ -44,6 +44,8 @@ class AssetsMigrateDialectCommand extends Command {
 
 	/**
 	 * @param AssetDialectMigrationService $migrationService The migration.
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function __construct(
 		private readonly AssetDialectMigrationService $migrationService,
@@ -54,6 +56,8 @@ class AssetsMigrateDialectCommand extends Command {
 
 	/**
 	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	protected function configure(): void {
 		$this->setName('hrmq:assets:migrate-dialect')
@@ -62,10 +66,18 @@ class AssetsMigrateDialectCommand extends Command {
 	}//end configure()
 
 	/**
-	 * @param InputInterface $input Console input.
+	 * @param InputInterface $input Console input. Unused: this command takes no
+	 *        arguments or options -- the migration is idempotent, so there is
+	 *        nothing to parameterise and nothing a flag would usefully change.
+	 *        The parameter cannot be dropped; Symfony's Command base class
+	 *        fixes the signature.
 	 * @param OutputInterface $output Console output.
 	 *
 	 * @return int
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 *
+	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$report = $this->migrationService->migrate();
