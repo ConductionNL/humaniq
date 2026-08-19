@@ -144,11 +144,20 @@ The consequence is not theoretical. Measured, same source, same machine, minutes
 | `npm run build` (default → sibling checkout) | **13 errors, no bundle emitted** |
 | `USE_LOCAL_LIB=false npm run build` (locked package) | clean, 2 warnings, bundle emitted |
 
-And the failing build **exited 0** at the npm-script level, so a CI or developer flow that only
-checks the exit code reads "built fine" while `js/` still holds the previous bundle. That is exactly
-the shape of the incident this change exists to prevent, one layer further out: the deps-drift check
-I just added would have passed, because `node_modules` was correct — it simply was not what the
-build used.
+**CORRECTION (same session).** I first recorded that the failing build "exited 0 at the npm-script
+level". That is **wrong**, and re-measuring is what caught it: `npm run build` returns
+**`NPM_EXIT=1`** on the failing local-lib build. What exited 0 was the background-task wrapper I ran
+it through, not npm. I had also mis-grepped the error count as 0 — `grep -c "ERROR in"` misses
+webpack's output because ANSI colour codes sit between `ERROR` and `in`. Two instruments, both
+lying in the same direction, about a build I had already described in a commit message.
+
+The finding survives the correction, in a different and narrower shape. The build fails **loudly**,
+but webpack errors before emitting, so `js/` keeps the PREVIOUS bundle. A developer who sees the
+failure and moves on is still shipping stale code, and nothing downstream distinguishes "bundle from
+this build" from "bundle from three weeks ago". That is what `check-bundle-freshness.js` is for.
+
+The deeper point is unchanged: the deps-drift check added here would have PASSED throughout, because
+`node_modules` was correct — it simply was not what the build used.
 
 - [ ] 7.1 Flip the alias to opt-IN (`USE_LOCAL_LIB === 'true'`), so a build uses the declared
       dependency unless a developer deliberately asks otherwise. Cross-repo: the same pattern is in
