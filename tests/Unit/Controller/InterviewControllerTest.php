@@ -102,6 +102,30 @@ class InterviewControllerTest extends TestCase {
 	}//end testUnknownOrUnauthorizedInterviewIdReturns404()
 
 	/**
+	 * An instance without OpenRegister answers 404, not 500.
+	 *
+	 * ADR-083: a controller is the wrong place to turn a missing optional app
+	 * into a server error — the caller of an HTTP endpoint cannot install
+	 * anything, and "cannot be resolved" is already this endpoint's documented
+	 * outcome. `$fake->findCalled` is asserted false so this proves the guard
+	 * runs BEFORE the reach, rather than the reach happening to return null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-008
+	 */
+	public function testMissingOpenRegisterReturns404WithoutReachingTheStore(): void {
+		[$controller, $fake, $service] = $this->buildController(isAdmin: true, interviewRow: $this->interview(), openRegisterAvailable: false);
+		$service->expects($this->never())->method('syncOne');
+
+		$response = $controller->sync('intv-1');
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertFalse($fake->findCalled, 'the store was reached despite OpenRegister being unavailable');
+
+	}//end testMissingOpenRegisterReturns404WithoutReachingTheStore()
+
+	/**
 	 * A missing interviewId is refused 400 before any resolve.
 	 *
 	 * @return void
@@ -156,7 +180,7 @@ class InterviewControllerTest extends TestCase {
 	 *
 	 * @return array{0: InterviewController, 1: object, 2: InterviewCalendarService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function buildController(bool $isAdmin, ?array $interviewRow): array {
+	private function buildController(bool $isAdmin, ?array $interviewRow, bool $openRegisterAvailable = true): array {
 		$request = $this->createMock(IRequest::class);
 
 		$fake = new class($interviewRow) {
@@ -203,7 +227,7 @@ class InterviewControllerTest extends TestCase {
 		// objectService() now establishes availability first (ADR-083). A bare
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
-		$settings->method('isOpenRegisterAvailable')->willReturn(true);
+		$settings->method('isOpenRegisterAvailable')->willReturn($openRegisterAvailable);
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('hr-admin');
