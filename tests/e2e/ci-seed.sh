@@ -458,15 +458,58 @@ done
 # BOTH codes — a seed step that silently fails is how the first two cuts of this
 # fix looked like they had worked (Administration 201, AdministrationAccess 201,
 # and the Dashboard still 403).
+# `occ` FIRST, and VERIFY BY READING THE VALUE BACK.
+#
+# The pointer is nothing but a per-user config value —
+# `AdministrationService::getActiveAdministrationId()` reads
+# `getUserValue($userId, 'hrmq', 'active_administration_id')`. Setting it over
+# HTTP made the seed depend on route-prefix form, session auth and CSRF, none of
+# which this fixture needs: `/index.php/apps/hrmq/api/administration/active`
+# answers 200 on the docker dev instance and 404 on the CI runner. `occ` writes
+# the same value directly, with no routing involved.
+#
+# The read-back is the point. A write that reports success and a write that
+# happened are different facts, and the previous two cuts of this seed differed
+# exactly there: both objects created (201/201), the pointer never set, and the
+# Dashboard failing on eight 403s four minutes later. This asserts the value the
+# guard will actually read, from the same place it reads it.
+ACT_KEY='active_administration_id'
 ACT_OK=0
-for form in "/index.php/apps/hrmq/api/administration/active" "/apps/hrmq/api/administration/active"; do
-	code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
-		-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-		-H 'Content-Type: application/json' -d "{\"administrationId\":\"${ADM_ID}\"}" \
-		"${BASE}${form}" || true)"
-	echo "[ci-seed] set active administration ${ADM_ID} via ${form} -> ${code}"
-	case "$code" in 2*) ACT_OK=1; break ;; esac
+OCC=''
+for cand in "${NEXTCLOUD_ROOT:-}/occ" "${PWD}/occ" "${APP_DIR}/../../occ" "${APP_DIR}/../../../occ"; do
+	if [ -n "$cand" ] && [ -f "$cand" ]; then OCC="$cand"; break; fi
 done
+
+if [ -n "$OCC" ]; then
+	echo "[ci-seed] occ: ${OCC}"
+	# `user:setting <uid> <app> <key> <value>` — NOT `config:user:set`, which
+	# does not exist ("There are no commands defined in the \"config:user\"
+	# namespace"), and NOT `--value=`, which is parsed as the positional value
+	# argument only by accident on some versions. Round-tripped against a live
+	# instance: writes, reads back byte-identical, and reports
+	# 'The setting does not exist for user "..."' once deleted — so the
+	# comparison below can genuinely fail.
+	php "$OCC" user:setting "${USER_NAME}" hrmq "${ACT_KEY}" "${ADM_ID}" >/dev/null 2>&1 || true
+	READBACK="$(php "$OCC" user:setting "${USER_NAME}" hrmq "${ACT_KEY}" 2>/dev/null | tr -d '\r\n' || true)"
+	echo "[ci-seed] active administration read back as: '${READBACK}' (want '${ADM_ID}')"
+	if [ "$READBACK" = "$ADM_ID" ]; then ACT_OK=1; fi
+else
+	echo "[ci-seed] occ not found (looked in NEXTCLOUD_ROOT, cwd, and two levels above the app dir)."
+fi
+
+# HTTP fallback, only if occ could not do it. Both prefix forms, both codes
+# reported — never one silent attempt.
+if [ "$ACT_OK" != "1" ]; then
+	for form in "/index.php/apps/hrmq/api/administration/active" "/apps/hrmq/api/administration/active"; do
+		code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+			-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+			-H 'Content-Type: application/json' -d "{\"administrationId\":\"${ADM_ID}\"}" \
+			"${BASE}${form}" || true)"
+		echo "[ci-seed] set active administration ${ADM_ID} via ${form} -> ${code}"
+		case "$code" in 2*) ACT_OK=1; break ;; esac
+	done
+fi
+
 if [ "$ACT_OK" != "1" ]; then
 	# Not fatal: only the analytics endpoints need it, and the rest of the suite
 	# is still worth running. But say so loudly rather than leaving a reader to
