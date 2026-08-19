@@ -21,9 +21,15 @@
  *   - the rendered page contains real content (innerHTML > 100 chars)
  *   - no app-origin console errors fire during initial mount
  *
- * `:id`-parameterised detail routes are excluded here — a detail page
- * needs a real object; one seeded detail journey lives in
- * core-journeys.spec.ts.
+ * `:id`-parameterised detail routes are covered too, each resolving one
+ * real object id from the register before navigating. They were previously
+ * EXCLUDED — computed into PARAM_PAGES, counted in the partition sanity
+ * check, and then never visited. That combination reads as full coverage
+ * while half the app goes unopened, and it is exactly how 49 detail pages
+ * rendering completely blank survived a green suite
+ * (ConductionNL/hrmq#112). A `detail coverage` control fails the run if
+ * every detail page ends up skipped, so an empty register cannot
+ * greenwash it either.
  *
  * Read-only: these tests do NOT create / mutate data.
  *
@@ -188,6 +194,89 @@ test.describe('manifest pages — schema-driven render', () => {
 		expect(MANIFEST.pages.length, 'manifest declares pages').toBeGreaterThan(0)
 		expect(SMOKE_PAGES.length + PARAM_PAGES.length).toBe(MANIFEST.pages.length)
 		expect(SMOKE_PAGES.length, 'non-parameterised pages to smoke').toBeGreaterThan(0)
+	})
+
+	/* ------------------------------------------------------------------ *
+	 *  Detail pages
+	 *
+	 *  These used to be excluded outright: PARAM_PAGES was computed, counted
+	 *  in the partition assertion above, and then never visited. That reads
+	 *  as full coverage — the partition check says every declared page is
+	 *  accounted for — while HALF the app was never opened. It is how 49
+	 *  detail pages rendering COMPLETELY BLANK survived a green suite
+	 *  (ConductionNL/hrmq#112): nothing ever navigated to one.
+	 *
+	 *  A detail route needs a real object, so each test resolves one id from
+	 *  the register before navigating. Where a schema genuinely has no rows
+	 *  the test skips — but the skip reason carries the MEASURED total, so it
+	 *  states a fact rather than a guess, and `detail coverage` below fails
+	 *  the run if skipping ever becomes the whole story.
+	 * ------------------------------------------------------------------ */
+
+	/** Detail pages whose route parameter we know how to resolve. */
+	const RESOLVABLE_DETAIL_PAGES = PARAM_PAGES.filter(
+		(p) => p.config?.register && p.config?.schema && /:id\b/.test(p.route),
+	)
+
+	/** How many detail pages actually got visited, for the coverage control. */
+	const detailOutcome = { visited: 0, skipped: 0 }
+
+	for (const pg of RESOLVABLE_DETAIL_PAGES) {
+		test(`[${pg.type}] ${pg.id} mounts at ${pg.route}`, async ({ page }) => {
+			const { errors } = attachConsoleSpy(page)
+			const register = pg.config!.register!
+			const schema = pg.config!.schema!
+
+			// Resolve a real object id. `page.request` inherits the
+			// authenticated storageState, so this is the same session the
+			// browser navigation will use.
+			const res = await page.request.get(
+				`/index.php/apps/openregister/api/objects/${register}/${schema}?_limit=1`,
+				{ headers: { 'OCS-APIRequest': 'true' } },
+			)
+			expect(res.ok(), `${pg.id}: listing ${register}/${schema} failed with HTTP ${res.status()}`).toBe(true)
+			const body = await res.json()
+			const rows = (body.results ?? []) as Array<{ id?: string }>
+			const total = body.total ?? rows.length
+
+			if (rows.length === 0 || !rows[0]?.id) {
+				detailOutcome.skipped++
+				// The reason states the measured total. A skip whose reason is
+				// untrue is an invisible pass.
+				test.skip(true, `${pg.id}: ${register}/${schema} has total=${total} — no object to open`)
+				return
+			}
+
+			const url = `${await rootUrl(page)}${pg.route.replace(/:id\b/, rows[0].id!)}`
+			await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 })
+
+			await expect(page.locator('#app-content, [data-cy=app-content], .app-content').first()).toBeVisible({ timeout: 15_000 })
+
+			// Same content assertion the index pages carry. This is the one
+			// that catches a blank detail pane: the shell mounts either way,
+			// so `#app-content` being visible proves nothing on its own.
+			const rendered = await page.locator('#app-content, .app-content').first().innerHTML()
+			expect(rendered.length, `${pg.id} (${pg.route}) rendered no content inside app-content`).toBeGreaterThan(100)
+
+			expect(errors, `${pg.id} (${pg.route}) emitted console errors: ${errors.join(' | ')}`).toEqual([])
+			detailOutcome.visited++
+		})
+	}
+
+	test('detail coverage: at least one detail page was actually opened', () => {
+		// The anti-greenwash control. Without it, an instance with an empty
+		// register would skip every detail test and the suite would report all
+		// green having opened nothing — the precise failure mode that let #112
+		// live. Runs last (declaration order) so the counters are populated.
+		expect(
+			RESOLVABLE_DETAIL_PAGES.length,
+			'no detail page had a resolvable register/schema — the manifest shape changed',
+		).toBeGreaterThan(0)
+		expect(
+			detailOutcome.visited,
+			`every detail page skipped (${detailOutcome.skipped} skipped of ${RESOLVABLE_DETAIL_PAGES.length}) — `
+			+ 'the register has no objects, so this run proves nothing about detail rendering',
+		).toBeGreaterThan(0)
 	})
 
 	for (const pg of SMOKE_PAGES) {

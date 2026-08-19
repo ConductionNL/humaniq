@@ -215,7 +215,19 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 	// Wait for the authenticated shell. NC 34 no longer guarantees the legacy
 	// `#header` / `header.header` markup, so accept any banner-role header and
 	// give the instance room to finish the post-login redirect.
-	await page.waitForURL((url) => /\/login(\?|$|\/)/.test(url.pathname) === false, { timeout: 60_000 })
+	// `waitForURL` defaults to `waitUntil: 'load'`, and that is the same trap
+	// this file already documents for `networkidle` a few lines up: on
+	// Nextcloud the post-login page keeps enough in flight that the wait runs
+	// its full timeout and throws `waiting for navigation until "load"` — even
+	// though the URL condition itself was satisfied almost immediately. The
+	// thing being waited on here is the REDIRECT OFF /login, which the
+	// predicate expresses; whether every subresource of the destination has
+	// finished is a different question, and `waitForSelector` on the next line
+	// is what actually establishes the authenticated shell is up.
+	await page.waitForURL(
+		(url) => /\/login(\?|$|\/)/.test(url.pathname) === false,
+		{ timeout: 60_000, waitUntil: 'domcontentloaded' },
+	)
 	await page.waitForSelector('#header, header.header, header, [role="banner"]', { timeout: 60_000 })
 	const currentUrl = page.url()
 	if (/\/login(\?|$|\/)/.test(currentUrl)) {
