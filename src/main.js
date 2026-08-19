@@ -17,6 +17,43 @@ import bundledManifest from './manifest.json'
 import registry from './registry.js'
 import appIcons from './icons.js'
 
+// Dashboard widget catalog — the side-effect import the PUBLISHED package drops.
+//
+// `CnWidgetGrid` resolves a `widgetKey` in three steps: the consumer registry
+// (src/registry.js), then `BUILT_IN_WIDGETS`, then the dashboard widget
+// catalog via `getWidgetTypeEntry()`. Six keys live ONLY in that third
+// catalog — `object-list`, `stats-block`, `chart`, `map`, `table`, `related` —
+// and they get there by SELF-REGISTRATION: importing
+// `CnWidgetGrid/registerDashboardWidgets.js` for its side effects is what
+// populates the registry.
+//
+// The library's own `src/index.js` does exactly that on line 13. Its BUILT
+// entrypoint does not:
+//
+//   src/index.js       line  13:  import '.../registerDashboardWidgets.js'      <-- side effect
+//   src/index.js       line 442:  export { registerBuiltinDashboardWidgets } …
+//   dist/esm/index.js  line   2:  export { registerBuiltinDashboardWidgets } …  <-- ONLY this
+//
+// `package.json`'s `module` field points at `dist/esm/index.js`, so every app
+// consuming the published package — which is every app, and CI — gets the
+// re-export without the side effect. A re-export does not execute the module
+// unless the exported binding is used, and nothing uses it. The catalog stays
+// empty and all six keys resolve to nothing.
+//
+// Measured on this instance before the fix: `EmployeeDetail` rendered
+// COMPLETELY BLANK, with 13 `[CnWidgetGrid] Unknown widgetKey` warnings
+// (9x object-list, 4x stats-block). Nine detail pages use these keys
+// (EmployeeDetail, PayrollRunDetail, CompReviewCycleDetail, ApplicationDetail,
+// OrgUnitDetail, AssetDetail, ReviewCycleDetail, ObjectiveDetail,
+// RosterDetail). The Dashboard was unaffected only because src/registry.js
+// overrides `chart` and `stat` locally, at layer 1.
+//
+// Filed upstream against @conduction/nextcloud-vue. This explicit import is
+// the leaf-app workaround and is safe to keep afterwards: the module is
+// idempotent, and `sideEffects` in the package already lists it, so webpack
+// will not drop it.
+import '@conduction/nextcloud-vue/dist/esm/components/CnWidgetGrid/registerDashboardWidgets.js'
+
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
 
