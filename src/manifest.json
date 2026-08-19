@@ -1999,22 +1999,23 @@
 					"gridWidth": 4,
 					"gridHeight": 2,
 					"props": {
+						"_note": "`entries` is a FLAT prop. CnStatsBlockWidget declares dataSource/entries/title/countLabel/variant/showZeroCount/horizontal/route/iconClass and no `content` prop at all, so the previous `content: {entries: […]}` shape never reached the component — it errored `Exactly one of dataSource / entries must be provided`. That error was invisible until the dashboard widget catalog started resolving at all (see src/main.js): with the catalog empty, CnWidgetGrid never mounted the component and never ran its contract check.",
 						"title": "Contracts",
 						"icon": "ChartBar",
-						"content": {
-							"entries": [
-								{
-									"title": "Contracts",
-									"register": "hrmq",
-									"schema": "EmploymentContract",
-									"metric": "count",
-									"filter": {
-										"employeeId": "@objectId"
-									},
-									"route": "EmploymentContracts"
+						"entries": [
+							{
+								"title": "Contracts",
+								"register": "hrmq",
+								"schema": "EmploymentContract",
+								"metric": "count",
+								"filter": {
+									"employeeId": "@objectId"
+								},
+								"route": {
+									"name": "EmploymentContracts"
 								}
-							]
-						}
+							}
+						]
 					}
 				},
 				{
@@ -2027,20 +2028,20 @@
 					"props": {
 						"title": "Payslips",
 						"icon": "ChartBar",
-						"content": {
-							"entries": [
-								{
-									"title": "Payslips",
-									"register": "hrmq",
-									"schema": "Payslip",
-									"metric": "count",
-									"filter": {
-										"employeeId": "@objectId"
-									},
-									"route": "Payslips"
+						"entries": [
+							{
+								"title": "Payslips",
+								"register": "hrmq",
+								"schema": "Payslip",
+								"metric": "count",
+								"filter": {
+									"employeeId": "@objectId"
+								},
+								"route": {
+									"name": "Payslips"
 								}
-							]
-						}
+							}
+						]
 					}
 				},
 				{
@@ -2053,21 +2054,21 @@
 					"props": {
 						"title": "Pending expenses",
 						"icon": "ChartBar",
-						"content": {
-							"entries": [
-								{
-									"title": "Pending expenses",
-									"register": "hrmq",
-									"schema": "Expense",
-									"metric": "count",
-									"filter": {
-										"employeeId": "@objectId",
-										"status": "submitted"
-									},
-									"route": "ExpenseApproval"
+						"entries": [
+							{
+								"title": "Pending expenses",
+								"register": "hrmq",
+								"schema": "Expense",
+								"metric": "count",
+								"filter": {
+									"employeeId": "@objectId",
+									"status": "submitted"
+								},
+								"route": {
+									"name": "ExpenseApproval"
 								}
-							]
-						}
+							}
+						]
 					}
 				},
 				{
@@ -2080,21 +2081,21 @@
 					"props": {
 						"title": "Hours logged",
 						"icon": "ChartBar",
-						"content": {
-							"entries": [
-								{
-									"title": "Hours logged",
-									"register": "hrmq",
-									"schema": "Timesheet",
-									"metric": "sum",
-									"field": "hours",
-									"filter": {
-										"employeeId": "@objectId"
-									},
-									"route": "Timesheets"
+						"entries": [
+							{
+								"title": "Hours logged",
+								"register": "hrmq",
+								"schema": "Timesheet",
+								"metric": "sum",
+								"field": "hours",
+								"filter": {
+									"employeeId": "@objectId"
+								},
+								"route": {
+									"name": "Timesheets"
 								}
-							]
-						}
+							}
+						]
 					}
 				},
 				{
