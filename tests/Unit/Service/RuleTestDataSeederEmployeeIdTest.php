@@ -38,9 +38,10 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Tests\Unit\Service;
 
+use OCA\Hrmq\Service\RuleTestDataEmployeeIndex;
+use OCA\Hrmq\Service\RuleTestDataSeeder;
 use OCA\Hrmq\Standards\CaoRegistry;
 use OCA\Hrmq\Standards\RuleEngine;
-use OCA\Hrmq\Service\RuleTestDataSeeder;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUserManager;
@@ -52,287 +53,260 @@ use Psr\Log\LoggerInterface;
  * Tests the Employee-UUID resolution the seeder applies before writing
  * samples that reference an employee by the synthetic 'EMP-NL-0001' key.
  */
-class RuleTestDataSeederEmployeeIdTest extends TestCase
-{
+class RuleTestDataSeederEmployeeIdTest extends TestCase {
 
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		RuleEngine::reset();
+		CaoRegistry::reset();
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        RuleEngine::reset();
-        CaoRegistry::reset();
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * @return void
+	 */
+	protected function tearDown(): void {
+		RuleEngine::reset();
+		CaoRegistry::reset();
 
+	}//end tearDown()
 
-    /**
-     * @return void
-     */
-    protected function tearDown(): void
-    {
-        RuleEngine::reset();
-        CaoRegistry::reset();
+	/**
+	 * Build a fake ObjectService that keeps an in-memory store keyed by
+	 * schema and supports the register/schema/findAll/saveObject surface the
+	 * seeder uses. Create assigns a fresh, schema-prefixed id that is
+	 * deliberately NOT uuid-shaped and NOT equal to any employeeNumber
+	 * placeholder, so a test assertion that a row's `employeeId` equals this
+	 * generated id can never be trivially satisfied by an unresolved
+	 * placeholder slipping through unchanged.
+	 *
+	 * @return object
+	 */
+	private function fakeObjectService(): object {
+		return new class {
+			/**
+			 * @var array<string, array<int, array<string, mixed>>>
+			 */
+			public array $store = [];
 
-    }//end tearDown()
+			/**
+			 * @var string
+			 */
+			private string $schema = '';
 
+			/**
+			 * @var int
+			 */
+			private int $counter = 0;
 
-    /**
-     * Build a fake ObjectService that keeps an in-memory store keyed by
-     * schema and supports the register/schema/findAll/saveObject surface the
-     * seeder uses. Create assigns a fresh, schema-prefixed id that is
-     * deliberately NOT uuid-shaped and NOT equal to any employeeNumber
-     * placeholder, so a test assertion that a row's `employeeId` equals this
-     * generated id can never be trivially satisfied by an unresolved
-     * placeholder slipping through unchanged.
-     *
-     * @return object
-     */
-    private function fakeObjectService(): object
-    {
-        return new class {
+			/**
+			 * @param string $register Register slug (unused).
+			 *
+			 * @return self
+			 */
+			public function setRegister(string $register): self {
+				return $this;
+			}//end setRegister()
 
-            /**
-             * @var array<string, array<int, array<string, mixed>>>
-             */
-            public array $store = [];
+			/**
+			 * @param string $schema Schema name.
+			 *
+			 * @return self
+			 */
+			public function setSchema(string $schema): self {
+				$this->schema = $schema;
+				return $this;
+			}//end setSchema()
 
-            /**
-             * @var string
-             */
-            private string $schema = '';
+			/**
+			 * @param array<string, mixed> $filters Query filters (unused beyond presence).
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(array $filters = []): array {
+				return ($this->store[$this->schema] ?? []);
+			}//end findAll()
 
-            /**
-             * @var int
-             */
-            private int $counter = 0;
+			/**
+			 * @param mixed $object The object to save.
+			 * @param string $register Register slug (unused).
+			 * @param string $schema Schema name.
+			 * @param string|null $uuid Existing id to update, or null to create.
+			 * @param bool $_rbac RBAC flag (unused).
+			 * @param bool $_multitenancy Multitenancy flag (unused).
+			 * @param mixed $currentUser Acting user (unused).
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function saveObject(mixed $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true, mixed $currentUser = null): array {
+				$object = (array)$object;
 
-            /**
-             * @param string $register Register slug (unused).
-             *
-             * @return self
-             */
-            public function setRegister(string $register): self
-            {
-                return $this;
+				if ($uuid !== null && $uuid !== '') {
+					foreach (($this->store[$schema] ?? []) as $i => $row) {
+						if ((string)($row['id'] ?? '') === $uuid) {
+							$this->store[$schema][$i] = array_merge(['id' => $uuid], $object);
+							return $this->store[$schema][$i];
+						}
+					}
+				}
 
-            }//end setRegister()
+				$this->counter++;
+				// Deliberately UNLIKE both a uuid AND any 'EMP-*-0001' placeholder,
+				// so a passing assertion proves real resolution happened.
+				$id = 'fake-generated-id-' . $schema . '-' . $this->counter;
+				$saved = array_merge(['id' => $id], $object);
+				$this->store[$schema][] = $saved;
+				return $saved;
+			}//end saveObject()
 
+		};
 
-            /**
-             * @param string $schema Schema name.
-             *
-             * @return self
-             */
-            public function setSchema(string $schema): self
-            {
-                $this->schema = $schema;
-                return $this;
+	}//end fakeObjectService()
 
-            }//end setSchema()
+	/**
+	 * Build a seeder wired to the fake ObjectService.
+	 *
+	 * @param object $objectService The fake ObjectService.
+	 *
+	 * @return RuleTestDataSeeder
+	 */
+	private function seederWith(object $objectService): RuleTestDataSeeder {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
 
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('hrmq');
 
-            /**
-             * @param array<string, mixed> $filters Query filters (unused beyond presence).
-             *
-             * @return array<int, array<string, mixed>>
-             */
-            public function findAll(array $filters=[]): array
-            {
-                return ($this->store[$this->schema] ?? []);
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('get')->willReturn(null);
 
-            }//end findAll()
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->method('get')->willReturn(null);
 
+		return new RuleTestDataSeeder(
+			$container,
+			$appConfig,
+			$userManager,
+			$groupManager,
+			$this->createMock(LoggerInterface::class),
+			new RuleTestDataEmployeeIndex($this->createMock(LoggerInterface::class))
+		);
 
-            /**
-             * @param mixed       $object        The object to save.
-             * @param string      $register      Register slug (unused).
-             * @param string      $schema        Schema name.
-             * @param string|null $uuid          Existing id to update, or null to create.
-             * @param bool        $_rbac         RBAC flag (unused).
-             * @param bool        $_multitenancy Multitenancy flag (unused).
-             * @param mixed       $currentUser   Acting user (unused).
-             *
-             * @return array<string, mixed>
-             */
-            public function saveObject(mixed $object=[], string $register='', string $schema='', ?string $uuid=null, bool $_rbac=true, bool $_multitenancy=true, mixed $currentUser=null): array
-            {
-                $object = (array) $object;
+	}//end seederWith()
 
-                if ($uuid !== null && $uuid !== '') {
-                    foreach (($this->store[$schema] ?? []) as $i => $row) {
-                        if ((string) ($row['id'] ?? '') === $uuid) {
-                            $this->store[$schema][$i] = array_merge(['id' => $uuid], $object);
-                            return $this->store[$schema][$i];
-                        }
-                    }
-                }
+	/**
+	 * Find the row in a fake-store schema slice whose `employeeNumber` field
+	 * equals the given natural key. `RuleEngine::providerSeedObjects()` merges
+	 * samples from every discovered provider (EuUsPayrollChecks contributes
+	 * DE/FR/US Employee samples alongside NlPayrollChecks' NL one), so the NL
+	 * anchor employee is not reliably at a fixed index — it must be located by
+	 * its natural key.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The schema's rows.
+	 * @param string $employeeNumber The natural key to match.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function findByEmployeeNumber(array $rows, string $employeeNumber): array {
+		foreach ($rows as $row) {
+			if ((string)($row['employeeNumber'] ?? '') === $employeeNumber) {
+				return $row;
+			}
+		}
 
-                $this->counter++;
-                // Deliberately UNLIKE both a uuid AND any 'EMP-*-0001' placeholder,
-                // so a passing assertion proves real resolution happened.
-                $id                     = 'fake-generated-id-'.$schema.'-'.$this->counter;
-                $saved                  = array_merge(['id' => $id], $object);
-                $this->store[$schema][] = $saved;
-                return $saved;
+		$this->fail('No row found with employeeNumber ' . $employeeNumber);
 
-            }//end saveObject()
+	}//end findByEmployeeNumber()
 
-        };
+	/**
+	 * The seeded Loonbeslag row's `employeeId` is the NL anchor Employee's
+	 * real generated id, never the literal 'EMP-NL-0001' placeholder the
+	 * provider's static seedObjects() declares.
+	 *
+	 * @return void
+	 */
+	public function testLoonbeslagEmployeeIdResolvesToRealEmployeeUuid(): void {
+		$fake = $this->fakeObjectService();
+		$seeder = $this->seederWith($fake);
 
-    }//end fakeObjectService()
+		$seeder->seed();
 
+		$employeeRows = ($fake->store['Employee'] ?? []);
+		$this->assertNotEmpty($employeeRows, 'The anchor Employee sample must have been created.');
+		$anchor = $this->findByEmployeeNumber($employeeRows, 'EMP-NL-0001');
+		$anchorId = (string)$anchor['id'];
+		$this->assertNotSame('EMP-NL-0001', $anchorId, 'Sanity: the fake generates its own id, not the natural key.');
 
-    /**
-     * Build a seeder wired to the fake ObjectService.
-     *
-     * @param object $objectService The fake ObjectService.
-     *
-     * @return RuleTestDataSeeder
-     */
-    private function seederWith(object $objectService): RuleTestDataSeeder
-    {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($objectService);
+		$loonbeslagRows = ($fake->store['Loonbeslag'] ?? []);
+		$this->assertNotEmpty($loonbeslagRows, 'The Loonbeslag sample must have been created.');
+		$this->assertSame(
+			$anchorId,
+			$loonbeslagRows[0]['employeeId'],
+			'Loonbeslag.employeeId must resolve to the real Employee uuid, not the literal EMP-NL-0001 placeholder.'
+		);
+		$this->assertNotSame(
+			'EMP-NL-0001',
+			$loonbeslagRows[0]['employeeId'],
+			'Loonbeslag.employeeId must never be the unresolved natural-key placeholder.'
+		);
 
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturn('hrmq');
+	}//end testLoonbeslagEmployeeIdResolvesToRealEmployeeUuid()
 
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('get')->willReturn(null);
+	/**
+	 * The same resolution applies to NlPayrollChecks' own EmploymentContract
+	 * and Payslip samples (matched to the NL anchor employee among the merged
+	 * NL/DE/FR/US rows) AND, since EuUsPayrollChecks seeds its own DE/FR/US
+	 * Employee samples under the identical natural-key scheme, to the DE/FR/US
+	 * EmploymentContract/Payslip rows as well — the fix is general, not
+	 * NL-only.
+	 *
+	 * @return void
+	 */
+	public function testEmploymentContractAndPayslipEmployeeIdResolveToRealEmployeeUuidForEveryJurisdiction(): void {
+		$fake = $this->fakeObjectService();
+		$seeder = $this->seederWith($fake);
 
-        $userManager = $this->createMock(IUserManager::class);
-        $userManager->method('get')->willReturn(null);
+		$seeder->seed();
 
-        return new RuleTestDataSeeder(
-            $container,
-            $appConfig,
-            $userManager,
-            $groupManager,
-            $this->createMock(LoggerInterface::class)
-        );
+		$employeeRows = $fake->store['Employee'];
+		$contractRows = $fake->store['EmploymentContract'];
+		$payslipRows = $fake->store['Payslip'];
 
-    }//end seederWith()
+		foreach (['EMP-NL-0001', 'EMP-DE-0001', 'EMP-FR-0001', 'EMP-US-0001'] as $employeeNumber) {
+			$anchorId = (string)$this->findByEmployeeNumber($employeeRows, $employeeNumber)['id'];
 
+			$contractMatch = null;
+			foreach ($contractRows as $row) {
+				if (($row['employeeId'] ?? null) === $anchorId) {
+					$contractMatch = $row;
+					break;
+				}
+			}
 
-    /**
-     * Find the row in a fake-store schema slice whose `employeeNumber` field
-     * equals the given natural key. `RuleEngine::providerSeedObjects()` merges
-     * samples from every discovered provider (EuUsPayrollChecks contributes
-     * DE/FR/US Employee samples alongside NlPayrollChecks' NL one), so the NL
-     * anchor employee is not reliably at a fixed index — it must be located by
-     * its natural key.
-     *
-     * @param array<int, array<string, mixed>> $rows           The schema's rows.
-     * @param string                           $employeeNumber The natural key to match.
-     *
-     * @return array<string, mixed>
-     */
-    private function findByEmployeeNumber(array $rows, string $employeeNumber): array
-    {
-        foreach ($rows as $row) {
-            if ((string) ($row['employeeNumber'] ?? '') === $employeeNumber) {
-                return $row;
-            }
-        }
+			$this->assertNotNull($contractMatch, 'An EmploymentContract row must resolve to the ' . $employeeNumber . ' employee uuid.');
 
-        $this->fail('No row found with employeeNumber '.$employeeNumber);
+			$payslipMatch = null;
+			foreach ($payslipRows as $row) {
+				if (($row['employeeId'] ?? null) === $anchorId) {
+					$payslipMatch = $row;
+					break;
+				}
+			}
 
-    }//end findByEmployeeNumber()
+			$this->assertNotNull($payslipMatch, 'A Payslip row must resolve to the ' . $employeeNumber . ' employee uuid.');
+		}//end foreach
 
+		// No row of either type may still carry an unresolved natural-key placeholder.
+		foreach (array_merge($contractRows, $payslipRows) as $row) {
+			$this->assertDoesNotMatchRegularExpression(
+				'/^EMP-[A-Z]{2}-\d+$/',
+				(string)($row['employeeId'] ?? ''),
+				'No EmploymentContract/Payslip row may retain an unresolved EMP-XX-0001 placeholder.'
+			);
+		}
 
-    /**
-     * The seeded Loonbeslag row's `employeeId` is the NL anchor Employee's
-     * real generated id, never the literal 'EMP-NL-0001' placeholder the
-     * provider's static seedObjects() declares.
-     *
-     * @return void
-     */
-    public function testLoonbeslagEmployeeIdResolvesToRealEmployeeUuid(): void
-    {
-        $fake   = $this->fakeObjectService();
-        $seeder = $this->seederWith($fake);
-
-        $seeder->seed();
-
-        $employeeRows = ($fake->store['Employee'] ?? []);
-        $this->assertNotEmpty($employeeRows, 'The anchor Employee sample must have been created.');
-        $anchor = $this->findByEmployeeNumber($employeeRows, 'EMP-NL-0001');
-        $anchorId = (string) $anchor['id'];
-        $this->assertNotSame('EMP-NL-0001', $anchorId, 'Sanity: the fake generates its own id, not the natural key.');
-
-        $loonbeslagRows = ($fake->store['Loonbeslag'] ?? []);
-        $this->assertNotEmpty($loonbeslagRows, 'The Loonbeslag sample must have been created.');
-        $this->assertSame(
-            $anchorId,
-            $loonbeslagRows[0]['employeeId'],
-            'Loonbeslag.employeeId must resolve to the real Employee uuid, not the literal EMP-NL-0001 placeholder.'
-        );
-        $this->assertNotSame(
-            'EMP-NL-0001',
-            $loonbeslagRows[0]['employeeId'],
-            'Loonbeslag.employeeId must never be the unresolved natural-key placeholder.'
-        );
-
-    }//end testLoonbeslagEmployeeIdResolvesToRealEmployeeUuid()
-
-
-    /**
-     * The same resolution applies to NlPayrollChecks' own EmploymentContract
-     * and Payslip samples (matched to the NL anchor employee among the merged
-     * NL/DE/FR/US rows) AND, since EuUsPayrollChecks seeds its own DE/FR/US
-     * Employee samples under the identical natural-key scheme, to the DE/FR/US
-     * EmploymentContract/Payslip rows as well — the fix is general, not
-     * NL-only.
-     *
-     * @return void
-     */
-    public function testEmploymentContractAndPayslipEmployeeIdResolveToRealEmployeeUuidForEveryJurisdiction(): void
-    {
-        $fake   = $this->fakeObjectService();
-        $seeder = $this->seederWith($fake);
-
-        $seeder->seed();
-
-        $employeeRows = $fake->store['Employee'];
-        $contractRows = $fake->store['EmploymentContract'];
-        $payslipRows  = $fake->store['Payslip'];
-
-        foreach (['EMP-NL-0001', 'EMP-DE-0001', 'EMP-FR-0001', 'EMP-US-0001'] as $employeeNumber) {
-            $anchorId = (string) $this->findByEmployeeNumber($employeeRows, $employeeNumber)['id'];
-
-            $contractMatch = null;
-            foreach ($contractRows as $row) {
-                if (($row['employeeId'] ?? null) === $anchorId) {
-                    $contractMatch = $row;
-                    break;
-                }
-            }
-
-            $this->assertNotNull($contractMatch, 'An EmploymentContract row must resolve to the '.$employeeNumber.' employee uuid.');
-
-            $payslipMatch = null;
-            foreach ($payslipRows as $row) {
-                if (($row['employeeId'] ?? null) === $anchorId) {
-                    $payslipMatch = $row;
-                    break;
-                }
-            }
-
-            $this->assertNotNull($payslipMatch, 'A Payslip row must resolve to the '.$employeeNumber.' employee uuid.');
-        }//end foreach
-
-        // No row of either type may still carry an unresolved natural-key placeholder.
-        foreach (array_merge($contractRows, $payslipRows) as $row) {
-            $this->assertDoesNotMatchRegularExpression(
-                '/^EMP-[A-Z]{2}-\d+$/',
-                (string) ($row['employeeId'] ?? ''),
-                'No EmploymentContract/Payslip row may retain an unresolved EMP-XX-0001 placeholder.'
-            );
-        }
-
-    }//end testEmploymentContractAndPayslipEmployeeIdResolveToRealEmployeeUuidForEveryJurisdiction()
-
+	}//end testEmploymentContractAndPayslipEmployeeIdResolveToRealEmployeeUuidForEveryJurisdiction()
 
 }//end class

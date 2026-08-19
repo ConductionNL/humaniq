@@ -30,24 +30,21 @@ namespace OCA\Hrmq\Service;
 /**
  * Immutable bundle of the resolved CalDAV backend + calendar + configured principal/URI.
  */
-final class InterviewCalendarTarget
-{
+final class InterviewCalendarTarget {
 
+	/**
+	 * @param mixed $backend The duck-typed CalDavBackend.
+	 * @param mixed $calendarId The resolved calendar's id.
+	 * @param string $principal The configured CalDAV principal.
+	 * @param string $calendarUri The configured calendar URI.
+	 */
+	public function __construct(
+		public readonly mixed $backend,
+		public readonly mixed $calendarId,
+		public readonly string $principal,
+		public readonly string $calendarUri,
+	) {
 
-    /**
-     * @param mixed  $backend     The duck-typed CalDavBackend.
-     * @param mixed  $calendarId  The resolved calendar's id.
-     * @param string $principal   The configured CalDAV principal.
-     * @param string $calendarUri The configured calendar URI.
-     */
-    public function __construct(
-        public readonly mixed $backend,
-        public readonly mixed $calendarId,
-        public readonly string $principal,
-        public readonly string $calendarUri,
-    ) {
-
-    }//end __construct()
-
+	}//end __construct()
 
 }//end class

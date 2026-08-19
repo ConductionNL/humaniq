@@ -57,95 +57,82 @@ namespace OCA\Hrmq\Standards\Checks;
 /**
  * Written-permanent-contract document-evidence executable check.
  */
-final class NlDocumentChecks implements CheckProvider
-{
+final class NlDocumentChecks implements CheckProvider {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 */
+	public static function checks(): array {
+		return [
+			'EmploymentContract' => [
+				'nl-contract-schriftelijk' => static fn (array $o, array $context): bool => self::isCompliant($o, $context),
+			],
+			'Payslip' => [
+				'nl-loonstrook-verplicht' => static fn (array $o, array $context): bool => self::isLoonstrookDocumented($o, $context),
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     */
-    public static function checks(): array
-    {
-        return [
-            'EmploymentContract' => [
-                'nl-contract-schriftelijk' => static fn(array $o, array $context): bool => self::isCompliant($o, $context),
-            ],
-            'Payslip'            => [
-                'nl-loonstrook-verplicht' => static fn(array $o, array $context): bool => self::isLoonstrookDocumented($o, $context),
-            ],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * The `nl-contract-schriftelijk` predicate (spec.md REQ-HDD-009): a
+	 * permanent, written contract must have an active generated
+	 * arbeidsovereenkomst GeneratedDocument on file.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract object.
+	 * @param array<string, mixed> $context Evaluation context; reads `documents.generatedArbeidsovereenkomstByContract`.
+	 *
+	 * @return bool
+	 */
+	private static function isCompliant(array $o, array $context): bool {
+		$permanent = ((string)($o['type'] ?? '') === 'permanent');
+		$written = (($o['writtenContract'] ?? false) === true);
+		if ($permanent === false || $written === false) {
+			// Non-permanent or unwritten contracts carry no document-evidence
+			// obligation under this rule -- vacuously compliant.
+			return true;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		$contractId = (string)($o['id'] ?? $o['@self']['id'] ?? '');
+		if ($contractId === '') {
+			// No identity to key the document index on (e.g. an unpersisted
+			// sample) -- never fabricate a violation without a resolvable id.
+			return true;
+		}
 
-    }//end seedSpec()
+		return (bool)($context['documents']['generatedArbeidsovereenkomstByContract'][$contractId] ?? false);
+	}//end isCompliant()
 
+	/**
+	 * The `nl-loonstrook-verplicht` predicate (payslip-pdf-docudesk design.md
+	 * D7): every Payslip should have an active `generated` loonstrook
+	 * `GeneratedDocument` referencing it.
+	 *
+	 * @param array<string, mixed> $o The Payslip object.
+	 * @param array<string, mixed> $context Evaluation context; reads `documents.generatedLoonstrookByPayslip`.
+	 *
+	 * @return bool
+	 */
+	private static function isLoonstrookDocumented(array $o, array $context): bool {
+		$payslipId = (string)($o['id'] ?? $o['@self']['id'] ?? '');
+		if ($payslipId === '') {
+			// No identity to key the document index on (e.g. an unpersisted
+			// sample) -- never fabricate a violation without a resolvable id.
+			return true;
+		}
 
-    /**
-     * The `nl-contract-schriftelijk` predicate (spec.md REQ-HDD-009): a
-     * permanent, written contract must have an active generated
-     * arbeidsovereenkomst GeneratedDocument on file.
-     *
-     * @param array<string, mixed> $o       The EmploymentContract object.
-     * @param array<string, mixed> $context Evaluation context; reads `documents.generatedArbeidsovereenkomstByContract`.
-     *
-     * @return bool
-     */
-    private static function isCompliant(array $o, array $context): bool
-    {
-        $permanent = ((string) ($o['type'] ?? '') === 'permanent');
-        $written   = (($o['writtenContract'] ?? false) === true);
-        if ($permanent === false || $written === false) {
-            // Non-permanent or unwritten contracts carry no document-evidence
-            // obligation under this rule -- vacuously compliant.
-            return true;
-        }
-
-        $contractId = (string) ($o['id'] ?? $o['@self']['id'] ?? '');
-        if ($contractId === '') {
-            // No identity to key the document index on (e.g. an unpersisted
-            // sample) -- never fabricate a violation without a resolvable id.
-            return true;
-        }
-
-        return (bool) ($context['documents']['generatedArbeidsovereenkomstByContract'][$contractId] ?? false);
-
-    }//end isCompliant()
-
-
-    /**
-     * The `nl-loonstrook-verplicht` predicate (payslip-pdf-docudesk design.md
-     * D7): every Payslip should have an active `generated` loonstrook
-     * `GeneratedDocument` referencing it.
-     *
-     * @param array<string, mixed> $o       The Payslip object.
-     * @param array<string, mixed> $context Evaluation context; reads `documents.generatedLoonstrookByPayslip`.
-     *
-     * @return bool
-     */
-    private static function isLoonstrookDocumented(array $o, array $context): bool
-    {
-        $payslipId = (string) ($o['id'] ?? $o['@self']['id'] ?? '');
-        if ($payslipId === '') {
-            // No identity to key the document index on (e.g. an unpersisted
-            // sample) -- never fabricate a violation without a resolvable id.
-            return true;
-        }
-
-        return (bool) ($context['documents']['generatedLoonstrookByPayslip'][$payslipId] ?? false);
-
-    }//end isLoonstrookDocumented()
-
+		return (bool)($context['documents']['generatedLoonstrookByPayslip'][$payslipId] ?? false);
+	}//end isLoonstrookDocumented()
 
 }//end class

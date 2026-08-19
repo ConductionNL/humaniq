@@ -40,88 +40,80 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * occ command that creates/recalculates draft payroll runs via the engine.
  */
-class PayrollRunCommand extends Command
-{
+class PayrollRunCommand extends Command {
 
+	/**
+	 * @param PayrollRunService $service The draft-run generation service.
+	 */
+	public function __construct(
+		private readonly PayrollRunService $service,
+	) {
+		parent::__construct();
 
-    /**
-     * @param PayrollRunService $service The draft-run generation service.
-     */
-    public function __construct(
-        private readonly PayrollRunService $service,
-    ) {
-        parent::__construct();
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-006
+	 */
+	protected function configure(): void {
+		$this->setName('hrmq:payroll:run')
+			->setDescription('Create (or with --recalculate regenerate) the draft PayrollRun + engine Payslips for a wage period.')
+			->addOption('period', null, InputOption::VALUE_REQUIRED, 'Wage period (YYYY-MM).')
+			->addOption('administration', null, InputOption::VALUE_REQUIRED, 'Administration id (defaults to the seed convention ADM-001).')
+			->addOption('recalculate', null, InputOption::VALUE_NONE, 'Regenerate an existing draft run in place (draft-only).');
 
+	}//end configure()
 
-    /**
-     * @return void
-     *
-     * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-006
-     */
-    protected function configure(): void
-    {
-        $this->setName('hrmq:payroll:run')
-            ->setDescription('Create (or with --recalculate regenerate) the draft PayrollRun + engine Payslips for a wage period.')
-            ->addOption('period', null, InputOption::VALUE_REQUIRED, 'Wage period (YYYY-MM).')
-            ->addOption('administration', null, InputOption::VALUE_REQUIRED, 'Administration id (defaults to the seed convention ADM-001).')
-            ->addOption('recalculate', null, InputOption::VALUE_NONE, 'Regenerate an existing draft run in place (draft-only).');
+	/**
+	 * @param InputInterface $input Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int 0 when the run was calculated or already exists, 1 on refusal/failure.
+	 *
+	 * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-006
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output): int {
+		$periodOption = $input->getOption('period');
+		$period = (is_string($periodOption) === true) ? trim($periodOption) : '';
+		if ($period === '') {
+			$output->writeln('<error>--period is verplicht (JJJJ-MM).</error>');
+			return 1;
+		}
 
-    }//end configure()
+		$administrationOption = $input->getOption('administration');
+		$administration = (is_string($administrationOption) === true && trim($administrationOption) !== '') ? trim($administrationOption) : null;
 
+		$result = $this->service->runFor($period, $administration, (bool)$input->getOption('recalculate'));
 
-    /**
-     * @param InputInterface  $input  Console input.
-     * @param OutputInterface $output Console output.
-     *
-     * @return int 0 when the run was calculated or already exists, 1 on refusal/failure.
-     *
-     * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-006
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        $periodOption = $input->getOption('period');
-        $period       = (is_string($periodOption) === true) ? trim($periodOption) : '';
-        if ($period === '') {
-            $output->writeln('<error>--period is verplicht (JJJJ-MM).</error>');
-            return 1;
-        }
+		$output->writeln('<info>Hrmq payroll run</info>');
+		$output->writeln(sprintf('  periode        : %s', (string)$result['period']));
+		$output->writeln(sprintf('  administratie  : %s', (string)$result['administrationId']));
+		$output->writeln(sprintf('  run            : %s', (string)($result['runId'] ?? 'geen')));
+		$output->writeln(sprintf('  status         : %s — %s', (string)$result['status'], (string)$result['message']));
 
-        $administrationOption = $input->getOption('administration');
-        $administration       = (is_string($administrationOption) === true && trim($administrationOption) !== '') ? trim($administrationOption) : null;
+		foreach ((array)$result['computed'] as $line) {
+			$output->writeln(sprintf('    berekend     : %s (loonstrook %s)', (string)$line['employee'], (string)$line['payslipId']));
+		}
 
-        $result = $this->service->runFor($period, $administration, (bool) $input->getOption('recalculate'));
+		foreach ((array)$result['skipped'] as $line) {
+			$output->writeln(sprintf('    overgeslagen : %s — %s', (string)$line['employee'], (string)$line['reason']));
+		}
 
-        $output->writeln('<info>Hrmq payroll run</info>');
-        $output->writeln(sprintf('  periode        : %s', (string) $result['period']));
-        $output->writeln(sprintf('  administratie  : %s', (string) $result['administrationId']));
-        $output->writeln(sprintf('  run            : %s', (string) ($result['runId'] ?? 'geen')));
-        $output->writeln(sprintf('  status         : %s — %s', (string) $result['status'], (string) $result['message']));
+		$totals = $result['totals'];
+		if (is_array($totals) === true) {
+			$output->writeln(sprintf(
+				'  totalen        : bruto %.2f / loonheffing %.2f / werkgeverslasten %.2f / netto %.2f',
+				(float)$totals['totalGross'],
+				(float)$totals['totalLoonheffing'],
+				(float)$totals['totalEmployerCharges'],
+				(float)$totals['totalNet']
+			));
+		}
 
-        foreach ((array) $result['computed'] as $line) {
-            $output->writeln(sprintf('    berekend     : %s (loonstrook %s)', (string) $line['employee'], (string) $line['payslipId']));
-        }
-
-        foreach ((array) $result['skipped'] as $line) {
-            $output->writeln(sprintf('    overgeslagen : %s — %s', (string) $line['employee'], (string) $line['reason']));
-        }
-
-        $totals = $result['totals'];
-        if (is_array($totals) === true) {
-            $output->writeln(sprintf(
-                '  totalen        : bruto %.2f / loonheffing %.2f / werkgeverslasten %.2f / netto %.2f',
-                (float) $totals['totalGross'],
-                (float) $totals['totalLoonheffing'],
-                (float) $totals['totalEmployerCharges'],
-                (float) $totals['totalNet']
-            ));
-        }
-
-        $status = (string) $result['status'];
-        return in_array($status, ['calculated', 'exists'], true) === true ? 0 : 1;
-
-    }//end execute()
-
+		$status = (string)$result['status'];
+		return in_array($status, ['calculated', 'exists'], true) === true ? 0 : 1;
+	}//end execute()
 
 }//end class

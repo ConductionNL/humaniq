@@ -63,327 +63,299 @@ use DateTimeImmutable;
  * Organisational-structure integrity executable checks (assignment
  * consistency + unit-cycle freedom).
  */
-final class NlOrgChecks implements CheckProvider
-{
+final class NlOrgChecks implements CheckProvider {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 */
+	public static function checks(): array {
+		return [
+			'OrgAssignment' => [
+				// Administration-integrity control — coherent dates + the
+				// placement must resolve to an active unit while it is itself
+				// active.
+				'nl-org-assignment-consistency' => static fn (array $o, array $c): bool => self::assignmentConsistent($o, $c),
+			],
+			'OrgUnit' => [
+				// Administration-integrity control — the parentUnitId chain
+				// must never re-enter a unit already walked.
+				'nl-org-unit-cycle' => static fn (array $o, array $c): bool => self::unitCycleFree($o, $c),
+			],
+			// mss-team-scope: one shared manager-consistency predicate,
+			// registered under the three approval-carrying schemas. A
+			// `recommended`-severity data-quality lamp, deliberately the
+			// inverse posture of the two `mandatory` predicates above:
+			// fail-open (vacuous pass) on absent org data, fail-closed only
+			// on a provable mismatch.
+			'Timesheet' => [
+				'nl-mss-manager-consistency' => static fn (array $o, array $c): bool => self::managerConsistent($o, $c),
+			],
+			'Expense' => [
+				'nl-mss-manager-consistency' => static fn (array $o, array $c): bool => self::managerConsistent($o, $c),
+			],
+			'LeaveRequest' => [
+				'nl-mss-manager-consistency' => static fn (array $o, array $c): bool => self::managerConsistent($o, $c),
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     */
-    public static function checks(): array
-    {
-        return [
-            'OrgAssignment' => [
-                // Administration-integrity control — coherent dates + the
-                // placement must resolve to an active unit while it is itself
-                // active.
-                'nl-org-assignment-consistency' => static fn(array $o, array $c): bool => self::assignmentConsistent($o, $c),
-            ],
-            'OrgUnit'       => [
-                // Administration-integrity control — the parentUnitId chain
-                // must never re-enter a unit already walked.
-                'nl-org-unit-cycle' => static fn(array $o, array $c): bool => self::unitCycleFree($o, $c),
-            ],
-            // mss-team-scope: one shared manager-consistency predicate,
-            // registered under the three approval-carrying schemas. A
-            // `recommended`-severity data-quality lamp, deliberately the
-            // inverse posture of the two `mandatory` predicates above:
-            // fail-open (vacuous pass) on absent org data, fail-closed only
-            // on a provable mismatch.
-            'Timesheet'     => [
-                'nl-mss-manager-consistency' => static fn(array $o, array $c): bool => self::managerConsistent($o, $c),
-            ],
-            'Expense'       => [
-                'nl-mss-manager-consistency' => static fn(array $o, array $c): bool => self::managerConsistent($o, $c),
-            ],
-            'LeaveRequest'  => [
-                'nl-mss-manager-consistency' => static fn(array $o, array $c): bool => self::managerConsistent($o, $c),
-            ],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * True when the assignment's dates are coherent (no endDate, or endDate
+	 * on/after startDate) AND, while the assignment is itself active (no
+	 * endDate, or endDate not yet in the past), its `orgUnitId` resolves in
+	 * the context's OrgUnit index to a unit with `active: true`. Fail-closed
+	 * on a dangling or missing `orgUnitId` while active. A coherently-dated,
+	 * already-ended placement is never checked against the unit's current
+	 * `active` flag — historical placements may point at retired units.
+	 *
+	 * @param array<string, mixed> $o The OrgAssignment.
+	 * @param array<string, mixed> $c Evaluation context (carries `related`).
+	 *
+	 * @return bool
+	 */
+	private static function assignmentConsistent(array $o, array $c): bool {
+		$startDate = trim((string)($o['startDate'] ?? ''));
+		$endDate = trim((string)($o['endDate'] ?? ''));
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		if ($endDate !== '') {
+			$start = strtotime($startDate);
+			$end = strtotime($endDate);
+			if ($start !== false && $end !== false && $end < $start) {
+				return false;
+			}
+		}
 
-    }//end seedSpec()
+		if (self::isCurrentlyActive($endDate) === false) {
+			// A coherently-dated, already-ended placement — historical
+			// placements may point at a retired unit.
+			return true;
+		}
 
+		$orgUnitId = trim((string)($o['orgUnitId'] ?? ''));
+		if ($orgUnitId === '') {
+			return false;
+		}
 
-    /**
-     * True when the assignment's dates are coherent (no endDate, or endDate
-     * on/after startDate) AND, while the assignment is itself active (no
-     * endDate, or endDate not yet in the past), its `orgUnitId` resolves in
-     * the context's OrgUnit index to a unit with `active: true`. Fail-closed
-     * on a dangling or missing `orgUnitId` while active. A coherently-dated,
-     * already-ended placement is never checked against the unit's current
-     * `active` flag — historical placements may point at retired units.
-     *
-     * @param array<string, mixed> $o The OrgAssignment.
-     * @param array<string, mixed> $c Evaluation context (carries `related`).
-     *
-     * @return bool
-     */
-    private static function assignmentConsistent(array $o, array $c): bool
-    {
-        $startDate = trim((string) ($o['startDate'] ?? ''));
-        $endDate   = trim((string) ($o['endDate'] ?? ''));
+		$unit = (self::relatedOrgUnitsById($c)[$orgUnitId] ?? null);
+		if (is_array($unit) === false) {
+			return false;
+		}
 
-        if ($endDate !== '') {
-            $start = strtotime($startDate);
-            $end   = strtotime($endDate);
-            if ($start !== false && $end !== false && $end < $start) {
-                return false;
-            }
-        }
+		return ($unit['active'] ?? false) === true;
+	}//end assignmentConsistent()
 
-        if (self::isCurrentlyActive($endDate) === false) {
-            // A coherently-dated, already-ended placement — historical
-            // placements may point at a retired unit.
-            return true;
-        }
+	/**
+	 * True when the placement is current — no `endDate`, or an `endDate` on
+	 * or after today (the audit run date).
+	 *
+	 * @param string $endDate The (already-trimmed) `endDate` value, or ''.
+	 *
+	 * @return bool
+	 */
+	private static function isCurrentlyActive(string $endDate): bool {
+		if ($endDate === '') {
+			return true;
+		}
 
-        $orgUnitId = trim((string) ($o['orgUnitId'] ?? ''));
-        if ($orgUnitId === '') {
-            return false;
-        }
+		$end = strtotime($endDate);
+		if ($end === false) {
+			return true;
+		}
 
-        $unit = (self::relatedOrgUnitsById($c)[$orgUnitId] ?? null);
-        if (is_array($unit) === false) {
-            return false;
-        }
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
+		return $end >= $today;
+	}//end isCurrentlyActive()
 
-        return ($unit['active'] ?? false) === true;
+	/**
+	 * True when this OrgUnit's `parentUnitId` ancestor chain never re-enters
+	 * a unit already visited (a visited-set parent walk, no depth-limit
+	 * heuristic) — including a unit parented to itself. A dangling parent
+	 * (not present in the context's OrgUnit index) simply ends the walk
+	 * without a violation: a missing node, not a cycle.
+	 *
+	 * @param array<string, mixed> $o The OrgUnit.
+	 * @param array<string, mixed> $c Evaluation context (carries `related`).
+	 *
+	 * @return bool
+	 */
+	private static function unitCycleFree(array $o, array $c): bool {
+		$ownId = trim((string)($o['id'] ?? $o['@self']['id'] ?? ''));
+		$parentId = trim((string)($o['parentUnitId'] ?? ''));
+		if ($parentId === '') {
+			return true;
+		}
 
-    }//end assignmentConsistent()
+		$byId = self::relatedOrgUnitsById($c);
+		$visited = [];
+		if ($ownId !== '') {
+			$visited[$ownId] = true;
+		}
 
+		$current = $parentId;
+		while ($current !== '') {
+			if (isset($visited[$current]) === true) {
+				return false;
+			}
 
-    /**
-     * True when the placement is current — no `endDate`, or an `endDate` on
-     * or after today (the audit run date).
-     *
-     * @param string $endDate The (already-trimmed) `endDate` value, or ''.
-     *
-     * @return bool
-     */
-    private static function isCurrentlyActive(string $endDate): bool
-    {
-        if ($endDate === '') {
-            return true;
-        }
+			$visited[$current] = true;
 
-        $end = strtotime($endDate);
-        if ($end === false) {
-            return true;
-        }
+			$unit = ($byId[$current] ?? null);
+			if (is_array($unit) === false) {
+				// Dangling parent — a missing-node problem, not a cycle.
+				return true;
+			}
 
-        $today = (new DateTimeImmutable('today'))->getTimestamp();
-        return $end >= $today;
+			$current = trim((string)($unit['parentUnitId'] ?? ''));
+		}
 
-    }//end isCurrentlyActive()
+		return true;
+	}//end unitCycleFree()
 
+	/**
+	 * The `related.OrgUnit.byId` index from the context, or an empty array
+	 * when the pre-pass has not populated it (e.g. the schema is not yet
+	 * imported).
+	 *
+	 * @param array<string, mixed> $c Evaluation context.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function relatedOrgUnitsById(array $c): array {
+		$byId = ($c['related']['OrgUnit']['byId'] ?? []);
+		return is_array($byId) === true ? $byId : [];
+	}//end relatedOrgUnitsById()
 
-    /**
-     * True when this OrgUnit's `parentUnitId` ancestor chain never re-enters
-     * a unit already visited (a visited-set parent walk, no depth-limit
-     * heuristic) — including a unit parented to itself. A dangling parent
-     * (not present in the context's OrgUnit index) simply ends the walk
-     * without a violation: a missing node, not a cycle.
-     *
-     * @param array<string, mixed> $o The OrgUnit.
-     * @param array<string, mixed> $c Evaluation context (carries `related`).
-     *
-     * @return bool
-     */
-    private static function unitCycleFree(array $o, array $c): bool
-    {
-        $ownId    = trim((string) ($o['id'] ?? $o['@self']['id'] ?? ''));
-        $parentId = trim((string) ($o['parentUnitId'] ?? ''));
-        if ($parentId === '') {
-            return true;
-        }
+	/**
+	 * True (satisfied/vacuous) unless the record carries a non-empty
+	 * `managerUserId`, at least one of the employee's active OrgAssignments
+	 * fully resolves a manager `nextcloudUserId` through the OrgUnit and
+	 * Employee indexes, and NONE of the resolved manager ids equals
+	 * `managerUserId` (mss-team-scope). Vacuous — passes — whenever any hop
+	 * of the chain is absent: no stamp, no `employeeId`, no active
+	 * assignment, an unresolvable/unmanaged unit, an unresolvable manager
+	 * Employee, or a manager without a `nextcloudUserId`. Multiple
+	 * concurrent active placements: matching ANY resolved manager passes
+	 * (any-match), mirroring how a person may legitimately be placed in more
+	 * than one unit.
+	 *
+	 * @param array<string, mixed> $o The Timesheet/Expense/LeaveRequest record.
+	 * @param array<string, mixed> $c Evaluation context (carries `related`).
+	 *
+	 * @return bool
+	 */
+	private static function managerConsistent(array $o, array $c): bool {
+		$managerUserId = trim((string)($o['managerUserId'] ?? ''));
+		if ($managerUserId === '') {
+			// Optional field, not stamped — vacuous pass.
+			return true;
+		}
 
-        $byId    = self::relatedOrgUnitsById($c);
-        $visited = [];
-        if ($ownId !== '') {
-            $visited[$ownId] = true;
-        }
+		$employeeId = trim((string)($o['employeeId'] ?? ''));
+		if ($employeeId === '') {
+			return true;
+		}
 
-        $current = $parentId;
-        while ($current !== '') {
-            if (isset($visited[$current]) === true) {
-                return false;
-            }
+		$assignments = (self::relatedOrgAssignmentsByEmployeeId($c)[$employeeId] ?? []);
+		if (is_array($assignments) === false || count($assignments) === 0) {
+			// No known placement at all — vacuous pass.
+			return true;
+		}
 
-            $visited[$current] = true;
+		$unitsById = self::relatedOrgUnitsById($c);
+		$employeesById = self::relatedEmployeesById($c);
 
-            $unit = ($byId[$current] ?? null);
-            if (is_array($unit) === false) {
-                // Dangling parent — a missing-node problem, not a cycle.
-                return true;
-            }
+		$resolvedManagerNextcloudUserIds = [];
+		foreach ($assignments as $assignment) {
+			if (is_array($assignment) === false) {
+				continue;
+			}
 
-            $current = trim((string) ($unit['parentUnitId'] ?? ''));
-        }
+			$endDate = trim((string)($assignment['endDate'] ?? ''));
+			if (self::isCurrentlyActive($endDate) === false) {
+				// Historical placement — irrelevant to who manages the
+				// employee today.
+				continue;
+			}
 
-        return true;
+			$orgUnitId = trim((string)($assignment['orgUnitId'] ?? ''));
+			if ($orgUnitId === '') {
+				continue;
+			}
 
-    }//end unitCycleFree()
+			$unit = ($unitsById[$orgUnitId] ?? null);
+			if (is_array($unit) === false) {
+				// Unresolvable unit — this hop dead-ends.
+				continue;
+			}
 
+			$unitManagerId = trim((string)($unit['managerId'] ?? ''));
+			if ($unitManagerId === '') {
+				// Unmanaged unit — this hop dead-ends.
+				continue;
+			}
 
-    /**
-     * The `related.OrgUnit.byId` index from the context, or an empty array
-     * when the pre-pass has not populated it (e.g. the schema is not yet
-     * imported).
-     *
-     * @param array<string, mixed> $c Evaluation context.
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    private static function relatedOrgUnitsById(array $c): array
-    {
-        $byId = ($c['related']['OrgUnit']['byId'] ?? []);
-        return is_array($byId) === true ? $byId : [];
+			$manager = ($employeesById[$unitManagerId] ?? null);
+			if (is_array($manager) === false) {
+				// Unresolvable manager Employee — this hop dead-ends.
+				continue;
+			}
 
-    }//end relatedOrgUnitsById()
+			$managerNextcloudUserId = trim((string)($manager['nextcloudUserId'] ?? ''));
+			if ($managerNextcloudUserId === '') {
+				// Manager has no Nextcloud account — this hop dead-ends.
+				continue;
+			}
 
+			$resolvedManagerNextcloudUserIds[] = $managerNextcloudUserId;
+		}//end foreach
 
-    /**
-     * True (satisfied/vacuous) unless the record carries a non-empty
-     * `managerUserId`, at least one of the employee's active OrgAssignments
-     * fully resolves a manager `nextcloudUserId` through the OrgUnit and
-     * Employee indexes, and NONE of the resolved manager ids equals
-     * `managerUserId` (mss-team-scope). Vacuous — passes — whenever any hop
-     * of the chain is absent: no stamp, no `employeeId`, no active
-     * assignment, an unresolvable/unmanaged unit, an unresolvable manager
-     * Employee, or a manager without a `nextcloudUserId`. Multiple
-     * concurrent active placements: matching ANY resolved manager passes
-     * (any-match), mirroring how a person may legitimately be placed in more
-     * than one unit.
-     *
-     * @param array<string, mixed> $o The Timesheet/Expense/LeaveRequest record.
-     * @param array<string, mixed> $c Evaluation context (carries `related`).
-     *
-     * @return bool
-     */
-    private static function managerConsistent(array $o, array $c): bool
-    {
-        $managerUserId = trim((string) ($o['managerUserId'] ?? ''));
-        if ($managerUserId === '') {
-            // Optional field, not stamped — vacuous pass.
-            return true;
-        }
+		if (count($resolvedManagerNextcloudUserIds) === 0) {
+			// No active placement's chain fully resolved — vacuous pass.
+			return true;
+		}
 
-        $employeeId = trim((string) ($o['employeeId'] ?? ''));
-        if ($employeeId === '') {
-            return true;
-        }
+		// Fail-closed ONLY on a provable mismatch: at least one chain fully
+		// resolved, and none of them equals the stamped managerUserId.
+		return in_array($managerUserId, $resolvedManagerNextcloudUserIds, true);
+	}//end managerConsistent()
 
-        $assignments = (self::relatedOrgAssignmentsByEmployeeId($c)[$employeeId] ?? []);
-        if (is_array($assignments) === false || count($assignments) === 0) {
-            // No known placement at all — vacuous pass.
-            return true;
-        }
+	/**
+	 * The `related.OrgAssignment.byEmployeeId` index from the context (lists
+	 * of `{orgUnitId, endDate}`), or an empty array when the pre-pass has not
+	 * populated it.
+	 *
+	 * @param array<string, mixed> $c Evaluation context.
+	 *
+	 * @return array<string, array<int, array<string, mixed>>>
+	 */
+	private static function relatedOrgAssignmentsByEmployeeId(array $c): array {
+		$byEmployeeId = ($c['related']['OrgAssignment']['byEmployeeId'] ?? []);
+		return is_array($byEmployeeId) === true ? $byEmployeeId : [];
+	}//end relatedOrgAssignmentsByEmployeeId()
 
-        $unitsById     = self::relatedOrgUnitsById($c);
-        $employeesById = self::relatedEmployeesById($c);
-
-        $resolvedManagerNextcloudUserIds = [];
-        foreach ($assignments as $assignment) {
-            if (is_array($assignment) === false) {
-                continue;
-            }
-
-            $endDate = trim((string) ($assignment['endDate'] ?? ''));
-            if (self::isCurrentlyActive($endDate) === false) {
-                // Historical placement — irrelevant to who manages the
-                // employee today.
-                continue;
-            }
-
-            $orgUnitId = trim((string) ($assignment['orgUnitId'] ?? ''));
-            if ($orgUnitId === '') {
-                continue;
-            }
-
-            $unit = ($unitsById[$orgUnitId] ?? null);
-            if (is_array($unit) === false) {
-                // Unresolvable unit — this hop dead-ends.
-                continue;
-            }
-
-            $unitManagerId = trim((string) ($unit['managerId'] ?? ''));
-            if ($unitManagerId === '') {
-                // Unmanaged unit — this hop dead-ends.
-                continue;
-            }
-
-            $manager = ($employeesById[$unitManagerId] ?? null);
-            if (is_array($manager) === false) {
-                // Unresolvable manager Employee — this hop dead-ends.
-                continue;
-            }
-
-            $managerNextcloudUserId = trim((string) ($manager['nextcloudUserId'] ?? ''));
-            if ($managerNextcloudUserId === '') {
-                // Manager has no Nextcloud account — this hop dead-ends.
-                continue;
-            }
-
-            $resolvedManagerNextcloudUserIds[] = $managerNextcloudUserId;
-        }//end foreach
-
-        if (count($resolvedManagerNextcloudUserIds) === 0) {
-            // No active placement's chain fully resolved — vacuous pass.
-            return true;
-        }
-
-        // Fail-closed ONLY on a provable mismatch: at least one chain fully
-        // resolved, and none of them equals the stamped managerUserId.
-        return in_array($managerUserId, $resolvedManagerNextcloudUserIds, true);
-
-    }//end managerConsistent()
-
-
-    /**
-     * The `related.OrgAssignment.byEmployeeId` index from the context (lists
-     * of `{orgUnitId, endDate}`), or an empty array when the pre-pass has not
-     * populated it.
-     *
-     * @param array<string, mixed> $c Evaluation context.
-     *
-     * @return array<string, array<int, array<string, mixed>>>
-     */
-    private static function relatedOrgAssignmentsByEmployeeId(array $c): array
-    {
-        $byEmployeeId = ($c['related']['OrgAssignment']['byEmployeeId'] ?? []);
-        return is_array($byEmployeeId) === true ? $byEmployeeId : [];
-
-    }//end relatedOrgAssignmentsByEmployeeId()
-
-
-    /**
-     * The `related.Employee.byId` index from the context, or an empty array
-     * when the pre-pass has not populated it.
-     *
-     * @param array<string, mixed> $c Evaluation context.
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    private static function relatedEmployeesById(array $c): array
-    {
-        $byId = ($c['related']['Employee']['byId'] ?? []);
-        return is_array($byId) === true ? $byId : [];
-
-    }//end relatedEmployeesById()
-
+	/**
+	 * The `related.Employee.byId` index from the context, or an empty array
+	 * when the pre-pass has not populated it.
+	 *
+	 * @param array<string, mixed> $c Evaluation context.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function relatedEmployeesById(array $c): array {
+		$byId = ($c['related']['Employee']['byId'] ?? []);
+		return is_array($byId) === true ? $byId : [];
+	}//end relatedEmployeesById()
 
 }//end class

@@ -28,21 +28,29 @@ behind an access guard, with a machine-checkable consistency rule keeping the de
 
 ## Requirements
 
-- **REQ-MULTI-001** — Every scoped HR/payroll schema carries an optional, nullable, plain-string
+### Requirement: Scoped schemas carry a plain-string administrationId (REQ-MULTI-001)
+
+Every scoped HR/payroll schema carries an optional, nullable, plain-string
   `administrationId` (never a `$ref`), because the manifest filter grammar cannot reach OpenRegister
   owner/`@self` metadata or two-hop from a record to its employee's administration. Rolled out to
   Employee, EmploymentContract, Payslip, Timesheet, Expense, LeaveRequest, LeaveBalance,
   SickLeaveCase, Onboarding, Vacancy, Application, OrgUnit, OrgAssignment, AttendanceRecord, Asset,
   AssetAssignment, ReviewCycle, PerformanceReview, PensionFiling, LoonaangifteFiling (the payroll
   aggregates already carried it). **Delivered.**
-- **REQ-MULTI-002** — An `Administration` catalog (name/KvK/loonheffingennummer/active) and an
+### Requirement: An Administration catalog and access membership model the tenant axis (REQ-MULTI-002)
+
+An `Administration` catalog (name/KvK/loonheffingennummer/active) and an
   `AdministrationAccess` membership (userId → administratie, role accountant|hr|employee) model the
   tenant axis. **Delivered.**
-- **REQ-MULTI-003** — The active administratie is a per-user selection persisted behind an
+### Requirement: The active administratie is a per-user, access-guarded selection (REQ-MULTI-003)
+
+The active administratie is a per-user selection persisted behind an
   access-guarded setter: `POST /api/administration/active` resolves the posted id to a caller
   `AdministrationAccess` row *before* storing (unknown/inaccessible → 404); routes precede the SPA
   catch-all. **Delivered.**
-- **REQ-MULTI-004** — Every list and detail page is implicitly scoped to the active administratie via
+### Requirement: Every page is implicitly scoped to the active administratie (REQ-MULTI-004)
+
+Every list and detail page is implicitly scoped to the active administratie via
   a base `administrationId` filter. **Delivered** (corrected 2026-07-16, #64 — see note below): every
   administration-scoped index/detail page's `filter` carries `administrationId:
   "@workspace.activeAdministrationId?"`; `App.vue` provides a reactive `cnWorkspaceContext` at the SPA
@@ -51,7 +59,9 @@ behind an access guard, with a machine-checkable consistency rule keeping the de
   successful switch so every page re-scopes without a reload. The `?`-optional grammar means an unset
   selection (or a single-administratie install) drops the clause and shows all accessible rows — no
   regression, exactly as originally intended.
-- **REQ-MULTI-005** — ~~The `@administration` filter token is a first-class member of the CLOSED
+### Requirement: A dedicated @administration filter token — SUPERSEDED (REQ-MULTI-005)
+
+~~The `@administration` filter token is a first-class member of the CLOSED
   nextcloud-vue token vocabulary.~~ **Superseded — this requirement was a wrong assumption, not a real
   gap (#64).** The original author believed automatic per-page scoping needed a NEW filter token added
   upstream to nextcloud-vue. It did not: nextcloud-vue already ships a general **workspace** context
@@ -63,17 +73,23 @@ behind an access guard, with a machine-checkable consistency rule keeping the de
   "provided by CnDashboardPage" (page-scoped), but Vue's inject walks the WHOLE ancestor chain — hrmq
   provides it once at its own SPA root (`App.vue`) instead, which makes it available fleet-wide across
   every page type with zero nextcloud-vue change. No upstream issue was ever needed; none is filed.
-- **REQ-MULTI-006** — The switch lives under `Configuratie › Administraties` (a switcher SFC backed by
+### Requirement: The switcher lives under Configuratie and adds no top-level menu (REQ-MULTI-006)
+
+The switch lives under `Configuratie › Administraties` (a switcher SFC backed by
   `GET/POST /api/administration/*` + a catalog list), adding no top-level menu (ADR-001 Rule 3).
   **Delivered** (the Dashboard-widget `runtime.user` visibleIf wiring remains a separate, small,
   named follow-up — unrelated to the #64 correction above; the Dashboard page itself carries no
   `administrationId`-scoped widgets today).
-- **REQ-MULTI-007** — `nl-administratie-scope-consistency` (recommended severity, auto-discovered by
+### Requirement: A consistency rule flags scope mismatches, and scoping is NOT a security boundary (REQ-MULTI-007)
+
+`nl-administratie-scope-consistency` (recommended severity, auto-discovered by
   the RuleEngine, vacuous when `administrationId` is absent) flags a child whose administratie
   disagrees with its parent; and scoping is documented as **NOT a security boundary** (hard
   per-administratie OpenRegister-organisation isolation is a named security fast-follow).
   **Delivered.**
-- **REQ-MULTI-008** — Seeds demonstrate the switch and the isolation: two `Administration` rows
+### Requirement: Seeds demonstrate the switch and the isolation (REQ-MULTI-008)
+
+Seeds demonstrate the switch and the isolation: two `Administration` rows
   (ADM-001/ADM-002), `AdministrationAccess` granting the admin accountant access to both, existing
   core-entity seeds backfilled to ADM-001 plus a small isolated ADM-002 set. **Delivered.**
 

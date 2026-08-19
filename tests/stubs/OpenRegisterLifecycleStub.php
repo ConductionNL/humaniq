@@ -38,74 +38,67 @@ namespace OCA\OpenRegister\Lifecycle;
 /**
  * Test-stub mirror of OpenRegister's LifecycleGuardInterface.
  */
-interface LifecycleGuardInterface
-{
-    /**
-     * @param array<string, mixed> $object The loaded object payload at its current state.
-     * @param string               $action The transition action being applied.
-     * @param string               $userId The uid of the caller.
-     *
-     * @return GuardResult
-     */
-    public function check(array $object, string $action, string $userId): GuardResult;
+interface LifecycleGuardInterface {
+	/**
+	 * @param array<string, mixed> $object The loaded object payload at its current state.
+	 * @param string $action The transition action being applied.
+	 * @param string $userId The uid of the caller.
+	 *
+	 * @return GuardResult
+	 */
+	public function check(array $object, string $action, string $userId): GuardResult;
 }//end interface
 
 /**
  * Test-stub mirror of OpenRegister's GuardResult value object.
  */
-final class GuardResult
-{
-    /**
-     * @var bool
-     */
-    private bool $allowed;
+final class GuardResult {
+	/**
+	 * @var bool
+	 */
+	private bool $allowed;
 
-    /**
-     * @var string|null
-     */
-    private ?string $message;
+	/**
+	 * @var string|null
+	 */
+	private ?string $message;
 
-    /**
-     * @param bool        $allowed Whether the transition should be allowed.
-     * @param string|null $message Optional deny message.
-     */
-    private function __construct(bool $allowed, ?string $message)
-    {
-        $this->allowed = $allowed;
-        $this->message = $message;
-    }//end __construct()
+	/**
+	 * @param bool $allowed Whether the transition should be allowed.
+	 * @param string|null $message Optional deny message.
+	 */
+	private function __construct(bool $allowed, ?string $message) {
+		$this->allowed = $allowed;
+		$this->message = $message;
+	}//end __construct()
 
-    /**
-     * @return self
-     */
-    public static function allow(): self
-    {
-        return new self(true, null);
-    }//end allow()
+	/**
+	 * @return self
+	 */
+	public static function allow(): self {
+		return new self(true, null);
+	}//end allow()
 
-    /**
-     * @param string $message Human-readable reason.
-     *
-     * @return self
-     */
-    public static function deny(string $message): self
-    {
-        return new self(false, $message);
-    }//end deny()
+	/**
+	 * @param string $message Human-readable reason.
+	 *
+	 * @return self
+	 */
+	public static function deny(string $message): self {
+		return new self(false, $message);
+	}//end deny()
 
-    /**
-     * @return bool
-     */
-    public function isAllowed(): bool
-    {
-        return $this->allowed;
-    }//end isAllowed()
+	/**
+	 * @return bool
+	 */
+	public function isAllowed(): bool {
+		return $this->allowed;
+	}//end isAllowed()
 
-    /**
-     * @return string|null
-     */
-    public function getMessage(): ?string
-    {
-        return $this->message;
-    }//end getMessage()
+	/**
+	 * @return string|null
+	 */
+	public function getMessage(): ?string {
+		return $this->message;
+	}//end getMessage()
 }//end class

@@ -26,13 +26,17 @@ jobs:
       # appinfo/info.xml declares <php min-version="8.3"/>.
       php-version: "8.3"
       php-test-versions: '["8.3", "8.4"]'
-      # appinfo/info.xml declares <nextcloud min-version="32" max-version="34"/>
-      # and `nextcloud/ocp` is now `^34.0` in require-dev — the stubs the
-      # analysers resolve against. Both sides now name the same server, so the
-      # test matrix names it too. Previously this ran stable31..33 against an
-      # ocp pinned at ^31: every leg tested a server the type checker had never
-      # been shown.
-      nextcloud-test-refs: '["stable34"]'
+      # nextcloud-test-refs is DELIBERATELY ABSENT. appinfo/info.xml declares
+      # <nextcloud min-version="32" max-version="34"/>, and with no explicit
+      # list the shared workflow derives the matrix from that same manifest —
+      # so the versions advertised to the App Store and the versions actually
+      # exercised cannot drift apart again.
+      #
+      # Pinning it to '["stable34"]' left NC 32 and 33 advertised and tested by
+      # nothing: not known-broken, UNMEASURED, which reads identically to a pass
+      # in a green run. Deleting the line is the fix with no next time in it;
+      # re-adding it would need a reason, and narrowing what info.xml claims
+      # would be the honest alternative.
 
       # ── PHP toolchain ────────────────────────────────────────────────────
       # Every one of these has its config committed at the repo root, so none

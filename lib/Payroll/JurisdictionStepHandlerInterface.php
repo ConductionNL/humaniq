@@ -51,27 +51,23 @@ use OCA\Hrmq\Payroll\Dsl\StepContext;
 /**
  * One allow-listed national-exotica handler.
  */
-interface JurisdictionStepHandlerInterface
-{
+interface JurisdictionStepHandlerInterface {
 
+	/**
+	 * The handler's allow-list name, as a pack's `handler` field writes it.
+	 *
+	 * @return string
+	 */
+	public function name(): string;
 
-    /**
-     * The handler's allow-list name, as a pack's `handler` field writes it.
-     *
-     * @return string
-     */
-    public function name(): string;
-
-
-    /**
-     * Compute this step's amount.
-     *
-     * @param array<string, mixed> $params The pack-declared params (data only — never code).
-     * @param StepContext          $ctx    The run context.
-     *
-     * @return int|float The amount, in integer cents.
-     */
-    public function handle(array $params, StepContext $ctx): int|float;
-
+	/**
+	 * Compute this step's amount.
+	 *
+	 * @param array<string, mixed> $params The pack-declared params (data only — never code).
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return int|float The amount, in integer cents.
+	 */
+	public function handle(array $params, StepContext $ctx): int|float;
 
 }//end interface

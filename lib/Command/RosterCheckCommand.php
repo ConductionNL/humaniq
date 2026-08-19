@@ -40,129 +40,118 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * occ command that audits a roster (by id or period) against the ATW corpus.
  */
-class RosterCheckCommand extends Command
-{
+class RosterCheckCommand extends Command {
 
+	/**
+	 * @param RosterCheckService $rosterCheckService The on-demand roster ATW auditor.
+	 */
+	public function __construct(
+		private readonly RosterCheckService $rosterCheckService,
+	) {
+		parent::__construct();
 
-    /**
-     * @param RosterCheckService $rosterCheckService The on-demand roster ATW auditor.
-     */
-    public function __construct(
-        private readonly RosterCheckService $rosterCheckService,
-    ) {
-        parent::__construct();
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * @return void
+	 *
+	 * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
+	 */
+	protected function configure(): void {
+		$this->setName('hrmq:roster:check')
+			->setDescription('Audit one Roster (by id or period) and its RosterAssignments against the Arbeidstijdenwet corpus checks, regardless of publish status.')
+			->addOption('roster', null, InputOption::VALUE_REQUIRED, 'Roster id.')
+			->addOption('period', null, InputOption::VALUE_REQUIRED, 'Planning period (YYYY-Www or YYYY-MM).')
+			->addOption('administration', null, InputOption::VALUE_REQUIRED, 'Only rosters of this administration (with --period).')
+			->addOption('jurisdiction', null, InputOption::VALUE_REQUIRED, 'Jurisdiction context (ISO alpha-2)', 'NL');
 
+	}//end configure()
 
-    /**
-     * @return void
-     *
-     * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
-     */
-    protected function configure(): void
-    {
-        $this->setName('hrmq:roster:check')
-            ->setDescription('Audit one Roster (by id or period) and its RosterAssignments against the Arbeidstijdenwet corpus checks, regardless of publish status.')
-            ->addOption('roster', null, InputOption::VALUE_REQUIRED, 'Roster id.')
-            ->addOption('period', null, InputOption::VALUE_REQUIRED, 'Planning period (YYYY-Www or YYYY-MM).')
-            ->addOption('administration', null, InputOption::VALUE_REQUIRED, 'Only rosters of this administration (with --period).')
-            ->addOption('jurisdiction', null, InputOption::VALUE_REQUIRED, 'Jurisdiction context (ISO alpha-2)', 'NL');
+	/**
+	 * @param InputInterface $input Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int 0 when no mandatory violation exists, 1 otherwise (or on invalid input / no roster found).
+	 *
+	 * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output): int {
+		$rosterOption = $input->getOption('roster');
+		$rosterId = (is_string($rosterOption) === true) ? trim($rosterOption) : '';
 
-    }//end configure()
+		$periodOption = $input->getOption('period');
+		$period = (is_string($periodOption) === true) ? trim($periodOption) : '';
 
+		if ($rosterId === '' && $period === '') {
+			$output->writeln('<error>--roster of --period is verplicht.</error>');
+			return 1;
+		}
 
-    /**
-     * @param InputInterface  $input  Console input.
-     * @param OutputInterface $output Console output.
-     *
-     * @return int 0 when no mandatory violation exists, 1 otherwise (or on invalid input / no roster found).
-     *
-     * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        $rosterOption = $input->getOption('roster');
-        $rosterId     = (is_string($rosterOption) === true) ? trim($rosterOption) : '';
+		$jurisdiction = ['jurisdiction' => (string)$input->getOption('jurisdiction')];
 
-        $periodOption = $input->getOption('period');
-        $period       = (is_string($periodOption) === true) ? trim($periodOption) : '';
+		$report = $this->runCheck($input, $rosterId, $period, $jurisdiction);
 
-        if ($rosterId === '' && $period === '') {
-            $output->writeln('<error>--roster of --period is verplicht.</error>');
-            return 1;
-        }
+		$output->writeln('<info>Hrmq roster check</info>');
+		$output->writeln(sprintf('  rosters gecontroleerd    : %d', $report['rostersChecked']));
+		$output->writeln(sprintf('  assignments gecontroleerd: %d', $report['assignmentsChecked']));
 
-        $jurisdiction = ['jurisdiction' => (string) $input->getOption('jurisdiction')];
+		if ($report['rostersChecked'] === 0) {
+			$output->writeln('  <comment>geen roster gevonden.</comment>');
+			return 1;
+		}
 
-        $report = $this->runCheck($input, $rosterId, $period, $jurisdiction);
+		if ($report['violations'] === []) {
+			$output->writeln('  <info>geen overtredingen — de roster voldoet aan het ATW-corpus.</info>');
+			return 0;
+		}
 
-        $output->writeln('<info>Hrmq roster check</info>');
-        $output->writeln(sprintf('  rosters gecontroleerd    : %d', $report['rostersChecked']));
-        $output->writeln(sprintf('  assignments gecontroleerd: %d', $report['assignmentsChecked']));
+		foreach ($report['violations'] as $violation) {
+			$line = sprintf(
+				'    %s %s [%s] %s: %s',
+				(string)$violation['objectType'],
+				(string)$violation['objectId'],
+				(string)$violation['severity'],
+				(string)$violation['ruleId'],
+				(string)$violation['statement']
+			);
 
-        if ($report['rostersChecked'] === 0) {
-            $output->writeln('  <comment>geen roster gevonden.</comment>');
-            return 1;
-        }
+			if ((string)$violation['severity'] === 'mandatory') {
+				$output->writeln('<error>' . $line . '</error>');
+				continue;
+			}
 
-        if ($report['violations'] === []) {
-            $output->writeln('  <info>geen overtredingen — de roster voldoet aan het ATW-corpus.</info>');
-            return 0;
-        }
+			$output->writeln('<comment>' . $line . '</comment>');
+		}
 
-        foreach ($report['violations'] as $violation) {
-            $line = sprintf(
-                '    %s %s [%s] %s: %s',
-                (string) $violation['objectType'],
-                (string) $violation['objectId'],
-                (string) $violation['severity'],
-                (string) $violation['ruleId'],
-                (string) $violation['statement']
-            );
+		$output->writeln(sprintf('  %d overtreding(en), waarvan %d verplicht.', count($report['violations']), $report['mandatoryViolations']));
 
-            if ((string) $violation['severity'] === 'mandatory') {
-                $output->writeln('<error>'.$line.'</error>');
-                continue;
-            }
+		return $report['mandatoryViolations'] > 0 ? 1 : 0;
+	}//end execute()
 
-            $output->writeln('<comment>'.$line.'</comment>');
-        }
+	/**
+	 * Run the roster check for whichever selector the caller supplied.
+	 *
+	 * A non-empty `--roster` wins; otherwise the check runs over `--period`,
+	 * optionally narrowed to a single administration.
+	 *
+	 * @param InputInterface $input Console input.
+	 * @param string $rosterId Trimmed `--roster` value ('' when absent).
+	 * @param string $period Trimmed `--period` value ('' when absent).
+	 * @param array<string, string> $jurisdiction Jurisdiction context passed to the service.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
+	 */
+	private function runCheck(InputInterface $input, string $rosterId, string $period, array $jurisdiction): array {
+		if ($rosterId !== '') {
+			return $this->rosterCheckService->checkRoster($rosterId, $jurisdiction);
+		}
 
-        $output->writeln(sprintf('  %d overtreding(en), waarvan %d verplicht.', count($report['violations']), $report['mandatoryViolations']));
+		$administrationOption = $input->getOption('administration');
+		$administration = (is_string($administrationOption) === true && trim($administrationOption) !== '') ? trim($administrationOption) : null;
 
-        return $report['mandatoryViolations'] > 0 ? 1 : 0;
-
-    }//end execute()
-
-
-    /**
-     * Run the roster check for whichever selector the caller supplied.
-     *
-     * A non-empty `--roster` wins; otherwise the check runs over `--period`,
-     * optionally narrowed to a single administration.
-     *
-     * @param InputInterface        $input        Console input.
-     * @param string                $rosterId     Trimmed `--roster` value ('' when absent).
-     * @param string                $period       Trimmed `--period` value ('' when absent).
-     * @param array<string, string> $jurisdiction Jurisdiction context passed to the service.
-     *
-     * @return array<string, mixed>
-     *
-     * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
-     */
-    private function runCheck(InputInterface $input, string $rosterId, string $period, array $jurisdiction): array
-    {
-        if ($rosterId !== '') {
-            return $this->rosterCheckService->checkRoster($rosterId, $jurisdiction);
-        }
-
-        $administrationOption = $input->getOption('administration');
-        $administration       = (is_string($administrationOption) === true && trim($administrationOption) !== '') ? trim($administrationOption) : null;
-
-        return $this->rosterCheckService->checkPeriod($period, $administration, $jurisdiction);
-
-    }//end runCheck()
-
+		return $this->rosterCheckService->checkPeriod($period, $administration, $jurisdiction);
+	}//end runCheck()
 
 }//end class

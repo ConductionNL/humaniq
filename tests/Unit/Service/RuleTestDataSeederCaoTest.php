@@ -29,9 +29,10 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Tests\Unit\Service;
 
+use OCA\Hrmq\Service\RuleTestDataEmployeeIndex;
+use OCA\Hrmq\Service\RuleTestDataSeeder;
 use OCA\Hrmq\Standards\CaoRegistry;
 use OCA\Hrmq\Standards\RuleEngine;
-use OCA\Hrmq\Service\RuleTestDataSeeder;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUserManager;
@@ -44,236 +45,209 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/cao-library/specs/cao-library/spec.md#REQ-CAO-006
  */
-class RuleTestDataSeederCaoTest extends TestCase
-{
+class RuleTestDataSeederCaoTest extends TestCase {
 
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		RuleEngine::reset();
+		CaoRegistry::reset();
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        RuleEngine::reset();
-        CaoRegistry::reset();
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * @return void
+	 */
+	protected function tearDown(): void {
+		RuleEngine::reset();
+		CaoRegistry::reset();
 
+	}//end tearDown()
 
-    /**
-     * @return void
-     */
-    protected function tearDown(): void
-    {
-        RuleEngine::reset();
-        CaoRegistry::reset();
+	/**
+	 * Build a fake ObjectService that keeps an in-memory store keyed by schema
+	 * and supports the register/schema/findAll/saveObject surface the seeder
+	 * uses. Upsert-by-uuid replaces in place; create assigns a fresh id.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $seedStore Initial rows keyed by schema.
+	 *
+	 * @return object
+	 */
+	private function fakeObjectService(array $seedStore): object {
+		return new class($seedStore) {
+			/**
+			 * @var array<string, array<int, array<string, mixed>>>
+			 */
+			public array $store;
 
-    }//end tearDown()
+			/**
+			 * @var string
+			 */
+			private string $schema = '';
 
+			/**
+			 * @var int
+			 */
+			private int $counter = 0;
 
-    /**
-     * Build a fake ObjectService that keeps an in-memory store keyed by schema
-     * and supports the register/schema/findAll/saveObject surface the seeder
-     * uses. Upsert-by-uuid replaces in place; create assigns a fresh id.
-     *
-     * @param array<string, array<int, array<string, mixed>>> $seedStore Initial rows keyed by schema.
-     *
-     * @return object
-     */
-    private function fakeObjectService(array $seedStore): object
-    {
-        return new class ($seedStore) {
+			/**
+			 * @param array<string, array<int, array<string, mixed>>> $seedStore Initial rows.
+			 */
+			public function __construct(array $seedStore) {
+				$this->store = $seedStore;
 
-            /**
-             * @var array<string, array<int, array<string, mixed>>>
-             */
-            public array $store;
+			}//end __construct()
 
-            /**
-             * @var string
-             */
-            private string $schema = '';
+			/**
+			 * @param string $register Register slug (unused).
+			 *
+			 * @return self
+			 */
+			public function setRegister(string $register): self {
+				return $this;
+			}//end setRegister()
 
-            /**
-             * @var int
-             */
-            private int $counter = 0;
+			/**
+			 * @param string $schema Schema name.
+			 *
+			 * @return self
+			 */
+			public function setSchema(string $schema): self {
+				$this->schema = $schema;
+				return $this;
+			}//end setSchema()
 
-            /**
-             * @param array<string, array<int, array<string, mixed>>> $seedStore Initial rows.
-             */
-            public function __construct(array $seedStore)
-            {
-                $this->store = $seedStore;
+			/**
+			 * @param array<string, mixed> $filters Query filters (only limit honoured).
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(array $filters = []): array {
+				return ($this->store[$this->schema] ?? []);
+			}//end findAll()
 
-            }//end __construct()
+			/**
+			 * @param mixed $object The object to save.
+			 * @param string $register Register slug (unused).
+			 * @param string $schema Schema name.
+			 * @param string|null $uuid Existing id to update, or null to create.
+			 * @param bool $_rbac RBAC flag (unused).
+			 * @param bool $_multitenancy Multitenancy flag (unused).
+			 * @param mixed $currentUser Acting user (unused).
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function saveObject(mixed $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true, mixed $currentUser = null): array {
+				$object = (array)$object;
 
+				if ($uuid !== null && $uuid !== '') {
+					foreach (($this->store[$schema] ?? []) as $i => $row) {
+						if ((string)($row['id'] ?? '') === $uuid) {
+							$this->store[$schema][$i] = array_merge(['id' => $uuid], $object);
+							return $this->store[$schema][$i];
+						}
+					}
+				}
 
-            /**
-             * @param string $register Register slug (unused).
-             *
-             * @return self
-             */
-            public function setRegister(string $register): self
-            {
-                return $this;
+				$this->counter++;
+				$id = $schema . '-' . $this->counter;
+				$saved = array_merge(['id' => $id], $object);
+				$this->store[$schema][] = $saved;
+				return $saved;
+			}//end saveObject()
 
-            }//end setRegister()
+		};
 
+	}//end fakeObjectService()
 
-            /**
-             * @param string $schema Schema name.
-             *
-             * @return self
-             */
-            public function setSchema(string $schema): self
-            {
-                $this->schema = $schema;
-                return $this;
+	/**
+	 * Build a seeder wired to the fake ObjectService.
+	 *
+	 * @param object $objectService The fake ObjectService.
+	 *
+	 * @return RuleTestDataSeeder
+	 */
+	private function seederWith(object $objectService): RuleTestDataSeeder {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
 
-            }//end setSchema()
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('hrmq');
 
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('get')->willReturn(null);
 
-            /**
-             * @param array<string, mixed> $filters Query filters (only limit honoured).
-             *
-             * @return array<int, array<string, mixed>>
-             */
-            public function findAll(array $filters=[]): array
-            {
-                return ($this->store[$this->schema] ?? []);
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->method('get')->willReturn(null);
 
-            }//end findAll()
+		return new RuleTestDataSeeder(
+			$container,
+			$appConfig,
+			$userManager,
+			$groupManager,
+			$this->createMock(LoggerInterface::class),
+			new RuleTestDataEmployeeIndex($this->createMock(LoggerInterface::class))
+		);
 
+	}//end seederWith()
 
-            /**
-             * @param mixed       $object        The object to save.
-             * @param string      $register      Register slug (unused).
-             * @param string      $schema        Schema name.
-             * @param string|null $uuid          Existing id to update, or null to create.
-             * @param bool        $_rbac         RBAC flag (unused).
-             * @param bool        $_multitenancy Multitenancy flag (unused).
-             * @param mixed       $currentUser   Acting user (unused).
-             *
-             * @return array<string, mixed>
-             */
-            public function saveObject(mixed $object=[], string $register='', string $schema='', ?string $uuid=null, bool $_rbac=true, bool $_multitenancy=true, mixed $currentUser=null): array
-            {
-                $object = (array) $object;
+	/**
+	 * A stale pre-existing cao-generiek row is converged (not duplicated) and
+	 * every other corpus CAO is created exactly once; re-running the seed
+	 * leaves the Cao row count unchanged.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cao-library/specs/cao-library/spec.md#REQ-CAO-006
+	 */
+	public function testSeedUpsertsCaoObjectsWithoutDuplicating(): void {
+		$expected = count(CaoRegistry::availableCaos());
+		$this->assertGreaterThanOrEqual(3, $expected);
 
-                if ($uuid !== null && $uuid !== '') {
-                    foreach (($this->store[$schema] ?? []) as $i => $row) {
-                        if ((string) ($row['id'] ?? '') === $uuid) {
-                            $this->store[$schema][$i] = array_merge(['id' => $uuid], $object);
-                            return $this->store[$schema][$i];
-                        }
-                    }
-                }
+		// A stale, hand-diverged cao-generiek row already exists.
+		$fake = $this->fakeObjectService(
+			[
+				'Cao' => [
+					['id' => 'cao-obj-existing', 'caoId' => 'cao-generiek', 'sector' => 'STALE SECTOR', 'name' => 'stale'],
+				],
+			]
+		);
 
-                $this->counter++;
-                $id                       = $schema.'-'.$this->counter;
-                $saved                    = array_merge(['id' => $id], $object);
-                $this->store[$schema][]   = $saved;
-                return $saved;
+		$seeder = $this->seederWith($fake);
 
-            }//end saveObject()
+		// First seed: converges the stale row, creates the rest.
+		$seeder->seed();
 
-        };
+		$caoRows = $fake->store['Cao'];
+		$this->assertCount($expected, $caoRows, 'One Cao row per corpus CAO — no duplicate for cao-generiek.');
 
-    }//end fakeObjectService()
+		$byCaoId = [];
+		foreach ($caoRows as $row) {
+			$byCaoId[$row['caoId']] = $row;
+		}
 
+		// The stale row kept its object id and converged its sector to the corpus.
+		$this->assertSame('cao-obj-existing', $byCaoId['cao-generiek']['id'], 'The existing object id is preserved (upsert in place).');
+		$corpusSector = CaoRegistry::availableCaos()['cao-generiek']['sector'];
+		$this->assertSame($corpusSector, $byCaoId['cao-generiek']['sector'], 'The stale sector converged to the corpus value.');
 
-    /**
-     * Build a seeder wired to the fake ObjectService.
-     *
-     * @param object $objectService The fake ObjectService.
-     *
-     * @return RuleTestDataSeeder
-     */
-    private function seederWith(object $objectService): RuleTestDataSeeder
-    {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($objectService);
+		// Second seed: still no duplicates (idempotent).
+		$seeder->seed();
+		$this->assertCount($expected, $fake->store['Cao'], 'Re-seeding creates no duplicate Cao objects.');
 
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturn('hrmq');
+	}//end testSeedUpsertsCaoObjectsWithoutDuplicating()
 
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('get')->willReturn(null);
+	/**
+	 * Cao is the object type the CAO provider declares its upsert key for.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cao-library/specs/cao-library/spec.md#REQ-CAO-006
+	 */
+	public function testCaoUpsertKeyIsRegistered(): void {
+		$this->assertSame('caoId', (RuleEngine::providerUpsertKeys()['Cao'] ?? null));
 
-        $userManager = $this->createMock(IUserManager::class);
-        $userManager->method('get')->willReturn(null);
-
-        return new RuleTestDataSeeder(
-            $container,
-            $appConfig,
-            $userManager,
-            $groupManager,
-            $this->createMock(LoggerInterface::class)
-        );
-
-    }//end seederWith()
-
-
-    /**
-     * A stale pre-existing cao-generiek row is converged (not duplicated) and
-     * every other corpus CAO is created exactly once; re-running the seed
-     * leaves the Cao row count unchanged.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/cao-library/specs/cao-library/spec.md#REQ-CAO-006
-     */
-    public function testSeedUpsertsCaoObjectsWithoutDuplicating(): void
-    {
-        $expected = count(CaoRegistry::availableCaos());
-        $this->assertGreaterThanOrEqual(3, $expected);
-
-        // A stale, hand-diverged cao-generiek row already exists.
-        $fake = $this->fakeObjectService(
-            [
-                'Cao' => [
-                    ['id' => 'cao-obj-existing', 'caoId' => 'cao-generiek', 'sector' => 'STALE SECTOR', 'name' => 'stale'],
-                ],
-            ]
-        );
-
-        $seeder = $this->seederWith($fake);
-
-        // First seed: converges the stale row, creates the rest.
-        $seeder->seed();
-
-        $caoRows = $fake->store['Cao'];
-        $this->assertCount($expected, $caoRows, 'One Cao row per corpus CAO — no duplicate for cao-generiek.');
-
-        $byCaoId = [];
-        foreach ($caoRows as $row) {
-            $byCaoId[$row['caoId']] = $row;
-        }
-
-        // The stale row kept its object id and converged its sector to the corpus.
-        $this->assertSame('cao-obj-existing', $byCaoId['cao-generiek']['id'], 'The existing object id is preserved (upsert in place).');
-        $corpusSector = CaoRegistry::availableCaos()['cao-generiek']['sector'];
-        $this->assertSame($corpusSector, $byCaoId['cao-generiek']['sector'], 'The stale sector converged to the corpus value.');
-
-        // Second seed: still no duplicates (idempotent).
-        $seeder->seed();
-        $this->assertCount($expected, $fake->store['Cao'], 'Re-seeding creates no duplicate Cao objects.');
-
-    }//end testSeedUpsertsCaoObjectsWithoutDuplicating()
-
-
-    /**
-     * Cao is the object type the CAO provider declares its upsert key for.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/cao-library/specs/cao-library/spec.md#REQ-CAO-006
-     */
-    public function testCaoUpsertKeyIsRegistered(): void
-    {
-        $this->assertSame('caoId', (RuleEngine::providerUpsertKeys()['Cao'] ?? null));
-
-    }//end testCaoUpsertKeyIsRegistered()
-
+	}//end testCaoUpsertKeyIsRegistered()
 
 }//end class

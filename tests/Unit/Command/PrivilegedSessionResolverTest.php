@@ -40,112 +40,102 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/avg-dsr/specs/avg-dsr/spec.md#REQ-DSR-004
  */
-class PrivilegedSessionResolverTest extends TestCase
-{
+class PrivilegedSessionResolverTest extends TestCase {
 
+	/**
+	 * An unknown --as-user is refused with a one-line message;
+	 * `IUserSession::setUser()` is never called.
+	 *
+	 * @return void
+	 */
+	public function testUnknownUserIsRefusedControlled(): void {
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->method('get')->with('nonexistent-uid')->willReturn(null);
 
-    /**
-     * An unknown --as-user is refused with a one-line message;
-     * `IUserSession::setUser()` is never called.
-     *
-     * @return void
-     */
-    public function testUnknownUserIsRefusedControlled(): void
-    {
-        $userManager = $this->createMock(IUserManager::class);
-        $userManager->method('get')->with('nonexistent-uid')->willReturn(null);
+		$groupManager = $this->createMock(IGroupManager::class);
 
-        $groupManager = $this->createMock(IGroupManager::class);
+		$userSession = $this->createMock(IUserSession::class);
+		$userSession->expects($this->never())->method('setUser');
 
-        $userSession = $this->createMock(IUserSession::class);
-        $userSession->expects($this->never())->method('setUser');
+		$resolver = new PrivilegedSessionResolver($userManager, $groupManager, $userSession);
+		$error = $resolver->establish('nonexistent-uid');
 
-        $resolver = new PrivilegedSessionResolver($userManager, $groupManager, $userSession);
-        $error    = $resolver->establish('nonexistent-uid');
+		$this->assertNotNull($error);
+		$this->assertStringContainsString('nonexistent-uid', $error);
 
-        $this->assertNotNull($error);
-        $this->assertStringContainsString('nonexistent-uid', $error);
+	}//end testUnknownUserIsRefusedControlled()
 
-    }//end testUnknownUserIsRefusedControlled()
+	/**
+	 * A valid but non-admin --as-user is refused with a one-line message;
+	 * `IUserSession::setUser()` is never called.
+	 *
+	 * @return void
+	 */
+	public function testNonAdminUserIsRefusedControlled(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('regular-user');
 
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->method('get')->with('regular-user')->willReturn($user);
 
-    /**
-     * A valid but non-admin --as-user is refused with a one-line message;
-     * `IUserSession::setUser()` is never called.
-     *
-     * @return void
-     */
-    public function testNonAdminUserIsRefusedControlled(): void
-    {
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('regular-user');
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->with('regular-user')->willReturn(false);
 
-        $userManager = $this->createMock(IUserManager::class);
-        $userManager->method('get')->with('regular-user')->willReturn($user);
+		$userSession = $this->createMock(IUserSession::class);
+		$userSession->expects($this->never())->method('setUser');
 
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('isAdmin')->with('regular-user')->willReturn(false);
+		$resolver = new PrivilegedSessionResolver($userManager, $groupManager, $userSession);
+		$error = $resolver->establish('regular-user');
 
-        $userSession = $this->createMock(IUserSession::class);
-        $userSession->expects($this->never())->method('setUser');
+		$this->assertNotNull($error);
+		$this->assertStringContainsString('beheerder', $error);
 
-        $resolver = new PrivilegedSessionResolver($userManager, $groupManager, $userSession);
-        $error    = $resolver->establish('regular-user');
+	}//end testNonAdminUserIsRefusedControlled()
 
-        $this->assertNotNull($error);
-        $this->assertStringContainsString('beheerder', $error);
+	/**
+	 * A real administrator uid establishes the session -- `setUser()` is
+	 * called with the resolved admin and `establish()` returns null.
+	 *
+	 * @return void
+	 */
+	public function testAdminUserEstablishesSession(): void {
+		$admin = $this->createMock(IUser::class);
+		$admin->method('getUID')->willReturn('admin');
 
-    }//end testNonAdminUserIsRefusedControlled()
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->method('get')->with('admin')->willReturn($admin);
 
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->with('admin')->willReturn(true);
 
-    /**
-     * A real administrator uid establishes the session -- `setUser()` is
-     * called with the resolved admin and `establish()` returns null.
-     *
-     * @return void
-     */
-    public function testAdminUserEstablishesSession(): void
-    {
-        $admin = $this->createMock(IUser::class);
-        $admin->method('getUID')->willReturn('admin');
+		$userSession = $this->createMock(IUserSession::class);
+		$userSession->expects($this->once())->method('setUser')->with($admin);
 
-        $userManager = $this->createMock(IUserManager::class);
-        $userManager->method('get')->with('admin')->willReturn($admin);
+		$resolver = new PrivilegedSessionResolver($userManager, $groupManager, $userSession);
+		$error = $resolver->establish('admin');
 
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('isAdmin')->with('admin')->willReturn(true);
+		$this->assertNull($error);
 
-        $userSession = $this->createMock(IUserSession::class);
-        $userSession->expects($this->once())->method('setUser')->with($admin);
+	}//end testAdminUserEstablishesSession()
 
-        $resolver = new PrivilegedSessionResolver($userManager, $groupManager, $userSession);
-        $error    = $resolver->establish('admin');
+	/**
+	 * An empty --as-user is refused before any resolve.
+	 *
+	 * @return void
+	 */
+	public function testEmptyUidIsRefused(): void {
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->expects($this->never())->method('get');
 
-        $this->assertNull($error);
+		$groupManager = $this->createMock(IGroupManager::class);
+		$userSession = $this->createMock(IUserSession::class);
+		$userSession->expects($this->never())->method('setUser');
 
-    }//end testAdminUserEstablishesSession()
+		$resolver = new PrivilegedSessionResolver($userManager, $groupManager, $userSession);
+		$error = $resolver->establish('');
 
+		$this->assertNotNull($error);
 
-    /**
-     * An empty --as-user is refused before any resolve.
-     *
-     * @return void
-     */
-    public function testEmptyUidIsRefused(): void
-    {
-        $userManager = $this->createMock(IUserManager::class);
-        $userManager->expects($this->never())->method('get');
-
-        $groupManager = $this->createMock(IGroupManager::class);
-        $userSession  = $this->createMock(IUserSession::class);
-        $userSession->expects($this->never())->method('setUser');
-
-        $resolver = new PrivilegedSessionResolver($userManager, $groupManager, $userSession);
-        $error    = $resolver->establish('');
-
-        $this->assertNotNull($error);
-
-    }//end testEmptyUidIsRefused()
-
+	}//end testEmptyUidIsRefused()
 
 }//end class

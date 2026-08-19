@@ -49,194 +49,203 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-008
  */
-class InterviewControllerTest extends TestCase
-{
+class InterviewControllerTest extends TestCase {
 
+	/**
+	 * A scheduled Interview fixture, overridable per test.
+	 *
+	 * @param array<string, mixed> $overrides Fields to override.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function interview(array $overrides = []): array {
+		return array_merge(
+			[
+				'id' => 'intv-1',
+				'status' => 'scheduled',
+			],
+			$overrides
+		);
 
-    /**
-     * A scheduled Interview fixture, overridable per test.
-     *
-     * @param array<string, mixed> $overrides Fields to override.
-     *
-     * @return array<string, mixed>
-     */
-    private function interview(array $overrides=[]): array
-    {
-        return array_merge(
-            [
-                'id'     => 'intv-1',
-                'status' => 'scheduled',
-            ],
-            $overrides
-        );
+	}//end interview()
 
-    }//end interview()
+	/**
+	 * REQ-INTV-008 Scenario "Non-admin, non-HR user is rejected".
+	 *
+	 * @return void
+	 */
+	public function testNonAdminCallerIsRefusedBeforeAnyResolveOrServiceCall(): void {
+		[$controller, $fake, $service] = $this->buildController(isAdmin: false, interviewRow: $this->interview());
+		$service->expects($this->never())->method('syncOne');
 
+		$response = $controller->sync('intv-1');
 
-    /**
-     * REQ-INTV-008 Scenario "Non-admin, non-HR user is rejected".
-     *
-     * @return void
-     */
-    public function testNonAdminCallerIsRefusedBeforeAnyResolveOrServiceCall(): void
-    {
-        [$controller, $fake, $service] = $this->buildController(isAdmin: false, interviewRow: $this->interview());
-        $service->expects($this->never())->method('syncOne');
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertFalse($fake->findCalled, 'No ObjectService resolve occurs for a non-admin/HR caller.');
 
-        $response = $controller->sync('intv-1');
+	}//end testNonAdminCallerIsRefusedBeforeAnyResolveOrServiceCall()
 
-        $this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
-        $this->assertFalse($fake->findCalled, 'No ObjectService resolve occurs for a non-admin/HR caller.');
+	/**
+	 * An unknown/unauthorized interviewId collapses to 404 before any
+	 * calendar write.
+	 *
+	 * @return void
+	 */
+	public function testUnknownOrUnauthorizedInterviewIdReturns404(): void {
+		[$controller, , $service] = $this->buildController(isAdmin: true, interviewRow: null);
+		$service->expects($this->never())->method('syncOne');
 
-    }//end testNonAdminCallerIsRefusedBeforeAnyResolveOrServiceCall()
+		$response = $controller->sync('intv-ghost');
 
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
 
-    /**
-     * An unknown/unauthorized interviewId collapses to 404 before any
-     * calendar write.
-     *
-     * @return void
-     */
-    public function testUnknownOrUnauthorizedInterviewIdReturns404(): void
-    {
-        [$controller, , $service] = $this->buildController(isAdmin: true, interviewRow: null);
-        $service->expects($this->never())->method('syncOne');
+	}//end testUnknownOrUnauthorizedInterviewIdReturns404()
 
-        $response = $controller->sync('intv-ghost');
+	/**
+	 * An instance without OpenRegister answers 404, not 500.
+	 *
+	 * ADR-083: a controller is the wrong place to turn a missing optional app
+	 * into a server error — the caller of an HTTP endpoint cannot install
+	 * anything, and "cannot be resolved" is already this endpoint's documented
+	 * outcome. `$fake->findCalled` is asserted false so this proves the guard
+	 * runs BEFORE the reach, rather than the reach happening to return null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-008
+	 */
+	public function testMissingOpenRegisterReturns404WithoutReachingTheStore(): void {
+		[$controller, $fake, $service] = $this->buildController(isAdmin: true, interviewRow: $this->interview(), openRegisterAvailable: false);
+		$service->expects($this->never())->method('syncOne');
 
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$response = $controller->sync('intv-1');
 
-    }//end testUnknownOrUnauthorizedInterviewIdReturns404()
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertFalse($fake->findCalled, 'the store was reached despite OpenRegister being unavailable');
 
+	}//end testMissingOpenRegisterReturns404WithoutReachingTheStore()
 
-    /**
-     * A missing interviewId is refused 400 before any resolve.
-     *
-     * @return void
-     */
-    public function testMissingInterviewIdReturns400BeforeAnyResolve(): void
-    {
-        [$controller, $fake] = $this->buildController(isAdmin: true, interviewRow: null);
+	/**
+	 * A missing interviewId is refused 400 before any resolve.
+	 *
+	 * @return void
+	 */
+	public function testMissingInterviewIdReturns400BeforeAnyResolve(): void {
+		[$controller, $fake] = $this->buildController(isAdmin: true, interviewRow: null);
 
-        $response = $controller->sync(null);
+		$response = $controller->sync(null);
 
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
-        $this->assertFalse($fake->findCalled);
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertFalse($fake->findCalled);
 
-    }//end testMissingInterviewIdReturns400BeforeAnyResolve()
+	}//end testMissingInterviewIdReturns400BeforeAnyResolve()
 
+	/**
+	 * REQ-INTV-008 Scenario "Admin/HR user syncs one interview from the
+	 * detail page" — the happy path delegates to
+	 * `InterviewCalendarService::syncOne()` and returns its outcome
+	 * verbatim.
+	 *
+	 * @return void
+	 */
+	public function testHappyPathDelegatesToTheServiceAndReturnsItsOutcome(): void {
+		[$controller, , $service] = $this->buildController(isAdmin: true, interviewRow: $this->interview());
 
-    /**
-     * REQ-INTV-008 Scenario "Admin/HR user syncs one interview from the
-     * detail page" — the happy path delegates to
-     * `InterviewCalendarService::syncOne()` and returns its outcome
-     * verbatim.
-     *
-     * @return void
-     */
-    public function testHappyPathDelegatesToTheServiceAndReturnsItsOutcome(): void
-    {
-        [$controller, , $service] = $this->buildController(isAdmin: true, interviewRow: $this->interview());
+		$outcome = [
+			'type' => 'interview',
+			'sourceId' => 'intv-1',
+			'status' => 'created',
+			'message' => 'Kalenderafspraak aangemaakt.',
+		];
 
-        $outcome = [
-            'type'     => 'interview',
-            'sourceId' => 'intv-1',
-            'status'   => 'created',
-            'message'  => 'Kalenderafspraak aangemaakt.',
-        ];
+		$service->expects($this->once())
+			->method('syncOne')
+			->with('intv-1')
+			->willReturn($outcome);
 
-        $service->expects($this->once())
-            ->method('syncOne')
-            ->with('intv-1')
-            ->willReturn($outcome);
+		$response = $controller->sync('intv-1');
 
-        $response = $controller->sync('intv-1');
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame($outcome, $response->getData());
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame($outcome, $response->getData());
+	}//end testHappyPathDelegatesToTheServiceAndReturnsItsOutcome()
 
-    }//end testHappyPathDelegatesToTheServiceAndReturnsItsOutcome()
+	/**
+	 * Build an `InterviewController` with a fake container-resolved
+	 * ObjectService whose `find()` returns the fixed `$interviewRow` (null
+	 * simulating unknown/unauthorized) and a mocked `InterviewCalendarService`.
+	 *
+	 * @param bool $isAdmin Whether the fake caller is an admin/HR principal.
+	 * @param array<string, mixed>|null $interviewRow The row `find()` should return.
+	 *
+	 * @return array{0: InterviewController, 1: object, 2: InterviewCalendarService&\PHPUnit\Framework\MockObject\MockObject}
+	 */
+	private function buildController(bool $isAdmin, ?array $interviewRow, bool $openRegisterAvailable = true): array {
+		$request = $this->createMock(IRequest::class);
 
+		$fake = new class($interviewRow) {
 
-    /**
-     * Build an `InterviewController` with a fake container-resolved
-     * ObjectService whose `find()` returns the fixed `$interviewRow` (null
-     * simulating unknown/unauthorized) and a mocked `InterviewCalendarService`.
-     *
-     * @param bool                       $isAdmin      Whether the fake caller is an admin/HR principal.
-     * @param array<string, mixed>|null $interviewRow The row `find()` should return.
-     *
-     * @return array{0: InterviewController, 1: object, 2: InterviewCalendarService&\PHPUnit\Framework\MockObject\MockObject}
-     */
-    private function buildController(bool $isAdmin, ?array $interviewRow): array
-    {
-        $request = $this->createMock(IRequest::class);
+			/**
+			 * @var array<string, mixed>|null
+			 */
+			public ?array $row;
 
-        $fake = new class ($interviewRow) {
+			/**
+			 * @var bool
+			 */
+			public bool $findCalled = false;
 
-            /**
-             * @var array<string, mixed>|null
-             */
-            public ?array $row;
+			/**
+			 * @param array<string, mixed>|null $row The row find() should return.
+			 */
+			public function __construct(?array $row) {
+				$this->row = $row;
 
-            /**
-             * @var bool
-             */
-            public bool $findCalled = false;
+			}//end __construct()
 
-            /**
-             * @param array<string, mixed>|null $row The row find() should return.
-             */
-            public function __construct(?array $row)
-            {
-                $this->row = $row;
+			/**
+			 * @param string $id The object id.
+			 * @param string|null $register Register slug (unused by the fake).
+			 * @param string|null $schema Schema name (unused by the fake).
+			 *
+			 * @return array<string, mixed>|null
+			 */
+			public function find(string $id, ?string $register = null, ?string $schema = null): ?array {
+				$this->findCalled = true;
+				return $this->row;
+			}//end find()
 
-            }//end __construct()
+		};
 
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($fake);
 
-            /**
-             * @param string      $id       The object id.
-             * @param string|null $register Register slug (unused by the fake).
-             * @param string|null $schema   Schema name (unused by the fake).
-             *
-             * @return array<string, mixed>|null
-             */
-            public function find(string $id, ?string $register=null, ?string $schema=null): ?array
-            {
-                $this->findCalled = true;
-                return $this->row;
+		$interviewCalendarService = $this->createMock(InterviewCalendarService::class);
 
-            }//end find()
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		// objectService() now establishes availability first (ADR-083). A bare
+		// createMock() answers a bool method with false, so without this the
+		// guard trips and the test fails on a missing app, not on its subject.
+		$settings->method('isOpenRegisterAvailable')->willReturn($openRegisterAvailable);
 
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('hr-admin');
 
-        };
+		$userSession = $this->createMock(IUserSession::class);
+		$userSession->method('getUser')->willReturn($user);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($fake);
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturn($isAdmin);
 
-        $interviewCalendarService = $this->createMock(InterviewCalendarService::class);
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $settings = $this->createMock(SettingsService::class);
-        $settings->method('getRegisterSlug')->willReturn('hrmq');
+		return [
+			new InterviewController($request, $container, $interviewCalendarService, $settings, $userSession, $groupManager, $logger),
+			$fake,
+			$interviewCalendarService,
+		];
 
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('hr-admin');
-
-        $userSession = $this->createMock(IUserSession::class);
-        $userSession->method('getUser')->willReturn($user);
-
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('isAdmin')->willReturn($isAdmin);
-
-        $logger = $this->createMock(LoggerInterface::class);
-
-        return [
-            new InterviewController($request, $container, $interviewCalendarService, $settings, $userSession, $groupManager, $logger),
-            $fake,
-            $interviewCalendarService,
-        ];
-
-    }//end buildController()
-
+	}//end buildController()
 
 }//end class

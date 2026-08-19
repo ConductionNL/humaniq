@@ -67,304 +67,276 @@ use OCA\Hrmq\Standards\RuleCatalogue;
 /**
  * Dutch sickness / Wet verbetering poortwachter executable checks.
  */
-final class NlAbsenceChecks implements CheckProvider
-{
+final class NlAbsenceChecks implements CheckProvider {
 
-    /**
-     * Number of days before (and including) a milestone Due date that an
-     * undone milestone on an open case starts alerting
-     * (nl-wvp-milestone-overdue).
-     *
-     * @var int
-     */
-    private const ALERT_WINDOW_DAYS = 14;
+	/**
+	 * Number of days before (and including) a milestone Due date that an
+	 * undone milestone on an open case starts alerting
+	 * (nl-wvp-milestone-overdue).
+	 *
+	 * @var int
+	 */
+	private const ALERT_WINDOW_DAYS = 14;
 
-    /**
-     * The four WVP milestone Due/Done field pairs, in derivation order, each
-     * mapped to its `parameters.milestoneWeeks` key on the
-     * nl-wvp-milestone-derivation corpus rule.
-     *
-     * @var array<int, array{due: string, done: string, weeksKey: string}>
-     */
-    private const MILESTONES = [
-        ['due' => 'probleemanalyseDue', 'done' => 'probleemanalyseDone', 'weeksKey' => 'probleemanalyse'],
-        ['due' => 'planVanAanpakDue', 'done' => 'planVanAanpakDone', 'weeksKey' => 'planVanAanpak'],
-        ['due' => 'uwv42WeekMeldingDue', 'done' => 'uwv42WeekMeldingDone', 'weeksKey' => 'uwv42WeekMelding'],
-        ['due' => 'eerstejaarsevaluatieDue', 'done' => 'eerstejaarsevaluatieDone', 'weeksKey' => 'eerstejaarsevaluatie'],
-    ];
+	/**
+	 * The four WVP milestone Due/Done field pairs, in derivation order, each
+	 * mapped to its `parameters.milestoneWeeks` key on the
+	 * nl-wvp-milestone-derivation corpus rule.
+	 *
+	 * @var array<int, array{due: string, done: string, weeksKey: string}>
+	 */
+	private const MILESTONES = [
+		['due' => 'probleemanalyseDue', 'done' => 'probleemanalyseDone', 'weeksKey' => 'probleemanalyse'],
+		['due' => 'planVanAanpakDue', 'done' => 'planVanAanpakDone', 'weeksKey' => 'planVanAanpak'],
+		['due' => 'uwv42WeekMeldingDue', 'done' => 'uwv42WeekMeldingDone', 'weeksKey' => 'uwv42WeekMelding'],
+		['due' => 'eerstejaarsevaluatieDue', 'done' => 'eerstejaarsevaluatieDone', 'weeksKey' => 'eerstejaarsevaluatie'],
+	];
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 */
+	public static function checks(): array {
+		return [
+			'SickLeaveCase' => [
+				// Regeling procesgang art. 2/4; ZW art. 38 — each Due equals
+				// firstSickDay + its rule-parameterised week offset; no null Due
+				// on an open case.
+				'nl-wvp-milestone-derivation' => static fn (array $o): bool => self::derivationSatisfied($o),
+				// Regeling procesgang art. 2/4; ZW art. 38 — an open case with an
+				// overdue or approaching, not-yet-Done milestone is flagged.
+				'nl-wvp-milestone-overdue' => static fn (array $o): bool => self::overdueSatisfied($o),
+				// BW art. 7:629 lid 1 — at least 70% loondoorbetaling on open cases.
+				'nl-loondoorbetaling-minimum' => static fn (array $o): bool => self::continuedWagePaymentSatisfied($o),
+			],
+			'Payslip' => [
+				// BW art. 7:629 lid 1 jo. WML art. 12 — a sick-pay payslip's
+				// doorbetaald loon is at least the independently recomputed
+				// 70%/year-1-WML floor (sick-pay-calc design.md D5).
+				'nl-loondoorbetaling-floor' => static fn (array $o): bool => self::continuedWagePaymentFloorSatisfied($o),
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     */
-    public static function checks(): array
-    {
-        return [
-            'SickLeaveCase' => [
-                // Regeling procesgang art. 2/4; ZW art. 38 — each Due equals
-                // firstSickDay + its rule-parameterised week offset; no null Due
-                // on an open case.
-                'nl-wvp-milestone-derivation' => static fn(array $o): bool => self::derivationSatisfied($o),
-                // Regeling procesgang art. 2/4; ZW art. 38 — an open case with an
-                // overdue or approaching, not-yet-Done milestone is flagged.
-                'nl-wvp-milestone-overdue' => static fn(array $o): bool => self::overdueSatisfied($o),
-                // BW art. 7:629 lid 1 — at least 70% loondoorbetaling on open cases.
-                'nl-loondoorbetaling-minimum' => static fn(array $o): bool => self::continuedWagePaymentSatisfied($o),
-            ],
-            'Payslip'       => [
-                // BW art. 7:629 lid 1 jo. WML art. 12 — a sick-pay payslip's
-                // doorbetaald loon is at least the independently recomputed
-                // 70%/year-1-WML floor (sick-pay-calc design.md D5).
-                'nl-loondoorbetaling-floor' => static fn(array $o): bool => self::continuedWagePaymentFloorSatisfied($o),
-            ],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * True when every non-null Due date equals firstSickDay plus its rule-
+	 * parameterised week offset, and (on an open/gemeld case) no Due date is
+	 * null. On a hersteld case, null Due dates are allowed (the clock never
+	 * mattered). Passes vacuously when firstSickDay is unparseable or the
+	 * corpus rule/parameters are missing (not decidable).
+	 *
+	 * @param array<string, mixed> $o The SickLeaveCase.
+	 *
+	 * @return bool
+	 */
+	private static function derivationSatisfied(array $o): bool {
+		$milestoneWeeks = self::milestoneWeeks();
+		if ($milestoneWeeks === null) {
+			return true;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		$firstSickDay = strtotime((string)($o['firstSickDay'] ?? ''));
+		if ($firstSickDay === false) {
+			return true;
+		}
 
-    }//end seedSpec()
+		$isOpen = (string)($o['status'] ?? 'gemeld') === 'gemeld';
 
+		foreach (self::MILESTONES as $milestone) {
+			$weeks = ($milestoneWeeks[$milestone['weeksKey']] ?? null);
+			if (is_numeric($weeks) === false) {
+				continue;
+			}
 
-    /**
-     * True when every non-null Due date equals firstSickDay plus its rule-
-     * parameterised week offset, and (on an open/gemeld case) no Due date is
-     * null. On a hersteld case, null Due dates are allowed (the clock never
-     * mattered). Passes vacuously when firstSickDay is unparseable or the
-     * corpus rule/parameters are missing (not decidable).
-     *
-     * @param array<string, mixed> $o The SickLeaveCase.
-     *
-     * @return bool
-     */
-    private static function derivationSatisfied(array $o): bool
-    {
-        $milestoneWeeks = self::milestoneWeeks();
-        if ($milestoneWeeks === null) {
-            return true;
-        }
+			$due = trim((string)($o[$milestone['due']] ?? ''));
+			if ($due === '') {
+				if ($isOpen === true) {
+					return false;
+				}
 
-        $firstSickDay = strtotime((string) ($o['firstSickDay'] ?? ''));
-        if ($firstSickDay === false) {
-            return true;
-        }
+				continue;
+			}
 
-        $isOpen = (string) ($o['status'] ?? 'gemeld') === 'gemeld';
+			$expected = date('Y-m-d', strtotime('+' . ((int)$weeks * 7) . ' days', $firstSickDay));
+			if ($due !== $expected) {
+				return false;
+			}
+		}//end foreach
 
-        foreach (self::MILESTONES as $milestone) {
-            $weeks = ($milestoneWeeks[$milestone['weeksKey']] ?? null);
-            if (is_numeric($weeks) === false) {
-                continue;
-            }
+		return true;
+	}//end derivationSatisfied()
 
-            $due = trim((string) ($o[$milestone['due']] ?? ''));
-            if ($due === '') {
-                if ($isOpen === true) {
-                    return false;
-                }
+	/**
+	 * True on a hersteld (closed) case, or when every WVP milestone on an
+	 * open case is either Done or more than 14 days from its Due date.
+	 * Mirrors the nl-loonaangifte-deadline-alert / nl-upa-deadline-alert
+	 * pattern: "past OR within the alert window" collapses to one boolean
+	 * condition, evaluated against the audit run date.
+	 *
+	 * @param array<string, mixed> $o The SickLeaveCase.
+	 *
+	 * @return bool
+	 */
+	private static function overdueSatisfied(array $o): bool {
+		if ((string)($o['status'] ?? 'gemeld') !== 'gemeld') {
+			return true;
+		}
 
-                continue;
-            }
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
 
-            $expected = date('Y-m-d', strtotime('+'.((int) $weeks * 7).' days', $firstSickDay));
-            if ($due !== $expected) {
-                return false;
-            }
-        }//end foreach
+		foreach (self::MILESTONES as $milestone) {
+			$done = trim((string)($o[$milestone['done']] ?? ''));
+			if ($done !== '') {
+				continue;
+			}
 
-        return true;
+			$due = strtotime((string)($o[$milestone['due']] ?? ''));
+			if ($due === false) {
+				continue;
+			}
 
-    }//end derivationSatisfied()
+			$daysRemaining = (int)floor(($due - $today) / 86400);
+			if ($daysRemaining <= self::ALERT_WINDOW_DAYS) {
+				return false;
+			}
+		}
 
+		return true;
+	}//end overdueSatisfied()
 
-    /**
-     * True on a hersteld (closed) case, or when every WVP milestone on an
-     * open case is either Done or more than 14 days from its Due date.
-     * Mirrors the nl-loonaangifte-deadline-alert / nl-upa-deadline-alert
-     * pattern: "past OR within the alert window" collapses to one boolean
-     * condition, evaluated against the audit run date.
-     *
-     * @param array<string, mixed> $o The SickLeaveCase.
-     *
-     * @return bool
-     */
-    private static function overdueSatisfied(array $o): bool
-    {
-        if ((string) ($o['status'] ?? 'gemeld') !== 'gemeld') {
-            return true;
-        }
+	/**
+	 * True on a hersteld (closed) case, or when an open case's
+	 * loondoorbetalingPercentage is present and at least 70.
+	 *
+	 * @param array<string, mixed> $o The SickLeaveCase.
+	 *
+	 * @return bool
+	 */
+	private static function continuedWagePaymentSatisfied(array $o): bool {
+		if ((string)($o['status'] ?? 'gemeld') !== 'gemeld') {
+			return true;
+		}
 
-        $today = (new DateTimeImmutable('today'))->getTimestamp();
+		$percentage = ($o['loondoorbetalingPercentage'] ?? null);
+		if ($percentage === null || $percentage === '') {
+			return false;
+		}
 
-        foreach (self::MILESTONES as $milestone) {
-            $done = trim((string) ($o[$milestone['done']] ?? ''));
-            if ($done !== '') {
-                continue;
-            }
+		return (float)$percentage >= 70.0;
+	}//end continuedWagePaymentSatisfied()
 
-            $due = strtotime((string) ($o[$milestone['due']] ?? ''));
-            if ($due === false) {
-                continue;
-            }
+	/**
+	 * The `parameters.milestoneWeeks` map of the nl-wvp-milestone-derivation
+	 * corpus rule, or null when the rule/parameters are missing from the
+	 * catalogue.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function milestoneWeeks(): ?array {
+		foreach (RuleCatalogue::all() as $rule) {
+			if ((string)($rule['id'] ?? '') !== 'nl-wvp-milestone-derivation') {
+				continue;
+			}
 
-            $daysRemaining = (int) floor(($due - $today) / 86400);
-            if ($daysRemaining <= self::ALERT_WINDOW_DAYS) {
-                return false;
-            }
-        }
+			$parameters = ($rule['parameters'] ?? null);
+			if (is_array($parameters) === false) {
+				return null;
+			}
 
-        return true;
+			$weeks = ($parameters['milestoneWeeks'] ?? null);
+			return is_array($weeks) === true ? $weeks : null;
+		}
 
-    }//end overdueSatisfied()
+		return null;
+	}//end milestoneWeeks()
 
+	/**
+	 * True when a Payslip is out of scope (no `sickLeaveCaseId` — a normal
+	 * payslip), or when its `doorbetaaldLoon` is at least the independently
+	 * recomputed 70%/year-1-WML floor: `max(round(sickPayReferenceWage x
+	 * statutoryPercentage/100), sickPayYearOne ? sickPayMinimumWageFloor : 0)`
+	 * — read from the payslip's own recorded fields and the
+	 * nl-loondoorbetaling-floor corpus rule's `parameters` (never a stored
+	 * answer echoed back). Passes vacuously when the corpus rule/parameters
+	 * are missing (not decidable).
+	 *
+	 * @param array<string, mixed> $o The Payslip.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-006
+	 */
+	private static function continuedWagePaymentFloorSatisfied(array $o): bool {
+		$sickLeaveCaseId = trim((string)($o['sickLeaveCaseId'] ?? ''));
+		if ($sickLeaveCaseId === '') {
+			return true;
+		}
 
-    /**
-     * True on a hersteld (closed) case, or when an open case's
-     * loondoorbetalingPercentage is present and at least 70.
-     *
-     * @param array<string, mixed> $o The SickLeaveCase.
-     *
-     * @return bool
-     */
-    private static function continuedWagePaymentSatisfied(array $o): bool
-    {
-        if ((string) ($o['status'] ?? 'gemeld') !== 'gemeld') {
-            return true;
-        }
+		$parameters = self::continuedWagePaymentFloorParameters();
+		if ($parameters === null) {
+			return true;
+		}
 
-        $percentage = ($o['loondoorbetalingPercentage'] ?? null);
-        if ($percentage === null || $percentage === '') {
-            return false;
-        }
+		$referenceWage = ($o['sickPayReferenceWage'] ?? null);
+		$doorbetaald = ($o['doorbetaaldLoon'] ?? null);
+		if (is_numeric($referenceWage) === false || is_numeric($doorbetaald) === false) {
+			return false;
+		}
 
-        return (float) $percentage >= 70.0;
+		$statutoryPercentage = (float)($parameters['statutoryPercentage'] ?? 70);
+		$statutoryFloorCents = (int)round((self::euroToCents((float)$referenceWage) * $statutoryPercentage) / 100);
 
-    }//end continuedWagePaymentSatisfied()
+		$yearOneFloorCents = 0;
+		if (($o['sickPayYearOne'] ?? false) === true) {
+			$minimumWageFloor = ($o['sickPayMinimumWageFloor'] ?? null);
+			$yearOneFloorCents = (is_numeric($minimumWageFloor) === true ? self::euroToCents((float)$minimumWageFloor) : 0);
+		}
 
+		$floorCents = max($statutoryFloorCents, $yearOneFloorCents);
 
-    /**
-     * The `parameters.milestoneWeeks` map of the nl-wvp-milestone-derivation
-     * corpus rule, or null when the rule/parameters are missing from the
-     * catalogue.
-     *
-     * @return array<string, mixed>|null
-     */
-    private static function milestoneWeeks(): ?array
-    {
-        foreach (RuleCatalogue::all() as $rule) {
-            if ((string) ($rule['id'] ?? '') !== 'nl-wvp-milestone-derivation') {
-                continue;
-            }
+		return self::euroToCents((float)$doorbetaald) >= $floorCents;
+	}//end continuedWagePaymentFloorSatisfied()
 
-            $parameters = ($rule['parameters'] ?? null);
-            if (is_array($parameters) === false) {
-                return null;
-            }
+	/**
+	 * The `parameters` of the nl-loondoorbetaling-floor corpus rule, or null
+	 * when the rule/parameters are missing from the catalogue.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function continuedWagePaymentFloorParameters(): ?array {
+		foreach (RuleCatalogue::all() as $rule) {
+			if ((string)($rule['id'] ?? '') !== 'nl-loondoorbetaling-floor') {
+				continue;
+			}
 
-            $weeks = ($parameters['milestoneWeeks'] ?? null);
-            return is_array($weeks) === true ? $weeks : null;
-        }
+			$parameters = ($rule['parameters'] ?? null);
+			return is_array($parameters) === true ? $parameters : null;
+		}
 
-        return null;
+		return null;
+	}//end continuedWagePaymentFloorParameters()
 
-    }//end milestoneWeeks()
-
-
-    /**
-     * True when a Payslip is out of scope (no `sickLeaveCaseId` — a normal
-     * payslip), or when its `doorbetaaldLoon` is at least the independently
-     * recomputed 70%/year-1-WML floor: `max(round(sickPayReferenceWage x
-     * statutoryPercentage/100), sickPayYearOne ? sickPayMinimumWageFloor : 0)`
-     * — read from the payslip's own recorded fields and the
-     * nl-loondoorbetaling-floor corpus rule's `parameters` (never a stored
-     * answer echoed back). Passes vacuously when the corpus rule/parameters
-     * are missing (not decidable).
-     *
-     * @param array<string, mixed> $o The Payslip.
-     *
-     * @return bool
-     *
-     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-006
-     */
-    private static function continuedWagePaymentFloorSatisfied(array $o): bool
-    {
-        $sickLeaveCaseId = trim((string) ($o['sickLeaveCaseId'] ?? ''));
-        if ($sickLeaveCaseId === '') {
-            return true;
-        }
-
-        $parameters = self::continuedWagePaymentFloorParameters();
-        if ($parameters === null) {
-            return true;
-        }
-
-        $referenceWage = ($o['sickPayReferenceWage'] ?? null);
-        $doorbetaald   = ($o['doorbetaaldLoon'] ?? null);
-        if (is_numeric($referenceWage) === false || is_numeric($doorbetaald) === false) {
-            return false;
-        }
-
-        $statutoryPercentage = (float) ($parameters['statutoryPercentage'] ?? 70);
-        $statutoryFloorCents = (int) round((self::euroToCents((float) $referenceWage) * $statutoryPercentage) / 100);
-
-        $yearOneFloorCents = 0;
-        if (($o['sickPayYearOne'] ?? false) === true) {
-            $minimumWageFloor  = ($o['sickPayMinimumWageFloor'] ?? null);
-            $yearOneFloorCents = (is_numeric($minimumWageFloor) === true ? self::euroToCents((float) $minimumWageFloor) : 0);
-        }
-
-        $floorCents = max($statutoryFloorCents, $yearOneFloorCents);
-
-        return self::euroToCents((float) $doorbetaald) >= $floorCents;
-
-    }//end continuedWagePaymentFloorSatisfied()
-
-
-    /**
-     * The `parameters` of the nl-loondoorbetaling-floor corpus rule, or null
-     * when the rule/parameters are missing from the catalogue.
-     *
-     * @return array<string, mixed>|null
-     */
-    private static function continuedWagePaymentFloorParameters(): ?array
-    {
-        foreach (RuleCatalogue::all() as $rule) {
-            if ((string) ($rule['id'] ?? '') !== 'nl-loondoorbetaling-floor') {
-                continue;
-            }
-
-            $parameters = ($rule['parameters'] ?? null);
-            return is_array($parameters) === true ? $parameters : null;
-        }
-
-        return null;
-
-    }//end continuedWagePaymentFloorParameters()
-
-
-    /**
-     * Convert a euro amount to integer cents (round-half-away-from-zero) —
-     * the payslip's number fields are euro-denominated.
-     *
-     * @param float $euro The euro amount.
-     *
-     * @return int
-     */
-    private static function euroToCents(float $euro): int
-    {
-        return (int) round($euro * 100);
-
-    }//end euroToCents()
-
+	/**
+	 * Convert a euro amount to integer cents (round-half-away-from-zero) —
+	 * the payslip's number fields are euro-denominated.
+	 *
+	 * @param float $euro The euro amount.
+	 *
+	 * @return int
+	 */
+	private static function euroToCents(float $euro): int {
+		return (int)round($euro * 100);
+	}//end euroToCents()
 
 }//end class

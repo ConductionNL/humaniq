@@ -43,239 +43,213 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-004
  */
-class NlDgaChecksTest extends TestCase
-{
+class NlDgaChecksTest extends TestCase {
 
-    /**
-     * The registered predicates.
-     *
-     * @var array<string, array<string, callable>>
-     */
-    private array $checks;
+	/**
+	 * The registered predicates.
+	 *
+	 * @var array<string, array<string, callable>>
+	 */
+	private array $checks;
 
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		RuleEngine::reset();
+		$this->checks = NlDgaChecks::checks();
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        RuleEngine::reset();
-        $this->checks = NlDgaChecks::checks();
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * @return void
+	 */
+	protected function tearDown(): void {
+		RuleEngine::reset();
 
+	}//end tearDown()
 
-    /**
-     * @return void
-     */
-    protected function tearDown(): void
-    {
-        RuleEngine::reset();
+	/**
+	 * A minimal Employee fixture, overridable per test.
+	 *
+	 * @param array<string, mixed> $overrides Fields to override.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function employee(array $overrides = []): array {
+		return array_merge(
+			[
+				'id' => 'emp-1',
+				'isDga' => false,
+				'grossMonthlySalary' => 1500.00,
+			],
+			$overrides
+		);
 
-    }//end tearDown()
+	}//end employee()
 
+	/**
+	 * REQ-DGA-004 scenario: a non-DGA employee is out of scope regardless of
+	 * salary — `isDga: false` (or absent) never triggers the check.
+	 *
+	 * @return void
+	 */
+	public function testNonDgaEmployeeIsVacuousRegardlessOfSalary(): void {
+		$check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
 
-    /**
-     * A minimal Employee fixture, overridable per test.
-     *
-     * @param array<string, mixed> $overrides Fields to override.
-     *
-     * @return array<string, mixed>
-     */
-    private function employee(array $overrides=[]): array
-    {
-        return array_merge(
-            [
-                'id'                 => 'emp-1',
-                'isDga'              => false,
-                'grossMonthlySalary' => 1500.00,
-            ],
-            $overrides
-        );
+		$this->assertTrue($check($this->employee(['isDga' => false, 'grossMonthlySalary' => 1500.00]), []));
+		$this->assertTrue($check($this->employee(['isDga' => null, 'grossMonthlySalary' => 1500.00]), []));
 
-    }//end employee()
+	}//end testNonDgaEmployeeIsVacuousRegardlessOfSalary()
 
+	/**
+	 * REQ-DGA-004 scenario: a below-norm DGA with no justification is
+	 * flagged — `isDga: true`, `grossMonthlySalary: 3000.00` (annualised
+	 * €36.000, below the €58.000 norm), no `gebruikelijkloonJustification`.
+	 *
+	 * @return void
+	 */
+	public function testBelowNormDgaWithNoJustificationIsFlagged(): void {
+		$check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
 
-    /**
-     * REQ-DGA-004 scenario: a non-DGA employee is out of scope regardless of
-     * salary — `isDga: false` (or absent) never triggers the check.
-     *
-     * @return void
-     */
-    public function testNonDgaEmployeeIsVacuousRegardlessOfSalary(): void
-    {
-        $check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
+		$employee = $this->employee(['isDga' => true, 'grossMonthlySalary' => 3000.00]);
 
-        $this->assertTrue($check($this->employee(['isDga' => false, 'grossMonthlySalary' => 1500.00]), []));
-        $this->assertTrue($check($this->employee(['isDga' => null, 'grossMonthlySalary' => 1500.00]), []));
+		$this->assertFalse($check($employee, []));
 
-    }//end testNonDgaEmployeeIsVacuousRegardlessOfSalary()
+	}//end testBelowNormDgaWithNoJustificationIsFlagged()
 
+	/**
+	 * REQ-DGA-004 scenario: the SAME below-norm DGA with a non-empty
+	 * `gebruikelijkloonJustification` on file passes (MVP: presence-only
+	 * exemption).
+	 *
+	 * @return void
+	 */
+	public function testBelowNormDgaWithJustificationPasses(): void {
+		$check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
 
-    /**
-     * REQ-DGA-004 scenario: a below-norm DGA with no justification is
-     * flagged — `isDga: true`, `grossMonthlySalary: 3000.00` (annualised
-     * €36.000, below the €58.000 norm), no `gebruikelijkloonJustification`.
-     *
-     * @return void
-     */
-    public function testBelowNormDgaWithNoJustificationIsFlagged(): void
-    {
-        $check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
+		$employee = $this->employee(
+			[
+				'isDga' => true,
+				'grossMonthlySalary' => 3000.00,
+				'gebruikelijkloonJustification' => 'Vergelijkbare functie elders verdient minder; onderbouwing in personeelsdossier.',
+			]
+		);
 
-        $employee = $this->employee(['isDga' => true, 'grossMonthlySalary' => 3000.00]);
+		$this->assertTrue($check($employee, []));
 
-        $this->assertFalse($check($employee, []));
+	}//end testBelowNormDgaWithJustificationPasses()
 
-    }//end testBelowNormDgaWithNoJustificationIsFlagged()
+	/**
+	 * A whitespace-only justification does NOT count as present.
+	 *
+	 * @return void
+	 */
+	public function testWhitespaceOnlyJustificationDoesNotExempt(): void {
+		$check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
 
+		$employee = $this->employee(
+			[
+				'isDga' => true,
+				'grossMonthlySalary' => 3000.00,
+				'gebruikelijkloonJustification' => '   ',
+			]
+		);
 
-    /**
-     * REQ-DGA-004 scenario: the SAME below-norm DGA with a non-empty
-     * `gebruikelijkloonJustification` on file passes (MVP: presence-only
-     * exemption).
-     *
-     * @return void
-     */
-    public function testBelowNormDgaWithJustificationPasses(): void
-    {
-        $check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
+		$this->assertFalse($check($employee, []));
 
-        $employee = $this->employee(
-            [
-                'isDga'                         => true,
-                'grossMonthlySalary'            => 3000.00,
-                'gebruikelijkloonJustification' => 'Vergelijkbare functie elders verdient minder; onderbouwing in personeelsdossier.',
-            ]
-        );
+	}//end testWhitespaceOnlyJustificationDoesNotExempt()
 
-        $this->assertTrue($check($employee, []));
+	/**
+	 * An at/above-norm DGA passes without any justification —
+	 * €58.000/12 = €4.833,34 monthly clears the 2026 norm.
+	 *
+	 * @return void
+	 */
+	public function testAtOrAboveNormDgaPasses(): void {
+		$check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
 
-    }//end testBelowNormDgaWithJustificationPasses()
+		$atNorm = $this->employee(['isDga' => true, 'grossMonthlySalary' => (58000 / 12)]);
+		$aboveIt = $this->employee(['isDga' => true, 'grossMonthlySalary' => 6000.00]);
 
+		$this->assertTrue($check($atNorm, []));
+		$this->assertTrue($check($aboveIt, []));
 
-    /**
-     * A whitespace-only justification does NOT count as present.
-     *
-     * @return void
-     */
-    public function testWhitespaceOnlyJustificationDoesNotExempt(): void
-    {
-        $check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
+	}//end testAtOrAboveNormDgaPasses()
 
-        $employee = $this->employee(
-            [
-                'isDga'                         => true,
-                'grossMonthlySalary'            => 3000.00,
-                'gebruikelijkloonJustification' => '   ',
-            ]
-        );
+	/**
+	 * A DGA with no `grossMonthlySalary` yet (hourly/no-salary path) is
+	 * vacuous — never a false violation on incomplete data.
+	 *
+	 * @return void
+	 */
+	public function testDgaWithoutSalaryYetIsVacuous(): void {
+		$check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
 
-        $this->assertFalse($check($employee, []));
+		$employee = $this->employee(['isDga' => true, 'grossMonthlySalary' => null]);
 
-    }//end testWhitespaceOnlyJustificationDoesNotExempt()
+		$this->assertTrue($check($employee, []));
 
+	}//end testDgaWithoutSalaryYetIsVacuous()
 
-    /**
-     * An at/above-norm DGA passes without any justification —
-     * €58.000/12 = €4.833,34 monthly clears the 2026 norm.
-     *
-     * @return void
-     */
-    public function testAtOrAboveNormDgaPasses(): void
-    {
-        $check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
+	/**
+	 * REQ-DGA-004 — the below-norm/no-justification scenario, driven through
+	 * the REAL `RuleEngine::evaluate()` (catalogue + auto-discovered
+	 * CheckProviders + the nl-2026 table), proving
+	 * `nl-gebruikelijkloon-norm` is genuinely reachable via
+	 * `occ hrmq:rules:audit` and not an orphaned capability.
+	 *
+	 * @return void
+	 */
+	public function testRealRuleEngineFiresTheViolationForABelowNormDga(): void {
+		$employee = $this->employee(['isDga' => true, 'grossMonthlySalary' => 3000.00]);
 
-        $atNorm  = $this->employee(['isDga' => true, 'grossMonthlySalary' => (58000 / 12)]);
-        $aboveIt = $this->employee(['isDga' => true, 'grossMonthlySalary' => 6000.00]);
+		$violations = RuleEngine::evaluate('Employee', $employee);
 
-        $this->assertTrue($check($atNorm, []));
-        $this->assertTrue($check($aboveIt, []));
+		$ruleIds = array_map(static fn ($v) => $v->ruleId, $violations);
+		$this->assertContains('nl-gebruikelijkloon-norm', $ruleIds, 'The real RuleEngine must fire nl-gebruikelijkloon-norm for a below-norm DGA with no justification.');
 
-    }//end testAtOrAboveNormDgaPasses()
+		$violation = $violations[array_search('nl-gebruikelijkloon-norm', $ruleIds, true)];
+		$this->assertSame('conditional', $violation->severity, 'nl-gebruikelijkloon-norm must be severity conditional (a below-norm salary can be lawful when justified).');
 
+	}//end testRealRuleEngineFiresTheViolationForABelowNormDga()
 
-    /**
-     * A DGA with no `grossMonthlySalary` yet (hourly/no-salary path) is
-     * vacuous — never a false violation on incomplete data.
-     *
-     * @return void
-     */
-    public function testDgaWithoutSalaryYetIsVacuous(): void
-    {
-        $check = $this->checks['Employee']['nl-gebruikelijkloon-norm'];
+	/**
+	 * The mirror-image REAL RuleEngine check: a justified below-norm DGA
+	 * produces NO `nl-gebruikelijkloon-norm` violation.
+	 *
+	 * @return void
+	 */
+	public function testRealRuleEngineIsSilentWhenJustified(): void {
+		$employee = $this->employee(
+			[
+				'isDga' => true,
+				'grossMonthlySalary' => 3000.00,
+				'gebruikelijkloonJustification' => 'Start-up dispensatie, onderbouwd bij de Belastingdienst.',
+			]
+		);
 
-        $employee = $this->employee(['isDga' => true, 'grossMonthlySalary' => null]);
+		$violations = RuleEngine::evaluate('Employee', $employee);
 
-        $this->assertTrue($check($employee, []));
+		$ruleIds = array_map(static fn ($v) => $v->ruleId, $violations);
+		$this->assertNotContains('nl-gebruikelijkloon-norm', $ruleIds);
 
-    }//end testDgaWithoutSalaryYetIsVacuous()
+	}//end testRealRuleEngineIsSilentWhenJustified()
 
+	/**
+	 * The mirror-image REAL RuleEngine check: a non-DGA employee never fires
+	 * the rule, regardless of salary.
+	 *
+	 * @return void
+	 */
+	public function testRealRuleEngineIsSilentForANonDgaEmployee(): void {
+		$employee = $this->employee(['isDga' => false, 'grossMonthlySalary' => 1500.00]);
 
-    /**
-     * REQ-DGA-004 — the below-norm/no-justification scenario, driven through
-     * the REAL `RuleEngine::evaluate()` (catalogue + auto-discovered
-     * CheckProviders + the nl-2026 table), proving
-     * `nl-gebruikelijkloon-norm` is genuinely reachable via
-     * `occ hrmq:rules:audit` and not an orphaned capability.
-     *
-     * @return void
-     */
-    public function testRealRuleEngineFiresTheViolationForABelowNormDga(): void
-    {
-        $employee = $this->employee(['isDga' => true, 'grossMonthlySalary' => 3000.00]);
+		$violations = RuleEngine::evaluate('Employee', $employee);
 
-        $violations = RuleEngine::evaluate('Employee', $employee);
+		$ruleIds = array_map(static fn ($v) => $v->ruleId, $violations);
+		$this->assertNotContains('nl-gebruikelijkloon-norm', $ruleIds);
 
-        $ruleIds = array_map(static fn($v) => $v->ruleId, $violations);
-        $this->assertContains('nl-gebruikelijkloon-norm', $ruleIds, 'The real RuleEngine must fire nl-gebruikelijkloon-norm for a below-norm DGA with no justification.');
-
-        $violation = $violations[array_search('nl-gebruikelijkloon-norm', $ruleIds, true)];
-        $this->assertSame('conditional', $violation->severity, 'nl-gebruikelijkloon-norm must be severity conditional (a below-norm salary can be lawful when justified).');
-
-    }//end testRealRuleEngineFiresTheViolationForABelowNormDga()
-
-
-    /**
-     * The mirror-image REAL RuleEngine check: a justified below-norm DGA
-     * produces NO `nl-gebruikelijkloon-norm` violation.
-     *
-     * @return void
-     */
-    public function testRealRuleEngineIsSilentWhenJustified(): void
-    {
-        $employee = $this->employee(
-            [
-                'isDga'                         => true,
-                'grossMonthlySalary'            => 3000.00,
-                'gebruikelijkloonJustification' => 'Start-up dispensatie, onderbouwd bij de Belastingdienst.',
-            ]
-        );
-
-        $violations = RuleEngine::evaluate('Employee', $employee);
-
-        $ruleIds = array_map(static fn($v) => $v->ruleId, $violations);
-        $this->assertNotContains('nl-gebruikelijkloon-norm', $ruleIds);
-
-    }//end testRealRuleEngineIsSilentWhenJustified()
-
-
-    /**
-     * The mirror-image REAL RuleEngine check: a non-DGA employee never fires
-     * the rule, regardless of salary.
-     *
-     * @return void
-     */
-    public function testRealRuleEngineIsSilentForANonDgaEmployee(): void
-    {
-        $employee = $this->employee(['isDga' => false, 'grossMonthlySalary' => 1500.00]);
-
-        $violations = RuleEngine::evaluate('Employee', $employee);
-
-        $ruleIds = array_map(static fn($v) => $v->ruleId, $violations);
-        $this->assertNotContains('nl-gebruikelijkloon-norm', $ruleIds);
-
-    }//end testRealRuleEngineIsSilentForANonDgaEmployee()
-
+	}//end testRealRuleEngineIsSilentForANonDgaEmployee()
 
 }//end class

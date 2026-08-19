@@ -48,83 +48,75 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * occ command that requests an offer-letter + e-signature for one Application.
  */
-class OfferRequestSignatureCommand extends Command
-{
+class OfferRequestSignatureCommand extends Command {
 
-    /**
-     * Outcome statuses that count as a failure for the command's exit code.
-     *
-     * @var string[]
-     */
-    private const FAILURE_STATUSES = ['failed', 'usage-error'];
+	/**
+	 * Outcome statuses that count as a failure for the command's exit code.
+	 *
+	 * @var string[]
+	 */
+	private const FAILURE_STATUSES = ['failed', 'usage-error'];
 
+	/**
+	 * @param OfferEsignService $service The offer-letter + e-signature service.
+	 */
+	public function __construct(
+		private readonly OfferEsignService $service,
+	) {
+		parent::__construct();
 
-    /**
-     * @param OfferEsignService $service The offer-letter + e-signature service.
-     */
-    public function __construct(
-        private readonly OfferEsignService $service,
-    ) {
-        parent::__construct();
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * @return void
+	 */
+	protected function configure(): void {
+		$this->setName('hrmq:offer:request-signature')
+			->setDescription(
+				'Generate the aanbiedingsbrief and raise a docudesk e-signature request for one Application in status "aanbod". '
+				. 'KNOWN LIMITATION: docudesk\'s SigningService::createRequest() throws "No authenticated user" when run from a '
+				. 'genuine occ CLI process (no Nextcloud user session) -- this command will reliably fail there. The '
+				. 'ApplicationDetail manifest action (authenticated browser session) is the primary, actually-working trigger.'
+			)
+			->addOption('application', null, InputOption::VALUE_REQUIRED, 'The Application id (required -- no backlog semantics).');
 
+	}//end configure()
 
-    /**
-     * @return void
-     */
-    protected function configure(): void
-    {
-        $this->setName('hrmq:offer:request-signature')
-            ->setDescription(
-                'Generate the aanbiedingsbrief and raise a docudesk e-signature request for one Application in status "aanbod". '
-                .'KNOWN LIMITATION: docudesk\'s SigningService::createRequest() throws "No authenticated user" when run from a '
-                .'genuine occ CLI process (no Nextcloud user session) -- this command will reliably fail there. The '
-                .'ApplicationDetail manifest action (authenticated browser session) is the primary, actually-working trigger.'
-            )
-            ->addOption('application', null, InputOption::VALUE_REQUIRED, 'The Application id (required -- no backlog semantics).');
+	/**
+	 * @param InputInterface $input Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int 0 when the outcome is requested/already-signed/skipped-no-docudesk, 1 when failed/usage-error.
+	 *
+	 * @spec openspec/changes/offer-esign/specs/offer-esign/spec.md#REQ-OFFR-007
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output): int {
+		$applicationOption = $input->getOption('application');
+		$applicationId = (is_string($applicationOption) === true) ? trim($applicationOption) : '';
 
-    }//end configure()
+		if ($applicationId === '') {
+			$output->writeln('<error>--application is verplicht.</error>');
+			return 1;
+		}
 
+		$result = $this->service->requestSignature($applicationId);
 
-    /**
-     * @param InputInterface  $input  Console input.
-     * @param OutputInterface $output Console output.
-     *
-     * @return int 0 when the outcome is requested/already-signed/skipped-no-docudesk, 1 when failed/usage-error.
-     *
-     * @spec openspec/changes/offer-esign/specs/offer-esign/spec.md#REQ-OFFR-007
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        $applicationOption = $input->getOption('application');
-        $applicationId      = (is_string($applicationOption) === true) ? trim($applicationOption) : '';
+		$status = (string)$result['status'];
+		$line = sprintf(
+			'application %s: %s — %s',
+			(string)$result['applicationId'],
+			$status,
+			(string)$result['message']
+		);
 
-        if ($applicationId === '') {
-            $output->writeln('<error>--application is verplicht.</error>');
-            return 1;
-        }
+		if (in_array($status, self::FAILURE_STATUSES, true) === true) {
+			$output->writeln('<error>' . $line . '</error>');
+			return 1;
+		}
 
-        $result = $this->service->requestSignature($applicationId);
+		$output->writeln($line);
 
-        $status = (string) $result['status'];
-        $line   = sprintf(
-            'application %s: %s — %s',
-            (string) $result['applicationId'],
-            $status,
-            (string) $result['message']
-        );
-
-        if (in_array($status, self::FAILURE_STATUSES, true) === true) {
-            $output->writeln('<error>'.$line.'</error>');
-            return 1;
-        }
-
-        $output->writeln($line);
-
-        return 0;
-
-    }//end execute()
-
+		return 0;
+	}//end execute()
 
 }//end class

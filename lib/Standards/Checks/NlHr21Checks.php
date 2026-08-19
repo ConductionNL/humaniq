@@ -52,147 +52,135 @@ namespace OCA\Hrmq\Standards\Checks;
  * HR21 normfunctie-to-schaal consistency check, plus the illustrative
  * Normfunctie reference-row seed.
  */
-final class NlHr21Checks implements CheckProvider, SeedsObjects
-{
+final class NlHr21Checks implements CheckProvider, SeedsObjects {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
+	 */
+	public static function checks(): array {
+		return [
+			'EmploymentContract' => [
+				'nl-hr21-schaal-consistentie' => static fn (array $contract, array $context): bool => self::schaalConsistentieSatisfied($contract, $context),
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     *
-     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
-     */
-    public static function checks(): array
-    {
-        return [
-            'EmploymentContract' => [
-                'nl-hr21-schaal-consistentie' => static fn(array $contract, array $context): bool => self::schaalConsistentieSatisfied($contract, $context),
-            ],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * A small illustrative `Normfunctie` subset spanning three HR21
+	 * hoofdprocessen (design.md Seed Data) — NOT a claimed-complete library.
+	 * Every row is `caoSchaalVerified: false` except `HR21-002`, which is
+	 * flipped to `true` (with its `caoSchaalSource` saying so) purely to give
+	 * the seeded `EmploymentContract` proof cases (REQ-HR21-005) a resolvable,
+	 * non-vacuous mapping to check against.
+	 *
+	 * @return array<string, array<int, array<string, mixed>>>
+	 *
+	 * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-001
+	 */
+	public static function seedObjects(): array {
+		return [
+			'Normfunctie' => [
+				[
+					'functiecode' => 'HR21-001',
+					'naam' => 'Medewerker Beheer',
+					'functiegroep' => 'Beheer',
+					'caoSchaal' => '6',
+					'caoSchaalVerified' => false,
+					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+				],
+				[
+					'functiecode' => 'HR21-002',
+					'naam' => 'Senior Beleidsmedewerker',
+					'functiegroep' => 'Beleid',
+					'caoSchaal' => '10',
+					'caoSchaalVerified' => true,
+					'caoSchaalSource' => 'Illustrative proof-case only — flipped to verified:true so the nl-hr21-schaal-consistentie check has one resolvable mapping to demonstrate against; NOT an actual VNG/HR21 confirmation.',
+				],
+				[
+					'functiecode' => 'HR21-003',
+					'naam' => 'Beleidsmedewerker',
+					'functiegroep' => 'Beleid',
+					'caoSchaal' => '9',
+					'caoSchaalVerified' => false,
+					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+				],
+				[
+					'functiecode' => 'HR21-004',
+					'naam' => 'Teammanager',
+					'functiegroep' => 'Management',
+					'caoSchaal' => '11',
+					'caoSchaalVerified' => false,
+					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+				],
+				[
+					'functiecode' => 'HR21-005',
+					'naam' => 'Afdelingsmanager',
+					'functiegroep' => 'Management',
+					'caoSchaal' => '13',
+					'caoSchaalVerified' => false,
+					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+				],
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+	}//end seedObjects()
 
-    }//end seedSpec()
+	/**
+	 * The `nl-hr21-schaal-consistentie` predicate (spec.md REQ-HR21-003):
+	 * vacuous when `normfunctieId` is absent, does not resolve to a
+	 * `Normfunctie` (via the `hr21.normfunctiesById` audit context), or the
+	 * resolved Normfunctie's `caoSchaalVerified` is not `true`. Otherwise
+	 * requires the contract's own `caoSchaal` to equal the resolved
+	 * Normfunctie's `caoSchaal`.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param array<string, mixed> $context Evaluation context; reads `hr21.normfunctiesById`.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
+	 */
+	private static function schaalConsistentieSatisfied(array $contract, array $context): bool {
+		$normfunctieId = trim((string)($contract['normfunctieId'] ?? ''));
+		if ($normfunctieId === '') {
+			// No normfunctie assigned -- out of scope.
+			return true;
+		}
 
+		$normfunctie = ($context['hr21']['normfunctiesById'][$normfunctieId] ?? null);
+		if (is_array($normfunctie) === false) {
+			// Unresolvable normfunctie -- nothing decidable from this object alone.
+			return true;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * A small illustrative `Normfunctie` subset spanning three HR21
-     * hoofdprocessen (design.md Seed Data) — NOT a claimed-complete library.
-     * Every row is `caoSchaalVerified: false` except `HR21-002`, which is
-     * flipped to `true` (with its `caoSchaalSource` saying so) purely to give
-     * the seeded `EmploymentContract` proof cases (REQ-HR21-005) a resolvable,
-     * non-vacuous mapping to check against.
-     *
-     * @return array<string, array<int, array<string, mixed>>>
-     *
-     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-001
-     */
-    public static function seedObjects(): array
-    {
-        return [
-            'Normfunctie' => [
-                [
-                    'functiecode'       => 'HR21-001',
-                    'naam'              => 'Medewerker Beheer',
-                    'functiegroep'      => 'Beheer',
-                    'caoSchaal'         => '6',
-                    'caoSchaalVerified' => false,
-                    'caoSchaalSource'   => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
-                ],
-                [
-                    'functiecode'       => 'HR21-002',
-                    'naam'              => 'Senior Beleidsmedewerker',
-                    'functiegroep'      => 'Beleid',
-                    'caoSchaal'         => '10',
-                    'caoSchaalVerified' => true,
-                    'caoSchaalSource'   => 'Illustrative proof-case only — flipped to verified:true so the nl-hr21-schaal-consistentie check has one resolvable mapping to demonstrate against; NOT an actual VNG/HR21 confirmation.',
-                ],
-                [
-                    'functiecode'       => 'HR21-003',
-                    'naam'              => 'Beleidsmedewerker',
-                    'functiegroep'      => 'Beleid',
-                    'caoSchaal'         => '9',
-                    'caoSchaalVerified' => false,
-                    'caoSchaalSource'   => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
-                ],
-                [
-                    'functiecode'       => 'HR21-004',
-                    'naam'              => 'Teammanager',
-                    'functiegroep'      => 'Management',
-                    'caoSchaal'         => '11',
-                    'caoSchaalVerified' => false,
-                    'caoSchaalSource'   => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
-                ],
-                [
-                    'functiecode'       => 'HR21-005',
-                    'naam'              => 'Afdelingsmanager',
-                    'functiegroep'      => 'Management',
-                    'caoSchaal'         => '13',
-                    'caoSchaalVerified' => false,
-                    'caoSchaalSource'   => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
-                ],
-            ],
-        ];
+		if (($normfunctie['caoSchaalVerified'] ?? false) !== true) {
+			// Unverified/placeholder mapping -- advisory, never a false mandatory violation.
+			return true;
+		}
 
-    }//end seedObjects()
+		$mappedSchaal = trim((string)($normfunctie['caoSchaal'] ?? ''));
+		if ($mappedSchaal === '') {
+			return true;
+		}
 
-
-    /**
-     * The `nl-hr21-schaal-consistentie` predicate (spec.md REQ-HR21-003):
-     * vacuous when `normfunctieId` is absent, does not resolve to a
-     * `Normfunctie` (via the `hr21.normfunctiesById` audit context), or the
-     * resolved Normfunctie's `caoSchaalVerified` is not `true`. Otherwise
-     * requires the contract's own `caoSchaal` to equal the resolved
-     * Normfunctie's `caoSchaal`.
-     *
-     * @param array<string, mixed> $contract The EmploymentContract.
-     * @param array<string, mixed> $context  Evaluation context; reads `hr21.normfunctiesById`.
-     *
-     * @return bool
-     *
-     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
-     */
-    private static function schaalConsistentieSatisfied(array $contract, array $context): bool
-    {
-        $normfunctieId = trim((string) ($contract['normfunctieId'] ?? ''));
-        if ($normfunctieId === '') {
-            // No normfunctie assigned -- out of scope.
-            return true;
-        }
-
-        $normfunctie = ($context['hr21']['normfunctiesById'][$normfunctieId] ?? null);
-        if (is_array($normfunctie) === false) {
-            // Unresolvable normfunctie -- nothing decidable from this object alone.
-            return true;
-        }
-
-        if (($normfunctie['caoSchaalVerified'] ?? false) !== true) {
-            // Unverified/placeholder mapping -- advisory, never a false mandatory violation.
-            return true;
-        }
-
-        $mappedSchaal = trim((string) ($normfunctie['caoSchaal'] ?? ''));
-        if ($mappedSchaal === '') {
-            return true;
-        }
-
-        $contractSchaal = trim((string) ($contract['caoSchaal'] ?? ''));
-        return $contractSchaal === $mappedSchaal;
-
-    }//end schaalConsistentieSatisfied()
-
+		$contractSchaal = trim((string)($contract['caoSchaal'] ?? ''));
+		return $contractSchaal === $mappedSchaal;
+	}//end schaalConsistentieSatisfied()
 
 }//end class

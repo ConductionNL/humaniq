@@ -43,59 +43,52 @@ use OCA\Hrmq\Payroll\StepHandlerRegistry;
 /**
  * Invoke an allow-listed national-exotica handler by name.
  */
-final class PhpStepOp extends AbstractOp
-{
+final class PhpStepOp extends AbstractOp {
 
+	/**
+	 * @param RefResolver $refs The reference resolver.
+	 * @param StepHandlerRegistry $registry The compile-time handler allow-list.
+	 */
+	public function __construct(
+		RefResolver $refs,
+		private readonly StepHandlerRegistry $registry,
+	) {
+		parent::__construct($refs);
 
-    /**
-     * @param RefResolver         $refs     The reference resolver.
-     * @param StepHandlerRegistry $registry The compile-time handler allow-list.
-     */
-    public function __construct(RefResolver $refs, private readonly StepHandlerRegistry $registry)
-    {
-        parent::__construct($refs);
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'phpStep';
+	}//end name()
 
+	/**
+	 * Resolve the declared handler name and invoke it.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return int|float
+	 *
+	 * @throws DslException When no handler name is declared, or the name is
+	 *                      not on the allow-list.
+	 */
+	public function evaluate(array $spec, StepContext $ctx): mixed {
+		$handler = ($spec['handler'] ?? null);
+		if (is_string($handler) === false || trim($handler) === '') {
+			throw new DslException('Pack: op "phpStep" mist de verplichte parameter "handler".');
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'phpStep';
+		$params = ($spec['params'] ?? []);
+		if (is_array($params) === false) {
+			throw new DslException('Pack: de "params" van op "phpStep" moeten een object zijn.');
+		}
 
-    }//end name()
-
-
-    /**
-     * Resolve the declared handler name and invoke it.
-     *
-     * @param array<string, mixed> $spec The declared spec.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return int|float
-     *
-     * @throws DslException When no handler name is declared, or the name is
-     *                      not on the allow-list.
-     */
-    public function evaluate(array $spec, StepContext $ctx): mixed
-    {
-        $handler = ($spec['handler'] ?? null);
-        if (is_string($handler) === false || trim($handler) === '') {
-            throw new DslException('Pack: op "phpStep" mist de verplichte parameter "handler".');
-        }
-
-        $params = ($spec['params'] ?? []);
-        if (is_array($params) === false) {
-            throw new DslException('Pack: de "params" van op "phpStep" moeten een object zijn.');
-        }
-
-        return $this->registry->get($handler)->handle($params, $ctx);
-
-    }//end evaluate()
-
+		return $this->registry->get($handler)->handle($params, $ctx);
+	}//end evaluate()
 
 }//end class

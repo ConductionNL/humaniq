@@ -37,126 +37,114 @@ use Throwable;
 /**
  * Deletes calendar objects whose source Interview no longer exists in the register.
  */
-class InterviewOrphanReconciler
-{
+class InterviewOrphanReconciler {
 
-    /**
-     * @var string
-     */
-    private const URI_PREFIX = 'hrmq-interview-';
+	/**
+	 * @var string
+	 */
+	private const URI_PREFIX = 'hrmq-interview-';
 
+	/**
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		private readonly LoggerInterface $logger,
+	) {
 
-    /**
-     * @param LoggerInterface $logger Logger.
-     */
-    public function __construct(
-        private readonly LoggerInterface $logger,
-    ) {
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * List the configured calendar's objects and delete every
+	 * `hrmq-interview-*.ics` URI whose embedded uuid is not among the given
+	 * (full, unbounded, any-status) live id set (design.md D4).
+	 *
+	 * @param InterviewCalendarTarget $target The resolved sync target.
+	 * @param array<int, string> $liveIds All currently-existing Interview ids.
+	 * @param array<int, array<string, mixed>> &$results Outcome accumulator.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-004
+	 */
+	public function reconcile(InterviewCalendarTarget $target, array $liveIds, array &$results): void {
+		try {
+			$objects = (method_exists($target->backend, 'getCalendarObjects') === true) ? $target->backend->getCalendarObjects($target->calendarId) : [];
+		} catch (Throwable $e) {
+			$this->logger->warning('InterviewOrphanReconciler: kon kalenderobjecten niet ophalen voor reconciliatie: ' . $e->getMessage());
+			return;
+		}
 
+		foreach ((is_array($objects) === true ? $objects : []) as $object) {
+			$objectUri = (string)(is_array($object) === true ? ($object['uri'] ?? '') : '');
+			$sourceId = $this->parseHrmqUri($objectUri);
+			if ($sourceId === null || in_array($sourceId, $liveIds, true) === true) {
+				continue;
+			}
 
-    /**
-     * List the configured calendar's objects and delete every
-     * `hrmq-interview-*.ics` URI whose embedded uuid is not among the given
-     * (full, unbounded, any-status) live id set (design.md D4).
-     *
-     * @param InterviewCalendarTarget          $target  The resolved sync target.
-     * @param array<int, string>               $liveIds All currently-existing Interview ids.
-     * @param array<int, array<string, mixed>> &$results Outcome accumulator.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/interview-scheduling/specs/interview-scheduling/spec.md#REQ-INTV-004
-     */
-    public function reconcile(InterviewCalendarTarget $target, array $liveIds, array &$results): void
-    {
-        try {
-            $objects = (method_exists($target->backend, 'getCalendarObjects') === true) ? $target->backend->getCalendarObjects($target->calendarId) : [];
-        } catch (Throwable $e) {
-            $this->logger->warning('InterviewOrphanReconciler: kon kalenderobjecten niet ophalen voor reconciliatie: '.$e->getMessage());
-            return;
-        }
+			$this->deleteOrphan($target, $objectUri, $sourceId, $results);
+		}
 
-        foreach ((is_array($objects) === true ? $objects : []) as $object) {
-            $objectUri = (string) (is_array($object) === true ? ($object['uri'] ?? '') : '');
-            $sourceId  = $this->parseHrmqUri($objectUri);
-            if ($sourceId === null || in_array($sourceId, $liveIds, true) === true) {
-                continue;
-            }
+	}//end reconcile()
 
-            $this->deleteOrphan($target, $objectUri, $sourceId, $results);
-        }
+	/**
+	 * Delete one orphaned calendar object.
+	 *
+	 * @param InterviewCalendarTarget $target The resolved sync target.
+	 * @param string $objectUri The orphaned object's URI.
+	 * @param string $sourceId The embedded Interview id, for the outcome row.
+	 * @param array<int, array<string, mixed>> &$results Outcome accumulator.
+	 *
+	 * @return void
+	 */
+	private function deleteOrphan(InterviewCalendarTarget $target, string $objectUri, string $sourceId, array &$results): void {
+		try {
+			if (method_exists($target->backend, 'deleteCalendarObject') === false) {
+				throw new RuntimeException('CalDavBackend::deleteCalendarObject is not available.');
+			}
 
-    }//end reconcile()
+			$target->backend->deleteCalendarObject($target->calendarId, $objectUri);
+		} catch (Throwable $e) {
+			$results[] = $this->outcome($sourceId, 'failed', 'Verwijderen weeskalenderobject mislukt: ' . $e->getMessage());
+			return;
+		}
 
+		$results[] = $this->outcome($sourceId, 'removed', 'Weeskalenderobject verwijderd (bron niet meer aanwezig in het register).');
 
-    /**
-     * Delete one orphaned calendar object.
-     *
-     * @param InterviewCalendarTarget          $target    The resolved sync target.
-     * @param string                           $objectUri The orphaned object's URI.
-     * @param string                           $sourceId  The embedded Interview id, for the outcome row.
-     * @param array<int, array<string, mixed>> &$results  Outcome accumulator.
-     *
-     * @return void
-     */
-    private function deleteOrphan(InterviewCalendarTarget $target, string $objectUri, string $sourceId, array &$results): void
-    {
-        try {
-            if (method_exists($target->backend, 'deleteCalendarObject') === false) {
-                throw new RuntimeException('CalDavBackend::deleteCalendarObject is not available.');
-            }
+	}//end deleteOrphan()
 
-            $target->backend->deleteCalendarObject($target->calendarId, $objectUri);
-        } catch (Throwable $e) {
-            $results[] = $this->outcome($sourceId, 'failed', 'Verwijderen weeskalenderobject mislukt: '.$e->getMessage());
-            return;
-        }
+	/**
+	 * Parse an hrmq-managed object URI (`hrmq-interview-{uuid}.ics`) into
+	 * its source id, or null when the URI carries no hrmq-interview prefix.
+	 *
+	 * @param string $objectUri The calendar object's URI.
+	 *
+	 * @return string|null
+	 */
+	private function parseHrmqUri(string $objectUri): ?string {
+		if (str_starts_with($objectUri, self::URI_PREFIX) === true && str_ends_with($objectUri, '.ics') === true) {
+			return substr($objectUri, strlen(self::URI_PREFIX), -4);
+		}
 
-        $results[] = $this->outcome($sourceId, 'removed', 'Weeskalenderobject verwijderd (bron niet meer aanwezig in het register).');
+		return null;
+	}//end parseHrmqUri()
 
-    }//end deleteOrphan()
+	/**
+	 * Build one outcome row.
+	 *
+	 * @param string $sourceId The Interview id.
+	 * @param string $status `removed|failed`.
+	 * @param string $message A human-readable outcome message.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function outcome(string $sourceId, string $status, string $message): array {
+		return [
+			'type' => 'interview',
+			'sourceId' => $sourceId,
+			'status' => $status,
+			'message' => $message,
+		];
 
-
-    /**
-     * Parse an hrmq-managed object URI (`hrmq-interview-{uuid}.ics`) into
-     * its source id, or null when the URI carries no hrmq-interview prefix.
-     *
-     * @param string $objectUri The calendar object's URI.
-     *
-     * @return string|null
-     */
-    private function parseHrmqUri(string $objectUri): ?string
-    {
-        if (str_starts_with($objectUri, self::URI_PREFIX) === true && str_ends_with($objectUri, '.ics') === true) {
-            return substr($objectUri, strlen(self::URI_PREFIX), -4);
-        }
-
-        return null;
-
-    }//end parseHrmqUri()
-
-
-    /**
-     * Build one outcome row.
-     *
-     * @param string $sourceId The Interview id.
-     * @param string $status   `removed|failed`.
-     * @param string $message  A human-readable outcome message.
-     *
-     * @return array<string, mixed>
-     */
-    private function outcome(string $sourceId, string $status, string $message): array
-    {
-        return [
-            'type'     => 'interview',
-            'sourceId' => $sourceId,
-            'status'   => $status,
-            'message'  => $message,
-        ];
-
-    }//end outcome()
-
+	}//end outcome()
 
 }//end class

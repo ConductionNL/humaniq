@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrm-rule-engine/specs/hrm-rule-engine/spec.md
+ * @spec openspec/specs/hrm-rule-engine/spec.md
  */
 
 declare(strict_types=1);
@@ -33,39 +33,34 @@ use JsonSerializable;
 /**
  * Immutable value object describing one violated rule.
  */
-final class Violation implements JsonSerializable
-{
+final class Violation implements JsonSerializable {
 
+	/**
+	 * @param string $ruleId The violated rule's catalogue id.
+	 * @param string $severity `mandatory` | `conditional` | `recommended`.
+	 * @param string $source Human citation (e.g. "WTD 2003/88/EC art. 6").
+	 * @param string $statement The rule statement.
+	 */
+	public function __construct(
+		public readonly string $ruleId,
+		public readonly string $severity,
+		public readonly string $source,
+		public readonly string $statement,
+	) {
 
-    /**
-     * @param string $ruleId    The violated rule's catalogue id.
-     * @param string $severity  `mandatory` | `conditional` | `recommended`.
-     * @param string $source    Human citation (e.g. "WTD 2003/88/EC art. 6").
-     * @param string $statement The rule statement.
-     */
-    public function __construct(
-        public readonly string $ruleId,
-        public readonly string $severity,
-        public readonly string $source,
-        public readonly string $statement,
-    ) {
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * @return array<string, string>
+	 */
+	public function jsonSerialize(): array {
+		return [
+			'ruleId' => $this->ruleId,
+			'severity' => $this->severity,
+			'source' => $this->source,
+			'statement' => $this->statement,
+		];
 
-
-    /**
-     * @return array<string, string>
-     */
-    public function jsonSerialize(): array
-    {
-        return [
-            'ruleId'    => $this->ruleId,
-            'severity'  => $this->severity,
-            'source'    => $this->source,
-            'statement' => $this->statement,
-        ];
-
-    }//end jsonSerialize()
-
+	}//end jsonSerialize()
 
 }//end class

@@ -37,252 +37,221 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/recruiting-ats-basic/specs/recruiting-applications/spec.md
  */
-class NlAtsChecksTest extends TestCase
-{
+class NlAtsChecksTest extends TestCase {
 
+	/**
+	 * The registered Application predicates, keyed by rule id.
+	 *
+	 * @var array<string, callable>
+	 */
+	private array $checks;
 
-    /**
-     * The registered Application predicates, keyed by rule id.
-     *
-     * @var array<string, callable>
-     */
-    private array $checks;
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$this->checks = NlAtsChecks::checks()['Application'];
 
+	}//end setUp()
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $this->checks = NlAtsChecks::checks()['Application'];
+	/**
+	 * A minimal Application fixture; each test overrides the fields it exercises.
+	 *
+	 * @param array<string, mixed> $overrides Fields to override.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function application(array $overrides = []): array {
+		return array_merge(
+			[
+				'vacancyId' => 'vacancy-vue-developer',
+				'candidateName' => 'Jan Voorbeeld',
+				'email' => 'voorbeeld@example.org',
+				'status' => 'nieuw',
+				'rejectedDate' => null,
+				'talentPoolOptIn' => false,
+				'retentionExpiryDate' => null,
+			],
+			$overrides
+		);
 
-    }//end setUp()
+	}//end application()
 
+	/**
+	 * @return void
+	 */
+	public function testDerivatieCorrectFourWeekOffsetPasses(): void {
+		$application = $this->application(
+			[
+				'status' => 'afgewezen',
+				'rejectedDate' => '2026-06-01',
+				'talentPoolOptIn' => false,
+				'retentionExpiryDate' => '2026-06-29',
+			]
+		);
 
-    /**
-     * A minimal Application fixture; each test overrides the fields it exercises.
-     *
-     * @param array<string, mixed> $overrides Fields to override.
-     *
-     * @return array<string, mixed>
-     */
-    private function application(array $overrides=[]): array
-    {
-        return array_merge(
-            [
-                'vacancyId'           => 'vacancy-vue-developer',
-                'candidateName'       => 'Jan Voorbeeld',
-                'email'               => 'voorbeeld@example.org',
-                'status'              => 'nieuw',
-                'rejectedDate'        => null,
-                'talentPoolOptIn'     => false,
-                'retentionExpiryDate' => null,
-            ],
-            $overrides
-        );
+		$this->assertTrue(($this->checks['nl-ats-retentie-derivatie'])($application));
 
-    }//end application()
+	}//end testDerivatieCorrectFourWeekOffsetPasses()
 
+	/**
+	 * @return void
+	 */
+	public function testDerivatieCorrectOneYearOptInOffsetPasses(): void {
+		$application = $this->application(
+			[
+				'status' => 'afgewezen',
+				'rejectedDate' => '2026-06-01',
+				'talentPoolOptIn' => true,
+				'retentionExpiryDate' => '2027-06-01',
+			]
+		);
 
-    /**
-     * @return void
-     */
-    public function testDerivatieCorrectFourWeekOffsetPasses(): void
-    {
-        $application = $this->application(
-            [
-                'status'              => 'afgewezen',
-                'rejectedDate'        => '2026-06-01',
-                'talentPoolOptIn'     => false,
-                'retentionExpiryDate' => '2026-06-29',
-            ]
-        );
+		$this->assertTrue(($this->checks['nl-ats-retentie-derivatie'])($application));
 
-        $this->assertTrue(($this->checks['nl-ats-retentie-derivatie'])($application));
+	}//end testDerivatieCorrectOneYearOptInOffsetPasses()
 
-    }//end testDerivatieCorrectFourWeekOffsetPasses()
+	/**
+	 * @return void
+	 */
+	public function testDerivatieWrongOffsetIsAViolation(): void {
+		$application = $this->application(
+			[
+				'status' => 'afgewezen',
+				'rejectedDate' => '2026-06-01',
+				'talentPoolOptIn' => false,
+				'retentionExpiryDate' => '2026-07-15',
+			]
+		);
 
+		$this->assertFalse(($this->checks['nl-ats-retentie-derivatie'])($application));
 
-    /**
-     * @return void
-     */
-    public function testDerivatieCorrectOneYearOptInOffsetPasses(): void
-    {
-        $application = $this->application(
-            [
-                'status'              => 'afgewezen',
-                'rejectedDate'        => '2026-06-01',
-                'talentPoolOptIn'     => true,
-                'retentionExpiryDate' => '2027-06-01',
-            ]
-        );
+	}//end testDerivatieWrongOffsetIsAViolation()
 
-        $this->assertTrue(($this->checks['nl-ats-retentie-derivatie'])($application));
+	/**
+	 * @return void
+	 */
+	public function testDerivatieNullRejectedDateOnAfgewezenIsAViolation(): void {
+		$application = $this->application(
+			[
+				'status' => 'afgewezen',
+				'rejectedDate' => null,
+				'retentionExpiryDate' => '2026-06-29',
+			]
+		);
 
-    }//end testDerivatieCorrectOneYearOptInOffsetPasses()
+		$this->assertFalse(($this->checks['nl-ats-retentie-derivatie'])($application));
 
+	}//end testDerivatieNullRejectedDateOnAfgewezenIsAViolation()
 
-    /**
-     * @return void
-     */
-    public function testDerivatieWrongOffsetIsAViolation(): void
-    {
-        $application = $this->application(
-            [
-                'status'              => 'afgewezen',
-                'rejectedDate'        => '2026-06-01',
-                'talentPoolOptIn'     => false,
-                'retentionExpiryDate' => '2026-07-15',
-            ]
-        );
+	/**
+	 * @return void
+	 */
+	public function testDerivatieNullRetentionExpiryDateOnAfgewezenIsAViolation(): void {
+		$application = $this->application(
+			[
+				'status' => 'afgewezen',
+				'rejectedDate' => '2026-06-01',
+				'retentionExpiryDate' => null,
+			]
+		);
 
-        $this->assertFalse(($this->checks['nl-ats-retentie-derivatie'])($application));
+		$this->assertFalse(($this->checks['nl-ats-retentie-derivatie'])($application));
 
-    }//end testDerivatieWrongOffsetIsAViolation()
+	}//end testDerivatieNullRetentionExpiryDateOnAfgewezenIsAViolation()
 
+	/**
+	 * @return void
+	 */
+	public function testDerivatieVacuousPassOnEveryActiveStatus(): void {
+		foreach (['nieuw', 'screening', 'gesprek', 'aanbod', 'aangenomen'] as $status) {
+			$application = $this->application(['status' => $status]);
+			$this->assertTrue(
+				($this->checks['nl-ats-retentie-derivatie'])($application),
+				sprintf('status %s should pass vacuously', $status)
+			);
+		}
 
-    /**
-     * @return void
-     */
-    public function testDerivatieNullRejectedDateOnAfgewezenIsAViolation(): void
-    {
-        $application = $this->application(
-            [
-                'status'              => 'afgewezen',
-                'rejectedDate'        => null,
-                'retentionExpiryDate' => '2026-06-29',
-            ]
-        );
+	}//end testDerivatieVacuousPassOnEveryActiveStatus()
 
-        $this->assertFalse(($this->checks['nl-ats-retentie-derivatie'])($application));
+	/**
+	 * @return void
+	 */
+	public function testVerlopenPastRetentionExpiryDateIsAViolation(): void {
+		// The seeded application-voorbeeld-afgewezen scenario: expiry 2026-06-29,
+		// audited well after that date.
+		$application = $this->application(
+			[
+				'status' => 'afgewezen',
+				'rejectedDate' => '2026-06-01',
+				'retentionExpiryDate' => '2026-06-29',
+			]
+		);
 
-    }//end testDerivatieNullRejectedDateOnAfgewezenIsAViolation()
+		$this->assertFalse(($this->checks['nl-ats-retentie-verlopen'])($application));
 
+	}//end testVerlopenPastRetentionExpiryDateIsAViolation()
 
-    /**
-     * @return void
-     */
-    public function testDerivatieNullRetentionExpiryDateOnAfgewezenIsAViolation(): void
-    {
-        $application = $this->application(
-            [
-                'status'              => 'afgewezen',
-                'rejectedDate'        => '2026-06-01',
-                'retentionExpiryDate' => null,
-            ]
-        );
+	/**
+	 * @return void
+	 */
+	public function testVerlopenFutureRetentionExpiryDateIsNotAViolation(): void {
+		$application = $this->application(
+			[
+				'status' => 'afgewezen',
+				'rejectedDate' => date('Y-m-d'),
+				'retentionExpiryDate' => date('Y-m-d', strtotime('+30 days')),
+			]
+		);
 
-        $this->assertFalse(($this->checks['nl-ats-retentie-derivatie'])($application));
+		$this->assertTrue(($this->checks['nl-ats-retentie-verlopen'])($application));
 
-    }//end testDerivatieNullRetentionExpiryDateOnAfgewezenIsAViolation()
+	}//end testVerlopenFutureRetentionExpiryDateIsNotAViolation()
 
+	/**
+	 * @return void
+	 */
+	public function testVerlopenNullRetentionExpiryDateIsNotAViolation(): void {
+		$application = $this->application(['status' => 'nieuw', 'retentionExpiryDate' => null]);
 
-    /**
-     * @return void
-     */
-    public function testDerivatieVacuousPassOnEveryActiveStatus(): void
-    {
-        foreach (['nieuw', 'screening', 'gesprek', 'aanbod', 'aangenomen'] as $status) {
-            $application = $this->application(['status' => $status]);
-            $this->assertTrue(
-                ($this->checks['nl-ats-retentie-derivatie'])($application),
-                sprintf('status %s should pass vacuously', $status)
-            );
-        }
+		$this->assertTrue(($this->checks['nl-ats-retentie-verlopen'])($application));
 
-    }//end testDerivatieVacuousPassOnEveryActiveStatus()
+	}//end testVerlopenNullRetentionExpiryDateIsNotAViolation()
 
+	/**
+	 * @return void
+	 */
+	public function testActiveApplicationPassesBothChecksVacuously(): void {
+		// The seeded application-voorbeeld-nieuw scenario.
+		$application = $this->application(['status' => 'nieuw']);
 
-    /**
-     * @return void
-     */
-    public function testVerlopenPastRetentionExpiryDateIsAViolation(): void
-    {
-        // The seeded application-voorbeeld-afgewezen scenario: expiry 2026-06-29,
-        // audited well after that date.
-        $application = $this->application(
-            [
-                'status'              => 'afgewezen',
-                'rejectedDate'        => '2026-06-01',
-                'retentionExpiryDate' => '2026-06-29',
-            ]
-        );
+		foreach ($this->checks as $ruleId => $predicate) {
+			$this->assertTrue((bool)$predicate($application), sprintf('nieuw application violates %s', $ruleId));
+		}
 
-        $this->assertFalse(($this->checks['nl-ats-retentie-verlopen'])($application));
+	}//end testActiveApplicationPassesBothChecksVacuously()
 
-    }//end testVerlopenPastRetentionExpiryDateIsAViolation()
+	/**
+	 * @return void
+	 */
+	public function testAangenomenApplicationPassesBothChecksVacuously(): void {
+		// The seeded application-voorbeeld-aangenomen scenario — no retention
+		// clock on a hire in the MVP (design D4).
+		$application = $this->application(['status' => 'aangenomen']);
 
+		foreach ($this->checks as $ruleId => $predicate) {
+			$this->assertTrue((bool)$predicate($application), sprintf('aangenomen application violates %s', $ruleId));
+		}
 
-    /**
-     * @return void
-     */
-    public function testVerlopenFutureRetentionExpiryDateIsNotAViolation(): void
-    {
-        $application = $this->application(
-            [
-                'status'              => 'afgewezen',
-                'rejectedDate'        => date('Y-m-d'),
-                'retentionExpiryDate' => date('Y-m-d', strtotime('+30 days')),
-            ]
-        );
+	}//end testAangenomenApplicationPassesBothChecksVacuously()
 
-        $this->assertTrue(($this->checks['nl-ats-retentie-verlopen'])($application));
+	/**
+	 * @return void
+	 */
+	public function testBothRuleIdsAreRegistered(): void {
+		$this->assertArrayHasKey('nl-ats-retentie-derivatie', $this->checks);
+		$this->assertArrayHasKey('nl-ats-retentie-verlopen', $this->checks);
 
-    }//end testVerlopenFutureRetentionExpiryDateIsNotAViolation()
-
-
-    /**
-     * @return void
-     */
-    public function testVerlopenNullRetentionExpiryDateIsNotAViolation(): void
-    {
-        $application = $this->application(['status' => 'nieuw', 'retentionExpiryDate' => null]);
-
-        $this->assertTrue(($this->checks['nl-ats-retentie-verlopen'])($application));
-
-    }//end testVerlopenNullRetentionExpiryDateIsNotAViolation()
-
-
-    /**
-     * @return void
-     */
-    public function testActiveApplicationPassesBothChecksVacuously(): void
-    {
-        // The seeded application-voorbeeld-nieuw scenario.
-        $application = $this->application(['status' => 'nieuw']);
-
-        foreach ($this->checks as $ruleId => $predicate) {
-            $this->assertTrue((bool) $predicate($application), sprintf('nieuw application violates %s', $ruleId));
-        }
-
-    }//end testActiveApplicationPassesBothChecksVacuously()
-
-
-    /**
-     * @return void
-     */
-    public function testAangenomenApplicationPassesBothChecksVacuously(): void
-    {
-        // The seeded application-voorbeeld-aangenomen scenario — no retention
-        // clock on a hire in the MVP (design D4).
-        $application = $this->application(['status' => 'aangenomen']);
-
-        foreach ($this->checks as $ruleId => $predicate) {
-            $this->assertTrue((bool) $predicate($application), sprintf('aangenomen application violates %s', $ruleId));
-        }
-
-    }//end testAangenomenApplicationPassesBothChecksVacuously()
-
-
-    /**
-     * @return void
-     */
-    public function testBothRuleIdsAreRegistered(): void
-    {
-        $this->assertArrayHasKey('nl-ats-retentie-derivatie', $this->checks);
-        $this->assertArrayHasKey('nl-ats-retentie-verlopen', $this->checks);
-
-    }//end testBothRuleIdsAreRegistered()
-
+	}//end testBothRuleIdsAreRegistered()
 
 }//end class

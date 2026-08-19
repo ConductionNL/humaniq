@@ -1,50 +1,58 @@
+# hrmq — Conduction PHPStan config.
+#
+# The shared base is the single source of truth. Everything here is either this
+# app's own tracked debt or an ignore naming a symbol that exists in no other
+# fleet app. Anything you are tempted to add that another app would also need
+# belongs in the base, not here.
+#
+# What moved OUT of this file and into the base, verbatim and unchanged:
+# level, paths, bootstrapFiles, scanDirectories, reportUnmatchedIgnoredErrors,
+# and every \OC / OC\ / OCA\DAV\ / OCA\OpenRegister\ ignore. They were not
+# hrmq-specific; all 18 apps had re-typed copies of the same blocks.
 includes:
-    # Tracked lint debt in the current tree (auto-generated via `phpstan --generate-baseline`).
-    # New code is NOT covered by the baseline, so new violations of level 5 rules fail CI.
+    - vendor/conduction/hydra-gates/quality-config/phpstan-base.neon
+    # Tracked lint debt in the current tree. Not regenerated wholesale; entries
+    # are removed one at a time as the underlying code is fixed.
     - phpstan-baseline.neon
 
 parameters:
-    level: 5
-    paths:
-        - lib
-    bootstrapFiles:
-        - phpstan-bootstrap.php
+    # App-specific only.
+    treatPhpDocTypesAsCertain: false
+
     excludePaths:
-        - vendor
-        - vendor-bin
         # These guards implement OCA\OpenRegister\Lifecycle\LifecycleGuardInterface,
-        # which is only available at runtime once OpenRegister is installed
-        # alongside hrmq. PHPStan cannot baseline "implements unknown interface"
-        # errors — exclusion is required (same pattern used fleet-wide, e.g.
-        # openconnector/phpstan.neon for its own OpenRegister-dependent classes).
+        # which only exists at runtime once OpenRegister is installed alongside
+        # hrmq. PHPStan cannot baseline "implements unknown interface" errors —
+        # exclusion is required, not preferred.
         - lib/Lifecycle/CompEffectiveDateGuard.php
         - lib/Lifecycle/LeaveBuySellApprovalGuard.php
         - lib/Lifecycle/LeaveSettlementPeriodGuard.php
         - lib/Lifecycle/NoSelfApprovalGuard.php
         - lib/Lifecycle/PayrollRunApprovedGuard.php
-    scanDirectories:
-        - vendor/nextcloud/ocp
-    treatPhpDocTypesAsCertain: false
-    reportUnmatchedIgnoredErrors: false
+
     ignoreErrors:
-        # Nextcloud server internals (\OC, OC\) not stubbed in nextcloud/ocp
-        - '#Call to an undefined method OC::#'
-        - '#Class OC not found#'
-        - '#Access to static property \$server on an unknown class OC#'
-        - '#unknown class OC\\#'
-        - '#Caught class OC\\#'
-        # OCA\DAV is server-internal and not in nextcloud/ocp stubs (CalDavBackend used by
-        # PortalCalendarService's ICreateFromString bridge)
-        - '#unknown class OCA\\DAV\\#'
-        - '#Class OCA\\DAV\\#'
-        # OCA classes from other apps (OpenRegister, DocuDesk) are only available at runtime
-        # once those apps are installed alongside hrmq — not resolvable during static analysis.
-        - '#unknown class OCA\\OpenRegister\\#'
-        - '#OCA\\OpenRegister\\[a-zA-Z\\]+.*not found#'
-        - '#on an unknown class OCA\\OpenRegister\\#'
-        - '#has invalid return type OCA\\OpenRegister\\#'
-        - '#has invalid type OCA\\OpenRegister\\#'
-        - '#implements unknown interface OCA\\OpenRegister\\#'
+        # AuthorizedAdminSetting's constructor is typed
+        # `class-string<IDelegatedSettings>`, but hrmq registers no settings
+        # class, and adding one purely to satisfy a type would put a settings
+        # PANEL in front of users as a side effect of an annotation.
+        #
+        # Passing the app id is the fleet's established form — 50 call sites
+        # across openconnector, launchpad and others — and it fails CLOSED:
+        # SecurityMiddleware resolves the value against the delegated-settings
+        # registry, finds no delegation for it, and falls back to requiring a
+        # full administrator. That is exactly the intended access rule for
+        # `POST /api/payroll/packs`, and the controller's own isAdmin() check
+        # remains as defence in depth.
+        #
+        # Scoped to this one attribute so any OTHER misuse still fails.
+        -
+            message: '#Parameter \#1 \$settings of attribute class OCP\\AppFramework\\Http\\Attribute\\AuthorizedAdminSetting constructor expects class-string<OCP\\Settings\\IDelegatedSettings>, string given#'
+            path: lib/Controller/JurisdictionPackController.php
+
+        # DocuDesk is an optional runtime companion app — hrmq's document
+        # generation and receipt-OCR commands duck-type against it and no-op
+        # when it is absent. No other fleet app analyses against DocuDesk, so
+        # these stay local rather than going into the base.
         - '#unknown class OCA\\DocuDesk\\#'
         - '#OCA\\DocuDesk\\[a-zA-Z\\]+.*not found#'
         - '#on an unknown class OCA\\DocuDesk\\#'

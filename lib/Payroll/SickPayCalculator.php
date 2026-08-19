@@ -48,145 +48,135 @@ namespace OCA\Hrmq\Payroll;
  * Pure NL loondoorbetaling-bij-ziekte calculator over a `TaxTables`
  * parameter set.
  */
-final class SickPayCalculator
-{
+final class SickPayCalculator {
 
-    /**
-     * The statutory continued-wage floor percentage (BW 7:629 lid 1) — always
-     * at least 70% of the reference wage, independent of the case's applied
-     * `loondoorbetalingPercentage` (which may be higher under a CAO). Mirrors
-     * the `nl-loondoorbetaling-floor` corpus rule's `statutoryPercentage`
-     * parameter (design.md D5); kept as a calculator-local constant since
-     * `compute()`'s signature is `(SickPayInput, TaxTables)` only, the same
-     * shape as `PayrollCalculator::calculate()`.
-     *
-     * @var int
-     */
-    private const STATUTORY_FLOOR_PERCENTAGE = 70;
+	/**
+	 * The statutory continued-wage floor percentage (BW 7:629 lid 1) — always
+	 * at least 70% of the reference wage, independent of the case's applied
+	 * `loondoorbetalingPercentage` (which may be higher under a CAO). Mirrors
+	 * the `nl-loondoorbetaling-floor` corpus rule's `statutoryPercentage`
+	 * parameter (design.md D5); kept as a calculator-local constant since
+	 * `compute()`'s signature is `(SickPayInput, TaxTables)` only, the same
+	 * shape as `PayrollCalculator::calculate()`.
+	 *
+	 * @var int
+	 */
+	private const STATUTORY_FLOOR_PERCENTAGE = 70;
 
-    /**
-     * The average working days per month the wachtdag is valued against
-     * (CBS/CAO average, design.md D2 step 6). Mirrors the
-     * `nl-loondoorbetaling-floor` corpus rule's `workingDaysPerMonth`
-     * parameter.
-     *
-     * @var float
-     */
-    private const WORKING_DAYS_PER_MONTH = 21.75;
+	/**
+	 * The average working days per month the wachtdag is valued against
+	 * (CBS/CAO average, design.md D2 step 6). Mirrors the
+	 * `nl-loondoorbetaling-floor` corpus rule's `workingDaysPerMonth`
+	 * parameter.
+	 *
+	 * @var float
+	 */
+	private const WORKING_DAYS_PER_MONTH = 21.75;
 
-    /**
-     * The full-time hours-per-week basis used when an input omits its own
-     * (e.g. a missing contract), so the WML floor's part-time factor never
-     * divides by zero.
-     *
-     * @var float
-     */
-    private const DEFAULT_FULLTIME_HOURS_PER_WEEK = 36.0;
+	/**
+	 * The full-time hours-per-week basis used when an input omits its own
+	 * (e.g. a missing contract), so the WML floor's part-time factor never
+	 * divides by zero.
+	 *
+	 * @var float
+	 */
+	private const DEFAULT_FULLTIME_HOURS_PER_WEEK = 36.0;
 
+	/**
+	 * Compute the loondoorbetaling-bij-ziekte chain for one employee in one
+	 * wage period (design.md D2).
+	 *
+	 * @param SickPayInput $in The calculation input.
+	 * @param TaxTables $t The tax-year parameter set (for the WML floor).
+	 *
+	 * @return SickPayResult
+	 *
+	 * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-001
+	 * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-002
+	 * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-003
+	 * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-004
+	 */
+	public function compute(SickPayInput $in, TaxTables $t): SickPayResult {
+		$w = max(0, $in->referenceWageCents);
+		$a = max(0, min($w, $in->aangepastLoonCents));
+		$p = $in->loondoorbetalingPercentage;
 
-    /**
-     * Compute the loondoorbetaling-bij-ziekte chain for one employee in one
-     * wage period (design.md D2).
-     *
-     * @param SickPayInput $in The calculation input.
-     * @param TaxTables    $t  The tax-year parameter set (for the WML floor).
-     *
-     * @return SickPayResult
-     *
-     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-001
-     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-002
-     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-003
-     * @spec openspec/specs/sick-pay-calc/spec.md#REQ-SICK-004
-     */
-    public function compute(SickPayInput $in, TaxTables $t): SickPayResult
-    {
-        $w = max(0, $in->referenceWageCents);
-        $a = max(0, min($w, $in->aangepastLoonCents));
-        $p = $in->loondoorbetalingPercentage;
+		// Step 1-3 (design.md D2): non-worked base, continuation on it, and
+		// the samengesteld/aangepast loon composition (worked wage at 100% +
+		// continuation on the rest).
+		$b = ($w - $a);
+		$c = self::roundHalfUpCents(($b * $p) / 100);
+		$l0 = ($a + $c);
 
-        // Step 1-3 (design.md D2): non-worked base, continuation on it, and
-        // the samengesteld/aangepast loon composition (worked wage at 100% +
-        // continuation on the rest).
-        $b  = ($w - $a);
-        $c  = self::roundHalfUpCents(($b * $p) / 100);
-        $l0 = ($a + $c);
+		// Step 4 (design.md D2/D3): the statutory floor — always at least
+		// 70% of the wage; in year 1 additionally at least the WML monthly
+		// floor (capped at the wage itself).
+		$m = $this->wmlFloorCents($t, $in);
+		$statutoryFloor = self::roundHalfUpCents(($w * self::STATUTORY_FLOOR_PERCENTAGE) / 100);
+		$yearOneFloor = ($in->yearOne === true ? min($w, $m) : 0);
+		$floor = max($statutoryFloor, $yearOneFloor);
 
-        // Step 4 (design.md D2/D3): the statutory floor — always at least
-        // 70% of the wage; in year 1 additionally at least the WML monthly
-        // floor (capped at the wage itself).
-        $m              = $this->wmlFloorCents($t, $in);
-        $statutoryFloor = self::roundHalfUpCents(($w * self::STATUTORY_FLOOR_PERCENTAGE) / 100);
-        $yearOneFloor   = ($in->yearOne === true ? min($w, $m) : 0);
-        $floor          = max($statutoryFloor, $yearOneFloor);
+		// Step 5: floored doorbetaald.
+		$l = max($l0, $floor);
+		$floorApplied = ($l > $l0);
 
-        // Step 5: floored doorbetaald.
-        $l            = max($l0, $floor);
-        $floorApplied = ($l > $l0);
+		// Step 6: the wachtdag deduction — once per case at its start.
+		$wd = 0;
+		if ($in->wachtdag === true && $in->firstSickDayInPeriod === true) {
+			$wd = self::roundHalfUpCents($l / self::WORKING_DAYS_PER_MONTH);
+		}
 
-        // Step 6: the wachtdag deduction — once per case at its start.
-        $wd = 0;
-        if ($in->wachtdag === true && $in->firstSickDayInPeriod === true) {
-            $wd = self::roundHalfUpCents($l / self::WORKING_DAYS_PER_MONTH);
-        }
+		// Step 7: payable gross, fed to PayrollCalculator unchanged.
+		$payableGross = ($l - $wd);
 
-        // Step 7: payable gross, fed to PayrollCalculator unchanged.
-        $payableGross = ($l - $wd);
+		return new SickPayResult(
+			doorbetaaldLoonCents: $l,
+			wachtdagDeductionCents: $wd,
+			payableGrossCents: $payableGross,
+			minimumWageFloorCents: $m,
+			floorApplied: $floorApplied,
+			appliedPercentage: $p,
+			yearOne: $in->yearOne,
+			referenceWageCents: $w
+		);
 
-        return new SickPayResult(
-            doorbetaaldLoonCents: $l,
-            wachtdagDeductionCents: $wd,
-            payableGrossCents: $payableGross,
-            minimumWageFloorCents: $m,
-            floorApplied: $floorApplied,
-            appliedPercentage: $p,
-            yearOne: $in->yearOne,
-            referenceWageCents: $w
-        );
+	}//end compute()
 
-    }//end compute()
+	/**
+	 * `M` — the WML monthly floor, derived from the tables' verified
+	 * full-time `referentiemaandloon` scaled by the part-time factor
+	 * `contractHoursPerWeek / fulltimeHoursPerWeek` (design.md D3). Never a
+	 * hard-coded number: a table with a different year's figure changes `M`
+	 * automatically. A non-positive `fulltimeHoursPerWeek` falls back to the
+	 * full-time basis so the factor never divides by zero.
+	 *
+	 * @param TaxTables $t The tax-year parameter set.
+	 * @param SickPayInput $in The calculation input.
+	 *
+	 * @return int
+	 */
+	private function wmlFloorCents(TaxTables $t, SickPayInput $in): int {
+		$fulltimeHours = ($in->fulltimeHoursPerWeek > 0.0 ? $in->fulltimeHoursPerWeek : self::DEFAULT_FULLTIME_HOURS_PER_WEEK);
+		$contractHours = ($in->contractHoursPerWeek > 0.0 ? $in->contractHoursPerWeek : $fulltimeHours);
 
+		$referentiemaandloonCents = $t->wml()['referentiemaandloonCents'];
 
-    /**
-     * `M` — the WML monthly floor, derived from the tables' verified
-     * full-time `referentiemaandloon` scaled by the part-time factor
-     * `contractHoursPerWeek / fulltimeHoursPerWeek` (design.md D3). Never a
-     * hard-coded number: a table with a different year's figure changes `M`
-     * automatically. A non-positive `fulltimeHoursPerWeek` falls back to the
-     * full-time basis so the factor never divides by zero.
-     *
-     * @param TaxTables    $t  The tax-year parameter set.
-     * @param SickPayInput $in The calculation input.
-     *
-     * @return int
-     */
-    private function wmlFloorCents(TaxTables $t, SickPayInput $in): int
-    {
-        $fulltimeHours = ($in->fulltimeHoursPerWeek > 0.0 ? $in->fulltimeHoursPerWeek : self::DEFAULT_FULLTIME_HOURS_PER_WEEK);
-        $contractHours = ($in->contractHoursPerWeek > 0.0 ? $in->contractHoursPerWeek : $fulltimeHours);
+		return self::roundHalfUpCents(($referentiemaandloonCents * $contractHours) / $fulltimeHours);
+	}//end wmlFloorCents()
 
-        $referentiemaandloonCents = $t->wml()['referentiemaandloonCents'];
-
-        return self::roundHalfUpCents(($referentiemaandloonCents * $contractHours) / $fulltimeHours);
-
-    }//end wmlFloorCents()
-
-
-    /**
-     * Round a raw cents amount to the nearest whole cent, half-up (design.md
-     * D1 — the two rounding points: the percentage multiply and the wachtdag
-     * divide). PHP's default `round()` mode (half-away-from-zero) coincides
-     * with half-up for the non-negative amounts this calculator ever
-     * produces.
-     *
-     * @param float $rawCents The raw cents amount.
-     *
-     * @return int
-     */
-    private static function roundHalfUpCents(float $rawCents): int
-    {
-        return (int) round($rawCents);
-
-    }//end roundHalfUpCents()
-
+	/**
+	 * Round a raw cents amount to the nearest whole cent, half-up (design.md
+	 * D1 — the two rounding points: the percentage multiply and the wachtdag
+	 * divide). PHP's default `round()` mode (half-away-from-zero) coincides
+	 * with half-up for the non-negative amounts this calculator ever
+	 * produces.
+	 *
+	 * @param float $rawCents The raw cents amount.
+	 *
+	 * @return int
+	 */
+	private static function roundHalfUpCents(float $rawCents): int {
+		return (int)round($rawCents);
+	}//end roundHalfUpCents()
 
 }//end class

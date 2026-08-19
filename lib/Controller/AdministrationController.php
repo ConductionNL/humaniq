@@ -45,91 +45,82 @@ use OCP\IUserSession;
 /**
  * Guarded per-user active-administration selection + context endpoints.
  */
-class AdministrationController extends Controller
-{
+class AdministrationController extends Controller {
 
+	/**
+	 * @param IRequest $request The request object.
+	 * @param AdministrationService $administrationService The access-resolution + active-pointer service.
+	 * @param IUserSession $userSession The current user session (acting userId).
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly AdministrationService $administrationService,
+		private readonly IUserSession $userSession,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
 
-    /**
-     * @param IRequest               $request               The request object.
-     * @param AdministrationService  $administrationService The access-resolution + active-pointer service.
-     * @param IUserSession           $userSession           The current user session (acting userId).
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly AdministrationService $administrationService,
-        private readonly IUserSession $userSession,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * `POST /api/administration/active` -- activates the posted
+	 * `administrationId` for the caller. No-admin-idor guard (ADR-005 Rule
+	 * 3): the id MUST resolve to one of the caller's own
+	 * `AdministrationAccess` rows BEFORE it is persisted -- unknown and
+	 * not-accessible both collapse to 404, so existence is never leaked to a
+	 * caller without a membership row.
+	 *
+	 * @param string|null $administrationId The administratie id to activate.
+	 *
+	 * @return JSONResponse `{activeAdministrationId}` on success, 400 on a missing id, 404 when the caller has no AdministrationAccess row for it.
+	 *
+	 * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-003
+	 */
+	#[NoAdminRequired]
+	public function setActive(?string $administrationId = null): JSONResponse {
+		$administrationId = trim((string)$administrationId);
+		if ($administrationId === '') {
+			return new JSONResponse(['error' => 'administrationId is verplicht.'], Http::STATUS_BAD_REQUEST);
+		}
 
+		$userId = $this->userSession->getUser()?->getUID();
+		if ($userId === null || $userId === '') {
+			return new JSONResponse(['error' => 'Niet ingelogd.'], Http::STATUS_NOT_FOUND);
+		}
 
-    /**
-     * `POST /api/administration/active` -- activates the posted
-     * `administrationId` for the caller. No-admin-idor guard (ADR-005 Rule
-     * 3): the id MUST resolve to one of the caller's own
-     * `AdministrationAccess` rows BEFORE it is persisted -- unknown and
-     * not-accessible both collapse to 404, so existence is never leaked to a
-     * caller without a membership row.
-     *
-     * @param string|null $administrationId The administratie id to activate.
-     *
-     * @return JSONResponse `{activeAdministrationId}` on success, 400 on a missing id, 404 when the caller has no AdministrationAccess row for it.
-     *
-     * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-003
-     */
-    #[NoAdminRequired]
-    public function setActive(?string $administrationId=null): JSONResponse
-    {
-        $administrationId = trim((string) $administrationId);
-        if ($administrationId === '') {
-            return new JSONResponse(['error' => 'administrationId is verplicht.'], Http::STATUS_BAD_REQUEST);
-        }
+		// No-admin-idor guard: resolve-first, BEFORE any write. A caller
+		// without an AdministrationAccess row for this id never reaches the
+		// persist step.
+		if ($this->administrationService->hasAccess($userId, $administrationId) === false) {
+			return new JSONResponse(['error' => 'Administratie niet gevonden.'], Http::STATUS_NOT_FOUND);
+		}
 
-        $userId = $this->userSession->getUser()?->getUID();
-        if ($userId === null || $userId === '') {
-            return new JSONResponse(['error' => 'Niet ingelogd.'], Http::STATUS_NOT_FOUND);
-        }
+		$this->administrationService->setActiveAdministrationId($userId, $administrationId);
 
-        // No-admin-idor guard: resolve-first, BEFORE any write. A caller
-        // without an AdministrationAccess row for this id never reaches the
-        // persist step.
-        if ($this->administrationService->hasAccess($userId, $administrationId) === false) {
-            return new JSONResponse(['error' => 'Administratie niet gevonden.'], Http::STATUS_NOT_FOUND);
-        }
+		return new JSONResponse(['activeAdministrationId' => $administrationId]);
+	}//end setActive()
 
-        $this->administrationService->setActiveAdministrationId($userId, $administrationId);
+	/**
+	 * `GET /api/administration/context` -- the active administratie id (or
+	 * null) plus the caller's accessible administraties, for the switcher
+	 * and the Dashboard/Configuratie indicator. single-person-modes
+	 * (REQ-SPM-002): every administratie entry additionally carries its
+	 * resolved `mode` (via `AdministrationService::accessibleAdministrations()`),
+	 * so the switcher can display it and a client-side switch can update
+	 * `runtime.user.administrationMode` without a reload.
+	 *
+	 * @return JSONResponse `{activeAdministrationId, administrations}` (each administratie carries `mode`).
+	 *
+	 * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-004
+	 * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
+	 */
+	#[NoAdminRequired]
+	public function context(): JSONResponse {
+		$userId = $this->userSession->getUser()?->getUID();
+		if ($userId === null || $userId === '') {
+			return new JSONResponse(['activeAdministrationId' => null, 'administrations' => []]);
+		}
 
-        return new JSONResponse(['activeAdministrationId' => $administrationId]);
-
-    }//end setActive()
-
-
-    /**
-     * `GET /api/administration/context` -- the active administratie id (or
-     * null) plus the caller's accessible administraties, for the switcher
-     * and the Dashboard/Configuratie indicator. single-person-modes
-     * (REQ-SPM-002): every administratie entry additionally carries its
-     * resolved `mode` (via `AdministrationService::accessibleAdministrations()`),
-     * so the switcher can display it and a client-side switch can update
-     * `runtime.user.administrationMode` without a reload.
-     *
-     * @return JSONResponse `{activeAdministrationId, administrations}` (each administratie carries `mode`).
-     *
-     * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-004
-     * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
-     */
-    #[NoAdminRequired]
-    public function context(): JSONResponse
-    {
-        $userId = $this->userSession->getUser()?->getUID();
-        if ($userId === null || $userId === '') {
-            return new JSONResponse(['activeAdministrationId' => null, 'administrations' => []]);
-        }
-
-        return new JSONResponse($this->administrationService->context($userId));
-
-    }//end context()
-
+		return new JSONResponse($this->administrationService->context($userId));
+	}//end context()
 
 }//end class

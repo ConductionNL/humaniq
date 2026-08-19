@@ -39,101 +39,93 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * occ command that audits one period's payroll run(s) against the corpus.
  */
-class PayrollVerifyCommand extends Command
-{
+class PayrollVerifyCommand extends Command {
 
+	/**
+	 * @param RuleAuditService $auditService The run-scoped compliance auditor.
+	 */
+	public function __construct(
+		private readonly RuleAuditService $auditService,
+	) {
+		parent::__construct();
 
-    /**
-     * @param RuleAuditService $auditService The run-scoped compliance auditor.
-     */
-    public function __construct(
-        private readonly RuleAuditService $auditService,
-    ) {
-        parent::__construct();
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-006
+	 */
+	protected function configure(): void {
+		$this->setName('hrmq:payroll:verify')
+			->setDescription('Audit one wage period\'s PayrollRun(s) + their payslips against the machine-checkable rule corpus (run-scoped).')
+			->addOption('period', null, InputOption::VALUE_REQUIRED, 'Wage period (YYYY-MM).')
+			->addOption('administration', null, InputOption::VALUE_REQUIRED, 'Only runs of this administration.')
+			->addOption('jurisdiction', null, InputOption::VALUE_REQUIRED, 'Jurisdiction context (ISO alpha-2)', 'NL');
 
+	}//end configure()
 
-    /**
-     * @return void
-     *
-     * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-006
-     */
-    protected function configure(): void
-    {
-        $this->setName('hrmq:payroll:verify')
-            ->setDescription('Audit one wage period\'s PayrollRun(s) + their payslips against the machine-checkable rule corpus (run-scoped).')
-            ->addOption('period', null, InputOption::VALUE_REQUIRED, 'Wage period (YYYY-MM).')
-            ->addOption('administration', null, InputOption::VALUE_REQUIRED, 'Only runs of this administration.')
-            ->addOption('jurisdiction', null, InputOption::VALUE_REQUIRED, 'Jurisdiction context (ISO alpha-2)', 'NL');
+	/**
+	 * @param InputInterface $input Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int 0 when no mandatory violation exists, 1 otherwise.
+	 *
+	 * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-006
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output): int {
+		$periodOption = $input->getOption('period');
+		$period = (is_string($periodOption) === true) ? trim($periodOption) : '';
+		if ($period === '') {
+			$output->writeln('<error>--period is verplicht (JJJJ-MM).</error>');
+			return 1;
+		}
 
-    }//end configure()
+		$administrationOption = $input->getOption('administration');
+		$administration = (is_string($administrationOption) === true && trim($administrationOption) !== '') ? trim($administrationOption) : null;
 
+		$report = $this->auditService->auditPayrollRunScope(
+			$period,
+			$administration,
+			['jurisdiction' => (string)$input->getOption('jurisdiction')]
+		);
 
-    /**
-     * @param InputInterface  $input  Console input.
-     * @param OutputInterface $output Console output.
-     *
-     * @return int 0 when no mandatory violation exists, 1 otherwise.
-     *
-     * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-006
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        $periodOption = $input->getOption('period');
-        $period       = (is_string($periodOption) === true) ? trim($periodOption) : '';
-        if ($period === '') {
-            $output->writeln('<error>--period is verplicht (JJJJ-MM).</error>');
-            return 1;
-        }
+		$output->writeln('<info>Hrmq payroll verify</info>');
+		$output->writeln(sprintf('  periode           : %s', $period));
+		$output->writeln(sprintf('  runs gecontroleerd: %d', $report['runsChecked']));
+		$output->writeln(sprintf('  loonstroken       : %d', $report['payslipsChecked']));
 
-        $administrationOption = $input->getOption('administration');
-        $administration       = (is_string($administrationOption) === true && trim($administrationOption) !== '') ? trim($administrationOption) : null;
+		if ($report['runsChecked'] === 0) {
+			$output->writeln('  <comment>geen loonruns gevonden voor deze periode.</comment>');
+			return 1;
+		}
 
-        $report = $this->auditService->auditPayrollRunScope(
-            $period,
-            $administration,
-            ['jurisdiction' => (string) $input->getOption('jurisdiction')]
-        );
+		if ($report['violations'] === []) {
+			$output->writeln('  <info>geen overtredingen — de run voldoet aan het corpus.</info>');
+			return 0;
+		}
 
-        $output->writeln('<info>Hrmq payroll verify</info>');
-        $output->writeln(sprintf('  periode           : %s', $period));
-        $output->writeln(sprintf('  runs gecontroleerd: %d', $report['runsChecked']));
-        $output->writeln(sprintf('  loonstroken       : %d', $report['payslipsChecked']));
+		foreach ($report['violations'] as $violation) {
+			$line = sprintf(
+				'    %s %s [%s] %s: %s',
+				(string)$violation['objectType'],
+				(string)$violation['objectId'],
+				(string)$violation['severity'],
+				(string)$violation['ruleId'],
+				(string)$violation['statement']
+			);
 
-        if ($report['runsChecked'] === 0) {
-            $output->writeln('  <comment>geen loonruns gevonden voor deze periode.</comment>');
-            return 1;
-        }
+			if ((string)$violation['severity'] === 'mandatory') {
+				$output->writeln('<error>' . $line . '</error>');
+				continue;
+			}
 
-        if ($report['violations'] === []) {
-            $output->writeln('  <info>geen overtredingen — de run voldoet aan het corpus.</info>');
-            return 0;
-        }
+			$output->writeln('<comment>' . $line . '</comment>');
+		}
 
-        foreach ($report['violations'] as $violation) {
-            $line = sprintf(
-                '    %s %s [%s] %s: %s',
-                (string) $violation['objectType'],
-                (string) $violation['objectId'],
-                (string) $violation['severity'],
-                (string) $violation['ruleId'],
-                (string) $violation['statement']
-            );
+		$output->writeln(sprintf('  %d overtreding(en), waarvan %d verplicht.', count($report['violations']), $report['mandatoryViolations']));
 
-            if ((string) $violation['severity'] === 'mandatory') {
-                $output->writeln('<error>'.$line.'</error>');
-                continue;
-            }
-
-            $output->writeln('<comment>'.$line.'</comment>');
-        }
-
-        $output->writeln(sprintf('  %d overtreding(en), waarvan %d verplicht.', count($report['violations']), $report['mandatoryViolations']));
-
-        return $report['mandatoryViolations'] > 0 ? 1 : 0;
-
-    }//end execute()
-
+		return $report['mandatoryViolations'] > 0 ? 1 : 0;
+	}//end execute()
 
 }//end class

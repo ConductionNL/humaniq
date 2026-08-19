@@ -49,215 +49,222 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/offer-esign/specs/offer-esign/spec.md#REQ-OFFR-007
  */
-class OfferControllerTest extends TestCase
-{
+class OfferControllerTest extends TestCase {
 
+	/**
+	 * An aanbod-stage Application fixture, overridable per test.
+	 *
+	 * @param array<string, mixed> $overrides Fields to override.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function application(array $overrides = []): array {
+		return array_merge(
+			[
+				'id' => 'app-1',
+				'candidateName' => 'Sanne Voorbeeld',
+				'status' => 'aanbod',
+			],
+			$overrides
+		);
 
-    /**
-     * An aanbod-stage Application fixture, overridable per test.
-     *
-     * @param array<string, mixed> $overrides Fields to override.
-     *
-     * @return array<string, mixed>
-     */
-    private function application(array $overrides=[]): array
-    {
-        return array_merge(
-            [
-                'id'            => 'app-1',
-                'candidateName' => 'Sanne Voorbeeld',
-                'status'        => 'aanbod',
-            ],
-            $overrides
-        );
+	}//end application()
 
-    }//end application()
+	/**
+	 * REQ-OFFR-007 Scenario "Non-admin/non-HR caller rejected before any
+	 * resolve".
+	 *
+	 * @return void
+	 */
+	public function testNonAdminCallerIsRefusedBeforeAnyResolveOrServiceCall(): void {
+		[$controller, $fake, $offerEsignService] = $this->buildController(isAdmin: false, applicationRow: $this->application());
+		$offerEsignService->expects($this->never())->method('requestSignature');
 
+		$response = $controller->requestSignature('app-1');
 
-    /**
-     * REQ-OFFR-007 Scenario "Non-admin/non-HR caller rejected before any
-     * resolve".
-     *
-     * @return void
-     */
-    public function testNonAdminCallerIsRefusedBeforeAnyResolveOrServiceCall(): void
-    {
-        [$controller, $fake, $offerEsignService] = $this->buildController(isAdmin: false, applicationRow: $this->application());
-        $offerEsignService->expects($this->never())->method('requestSignature');
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertFalse($fake->findCalled, 'No ObjectService resolve occurs for a non-admin/HR caller.');
 
-        $response = $controller->requestSignature('app-1');
+	}//end testNonAdminCallerIsRefusedBeforeAnyResolveOrServiceCall()
 
-        $this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
-        $this->assertFalse($fake->findCalled, 'No ObjectService resolve occurs for a non-admin/HR caller.');
+	/**
+	 * REQ-OFFR-007 Scenario "Unauthorized or unknown applicationId collapses
+	 * to 404".
+	 *
+	 * @return void
+	 */
+	public function testUnknownOrUnauthorizedApplicationIdReturns404(): void {
+		[$controller, , $offerEsignService] = $this->buildController(isAdmin: true, applicationRow: null);
+		$offerEsignService->expects($this->never())->method('requestSignature');
 
-    }//end testNonAdminCallerIsRefusedBeforeAnyResolveOrServiceCall()
+		$response = $controller->requestSignature('app-ghost');
 
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
 
-    /**
-     * REQ-OFFR-007 Scenario "Unauthorized or unknown applicationId collapses
-     * to 404".
-     *
-     * @return void
-     */
-    public function testUnknownOrUnauthorizedApplicationIdReturns404(): void
-    {
-        [$controller, , $offerEsignService] = $this->buildController(isAdmin: true, applicationRow: null);
-        $offerEsignService->expects($this->never())->method('requestSignature');
+	}//end testUnknownOrUnauthorizedApplicationIdReturns404()
 
-        $response = $controller->requestSignature('app-ghost');
+	/**
+	 * An instance without OpenRegister answers 404, not 500.
+	 *
+	 * ADR-083: a controller is the wrong place to turn a missing optional app
+	 * into a server error — the caller of an HTTP endpoint cannot install
+	 * anything, and "cannot be resolved" is already this endpoint's documented
+	 * outcome. `$fake->findCalled` is asserted false so this proves the guard
+	 * runs BEFORE the reach, rather than the reach happening to return null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/offer-esign/specs/offer-esign/spec.md#REQ-OFFR-007
+	 */
+	public function testMissingOpenRegisterReturns404WithoutReachingTheStore(): void {
+		[$controller, $fake, $offerEsignService] = $this->buildController(isAdmin: true, applicationRow: $this->application(), openRegisterAvailable: false);
+		$offerEsignService->expects($this->never())->method('requestSignature');
 
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$response = $controller->requestSignature('app-1');
 
-    }//end testUnknownOrUnauthorizedApplicationIdReturns404()
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertFalse($fake->findCalled, 'the store was reached despite OpenRegister being unavailable');
 
+	}//end testMissingOpenRegisterReturns404WithoutReachingTheStore()
 
-    /**
-     * A missing applicationId is refused 400 before any resolve.
-     *
-     * @return void
-     */
-    public function testMissingApplicationIdReturns400BeforeAnyResolve(): void
-    {
-        [$controller, $fake] = $this->buildController(isAdmin: true, applicationRow: null);
+	/**
+	 * A missing applicationId is refused 400 before any resolve.
+	 *
+	 * @return void
+	 */
+	public function testMissingApplicationIdReturns400BeforeAnyResolve(): void {
+		[$controller, $fake] = $this->buildController(isAdmin: true, applicationRow: null);
 
-        $response = $controller->requestSignature(null);
+		$response = $controller->requestSignature(null);
 
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
-        $this->assertFalse($fake->findCalled);
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertFalse($fake->findCalled);
 
-    }//end testMissingApplicationIdReturns400BeforeAnyResolve()
+	}//end testMissingApplicationIdReturns400BeforeAnyResolve()
 
+	/**
+	 * REQ-OFFR-007 Scenario "Wrong-stage Application rejected by the
+	 * controller".
+	 *
+	 * @return void
+	 */
+	public function testWrongStageApplicationReturns400WithNoServiceCall(): void {
+		[$controller, , $offerEsignService] = $this->buildController(isAdmin: true, applicationRow: $this->application(['status' => 'screening']));
+		$offerEsignService->expects($this->never())->method('requestSignature');
 
-    /**
-     * REQ-OFFR-007 Scenario "Wrong-stage Application rejected by the
-     * controller".
-     *
-     * @return void
-     */
-    public function testWrongStageApplicationReturns400WithNoServiceCall(): void
-    {
-        [$controller, , $offerEsignService] = $this->buildController(isAdmin: true, applicationRow: $this->application(['status' => 'screening']));
-        $offerEsignService->expects($this->never())->method('requestSignature');
+		$response = $controller->requestSignature('app-1');
 
-        $response = $controller->requestSignature('app-1');
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+	}//end testWrongStageApplicationReturns400WithNoServiceCall()
 
-    }//end testWrongStageApplicationReturns400WithNoServiceCall()
+	/**
+	 * The happy path delegates to `OfferEsignService::requestSignature()`
+	 * with the resolved applicationId and the caller's uid, returning its
+	 * outcome verbatim.
+	 *
+	 * @return void
+	 */
+	public function testHappyPathDelegatesToTheServiceWithCallerUid(): void {
+		[$controller, , $offerEsignService] = $this->buildController(isAdmin: true, applicationRow: $this->application());
 
+		$outcome = [
+			'applicationId' => 'app-1',
+			'status' => 'requested',
+			'message' => 'Aanbiedingsbrief gegenereerd en e-handtekeningaanvraag aangemaakt.',
+			'offerLetterFileId' => 42,
+			'offerSigningRequestId' => 'req-1',
+			'offerSigningStatus' => 'PENDING',
+		];
 
-    /**
-     * The happy path delegates to `OfferEsignService::requestSignature()`
-     * with the resolved applicationId and the caller's uid, returning its
-     * outcome verbatim.
-     *
-     * @return void
-     */
-    public function testHappyPathDelegatesToTheServiceWithCallerUid(): void
-    {
-        [$controller, , $offerEsignService] = $this->buildController(isAdmin: true, applicationRow: $this->application());
+		$offerEsignService->expects($this->once())
+			->method('requestSignature')
+			->with('app-1', 'hr-admin')
+			->willReturn($outcome);
 
-        $outcome = [
-            'applicationId'         => 'app-1',
-            'status'                => 'requested',
-            'message'               => 'Aanbiedingsbrief gegenereerd en e-handtekeningaanvraag aangemaakt.',
-            'offerLetterFileId'     => 42,
-            'offerSigningRequestId' => 'req-1',
-            'offerSigningStatus'    => 'PENDING',
-        ];
+		$response = $controller->requestSignature('app-1');
 
-        $offerEsignService->expects($this->once())
-            ->method('requestSignature')
-            ->with('app-1', 'hr-admin')
-            ->willReturn($outcome);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame($outcome, $response->getData());
 
-        $response = $controller->requestSignature('app-1');
+	}//end testHappyPathDelegatesToTheServiceWithCallerUid()
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame($outcome, $response->getData());
+	/**
+	 * Build an `OfferController` with a fake container-resolved
+	 * ObjectService whose `find()` returns the fixed `$applicationRow` (null
+	 * simulating unknown/unauthorized) and a mocked `OfferEsignService`.
+	 *
+	 * @param bool $isAdmin Whether the fake caller is an admin/HR principal.
+	 * @param array<string, mixed>|null $applicationRow The row `find()` should return.
+	 *
+	 * @return array{0: OfferController, 1: object, 2: OfferEsignService&\PHPUnit\Framework\MockObject\MockObject}
+	 */
+	private function buildController(bool $isAdmin, ?array $applicationRow, bool $openRegisterAvailable = true): array {
+		$request = $this->createMock(IRequest::class);
 
-    }//end testHappyPathDelegatesToTheServiceWithCallerUid()
+		$fake = new class($applicationRow) {
 
+			/**
+			 * @var array<string, mixed>|null
+			 */
+			public ?array $row;
 
-    /**
-     * Build an `OfferController` with a fake container-resolved
-     * ObjectService whose `find()` returns the fixed `$applicationRow` (null
-     * simulating unknown/unauthorized) and a mocked `OfferEsignService`.
-     *
-     * @param bool                       $isAdmin        Whether the fake caller is an admin/HR principal.
-     * @param array<string, mixed>|null $applicationRow The row `find()` should return.
-     *
-     * @return array{0: OfferController, 1: object, 2: OfferEsignService&\PHPUnit\Framework\MockObject\MockObject}
-     */
-    private function buildController(bool $isAdmin, ?array $applicationRow): array
-    {
-        $request = $this->createMock(IRequest::class);
+			/**
+			 * @var bool
+			 */
+			public bool $findCalled = false;
 
-        $fake = new class ($applicationRow) {
+			/**
+			 * @param array<string, mixed>|null $row The row find() should return.
+			 */
+			public function __construct(?array $row) {
+				$this->row = $row;
 
-            /**
-             * @var array<string, mixed>|null
-             */
-            public ?array $row;
+			}//end __construct()
 
-            /**
-             * @var bool
-             */
-            public bool $findCalled = false;
+			/**
+			 * @param string $id The object id.
+			 * @param string|null $register Register slug (unused by the fake).
+			 * @param string|null $schema Schema name (unused by the fake).
+			 *
+			 * @return array<string, mixed>|null
+			 */
+			public function find(string $id, ?string $register = null, ?string $schema = null): ?array {
+				$this->findCalled = true;
+				return $this->row;
+			}//end find()
 
-            /**
-             * @param array<string, mixed>|null $row The row find() should return.
-             */
-            public function __construct(?array $row)
-            {
-                $this->row = $row;
+		};
 
-            }//end __construct()
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($fake);
 
+		$offerEsignService = $this->createMock(OfferEsignService::class);
 
-            /**
-             * @param string      $id       The object id.
-             * @param string|null $register Register slug (unused by the fake).
-             * @param string|null $schema   Schema name (unused by the fake).
-             *
-             * @return array<string, mixed>|null
-             */
-            public function find(string $id, ?string $register=null, ?string $schema=null): ?array
-            {
-                $this->findCalled = true;
-                return $this->row;
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		// objectService() now establishes availability first (ADR-083). A bare
+		// createMock() answers a bool method with false, so without this the
+		// guard trips and the test fails on a missing app, not on its subject.
+		$settings->method('isOpenRegisterAvailable')->willReturn($openRegisterAvailable);
 
-            }//end find()
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('hr-admin');
 
+		$userSession = $this->createMock(IUserSession::class);
+		$userSession->method('getUser')->willReturn($user);
 
-        };
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturn($isAdmin);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($fake);
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $offerEsignService = $this->createMock(OfferEsignService::class);
+		return [
+			new OfferController($request, $container, $offerEsignService, $settings, $userSession, $groupManager, $logger),
+			$fake,
+			$offerEsignService,
+		];
 
-        $settings = $this->createMock(SettingsService::class);
-        $settings->method('getRegisterSlug')->willReturn('hrmq');
-
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('hr-admin');
-
-        $userSession = $this->createMock(IUserSession::class);
-        $userSession->method('getUser')->willReturn($user);
-
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('isAdmin')->willReturn($isAdmin);
-
-        $logger = $this->createMock(LoggerInterface::class);
-
-        return [
-            new OfferController($request, $container, $offerEsignService, $settings, $userSession, $groupManager, $logger),
-            $fake,
-            $offerEsignService,
-        ];
-
-    }//end buildController()
-
+	}//end buildController()
 
 }//end class

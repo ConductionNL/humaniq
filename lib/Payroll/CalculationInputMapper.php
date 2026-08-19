@@ -47,35 +47,31 @@ namespace OCA\Hrmq\Payroll;
 /**
  * Maps a `CalculationInput` into a pack's declared input vocabulary.
  */
-final class CalculationInputMapper
-{
+final class CalculationInputMapper {
 
+	/**
+	 * Map hrmq's DTO onto the pack's input contract.
+	 *
+	 * @param CalculationInput $input The calculation input.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-007
+	 * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-003
+	 */
+	public function toPackInputs(CalculationInput $input): array {
+		return [
+			'gross' => $input->grossMonthlySalaryCents,
+			'taxTableColor' => ($input->taxTableColor === 'groen' ? 'groen' : 'wit'),
+			'loonheffingskortingToegepast' => $input->loonheffingskortingToegepast,
+			'dateOfBirth' => $input->dateOfBirth,
+			'awfTariff' => ($input->awfTariff === 'high' ? 'hoog' : 'laag'),
+			'aofTariff' => ($input->aofTariff === 'hoog' ? 'hoog' : 'laag'),
+			'whkPercentage' => $input->whkPercentage,
+			'verzekeringsplichtig' => $input->verzekeringsplichtig,
+			'thirtyPercentRulingRate' => $input->thirtyPercentRulingRate,
+		];
 
-    /**
-     * Map hrmq's DTO onto the pack's input contract.
-     *
-     * @param CalculationInput $input The calculation input.
-     *
-     * @return array<string, mixed>
-     *
-     * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-007
-     * @spec openspec/changes/30-procent-regeling/specs/30-procent-regeling/spec.md#REQ-30P-003
-     */
-    public function toPackInputs(CalculationInput $input): array
-    {
-        return [
-            'gross'                        => $input->grossMonthlySalaryCents,
-            'taxTableColor'                => ($input->taxTableColor === 'groen' ? 'groen' : 'wit'),
-            'loonheffingskortingToegepast' => $input->loonheffingskortingToegepast,
-            'dateOfBirth'                  => $input->dateOfBirth,
-            'awfTariff'                    => ($input->awfTariff === 'high' ? 'hoog' : 'laag'),
-            'aofTariff'                    => ($input->aofTariff === 'hoog' ? 'hoog' : 'laag'),
-            'whkPercentage'                => $input->whkPercentage,
-            'verzekeringsplichtig'         => $input->verzekeringsplichtig,
-            'thirtyPercentRulingRate'      => $input->thirtyPercentRulingRate,
-        ];
-
-    }//end toPackInputs()
-
+	}//end toPackInputs()
 
 }//end class

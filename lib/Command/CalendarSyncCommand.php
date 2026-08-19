@@ -44,72 +44,64 @@ use Symfony\Component\Console\Output\OutputInterface;
  * occ command that syncs approved absence onto the configured shared
  * Nextcloud calendar.
  */
-class CalendarSyncCommand extends Command
-{
+class CalendarSyncCommand extends Command {
 
+	/**
+	 * @param LeaveCalendarService $service The calendar-sync service.
+	 */
+	public function __construct(
+		private readonly LeaveCalendarService $service,
+	) {
+		parent::__construct();
 
-    /**
-     * @param LeaveCalendarService $service The calendar-sync service.
-     */
-    public function __construct(
-        private readonly LeaveCalendarService $service,
-    ) {
-        parent::__construct();
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * @return void
+	 */
+	protected function configure(): void {
+		$this->setName('hrmq:calendar:sync')
+			->setDescription('Sync approved leave and sickness absence onto the configured shared Nextcloud calendar (MVP trigger; run on operator demand). Calendar edits made by hand are overwritten by the next sync (one-way projection).')
+			->addOption('from', null, InputOption::VALUE_REQUIRED, 'Bound the upsert set to sources whose absence period ends on/after this date (Y-m-d). Reconciliation and open sickness cases are always unbounded.');
 
+	}//end configure()
 
-    /**
-     * @return void
-     */
-    protected function configure(): void
-    {
-        $this->setName('hrmq:calendar:sync')
-            ->setDescription('Sync approved leave and sickness absence onto the configured shared Nextcloud calendar (MVP trigger; run on operator demand). Calendar edits made by hand are overwritten by the next sync (one-way projection).')
-            ->addOption('from', null, InputOption::VALUE_REQUIRED, 'Bound the upsert set to sources whose absence period ends on/after this date (Y-m-d). Reconciliation and open sickness cases are always unbounded.');
+	/**
+	 * @param InputInterface $input Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int 0 when no source ended `failed` (a fully skipped run is a healthy 0), 1 otherwise.
+	 *
+	 * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-007
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output): int {
+		$fromOption = $input->getOption('from');
+		$from = (is_string($fromOption) === true && trim($fromOption) !== '') ? trim($fromOption) : null;
 
-    }//end configure()
+		$results = $this->service->sync($from);
 
+		$output->writeln('<info>Hrmq leave calendar sync</info>');
 
-    /**
-     * @param InputInterface  $input  Console input.
-     * @param OutputInterface $output Console output.
-     *
-     * @return int 0 when no source ended `failed` (a fully skipped run is a healthy 0), 1 otherwise.
-     *
-     * @spec openspec/changes/leave-calendar-nc/specs/leave-calendar-nc/spec.md#REQ-LC-007
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        $fromOption = $input->getOption('from');
-        $from       = (is_string($fromOption) === true && trim($fromOption) !== '') ? trim($fromOption) : null;
+		$failed = 0;
+		foreach ($results as $result) {
+			$status = (string)$result['status'];
+			$label = ($result['type'] !== null && $result['sourceId'] !== null)
+				? sprintf('%s %s', (string)$result['type'], (string)$result['sourceId'])
+				: 'run';
+			$line = sprintf('  %s: %s — %s', $label, $status, (string)$result['message']);
 
-        $results = $this->service->sync($from);
+			if ($status === 'failed') {
+				$failed++;
+				$output->writeln('<error>' . $line . '</error>');
+				continue;
+			}
 
-        $output->writeln('<info>Hrmq leave calendar sync</info>');
+			$output->writeln($line);
+		}
 
-        $failed = 0;
-        foreach ($results as $result) {
-            $status = (string) $result['status'];
-            $label  = ($result['type'] !== null && $result['sourceId'] !== null)
-                ? sprintf('%s %s', (string) $result['type'], (string) $result['sourceId'])
-                : 'run';
-            $line   = sprintf('  %s: %s — %s', $label, $status, (string) $result['message']);
+		$output->writeln(sprintf('  %d uitkomst(en), %d mislukt.', count($results), $failed));
 
-            if ($status === 'failed') {
-                $failed++;
-                $output->writeln('<error>'.$line.'</error>');
-                continue;
-            }
-
-            $output->writeln($line);
-        }
-
-        $output->writeln(sprintf('  %d uitkomst(en), %d mislukt.', count($results), $failed));
-
-        return $failed > 0 ? 1 : 0;
-
-    }//end execute()
-
+		return $failed > 0 ? 1 : 0;
+	}//end execute()
 
 }//end class

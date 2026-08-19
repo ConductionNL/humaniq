@@ -41,20 +41,17 @@ namespace OCA\Hrmq\Payroll;
 /**
  * Supplies uploaded, activated packs to the resolver.
  */
-interface PackSourceInterface
-{
+interface PackSourceInterface {
 
-
-    /**
-     * The uploaded pack that is ACTIVE for this key, or null when there is
-     * none.
-     *
-     * @param string $jurisdiction The ISO 3166-1 alpha-2 jurisdiction.
-     * @param int    $taxYear      The tax year.
-     *
-     * @return JurisdictionPack|null
-     */
-    public function activePack(string $jurisdiction, int $taxYear): ?JurisdictionPack;
-
+	/**
+	 * The uploaded pack that is ACTIVE for this key, or null when there is
+	 * none.
+	 *
+	 * @param string $jurisdiction The ISO 3166-1 alpha-2 jurisdiction.
+	 * @param int $taxYear The tax year.
+	 *
+	 * @return JurisdictionPack|null
+	 */
+	public function activePack(string $jurisdiction, int $taxYear): ?JurisdictionPack;
 
 }//end interface

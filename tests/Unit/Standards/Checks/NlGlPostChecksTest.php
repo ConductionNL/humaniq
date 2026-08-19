@@ -35,206 +35,176 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-007
  */
-class NlGlPostChecksTest extends TestCase
-{
+class NlGlPostChecksTest extends TestCase {
 
+	/**
+	 * The registered PayrollGLPost predicates, keyed by rule id.
+	 *
+	 * @var array<string, callable>
+	 */
+	private array $checks;
 
-    /**
-     * The registered PayrollGLPost predicates, keyed by rule id.
-     *
-     * @var array<string, callable>
-     */
-    private array $checks;
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$this->checks = NlGlPostChecks::checks()['PayrollGLPost'];
 
+	}//end setUp()
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $this->checks = NlGlPostChecks::checks()['PayrollGLPost'];
+	/**
+	 * A minimal PayrollGLPost fixture; each test overrides the fields it exercises.
+	 *
+	 * @param array<string, mixed> $overrides Fields to override.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function glPost(array $overrides = []): array {
+		return array_merge(
+			[
+				'payrollRunId' => 'run-1',
+				'period' => '2026-05',
+				'status' => 'posted',
+				'journalEntryId' => 'je-1',
+				'journalNumber' => 'HRMQ-LOON-2026-05-ADM-001',
+				'postedAt' => '2026-06-01T09:00:00Z',
+				'lines' => [
+					['accountNumber' => '4001', 'side' => 'debit', 'amount' => 3800.00],
+					['accountNumber' => '4002', 'side' => 'debit', 'amount' => 649.80],
+					['accountNumber' => '1701', 'side' => 'credit', 'amount' => 1102.00],
+					['accountNumber' => '1702', 'side' => 'credit', 'amount' => 3347.80],
+				],
+			],
+			$overrides
+		);
 
-    }//end setUp()
+	}//end glPost()
 
+	/**
+	 * A `context['glpost']['activeCountByRun']` fixture.
+	 *
+	 * @param array<string, int> $counts Per-run active counts.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function context(array $counts = []): array {
+		return ['glpost' => ['activeCountByRun' => $counts]];
+	}//end context()
 
-    /**
-     * A minimal PayrollGLPost fixture; each test overrides the fields it exercises.
-     *
-     * @param array<string, mixed> $overrides Fields to override.
-     *
-     * @return array<string, mixed>
-     */
-    private function glPost(array $overrides=[]): array
-    {
-        return array_merge(
-            [
-                'payrollRunId'   => 'run-1',
-                'period'         => '2026-05',
-                'status'         => 'posted',
-                'journalEntryId' => 'je-1',
-                'journalNumber'  => 'HRMQ-LOON-2026-05-ADM-001',
-                'postedAt'       => '2026-06-01T09:00:00Z',
-                'lines'          => [
-                    ['accountNumber' => '4001', 'side' => 'debit', 'amount' => 3800.00],
-                    ['accountNumber' => '4002', 'side' => 'debit', 'amount' => 649.80],
-                    ['accountNumber' => '1701', 'side' => 'credit', 'amount' => 1102.00],
-                    ['accountNumber' => '1702', 'side' => 'credit', 'amount' => 3347.80],
-                ],
-            ],
-            $overrides
-        );
+	/**
+	 * @return void
+	 */
+	public function testCompliantPostedRecordSatisfiesTheRule(): void {
+		$glPost = $this->glPost();
+		$context = $this->context(['run-1' => 1]);
 
-    }//end glPost()
+		$this->assertTrue(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
 
+	}//end testCompliantPostedRecordSatisfiesTheRule()
 
-    /**
-     * A `context['glpost']['activeCountByRun']` fixture.
-     *
-     * @param array<string, int> $counts Per-run active counts.
-     *
-     * @return array<string, mixed>
-     */
-    private function context(array $counts=[]): array
-    {
-        return ['glpost' => ['activeCountByRun' => $counts]];
+	/**
+	 * @return void
+	 */
+	public function testDuplicateActiveRecordsForTheSameRunViolate(): void {
+		$glPost = $this->glPost();
+		$context = $this->context(['run-1' => 2]);
 
-    }//end context()
+		$this->assertFalse(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
 
+	}//end testDuplicateActiveRecordsForTheSameRunViolate()
 
-    /**
-     * @return void
-     */
-    public function testCompliantPostedRecordSatisfiesTheRule(): void
-    {
-        $glPost  = $this->glPost();
-        $context = $this->context(['run-1' => 1]);
+	/**
+	 * @return void
+	 */
+	public function testPendingRecordIsCompliantWhenItIsTheOnlyActiveOne(): void {
+		$glPost = $this->glPost(['status' => 'pending', 'journalEntryId' => null, 'postedAt' => null]);
+		$context = $this->context(['run-1' => 1]);
 
-        $this->assertTrue(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
+		$this->assertTrue(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
 
-    }//end testCompliantPostedRecordSatisfiesTheRule()
+	}//end testPendingRecordIsCompliantWhenItIsTheOnlyActiveOne()
 
+	/**
+	 * @return void
+	 */
+	public function testFailedAttemptIsAlwaysCompliantRegardlessOfActiveCount(): void {
+		$glPost = $this->glPost(['status' => 'failed', 'journalEntryId' => null, 'postedAt' => null, 'lines' => []]);
+		$context = $this->context(['run-1' => 3]);
 
-    /**
-     * @return void
-     */
-    public function testDuplicateActiveRecordsForTheSameRunViolate(): void
-    {
-        $glPost  = $this->glPost();
-        $context = $this->context(['run-1' => 2]);
+		$this->assertTrue(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
 
-        $this->assertFalse(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
+	}//end testFailedAttemptIsAlwaysCompliantRegardlessOfActiveCount()
 
-    }//end testDuplicateActiveRecordsForTheSameRunViolate()
+	/**
+	 * @return void
+	 */
+	public function testSkippedNoShillinqAttemptIsAlwaysCompliant(): void {
+		$glPost = $this->glPost(['status' => 'skipped-no-shillinq', 'journalEntryId' => null, 'postedAt' => null, 'lines' => []]);
+		$context = $this->context(['run-1' => 3]);
 
+		$this->assertTrue(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
 
-    /**
-     * @return void
-     */
-    public function testPendingRecordIsCompliantWhenItIsTheOnlyActiveOne(): void
-    {
-        $glPost  = $this->glPost(['status' => 'pending', 'journalEntryId' => null, 'postedAt' => null]);
-        $context = $this->context(['run-1' => 1]);
+	}//end testSkippedNoShillinqAttemptIsAlwaysCompliant()
 
-        $this->assertTrue(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
+	/**
+	 * @return void
+	 */
+	public function testPostedRecordViolatesWhenJournalEntryIdMissing(): void {
+		$glPost = $this->glPost(['journalEntryId' => null]);
+		$context = $this->context(['run-1' => 1]);
 
-    }//end testPendingRecordIsCompliantWhenItIsTheOnlyActiveOne()
+		$this->assertFalse(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
 
+	}//end testPostedRecordViolatesWhenJournalEntryIdMissing()
 
-    /**
-     * @return void
-     */
-    public function testFailedAttemptIsAlwaysCompliantRegardlessOfActiveCount(): void
-    {
-        $glPost  = $this->glPost(['status' => 'failed', 'journalEntryId' => null, 'postedAt' => null, 'lines' => []]);
-        $context = $this->context(['run-1' => 3]);
+	/**
+	 * @return void
+	 */
+	public function testPostedRecordViolatesWhenPostedAtMissing(): void {
+		$glPost = $this->glPost(['postedAt' => null]);
+		$context = $this->context(['run-1' => 1]);
 
-        $this->assertTrue(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
+		$this->assertFalse(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
 
-    }//end testFailedAttemptIsAlwaysCompliantRegardlessOfActiveCount()
+	}//end testPostedRecordViolatesWhenPostedAtMissing()
 
+	/**
+	 * @return void
+	 */
+	public function testPostedRecordViolatesWhenLinesDoNotBalance(): void {
+		$glPost = $this->glPost(
+			[
+				'lines' => [
+					['accountNumber' => '4001', 'side' => 'debit', 'amount' => 3800.00],
+					['accountNumber' => '1701', 'side' => 'credit', 'amount' => 1102.00],
+				],
+			]
+		);
+		$context = $this->context(['run-1' => 1]);
 
-    /**
-     * @return void
-     */
-    public function testSkippedNoShillinqAttemptIsAlwaysCompliant(): void
-    {
-        $glPost  = $this->glPost(['status' => 'skipped-no-shillinq', 'journalEntryId' => null, 'postedAt' => null, 'lines' => []]);
-        $context = $this->context(['run-1' => 3]);
+		$this->assertFalse(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
 
-        $this->assertTrue(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
+	}//end testPostedRecordViolatesWhenLinesDoNotBalance()
 
-    }//end testSkippedNoShillinqAttemptIsAlwaysCompliant()
+	/**
+	 * @return void
+	 */
+	public function testPostedRecordViolatesWhenLinesEmpty(): void {
+		$glPost = $this->glPost(['lines' => []]);
+		$context = $this->context(['run-1' => 1]);
 
+		$this->assertFalse(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
 
-    /**
-     * @return void
-     */
-    public function testPostedRecordViolatesWhenJournalEntryIdMissing(): void
-    {
-        $glPost  = $this->glPost(['journalEntryId' => null]);
-        $context = $this->context(['run-1' => 1]);
+	}//end testPostedRecordViolatesWhenLinesEmpty()
 
-        $this->assertFalse(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
+	/**
+	 * @return void
+	 */
+	public function testMissingContextDefaultsToZeroActiveCount(): void {
+		$glPost = $this->glPost();
 
-    }//end testPostedRecordViolatesWhenJournalEntryIdMissing()
+		$this->assertTrue(($this->checks['nl-glpost-idempotent-per-run'])($glPost, []));
 
-
-    /**
-     * @return void
-     */
-    public function testPostedRecordViolatesWhenPostedAtMissing(): void
-    {
-        $glPost  = $this->glPost(['postedAt' => null]);
-        $context = $this->context(['run-1' => 1]);
-
-        $this->assertFalse(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
-
-    }//end testPostedRecordViolatesWhenPostedAtMissing()
-
-
-    /**
-     * @return void
-     */
-    public function testPostedRecordViolatesWhenLinesDoNotBalance(): void
-    {
-        $glPost = $this->glPost(
-            [
-                'lines' => [
-                    ['accountNumber' => '4001', 'side' => 'debit', 'amount' => 3800.00],
-                    ['accountNumber' => '1701', 'side' => 'credit', 'amount' => 1102.00],
-                ],
-            ]
-        );
-        $context = $this->context(['run-1' => 1]);
-
-        $this->assertFalse(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
-
-    }//end testPostedRecordViolatesWhenLinesDoNotBalance()
-
-
-    /**
-     * @return void
-     */
-    public function testPostedRecordViolatesWhenLinesEmpty(): void
-    {
-        $glPost  = $this->glPost(['lines' => []]);
-        $context = $this->context(['run-1' => 1]);
-
-        $this->assertFalse(($this->checks['nl-glpost-idempotent-per-run'])($glPost, $context));
-
-    }//end testPostedRecordViolatesWhenLinesEmpty()
-
-
-    /**
-     * @return void
-     */
-    public function testMissingContextDefaultsToZeroActiveCount(): void
-    {
-        $glPost = $this->glPost();
-
-        $this->assertTrue(($this->checks['nl-glpost-idempotent-per-run'])($glPost, []));
-
-    }//end testMissingContextDefaultsToZeroActiveCount()
-
+	}//end testMissingContextDefaultsToZeroActiveCount()
 
 }//end class

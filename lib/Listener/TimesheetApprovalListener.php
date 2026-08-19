@@ -44,97 +44,90 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
  */
-class TimesheetApprovalListener implements IEventListener
-{
+class TimesheetApprovalListener implements IEventListener {
 
+	/**
+	 * Constructor.
+	 *
+	 * @param TimeEntryEventService $eventService The approved-time-entry emitter.
+	 * @param ContainerInterface $container The DI container (lazy OpenRegister SchemaMapper lookup).
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		private readonly TimeEntryEventService $eventService,
+		private readonly ContainerInterface $container,
+		private readonly LoggerInterface $logger,
+	) {
 
-    /**
-     * Constructor.
-     *
-     * @param TimeEntryEventService $eventService The approved-time-entry emitter.
-     * @param ContainerInterface    $container    The DI container (lazy OpenRegister SchemaMapper lookup).
-     * @param LoggerInterface       $logger       The logger.
-     */
-    public function __construct(
-        private readonly TimeEntryEventService $eventService,
-        private readonly ContainerInterface $container,
-        private readonly LoggerInterface $logger,
-    ) {
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * Handle an ObjectUpdatedEvent.
+	 *
+	 * @param Event $event The dispatched event.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+	 */
+	public function handle(Event $event): void {
+		if (($event instanceof ObjectUpdatedEvent) === false) {
+			return;
+		}
 
+		try {
+			$newEntity = $event->getNewObject();
+			$oldEntity = $event->getOldObject();
+			$schemaSlug = $this->resolveSchemaSlug((string)$newEntity->getSchema());
+			if ($schemaSlug === '') {
+				return;
+			}
 
-    /**
-     * Handle an ObjectUpdatedEvent.
-     *
-     * @param Event $event The dispatched event.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
-     */
-    public function handle(Event $event): void
-    {
-        if (($event instanceof ObjectUpdatedEvent) === false) {
-            return;
-        }
+			$newData = $newEntity->getObject();
+			$oldData = null;
+			if ($oldEntity !== null) {
+				$oldData = $oldEntity->getObject();
+			}
 
-        try {
-            $newEntity  = $event->getNewObject();
-            $oldEntity  = $event->getOldObject();
-            $schemaSlug = $this->resolveSchemaSlug((string) $newEntity->getSchema());
-            if ($schemaSlug === '') {
-                return;
-            }
+			$this->eventService->maybeDispatchApproved(
+				schemaSlug: $schemaSlug,
+				oldData: $oldData,
+				newData: $newData
+			);
+		} catch (\Throwable $e) {
+			// Never break the save path — a failure to resolve or emit is logged
+			// and swallowed (fire-and-forget per REQ-TEC-002).
+			$this->logger->warning(
+				'hrmq: TimesheetApprovalListener could not process an ObjectUpdatedEvent',
+				['exception' => $e->getMessage()]
+			);
+		}//end try
 
-            $newData = $newEntity->getObject();
-            $oldData = null;
-            if ($oldEntity !== null) {
-                $oldData = $oldEntity->getObject();
-            }
+	}//end handle()
 
-            $this->eventService->maybeDispatchApproved(
-                schemaSlug: $schemaSlug,
-                oldData: $oldData,
-                newData: $newData
-            );
-        } catch (\Throwable $e) {
-            // Never break the save path — a failure to resolve or emit is logged
-            // and swallowed (fire-and-forget per REQ-TEC-002).
-            $this->logger->warning(
-                'hrmq: TimesheetApprovalListener could not process an ObjectUpdatedEvent',
-                ['exception' => $e->getMessage()]
-            );
-        }//end try
+	/**
+	 * Resolve a schema id to its slug via OpenRegister's SchemaMapper.
+	 *
+	 * Returns an empty string when OpenRegister is absent or the schema cannot
+	 * be resolved, so the listener no-ops safely.
+	 *
+	 * @param string $schemaId The OpenRegister schema id/uuid carried by the object.
+	 *
+	 * @return string The lower-caseable schema slug, or '' when unresolvable.
+	 */
+	private function resolveSchemaSlug(string $schemaId): string {
+		if ($schemaId === '') {
+			return '';
+		}
 
-    }//end handle()
+		try {
+			$schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+			$schema = $schemaMapper->find($schemaId);
+			return (string)$schema->getSlug();
+		} catch (\Throwable $e) {
+			return '';
+		}
 
-
-    /**
-     * Resolve a schema id to its slug via OpenRegister's SchemaMapper.
-     *
-     * Returns an empty string when OpenRegister is absent or the schema cannot
-     * be resolved, so the listener no-ops safely.
-     *
-     * @param string $schemaId The OpenRegister schema id/uuid carried by the object.
-     *
-     * @return string The lower-caseable schema slug, or '' when unresolvable.
-     */
-    private function resolveSchemaSlug(string $schemaId): string
-    {
-        if ($schemaId === '') {
-            return '';
-        }
-
-        try {
-            $schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
-            $schema       = $schemaMapper->find($schemaId);
-            return (string) $schema->getSlug();
-        } catch (\Throwable $e) {
-            return '';
-        }
-
-    }//end resolveSchemaSlug()
-
+	}//end resolveSchemaSlug()
 
 }//end class

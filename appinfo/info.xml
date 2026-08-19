@@ -59,8 +59,14 @@ Vrij en open source onder de EUPL-1.2-licentie.
     <screenshot>https://codeberg.org/Conduction/hrmq/raw/branch/main/img/app-store.svg</screenshot>
 
     <dependencies>
-        <nextcloud min-version="32" max-version="34"/>
+        <!-- ORDER IS LOAD-BEARING. info.xsd declares <dependencies> as a
+             SEQUENCE: php, database, command, lib, owncloud, nextcloud,
+             architecture, backend. With <nextcloud> first, xmllint rejects the
+             file with "Element 'php': This element is not expected. Expected
+             is one of ( architecture, backend )" — the elements are both
+             valid, only their order was not. -->
         <php min-version="8.3"/>
+        <nextcloud min-version="32" max-version="34"/>
         <!-- App dependency (not expressible in app-info.xsd): OpenRegister.
              HRMQ owns no database tables — Employee / EmploymentContract /
              PayrollRun / Payslip / WageTaxFiling / Timesheet / Expense objects
@@ -71,16 +77,35 @@ Vrij en open source onder de EUPL-1.2-licentie.
              declares "dependencies": ["openregister"]). -->
     </dependencies>
 
-    <navigations>
-        <navigation>
-            <id>hrmq</id>
-            <name>HRMQ</name>
-            <route>hrmq.page.index</route>
-            <icon>app.svg</icon>
-        </navigation>
-    </navigations>
+    <!-- ORDER IS LOAD-BEARING, and this file had it wrong three ways. info.xsd
+         declares the body of <info> as a SEQUENCE, so these blocks must appear
+         as: dependencies, background-jobs, repair-steps, commands, navigations.
+         <navigations> used to sit here (before <repair-steps>) and
+         <background-jobs> sat after it, which is why xmllint rejected the file
+         with "Element 'repair-steps': This element is not expected. Expected is
+         one of ( contactsmenu, collaboration, openmetrics, sabre, trash,
+         versions, external-app )" — once <navigations> is consumed, the schema
+         will accept nothing that legally precedes it. Nothing here changed but
+         the order. -->
+
+    <background-jobs>
+        <!-- Monthly statutory + bovenwettelijk leave accrual onto every active
+             employee's holiday LeaveBalance (leave-accrual-job). Fires ~daily;
+             the per-balance lastAccruedPeriod marker — not the interval —
+             defines "once a month". Gated by the leave_accrual_enabled toggle. -->
+        <job>OCA\Hrmq\BackgroundJob\LeaveAccrualJob</job>
+    </background-jobs>
 
     <repair-steps>
+        <!-- Order here is a SEQUENCE too: pre-migration, post-migration,
+             live-migration, install, uninstall. <install> used to come first,
+             which the schema rejects. Both steps are unchanged. -->
+        <post-migration>
+            <!-- Import the hrmq register (lib/Settings/hrmq_register.json +
+                 register.d/*.json fragments) into OpenRegister. Idempotent;
+                 fails soft when OpenRegister is not installed. -->
+            <step>OCA\Hrmq\Repair\InitializeRegister</step>
+        </post-migration>
         <install>
             <!-- SAME step as post-migration, and that duplication is the point.
                  Nextcloud's Installer::installAppLastSteps() guards BOTH the
@@ -103,21 +128,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  skip. -->
             <step>OCA\Hrmq\Repair\InitializeRegister</step>
         </install>
-        <post-migration>
-            <!-- Import the hrmq register (lib/Settings/hrmq_register.json +
-                 register.d/*.json fragments) into OpenRegister. Idempotent;
-                 fails soft when OpenRegister is not installed. -->
-            <step>OCA\Hrmq\Repair\InitializeRegister</step>
-        </post-migration>
     </repair-steps>
-
-    <background-jobs>
-        <!-- Monthly statutory + bovenwettelijk leave accrual onto every active
-             employee's holiday LeaveBalance (leave-accrual-job). Fires ~daily;
-             the per-balance lastAccruedPeriod marker — not the interval —
-             defines "once a month". Gated by the leave_accrual_enabled toggle. -->
-        <job>OCA\Hrmq\BackgroundJob\LeaveAccrualJob</job>
-    </background-jobs>
 
     <commands>
         <!-- Audit the register's HR/labour objects against the machine-checkable
@@ -232,4 +243,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
              calendar is not configured or cannot be resolved. -->
         <command>OCA\Hrmq\Command\InterviewCalendarSyncCommand</command>
     </commands>
+
+    <navigations>
+        <navigation>
+            <id>hrmq</id>
+            <name>HRMQ</name>
+            <route>hrmq.page.index</route>
+            <icon>app.svg</icon>
+        </navigation>
+    </navigations>
 </info>

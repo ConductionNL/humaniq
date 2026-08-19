@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrm-rule-testdata-seed/specs/hrm-rule-engine/spec.md
+ * @spec openspec/specs/hrm-rule-engine/spec.md
  */
 
 declare(strict_types=1);
@@ -36,45 +36,41 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * occ command that seeds compliant local test data.
  */
-class RulesSeedTestDataCommand extends Command
-{
-    /**
-     * @param RuleTestDataSeeder $seeder The test-data seeder.
-     */
-    public function __construct(
-        private readonly RuleTestDataSeeder $seeder,
-    ) {
-        parent::__construct();
+class RulesSeedTestDataCommand extends Command {
+	/**
+	 * @param RuleTestDataSeeder $seeder The test-data seeder.
+	 */
+	public function __construct(
+		private readonly RuleTestDataSeeder $seeder,
+	) {
+		parent::__construct();
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * @return void
-     */
-    protected function configure(): void
-    {
-        $this->setName('hrmq:rules:seed-testdata')
-            ->setDescription('Backfill local test data to satisfy the enforced rules (idempotent; test/dev only).');
+	/**
+	 * @return void
+	 */
+	protected function configure(): void {
+		$this->setName('hrmq:rules:seed-testdata')
+			->setDescription('Backfill local test data to satisfy the enforced rules (idempotent; test/dev only).');
 
-    }//end configure()
+	}//end configure()
 
-    /**
-     * @param InputInterface  $input  Console input.
-     * @param OutputInterface $output Console output.
-     *
-     * @return int
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        $result = $this->seeder->seed();
+	/**
+	 * @param InputInterface $input Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output): int {
+		$result = $this->seeder->seed();
 
-        $output->writeln('<info>Hrmq rules test-data seeder</info>');
-        $output->writeln(sprintf('  provider objects created : %d', ($result['providerObjectsCreated'] ?? 0)));
-        $output->writeln(sprintf('  provider fields backfilled : %d', ($result['providerFieldsAdded'] ?? 0)));
-        $output->writeln(sprintf('  already compliant          : %d', $result['alreadyCompliant']));
-        $output->writeln('Run <info>occ hrmq:rules:audit</info> to confirm 100% compliance.');
+		$output->writeln('<info>Hrmq rules test-data seeder</info>');
+		$output->writeln(sprintf('  provider objects created : %d', ($result['providerObjectsCreated'] ?? 0)));
+		$output->writeln(sprintf('  provider fields backfilled : %d', ($result['providerFieldsAdded'] ?? 0)));
+		$output->writeln(sprintf('  already compliant          : %d', $result['alreadyCompliant']));
+		$output->writeln('Run <info>occ hrmq:rules:audit</info> to confirm 100% compliance.');
 
-        return 0;
-
-    }//end execute()
+		return 0;
+	}//end execute()
 }//end class

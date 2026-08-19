@@ -40,73 +40,60 @@ use OCA\Hrmq\Payroll\Dsl\DslException;
 /**
  * The closed set of step ops, by declared name.
  */
-final class OpRegistry
-{
+final class OpRegistry {
 
-    /**
-     * The registered ops, by declared name.
-     *
-     * @var array<string, StepOpInterface>
-     */
-    private array $ops = [];
+	/**
+	 * The registered ops, by declared name.
+	 *
+	 * @var array<string, StepOpInterface>
+	 */
+	private array $ops = [];
 
+	/**
+	 * @param array<int, StepOpInterface> $ops The ops forming the vocabulary.
+	 */
+	public function __construct(array $ops) {
+		foreach ($ops as $op) {
+			$this->ops[$op->name()] = $op;
+		}
 
-    /**
-     * @param array<int, StepOpInterface> $ops The ops forming the vocabulary.
-     */
-    public function __construct(array $ops)
-    {
-        foreach ($ops as $op) {
-            $this->ops[$op->name()] = $op;
-        }
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * Whether an op name is in the vocabulary.
+	 *
+	 * @param string $name The declared op name.
+	 *
+	 * @return bool
+	 */
+	public function has(string $name): bool {
+		return array_key_exists($name, $this->ops);
+	}//end has()
 
+	/**
+	 * Resolve an op by name.
+	 *
+	 * @param string $name The declared op name.
+	 *
+	 * @return StepOpInterface
+	 *
+	 * @throws DslException When the op is not in the vocabulary.
+	 */
+	public function get(string $name): StepOpInterface {
+		if ($this->has($name) === false) {
+			throw new DslException('Pack: onbekende op "' . $name . '" (toegestaan: ' . implode(', ', $this->names()) . ').');
+		}
 
-    /**
-     * Whether an op name is in the vocabulary.
-     *
-     * @param string $name The declared op name.
-     *
-     * @return bool
-     */
-    public function has(string $name): bool
-    {
-        return array_key_exists($name, $this->ops);
+		return $this->ops[$name];
+	}//end get()
 
-    }//end has()
-
-
-    /**
-     * Resolve an op by name.
-     *
-     * @param string $name The declared op name.
-     *
-     * @return StepOpInterface
-     *
-     * @throws DslException When the op is not in the vocabulary.
-     */
-    public function get(string $name): StepOpInterface
-    {
-        if ($this->has($name) === false) {
-            throw new DslException('Pack: onbekende op "'.$name.'" (toegestaan: '.implode(', ', $this->names()).').');
-        }
-
-        return $this->ops[$name];
-
-    }//end get()
-
-
-    /**
-     * Every op name in the vocabulary.
-     *
-     * @return array<int, string>
-     */
-    public function names(): array
-    {
-        return array_keys($this->ops);
-
-    }//end names()
-
+	/**
+	 * Every op name in the vocabulary.
+	 *
+	 * @return array<int, string>
+	 */
+	public function names(): array {
+		return array_keys($this->ops);
+	}//end names()
 
 }//end class
