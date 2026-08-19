@@ -1,4 +1,12 @@
-## MODIFIED Requirements
+## REMOVED Requirements
+
+### Requirement: Vehicle and CarAssignment schemas SHALL carry the fiscal facts bijtelling needs (REQ-FLEET-001)
+
+**Reason**: this change RETIRES the `Vehicle` and `CarAssignment` schemas outright — `lib/Settings/register.d/hr-fleet.json` is deleted — so a requirement about what those two schemas carry can no longer be true of anything. Its scenario "A CarAssignment resolves to exactly one Vehicle and one Employee" asserts `$ref`s to schemas that no longer exist, and is replaced (not dropped) by "A vehicle Asset carries the fiscal facts a bijtelling assignment needs" on the requirement below, which makes the same structural assertion against the merged `Asset`/`AssetAssignment` pair.
+
+**Migration**: covered by REQ-AST-008 (`AssetDialectMigrationService`), which rewrites every pre-existing object into the merged dialect.
+
+## ADDED Requirements
 
 ### Requirement: The company car's fiscal facts and holding period SHALL be declared on the merged Asset/AssetAssignment schemas (REQ-FLEET-001)
 
@@ -13,6 +21,8 @@ This closes the deliberate decoupling `Vehicle`'s own description named at the t
 - GIVEN an `Asset` with `category: "vehicle"`, `listPrice: 45000`, `fuelType: "gasoline"`, `companyCarTaxCategory: "standard"`
 - WHEN an `AssetAssignment` referencing it (`assetId`) is created for an `Employee` with `employeeContribution: 325`
 - THEN both references resolve as UUID `$ref` fields to existing `Asset` and `Employee` schemas, and no property on either schema references a `Vehicle` or `CarAssignment` schema (neither exists)
+
+## MODIFIED Requirements
 
 ### Requirement: PayrollRunService SHALL add the monthly bijtelling to the taxable gross before the calculator runs (REQ-FLEET-003)
 

@@ -55,39 +55,69 @@ Offboarding schema is absent.
 
 ### Requirement: A new `hr-assets` fragment SHALL define the `Asset` schema with a declarative custody lifecycle (REQ-AST-001)
 
-`lib/Settings/register.d/hr-assets.json` (new file, `x-hrmq-fragment: hr-assets`, OpenAPI 3.0.0 `components.schemas` shape like `hr-org.json`) declares `Asset` (slug `Asset`, icon `PackageVariantClosed`, version `0.1.0`, `x-schema-org: schema:IndividualProduct`) with properties: `name` (string), `category` (enum `laptop|telefoon|voertuig|gereedschap|toegangspas|kleding|overig`), `serienummer` (string, nullable), `kenteken` (string, nullable — Dutch licence plate, meaningful for category `voertuig`; carries no fiscal semantics, bijtelling is an explicit non-goal per Spectr `hrmq-canon-fleet-bijtelling`), `aanschafdatum` (string, format date, nullable), `aanschafwaarde` (number, nullable), `status` (enum `beschikbaar|uitgegeven|ingenomen|afgeschreven`), `active` (boolean, default `true`). `required: [name, category, status]`. `status` carries an `x-openregister-lifecycle` (initial `beschikbaar`, terminal `afgeschreven`) with exactly four transitions: `uitgeven` (`beschikbaar`→`uitgegeven`), `innemen` (`uitgegeven`→`ingenomen`), `vrijgeven` (`ingenomen`→`beschikbaar`), `afschrijven` (`beschikbaar`/`ingenomen`→`afgeschreven`) — no guards. The existing register Repair import picks the fragment up without code changes.
+`lib/Settings/register.d/hr-assets.json` SHALL declare the `Asset` schema entirely in English field/enum names, including the three vehicle-only fiscal-facts fields absorbed from the retired `Vehicle` schema, required exactly when `category` is `vehicle`.
+
+`lib/Settings/register.d/hr-assets.json` (`x-hrmq-fragment: hr-assets`, OpenAPI 3.0.0 `components.schemas` shape like `hr-org.json`) declares `Asset` (slug `Asset`, icon `PackageVariantClosed`, `x-schema-org: schema:IndividualProduct`) with properties: `name` (string), `category` (enum `laptop|phone|vehicle|tool|accessPass|clothing|other`), `serialNumber` (string, nullable), `licencePlate` (string, nullable — meaningful for category `vehicle`; carries no fiscal semantics), `purchaseDate` (string, format date, nullable), `purchaseValue` (number, nullable), `status` (enum `available|issued|checkedIn|writtenOff`), `active` (boolean, default `true`), `administrationId` (string, nullable). `required: [name, category, status]`. `status` carries an `x-openregister-lifecycle` (initial `available`, terminal `writtenOff`) with exactly four transitions: `issue` (`available`→`issued`), `checkIn` (`issued`→`checkedIn`), `release` (`checkedIn`→`available`), `writeOff` (`available`/`checkedIn`→`writtenOff`) — no guards.
+
+`Asset` additionally gains three fiscal-facts properties absorbed from the retired `Vehicle` schema (see the modified `fleet-bijtelling` capability): `listPrice` (number, nullable), `fuelType` (enum `gasoline|diesel|hybrid|fullyElectric|hydrogen|other`, nullable), `companyCarTaxCategory` (enum `standard|evReducedCapped`, nullable). None of the three is in the schema's unconditional `required` array — they are meaningless for any `category` other than `vehicle`. Their completeness when `category === "vehicle"` SHALL be enforced by a machine-checkable corpus rule `nl-asset-voertuig-fiscale-velden-compleet` (predicate in `NlFleetChecks`), **not** by a schema-level conditional. A JSON Schema `allOf`/`if`/`then` block cannot work here: `Schema::getSchemaObject()` builds the object handed to the validator from `title`/`description`/`version`/`type`/`required`/`properties` only, so composition keywords never reach `opis/json-schema` however faithfully they are declared (measured — see design.md D2). Declaring one would be enforced nowhere while reading as a guarantee.
+
+This is an **audit-time** guard, and deliberately weaker than what it replaces: before this change a `Vehicle` without a `cataloguswaarde` was rejected at write time by `Vehicle`'s own unconditional `required`. After the merge an incomplete vehicle `Asset` is writable, and is caught on the next `occ hrmq:rules:audit` instead. The consequence is bounded rather than silent — `PayrollRunService::bijtellingCentsFor()`'s existing `is_numeric` guard yields €0, a missing benefit rather than a wrong one — but the downgrade is real and is recorded as such.
 
 #### Scenario: Schema validates a new asset in stock
 
 - GIVEN the imported hrmq register
-- WHEN an object `{name: "Fairphone 5", category: "telefoon", status: "beschikbaar"}` is created
-- THEN creation succeeds with `active` defaulted to `true` and `serienummer`/`kenteken`/`aanschafdatum`/`aanschafwaarde` null
+- WHEN an object `{name: "Fairphone 5", category: "phone", status: "available"}` is created
+- THEN creation succeeds with `active` defaulted to `true` and `serialNumber`/`licencePlate`/`purchaseDate`/`purchaseValue`/`listPrice`/`fuelType`/`companyCarTaxCategory` null
 
 #### Scenario: Unknown category rejected
 
-- WHEN an object is written with `category: "meubilair"`
+- WHEN an object is written with `category: "furniture"`
 - THEN OpenRegister schema validation rejects it (enum mismatch)
 
 #### Scenario: Lifecycle blocks writing off an issued asset
 
-- GIVEN an Asset in status `uitgegeven`
-- WHEN the `afschrijven` transition is attempted
-- THEN the lifecycle rejects it (`afschrijven` is only reachable from `beschikbaar` or `ingenomen`)
+- GIVEN an Asset in status `issued`
+- WHEN the `writeOff` transition is attempted
+- THEN the lifecycle rejects it (`writeOff` is only reachable from `available` or `checkedIn`)
 
 #### Scenario: Returned asset can re-enter stock
 
-- GIVEN an Asset in status `ingenomen`
-- WHEN the `vrijgeven` transition is applied
-- THEN the asset's status becomes `beschikbaar` and it is issuable again via `uitgeven`
+- GIVEN an Asset in status `checkedIn`
+- WHEN the `release` transition is applied
+- THEN the asset's status becomes `available` and it is issuable again via `issue`
+
+#### Scenario: A vehicle Asset without fiscal facts is reported by the rule audit
+
+- WHEN an object `{name: "Tesla Model Y", category: "vehicle", status: "available"}` is created with no `listPrice`, `fuelType`, or `companyCarTaxCategory`
+- THEN the object is **accepted** by OpenRegister schema validation — the schema layer cannot express a conditional-required (see design.md D2: `Schema::getSchemaObject()` emits no `allOf`/`if`/`then`, so the validator never sees one)
+- AND `occ hrmq:rules:audit` reports a `nl-asset-voertuig-fiscale-velden-compleet` violation for that object
+- AND `PayrollRunService::bijtellingCentsFor()` yields €0 for it rather than a wrong figure, so the incomplete record costs a missing benefit, never a miscalculated one
+- @e2e exclude rule-engine predicate behaviour; covered by a PHPUnit fixture over `NlFleetChecks` in the `RuleAuditServiceTest` precedent, not a UI flow — app-level e2e suite does not exist yet (tracked by active change `hrmq-test-coverage-baseline`)
+
+#### Scenario: The guard is weaker than the one it replaces, and the tasks say so
+
+- GIVEN the pre-merge `Vehicle` schema made an incomplete vehicle **impossible to write** via its own unconditional `required` array
+- WHEN the merged `Asset` relies on an audit-time corpus rule instead
+- THEN the detection is after-the-fact, and the migration notes SHALL record that as a deliberate downgrade forced by the platform, not describe the two guards as equivalent
+- @e2e exclude a documentation invariant, verified by reading tasks.md
+
+#### Scenario: A non-vehicle Asset is unaffected by the conditional
+
+- WHEN an object `{name: "Werkschoenen", category: "clothing", status: "available"}` is created with no `listPrice`/`fuelType`/`companyCarTaxCategory`
+- THEN creation succeeds — the conditional-required block does not fire for a non-`vehicle` category
 
 ### Requirement: The `hr-assets` fragment SHALL define the effective-dated `AssetAssignment` schema (REQ-AST-002)
 
-The same fragment declares `AssetAssignment` (slug `AssetAssignment`, icon `HandshakeOutline`, version `0.1.0`, `x-schema-org: schema:OwnershipInfo`) with properties: `assetId` (string, format uuid, `$ref: Asset`), `employeeId` (string, format uuid, `$ref: Employee`), `uitgifteDatum` (string, format date), `innameDatum` (string, format date, nullable — null while the asset is out), `uitgifteBonSigned` (boolean, default `false`), `notes` (string, nullable). `required: [assetId, employeeId, uitgifteDatum]`. `AssetAssignment` does NOT carry an `x-openregister-lifecycle` (a plain effective-dated record, the OrgAssignment pattern).
+`lib/Settings/register.d/hr-assets.json` SHALL declare the `AssetAssignment` schema entirely in English field names, including `employeeContribution` absorbed from the retired `CarAssignment` schema.
+
+The same fragment declares `AssetAssignment` (slug `AssetAssignment`, icon `HandshakeOutline`, `x-schema-org: schema:OwnershipInfo`) with properties: `assetId` (string, format uuid, `$ref: Asset`), `employeeId` (string, format uuid, `$ref: Employee`), `issuedOn` (string, format date), `returnedOn` (string, format date, nullable — null while the asset is out), `issueReceiptSigned` (boolean, default `false`), `notes` (string, nullable), `administrationId` (string, nullable). `required: [assetId, employeeId, issuedOn]`. `AssetAssignment` does NOT carry an `x-openregister-lifecycle` (a plain effective-dated record, the OrgAssignment pattern).
+
+`AssetAssignment` additionally gains `employeeContribution` (number, default `0`) absorbed from the retired `CarAssignment` schema (see the modified `fleet-bijtelling` capability) — the employee's own monthly contribution for private use of a company car. Unlike the three Asset-side fiscal fields, `employeeContribution` needs no conditional-required treatment: it already defaulted to `0` on `CarAssignment`, and `0` reads correctly as "no contribution" on any non-vehicle assignment (a laptop uitgifte has never had, and will never be asked for, an employee contribution).
 
 #### Scenario: Open uitgifte is valid
 
-- WHEN an object `{assetId: <asset uuid>, employeeId: <employee uuid>, uitgifteDatum: "2026-06-15"}` is created
-- THEN creation succeeds with `innameDatum` null (an open, current uitgifte) and `uitgifteBonSigned` defaulted to `false`
+- WHEN an object `{assetId: <asset uuid>, employeeId: <employee uuid>, issuedOn: "2026-06-15"}` is created
+- THEN creation succeeds with `returnedOn` null (an open, current uitgifte), `issueReceiptSigned` defaulted to `false`, and `employeeContribution` defaulted to `0`
 
 #### Scenario: Missing asset reference rejected
 
@@ -116,26 +146,28 @@ Both reference fields (`AssetAssignment.assetId`→Asset, `AssetAssignment.emplo
 
 ### Requirement: `NlAssetChecks` SHALL enforce assignment consistency and offboarding asset return via the related-context (REQ-AST-005)
 
-New auto-discovered provider `lib/Standards/Checks/NlAssetChecks.php` (implements `CheckProvider`; no seeded sample objects — seeds live in hr-seed.json, the NlOrgChecks reasoning) registers both predicates keyed on `AssetAssignment` (pure `fn(array $object, array $context): bool`). `RuleAuditService::buildRelatedContext()` was extended consistently with an `Asset` index — `context['related']['Asset']['byId']` mapping each asset id to `{id, status, active}` (the OrgUnit index shape) — and an `Offboarding` index — `context['related']['Offboarding']['plannedCompletionByEmployeeId']` mapping each employeeId to the latest planned-completion date (`lastWorkingDay`) among its non-cancelled (status not `geannuleerd`) Offboarding cases — both with the same single pre-pass and the same degrade-to-empty behaviour when a schema is not yet imported. Predicates:
+Both predicates SHALL read the renamed `issuedOn`/`returnedOn`/`issued` fields and values, and SHALL report the identical violation count on equivalent fixture data before and after the rename in this change.
 
-1. **`nl-asset-assignment-consistency`** — violates when `innameDatum` is present and earlier than `uitgifteDatum`, or when the assignment is open (no `innameDatum`) and `assetId` does not resolve in the Asset index, or resolves to an asset whose `status` is not `uitgegeven`, or `employeeId` does not resolve in the existing Employee index (fail-closed on dangling references).
-2. **`nl-asset-inname-bij-offboarding`** — violates when the assignment is open and its `employeeId` resolves in the Offboarding index to a planned-completion date strictly before the audit run date. The predicate passes vacuously when the Offboarding index is empty or the employee has no entry (defensive coordination with the parallel `offboarding-wizard-mvp` change — the two changes land in either order; unreadable index entries are skipped at index build, degrading to vacuous pass, never to a false violation).
+`lib/Standards/Checks/NlAssetChecks.php` (implements `CheckProvider`) registers both predicates keyed on `AssetAssignment` (pure `fn(array $object, array $context): bool`), reading `context['related']['Asset']['byId']` (each entry `{id, status, active}`) and `context['related']['Offboarding']['plannedCompletionByEmployeeId']`, both built by `RuleAuditService::buildRelatedContext()`'s single pre-pass. Predicates:
+
+1. **`nl-asset-assignment-consistency`** — violates when `returnedOn` is present and earlier than `issuedOn`, or when the assignment is open (no `returnedOn`) and `assetId` does not resolve in the Asset index, or resolves to an asset whose `status` is not `issued`, or `employeeId` does not resolve in the existing Employee index (fail-closed on dangling references).
+2. **`nl-asset-inname-bij-offboarding`** — violates when the assignment is open and its `employeeId` resolves in the Offboarding index to a planned-completion date strictly before the audit run date. The predicate passes vacuously when the Offboarding index is empty or the employee has no entry.
 
 #### Scenario: Incoherent dates flagged
 
-- GIVEN an AssetAssignment with `uitgifteDatum: 2026-06-01` and `innameDatum: 2026-05-01`
+- GIVEN an AssetAssignment with `issuedOn: 2026-06-01` and `returnedOn: 2026-05-01`
 - WHEN `occ hrmq:rules:audit` runs
 - THEN a `nl-asset-assignment-consistency` violation is reported for that assignment
 
 #### Scenario: Open uitgifte on an in-stock asset flagged
 
-- GIVEN the seed assignment `assetassignment-jansen-telefoon` (open, referencing the `beschikbaar` telefoon)
+- GIVEN the seed assignment `assetassignment-jansen-telefoon` (open, referencing the `available` telefoon)
 - WHEN the audit runs
 - THEN a `nl-asset-assignment-consistency` violation is reported for it
 
 #### Scenario: Closed uitgifte on a non-issued asset passes
 
-- GIVEN an AssetAssignment with coherent dates and an `innameDatum` in the past, referencing an Asset in status `beschikbaar`
+- GIVEN an AssetAssignment with coherent dates and a `returnedOn` in the past, referencing an Asset in status `available`
 - WHEN the audit runs
 - THEN no `nl-asset-assignment-consistency` violation is reported for it (historical uitgiftes may reference re-stocked or written-off assets)
 
@@ -153,15 +185,26 @@ New auto-discovered provider `lib/Standards/Checks/NlAssetChecks.php` (implement
 
 #### Scenario: Rule passes vacuously without Offboarding objects
 
-- GIVEN a register in which no Offboarding schema or objects exist (the parallel offboarding-wizard-mvp change not yet landed)
+- GIVEN a register in which no Offboarding schema or objects exist
 - WHEN the audit runs
 - THEN no `nl-asset-inname-bij-offboarding` violation is reported for any assignment
 
-Pinned by `tests/Unit/Standards/Checks/NlAssetChecksTest.php` (both predicates, including fail-closed empty-context behaviour and every vacuous-pass path) and `tests/Unit/Service/RuleAuditServiceTest.php` (the `buildRelatedContext()` Asset + Offboarding indexes exercised end-to-end through `RuleAuditService::audit()` against the exact seeded fixture shapes, a dangling `assetId`, an overdue Offboarding case, a cancelled case, and the real future-dated `offboarding-jansen` seed).
+#### Scenario: The renamed fields produce the identical violation count as before the merge
+
+- GIVEN the seeded fixture data (three Assets, two AssetAssignments, one deliberately open uitgifte on an `available` asset) both immediately before this change (Dutch field names) and immediately after (English field names)
+- WHEN `occ hrmq:rules:audit` runs against each
+- THEN both runs report exactly one `nl-asset-assignment-consistency` violation and zero `nl-asset-inname-bij-offboarding` violations — the rename changes no arithmetic or resolution logic, only field names, so the before/after counts MUST be asserted equal, not merely "the tests pass" (the silent-empty failure mode named in the wave-1 brief: a check reading a field that moved does not throw, it silently stops matching)
+- @e2e exclude before/after count parity is a PHPUnit/CLI assertion (`RuleAuditServiceTest`), not a UI flow
+
+Pinned by `tests/Unit/Standards/Checks/NlAssetChecksTest.php` (both predicates, including fail-closed empty-context behaviour and every vacuous-pass path) and `tests/Unit/Service/RuleAuditServiceTest.php` (the `buildRelatedContext()` Asset + Offboarding indexes exercised end-to-end through `RuleAuditService::audit()`).
 
 ### Requirement: New asset pages SHALL surface the register under the existing expenses menu group (REQ-AST-006)
 
-`src/manifest.json` gains (a) an `Assets` index page (route `/assets`, register `hrmq`, schema `Asset`) with columns `name`, `category`, `status`, `serienummer`, filters `category`/`status`, default sort `name` ascending; (b) an `AssetDetail` detail page (route `/assets/:id`) with a `data` widget (name/category/serienummer/kenteken/aanschafdatum/aanschafwaarde/status/active), `lifecycleActions` exposing exactly the four fragment transitions (`uitgeven`/`innemen`/`vrijgeven`/`afschrijven` — never invent a transition), a `related` widget, an FK-scoped `object-list` "Uitgiftes" (`AssetAssignment`, `filter: { assetId: "@objectId" }`, sort `uitgifteDatum` descending, rowRoute `AssetAssignmentDetail`), an `integration: files` widget for signed uitgiftebonnen (the ExpenseDetail receipt placement) and an audit-history sidebar tab; (c) an `AssetAssignments` index page (route `/asset-assignments`) with columns `assetId`, `employeeId`, `uitgifteDatum`, `innameDatum`, `uitgifteBonSigned`, sort `uitgifteDatum` descending; (d) an `AssetAssignmentDetail` detail page (route `/asset-assignments/:id`) with a `data` widget (excluding `assetId`/`employeeId` — Related resolves both by name), a `related` widget and an audit-history sidebar tab, and no lifecycleActions; (e) menu children `Assets` ("Assets", icon `PackageVariantClosed`) and `AssetAssignments` ("Uitgiftes", icon `HandshakeOutline`) added to the **existing** `ExpensesGroup` after `ExpenseApproval` — the group was NOT renamed by this change (IA renames are owned by the active `hrmq-ia-navigation-alignment` change, which re-homes this group to the frozen ADR-001 menu 7 "Declaraties & assets"); (f) `deepLinks` entries for `Asset` (`/apps/hrmq/assets/{uuid}`) and `AssetAssignment` (`/apps/hrmq/asset-assignments/{uuid}`). The manifest validates (`npm run check:manifest`). Icons exist in `node_modules/vue-material-design-icons` (`LaptopOutline` does not — `PackageVariantClosed` and `HandshakeOutline` are verified present).
+`src/manifest.json` SHALL retire the `Vehicles`/`CarAssignments` menu entries, pages, and `deepLinks` entries, SHALL redirect their former URL patterns to the merged Asset/AssetAssignment detail routes, and SHALL hide the three vehicle-only fiscal fields on non-`vehicle` Asset detail pages.
+
+`src/manifest.json` carries (a) an `Assets` index page (route `/assets`, register `hrmq`, schema `Asset`) with columns `name`, `category`, `status`, `serialNumber`, filters `category`/`status`, default sort `name` ascending; (b) an `AssetDetail` detail page (route `/assets/:id`) with a `data` widget (`content.include`: `name`/`category`/`serialNumber`/`licencePlate`/`purchaseDate`/`purchaseValue`/`status`/`active`/`listPrice`/`fuelType`/`companyCarTaxCategory`, `content.hideEmpty: true` — the documented `CnObjectDataWidget` "discriminated supertype" mechanism, so a non-`vehicle` Asset's detail page does not render three permanently-empty fiscal fields as em dashes), `lifecycleActions` exposing exactly the four fragment transitions (`issue`/`checkIn`/`release`/`writeOff`), a `related` widget, an FK-scoped `object-list` "Uitgiftes" (`AssetAssignment`, `filter: { assetId: "@objectId" }`, sort `issuedOn` descending, rowRoute `AssetAssignmentDetail`), an `integration: files` widget for signed uitgiftebonnen and an audit-history sidebar tab; (c) an `AssetAssignments` index page (route `/asset-assignments`) with columns `assetId`, `employeeId`, `issuedOn`, `returnedOn`, `issueReceiptSigned`, sort `issuedOn` descending; (d) an `AssetAssignmentDetail` detail page (route `/asset-assignments/:id`) with a `data` widget (excluding `assetId`/`employeeId`; including `employeeContribution`), a `related` widget and an audit-history sidebar tab, and no lifecycleActions; (e) menu children `Assets` and `AssetAssignments` under the existing `ExpensesGroup`, unchanged in position by this change; (f) `deepLinks` entries for `Asset` (`/apps/hrmq/assets/{uuid}`) and `AssetAssignment` (`/apps/hrmq/asset-assignments/{uuid}`), unchanged. The manifest validates (`npm run check:manifest`).
+
+The `ExpensesGroup` menu's `Vehicles`/`CarAssignments` children, the `Vehicles`/`VehicleDetail`/`CarAssignments`/`CarAssignmentDetail` pages, and the `Vehicle`/`CarAssignment` `deepLinks` entries are removed (their schemas no longer exist — see the modified `fleet-bijtelling` capability). Their two former URL patterns become vue-router redirects to the merged Asset/AssetAssignment detail routes (`/vehicles/:id` → `/assets/:id`, `/car-assignments/:id` → `/asset-assignments/:id`), so a stale bookmark or external link resolves instead of 404ing.
 
 #### Scenario: Manifest stays valid
 
@@ -172,12 +215,28 @@ Pinned by `tests/Unit/Standards/Checks/NlAssetChecksTest.php` (both predicates, 
 
 - GIVEN the seeded `asset-bus-transit` opened on `AssetDetail`
 - WHEN the page renders
-- THEN the data card shows the kenteken, the lifecycle actions offer only the transitions valid from the current status, and the Uitgiftes list shows the closed visser assignment linking to its detail page
+- THEN the data card shows the licence plate, the lifecycle actions offer only the transitions valid from the current status, and the Uitgiftes list shows the closed visser assignment linking to its detail page
 - @e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+
+#### Scenario: A non-vehicle asset's detail page hides the fiscal fields
+
+- GIVEN the seeded `asset-laptop-latitude` (category `laptop`) opened on `AssetDetail`
+- WHEN the page renders
+- THEN the data card does not render `listPrice`/`fuelType`/`companyCarTaxCategory` as empty fields (hideEmpty)
+- @e2e exclude declarative widget config (`content.hideEmpty`); covered by the shared `CnObjectDataWidget` library tests, not an app-level e2e flow — app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+
+#### Scenario: A stale Vehicle URL redirects instead of 404ing
+
+- GIVEN a browser navigates to `/apps/hrmq/vehicles/<any-uuid>`
+- WHEN vue-router resolves the route
+- THEN it redirects to `/apps/hrmq/assets/<the-same-uuid>` rather than rendering the catch-all "no match" route
+- @e2e exclude router redirect; no live Vehicle object has ever existed to link to one (0 rows at merge time — Measured facts), so this is forward-looking deep-link hygiene rather than a fix for a reachable broken link; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
 
 ### Requirement: Seed data SHALL provide three assets and two uitgiftes with one deliberate inconsistency (REQ-AST-007)
 
-`lib/Settings/register.d/hr-seed.json` gains three Asset seeds — `asset-laptop-latitude` (category `laptop`, serienummer placeholder, status `uitgegeven`), `asset-telefoon-fairphone` (category `telefoon`, status `beschikbaar`), `asset-bus-transit` (category `voertuig`, kenteken placeholder `V-000-XX`, status `uitgegeven` — the fleet example, nothing fiscal) — and two AssetAssignment seeds referencing by slug (the Timesheet `employeeId` mechanism) against the **slugged** Employee seeds `employee-jansen` and `employee-visser`: `assetassignment-visser-bus` (closed: uitgifteDatum `2025-01-06`, innameDatum `2025-12-19`, uitgifteBonSigned `true` — consistent) and `assetassignment-jansen-telefoon` (open: uitgifteDatum `2026-06-15`, innameDatum null, uitgifteBonSigned `false`) whose referenced telefoon is `beschikbaar` — **deliberately inconsistent** so `nl-asset-assignment-consistency` fires exactly once on seed data. No Offboarding seeds added by this change (owned by `offboarding-wizard-mvp`; the pre-existing `offboarding-jansen` seed's `lastWorkingDay` is in the future, so `nl-asset-inname-bij-offboarding` stays green on seeds — its violating path is pinned by unit tests). All identifiers are obvious placeholders.
+`lib/Settings/register.d/hr-seed.json` SHALL carry the same three Asset and two AssetAssignment seeds under the renamed English field names, with the vehicle seed additionally populating the three fiscal fields the REQ-AST-001 conditional now requires.
+
+`lib/Settings/register.d/hr-seed.json` carries three Asset seeds — `asset-laptop-latitude` (category `laptop`, `serialNumber` placeholder, status `issued`), `asset-telefoon-fairphone` (category `phone`, status `available`), `asset-bus-transit` (category `vehicle`, `licencePlate` placeholder `V-000-XX`, status `issued`, plus `listPrice`/`fuelType`/`companyCarTaxCategory` populated — required now that `category: vehicle` triggers the conditional-required block) — and two AssetAssignment seeds referencing by slug against the slugged Employee seeds `employee-jansen` and `employee-visser`: `assetassignment-visser-bus` (closed: `issuedOn` `2025-01-06`, `returnedOn` `2025-12-19`, `issueReceiptSigned` `true` — consistent) and `assetassignment-jansen-telefoon` (open: `issuedOn` `2026-06-15`, `returnedOn` null, `issueReceiptSigned` `false`) whose referenced telefoon is `available` — deliberately inconsistent so `nl-asset-assignment-consistency` fires exactly once on seed data. No `Vehicle`/`CarAssignment` seeds exist to remove (the retired schemas were never seeded). All identifiers are unchanged from before this rename.
 
 #### Scenario: Idempotent seed
 
@@ -190,4 +249,52 @@ Pinned by `tests/Unit/Standards/Checks/NlAssetChecksTest.php` (both predicates, 
 - WHEN the audit runs
 - THEN exactly one `nl-asset-assignment-consistency` violation (the open jansen-telefoon uitgifte) and zero `nl-asset-inname-bij-offboarding` violations are reported, and no pre-existing check regresses
 
-Pinned by `RuleAuditServiceTest::testSeededAssetDataFlagsExactlyOneAssignmentConsistencyViolation` and `::testSeededOffboardingJansenLastWorkingDayInTheFutureDoesNotFlagTheOpenTelefoonUitgifte`, run against the exact seeded fixture shapes.
+Pinned by `RuleAuditServiceTest::testSeededAssetDataFlagsExactlyOneAssignmentConsistencyViolation` and `::testSeededOffboardingJansenLastWorkingDayInTheFutureDoesNotFlagTheOpenTelefoonUitgifte`, updated to the renamed field/enum names.
+
+### Requirement: Pre-existing `Asset`/`AssetAssignment` objects SHALL be rewritten from the old Dutch dialect to the renamed one (REQ-AST-008)
+
+Every pre-existing `Asset` and `AssetAssignment` object SHALL be rewritten from the old Dutch dialect to the renamed one, and the rewrite MUST NOT delete any object.
+
+The rename in REQ-AST-001/REQ-AST-002 changed schema field names and enum values but, because OpenRegister's register-config seed import is create-only, never patches an object that already exists. Objects created before this change carry the old Dutch field names/enum values indefinitely unless something rewrites them. `AssetDialectMigrationService::migrate()` performs that rewrite for every existing `Asset`/`AssetAssignment` object, invoked by both the `MigrateAssetDialect` repair step (unconditional on upgrade, and on `occ maintenance:repair`) and the `occ hrmq:assets:migrate-dialect` command (on-demand re-run). It never deletes an object, and reports counts per schema: rows inspected, rewritten, already-current, and skipped-with-reason.
+
+#### Scenario: An old-dialect Asset is rewritten
+
+- GIVEN an `Asset` object with `category: voertuig`, `status: uitgegeven`, and a `kenteken` field
+- WHEN the migration runs
+- THEN `category` becomes `vehicle`, `kenteken` is renamed to `licencePlate`, and the row is counted as rewritten
+
+#### Scenario: Re-running is a no-op
+
+- GIVEN a run of the migration has already rewritten every reachable field on an object
+- WHEN the migration runs again
+- THEN no further write happens for that object and it is counted as already-current (or, for a field the migration cannot reach — Scenario below — the same skip recurs identically rather than escalating)
+
+#### Scenario: An unrecognised enum value is skipped, not guessed
+
+- GIVEN an `Asset.category` or `Asset.status` value that matches neither the old-dialect map nor the current schema enum
+- WHEN the migration runs
+- THEN that object is left untouched and counted as skipped, with the unrecognised value recorded as the reason
+
+#### Scenario: A conflicting renamed-field pair is skipped, not guessed
+
+- GIVEN an `AssetAssignment` object carrying both a retired field (e.g. `uitgifteBonSigned`) and its renamed replacement (`issueReceiptSigned`) with two DIFFERENT values
+- WHEN the migration runs
+- THEN neither value is chosen; the object is left untouched and counted as skipped, with both values recorded in the reason
+
+#### Scenario: `Asset.status` cannot be rewritten through the guarded save path
+
+- GIVEN an `Asset` object whose stored `status` is an old-dialect value (e.g. `uitgegeven`)
+- WHEN the migration attempts to rewrite `status` to its renamed value (`issued`)
+- THEN OpenRegister's `LifecycleValidationListener` rejects the write — the schema's `x-openregister-lifecycle` transitions only declare `from` states in the new dialect, so no declared transition matches the old value regardless of write order or count — and the migration records this as skipped-with-reason using the rejection's own message, while still rewriting every other field on the same object
+
+#### Scenario: A retired field name is never cleared, and re-running does not keep retrying it
+
+- GIVEN an `Asset`/`AssetAssignment` object whose renamed field is now populated (the previous scenario) while its retired field name still holds the old value
+- WHEN the migration runs again
+- THEN the row is counted as already-current, not rewritten, and not skipped — OpenRegister's magic-table UPDATE generates a SET clause only for properties the CURRENT schema still declares, so a retired field name can never actually be cleared through `saveObject()` once the schema stops declaring it (measured: true whether the retired key is omitted from the payload or sent as an explicit null); its stale value is permanent, harmless debris, and treating its mere presence as unfinished work would retry a write that can never converge
+
+#### Scenario: The fiscal-fields rule audit reaches migrated data
+
+- GIVEN a pre-existing `Asset` with `category: voertuig` and no `listPrice`/`fuelType`/`companyCarTaxCategory`, alongside a newly-seeded `Asset` with `category: vehicle` and the same gap
+- WHEN the migration runs and `occ hrmq:rules:audit` runs afterward
+- THEN `nl-asset-voertuig-fiscale-velden-compleet` flags BOTH vehicles (`Asset ... withViolations=2`), not just the one that was already in the new dialect
