@@ -452,11 +452,27 @@ done
 # pointer `getActiveAdministrationId()` returns null and every analytics
 # endpoint answers 403, which is what the first cut of this seed missed: both
 # objects were created (201/201) and the Dashboard still failed on eight 403s.
-ACT_CODE="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
-	-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	-H 'Content-Type: application/json' -d "{\"administrationId\":\"${ADM_ID}\"}" \
-	"${BASE}/index.php/apps/hrmq/api/administration/active" || true)"
-echo "[ci-seed] set active administration ${ADM_ID} -> ${ACT_CODE}"
+# Two URL forms, because they do not behave identically across environments:
+# `/index.php/apps/...` answers 200 on the docker dev instance and 404 on the
+# CI runner's `php -S`. Rather than guess which one CI has, try both and report
+# BOTH codes — a seed step that silently fails is how the first two cuts of this
+# fix looked like they had worked (Administration 201, AdministrationAccess 201,
+# and the Dashboard still 403).
+ACT_OK=0
+for form in "/index.php/apps/hrmq/api/administration/active" "/apps/hrmq/api/administration/active"; do
+	code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+		-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+		-H 'Content-Type: application/json' -d "{\"administrationId\":\"${ADM_ID}\"}" \
+		"${BASE}${form}" || true)"
+	echo "[ci-seed] set active administration ${ADM_ID} via ${form} -> ${code}"
+	case "$code" in 2*) ACT_OK=1; break ;; esac
+done
+if [ "$ACT_OK" != "1" ]; then
+	# Not fatal: only the analytics endpoints need it, and the rest of the suite
+	# is still worth running. But say so loudly rather than leaving a reader to
+	# infer it from a Dashboard failure 4 minutes later.
+	echo "[ci-seed] WARNING: no active administration set — AnalyticsController will answer 403 and the Dashboard spec will fail on console errors."
+fi
 
 APP_HTML="${WORK}/app.html"
 curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
