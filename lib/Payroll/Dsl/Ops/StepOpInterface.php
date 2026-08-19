@@ -36,27 +36,23 @@ use OCA\Hrmq\Payroll\Dsl\StepContext;
 /**
  * One operation in the closed step vocabulary.
  */
-interface StepOpInterface
-{
+interface StepOpInterface {
 
+	/**
+	 * The op's declared name, as a pack writes it.
+	 *
+	 * @return string
+	 */
+	public function name(): string;
 
-    /**
-     * The op's declared name, as a pack writes it.
-     *
-     * @return string
-     */
-    public function name(): string;
-
-
-    /**
-     * Evaluate the op against its declared spec.
-     *
-     * @param array<string, mixed> $spec The declared step/binding spec.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return mixed
-     */
-    public function evaluate(array $spec, StepContext $ctx): mixed;
-
+	/**
+	 * Evaluate the op against its declared spec.
+	 *
+	 * @param array<string, mixed> $spec The declared step/binding spec.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return mixed
+	 */
+	public function evaluate(array $spec, StepContext $ctx): mixed;
 
 }//end interface

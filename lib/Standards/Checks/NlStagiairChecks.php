@@ -51,101 +51,88 @@ use DateTimeImmutable;
 /**
  * The single hr-stagiair BPV-overeenkomst obligation, over Stagiair + bbl EmploymentContract.
  */
-final class NlStagiairChecks implements CheckProvider
-{
+final class NlStagiairChecks implements CheckProvider {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/stagiair-bbl-admin/specs/stagiair-bbl-admin/spec.md
+	 */
+	public static function checks(): array {
+		return [
+			'Stagiair' => [
+				// A stage placement that has started must have a signed
+				// BPV-overeenkomst on file (REQ-STAG-005).
+				'nl-bpv-overeenkomst-vereist' => static fn (array $object): bool => self::bpvSatisfied($object),
+			],
+			'EmploymentContract' => [
+				// The SAME rule, guarded to type: bbl -- vacuous for every
+				// other contract type (REQ-STAG-005, design.md D4).
+				'nl-bpv-overeenkomst-vereist' => static fn (array $object): bool => self::bblBpvSatisfied($object),
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     *
-     * @spec openspec/changes/stagiair-bbl-admin/specs/stagiair-bbl-admin/spec.md
-     */
-    public static function checks(): array
-    {
-        return [
-            'Stagiair'           => [
-                // A stage placement that has started must have a signed
-                // BPV-overeenkomst on file (REQ-STAG-005).
-                'nl-bpv-overeenkomst-vereist' => static fn(array $object): bool => self::bpvSatisfied($object),
-            ],
-            'EmploymentContract' => [
-                // The SAME rule, guarded to type: bbl -- vacuous for every
-                // other contract type (REQ-STAG-005, design.md D4).
-                'nl-bpv-overeenkomst-vereist' => static fn(array $object): bool => self::bblBpvSatisfied($object),
-            ],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/stagiair-bbl-admin/specs/stagiair-bbl-admin/spec.md
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * True (satisfied) unless a placement has started (startDate strictly in
+	 * the past relative to today) AND its BPV-overeenkomst is not signed
+	 * (bpvOvereenkomstOndertekend is not the exact boolean true). A
+	 * future/absent/unparseable startDate is vacuously satisfied (the
+	 * placement has not started yet), and a signed BPV is always satisfied.
+	 *
+	 * @param array<string, mixed> $object The Stagiair (or bbl EmploymentContract) fields.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/stagiair-bbl-admin/specs/stagiair-bbl-admin/spec.md
+	 */
+	private static function bpvSatisfied(array $object): bool {
+		if (($object['bpvOvereenkomstOndertekend'] ?? false) === true) {
+			return true;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     *
-     * @spec openspec/changes/stagiair-bbl-admin/specs/stagiair-bbl-admin/spec.md
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		$startDate = strtotime((string)($object['startDate'] ?? ''));
+		if ($startDate === false) {
+			return true;
+		}
 
-    }//end seedSpec()
+		$startDatePassed = $startDate < (new DateTimeImmutable('today'))->getTimestamp();
 
+		return $startDatePassed === false;
+	}//end bpvSatisfied()
 
-    /**
-     * True (satisfied) unless a placement has started (startDate strictly in
-     * the past relative to today) AND its BPV-overeenkomst is not signed
-     * (bpvOvereenkomstOndertekend is not the exact boolean true). A
-     * future/absent/unparseable startDate is vacuously satisfied (the
-     * placement has not started yet), and a signed BPV is always satisfied.
-     *
-     * @param array<string, mixed> $object The Stagiair (or bbl EmploymentContract) fields.
-     *
-     * @return bool
-     *
-     * @spec openspec/changes/stagiair-bbl-admin/specs/stagiair-bbl-admin/spec.md
-     */
-    private static function bpvSatisfied(array $object): bool
-    {
-        if (($object['bpvOvereenkomstOndertekend'] ?? false) === true) {
-            return true;
-        }
+	/**
+	 * The EmploymentContract branch: vacuously satisfied for every contract
+	 * type other than `bbl` (the rule never fires for
+	 * permanent/temporary/agency/minijob, design.md D4); for a bbl contract it
+	 * applies the identical BPV-signed-by-start-date predicate.
+	 *
+	 * @param array<string, mixed> $object The EmploymentContract fields.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/stagiair-bbl-admin/specs/stagiair-bbl-admin/spec.md
+	 */
+	private static function bblBpvSatisfied(array $object): bool {
+		if ((string)($object['type'] ?? '') !== 'bbl') {
+			return true;
+		}
 
-        $startDate = strtotime((string) ($object['startDate'] ?? ''));
-        if ($startDate === false) {
-            return true;
-        }
-
-        $startDatePassed = $startDate < (new DateTimeImmutable('today'))->getTimestamp();
-
-        return $startDatePassed === false;
-
-    }//end bpvSatisfied()
-
-
-    /**
-     * The EmploymentContract branch: vacuously satisfied for every contract
-     * type other than `bbl` (the rule never fires for
-     * permanent/temporary/agency/minijob, design.md D4); for a bbl contract it
-     * applies the identical BPV-signed-by-start-date predicate.
-     *
-     * @param array<string, mixed> $object The EmploymentContract fields.
-     *
-     * @return bool
-     *
-     * @spec openspec/changes/stagiair-bbl-admin/specs/stagiair-bbl-admin/spec.md
-     */
-    private static function bblBpvSatisfied(array $object): bool
-    {
-        if ((string) ($object['type'] ?? '') !== 'bbl') {
-            return true;
-        }
-
-        return self::bpvSatisfied($object);
-
-    }//end bblBpvSatisfied()
-
+		return self::bpvSatisfied($object);
+	}//end bblBpvSatisfied()
 
 }//end class

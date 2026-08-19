@@ -52,158 +52,139 @@ use Symfony\Component\Console\Output\BufferedOutput;
  *
  * @spec openspec/changes/receipt-ocr/specs/receipt-ocr/spec.md#REQ-RCPT-006
  */
-class ExpenseExtractReceiptCommandTest extends TestCase
-{
+class ExpenseExtractReceiptCommandTest extends TestCase {
 
+	/**
+	 * An unresolvable --as-user (unknown/non-admin uid) is refused BEFORE
+	 * any ReceiptExtractionService::backlog() call, exit 1 -- the same
+	 * "no Anonymous actor ever reaches docudesk/OR" contract as the
+	 * hrmq:avg:* commands.
+	 *
+	 * @return void
+	 */
+	public function testUnresolvableAsUserRefusedBeforeAnyServiceCall(): void {
+		$service = $this->createMock(ReceiptExtractionService::class);
+		$service->expects($this->never())->method('backlog');
 
-    /**
-     * An unresolvable --as-user (unknown/non-admin uid) is refused BEFORE
-     * any ReceiptExtractionService::backlog() call, exit 1 -- the same
-     * "no Anonymous actor ever reaches docudesk/OR" contract as the
-     * hrmq:avg:* commands.
-     *
-     * @return void
-     */
-    public function testUnresolvableAsUserRefusedBeforeAnyServiceCall(): void
-    {
-        $service = $this->createMock(ReceiptExtractionService::class);
-        $service->expects($this->never())->method('backlog');
+		$command = new ExpenseExtractReceiptCommand($service, $this->failingSessionResolver());
+		$exit = $this->runCommand($command, ['--as-user' => 'regular-user']);
 
-        $command = new ExpenseExtractReceiptCommand($service, $this->failingSessionResolver());
-        $exit    = $this->runCommand($command, ['--as-user' => 'regular-user']);
+		$this->assertSame(1, $exit);
 
-        $this->assertSame(1, $exit);
+	}//end testUnresolvableAsUserRefusedBeforeAnyServiceCall()
 
-    }//end testUnresolvableAsUserRefusedBeforeAnyServiceCall()
+	/**
+	 * An empty --as-user is refused before any resolve is even attempted
+	 * (IUserManager::get() -- the first thing establish() would do -- is
+	 * never reached), exit 1.
+	 *
+	 * @return void
+	 */
+	public function testEmptyAsUserRefusedBeforeAnyServiceCall(): void {
+		$service = $this->createMock(ReceiptExtractionService::class);
+		$service->expects($this->never())->method('backlog');
 
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->expects($this->never())->method('get');
+		$sessionResolver = new PrivilegedSessionResolver($userManager, $this->createMock(IGroupManager::class), $this->createMock(IUserSession::class));
 
-    /**
-     * An empty --as-user is refused before any resolve is even attempted
-     * (IUserManager::get() -- the first thing establish() would do -- is
-     * never reached), exit 1.
-     *
-     * @return void
-     */
-    public function testEmptyAsUserRefusedBeforeAnyServiceCall(): void
-    {
-        $service = $this->createMock(ReceiptExtractionService::class);
-        $service->expects($this->never())->method('backlog');
+		$command = new ExpenseExtractReceiptCommand($service, $sessionResolver);
+		$exit = $this->runCommand($command, []);
 
-        $userManager = $this->createMock(IUserManager::class);
-        $userManager->expects($this->never())->method('get');
-        $sessionResolver = new PrivilegedSessionResolver($userManager, $this->createMock(IGroupManager::class), $this->createMock(IUserSession::class));
+		$this->assertSame(1, $exit);
 
-        $command = new ExpenseExtractReceiptCommand($service, $sessionResolver);
-        $exit    = $this->runCommand($command, []);
+	}//end testEmptyAsUserRefusedBeforeAnyServiceCall()
 
-        $this->assertSame(1, $exit);
+	/**
+	 * A valid admin --as-user establishes the session, the resolved uid is
+	 * threaded through to backlog() as the acting user, and a clean
+	 * (non-failed) outcome exits 0.
+	 *
+	 * @return void
+	 */
+	public function testValidAdminEstablishesSessionAndRunsBacklog(): void {
+		$service = $this->createMock(ReceiptExtractionService::class);
+		$service->expects($this->once())
+			->method('backlog')
+			->with(null, 'admin')
+			->willReturn([['expenseId' => 'exp-1', 'status' => 'extracted', 'message' => 'ok', 'receiptExtractionId' => 're-1']]);
 
-    }//end testEmptyAsUserRefusedBeforeAnyServiceCall()
+		$command = new ExpenseExtractReceiptCommand($service, $this->succeedingSessionResolver());
+		$exit = $this->runCommand($command, ['--as-user' => 'admin']);
 
+		$this->assertSame(0, $exit);
 
-    /**
-     * A valid admin --as-user establishes the session, the resolved uid is
-     * threaded through to backlog() as the acting user, and a clean
-     * (non-failed) outcome exits 0.
-     *
-     * @return void
-     */
-    public function testValidAdminEstablishesSessionAndRunsBacklog(): void
-    {
-        $service = $this->createMock(ReceiptExtractionService::class);
-        $service->expects($this->once())
-            ->method('backlog')
-            ->with(null, 'admin')
-            ->willReturn([['expenseId' => 'exp-1', 'status' => 'extracted', 'message' => 'ok', 'receiptExtractionId' => 're-1']]);
+	}//end testValidAdminEstablishesSessionAndRunsBacklog()
 
-        $command = new ExpenseExtractReceiptCommand($service, $this->succeedingSessionResolver());
-        $exit    = $this->runCommand($command, ['--as-user' => 'admin']);
+	/**
+	 * --expense narrows the backlog call to one Expense id, still passing
+	 * the resolved --as-user uid through.
+	 *
+	 * @return void
+	 */
+	public function testExpenseOptionNarrowsBacklogCall(): void {
+		$service = $this->createMock(ReceiptExtractionService::class);
+		$service->expects($this->once())
+			->method('backlog')
+			->with('11ec50b9-8468-4932-8c4f-2b480765e3ed', 'admin')
+			->willReturn([['expenseId' => '11ec50b9-8468-4932-8c4f-2b480765e3ed', 'status' => 'failed', 'message' => 'geen tekst geëxtraheerd', 'receiptExtractionId' => 're-2']]);
 
-        $this->assertSame(0, $exit);
+		$command = new ExpenseExtractReceiptCommand($service, $this->succeedingSessionResolver());
+		$exit = $this->runCommand($command, ['--as-user' => 'admin', '--expense' => '11ec50b9-8468-4932-8c4f-2b480765e3ed']);
 
-    }//end testValidAdminEstablishesSessionAndRunsBacklog()
+		$this->assertSame(1, $exit, 'A failed outcome still exits 1, even though the session was established fine.');
 
+	}//end testExpenseOptionNarrowsBacklogCall()
 
-    /**
-     * --expense narrows the backlog call to one Expense id, still passing
-     * the resolved --as-user uid through.
-     *
-     * @return void
-     */
-    public function testExpenseOptionNarrowsBacklogCall(): void
-    {
-        $service = $this->createMock(ReceiptExtractionService::class);
-        $service->expects($this->once())
-            ->method('backlog')
-            ->with('11ec50b9-8468-4932-8c4f-2b480765e3ed', 'admin')
-            ->willReturn([['expenseId' => '11ec50b9-8468-4932-8c4f-2b480765e3ed', 'status' => 'failed', 'message' => 'geen tekst geëxtraheerd', 'receiptExtractionId' => 're-2']]);
+	/**
+	 * A REAL PrivilegedSessionResolver whose establish() always fails
+	 * (unknown/non-admin uid) -- `IGroupManager::isAdmin()` returns false.
+	 *
+	 * @return PrivilegedSessionResolver
+	 */
+	private function failingSessionResolver(): PrivilegedSessionResolver {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('regular-user');
 
-        $command = new ExpenseExtractReceiptCommand($service, $this->succeedingSessionResolver());
-        $exit    = $this->runCommand($command, ['--as-user' => 'admin', '--expense' => '11ec50b9-8468-4932-8c4f-2b480765e3ed']);
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->method('get')->willReturn($user);
 
-        $this->assertSame(1, $exit, 'A failed outcome still exits 1, even though the session was established fine.');
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturn(false);
 
-    }//end testExpenseOptionNarrowsBacklogCall()
+		return new PrivilegedSessionResolver($userManager, $groupManager, $this->createMock(IUserSession::class));
+	}//end failingSessionResolver()
 
+	/**
+	 * A REAL PrivilegedSessionResolver whose establish() always succeeds --
+	 * resolves a real admin and calls `IUserSession::setUser()`.
+	 *
+	 * @return PrivilegedSessionResolver
+	 */
+	private function succeedingSessionResolver(): PrivilegedSessionResolver {
+		$admin = $this->createMock(IUser::class);
+		$admin->method('getUID')->willReturn('admin');
 
-    /**
-     * A REAL PrivilegedSessionResolver whose establish() always fails
-     * (unknown/non-admin uid) -- `IGroupManager::isAdmin()` returns false.
-     *
-     * @return PrivilegedSessionResolver
-     */
-    private function failingSessionResolver(): PrivilegedSessionResolver
-    {
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('regular-user');
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->method('get')->willReturn($admin);
 
-        $userManager = $this->createMock(IUserManager::class);
-        $userManager->method('get')->willReturn($user);
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturn(true);
 
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('isAdmin')->willReturn(false);
+		return new PrivilegedSessionResolver($userManager, $groupManager, $this->createMock(IUserSession::class));
+	}//end succeedingSessionResolver()
 
-        return new PrivilegedSessionResolver($userManager, $groupManager, $this->createMock(IUserSession::class));
-
-    }//end failingSessionResolver()
-
-
-    /**
-     * A REAL PrivilegedSessionResolver whose establish() always succeeds --
-     * resolves a real admin and calls `IUserSession::setUser()`.
-     *
-     * @return PrivilegedSessionResolver
-     */
-    private function succeedingSessionResolver(): PrivilegedSessionResolver
-    {
-        $admin = $this->createMock(IUser::class);
-        $admin->method('getUID')->willReturn('admin');
-
-        $userManager = $this->createMock(IUserManager::class);
-        $userManager->method('get')->willReturn($admin);
-
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('isAdmin')->willReturn(true);
-
-        return new PrivilegedSessionResolver($userManager, $groupManager, $this->createMock(IUserSession::class));
-
-    }//end succeedingSessionResolver()
-
-
-    /**
-     * Run a command with the given options via a plain ArrayInput/BufferedOutput
-     * pair.
-     *
-     * @param ExpenseExtractReceiptCommand $command The command under test.
-     * @param array<string, mixed>         $options The `--option` => value map.
-     *
-     * @return int The exit code.
-     */
-    private function runCommand(ExpenseExtractReceiptCommand $command, array $options): int
-    {
-        return $command->run(new ArrayInput($options, $command->getDefinition()), new BufferedOutput());
-
-    }//end runCommand()
-
+	/**
+	 * Run a command with the given options via a plain ArrayInput/BufferedOutput
+	 * pair.
+	 *
+	 * @param ExpenseExtractReceiptCommand $command The command under test.
+	 * @param array<string, mixed> $options The `--option` => value map.
+	 *
+	 * @return int The exit code.
+	 */
+	private function runCommand(ExpenseExtractReceiptCommand $command, array $options): int {
+		return $command->run(new ArrayInput($options, $command->getDefinition()), new BufferedOutput());
+	}//end runCommand()
 
 }//end class

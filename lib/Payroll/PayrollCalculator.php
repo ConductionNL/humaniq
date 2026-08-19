@@ -71,114 +71,106 @@ use OCA\Hrmq\Payroll\Dsl\PackRunResult;
 /**
  * Thin façade over the pack interpreter; holds no jurisdiction rules.
  */
-final class PayrollCalculator
-{
+final class PayrollCalculator {
 
-    /**
-     * The pack resolver.
-     *
-     * @var PackRepository
-     */
-    private readonly PackRepository $packs;
+	/**
+	 * The pack resolver.
+	 *
+	 * @var PackRepository
+	 */
+	private readonly PackRepository $packs;
 
-    /**
-     * The pure chain interpreter.
-     *
-     * @var PackInterpreter
-     */
-    private readonly PackInterpreter $interpreter;
+	/**
+	 * The pure chain interpreter.
+	 *
+	 * @var PackInterpreter
+	 */
+	private readonly PackInterpreter $interpreter;
 
-    /**
-     * The DTO-to-pack input boundary mapper.
-     *
-     * @var CalculationInputMapper
-     */
-    private readonly CalculationInputMapper $mapper;
+	/**
+	 * The DTO-to-pack input boundary mapper.
+	 *
+	 * @var CalculationInputMapper
+	 */
+	private readonly CalculationInputMapper $mapper;
 
+	/**
+	 * Every dependency defaults, so `new PayrollCalculator()` keeps working
+	 * for the pure call sites that construct it directly (e.g. `NlRetroChecks`)
+	 * while the container can still inject a resolver wired to uploaded packs.
+	 *
+	 * @param PackRepository|null $packs The pack resolver.
+	 * @param PackInterpreter|null $interpreter The chain interpreter.
+	 * @param CalculationInputMapper|null $mapper The boundary mapper.
+	 */
+	public function __construct(
+		?PackRepository $packs = null,
+		?PackInterpreter $interpreter = null,
+		?CalculationInputMapper $mapper = null,
+	) {
+		$this->packs = ($packs ?? new PackRepository());
+		$this->interpreter = ($interpreter ?? new PackInterpreter());
+		$this->mapper = ($mapper ?? new CalculationInputMapper());
 
-    /**
-     * Every dependency defaults, so `new PayrollCalculator()` keeps working
-     * for the pure call sites that construct it directly (e.g. `NlRetroChecks`)
-     * while the container can still inject a resolver wired to uploaded packs.
-     *
-     * @param PackRepository|null         $packs       The pack resolver.
-     * @param PackInterpreter|null        $interpreter The chain interpreter.
-     * @param CalculationInputMapper|null $mapper      The boundary mapper.
-     */
-    public function __construct(
-        ?PackRepository $packs=null,
-        ?PackInterpreter $interpreter=null,
-        ?CalculationInputMapper $mapper=null,
-    ) {
-        $this->packs       = ($packs ?? new PackRepository());
-        $this->interpreter = ($interpreter ?? new PackInterpreter());
-        $this->mapper      = ($mapper ?? new CalculationInputMapper());
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * Compute the full gross-to-net component breakdown for one employee in
+	 * one wage period, through the run's jurisdiction pack.
+	 *
+	 * @param CalculationInput $in The calculation input.
+	 * @param TaxTables $t The tax-year parameter set the pack's `@table.*` refs resolve against.
+	 *
+	 * @return CalculationResult
+	 *
+	 * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
+	 * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-002
+	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
+	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
+	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-007
+	 */
+	public function calculate(CalculationInput $in, TaxTables $t): CalculationResult {
+		$pack = $this->packs->resolve($in->jurisdiction, $in->period);
+		$out = $this->interpreter->run($this->mapper->toPackInputs($in), $pack, $t, $in->period);
 
+		return $this->resultFrom($out);
+	}//end calculate()
 
-    /**
-     * Compute the full gross-to-net component breakdown for one employee in
-     * one wage period, through the run's jurisdiction pack.
-     *
-     * @param CalculationInput $in The calculation input.
-     * @param TaxTables        $t  The tax-year parameter set the pack's `@table.*` refs resolve against.
-     *
-     * @return CalculationResult
-     *
-     * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-001
-     * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-002
-     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
-     * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-002
-     * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-007
-     */
-    public function calculate(CalculationInput $in, TaxTables $t): CalculationResult
-    {
-        $pack = $this->packs->resolve($in->jurisdiction, $in->period);
-        $out  = $this->interpreter->run($this->mapper->toPackInputs($in), $pack, $t, $in->period);
+	/**
+	 * Map the interpreter's output onto `CalculationResult`'s 18 fields.
+	 *
+	 * `nettoPayCents` and `employerChargesCents` are the interpreter's
+	 * incidence folds — this method reads them, it does not compute them
+	 * (REQ-JP-003).
+	 *
+	 * @param PackRunResult $out The pack run's output.
+	 *
+	 * @return CalculationResult
+	 *
+	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
+	 */
+	private function resultFrom(PackRunResult $out): CalculationResult {
+		return new CalculationResult(
+			grossPayCents: $out->gross(),
+			loonheffingCents: $out->cents('loonheffing'),
+			arbeidskortingCents: $out->cents('arbeidskorting'),
+			volksverzekeringenCents: $out->cents('volksverzekeringen'),
+			zvwCents: $out->cents('zvw'),
+			zvwMode: 'werkgeversheffing',
+			zvwRate: (float)$out->binding('zvwRate'),
+			appliedTaxRate: (float)$out->step('appliedTaxRate'),
+			nettoPayCents: $out->net(),
+			vakantiegeldReservedCents: $out->cents('vakantiegeld'),
+			vakantiegeldRate: (float)$out->binding('vakantiegeldRate'),
+			awfCents: $out->cents('awf'),
+			aofCents: $out->cents('aof'),
+			wkoCents: $out->cents('wko'),
+			whkCents: $out->cents('whk'),
+			werknemersverzekeringenCents: $out->cents('werknemersverzekeringen'),
+			employerChargesCents: $out->employerCharges(),
+			aboveLmax: (bool)$out->binding('aboveLmax')
+		);
 
-        return $this->resultFrom($out);
-
-    }//end calculate()
-
-
-    /**
-     * Map the interpreter's output onto `CalculationResult`'s 18 fields.
-     *
-     * `nettoPayCents` and `employerChargesCents` are the interpreter's
-     * incidence folds — this method reads them, it does not compute them
-     * (REQ-JP-003).
-     *
-     * @param PackRunResult $out The pack run's output.
-     *
-     * @return CalculationResult
-     *
-     * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
-     */
-    private function resultFrom(PackRunResult $out): CalculationResult
-    {
-        return new CalculationResult(
-            grossPayCents: $out->gross(),
-            loonheffingCents: $out->cents('loonheffing'),
-            arbeidskortingCents: $out->cents('arbeidskorting'),
-            volksverzekeringenCents: $out->cents('volksverzekeringen'),
-            zvwCents: $out->cents('zvw'),
-            zvwMode: 'werkgeversheffing',
-            zvwRate: (float) $out->binding('zvwRate'),
-            appliedTaxRate: (float) $out->step('appliedTaxRate'),
-            nettoPayCents: $out->net(),
-            vakantiegeldReservedCents: $out->cents('vakantiegeld'),
-            vakantiegeldRate: (float) $out->binding('vakantiegeldRate'),
-            awfCents: $out->cents('awf'),
-            aofCents: $out->cents('aof'),
-            wkoCents: $out->cents('wko'),
-            whkCents: $out->cents('whk'),
-            werknemersverzekeringenCents: $out->cents('werknemersverzekeringen'),
-            employerChargesCents: $out->employerCharges(),
-            aboveLmax: (bool) $out->binding('aboveLmax')
-        );
-
-    }//end resultFrom()
-
+	}//end resultFrom()
 
 }//end class

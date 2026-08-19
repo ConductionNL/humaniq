@@ -41,80 +41,69 @@ use OCA\Hrmq\Payroll\Dsl\StepContext;
 /**
  * Select a value by matching a subject against declared cases.
  */
-final class MatchOp extends AbstractOp
-{
+final class MatchOp extends AbstractOp {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'match';
+	}//end name()
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'match';
+	/**
+	 * Select the case matching `on`, falling back to `default`.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return mixed
+	 *
+	 * @throws DslException When no case matches and no default is declared.
+	 */
+	public function evaluate(array $spec, StepContext $ctx): mixed {
+		if (array_key_exists('on', $spec) === false) {
+			throw new DslException('Pack: op "match" mist de verplichte parameter "on".');
+		}
 
-    }//end name()
+		$cases = ($spec['cases'] ?? null);
+		if (is_array($cases) === false || $cases === []) {
+			throw new DslException('Pack: op "match" verwacht een niet-lege "cases"-map.');
+		}
 
+		$key = $this->key($this->refs->value($spec['on'], $ctx));
 
-    /**
-     * Select the case matching `on`, falling back to `default`.
-     *
-     * @param array<string, mixed> $spec The declared spec.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return mixed
-     *
-     * @throws DslException When no case matches and no default is declared.
-     */
-    public function evaluate(array $spec, StepContext $ctx): mixed
-    {
-        if (array_key_exists('on', $spec) === false) {
-            throw new DslException('Pack: op "match" mist de verplichte parameter "on".');
-        }
+		if (array_key_exists($key, $cases) === true) {
+			return $this->refs->value($cases[$key], $ctx);
+		}
 
-        $cases = ($spec['cases'] ?? null);
-        if (is_array($cases) === false || $cases === []) {
-            throw new DslException('Pack: op "match" verwacht een niet-lege "cases"-map.');
-        }
+		if (array_key_exists('default', $spec) === true) {
+			return $this->refs->value($spec['default'], $ctx);
+		}
 
-        $key = $this->key($this->refs->value($spec['on'], $ctx));
+		throw new DslException('Pack: op "match" heeft geen case voor "' . $key . '" en geen "default".');
+	}//end evaluate()
 
-        if (array_key_exists($key, $cases) === true) {
-            return $this->refs->value($cases[$key], $ctx);
-        }
+	/**
+	 * The canonical string form of a match subject.
+	 *
+	 * @param mixed $value The resolved subject.
+	 *
+	 * @return string
+	 *
+	 * @throws DslException When the subject cannot be matched.
+	 */
+	private function key(mixed $value): string {
+		if (is_bool($value) === true) {
+			return $value === true ? 'true' : 'false';
+		}
 
-        if (array_key_exists('default', $spec) === true) {
-            return $this->refs->value($spec['default'], $ctx);
-        }
+		if (is_string($value) === true || is_int($value) === true) {
+			return (string)$value;
+		}
 
-        throw new DslException('Pack: op "match" heeft geen case voor "'.$key.'" en geen "default".');
-
-    }//end evaluate()
-
-
-    /**
-     * The canonical string form of a match subject.
-     *
-     * @param mixed $value The resolved subject.
-     *
-     * @return string
-     *
-     * @throws DslException When the subject cannot be matched.
-     */
-    private function key(mixed $value): string
-    {
-        if (is_bool($value) === true) {
-            return $value === true ? 'true' : 'false';
-        }
-
-        if (is_string($value) === true || is_int($value) === true) {
-            return (string) $value;
-        }
-
-        throw new DslException('Pack: op "match" verwacht een string, int of bool als "on".');
-
-    }//end key()
-
+		throw new DslException('Pack: op "match" verwacht een string, int of bool als "on".');
+	}//end key()
 
 }//end class

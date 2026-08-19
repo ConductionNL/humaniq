@@ -1,117 +1,30 @@
 <?xml version="1.0"?>
-<ruleset name="Hrmq Nextcloud Rules"
+<ruleset name="hrmq"
     xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
-                        http://pmd.sourceforge.net/ruleset_xml_schema.xsd">
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_xml_schema.xsd">
+    <description>hrmq — Conduction PHPMD ruleset (single source: conduction/hydra-gates).</description>
 
-    <description>
-        Custom ruleset for hrmq (Nextcloud HR/payroll app). Follows the
-        fleet-wide Conduction PHPMD convention (see e.g. openconnector/phpmd.xml):
-        real defect-shaped rules kept, rules that false-positive widely on
-        idiomatic Nextcloud/payroll code excluded with a rationale below.
-        Pre-existing debt against the kept rules is tracked via
-        phpmd.baseline.xml (issue #25), NOT via excluding the rule.
-    </description>
-
-    <!-- Clean Code Rules -->
-    <rule ref="rulesets/cleancode.xml/ElseExpression"/>
-    <rule ref="rulesets/cleancode.xml/StaticAccess"/>
-    <rule ref="rulesets/cleancode.xml/IfStatementAssignment"/>
-    <rule ref="rulesets/cleancode.xml/DuplicatedArrayKey"/>
-    <rule ref="rulesets/cleancode.xml/MissingImport"/>
-    <rule ref="rulesets/cleancode.xml/UndefinedVariable"/>
-    <rule ref="rulesets/cleancode.xml/ErrorControlOperator"/>
-    <!-- BooleanArgumentFlag excluded: payroll domain services legitimately take
-         boolean flags (e.g. `bool $isDryRun`, `bool $includeInactive`) — pervasive,
-         idiomatic, not a real smell here; false-positives widely (pre-existing debt). -->
-
-    <!-- Code Size Rules -->
-    <rule ref="rulesets/codesize.xml/CyclomaticComplexity"/>
-    <rule ref="rulesets/codesize.xml/NPathComplexity"/>
-    <rule ref="rulesets/codesize.xml/ExcessiveMethodLength"/>
-    <rule ref="rulesets/codesize.xml/ExcessiveClassLength"/>
-    <rule ref="rulesets/codesize.xml/ExcessiveParameterList"/>
-    <rule ref="rulesets/codesize.xml/ExcessivePublicCount"/>
-    <rule ref="rulesets/codesize.xml/TooManyFields"/>
-    <rule ref="rulesets/codesize.xml/TooManyMethods"/>
-    <rule ref="rulesets/codesize.xml/TooManyPublicMethods"/>
-    <rule ref="rulesets/codesize.xml/ExcessiveClassComplexity"/>
-
-    <!-- Controversial Rules -->
-    <rule ref="rulesets/controversial.xml/Superglobals"/>
-    <rule ref="rulesets/controversial.xml/CamelCaseClassName"/>
-    <rule ref="rulesets/controversial.xml/CamelCasePropertyName"/>
-    <rule ref="rulesets/controversial.xml/CamelCaseMethodName"/>
-    <!-- CamelCaseParameterName / CamelCaseVariableName excluded: leading-underscore
-         convention for unused/config params and loop vars is used throughout hrmq
-         (same fleet-wide exclusion as openconnector). -->
-
-    <!-- Design Rules -->
-    <rule ref="rulesets/design.xml/ExitExpression"/>
-    <rule ref="rulesets/design.xml/EvalExpression"/>
-    <rule ref="rulesets/design.xml/GotoStatement"/>
-    <rule ref="rulesets/design.xml/NumberOfChildren"/>
-    <rule ref="rulesets/design.xml/DepthOfInheritance"/>
-    <rule ref="rulesets/design.xml/CouplingBetweenObjects"/>
-    <!-- DevelopmentCodeFragment MUST carry ignore-namespaces=true, or it is dead
-         code in this ruleset. See ConductionNL/openregister#2286.
-
-         PDepend resolves an unqualified call inside a namespaced file to the
-         CURRENT-NAMESPACE-qualified image, so `var_dump($x)` in
-         `namespace OCA\MyApp\Service;` reaches the rule as
-         `OCA\MyApp\Service\var_dump`, which never matches the
-         `unwanted-functions` list. All of our production PHP is namespaced, so
-         with the default (false) the rule catches nothing anywhere.
-
-         Measured on phpmd 2.15.0 / PHP 8.3.32: byte-identical probe class,
-         namespaced -> exit 0, non-namespaced -> exit 2. With
-         ignore-namespaces=true the rule strips the enclosing namespace before
-         matching, the namespaced probe is reported (exit 2), and a clean
-         namespaced file stays exit 0.
-
-         Note: hydra gate 2 (forbidden-patterns) independently greps lib/ for
-         var_dump / die / error_log / print_r / dd / dump and is the broader
-         control - it also catches calls outside methods, which this rule (a
-         MethodAware/FunctionAware rule) cannot see. This rule is the
-         `composer check:strict` half of the same guard; keep both. -->
-    <rule ref="rulesets/design.xml/DevelopmentCodeFragment">
-        <properties>
-            <property name="ignore-namespaces" value="true"/>
-        </properties>
+    <!-- This was a ~40-rule hand-maintained copy of the fleet ruleset. Every rule
+         it named, and both property overrides it carried (ShortVariable's
+         minimum/exceptions list and DevelopmentCodeFragment's ignore-namespaces),
+         are byte-identical to the central file — which is exactly how a fleet
+         ends up with several drifting variants of one config. Only the two real
+         divergences survive, declared AS divergences so they read as decisions
+         rather than hiding inside a full copy. -->
+    <rule ref="vendor/conduction/hydra-gates/quality-config/phpmd.xml">
+        <exclude name="BooleanArgumentFlag"/>
+        <exclude name="LongVariable"/>
     </rule>
-    <rule ref="rulesets/design.xml/EmptyCatchBlock"/>
-    <rule ref="rulesets/design.xml/CountInLoopExpression"/>
 
-    <!-- Naming Rules -->
-    <rule ref="rulesets/naming.xml/LongClassName"/>
-    <rule ref="rulesets/naming.xml/ShortClassName"/>
-    <!-- ShortVariable configured with an allowlist of idiomatic short names
-         (loop/db/query-builder abbreviations pervasive in this codebase). -->
-    <rule ref="rulesets/naming.xml/ShortVariable">
-        <properties>
-            <property name="minimum" value="3" />
-            <property name="exceptions" value="id,db,qb,op,ui,io,gc,tz,pk,fk,to,ch,a,b,l,v,c,t,r,f,n,k,e" />
-        </properties>
-    </rule>
-    <!-- LongVariable excluded: descriptive domain names (e.g. $administrationId,
-         $eindheffingDeclared, $vrijeRuimteDeclared) are the norm in NL payroll/tax
-         code and are clearer than truncated alternatives — false-positives widely
-         on this codebase (pre-existing debt, see #25). -->
-    <rule ref="rulesets/naming.xml/ShortMethodName"/>
-    <rule ref="rulesets/naming.xml/ConstructorWithNameAsEnclosingClass"/>
-    <rule ref="rulesets/naming.xml/ConstantNamingConventions"/>
-    <rule ref="rulesets/naming.xml/BooleanGetMethodName"/>
+    <!-- BooleanArgumentFlag: payroll domain services legitimately take boolean
+         flags (`bool $isDryRun`, `bool $includeInactive`, `bool $recalculate`).
+         The rule's premise — that a boolean argument signals a method doing two
+         things — does not hold for a calculator whose caller chooses between
+         "compute" and "compute and persist". Pervasive and idiomatic here. -->
 
-    <!-- Unused Code Rules -->
-    <rule ref="rulesets/unusedcode.xml/UnusedPrivateField"/>
-    <rule ref="rulesets/unusedcode.xml/UnusedLocalVariable"/>
-    <rule ref="rulesets/unusedcode.xml/UnusedPrivateMethod"/>
-    <!-- UnusedFormalParameter lives in the sibling ruleset phpmd-unusedparams.xml,
-         which `composer phpmd` runs as a second leg. It was moved out because the
-         <exclude-pattern> that used to sit here, nested inside the <rule>, was INERT:
-         PHPMD 2.15 honours exclude-pattern only as a direct child of <ruleset>
-         (ConductionNL/.github#155). A direct child is applied by PDepend at
-         file-collection time and would drop the file from EVERY rule in this ruleset,
-         so the exclusion had to move to a ruleset containing this rule alone. -->
+    <!-- LongVariable: descriptive domain names are the norm in NL payroll and
+         wage-tax code — $administrationId, $eindheffingDeclared,
+         $vrijeRuimteDeclared. These are statutory concepts with long names; a
+         shorter identifier would be a less accurate one. -->
 </ruleset>

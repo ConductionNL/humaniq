@@ -79,10 +79,13 @@
                             "properties": {
                                 "accountNumber": {
                                     "type": "string",
+                                    "title": "Account number",
                                     "description": "RGS-coded GL account number (configurable via SettingsService)."
                                 },
                                 "side": {
                                     "type": "string",
+                                    "title": "Side",
+                                    "description": "Which side of the journal this line posts to: debit or credit. The two sides of a posted run must balance to the cent.",
                                     "enum": [
                                         "debit",
                                         "credit"
@@ -90,10 +93,13 @@
                                 },
                                 "amount": {
                                     "type": "number",
+                                    "title": "Amount",
                                     "description": "Line amount in the administration's currency, rounded to cents."
                                 },
                                 "description": {
                                     "type": "string",
+                                    "title": "Description",
+                                    "description": "Free-text label for the line as sent to shillinq, e.g. \"Loonkosten bruto\". Optional; the account number is what the ledger keys on.",
                                     "nullable": true
                                 }
                             }

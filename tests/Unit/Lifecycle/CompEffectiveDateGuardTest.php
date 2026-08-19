@@ -34,89 +34,75 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-005
  */
-class CompEffectiveDateGuardTest extends TestCase
-{
+class CompEffectiveDateGuardTest extends TestCase {
 
+	/**
+	 * @return void
+	 */
+	public function testTodayEffectiveDateAllows(): void {
+		$guard = new CompEffectiveDateGuard();
+		$result = $guard->check(['effectiveDate' => gmdate('Y-m-d')], 'effectuate', 'alice');
 
-    /**
-     * @return void
-     */
-    public function testTodayEffectiveDateAllows(): void
-    {
-        $guard  = new CompEffectiveDateGuard();
-        $result = $guard->check(['effectiveDate' => gmdate('Y-m-d')], 'effectuate', 'alice');
+		$this->assertTrue($result->isAllowed());
 
-        $this->assertTrue($result->isAllowed());
+	}//end testTodayEffectiveDateAllows()
 
-    }//end testTodayEffectiveDateAllows()
+	/**
+	 * @return void
+	 */
+	public function testPastEffectiveDateAllows(): void {
+		$guard = new CompEffectiveDateGuard();
+		$result = $guard->check(['effectiveDate' => '2020-01-01'], 'effectuate', 'alice');
 
+		$this->assertTrue($result->isAllowed());
 
-    /**
-     * @return void
-     */
-    public function testPastEffectiveDateAllows(): void
-    {
-        $guard  = new CompEffectiveDateGuard();
-        $result = $guard->check(['effectiveDate' => '2020-01-01'], 'effectuate', 'alice');
+	}//end testPastEffectiveDateAllows()
 
-        $this->assertTrue($result->isAllowed());
+	/**
+	 * @return void
+	 */
+	public function testFutureEffectiveDateDenies(): void {
+		$tomorrow = gmdate('Y-m-d', (strtotime('today') + 86400));
 
-    }//end testPastEffectiveDateAllows()
+		$guard = new CompEffectiveDateGuard();
+		$result = $guard->check(['effectiveDate' => $tomorrow], 'effectuate', 'alice');
 
+		$this->assertFalse($result->isAllowed());
+		$this->assertStringContainsString('toekomst', (string)$result->getMessage());
 
-    /**
-     * @return void
-     */
-    public function testFutureEffectiveDateDenies(): void
-    {
-        $tomorrow = gmdate('Y-m-d', (strtotime('today') + 86400));
+	}//end testFutureEffectiveDateDenies()
 
-        $guard  = new CompEffectiveDateGuard();
-        $result = $guard->check(['effectiveDate' => $tomorrow], 'effectuate', 'alice');
+	/**
+	 * @return void
+	 */
+	public function testEmptyEffectiveDateDenies(): void {
+		$guard = new CompEffectiveDateGuard();
+		$result = $guard->check(['effectiveDate' => ''], 'effectuate', 'alice');
 
-        $this->assertFalse($result->isAllowed());
-        $this->assertStringContainsString('toekomst', (string) $result->getMessage());
+		$this->assertFalse($result->isAllowed());
 
-    }//end testFutureEffectiveDateDenies()
+	}//end testEmptyEffectiveDateDenies()
 
+	/**
+	 * @return void
+	 */
+	public function testMissingEffectiveDateKeyDenies(): void {
+		$guard = new CompEffectiveDateGuard();
+		$result = $guard->check([], 'effectuate', 'alice');
 
-    /**
-     * @return void
-     */
-    public function testEmptyEffectiveDateDenies(): void
-    {
-        $guard  = new CompEffectiveDateGuard();
-        $result = $guard->check(['effectiveDate' => ''], 'effectuate', 'alice');
+		$this->assertFalse($result->isAllowed());
 
-        $this->assertFalse($result->isAllowed());
+	}//end testMissingEffectiveDateKeyDenies()
 
-    }//end testEmptyEffectiveDateDenies()
+	/**
+	 * @return void
+	 */
+	public function testMalformedEffectiveDateDenies(): void {
+		$guard = new CompEffectiveDateGuard();
+		$result = $guard->check(['effectiveDate' => 'not-a-date'], 'effectuate', 'alice');
 
+		$this->assertFalse($result->isAllowed());
 
-    /**
-     * @return void
-     */
-    public function testMissingEffectiveDateKeyDenies(): void
-    {
-        $guard  = new CompEffectiveDateGuard();
-        $result = $guard->check([], 'effectuate', 'alice');
-
-        $this->assertFalse($result->isAllowed());
-
-    }//end testMissingEffectiveDateKeyDenies()
-
-
-    /**
-     * @return void
-     */
-    public function testMalformedEffectiveDateDenies(): void
-    {
-        $guard  = new CompEffectiveDateGuard();
-        $result = $guard->check(['effectiveDate' => 'not-a-date'], 'effectuate', 'alice');
-
-        $this->assertFalse($result->isAllowed());
-
-    }//end testMalformedEffectiveDateDenies()
-
+	}//end testMalformedEffectiveDateDenies()
 
 }//end class

@@ -38,273 +38,248 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md
  */
-class TimeEntryEventServiceTest extends TestCase
-{
+class TimeEntryEventServiceTest extends TestCase {
 
+	/**
+	 * A spy that records every CloudEvent dispatched through the fake
+	 * WebhookService, so a test can assert whether — and with what payload —
+	 * the service emitted.
+	 *
+	 * @var object{calls: array<int, array{eventName: string, payload: array<string, mixed>}>}
+	 */
+	private object $spy;
 
-    /**
-     * A spy that records every CloudEvent dispatched through the fake
-     * WebhookService, so a test can assert whether — and with what payload —
-     * the service emitted.
-     *
-     * @var object{calls: array<int, array{eventName: string, payload: array<string, mixed>}>}
-     */
-    private object $spy;
+	/**
+	 * Build a service whose lazily-resolved WebhookService is a recording spy.
+	 *
+	 * @return TimeEntryEventService
+	 */
+	private function serviceWithSpy(): TimeEntryEventService {
+		$this->spy = new class {
 
+			/**
+			 * @var array<int, array{eventName: string, payload: array<string, mixed>}>
+			 */
+			public array $calls = [];
 
-    /**
-     * Build a service whose lazily-resolved WebhookService is a recording spy.
-     *
-     * @return TimeEntryEventService
-     */
-    private function serviceWithSpy(): TimeEntryEventService
-    {
-        $this->spy = new class {
+			/**
+			 * Record a dispatched CloudEvent.
+			 *
+			 * @param object $_event The (unused) event object.
+			 * @param string $eventName The CloudEvent type.
+			 * @param array<string, mixed> $payload The CloudEvent envelope.
+			 *
+			 * @return void
+			 */
+			public function dispatchEvent(object $_event, string $eventName, array $payload): void {
+				$this->calls[] = ['eventName' => $eventName, 'payload' => $payload];
+			}//end dispatchEvent()
+		};
 
-            /**
-             * @var array<int, array{eventName: string, payload: array<string, mixed>}>
-             */
-            public array $calls = [];
+		$spy = $this->spy;
+		$container = new class($spy) implements ContainerInterface {
 
+			/**
+			 * @param object $spy The WebhookService spy.
+			 */
+			public function __construct(
+				private readonly object $spy,
+			) {
+			}//end __construct()
 
-            /**
-             * Record a dispatched CloudEvent.
-             *
-             * @param object               $_event    The (unused) event object.
-             * @param string               $eventName The CloudEvent type.
-             * @param array<string, mixed> $payload   The CloudEvent envelope.
-             *
-             * @return void
-             */
-            public function dispatchEvent(object $_event, string $eventName, array $payload): void
-            {
-                $this->calls[] = ['eventName' => $eventName, 'payload' => $payload];
-            }//end dispatchEvent()
-        };
+			/**
+			 * @param string $id Service id.
+			 *
+			 * @return mixed
+			 */
+			public function get(string $id): mixed {
+				if ($id === 'OCA\OpenRegister\Service\WebhookService') {
+					return $this->spy;
+				}
 
-        $spy       = $this->spy;
-        $container = new class ($spy) implements ContainerInterface {
+				throw new \RuntimeException('unexpected service ' . $id);
+			}//end get()
 
+			/**
+			 * @param string $id Service id.
+			 *
+			 * @return bool
+			 */
+			public function has(string $id): bool {
+				return $id === 'OCA\OpenRegister\Service\WebhookService';
+			}//end has()
+		};
 
-            /**
-             * @param object $spy The WebhookService spy.
-             */
-            public function __construct(private readonly object $spy)
-            {
-            }//end __construct()
+		return new TimeEntryEventService(
+			container: $container,
+			logger: $this->createMock(LoggerInterface::class)
+		);
 
+	}//end serviceWithSpy()
 
-            /**
-             * @param string $id Service id.
-             *
-             * @return mixed
-             */
-            public function get(string $id): mixed
-            {
-                if ($id === 'OCA\OpenRegister\Service\WebhookService') {
-                    return $this->spy;
-                }
+	/**
+	 * A representative approved Timesheet payload.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function approvedTimesheet(): array {
+		return [
+			'id' => 'ts-0001',
+			'employeeId' => 'emp-devries',
+			'period' => '2026-07',
+			'hours' => 36.5,
+			'billable' => true,
+			'projectId' => 'proj-alpha',
+			'costCenter' => 'cc-42',
+			'clientRef' => 'client-7',
+			'description' => 'Sprint work',
+			'status' => 'approved',
+			'approvedBy' => 'manager-jansen',
+			'approvedAt' => '2026-07-15T10:00:00Z',
+		];
+	}//end approvedTimesheet()
 
-                throw new \RuntimeException('unexpected service '.$id);
-            }//end get()
+	/**
+	 * A submitted→approved transition emits one CloudEvent with the hours,
+	 * project and billable flag a finance consumer needs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+	 */
+	public function testSubmittedToApprovedEmitsEvent(): void {
+		$service = $this->serviceWithSpy();
 
+		$emitted = $service->maybeDispatchApproved(
+			schemaSlug: 'Timesheet',
+			oldData: ['status' => 'submitted', 'hours' => 36.5],
+			newData: $this->approvedTimesheet()
+		);
 
-            /**
-             * @param string $id Service id.
-             *
-             * @return bool
-             */
-            public function has(string $id): bool
-            {
-                return $id === 'OCA\OpenRegister\Service\WebhookService';
-            }//end has()
-        };
+		$this->assertTrue($emitted);
+		$this->assertCount(1, $this->spy->calls);
 
-        return new TimeEntryEventService(
-            container: $container,
-            logger: $this->createMock(LoggerInterface::class)
-        );
+		$call = $this->spy->calls[0];
+		$this->assertSame('nl.conduction.hrmq.timeentry.approved', $call['eventName']);
+		$this->assertSame('1.0', $call['payload']['specversion']);
+		$this->assertSame('/apps/hrmq/timesheets', $call['payload']['source']);
+		$this->assertSame('ts-0001', $call['payload']['id']);
 
-    }//end serviceWithSpy()
+		$data = $call['payload']['data'];
+		$this->assertSame('ts-0001', $data['timesheetId']);
+		$this->assertSame('emp-devries', $data['employeeId']);
+		$this->assertSame('2026-07', $data['period']);
+		$this->assertSame(36.5, $data['hours']);
+		$this->assertTrue($data['billable']);
+		$this->assertSame('proj-alpha', $data['projectId']);
+		$this->assertSame('cc-42', $data['costCenter']);
+		$this->assertSame('manager-jansen', $data['approvedBy']);
+		$this->assertSame('2026-07-15T10:00:00Z', $data['approvedAt']);
 
+	}//end testSubmittedToApprovedEmitsEvent()
 
-    /**
-     * A representative approved Timesheet payload.
-     *
-     * @return array<string, mixed>
-     */
-    private function approvedTimesheet(): array
-    {
-        return [
-            'id'          => 'ts-0001',
-            'employeeId'  => 'emp-devries',
-            'period'      => '2026-07',
-            'hours'       => 36.5,
-            'billable'    => true,
-            'projectId'   => 'proj-alpha',
-            'costCenter'  => 'cc-42',
-            'clientRef'   => 'client-7',
-            'description' => 'Sprint work',
-            'status'      => 'approved',
-            'approvedBy'  => 'manager-jansen',
-            'approvedAt'  => '2026-07-15T10:00:00Z',
-        ];
-    }//end approvedTimesheet()
+	/**
+	 * An unapproved change (draft→submitted) emits nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+	 */
+	public function testUnapprovedTransitionDoesNotEmit(): void {
+		$service = $this->serviceWithSpy();
 
+		$emitted = $service->maybeDispatchApproved(
+			schemaSlug: 'Timesheet',
+			oldData: ['status' => 'draft'],
+			newData: ['status' => 'submitted', 'hours' => 8.0, 'employeeId' => 'emp-devries']
+		);
 
-    /**
-     * A submitted→approved transition emits one CloudEvent with the hours,
-     * project and billable flag a finance consumer needs.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
-     */
-    public function testSubmittedToApprovedEmitsEvent(): void
-    {
-        $service = $this->serviceWithSpy();
+		$this->assertFalse($emitted);
+		$this->assertCount(0, $this->spy->calls);
 
-        $emitted = $service->maybeDispatchApproved(
-            schemaSlug: 'Timesheet',
-            oldData: ['status' => 'submitted', 'hours' => 36.5],
-            newData: $this->approvedTimesheet()
-        );
+	}//end testUnapprovedTransitionDoesNotEmit()
 
-        $this->assertTrue($emitted);
-        $this->assertCount(1, $this->spy->calls);
+	/**
+	 * Re-saving an already-approved timesheet does not re-emit (idempotent edge).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+	 */
+	public function testAlreadyApprovedDoesNotReEmit(): void {
+		$service = $this->serviceWithSpy();
 
-        $call = $this->spy->calls[0];
-        $this->assertSame('nl.conduction.hrmq.timeentry.approved', $call['eventName']);
-        $this->assertSame('1.0', $call['payload']['specversion']);
-        $this->assertSame('/apps/hrmq/timesheets', $call['payload']['source']);
-        $this->assertSame('ts-0001', $call['payload']['id']);
+		$emitted = $service->maybeDispatchApproved(
+			schemaSlug: 'Timesheet',
+			oldData: ['status' => 'approved'],
+			newData: $this->approvedTimesheet()
+		);
 
-        $data = $call['payload']['data'];
-        $this->assertSame('ts-0001', $data['timesheetId']);
-        $this->assertSame('emp-devries', $data['employeeId']);
-        $this->assertSame('2026-07', $data['period']);
-        $this->assertSame(36.5, $data['hours']);
-        $this->assertTrue($data['billable']);
-        $this->assertSame('proj-alpha', $data['projectId']);
-        $this->assertSame('cc-42', $data['costCenter']);
-        $this->assertSame('manager-jansen', $data['approvedBy']);
-        $this->assertSame('2026-07-15T10:00:00Z', $data['approvedAt']);
+		$this->assertFalse($emitted);
+		$this->assertCount(0, $this->spy->calls);
 
-    }//end testSubmittedToApprovedEmitsEvent()
+	}//end testAlreadyApprovedDoesNotReEmit()
 
+	/**
+	 * An approval on a non-Timesheet schema does not emit the time-entry event.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+	 */
+	public function testNonTimesheetSchemaDoesNotEmit(): void {
+		$service = $this->serviceWithSpy();
 
-    /**
-     * An unapproved change (draft→submitted) emits nothing.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
-     */
-    public function testUnapprovedTransitionDoesNotEmit(): void
-    {
-        $service = $this->serviceWithSpy();
+		$emitted = $service->maybeDispatchApproved(
+			schemaSlug: 'Employee',
+			oldData: ['status' => 'submitted'],
+			newData: ['status' => 'approved', 'hours' => 10.0]
+		);
 
-        $emitted = $service->maybeDispatchApproved(
-            schemaSlug: 'Timesheet',
-            oldData: ['status' => 'draft'],
-            newData: ['status' => 'submitted', 'hours' => 8.0, 'employeeId' => 'emp-devries']
-        );
+		$this->assertFalse($emitted);
+		$this->assertCount(0, $this->spy->calls);
 
-        $this->assertFalse($emitted);
-        $this->assertCount(0, $this->spy->calls);
+	}//end testNonTimesheetSchemaDoesNotEmit()
 
-    }//end testUnapprovedTransitionDoesNotEmit()
+	/**
+	 * isApprovalTransition pins the edge semantics directly.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+	 */
+	public function testIsApprovalTransitionEdges(): void {
+		$service = $this->serviceWithSpy();
 
+		$this->assertTrue($service->isApprovalTransition(['status' => 'submitted'], ['status' => 'approved']));
+		$this->assertTrue($service->isApprovalTransition(null, ['status' => 'approved']));
+		$this->assertFalse($service->isApprovalTransition(['status' => 'approved'], ['status' => 'approved']));
+		$this->assertFalse($service->isApprovalTransition(['status' => 'draft'], ['status' => 'submitted']));
+		$this->assertFalse($service->isApprovalTransition(['status' => 'submitted'], ['status' => 'rejected']));
 
-    /**
-     * Re-saving an already-approved timesheet does not re-emit (idempotent edge).
-     *
-     * @return void
-     *
-     * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
-     */
-    public function testAlreadyApprovedDoesNotReEmit(): void
-    {
-        $service = $this->serviceWithSpy();
+	}//end testIsApprovalTransitionEdges()
 
-        $emitted = $service->maybeDispatchApproved(
-            schemaSlug: 'Timesheet',
-            oldData: ['status' => 'approved'],
-            newData: $this->approvedTimesheet()
-        );
+	/**
+	 * The CloudEvent envelope carries the CloudEvents 1.0 required attributes,
+	 * falling back to a generated `time` when approvedAt is absent.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-003
+	 */
+	public function testBuildApprovedEventEnvelope(): void {
+		$service = $this->serviceWithSpy();
 
-        $this->assertFalse($emitted);
-        $this->assertCount(0, $this->spy->calls);
+		$event = $service->buildApprovedEvent(['id' => 'ts-9', 'hours' => 4, 'status' => 'approved']);
 
-    }//end testAlreadyApprovedDoesNotReEmit()
+		$this->assertSame('1.0', $event['specversion']);
+		$this->assertSame('nl.conduction.hrmq.timeentry.approved', $event['type']);
+		$this->assertSame('application/json', $event['datacontenttype']);
+		$this->assertSame('ts-9', $event['id']);
+		$this->assertNotSame('', $event['time']);
+		$this->assertSame(4.0, $event['data']['hours']);
+		$this->assertFalse($event['data']['billable']);
 
-
-    /**
-     * An approval on a non-Timesheet schema does not emit the time-entry event.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
-     */
-    public function testNonTimesheetSchemaDoesNotEmit(): void
-    {
-        $service = $this->serviceWithSpy();
-
-        $emitted = $service->maybeDispatchApproved(
-            schemaSlug: 'Employee',
-            oldData: ['status' => 'submitted'],
-            newData: ['status' => 'approved', 'hours' => 10.0]
-        );
-
-        $this->assertFalse($emitted);
-        $this->assertCount(0, $this->spy->calls);
-
-    }//end testNonTimesheetSchemaDoesNotEmit()
-
-
-    /**
-     * isApprovalTransition pins the edge semantics directly.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
-     */
-    public function testIsApprovalTransitionEdges(): void
-    {
-        $service = $this->serviceWithSpy();
-
-        $this->assertTrue($service->isApprovalTransition(['status' => 'submitted'], ['status' => 'approved']));
-        $this->assertTrue($service->isApprovalTransition(null, ['status' => 'approved']));
-        $this->assertFalse($service->isApprovalTransition(['status' => 'approved'], ['status' => 'approved']));
-        $this->assertFalse($service->isApprovalTransition(['status' => 'draft'], ['status' => 'submitted']));
-        $this->assertFalse($service->isApprovalTransition(['status' => 'submitted'], ['status' => 'rejected']));
-
-    }//end testIsApprovalTransitionEdges()
-
-
-    /**
-     * The CloudEvent envelope carries the CloudEvents 1.0 required attributes,
-     * falling back to a generated `time` when approvedAt is absent.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-003
-     */
-    public function testBuildApprovedEventEnvelope(): void
-    {
-        $service = $this->serviceWithSpy();
-
-        $event = $service->buildApprovedEvent(['id' => 'ts-9', 'hours' => 4, 'status' => 'approved']);
-
-        $this->assertSame('1.0', $event['specversion']);
-        $this->assertSame('nl.conduction.hrmq.timeentry.approved', $event['type']);
-        $this->assertSame('application/json', $event['datacontenttype']);
-        $this->assertSame('ts-9', $event['id']);
-        $this->assertNotSame('', $event['time']);
-        $this->assertSame(4.0, $event['data']['hours']);
-        $this->assertFalse($event['data']['billable']);
-
-    }//end testBuildApprovedEventEnvelope()
-
+	}//end testBuildApprovedEventEnvelope()
 
 }//end class

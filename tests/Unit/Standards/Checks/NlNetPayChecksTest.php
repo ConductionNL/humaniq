@@ -35,156 +35,133 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-008
  */
-class NlNetPayChecksTest extends TestCase
-{
+class NlNetPayChecksTest extends TestCase {
 
+	/**
+	 * The registered Payslip predicates, keyed by rule id.
+	 *
+	 * @var array<string, callable>
+	 */
+	private array $checks;
 
-    /**
-     * The registered Payslip predicates, keyed by rule id.
-     *
-     * @var array<string, callable>
-     */
-    private array $checks;
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$this->checks = NlNetPayChecks::checks()['Payslip'];
 
+	}//end setUp()
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $this->checks = NlNetPayChecks::checks()['Payslip'];
+	/**
+	 * A minimal Payslip fixture; each test overrides the fields it exercises.
+	 *
+	 * @param array<string, mixed> $overrides Fields to override.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function payslip(array $overrides = []): array {
+		return array_merge(
+			[
+				'employeeId' => 'employee-jansen',
+				'period' => '2026-05',
+			],
+			$overrides
+		);
 
-    }//end setUp()
+	}//end payslip()
 
+	/**
+	 * A `context['netpay']` fixture.
+	 *
+	 * @param array<string, bool> $ibanByEmployeeKey Employee key => IBAN-present map.
+	 * @param array<int, string> $payablePeriods Periods with a payable run.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function context(array $ibanByEmployeeKey = [], array $payablePeriods = ['2026-05']): array {
+		return [
+			'netpay' => [
+				'ibanByEmployeeKey' => $ibanByEmployeeKey,
+				'payablePeriods' => $payablePeriods,
+			],
+		];
 
-    /**
-     * A minimal Payslip fixture; each test overrides the fields it exercises.
-     *
-     * @param array<string, mixed> $overrides Fields to override.
-     *
-     * @return array<string, mixed>
-     */
-    private function payslip(array $overrides=[]): array
-    {
-        return array_merge(
-            [
-                'employeeId' => 'employee-jansen',
-                'period'     => '2026-05',
-            ],
-            $overrides
-        );
+	}//end context()
 
-    }//end payslip()
+	/**
+	 * @return void
+	 */
+	public function testCompliantWhenEmployeeHasIbanOnAPayablePeriod(): void {
+		$payslip = $this->payslip();
+		$context = $this->context(['employee-jansen' => true]);
 
+		$this->assertTrue(($this->checks['nl-netpay-iban-present'])($payslip, $context));
 
-    /**
-     * A `context['netpay']` fixture.
-     *
-     * @param array<string, bool> $ibanByEmployeeKey Employee key => IBAN-present map.
-     * @param array<int, string>  $payablePeriods    Periods with a payable run.
-     *
-     * @return array<string, mixed>
-     */
-    private function context(array $ibanByEmployeeKey=[], array $payablePeriods=['2026-05']): array
-    {
-        return [
-            'netpay' => [
-                'ibanByEmployeeKey' => $ibanByEmployeeKey,
-                'payablePeriods'    => $payablePeriods,
-            ],
-        ];
+	}//end testCompliantWhenEmployeeHasIbanOnAPayablePeriod()
 
-    }//end context()
+	/**
+	 * @return void
+	 */
+	public function testViolatesWhenEmployeeHasNoIbanOnAPayablePeriod(): void {
+		$payslip = $this->payslip();
+		$context = $this->context(['employee-jansen' => false]);
 
+		$this->assertFalse(($this->checks['nl-netpay-iban-present'])($payslip, $context));
 
-    /**
-     * @return void
-     */
-    public function testCompliantWhenEmployeeHasIbanOnAPayablePeriod(): void
-    {
-        $payslip = $this->payslip();
-        $context = $this->context(['employee-jansen' => true]);
+	}//end testViolatesWhenEmployeeHasNoIbanOnAPayablePeriod()
 
-        $this->assertTrue(($this->checks['nl-netpay-iban-present'])($payslip, $context));
+	/**
+	 * @return void
+	 */
+	public function testViolatesWhenEmployeeDoesNotResolveAtAllOnAPayablePeriod(): void {
+		$payslip = $this->payslip();
+		$context = $this->context([]);
 
-    }//end testCompliantWhenEmployeeHasIbanOnAPayablePeriod()
+		$this->assertFalse(($this->checks['nl-netpay-iban-present'])($payslip, $context));
 
+	}//end testViolatesWhenEmployeeDoesNotResolveAtAllOnAPayablePeriod()
 
-    /**
-     * @return void
-     */
-    public function testViolatesWhenEmployeeHasNoIbanOnAPayablePeriod(): void
-    {
-        $payslip = $this->payslip();
-        $context = $this->context(['employee-jansen' => false]);
+	/**
+	 * @return void
+	 */
+	public function testCompliantWhenPeriodHasNoPayableRun(): void {
+		$payslip = $this->payslip(['period' => '2026-06']);
+		$context = $this->context(['employee-jansen' => false], ['2026-05']);
 
-        $this->assertFalse(($this->checks['nl-netpay-iban-present'])($payslip, $context));
+		$this->assertTrue(($this->checks['nl-netpay-iban-present'])($payslip, $context));
 
-    }//end testViolatesWhenEmployeeHasNoIbanOnAPayablePeriod()
+	}//end testCompliantWhenPeriodHasNoPayableRun()
 
+	/**
+	 * @return void
+	 */
+	public function testViolatesWhenEmployeeIdIsBlank(): void {
+		$payslip = $this->payslip(['employeeId' => '']);
+		$context = $this->context(['employee-jansen' => true]);
 
-    /**
-     * @return void
-     */
-    public function testViolatesWhenEmployeeDoesNotResolveAtAllOnAPayablePeriod(): void
-    {
-        $payslip = $this->payslip();
-        $context = $this->context([]);
+		$this->assertFalse(($this->checks['nl-netpay-iban-present'])($payslip, $context));
 
-        $this->assertFalse(($this->checks['nl-netpay-iban-present'])($payslip, $context));
+	}//end testViolatesWhenEmployeeIdIsBlank()
 
-    }//end testViolatesWhenEmployeeDoesNotResolveAtAllOnAPayablePeriod()
+	/**
+	 * @return void
+	 */
+	public function testMissingContextDefaultsToCompliantSinceNoPeriodIsPayable(): void {
+		$payslip = $this->payslip();
 
+		$this->assertTrue(($this->checks['nl-netpay-iban-present'])($payslip, []));
 
-    /**
-     * @return void
-     */
-    public function testCompliantWhenPeriodHasNoPayableRun(): void
-    {
-        $payslip = $this->payslip(['period' => '2026-06']);
-        $context = $this->context(['employee-jansen' => false], ['2026-05']);
+	}//end testMissingContextDefaultsToCompliantSinceNoPeriodIsPayable()
 
-        $this->assertTrue(($this->checks['nl-netpay-iban-present'])($payslip, $context));
+	/**
+	 * @return void
+	 */
+	public function testResolvesByEmployeeNumberKeyToo(): void {
+		$payslip = $this->payslip(['employeeId' => 'EMP-NL-0001']);
+		$context = $this->context(['EMP-NL-0001' => true]);
 
-    }//end testCompliantWhenPeriodHasNoPayableRun()
+		$this->assertTrue(($this->checks['nl-netpay-iban-present'])($payslip, $context));
 
-
-    /**
-     * @return void
-     */
-    public function testViolatesWhenEmployeeIdIsBlank(): void
-    {
-        $payslip = $this->payslip(['employeeId' => '']);
-        $context = $this->context(['employee-jansen' => true]);
-
-        $this->assertFalse(($this->checks['nl-netpay-iban-present'])($payslip, $context));
-
-    }//end testViolatesWhenEmployeeIdIsBlank()
-
-
-    /**
-     * @return void
-     */
-    public function testMissingContextDefaultsToCompliantSinceNoPeriodIsPayable(): void
-    {
-        $payslip = $this->payslip();
-
-        $this->assertTrue(($this->checks['nl-netpay-iban-present'])($payslip, []));
-
-    }//end testMissingContextDefaultsToCompliantSinceNoPeriodIsPayable()
-
-
-    /**
-     * @return void
-     */
-    public function testResolvesByEmployeeNumberKeyToo(): void
-    {
-        $payslip = $this->payslip(['employeeId' => 'EMP-NL-0001']);
-        $context = $this->context(['EMP-NL-0001' => true]);
-
-        $this->assertTrue(($this->checks['nl-netpay-iban-present'])($payslip, $context));
-
-    }//end testResolvesByEmployeeNumberKeyToo()
-
+	}//end testResolvesByEmployeeNumberKeyToo()
 
 }//end class

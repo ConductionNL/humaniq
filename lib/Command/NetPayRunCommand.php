@@ -41,74 +41,66 @@ use Symfony\Component\Console\Output\OutputInterface;
  * occ command that hands payable payroll runs off to shillinq as draft SEPA
  * PaymentRuns.
  */
-class NetPayRunCommand extends Command
-{
+class NetPayRunCommand extends Command {
 
+	/**
+	 * @param PayrollNetPayService $service The net-pay service.
+	 */
+	public function __construct(
+		private readonly PayrollNetPayService $service,
+	) {
+		parent::__construct();
 
-    /**
-     * @param PayrollNetPayService $service The net-pay service.
-     */
-    public function __construct(
-        private readonly PayrollNetPayService $service,
-    ) {
-        parent::__construct();
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * @return void
+	 */
+	protected function configure(): void {
+		$this->setName('hrmq:netpay:run')
+			->setDescription('Hand off each payable PayrollRun\'s payslips as a draft SEPA PaymentRun into shillinq (MVP trigger; run on operator demand).')
+			->addOption('period', null, InputOption::VALUE_REQUIRED, 'Only process runs for this wage period (YYYY-MM).');
 
+	}//end configure()
 
-    /**
-     * @return void
-     */
-    protected function configure(): void
-    {
-        $this->setName('hrmq:netpay:run')
-            ->setDescription('Hand off each payable PayrollRun\'s payslips as a draft SEPA PaymentRun into shillinq (MVP trigger; run on operator demand).')
-            ->addOption('period', null, InputOption::VALUE_REQUIRED, 'Only process runs for this wage period (YYYY-MM).');
+	/**
+	 * @param InputInterface $input Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int 0 when every selected run ends created/skipped-no-shillinq, 1 when any ends failed.
+	 *
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-007
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output): int {
+		$periodOption = $input->getOption('period');
+		$period = (is_string($periodOption) === true && trim($periodOption) !== '') ? trim($periodOption) : null;
 
-    }//end configure()
+		$results = $this->service->processPayableRuns($period);
 
+		$output->writeln('<info>Hrmq payroll net pay</info>');
 
-    /**
-     * @param InputInterface  $input  Console input.
-     * @param OutputInterface $output Console output.
-     *
-     * @return int 0 when every selected run ends created/skipped-no-shillinq, 1 when any ends failed.
-     *
-     * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-007
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        $periodOption = $input->getOption('period');
-        $period       = (is_string($periodOption) === true && trim($periodOption) !== '') ? trim($periodOption) : null;
+		if ($results === []) {
+			$output->writeln('  geen betaalbare loonruns geselecteerd' . ($period !== null ? ' voor periode ' . $period : '') . '.');
+			return 0;
+		}
 
-        $results = $this->service->processPayableRuns($period);
+		$failed = 0;
+		foreach ($results as $result) {
+			$status = (string)$result['status'];
+			$line = sprintf('  run %s: %s — %s', (string)$result['runId'], $status, (string)$result['message']);
 
-        $output->writeln('<info>Hrmq payroll net pay</info>');
+			if ($status === 'failed') {
+				$failed++;
+				$output->writeln('<error>' . $line . '</error>');
+				continue;
+			}
 
-        if ($results === []) {
-            $output->writeln('  geen betaalbare loonruns geselecteerd'.($period !== null ? ' voor periode '.$period : '').'.');
-            return 0;
-        }
+			$output->writeln($line);
+		}
 
-        $failed = 0;
-        foreach ($results as $result) {
-            $status = (string) $result['status'];
-            $line   = sprintf('  run %s: %s — %s', (string) $result['runId'], $status, (string) $result['message']);
+		$output->writeln(sprintf('  %d run(s) verwerkt, %d mislukt.', count($results), $failed));
 
-            if ($status === 'failed') {
-                $failed++;
-                $output->writeln('<error>'.$line.'</error>');
-                continue;
-            }
-
-            $output->writeln($line);
-        }
-
-        $output->writeln(sprintf('  %d run(s) verwerkt, %d mislukt.', count($results), $failed));
-
-        return $failed > 0 ? 1 : 0;
-
-    }//end execute()
-
+		return $failed > 0 ? 1 : 0;
+	}//end execute()
 
 }//end class

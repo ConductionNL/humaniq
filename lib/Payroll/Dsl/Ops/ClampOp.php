@@ -33,53 +33,45 @@ use OCA\Hrmq\Payroll\Dsl\StepContext;
 /**
  * Bound a value between an optional floor and an optional ceiling.
  */
-final class ClampOp extends AbstractOp
-{
+final class ClampOp extends AbstractOp {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'clamp';
+	}//end name()
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'clamp';
+	/**
+	 * `min(max(value, min), max)`, applying only the declared bounds.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return int|float
+	 *
+	 * @throws DslException When neither bound is declared.
+	 */
+	public function evaluate(array $spec, StepContext $ctx): mixed {
+		$value = $this->num($spec, 'value', $ctx);
+		$floor = $this->optionalNum($spec, 'min', $ctx);
+		$ceil = $this->optionalNum($spec, 'max', $ctx);
 
-    }//end name()
+		if ($floor === null && $ceil === null) {
+			throw new DslException('Pack: op "clamp" verwacht ten minste "min" of "max".');
+		}
 
+		if ($floor !== null) {
+			$value = max($value, $floor);
+		}
 
-    /**
-     * `min(max(value, min), max)`, applying only the declared bounds.
-     *
-     * @param array<string, mixed> $spec The declared spec.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return int|float
-     *
-     * @throws DslException When neither bound is declared.
-     */
-    public function evaluate(array $spec, StepContext $ctx): mixed
-    {
-        $value = $this->num($spec, 'value', $ctx);
-        $floor = $this->optionalNum($spec, 'min', $ctx);
-        $ceil  = $this->optionalNum($spec, 'max', $ctx);
+		if ($ceil !== null) {
+			$value = min($value, $ceil);
+		}
 
-        if ($floor === null && $ceil === null) {
-            throw new DslException('Pack: op "clamp" verwacht ten minste "min" of "max".');
-        }
-
-        if ($floor !== null) {
-            $value = max($value, $floor);
-        }
-
-        if ($ceil !== null) {
-            $value = min($value, $ceil);
-        }
-
-        return $value;
-
-    }//end evaluate()
-
+		return $value;
+	}//end evaluate()
 
 }//end class

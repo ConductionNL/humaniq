@@ -37,302 +37,259 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/asset-management-mvp/specs/asset-management/spec.md#REQ-AST-005
  */
-class NlAssetChecksTest extends TestCase
-{
-
-
-    /**
-     * The registered AssetAssignment predicates, keyed by rule id.
-     *
-     * @var array<string, callable>
-     */
-    private array $checks;
-
-
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $this->checks = NlAssetChecks::checks()['AssetAssignment'];
-
-    }//end setUp()
-
-
-    /**
-     * A minimal AssetAssignment fixture; each test overrides the fields it
-     * exercises.
-     *
-     * @param array<string, mixed> $overrides Fields to override.
-     *
-     * @return array<string, mixed>
-     */
-    private function assignment(array $overrides=[]): array
-    {
-        return array_merge(
-            [
-                'assetId'           => 'asset-laptop',
-                'employeeId'        => 'employee-jansen',
-                'uitgifteDatum'     => '2026-06-15',
-                'innameDatum'       => null,
-                'uitgifteBonSigned' => false,
-                'notes'             => null,
-            ],
-            $overrides
-        );
-
-    }//end assignment()
-
-
-    /**
-     * A minimal `context['related']` fixture matching RuleAuditService's
-     * pre-pass shape.
-     *
-     * @param array<string, array<string, mixed>> $assetsById                     Asset index by id.
-     * @param array<string, array<string, mixed>> $employeesById                  Employee index by id.
-     * @param array<string, string>               $plannedCompletionByEmployeeId Offboarding plannedCompletionByEmployeeId index.
-     *
-     * @return array<string, mixed>
-     */
-    private function context(array $assetsById=[], array $employeesById=[], array $plannedCompletionByEmployeeId=[]): array
-    {
-        return [
-            'related' => [
-                'Asset'       => ['byId' => $assetsById],
-                'Employee'    => ['byId' => $employeesById],
-                'Offboarding' => ['plannedCompletionByEmployeeId' => $plannedCompletionByEmployeeId],
-            ],
-        ];
-
-    }//end context()
-
-
-    // -- nl-asset-assignment-consistency --------------------------------------
-
-
-    /**
-     * @return void
-     */
-    public function testOpenAssignmentOnIssuedAssetWithKnownEmployeeSatisfied(): void
-    {
-        $assignment = $this->assignment(['assetId' => 'asset-laptop', 'innameDatum' => null]);
-        $context    = $this->context(
-            ['asset-laptop' => ['id' => 'asset-laptop', 'status' => 'uitgegeven', 'active' => true]],
-            ['employee-jansen' => ['id' => 'employee-jansen']]
-        );
-
-        $this->assertTrue(($this->checks['nl-asset-assignment-consistency'])($assignment, $context));
-
-    }//end testOpenAssignmentOnIssuedAssetWithKnownEmployeeSatisfied()
-
-
-    /**
-     * @return void
-     */
-    public function testIncoherentDatesViolate(): void
-    {
-        $assignment = $this->assignment(['uitgifteDatum' => '2026-06-01', 'innameDatum' => '2026-05-01']);
-
-        $this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, $this->context()));
-
-    }//end testIncoherentDatesViolate()
-
-
-    /**
-     * @return void
-     */
-    public function testSameDayUitgifteAndInnameIsCoherentAndSatisfied(): void
-    {
-        $assignment = $this->assignment(['uitgifteDatum' => '2026-06-15', 'innameDatum' => '2026-06-15']);
+class NlAssetChecksTest extends TestCase {
+
+	/**
+	 * The registered AssetAssignment predicates, keyed by rule id.
+	 *
+	 * @var array<string, callable>
+	 */
+	private array $checks;
+
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$this->checks = NlAssetChecks::checks()['AssetAssignment'];
+
+	}//end setUp()
+
+	/**
+	 * A minimal AssetAssignment fixture; each test overrides the fields it
+	 * exercises.
+	 *
+	 * @param array<string, mixed> $overrides Fields to override.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function assignment(array $overrides = []): array {
+		return array_merge(
+			[
+				'assetId' => 'asset-laptop',
+				'employeeId' => 'employee-jansen',
+				'uitgifteDatum' => '2026-06-15',
+				'innameDatum' => null,
+				'uitgifteBonSigned' => false,
+				'notes' => null,
+			],
+			$overrides
+		);
+
+	}//end assignment()
+
+	/**
+	 * A minimal `context['related']` fixture matching RuleAuditService's
+	 * pre-pass shape.
+	 *
+	 * @param array<string, array<string, mixed>> $assetsById Asset index by id.
+	 * @param array<string, array<string, mixed>> $employeesById Employee index by id.
+	 * @param array<string, string> $plannedCompletionByEmployeeId Offboarding plannedCompletionByEmployeeId index.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function context(array $assetsById = [], array $employeesById = [], array $plannedCompletionByEmployeeId = []): array {
+		return [
+			'related' => [
+				'Asset' => ['byId' => $assetsById],
+				'Employee' => ['byId' => $employeesById],
+				'Offboarding' => ['plannedCompletionByEmployeeId' => $plannedCompletionByEmployeeId],
+			],
+		];
+
+	}//end context()
+
+	// -- nl-asset-assignment-consistency --------------------------------------
+
+	/**
+	 * @return void
+	 */
+	public function testOpenAssignmentOnIssuedAssetWithKnownEmployeeSatisfied(): void {
+		$assignment = $this->assignment(['assetId' => 'asset-laptop', 'innameDatum' => null]);
+		$context = $this->context(
+			['asset-laptop' => ['id' => 'asset-laptop', 'status' => 'uitgegeven', 'active' => true]],
+			['employee-jansen' => ['id' => 'employee-jansen']]
+		);
+
+		$this->assertTrue(($this->checks['nl-asset-assignment-consistency'])($assignment, $context));
+
+	}//end testOpenAssignmentOnIssuedAssetWithKnownEmployeeSatisfied()
+
+	/**
+	 * @return void
+	 */
+	public function testIncoherentDatesViolate(): void {
+		$assignment = $this->assignment(['uitgifteDatum' => '2026-06-01', 'innameDatum' => '2026-05-01']);
+
+		$this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, $this->context()));
+
+	}//end testIncoherentDatesViolate()
+
+	/**
+	 * @return void
+	 */
+	public function testSameDayUitgifteAndInnameIsCoherentAndSatisfied(): void {
+		$assignment = $this->assignment(['uitgifteDatum' => '2026-06-15', 'innameDatum' => '2026-06-15']);
+
+		$this->assertTrue(($this->checks['nl-asset-assignment-consistency'])($assignment, $this->context()));
+
+	}//end testSameDayUitgifteAndInnameIsCoherentAndSatisfied()
+
+	/**
+	 * @return void
+	 */
+	public function testOpenAssignmentOnBeschikbaarAssetViolates(): void {
+		$assignment = $this->assignment(['assetId' => 'asset-telefoon', 'innameDatum' => null]);
+		$context = $this->context(
+			['asset-telefoon' => ['id' => 'asset-telefoon', 'status' => 'beschikbaar', 'active' => true]],
+			['employee-jansen' => ['id' => 'employee-jansen']]
+		);
+
+		$this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, $context));
+
+	}//end testOpenAssignmentOnBeschikbaarAssetViolates()
+
+	/**
+	 * @return void
+	 */
+	public function testOpenAssignmentOnIngenomenAssetViolates(): void {
+		$assignment = $this->assignment(['assetId' => 'asset-bus', 'innameDatum' => null]);
+		$context = $this->context(
+			['asset-bus' => ['id' => 'asset-bus', 'status' => 'ingenomen', 'active' => true]],
+			['employee-jansen' => ['id' => 'employee-jansen']]
+		);
 
-        $this->assertTrue(($this->checks['nl-asset-assignment-consistency'])($assignment, $this->context()));
+		$this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, $context));
 
-    }//end testSameDayUitgifteAndInnameIsCoherentAndSatisfied()
+	}//end testOpenAssignmentOnIngenomenAssetViolates()
 
+	/**
+	 * @return void
+	 */
+	public function testClosedAssignmentOnNonIssuedAssetIsSatisfied(): void {
+		// Historical uitgiftes may reference a re-stocked or written-off asset
+		// -- the consistency rule never re-checks a closed record's asset
+		// status.
+		$assignment = $this->assignment(['assetId' => 'asset-bus', 'uitgifteDatum' => '2025-01-06', 'innameDatum' => '2025-12-19']);
+		$context = $this->context(
+			['asset-bus' => ['id' => 'asset-bus', 'status' => 'beschikbaar', 'active' => true]],
+			['employee-jansen' => ['id' => 'employee-jansen']]
+		);
+
+		$this->assertTrue(($this->checks['nl-asset-assignment-consistency'])($assignment, $context));
+
+	}//end testClosedAssignmentOnNonIssuedAssetIsSatisfied()
+
+	/**
+	 * @return void
+	 */
+	public function testDanglingAssetReferenceFailsClosed(): void {
+		$assignment = $this->assignment(['assetId' => 'no-such-asset', 'innameDatum' => null]);
+		$context = $this->context([], ['employee-jansen' => ['id' => 'employee-jansen']]);
 
-    /**
-     * @return void
-     */
-    public function testOpenAssignmentOnBeschikbaarAssetViolates(): void
-    {
-        $assignment = $this->assignment(['assetId' => 'asset-telefoon', 'innameDatum' => null]);
-        $context    = $this->context(
-            ['asset-telefoon' => ['id' => 'asset-telefoon', 'status' => 'beschikbaar', 'active' => true]],
-            ['employee-jansen' => ['id' => 'employee-jansen']]
-        );
+		$this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, $context));
+
+	}//end testDanglingAssetReferenceFailsClosed()
 
-        $this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, $context));
+	/**
+	 * @return void
+	 */
+	public function testEmptyAssetReferenceFailsClosed(): void {
+		$assignment = $this->assignment(['assetId' => '', 'innameDatum' => null]);
 
-    }//end testOpenAssignmentOnBeschikbaarAssetViolates()
+		$this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, $this->context()));
 
+	}//end testEmptyAssetReferenceFailsClosed()
 
-    /**
-     * @return void
-     */
-    public function testOpenAssignmentOnIngenomenAssetViolates(): void
-    {
-        $assignment = $this->assignment(['assetId' => 'asset-bus', 'innameDatum' => null]);
-        $context    = $this->context(
-            ['asset-bus' => ['id' => 'asset-bus', 'status' => 'ingenomen', 'active' => true]],
-            ['employee-jansen' => ['id' => 'employee-jansen']]
-        );
+	/**
+	 * @return void
+	 */
+	public function testDanglingEmployeeReferenceFailsClosed(): void {
+		$assignment = $this->assignment(['assetId' => 'asset-laptop', 'employeeId' => 'no-such-employee', 'innameDatum' => null]);
+		$context = $this->context(['asset-laptop' => ['id' => 'asset-laptop', 'status' => 'uitgegeven', 'active' => true]]);
 
-        $this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, $context));
+		$this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, $context));
 
-    }//end testOpenAssignmentOnIngenomenAssetViolates()
+	}//end testDanglingEmployeeReferenceFailsClosed()
 
+	/**
+	 * @return void
+	 */
+	public function testOpenAssignmentWithEmptyContextIndexFailsClosed(): void {
+		$assignment = $this->assignment(['assetId' => 'asset-laptop', 'innameDatum' => null]);
 
-    /**
-     * @return void
-     */
-    public function testClosedAssignmentOnNonIssuedAssetIsSatisfied(): void
-    {
-        // Historical uitgiftes may reference a re-stocked or written-off asset
-        // -- the consistency rule never re-checks a closed record's asset
-        // status.
-        $assignment = $this->assignment(['assetId' => 'asset-bus', 'uitgifteDatum' => '2025-01-06', 'innameDatum' => '2025-12-19']);
-        $context    = $this->context(
-            ['asset-bus' => ['id' => 'asset-bus', 'status' => 'beschikbaar', 'active' => true]],
-            ['employee-jansen' => ['id' => 'employee-jansen']]
-        );
+		// No `related.Asset` index at all (schema not yet imported) -- the
+		// asset-status lookup degrades to empty, and an open assignment that
+		// cannot resolve its asset fails closed.
+		$this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, []));
 
-        $this->assertTrue(($this->checks['nl-asset-assignment-consistency'])($assignment, $context));
+	}//end testOpenAssignmentWithEmptyContextIndexFailsClosed()
 
-    }//end testClosedAssignmentOnNonIssuedAssetIsSatisfied()
+	// -- nl-asset-inname-bij-offboarding ---------------------------------------
 
+	/**
+	 * @return void
+	 */
+	public function testOpenAssignmentPassesVacuouslyWithoutOffboardingObjects(): void {
+		$assignment = $this->assignment(['innameDatum' => null]);
 
-    /**
-     * @return void
-     */
-    public function testDanglingAssetReferenceFailsClosed(): void
-    {
-        $assignment = $this->assignment(['assetId' => 'no-such-asset', 'innameDatum' => null]);
-        $context    = $this->context([], ['employee-jansen' => ['id' => 'employee-jansen']]);
+		// Empty related.Offboarding index (the parallel offboarding-wizard-mvp
+		// change not yet landed) -- vacuous pass.
+		$this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $this->context()));
 
-        $this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, $context));
+	}//end testOpenAssignmentPassesVacuouslyWithoutOffboardingObjects()
 
-    }//end testDanglingAssetReferenceFailsClosed()
+	/**
+	 * @return void
+	 */
+	public function testOpenAssignmentPassesVacuouslyWithEmptyContextAltogether(): void {
+		$assignment = $this->assignment(['innameDatum' => null]);
 
+		$this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, []));
 
-    /**
-     * @return void
-     */
-    public function testEmptyAssetReferenceFailsClosed(): void
-    {
-        $assignment = $this->assignment(['assetId' => '', 'innameDatum' => null]);
+	}//end testOpenAssignmentPassesVacuouslyWithEmptyContextAltogether()
 
-        $this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, $this->context()));
+	/**
+	 * @return void
+	 */
+	public function testOpenAssignmentPastOverdueOffboardingCompletionViolates(): void {
+		$assignment = $this->assignment(['employeeId' => 'employee-jansen', 'innameDatum' => null]);
+		$context = $this->context([], [], ['employee-jansen' => date('Y-m-d', strtotime('-1 day'))]);
 
-    }//end testEmptyAssetReferenceFailsClosed()
+		$this->assertFalse(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $context));
 
+	}//end testOpenAssignmentPastOverdueOffboardingCompletionViolates()
 
-    /**
-     * @return void
-     */
-    public function testDanglingEmployeeReferenceFailsClosed(): void
-    {
-        $assignment = $this->assignment(['assetId' => 'asset-laptop', 'employeeId' => 'no-such-employee', 'innameDatum' => null]);
-        $context    = $this->context(['asset-laptop' => ['id' => 'asset-laptop', 'status' => 'uitgegeven', 'active' => true]]);
+	/**
+	 * @return void
+	 */
+	public function testOpenAssignmentWithFutureOffboardingCompletionSatisfied(): void {
+		$assignment = $this->assignment(['employeeId' => 'employee-jansen', 'innameDatum' => null]);
+		$context = $this->context([], [], ['employee-jansen' => date('Y-m-d', strtotime('+30 days'))]);
 
-        $this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, $context));
+		$this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $context));
 
-    }//end testDanglingEmployeeReferenceFailsClosed()
+	}//end testOpenAssignmentWithFutureOffboardingCompletionSatisfied()
 
+	/**
+	 * @return void
+	 */
+	public function testOpenAssignmentWithNoMatchingEmployeeEntrySatisfied(): void {
+		$assignment = $this->assignment(['employeeId' => 'employee-visser', 'innameDatum' => null]);
+		$context = $this->context([], [], ['employee-jansen' => date('Y-m-d', strtotime('-1 day'))]);
 
-    /**
-     * @return void
-     */
-    public function testOpenAssignmentWithEmptyContextIndexFailsClosed(): void
-    {
-        $assignment = $this->assignment(['assetId' => 'asset-laptop', 'innameDatum' => null]);
+		$this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $context));
 
-        // No `related.Asset` index at all (schema not yet imported) -- the
-        // asset-status lookup degrades to empty, and an open assignment that
-        // cannot resolve its asset fails closed.
-        $this->assertFalse(($this->checks['nl-asset-assignment-consistency'])($assignment, []));
+	}//end testOpenAssignmentWithNoMatchingEmployeeEntrySatisfied()
 
-    }//end testOpenAssignmentWithEmptyContextIndexFailsClosed()
+	/**
+	 * @return void
+	 */
+	public function testClosedAssignmentNeverChecksOffboardingCompletion(): void {
+		$assignment = $this->assignment(['employeeId' => 'employee-jansen', 'innameDatum' => '2026-06-20']);
+		$context = $this->context([], [], ['employee-jansen' => date('Y-m-d', strtotime('-1 day'))]);
 
+		$this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $context));
 
-    // -- nl-asset-inname-bij-offboarding ---------------------------------------
-
-
-    /**
-     * @return void
-     */
-    public function testOpenAssignmentPassesVacuouslyWithoutOffboardingObjects(): void
-    {
-        $assignment = $this->assignment(['innameDatum' => null]);
-
-        // Empty related.Offboarding index (the parallel offboarding-wizard-mvp
-        // change not yet landed) -- vacuous pass.
-        $this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $this->context()));
-
-    }//end testOpenAssignmentPassesVacuouslyWithoutOffboardingObjects()
-
-
-    /**
-     * @return void
-     */
-    public function testOpenAssignmentPassesVacuouslyWithEmptyContextAltogether(): void
-    {
-        $assignment = $this->assignment(['innameDatum' => null]);
-
-        $this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, []));
-
-    }//end testOpenAssignmentPassesVacuouslyWithEmptyContextAltogether()
-
-
-    /**
-     * @return void
-     */
-    public function testOpenAssignmentPastOverdueOffboardingCompletionViolates(): void
-    {
-        $assignment = $this->assignment(['employeeId' => 'employee-jansen', 'innameDatum' => null]);
-        $context    = $this->context([], [], ['employee-jansen' => date('Y-m-d', strtotime('-1 day'))]);
-
-        $this->assertFalse(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $context));
-
-    }//end testOpenAssignmentPastOverdueOffboardingCompletionViolates()
-
-
-    /**
-     * @return void
-     */
-    public function testOpenAssignmentWithFutureOffboardingCompletionSatisfied(): void
-    {
-        $assignment = $this->assignment(['employeeId' => 'employee-jansen', 'innameDatum' => null]);
-        $context    = $this->context([], [], ['employee-jansen' => date('Y-m-d', strtotime('+30 days'))]);
-
-        $this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $context));
-
-    }//end testOpenAssignmentWithFutureOffboardingCompletionSatisfied()
-
-
-    /**
-     * @return void
-     */
-    public function testOpenAssignmentWithNoMatchingEmployeeEntrySatisfied(): void
-    {
-        $assignment = $this->assignment(['employeeId' => 'employee-visser', 'innameDatum' => null]);
-        $context    = $this->context([], [], ['employee-jansen' => date('Y-m-d', strtotime('-1 day'))]);
-
-        $this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $context));
-
-    }//end testOpenAssignmentWithNoMatchingEmployeeEntrySatisfied()
-
-
-    /**
-     * @return void
-     */
-    public function testClosedAssignmentNeverChecksOffboardingCompletion(): void
-    {
-        $assignment = $this->assignment(['employeeId' => 'employee-jansen', 'innameDatum' => '2026-06-20']);
-        $context    = $this->context([], [], ['employee-jansen' => date('Y-m-d', strtotime('-1 day'))]);
-
-        $this->assertTrue(($this->checks['nl-asset-inname-bij-offboarding'])($assignment, $context));
-
-    }//end testClosedAssignmentNeverChecksOffboardingCompletion()
-
+	}//end testClosedAssignmentNeverChecksOffboardingCompletion()
 
 }//end class

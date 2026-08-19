@@ -48,6 +48,7 @@ use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
+use RuntimeException;
 
 /**
  * Denies the PensionFiling `controleren` transition unless the referenced
@@ -56,126 +57,122 @@ use Psr\Container\ContainerInterface;
  * Fails closed: when the reference is empty, dangling, or the run cannot be
  * loaded, the transition is denied rather than allowed on a guess.
  */
-final class PayrollRunApprovedGuard implements LifecycleGuardInterface
-{
+final class PayrollRunApprovedGuard implements LifecycleGuardInterface {
 
+	/**
+	 * PayrollRun statuses that unblock the `controleren` transition.
+	 *
+	 * @var string[]
+	 */
+	private const ALLOWED_STATUSES = ['approved', 'posted', 'paid'];
 
-    /**
-     * PayrollRun statuses that unblock the `controleren` transition.
-     *
-     * @var string[]
-     */
-    private const ALLOWED_STATUSES = ['approved', 'posted', 'paid'];
+	/**
+	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
+	 * @param IAppConfig $appConfig App config for the register slug.
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+		private readonly IAppConfig $appConfig,
+	) {
 
+	}//end __construct()
 
-    /**
-     * @param ContainerInterface $container DI container for lazy ObjectService resolution.
-     * @param IAppConfig         $appConfig App config for the register slug.
-     */
-    public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly IAppConfig $appConfig,
-    ) {
+	/**
+	 * Authorise the `controleren` transition by checking the referenced
+	 * PayrollRun's approval status.
+	 *
+	 * @param array<string, mixed> $object The PensionFiling payload at its current state.
+	 * @param string $action The transition action ('controleren').
+	 * @param string $userId The uid of the caller.
+	 *
+	 * @return GuardResult Allow when the referenced PayrollRun is
+	 *                     approved/posted/paid; deny otherwise (fail-closed).
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
+	 *  static allow()/deny() factories mandated by OpenRegister's contract.
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action/$userId are part of
+	 *  the LifecycleGuardInterface signature; the gate depends only on the
+	 *  referenced PayrollRun's status, not on who is acting.
+	 *
+	 * @spec openspec/changes/pension-filing-upa-mvp/specs/pension-filing-upa-mvp/spec.md
+	 */
+	public function check(array $object, string $action, string $userId): GuardResult {
+		$payrollRunId = trim((string)($object['payrollRunId'] ?? ''));
+		if ($payrollRunId === '') {
+			return GuardResult::deny(
+				'Deze pensioenaangifte verwijst niet naar een loonrun; controleren is geweigerd.'
+			);
+		}
 
-    }//end __construct()
+		try {
+			$run = $this->objectService()->find(id: $payrollRunId, register: $this->register(), schema: 'PayrollRun');
+		} catch (\Throwable $e) {
+			return GuardResult::deny(
+				'De gekoppelde loonrun kon niet worden geladen; controleren is geweigerd.'
+			);
+		}
 
+		if ($run === null) {
+			return GuardResult::deny(
+				'De gekoppelde loonrun bestaat niet (meer); controleren is geweigerd.'
+			);
+		}
 
-    /**
-     * Authorise the `controleren` transition by checking the referenced
-     * PayrollRun's approval status.
-     *
-     * @param array<string, mixed> $object The PensionFiling payload at its current state.
-     * @param string               $action The transition action ('controleren').
-     * @param string               $userId The uid of the caller.
-     *
-     * @return GuardResult Allow when the referenced PayrollRun is
-     *                     approved/posted/paid; deny otherwise (fail-closed).
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
-     *  static allow()/deny() factories mandated by OpenRegister's contract.
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action/$userId are part of
-     *  the LifecycleGuardInterface signature; the gate depends only on the
-     *  referenced PayrollRun's status, not on who is acting.
-     *
-     * @spec openspec/changes/pension-filing-upa-mvp/specs/pension-filing-upa-mvp/spec.md
-     */
-    public function check(array $object, string $action, string $userId): GuardResult
-    {
-        $payrollRunId = trim((string) ($object['payrollRunId'] ?? ''));
-        if ($payrollRunId === '') {
-            return GuardResult::deny(
-                'Deze pensioenaangifte verwijst niet naar een loonrun; controleren is geweigerd.'
-            );
-        }
+		$status = (string)($this->toArray($run)['status'] ?? '');
+		if (in_array($status, self::ALLOWED_STATUSES, true) === false) {
+			return GuardResult::deny(sprintf(
+				'De loonrun heeft status "%s"; controleren kan pas nadat de loonrun is goedgekeurd, geboekt of uitbetaald.',
+				$status !== '' ? $status : 'onbekend'
+			));
+		}
 
-        try {
-            $run = $this->objectService()->find(id: $payrollRunId, register: $this->register(), schema: 'PayrollRun');
-        } catch (\Throwable $e) {
-            return GuardResult::deny(
-                'De gekoppelde loonrun kon niet worden geladen; controleren is geweigerd.'
-            );
-        }
+		return GuardResult::allow();
+	}//end check()
 
-        if ($run === null) {
-            return GuardResult::deny(
-                'De gekoppelde loonrun bestaat niet (meer); controleren is geweigerd.'
-            );
-        }
+	/**
+	 * Normalise an ObjectService lookup result (entity or array) to an array.
+	 *
+	 * @param mixed $run The loaded PayrollRun, or an unexpected shape.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function toArray(mixed $run): array {
+		if (is_array($run) === true) {
+			return $run;
+		}
 
-        $status = (string) ($this->toArray($run)['status'] ?? '');
-        if (in_array($status, self::ALLOWED_STATUSES, true) === false) {
-            return GuardResult::deny(sprintf(
-                'De loonrun heeft status "%s"; controleren kan pas nadat de loonrun is goedgekeurd, geboekt of uitbetaald.',
-                $status !== '' ? $status : 'onbekend'
-            ));
-        }
+		if (is_object($run) === true && method_exists($run, 'jsonSerialize') === true) {
+			return (array)$run->jsonSerialize();
+		}
 
-        return GuardResult::allow();
+		return [];
+	}//end toArray()
 
-    }//end check()
+	/**
+	 * @return mixed The OpenRegister ObjectService.
+	 */
+	private function objectService(): mixed {
+		// ADR-083: establish availability before reaching. class_exists() rather
+		// than SettingsService::isOpenRegisterAvailable(), because this guard
+		// does not inject SettingsService and adding a constructor dependency
+		// to a lifecycle guard purely to ask a yes/no question is the wrong
+		// trade. It answers the same question the container would otherwise
+		// have answered fatally.
+		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
+			throw new RuntimeException(
+				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+			);
+		}
 
+		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+	}//end objectService()
 
-    /**
-     * Normalise an ObjectService lookup result (entity or array) to an array.
-     *
-     * @param mixed $run The loaded PayrollRun, or an unexpected shape.
-     *
-     * @return array<string, mixed>
-     */
-    private function toArray(mixed $run): array
-    {
-        if (is_array($run) === true) {
-            return $run;
-        }
-
-        if (is_object($run) === true && method_exists($run, 'jsonSerialize') === true) {
-            return (array) $run->jsonSerialize();
-        }
-
-        return [];
-
-    }//end toArray()
-
-
-    /**
-     * @return mixed The OpenRegister ObjectService.
-     */
-    private function objectService(): mixed
-    {
-        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-    }//end objectService()
-
-
-    /**
-     * @return string The configured register slug.
-     */
-    private function register(): string
-    {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');
-        return $register === '' ? 'hrmq' : $register;
-
-    }//end register()
-
+	/**
+	 * @return string The configured register slug.
+	 */
+	private function register(): string {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');
+		return $register === '' ? 'hrmq' : $register;
+	}//end register()
 
 }//end class

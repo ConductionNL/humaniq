@@ -40,74 +40,66 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * occ command that posts approved payroll runs into shillinq's GL journal.
  */
-class GlPostRunCommand extends Command
-{
+class GlPostRunCommand extends Command {
 
+	/**
+	 * @param PayrollGLPostService $service The GL-posting service.
+	 */
+	public function __construct(
+		private readonly PayrollGLPostService $service,
+	) {
+		parent::__construct();
 
-    /**
-     * @param PayrollGLPostService $service The GL-posting service.
-     */
-    public function __construct(
-        private readonly PayrollGLPostService $service,
-    ) {
-        parent::__construct();
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * @return void
+	 */
+	protected function configure(): void {
+		$this->setName('hrmq:glpost:run')
+			->setDescription('Post each approved PayrollRun as a balanced loonjournaalpost into shillinq (MVP trigger; run on operator demand).')
+			->addOption('period', null, InputOption::VALUE_REQUIRED, 'Only post runs for this wage period (YYYY-MM).');
 
+	}//end configure()
 
-    /**
-     * @return void
-     */
-    protected function configure(): void
-    {
-        $this->setName('hrmq:glpost:run')
-            ->setDescription('Post each approved PayrollRun as a balanced loonjournaalpost into shillinq (MVP trigger; run on operator demand).')
-            ->addOption('period', null, InputOption::VALUE_REQUIRED, 'Only post runs for this wage period (YYYY-MM).');
+	/**
+	 * @param InputInterface $input Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return int 0 when every selected run ends posted/skipped-no-shillinq, 1 when any ends failed.
+	 *
+	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-006
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output): int {
+		$periodOption = $input->getOption('period');
+		$period = (is_string($periodOption) === true && trim($periodOption) !== '') ? trim($periodOption) : null;
 
-    }//end configure()
+		$results = $this->service->postApprovedRuns($period);
 
+		$output->writeln('<info>Hrmq payroll GL-post</info>');
 
-    /**
-     * @param InputInterface  $input  Console input.
-     * @param OutputInterface $output Console output.
-     *
-     * @return int 0 when every selected run ends posted/skipped-no-shillinq, 1 when any ends failed.
-     *
-     * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-006
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        $periodOption = $input->getOption('period');
-        $period       = (is_string($periodOption) === true && trim($periodOption) !== '') ? trim($periodOption) : null;
+		if ($results === []) {
+			$output->writeln('  geen goedgekeurde loonruns geselecteerd' . ($period !== null ? ' voor periode ' . $period : '') . '.');
+			return 0;
+		}
 
-        $results = $this->service->postApprovedRuns($period);
+		$failed = 0;
+		foreach ($results as $result) {
+			$status = (string)$result['status'];
+			$line = sprintf('  run %s: %s — %s', (string)$result['runId'], $status, (string)$result['message']);
 
-        $output->writeln('<info>Hrmq payroll GL-post</info>');
+			if ($status === 'failed') {
+				$failed++;
+				$output->writeln('<error>' . $line . '</error>');
+				continue;
+			}
 
-        if ($results === []) {
-            $output->writeln('  geen goedgekeurde loonruns geselecteerd'.($period !== null ? ' voor periode '.$period : '').'.');
-            return 0;
-        }
+			$output->writeln($line);
+		}
 
-        $failed = 0;
-        foreach ($results as $result) {
-            $status = (string) $result['status'];
-            $line   = sprintf('  run %s: %s — %s', (string) $result['runId'], $status, (string) $result['message']);
+		$output->writeln(sprintf('  %d run(s) verwerkt, %d mislukt.', count($results), $failed));
 
-            if ($status === 'failed') {
-                $failed++;
-                $output->writeln('<error>'.$line.'</error>');
-                continue;
-            }
-
-            $output->writeln($line);
-        }
-
-        $output->writeln(sprintf('  %d run(s) verwerkt, %d mislukt.', count($results), $failed));
-
-        return $failed > 0 ? 1 : 0;
-
-    }//end execute()
-
+		return $failed > 0 ? 1 : 0;
+	}//end execute()
 
 }//end class

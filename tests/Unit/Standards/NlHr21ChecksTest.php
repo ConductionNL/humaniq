@@ -41,278 +41,249 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
  */
-class NlHr21ChecksTest extends TestCase
-{
+class NlHr21ChecksTest extends TestCase {
 
+	/**
+	 * Reset every statically-memoised layer so each test loads the real
+	 * catalogue/corpus fresh.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		RuleEngine::reset();
+		RuleCatalogue::reset();
 
-    /**
-     * Reset every statically-memoised layer so each test loads the real
-     * catalogue/corpus fresh.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        RuleEngine::reset();
-        RuleCatalogue::reset();
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * @return void
+	 */
+	protected function tearDown(): void {
+		RuleEngine::reset();
+		RuleCatalogue::reset();
 
+	}//end tearDown()
 
-    /**
-     * @return void
-     */
-    protected function tearDown(): void
-    {
-        RuleEngine::reset();
-        RuleCatalogue::reset();
+	/**
+	 * Whether the evaluated violations contain a given rule id.
+	 *
+	 * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
+	 * @param string $ruleId The rule id to look for.
+	 *
+	 * @return bool
+	 */
+	private function hasViolation(array $violations, string $ruleId): bool {
+		foreach ($violations as $violation) {
+			if ($violation->ruleId === $ruleId) {
+				return true;
+			}
+		}
 
-    }//end tearDown()
+		return false;
+	}//end hasViolation()
 
+	/**
+	 * An hr21 context with one Normfunctie's `{caoSchaal, caoSchaalVerified}`.
+	 *
+	 * @param string $normfunctieId The Normfunctie id.
+	 * @param string $caoSchaal Its mapped schaal.
+	 * @param bool $caoSchaalVerified Whether the mapping is verified.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function context(string $normfunctieId, string $caoSchaal, bool $caoSchaalVerified): array {
+		return [
+			'hr21' => [
+				'normfunctiesById' => [
+					$normfunctieId => ['caoSchaal' => $caoSchaal, 'caoSchaalVerified' => $caoSchaalVerified],
+				],
+			],
+		];
 
-    /**
-     * Whether the evaluated violations contain a given rule id.
-     *
-     * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
-     * @param string                                    $ruleId     The rule id to look for.
-     *
-     * @return bool
-     */
-    private function hasViolation(array $violations, string $ruleId): bool
-    {
-        foreach ($violations as $violation) {
-            if ($violation->ruleId === $ruleId) {
-                return true;
-            }
-        }
+	}//end context()
 
-        return false;
+	/**
+	 * The rule is registered against EmploymentContract AND wired to the
+	 * corpus — i.e. reachable, not an orphaned predicate.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
+	 */
+	public function testSchaalConsistentieCheckIsReachableFromTheEngine(): void {
+		$this->assertArrayHasKey('nl-hr21-schaal-consistentie', (NlHr21Checks::checks()['EmploymentContract'] ?? []));
+		$this->assertContains('nl-hr21-schaal-consistentie', RuleEngine::checkedRuleIds());
 
-    }//end hasViolation()
+	}//end testSchaalConsistentieCheckIsReachableFromTheEngine()
 
+	/**
+	 * A contract whose own caoSchaal disagrees with its verified normfunctie's
+	 * mapped schaal is a mandatory violation.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
+	 */
+	public function testMismatchedSchaalRaisesMandatoryViolation(): void {
+		$contract = ['normfunctieId' => 'nf-1', 'caoSchaal' => '6'];
+		$violations = RuleEngine::evaluate('EmploymentContract', $contract, $this->context('nf-1', '8', true));
 
-    /**
-     * An hr21 context with one Normfunctie's `{caoSchaal, caoSchaalVerified}`.
-     *
-     * @param string $normfunctieId    The Normfunctie id.
-     * @param string $caoSchaal        Its mapped schaal.
-     * @param bool   $caoSchaalVerified Whether the mapping is verified.
-     *
-     * @return array<string, mixed>
-     */
-    private function context(string $normfunctieId, string $caoSchaal, bool $caoSchaalVerified): array
-    {
-        return [
-            'hr21' => [
-                'normfunctiesById' => [
-                    $normfunctieId => ['caoSchaal' => $caoSchaal, 'caoSchaalVerified' => $caoSchaalVerified],
-                ],
-            ],
-        ];
+		$this->assertTrue($this->hasViolation($violations, 'nl-hr21-schaal-consistentie'));
 
-    }//end context()
+		$rule = null;
+		foreach ($violations as $violation) {
+			if ($violation->ruleId === 'nl-hr21-schaal-consistentie') {
+				$rule = $violation;
+			}
+		}
 
+		$this->assertNotNull($rule);
+		$this->assertSame('mandatory', $rule->severity);
 
-    /**
-     * The rule is registered against EmploymentContract AND wired to the
-     * corpus — i.e. reachable, not an orphaned predicate.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
-     */
-    public function testSchaalConsistentieCheckIsReachableFromTheEngine(): void
-    {
-        $this->assertArrayHasKey('nl-hr21-schaal-consistentie', (NlHr21Checks::checks()['EmploymentContract'] ?? []));
-        $this->assertContains('nl-hr21-schaal-consistentie', RuleEngine::checkedRuleIds());
+	}//end testMismatchedSchaalRaisesMandatoryViolation()
 
-    }//end testSchaalConsistentieCheckIsReachableFromTheEngine()
+	/**
+	 * A contract whose own caoSchaal matches its verified normfunctie's mapped
+	 * schaal passes.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
+	 */
+	public function testMatchingSchaalPasses(): void {
+		$contract = ['normfunctieId' => 'nf-1', 'caoSchaal' => '8'];
+		$violations = RuleEngine::evaluate('EmploymentContract', $contract, $this->context('nf-1', '8', true));
 
+		$this->assertFalse($this->hasViolation($violations, 'nl-hr21-schaal-consistentie'));
 
-    /**
-     * A contract whose own caoSchaal disagrees with its verified normfunctie's
-     * mapped schaal is a mandatory violation.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
-     */
-    public function testMismatchedSchaalRaisesMandatoryViolation(): void
-    {
-        $contract   = ['normfunctieId' => 'nf-1', 'caoSchaal' => '6'];
-        $violations = RuleEngine::evaluate('EmploymentContract', $contract, $this->context('nf-1', '8', true));
+	}//end testMatchingSchaalPasses()
 
-        $this->assertTrue($this->hasViolation($violations, 'nl-hr21-schaal-consistentie'));
+	/**
+	 * A contract with no normfunctieId is out of scope — vacuous, regardless
+	 * of its own caoSchaal.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
+	 */
+	public function testNullNormfunctieIdIsVacuous(): void {
+		$contract = ['normfunctieId' => null, 'caoSchaal' => '6'];
+		$violations = RuleEngine::evaluate('EmploymentContract', $contract, $this->context('nf-1', '8', true));
 
-        $rule = null;
-        foreach ($violations as $violation) {
-            if ($violation->ruleId === 'nl-hr21-schaal-consistentie') {
-                $rule = $violation;
-            }
-        }
+		$this->assertFalse($this->hasViolation($violations, 'nl-hr21-schaal-consistentie'));
 
-        $this->assertNotNull($rule);
-        $this->assertSame('mandatory', $rule->severity);
+	}//end testNullNormfunctieIdIsVacuous()
 
-    }//end testMismatchedSchaalRaisesMandatoryViolation()
+	/**
+	 * An unresolvable normfunctieId (not present in the audit context) is
+	 * vacuous — nothing decidable from this object alone.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
+	 */
+	public function testUnresolvableNormfunctieIsVacuous(): void {
+		$contract = ['normfunctieId' => 'no-such-normfunctie', 'caoSchaal' => '6'];
+		$violations = RuleEngine::evaluate('EmploymentContract', $contract, $this->context('nf-1', '8', true));
 
+		$this->assertFalse($this->hasViolation($violations, 'nl-hr21-schaal-consistentie'));
 
-    /**
-     * A contract whose own caoSchaal matches its verified normfunctie's mapped
-     * schaal passes.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
-     */
-    public function testMatchingSchaalPasses(): void
-    {
-        $contract   = ['normfunctieId' => 'nf-1', 'caoSchaal' => '8'];
-        $violations = RuleEngine::evaluate('EmploymentContract', $contract, $this->context('nf-1', '8', true));
+	}//end testUnresolvableNormfunctieIsVacuous()
 
-        $this->assertFalse($this->hasViolation($violations, 'nl-hr21-schaal-consistentie'));
+	/**
+	 * A placeholder (unverified) mapping is advisory, never a false mandatory
+	 * violation, even when the contract's caoSchaal disagrees with the
+	 * unverified mapped schaal.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
+	 */
+	public function testUnverifiedMappingIsVacuousEvenOnMismatch(): void {
+		$contract = ['normfunctieId' => 'nf-1', 'caoSchaal' => '6'];
+		$violations = RuleEngine::evaluate('EmploymentContract', $contract, $this->context('nf-1', '8', false));
 
-    }//end testMatchingSchaalPasses()
+		$this->assertFalse($this->hasViolation($violations, 'nl-hr21-schaal-consistentie'));
 
+	}//end testUnverifiedMappingIsVacuousEvenOnMismatch()
 
-    /**
-     * A contract with no normfunctieId is out of scope — vacuous, regardless
-     * of its own caoSchaal.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
-     */
-    public function testNullNormfunctieIdIsVacuous(): void
-    {
-        $contract   = ['normfunctieId' => null, 'caoSchaal' => '6'];
-        $violations = RuleEngine::evaluate('EmploymentContract', $contract, $this->context('nf-1', '8', true));
+	/**
+	 * The illustrative Normfunctie seed: every row is well-formed (natural
+	 * key, no full ~150-catalog claim implied by row count), and exactly one
+	 * row is `caoSchaalVerified: true` (the deliberate, documented proof-case
+	 * exception — tasks.md #11), every other row `caoSchaalVerified: false`
+	 * (the honesty bar: an unconfirmed mapping never silently reads as
+	 * confirmed).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-001
+	 */
+	public function testSeedIsIllustrativeSubsetWithOneDocumentedVerifiedException(): void {
+		$rows = (NlHr21Checks::seedObjects()['Normfunctie'] ?? []);
+		$this->assertNotEmpty($rows);
+		$this->assertLessThanOrEqual(6, count($rows));
+		$this->assertGreaterThanOrEqual(4, count($rows));
 
-        $this->assertFalse($this->hasViolation($violations, 'nl-hr21-schaal-consistentie'));
+		$verifiedCount = 0;
+		$codes = [];
+		foreach ($rows as $row) {
+			$this->assertNotEmpty((string)($row['functiecode'] ?? ''));
+			$this->assertNotEmpty((string)($row['naam'] ?? ''));
+			$this->assertNotEmpty((string)($row['functiegroep'] ?? ''));
+			$this->assertNotEmpty((string)($row['caoSchaal'] ?? ''));
+			$this->assertNotEmpty((string)($row['caoSchaalSource'] ?? ''));
+			$codes[] = $row['functiecode'];
 
-    }//end testNullNormfunctieIdIsVacuous()
+			if (($row['caoSchaalVerified'] ?? false) === true) {
+				$verifiedCount++;
+				// The single verified row must document that it's a proof
+				// case, not an actual VNG/HR21 confirmation.
+				$this->assertStringContainsString('proof-case', (string)$row['caoSchaalSource']);
+			}
+		}
 
+		$this->assertSame(1, $verifiedCount, 'exactly one seeded row is the documented verified proof-case exception');
+		$this->assertSame(count($codes), count(array_unique($codes)), 'no duplicate functiecode in the seed');
 
-    /**
-     * An unresolvable normfunctieId (not present in the audit context) is
-     * vacuous — nothing decidable from this object alone.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
-     */
-    public function testUnresolvableNormfunctieIsVacuous(): void
-    {
-        $contract   = ['normfunctieId' => 'no-such-normfunctie', 'caoSchaal' => '6'];
-        $violations = RuleEngine::evaluate('EmploymentContract', $contract, $this->context('nf-1', '8', true));
+	}//end testSeedIsIllustrativeSubsetWithOneDocumentedVerifiedException()
 
-        $this->assertFalse($this->hasViolation($violations, 'nl-hr21-schaal-consistentie'));
+	/**
+	 * Spans at least 2 hoofdprocessen (design.md Seed Data: "2-3
+	 * hoofdprocessen").
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-005
+	 */
+	public function testSeedSpansMultipleHoofdprocessen(): void {
+		$rows = (NlHr21Checks::seedObjects()['Normfunctie'] ?? []);
+		$functiegroepen = array_unique(array_map(static fn (array $r): string => (string)$r['functiegroep'], $rows));
 
-    }//end testUnresolvableNormfunctieIsVacuous()
+		$this->assertGreaterThanOrEqual(2, count($functiegroepen));
 
+	}//end testSeedSpansMultipleHoofdprocessen()
 
-    /**
-     * A placeholder (unverified) mapping is advisory, never a false mandatory
-     * violation, even when the contract's caoSchaal disagrees with the
-     * unverified mapped schaal.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-003
-     */
-    public function testUnverifiedMappingIsVacuousEvenOnMismatch(): void
-    {
-        $contract   = ['normfunctieId' => 'nf-1', 'caoSchaal' => '6'];
-        $violations = RuleEngine::evaluate('EmploymentContract', $contract, $this->context('nf-1', '8', false));
+	/**
+	 * `seedObjects()` is a pure, side-effect-free data provider: calling it
+	 * twice yields byte-identical rows (no randomness, no accumulating
+	 * state), so the "create only when the type is empty" seeder discipline
+	 * (RuleTestDataSeeder::createMissingSamples) never sees drift across
+	 * repeated calls and a re-seed never produces a duplicate row.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-001
+	 */
+	public function testSeedObjectsIsIdempotentAcrossCalls(): void {
+		$first = NlHr21Checks::seedObjects();
+		$second = NlHr21Checks::seedObjects();
 
-        $this->assertFalse($this->hasViolation($violations, 'nl-hr21-schaal-consistentie'));
+		$this->assertSame($first, $second);
 
-    }//end testUnverifiedMappingIsVacuousEvenOnMismatch()
+		$codes = array_map(static fn (array $r): string => (string)$r['functiecode'], ($first['Normfunctie'] ?? []));
+		$this->assertSame(count($codes), count(array_unique($codes)), 'no duplicate functiecode across repeated calls');
 
-
-    /**
-     * The illustrative Normfunctie seed: every row is well-formed (natural
-     * key, no full ~150-catalog claim implied by row count), and exactly one
-     * row is `caoSchaalVerified: true` (the deliberate, documented proof-case
-     * exception — tasks.md #11), every other row `caoSchaalVerified: false`
-     * (the honesty bar: an unconfirmed mapping never silently reads as
-     * confirmed).
-     *
-     * @return void
-     *
-     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-001
-     */
-    public function testSeedIsIllustrativeSubsetWithOneDocumentedVerifiedException(): void
-    {
-        $rows = (NlHr21Checks::seedObjects()['Normfunctie'] ?? []);
-        $this->assertNotEmpty($rows);
-        $this->assertLessThanOrEqual(6, count($rows));
-        $this->assertGreaterThanOrEqual(4, count($rows));
-
-        $verifiedCount = 0;
-        $codes         = [];
-        foreach ($rows as $row) {
-            $this->assertNotEmpty((string) ($row['functiecode'] ?? ''));
-            $this->assertNotEmpty((string) ($row['naam'] ?? ''));
-            $this->assertNotEmpty((string) ($row['functiegroep'] ?? ''));
-            $this->assertNotEmpty((string) ($row['caoSchaal'] ?? ''));
-            $this->assertNotEmpty((string) ($row['caoSchaalSource'] ?? ''));
-            $codes[] = $row['functiecode'];
-
-            if (($row['caoSchaalVerified'] ?? false) === true) {
-                $verifiedCount++;
-                // The single verified row must document that it's a proof
-                // case, not an actual VNG/HR21 confirmation.
-                $this->assertStringContainsString('proof-case', (string) $row['caoSchaalSource']);
-            }
-        }
-
-        $this->assertSame(1, $verifiedCount, 'exactly one seeded row is the documented verified proof-case exception');
-        $this->assertSame(count($codes), count(array_unique($codes)), 'no duplicate functiecode in the seed');
-
-    }//end testSeedIsIllustrativeSubsetWithOneDocumentedVerifiedException()
-
-
-    /**
-     * Spans at least 2 hoofdprocessen (design.md Seed Data: "2-3
-     * hoofdprocessen").
-     *
-     * @return void
-     *
-     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-005
-     */
-    public function testSeedSpansMultipleHoofdprocessen(): void
-    {
-        $rows          = (NlHr21Checks::seedObjects()['Normfunctie'] ?? []);
-        $functiegroepen = array_unique(array_map(static fn (array $r): string => (string) $r['functiegroep'], $rows));
-
-        $this->assertGreaterThanOrEqual(2, count($functiegroepen));
-
-    }//end testSeedSpansMultipleHoofdprocessen()
-
-
-    /**
-     * `seedObjects()` is a pure, side-effect-free data provider: calling it
-     * twice yields byte-identical rows (no randomness, no accumulating
-     * state), so the "create only when the type is empty" seeder discipline
-     * (RuleTestDataSeeder::createMissingSamples) never sees drift across
-     * repeated calls and a re-seed never produces a duplicate row.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/functiehuis-hr21/specs/functiehuis-hr21/spec.md#REQ-HR21-001
-     */
-    public function testSeedObjectsIsIdempotentAcrossCalls(): void
-    {
-        $first  = NlHr21Checks::seedObjects();
-        $second = NlHr21Checks::seedObjects();
-
-        $this->assertSame($first, $second);
-
-        $codes = array_map(static fn (array $r): string => (string) $r['functiecode'], ($first['Normfunctie'] ?? []));
-        $this->assertSame(count($codes), count(array_unique($codes)), 'no duplicate functiecode across repeated calls');
-
-    }//end testSeedObjectsIsIdempotentAcrossCalls()
-
+	}//end testSeedObjectsIsIdempotentAcrossCalls()
 
 }//end class

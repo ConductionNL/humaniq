@@ -34,8 +34,6 @@ use RuntimeException;
  * Raised whenever a pack is malformed, unresolvable, out of bounds, or fails
  * its own golden vectors.
  */
-final class DslException extends RuntimeException
-{
-
+final class DslException extends RuntimeException {
 
 }//end class

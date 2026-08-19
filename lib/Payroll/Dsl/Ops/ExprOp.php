@@ -44,53 +44,46 @@ use OCA\Hrmq\Payroll\Dsl\StepContext;
 /**
  * Evaluate a closed, total arithmetic expression.
  */
-final class ExprOp extends AbstractOp
-{
+final class ExprOp extends AbstractOp {
 
+	/**
+	 * @param RefResolver $refs The reference resolver.
+	 * @param ExprEvaluator $expr The closed-grammar expression evaluator.
+	 */
+	public function __construct(
+		RefResolver $refs,
+		private readonly ExprEvaluator $expr,
+	) {
+		parent::__construct($refs);
 
-    /**
-     * @param RefResolver   $refs The reference resolver.
-     * @param ExprEvaluator $expr The closed-grammar expression evaluator.
-     */
-    public function __construct(RefResolver $refs, private readonly ExprEvaluator $expr)
-    {
-        parent::__construct($refs);
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'expr';
+	}//end name()
 
+	/**
+	 * Parse and evaluate the declared expression.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return int|float
+	 *
+	 * @throws DslException When the expression is absent or malformed.
+	 */
+	public function evaluate(array $spec, StepContext $ctx): mixed {
+		$expression = ($spec['expression'] ?? null);
+		if (is_string($expression) === false || trim($expression) === '') {
+			throw new DslException('Pack: op "expr" mist de verplichte parameter "expression".');
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'expr';
-
-    }//end name()
-
-
-    /**
-     * Parse and evaluate the declared expression.
-     *
-     * @param array<string, mixed> $spec The declared spec.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return int|float
-     *
-     * @throws DslException When the expression is absent or malformed.
-     */
-    public function evaluate(array $spec, StepContext $ctx): mixed
-    {
-        $expression = ($spec['expression'] ?? null);
-        if (is_string($expression) === false || trim($expression) === '') {
-            throw new DslException('Pack: op "expr" mist de verplichte parameter "expression".');
-        }
-
-        return $this->expr->evaluate($this->expr->parse($expression), $ctx, $this->refs);
-
-    }//end evaluate()
-
+		return $this->expr->evaluate($this->expr->parse($expression), $ctx, $this->refs);
+	}//end evaluate()
 
 }//end class

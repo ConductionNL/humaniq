@@ -44,249 +44,223 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
  */
-class RosterCheckServiceTest extends TestCase
-{
+class RosterCheckServiceTest extends TestCase {
 
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		RuleEngine::reset();
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        RuleEngine::reset();
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Build a RosterCheckService backed by a fake ObjectService that returns
+	 * $rowsBySchema[$schema] for any findAll() call.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Rows keyed by schema name.
+	 *
+	 * @return RosterCheckService
+	 */
+	private function serviceWithRows(array $rowsBySchema): RosterCheckService {
+		$objectService = new class($rowsBySchema) {
 
+			/**
+			 * @var string
+			 */
+			private string $schema = '';
 
-    /**
-     * Build a RosterCheckService backed by a fake ObjectService that returns
-     * $rowsBySchema[$schema] for any findAll() call.
-     *
-     * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Rows keyed by schema name.
-     *
-     * @return RosterCheckService
-     */
-    private function serviceWithRows(array $rowsBySchema): RosterCheckService
-    {
-        $objectService = new class ($rowsBySchema) {
+			/**
+			 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Rows keyed by schema name.
+			 */
+			public function __construct(
+				private readonly array $rowsBySchema,
+			) {
 
-            /**
-             * @var string
-             */
-            private string $schema = '';
+			}//end __construct()
 
-            /**
-             * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Rows keyed by schema name.
-             */
-            public function __construct(private readonly array $rowsBySchema)
-            {
+			/**
+			 * @param string $register Register slug (unused by the fake).
+			 *
+			 * @return self
+			 */
+			public function setRegister(string $register): self {
+				return $this;
+			}//end setRegister()
 
-            }//end __construct()
+			/**
+			 * @param string $schema Schema name.
+			 *
+			 * @return self
+			 */
+			public function setSchema(string $schema): self {
+				$this->schema = $schema;
+				return $this;
+			}//end setSchema()
 
+			/**
+			 * @param array<string, mixed> $options Query options (unused by the fake).
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(array $options = []): array {
+				return $this->rowsBySchema[$this->schema] ?? [];
+			}//end findAll()
 
-            /**
-             * @param string $register Register slug (unused by the fake).
-             *
-             * @return self
-             */
-            public function setRegister(string $register): self
-            {
-                return $this;
+		};
 
-            }//end setRegister()
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')
+			->with('OCA\OpenRegister\Service\ObjectService')
+			->willReturn($objectService);
 
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('hrmq');
 
-            /**
-             * @param string $schema Schema name.
-             *
-             * @return self
-             */
-            public function setSchema(string $schema): self
-            {
-                $this->schema = $schema;
-                return $this;
+		$logger = $this->createMock(LoggerInterface::class);
 
-            }//end setSchema()
+		return new RosterCheckService($container, $appConfig, $logger);
+	}//end serviceWithRows()
 
+	/**
+	 * A concept roster with a rest-violating consecutive-day pair is checked
+	 * on demand (regardless of publish status) and reports a mandatory
+	 * violation, cross-checking the concept roster's own assignments against
+	 * each other.
+	 *
+	 * @return void
+	 */
+	public function testConceptRosterRestViolationReportsMandatory(): void {
+		$service = $this->serviceWithRows(
+			[
+				'Roster' => [
+					['id' => 'roster-w28', 'period' => '2026-W28', 'status' => 'concept'],
+				],
+				'RosterAssignment' => [
+					['id' => 'ra-1', 'rosterId' => 'roster-w28', 'employeeId' => 'emp-1', 'shiftId' => 'shift-late', 'date' => '2026-07-13', 'plannedStart' => '2026-07-13T15:00:00', 'plannedEnd' => '2026-07-13T23:00:00', 'plannedBreakMinutes' => 30],
+					['id' => 'ra-2', 'rosterId' => 'roster-w28', 'employeeId' => 'emp-1', 'shiftId' => 'shift-early', 'date' => '2026-07-14', 'plannedStart' => '2026-07-14T06:00:00', 'plannedEnd' => '2026-07-14T14:00:00', 'plannedBreakMinutes' => 30],
+				],
+				'Shift' => [],
+			]
+		);
 
-            /**
-             * @param array<string, mixed> $options Query options (unused by the fake).
-             *
-             * @return array<int, array<string, mixed>>
-             */
-            public function findAll(array $options=[]): array
-            {
-                return $this->rowsBySchema[$this->schema] ?? [];
+		$report = $service->checkRoster('roster-w28');
 
-            }//end findAll()
+		$this->assertSame(1, $report['rostersChecked']);
+		$this->assertSame(2, $report['assignmentsChecked']);
+		$this->assertGreaterThanOrEqual(1, $report['mandatoryViolations']);
 
+		$ruleIds = array_map(static fn (array $v): string => $v['ruleId'], $report['violations']);
+		$this->assertContains('nl-atw-dagelijkse-rust', $ruleIds);
 
-        };
+	}//end testConceptRosterRestViolationReportsMandatory()
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')
-            ->with('OCA\OpenRegister\Service\ObjectService')
-            ->willReturn($objectService);
+	/**
+	 * A compliant roster reports no violations.
+	 *
+	 * @return void
+	 */
+	public function testCompliantRosterReportsNoViolations(): void {
+		$service = $this->serviceWithRows(
+			[
+				'Roster' => [
+					['id' => 'roster-ok', 'period' => '2026-W29', 'status' => 'gepubliceerd'],
+				],
+				'RosterAssignment' => [
+					['id' => 'ra-ok', 'rosterId' => 'roster-ok', 'employeeId' => 'emp-2', 'shiftId' => 'shift-day', 'date' => '2026-07-20', 'plannedStart' => '2026-07-20T07:00:00', 'plannedEnd' => '2026-07-20T15:30:00', 'plannedBreakMinutes' => 30],
+				],
+				'Shift' => [],
+			]
+		);
 
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturn('hrmq');
+		$report = $service->checkRoster('roster-ok');
 
-        $logger = $this->createMock(LoggerInterface::class);
+		$this->assertSame(1, $report['rostersChecked']);
+		$this->assertSame(1, $report['assignmentsChecked']);
+		$this->assertSame(0, $report['mandatoryViolations']);
+		$this->assertSame([], $report['violations']);
 
-        return new RosterCheckService($container, $appConfig, $logger);
+	}//end testCompliantRosterReportsNoViolations()
 
-    }//end serviceWithRows()
+	/**
+	 * An assignment missing its projected planned-clock fields is filled
+	 * in-memory from its referenced Shift for the purposes of the check
+	 * (design D2), so a max-werkdag breach is still detected.
+	 *
+	 * @return void
+	 */
+	public function testMissingProjectionIsFilledFromShift(): void {
+		$service = $this->serviceWithRows(
+			[
+				'Roster' => [
+					['id' => 'roster-proj', 'period' => '2026-W30', 'status' => 'concept'],
+				],
+				'RosterAssignment' => [
+					// No plannedStart/plannedEnd/plannedBreakMinutes — must be projected from the Shift.
+					['id' => 'ra-proj', 'rosterId' => 'roster-proj', 'employeeId' => 'emp-3', 'shiftId' => 'shift-long', 'date' => '2026-07-27'],
+				],
+				'Shift' => [
+					// 08:00 -> 21:00 = 13h — breaches nl-atw-max-werkdag.
+					['id' => 'shift-long', 'startTime' => '08:00', 'endTime' => '21:00', 'breakMinutes' => 45],
+				],
+			]
+		);
 
+		$report = $service->checkRoster('roster-proj');
 
-    /**
-     * A concept roster with a rest-violating consecutive-day pair is checked
-     * on demand (regardless of publish status) and reports a mandatory
-     * violation, cross-checking the concept roster's own assignments against
-     * each other.
-     *
-     * @return void
-     */
-    public function testConceptRosterRestViolationReportsMandatory(): void
-    {
-        $service = $this->serviceWithRows(
-            [
-                'Roster'           => [
-                    ['id' => 'roster-w28', 'period' => '2026-W28', 'status' => 'concept'],
-                ],
-                'RosterAssignment' => [
-                    ['id' => 'ra-1', 'rosterId' => 'roster-w28', 'employeeId' => 'emp-1', 'shiftId' => 'shift-late', 'date' => '2026-07-13', 'plannedStart' => '2026-07-13T15:00:00', 'plannedEnd' => '2026-07-13T23:00:00', 'plannedBreakMinutes' => 30],
-                    ['id' => 'ra-2', 'rosterId' => 'roster-w28', 'employeeId' => 'emp-1', 'shiftId' => 'shift-early', 'date' => '2026-07-14', 'plannedStart' => '2026-07-14T06:00:00', 'plannedEnd' => '2026-07-14T14:00:00', 'plannedBreakMinutes' => 30],
-                ],
-                'Shift'            => [],
-            ]
-        );
+		$this->assertSame(1, $report['assignmentsChecked']);
+		$ruleIds = array_map(static fn (array $v): string => $v['ruleId'], $report['violations']);
+		$this->assertContains('nl-atw-max-werkdag', $ruleIds);
 
-        $report = $service->checkRoster('roster-w28');
+	}//end testMissingProjectionIsFilledFromShift()
 
-        $this->assertSame(1, $report['rostersChecked']);
-        $this->assertSame(2, $report['assignmentsChecked']);
-        $this->assertGreaterThanOrEqual(1, $report['mandatoryViolations']);
+	/**
+	 * An unknown roster id resolves nothing and reports zero rosters checked.
+	 *
+	 * @return void
+	 */
+	public function testUnknownRosterReportsZero(): void {
+		$service = $this->serviceWithRows(
+			[
+				'Roster' => [['id' => 'roster-x', 'period' => '2026-W28', 'status' => 'concept']],
+				'RosterAssignment' => [],
+				'Shift' => [],
+			]
+		);
 
-        $ruleIds = array_map(static fn(array $v): string => $v['ruleId'], $report['violations']);
-        $this->assertContains('nl-atw-dagelijkse-rust', $ruleIds);
+		$report = $service->checkRoster('does-not-exist');
 
-    }//end testConceptRosterRestViolationReportsMandatory()
+		$this->assertSame(0, $report['rostersChecked']);
+		$this->assertSame(0, $report['assignmentsChecked']);
+		$this->assertSame([], $report['violations']);
 
+	}//end testUnknownRosterReportsZero()
 
-    /**
-     * A compliant roster reports no violations.
-     *
-     * @return void
-     */
-    public function testCompliantRosterReportsNoViolations(): void
-    {
-        $service = $this->serviceWithRows(
-            [
-                'Roster'           => [
-                    ['id' => 'roster-ok', 'period' => '2026-W29', 'status' => 'gepubliceerd'],
-                ],
-                'RosterAssignment' => [
-                    ['id' => 'ra-ok', 'rosterId' => 'roster-ok', 'employeeId' => 'emp-2', 'shiftId' => 'shift-day', 'date' => '2026-07-20', 'plannedStart' => '2026-07-20T07:00:00', 'plannedEnd' => '2026-07-20T15:30:00', 'plannedBreakMinutes' => 30],
-                ],
-                'Shift'            => [],
-            ]
-        );
+	/**
+	 * `checkPeriod()` resolves every roster of a period and evaluates their
+	 * assignments.
+	 *
+	 * @return void
+	 */
+	public function testCheckPeriodResolvesRostersOfThePeriod(): void {
+		$service = $this->serviceWithRows(
+			[
+				'Roster' => [
+					['id' => 'roster-a', 'period' => '2026-W28', 'status' => 'concept'],
+					['id' => 'roster-b', 'period' => '2026-W29', 'status' => 'concept'],
+				],
+				'RosterAssignment' => [
+					['id' => 'ra-a', 'rosterId' => 'roster-a', 'employeeId' => 'emp-4', 'shiftId' => 's', 'date' => '2026-07-13', 'plannedStart' => '2026-07-13T07:00:00', 'plannedEnd' => '2026-07-13T15:30:00', 'plannedBreakMinutes' => 30],
+				],
+				'Shift' => [],
+			]
+		);
 
-        $report = $service->checkRoster('roster-ok');
+		$report = $service->checkPeriod('2026-W28');
 
-        $this->assertSame(1, $report['rostersChecked']);
-        $this->assertSame(1, $report['assignmentsChecked']);
-        $this->assertSame(0, $report['mandatoryViolations']);
-        $this->assertSame([], $report['violations']);
+		$this->assertSame(1, $report['rostersChecked']);
+		$this->assertSame(1, $report['assignmentsChecked']);
 
-    }//end testCompliantRosterReportsNoViolations()
-
-
-    /**
-     * An assignment missing its projected planned-clock fields is filled
-     * in-memory from its referenced Shift for the purposes of the check
-     * (design D2), so a max-werkdag breach is still detected.
-     *
-     * @return void
-     */
-    public function testMissingProjectionIsFilledFromShift(): void
-    {
-        $service = $this->serviceWithRows(
-            [
-                'Roster'           => [
-                    ['id' => 'roster-proj', 'period' => '2026-W30', 'status' => 'concept'],
-                ],
-                'RosterAssignment' => [
-                    // No plannedStart/plannedEnd/plannedBreakMinutes — must be projected from the Shift.
-                    ['id' => 'ra-proj', 'rosterId' => 'roster-proj', 'employeeId' => 'emp-3', 'shiftId' => 'shift-long', 'date' => '2026-07-27'],
-                ],
-                'Shift'            => [
-                    // 08:00 -> 21:00 = 13h — breaches nl-atw-max-werkdag.
-                    ['id' => 'shift-long', 'startTime' => '08:00', 'endTime' => '21:00', 'breakMinutes' => 45],
-                ],
-            ]
-        );
-
-        $report = $service->checkRoster('roster-proj');
-
-        $this->assertSame(1, $report['assignmentsChecked']);
-        $ruleIds = array_map(static fn(array $v): string => $v['ruleId'], $report['violations']);
-        $this->assertContains('nl-atw-max-werkdag', $ruleIds);
-
-    }//end testMissingProjectionIsFilledFromShift()
-
-
-    /**
-     * An unknown roster id resolves nothing and reports zero rosters checked.
-     *
-     * @return void
-     */
-    public function testUnknownRosterReportsZero(): void
-    {
-        $service = $this->serviceWithRows(
-            [
-                'Roster'           => [['id' => 'roster-x', 'period' => '2026-W28', 'status' => 'concept']],
-                'RosterAssignment' => [],
-                'Shift'            => [],
-            ]
-        );
-
-        $report = $service->checkRoster('does-not-exist');
-
-        $this->assertSame(0, $report['rostersChecked']);
-        $this->assertSame(0, $report['assignmentsChecked']);
-        $this->assertSame([], $report['violations']);
-
-    }//end testUnknownRosterReportsZero()
-
-
-    /**
-     * `checkPeriod()` resolves every roster of a period and evaluates their
-     * assignments.
-     *
-     * @return void
-     */
-    public function testCheckPeriodResolvesRostersOfThePeriod(): void
-    {
-        $service = $this->serviceWithRows(
-            [
-                'Roster'           => [
-                    ['id' => 'roster-a', 'period' => '2026-W28', 'status' => 'concept'],
-                    ['id' => 'roster-b', 'period' => '2026-W29', 'status' => 'concept'],
-                ],
-                'RosterAssignment' => [
-                    ['id' => 'ra-a', 'rosterId' => 'roster-a', 'employeeId' => 'emp-4', 'shiftId' => 's', 'date' => '2026-07-13', 'plannedStart' => '2026-07-13T07:00:00', 'plannedEnd' => '2026-07-13T15:30:00', 'plannedBreakMinutes' => 30],
-                ],
-                'Shift'            => [],
-            ]
-        );
-
-        $report = $service->checkPeriod('2026-W28');
-
-        $this->assertSame(1, $report['rostersChecked']);
-        $this->assertSame(1, $report['assignmentsChecked']);
-
-    }//end testCheckPeriodResolvesRostersOfThePeriod()
-
+	}//end testCheckPeriodResolvesRostersOfThePeriod()
 
 }//end class

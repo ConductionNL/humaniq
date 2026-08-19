@@ -103,8 +103,9 @@
                         "type": "string",
                         "format": "uuid",
                         "nullable": true,
+                        "x-external-register": "pipelinq",
                         "title": "Client",
-                        "description": "Optional UUID reference to the client domain object (contact/organisation) who reviews and approves the billable hours on this timesheet — a domain-object reference, never a Nextcloud user id (ADR-046 A4). Scopes the read-only client view in the shared external portal (portaliq scopeField)."
+                        "description": "Optional UUID reference to the client domain object (contact/organisation) who reviews and approves the billable hours on this timesheet — a domain-object reference, never a Nextcloud user id (ADR-046 A4). Cross-app reference: the target `client` schema lives in pipelinq's register, not hrmq's, so this is a plain identifier rather than an OpenRegister relation — see x-external-register. Deliberately NOT a $ref: OpenRegister resolves $ref within one register set, so a $ref here would name a schema it can never resolve. Scopes the read-only client view in the shared external portal (portaliq scopeField)."
                     },
                     "userId": {
                         "type": "string",

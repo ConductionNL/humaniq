@@ -45,153 +45,150 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Guarded endpoint that effectuates one approved, due CompAdjustment.
  */
-class CompController extends Controller
-{
+class CompController extends Controller {
 
+	/**
+	 * @param IRequest $request The request object.
+	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
+	 * @param CompAdjustmentService $compAdjustmentService The effective-dating write service.
+	 * @param SettingsService $settingsService The register-slug source.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly ContainerInterface $container,
+		private readonly CompAdjustmentService $compAdjustmentService,
+		private readonly SettingsService $settingsService,
+		private readonly LoggerInterface $logger,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
 
-    /**
-     * @param IRequest               $request               The request object.
-     * @param ContainerInterface     $container             DI container for the RBAC-guarded ObjectService resolve.
-     * @param CompAdjustmentService  $compAdjustmentService The effective-dating write service.
-     * @param SettingsService        $settingsService       The register-slug source.
-     * @param LoggerInterface        $logger                Logger.
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly ContainerInterface $container,
-        private readonly CompAdjustmentService $compAdjustmentService,
-        private readonly SettingsService $settingsService,
-        private readonly LoggerInterface $logger,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * `POST /api/comp/effectuate` — effectuate one approved, due
+	 * CompAdjustment. The posted `adjustmentId` must resolve through
+	 * ObjectService under the caller's RBAC before anything is written
+	 * (unknown/unauthorized -> 404); a non-approved adjustment is refused
+	 * (400) before the service is invoked.
+	 *
+	 * @param string|null $adjustmentId The CompAdjustment id (row-scoped, `@objectId` from the manifest action).
+	 *
+	 * @return JSONResponse The effectuation outcome, 400 on a missing/non-approved adjustment, 404 when it does not resolve.
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-006
+	 */
+	#[NoAdminRequired]
+	public function effectuate(?string $adjustmentId = null): JSONResponse {
+		$adjustmentId = trim((string)$adjustmentId);
+		if ($adjustmentId === '') {
+			return new JSONResponse(['error' => 'adjustmentId is verplicht.'], Http::STATUS_BAD_REQUEST);
+		}
 
+		// No-admin-idor guard (ADR-005 Rule 3): the adjustment must resolve
+		// through OpenRegister's ObjectService under the caller's RBAC before
+		// any write — an unresolvable/unauthorized id never reaches the
+		// effectuation service.
+		$adjustment = $this->authorizeAdjustment($adjustmentId);
+		if ($adjustment === null) {
+			return new JSONResponse(['error' => 'Aanpassing niet gevonden.'], Http::STATUS_NOT_FOUND);
+		}
 
-    /**
-     * `POST /api/comp/effectuate` — effectuate one approved, due
-     * CompAdjustment. The posted `adjustmentId` must resolve through
-     * ObjectService under the caller's RBAC before anything is written
-     * (unknown/unauthorized -> 404); a non-approved adjustment is refused
-     * (400) before the service is invoked.
-     *
-     * @param string|null $adjustmentId The CompAdjustment id (row-scoped, `@objectId` from the manifest action).
-     *
-     * @return JSONResponse The effectuation outcome, 400 on a missing/non-approved adjustment, 404 when it does not resolve.
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-006
-     */
-    #[NoAdminRequired]
-    public function effectuate(?string $adjustmentId=null): JSONResponse
-    {
-        $adjustmentId = trim((string) $adjustmentId);
-        if ($adjustmentId === '') {
-            return new JSONResponse(['error' => 'adjustmentId is verplicht.'], Http::STATUS_BAD_REQUEST);
-        }
+		$status = (string)($adjustment['status'] ?? '');
+		if ($status !== 'approved') {
+			return new JSONResponse(
+				['error' => 'Aanpassing heeft status "' . $status . '" — alleen goedgekeurde aanpassingen kunnen worden geëffectueerd.'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
 
-        // No-admin-idor guard (ADR-005 Rule 3): the adjustment must resolve
-        // through OpenRegister's ObjectService under the caller's RBAC before
-        // any write — an unresolvable/unauthorized id never reaches the
-        // effectuation service.
-        $adjustment = $this->authorizeAdjustment($adjustmentId);
-        if ($adjustment === null) {
-            return new JSONResponse(['error' => 'Aanpassing niet gevonden.'], Http::STATUS_NOT_FOUND);
-        }
+		$result = $this->compAdjustmentService->effectuateOne($adjustmentId);
 
-        $status = (string) ($adjustment['status'] ?? '');
-        if ($status !== 'approved') {
-            return new JSONResponse(
-                ['error' => 'Aanpassing heeft status "'.$status.'" — alleen goedgekeurde aanpassingen kunnen worden geëffectueerd.'],
-                Http::STATUS_BAD_REQUEST
-            );
-        }
+		$resultStatus = (string)($result['status'] ?? '');
+		if ($resultStatus === 'failed') {
+			return new JSONResponse($result, Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
 
-        $result = $this->compAdjustmentService->effectuateOne($adjustmentId);
+		if (str_starts_with($resultStatus, 'refused-') === true) {
+			return new JSONResponse($result, Http::STATUS_BAD_REQUEST);
+		}
 
-        $resultStatus = (string) ($result['status'] ?? '');
-        if ($resultStatus === 'failed') {
-            return new JSONResponse($result, Http::STATUS_INTERNAL_SERVER_ERROR);
-        }
+		return new JSONResponse($result);
+	}//end effectuate()
 
-        if (str_starts_with($resultStatus, 'refused-') === true) {
-            return new JSONResponse($result, Http::STATUS_BAD_REQUEST);
-        }
+	/**
+	 * Resolve the posted adjustmentId through OpenRegister's ObjectService
+	 * under the caller's ambient RBAC (default $_rbac=true) — the
+	 * no-admin-idor guard for this endpoint (the
+	 * `PayrollController::authorizeRun()` pattern). Returns null when the
+	 * adjustment does not exist OR the caller's RBAC denies it (both
+	 * collapse to the same 404 so existence is never leaked).
+	 *
+	 * @param string $adjustmentId The CompAdjustment id.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-006
+	 */
+	private function authorizeAdjustment(string $adjustmentId): ?array {
+		try {
+			$adjustment = $this->objectService()->find(
+				id: $adjustmentId,
+				register: $this->settingsService->getRegisterSlug(),
+				schema: 'CompAdjustment'
+			);
+		} catch (\Throwable $e) {
+			$this->logger->info('CompController: aanpassing ' . $adjustmentId . ' kon niet worden opgehaald: ' . $e->getMessage());
+			return null;
+		}
 
-        return new JSONResponse($result);
+		if ($adjustment === null) {
+			return null;
+		}
 
-    }//end effectuate()
+		return $this->toArray($adjustment);
+	}//end authorizeAdjustment()
 
+	/**
+	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
+	 */
+	private function objectService(): mixed {
+		// ADR-083: establish availability before reaching. Unguarded, an
+		// instance without OpenRegister gets a container exception naming a
+		// class the admin has never heard of; guarded, it is told which app to
+		// install — which is rule 3's promise that the app still explains
+		// itself.
+		if ($this->settingsService->isOpenRegisterAvailable() === false) {
+			throw new RuntimeException(
+				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+			);
+		}
 
-    /**
-     * Resolve the posted adjustmentId through OpenRegister's ObjectService
-     * under the caller's ambient RBAC (default $_rbac=true) — the
-     * no-admin-idor guard for this endpoint (the
-     * `PayrollController::authorizeRun()` pattern). Returns null when the
-     * adjustment does not exist OR the caller's RBAC denies it (both
-     * collapse to the same 404 so existence is never leaked).
-     *
-     * @param string $adjustmentId The CompAdjustment id.
-     *
-     * @return array<string, mixed>|null
-     *
-     * @spec openspec/changes/comp-cycles/specs/comp-cycles/spec.md#REQ-COMP-006
-     */
-    private function authorizeAdjustment(string $adjustmentId): ?array
-    {
-        try {
-            $adjustment = $this->objectService()->find(
-                id: $adjustmentId,
-                register: $this->settingsService->getRegisterSlug(),
-                schema: 'CompAdjustment'
-            );
-        } catch (\Throwable $e) {
-            $this->logger->info('CompController: aanpassing '.$adjustmentId.' kon niet worden opgehaald: '.$e->getMessage());
-            return null;
-        }
+		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+	}//end objectService()
 
-        if ($adjustment === null) {
-            return null;
-        }
+	/**
+	 * Normalise an ObjectService row (entity or array) to an array.
+	 *
+	 * @param mixed $row The row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function toArray(mixed $row): array {
+		if (is_array($row) === true) {
+			return $row;
+		}
 
-        return $this->toArray($adjustment);
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			return (array)$row->jsonSerialize();
+		}
 
-    }//end authorizeAdjustment()
-
-
-    /**
-     * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).
-     */
-    private function objectService(): mixed
-    {
-        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-    }//end objectService()
-
-
-    /**
-     * Normalise an ObjectService row (entity or array) to an array.
-     *
-     * @param mixed $row The row.
-     *
-     * @return array<string, mixed>
-     */
-    private function toArray(mixed $row): array
-    {
-        if (is_array($row) === true) {
-            return $row;
-        }
-
-        if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-            return (array) $row->jsonSerialize();
-        }
-
-        return [];
-
-    }//end toArray()
-
+		return [];
+	}//end toArray()
 
 }//end class

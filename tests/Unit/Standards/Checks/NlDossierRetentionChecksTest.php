@@ -39,146 +39,127 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
  */
-class NlDossierRetentionChecksTest extends TestCase
-{
+class NlDossierRetentionChecksTest extends TestCase {
 
-    /**
-     * The rule id under test.
-     *
-     * @var string
-     */
-    private const RULE_ID = 'nl-bewaartermijn-verstreken';
+	/**
+	 * The rule id under test.
+	 *
+	 * @var string
+	 */
+	private const RULE_ID = 'nl-bewaartermijn-verstreken';
 
+	/**
+	 * The check is registered for every schema in the payroll family plus
+	 * GeneratedDocument (mirrors the deleted AvgDsrRetentionClassifier's
+	 * scope).
+	 *
+	 * @return void
+	 */
+	public function testRuleIsRegisteredForThePayrollFamilyAndGeneratedDocument(): void {
+		$checks = NlDossierRetentionChecks::checks();
 
-    /**
-     * The check is registered for every schema in the payroll family plus
-     * GeneratedDocument (mirrors the deleted AvgDsrRetentionClassifier's
-     * scope).
-     *
-     * @return void
-     */
-    public function testRuleIsRegisteredForThePayrollFamilyAndGeneratedDocument(): void
-    {
-        $checks = NlDossierRetentionChecks::checks();
+		foreach (['Payslip', 'PayrollRun', 'LoonaangifteFiling', 'PayrollMutationReport', 'WkrDeclaration', 'WkrAssessment', 'PensionFiling', 'GeneratedDocument'] as $schema) {
+			$this->assertArrayHasKey($schema, $checks);
+			$this->assertArrayHasKey(self::RULE_ID, $checks[$schema]);
+		}
 
-        foreach (['Payslip', 'PayrollRun', 'LoonaangifteFiling', 'PayrollMutationReport', 'WkrDeclaration', 'WkrAssessment', 'PensionFiling', 'GeneratedDocument'] as $schema) {
-            $this->assertArrayHasKey($schema, $checks);
-            $this->assertArrayHasKey(self::RULE_ID, $checks[$schema]);
-        }
+	}//end testRuleIsRegisteredForThePayrollFamilyAndGeneratedDocument()
 
-    }//end testRuleIsRegisteredForThePayrollFamilyAndGeneratedDocument()
+	/**
+	 * Vacuous (satisfied) when `retention.archiefactiedatum` is unpopulated.
+	 *
+	 * @return void
+	 */
+	public function testVacuousWhenArchiefactiedatumIsUnpopulated(): void {
+		$check = $this->checkFor('GeneratedDocument');
 
+		$this->assertTrue($check(['@self' => ['retention' => []]]));
+		$this->assertTrue($check([]));
 
-    /**
-     * Vacuous (satisfied) when `retention.archiefactiedatum` is unpopulated.
-     *
-     * @return void
-     */
-    public function testVacuousWhenArchiefactiedatumIsUnpopulated(): void
-    {
-        $check = $this->checkFor('GeneratedDocument');
+	}//end testVacuousWhenArchiefactiedatumIsUnpopulated()
 
-        $this->assertTrue($check(['@self' => ['retention' => []]]));
-        $this->assertTrue($check([]));
+	/**
+	 * Violated when `retention.archiefactiedatum` is a past date and the
+	 * object is not `vernietigd`.
+	 *
+	 * @return void
+	 */
+	public function testViolatedWhenArchiefactiedatumHasPassedAndNotDestroyed(): void {
+		$check = $this->checkFor('Payslip');
+		$past = date('Y-m-d', strtotime('-1 day'));
 
-    }//end testVacuousWhenArchiefactiedatumIsUnpopulated()
+		$object = ['@self' => ['retention' => ['archiefactiedatum' => $past, 'archiefstatus' => 'nog_te_archiveren']]];
 
+		$this->assertFalse($check($object));
 
-    /**
-     * Violated when `retention.archiefactiedatum` is a past date and the
-     * object is not `vernietigd`.
-     *
-     * @return void
-     */
-    public function testViolatedWhenArchiefactiedatumHasPassedAndNotDestroyed(): void
-    {
-        $check = $this->checkFor('Payslip');
-        $past  = date('Y-m-d', strtotime('-1 day'));
+	}//end testViolatedWhenArchiefactiedatumHasPassedAndNotDestroyed()
 
-        $object = ['@self' => ['retention' => ['archiefactiedatum' => $past, 'archiefstatus' => 'nog_te_archiveren']]];
+	/**
+	 * Satisfied when `retention.archiefactiedatum` is a future date.
+	 *
+	 * @return void
+	 */
+	public function testSatisfiedWhenArchiefactiedatumIsInTheFuture(): void {
+		$check = $this->checkFor('LoonaangifteFiling');
+		$future = date('Y-m-d', strtotime('+1 year'));
 
-        $this->assertFalse($check($object));
+		$object = ['@self' => ['retention' => ['archiefactiedatum' => $future]]];
 
-    }//end testViolatedWhenArchiefactiedatumHasPassedAndNotDestroyed()
+		$this->assertTrue($check($object));
 
+	}//end testSatisfiedWhenArchiefactiedatumIsInTheFuture()
 
-    /**
-     * Satisfied when `retention.archiefactiedatum` is a future date.
-     *
-     * @return void
-     */
-    public function testSatisfiedWhenArchiefactiedatumIsInTheFuture(): void
-    {
-        $check  = $this->checkFor('LoonaangifteFiling');
-        $future = date('Y-m-d', strtotime('+1 year'));
+	/**
+	 * Vacuous (satisfied) once `archiefstatus` is `vernietigd` -- a properly
+	 * destroyed record is no longer "still present", even with a past
+	 * `archiefactiedatum`.
+	 *
+	 * @return void
+	 */
+	public function testSatisfiedWhenArchiefstatusIsVernietigd(): void {
+		$check = $this->checkFor('GeneratedDocument');
+		$past = date('Y-m-d', strtotime('-1 year'));
 
-        $object = ['@self' => ['retention' => ['archiefactiedatum' => $future]]];
+		$object = ['@self' => ['retention' => ['archiefactiedatum' => $past, 'archiefstatus' => 'vernietigd']]];
 
-        $this->assertTrue($check($object));
+		$this->assertTrue($check($object));
 
-    }//end testSatisfiedWhenArchiefactiedatumIsInTheFuture()
+	}//end testSatisfiedWhenArchiefstatusIsVernietigd()
 
+	/**
+	 * The check never mutates -- it reports only (hole #2's own posture: a
+	 * flag, never an action). Asserted indirectly: the predicate is a pure
+	 * function of its input, called here with the SAME object array before
+	 * and after, with an identical result -- there is no side channel for it
+	 * to have mutated anything through.
+	 *
+	 * @return void
+	 */
+	public function testPredicateIsPureAndDeterministic(): void {
+		$check = $this->checkFor('Payslip');
+		$object = ['@self' => ['retention' => ['archiefactiedatum' => date('Y-m-d', strtotime('-1 day'))]]];
 
-    /**
-     * Vacuous (satisfied) once `archiefstatus` is `vernietigd` -- a properly
-     * destroyed record is no longer "still present", even with a past
-     * `archiefactiedatum`.
-     *
-     * @return void
-     */
-    public function testSatisfiedWhenArchiefstatusIsVernietigd(): void
-    {
-        $check = $this->checkFor('GeneratedDocument');
-        $past  = date('Y-m-d', strtotime('-1 year'));
+		$this->assertSame($check($object), $check($object));
 
-        $object = ['@self' => ['retention' => ['archiefactiedatum' => $past, 'archiefstatus' => 'vernietigd']]];
+	}//end testPredicateIsPureAndDeterministic()
 
-        $this->assertTrue($check($object));
+	/**
+	 * @return void
+	 */
+	public function testSeedSpecIsEmpty(): void {
+		$this->assertSame([], NlDossierRetentionChecks::seedSpec());
 
-    }//end testSatisfiedWhenArchiefstatusIsVernietigd()
+	}//end testSeedSpecIsEmpty()
 
-
-    /**
-     * The check never mutates -- it reports only (hole #2's own posture: a
-     * flag, never an action). Asserted indirectly: the predicate is a pure
-     * function of its input, called here with the SAME object array before
-     * and after, with an identical result -- there is no side channel for it
-     * to have mutated anything through.
-     *
-     * @return void
-     */
-    public function testPredicateIsPureAndDeterministic(): void
-    {
-        $check  = $this->checkFor('Payslip');
-        $object = ['@self' => ['retention' => ['archiefactiedatum' => date('Y-m-d', strtotime('-1 day'))]]];
-
-        $this->assertSame($check($object), $check($object));
-
-    }//end testPredicateIsPureAndDeterministic()
-
-
-    /**
-     * @return void
-     */
-    public function testSeedSpecIsEmpty(): void
-    {
-        $this->assertSame([], NlDossierRetentionChecks::seedSpec());
-
-    }//end testSeedSpecIsEmpty()
-
-
-    /**
-     * Resolve the `nl-bewaartermijn-verstreken` predicate for one schema.
-     *
-     * @param string $schema The schema name.
-     *
-     * @return callable
-     */
-    private function checkFor(string $schema): callable
-    {
-        return NlDossierRetentionChecks::checks()[$schema][self::RULE_ID];
-
-    }//end checkFor()
-
+	/**
+	 * Resolve the `nl-bewaartermijn-verstreken` predicate for one schema.
+	 *
+	 * @param string $schema The schema name.
+	 *
+	 * @return callable
+	 */
+	private function checkFor(string $schema): callable {
+		return NlDossierRetentionChecks::checks()[$schema][self::RULE_ID];
+	}//end checkFor()
 
 }//end class

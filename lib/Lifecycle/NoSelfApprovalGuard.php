@@ -51,49 +51,44 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
  * Fails closed: when the acting user cannot be identified, or the claiming
  * employee is unknown, the transition is denied rather than allowed on a guess.
  */
-class NoSelfApprovalGuard implements LifecycleGuardInterface
-{
+class NoSelfApprovalGuard implements LifecycleGuardInterface {
 
+	/**
+	 * Authorise an approve/reject transition by enforcing separation of duties.
+	 *
+	 * @param array<string, mixed> $object The Timesheet/Expense payload at its current state.
+	 * @param string $action The transition action ('approve' or 'reject').
+	 * @param string $userId The uid of the manager performing the transition.
+	 *
+	 * @return GuardResult Allow when the acting user differs from the claiming
+	 *                     employee; deny otherwise.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
+	 *  static allow()/deny() factories mandated by OpenRegister's contract.
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action is part of the
+	 *  LifecycleGuardInterface signature; the same separation-of-duties rule
+	 *  applies to both approve and reject.
+	 *
+	 * @spec openspec/changes/hrmq-timesheet-approval/specs/hrmq-timesheet-approval/spec.md
+	 */
+	public function check(array $object, string $action, string $userId): GuardResult {
+		if ($userId === '') {
+			return GuardResult::deny('U moet ingelogd zijn om goed te keuren of af te keuren.');
+		}
 
-    /**
-     * Authorise an approve/reject transition by enforcing separation of duties.
-     *
-     * @param array<string, mixed> $object The Timesheet/Expense payload at its current state.
-     * @param string               $action The transition action ('approve' or 'reject').
-     * @param string               $userId The uid of the manager performing the transition.
-     *
-     * @return GuardResult Allow when the acting user differs from the claiming
-     *                     employee; deny otherwise.
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
-     *  static allow()/deny() factories mandated by OpenRegister's contract.
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action is part of the
-     *  LifecycleGuardInterface signature; the same separation-of-duties rule
-     *  applies to both approve and reject.
-     *
-     * @spec openspec/changes/hrmq-timesheet-approval/specs/hrmq-timesheet-approval/spec.md
-     */
-    public function check(array $object, string $action, string $userId): GuardResult
-    {
-        if ($userId === '') {
-            return GuardResult::deny('U moet ingelogd zijn om goed te keuren of af te keuren.');
-        }
+		$employeeId = (string)($object['employeeId'] ?? '');
+		if ($employeeId === '') {
+			return GuardResult::deny('De indiener van deze declaratie/urenstaat is onbekend; goedkeuring is geweigerd.');
+		}
 
-        $employeeId = (string) ($object['employeeId'] ?? '');
-        if ($employeeId === '') {
-            return GuardResult::deny('De indiener van deze declaratie/urenstaat is onbekend; goedkeuring is geweigerd.');
-        }
+		if ($employeeId === $userId) {
+			return GuardResult::deny(
+				'U mag uw eigen urenstaat of declaratie niet goedkeuren of afkeuren. '
+				. 'Een andere medewerker (manager) moet dit doen.'
+			);
+		}
 
-        if ($employeeId === $userId) {
-            return GuardResult::deny(
-                'U mag uw eigen urenstaat of declaratie niet goedkeuren of afkeuren. '
-                .'Een andere medewerker (manager) moet dit doen.'
-            );
-        }
-
-        return GuardResult::allow();
-
-    }//end check()
-
+		return GuardResult::allow();
+	}//end check()
 
 }//end class

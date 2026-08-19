@@ -33,38 +33,30 @@ use OCA\Hrmq\Payroll\Dsl\StepContext;
 /**
  * A straight percentage of a base.
  */
-final class RateOp extends AbstractOp
-{
+final class RateOp extends AbstractOp {
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'rate';
+	}//end name()
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'rate';
+	/**
+	 * `base * rate / 100`.
+	 *
+	 * @param array<string, mixed> $spec The declared spec.
+	 * @param StepContext $ctx The run context.
+	 *
+	 * @return int|float
+	 */
+	public function evaluate(array $spec, StepContext $ctx): mixed {
+		$base = $this->num($spec, 'base', $ctx);
+		$rate = $this->num($spec, 'rate', $ctx);
 
-    }//end name()
-
-
-    /**
-     * `base * rate / 100`.
-     *
-     * @param array<string, mixed> $spec The declared spec.
-     * @param StepContext          $ctx  The run context.
-     *
-     * @return int|float
-     */
-    public function evaluate(array $spec, StepContext $ctx): mixed
-    {
-        $base = $this->num($spec, 'base', $ctx);
-        $rate = $this->num($spec, 'rate', $ctx);
-
-        return (($base * $rate) / 100);
-
-    }//end evaluate()
-
+		return (($base * $rate) / 100);
+	}//end evaluate()
 
 }//end class

@@ -52,93 +52,84 @@ use Psr\Log\LoggerInterface;
  * Candidate-user resolution and orphaned-signing-request recovery for
  * `OfferEsignService`.
  */
-class OfferSigningRecoveryService
-{
+class OfferSigningRecoveryService {
 
+	/**
+	 * @param IUserManager $userManager Resolves a candidate's email to an existing Nextcloud user id.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		private readonly IUserManager $userManager,
+		private readonly LoggerInterface $logger,
+	) {
 
-    /**
-     * @param IUserManager    $userManager Resolves a candidate's email to an existing Nextcloud user id.
-     * @param LoggerInterface $logger      Logger.
-     */
-    public function __construct(
-        private readonly IUserManager $userManager,
-        private readonly LoggerInterface $logger,
-    ) {
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * Resolve a candidate's `Application.email` to an existing Nextcloud
+	 * user id (see class docblock, defect-2). Sending an empty `userId`
+	 * used to reach `createRequest()` and crash the whole request on the
+	 * `signerRecord.user_id` NOT NULL column; resolving first and failing
+	 * closed keeps that write out of docudesk entirely when no such user
+	 * exists.
+	 *
+	 * @param string $email The candidate's `Application.email`.
+	 *
+	 * @return string|null The matching Nextcloud user id, or null when no user has this email (or the email is blank).
+	 */
+	public function resolveCandidateUserId(string $email): ?string {
+		$email = trim($email);
+		if ($email === '') {
+			return null;
+		}
 
+		$matches = $this->userManager->getByEmail($email);
+		$first = $matches[0] ?? null;
 
-    /**
-     * Resolve a candidate's `Application.email` to an existing Nextcloud
-     * user id (see class docblock, defect-2). Sending an empty `userId`
-     * used to reach `createRequest()` and crash the whole request on the
-     * `signerRecord.user_id` NOT NULL column; resolving first and failing
-     * closed keeps that write out of docudesk entirely when no such user
-     * exists.
-     *
-     * @param string $email The candidate's `Application.email`.
-     *
-     * @return string|null The matching Nextcloud user id, or null when no user has this email (or the email is blank).
-     */
-    public function resolveCandidateUserId(string $email): ?string
-    {
-        $email = trim($email);
-        if ($email === '') {
-            return null;
-        }
+		return $first?->getUID();
+	}//end resolveCandidateUserId()
 
-        $matches = $this->userManager->getByEmail($email);
-        $first   = $matches[0] ?? null;
+	/**
+	 * Best-effort recovery of a signing-request id that docudesk's
+	 * `createRequest()` may have partially created before throwing (see
+	 * class docblock, defect-3). `listRequests()` — like `getRequest()` —
+	 * carries no session guard, so this lookup is genuinely CLI-safe. Only
+	 * persists when EXACTLY ONE candidate matches BOTH keys (never guesses
+	 * between ambiguous matches); any ambiguity or lookup failure is left
+	 * unresolved and surfaced in the caller's failure message instead.
+	 *
+	 * @param mixed $signingService docudesk's SigningService, already resolved by the caller.
+	 * @param string $applicationId The Application id (== the correlationId/subjectId hrmq sent).
+	 * @param int $fileId The offer-letter file id sent as `documentFileId`.
+	 *
+	 * @return string|null The recovered signing-request id, or null when it cannot be determined unambiguously.
+	 */
+	public function recoverOrphanedRequestId(mixed $signingService, string $applicationId, int $fileId): ?string {
+		try {
+			$requests = $signingService->listRequests('', true);
+		} catch (\Throwable $e) {
+			$this->logger->warning('OfferSigningRecoveryService: kon geen orphan-recovery uitvoeren voor ' . $applicationId . ': ' . $e->getMessage());
+			return null;
+		}
 
-        return $first?->getUID();
+		$documentFileId = (string)$fileId;
+		$candidates = array_values(
+			array_filter(
+				$requests,
+				static function (array $request) use ($applicationId, $documentFileId): bool {
+					return (string)($request['correlationId'] ?? '') === $applicationId
+						&& (string)($request['documentFileId'] ?? '') === $documentFileId;
+				}
+			)
+		);
 
-    }//end resolveCandidateUserId()
+		if (count($candidates) !== 1) {
+			return null;
+		}
 
+		$requestId = (string)($candidates[0]['id'] ?? $candidates[0]['uuid'] ?? '');
 
-    /**
-     * Best-effort recovery of a signing-request id that docudesk's
-     * `createRequest()` may have partially created before throwing (see
-     * class docblock, defect-3). `listRequests()` — like `getRequest()` —
-     * carries no session guard, so this lookup is genuinely CLI-safe. Only
-     * persists when EXACTLY ONE candidate matches BOTH keys (never guesses
-     * between ambiguous matches); any ambiguity or lookup failure is left
-     * unresolved and surfaced in the caller's failure message instead.
-     *
-     * @param mixed  $signingService docudesk's SigningService, already resolved by the caller.
-     * @param string $applicationId  The Application id (== the correlationId/subjectId hrmq sent).
-     * @param int    $fileId         The offer-letter file id sent as `documentFileId`.
-     *
-     * @return string|null The recovered signing-request id, or null when it cannot be determined unambiguously.
-     */
-    public function recoverOrphanedRequestId(mixed $signingService, string $applicationId, int $fileId): ?string
-    {
-        try {
-            $requests = $signingService->listRequests('', true);
-        } catch (\Throwable $e) {
-            $this->logger->warning('OfferSigningRecoveryService: kon geen orphan-recovery uitvoeren voor '.$applicationId.': '.$e->getMessage());
-            return null;
-        }
-
-        $documentFileId = (string) $fileId;
-        $candidates     = array_values(
-            array_filter(
-                $requests,
-                static function (array $request) use ($applicationId, $documentFileId): bool {
-                    return (string) ($request['correlationId'] ?? '') === $applicationId
-                        && (string) ($request['documentFileId'] ?? '') === $documentFileId;
-                }
-            )
-        );
-
-        if (count($candidates) !== 1) {
-            return null;
-        }
-
-        $requestId = (string) ($candidates[0]['id'] ?? $candidates[0]['uuid'] ?? '');
-
-        return ($requestId === '' ? null : $requestId);
-
-    }//end recoverOrphanedRequestId()
-
+		return ($requestId === '' ? null : $requestId);
+	}//end recoverOrphanedRequestId()
 
 }//end class

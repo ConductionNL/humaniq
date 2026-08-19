@@ -112,376 +112,346 @@ use Psr\Log\LoggerInterface;
  * reachable (a plain NL Payslip -- see the class docblock's REGRESSION
  * note), derives the statutory floor directly, in exactly one place.
  */
-class PayrollRetentionGuardService
-{
+class PayrollRetentionGuardService {
 
-    /**
-     * AWR art. 52 lid 4 fiscal administratie bewaarplicht -- the statutory
-     * retention duration in years for the NL payroll/loonadministratie
-     * family. Exposed as a public constant so every caller (currently
-     * `PayrollRunService`) cites the SAME value rather than a repeated
-     * literal `7`.
-     *
-     * @var int
-     */
-    public const AWR_RETENTION_YEARS = 7;
+	/**
+	 * AWR art. 52 lid 4 fiscal administratie bewaarplicht -- the statutory
+	 * retention duration in years for the NL payroll/loonadministratie
+	 * family. Exposed as a public constant so every caller (currently
+	 * `PayrollRunService`) cites the SAME value rather than a repeated
+	 * literal `7`.
+	 *
+	 * @var int
+	 */
+	public const AWR_RETENTION_YEARS = 7;
 
-    /**
-     * The law reference recorded on an AWR-derived hold's reason.
-     *
-     * @var string
-     */
-    public const AWR_LAW_REFERENCE = 'AWR art. 52 lid 4';
+	/**
+	 * The law reference recorded on an AWR-derived hold's reason.
+	 *
+	 * @var string
+	 */
+	public const AWR_LAW_REFERENCE = 'AWR art. 52 lid 4';
 
-    /**
-     * The FQCN of OpenRegister's retention/legal-hold service, resolved via
-     * the DI container only (ADR-022).
-     *
-     * @var string
-     */
-    private const RETENTION_SERVICE_FQCN = 'OCA\OpenRegister\Service\RetentionService';
+	/**
+	 * The FQCN of OpenRegister's retention/legal-hold service, resolved via
+	 * the DI container only (ADR-022).
+	 *
+	 * @var string
+	 */
+	private const RETENTION_SERVICE_FQCN = 'OCA\OpenRegister\Service\RetentionService';
 
-    /**
-     * The legal-hold reason recorded when this service places one.
-     *
-     * @var string
-     */
-    private const HOLD_REASON_PREFIX = 'Statutaire bewaarplicht (hrmq#99) tot ';
+	/**
+	 * The legal-hold reason recorded when this service places one.
+	 *
+	 * @var string
+	 */
+	private const HOLD_REASON_PREFIX = 'Statutaire bewaarplicht (hrmq#99) tot ';
 
-    /**
-     * The FQCN of OpenRegister's object mapper, resolved via the DI container
-     * only (ADR-022). `update()` persists an ObjectEntity's entity-level
-     * columns (including `retention`) directly -- unlike `ObjectService
-     * ::saveObject()`, it never round-trips the entity through its
-     * schema-payload array first (see the class docblock's Persistence
-     * gotcha).
-     *
-     * @var string
-     */
-    private const OBJECT_MAPPER_FQCN = 'OCA\OpenRegister\Db\MagicMapper';
+	/**
+	 * The FQCN of OpenRegister's object mapper, resolved via the DI container
+	 * only (ADR-022). `update()` persists an ObjectEntity's entity-level
+	 * columns (including `retention`) directly -- unlike `ObjectService
+	 * ::saveObject()`, it never round-trips the entity through its
+	 * schema-payload array first (see the class docblock's Persistence
+	 * gotcha).
+	 *
+	 * @var string
+	 */
+	private const OBJECT_MAPPER_FQCN = 'OCA\OpenRegister\Db\MagicMapper';
 
+	/**
+	 * @param ContainerInterface $container DI container for the lazy RetentionService/MagicMapper resolve.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+		private readonly LoggerInterface $logger,
+	) {
 
-    /**
-     * @param ContainerInterface $container DI container for the lazy RetentionService/MagicMapper resolve.
-     * @param LoggerInterface    $logger    Logger.
-     */
-    public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly LoggerInterface $logger,
-    ) {
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * Sync a legal hold onto `$object` when it carries an already-known,
+	 * still-open retention ceiling -- a populated `retainedUntil` field, or
+	 * OpenRegister's own computed `retention.archiefactiedatum`. A no-op
+	 * when no ceiling is known, the ceiling has already passed, or a legal
+	 * hold is already active (idempotent -- safe to call on every save).
+	 *
+	 * @param mixed $object The OpenRegister ObjectEntity to sync.
+	 * @param string $schema The schema name (for the warning log message only).
+	 *
+	 * @return array{held: bool, ceiling: string|null, source: string|null} Whether a hold is (now) active, its ceiling date, and which field it came from.
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+	 */
+	public function syncLegalHold(mixed $object, string $schema): array {
+		// hrmq#99 live-verify finding: `method_exists($object, 'getRetention')`
+		// is ALWAYS false for a real OpenRegister ObjectEntity -- its
+		// getters/setters are magic (`__call`, generated from `addType()`
+		// declarations on the Nextcloud `Entity` base class), never literal
+		// declared methods, so `method_exists()` cannot see them even though
+		// calling them works fine. A `method_exists` gate here silently
+		// short-circuited every real call. `is_object()` plus a try/catch
+		// around the actual magic-method calls is the correct guard.
+		if (is_object($object) === false) {
+			return ['held' => false, 'ceiling' => null, 'source' => null];
+		}
 
+		[$ceiling, $source] = $this->resolveCeiling($object);
 
-    /**
-     * Sync a legal hold onto `$object` when it carries an already-known,
-     * still-open retention ceiling -- a populated `retainedUntil` field, or
-     * OpenRegister's own computed `retention.archiefactiedatum`. A no-op
-     * when no ceiling is known, the ceiling has already passed, or a legal
-     * hold is already active (idempotent -- safe to call on every save).
-     *
-     * @param mixed  $object The OpenRegister ObjectEntity to sync.
-     * @param string $schema The schema name (for the warning log message only).
-     *
-     * @return array{held: bool, ceiling: string|null, source: string|null} Whether a hold is (now) active, its ceiling date, and which field it came from.
-     *
-     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
-     */
-    public function syncLegalHold(mixed $object, string $schema): array
-    {
-        // hrmq#99 live-verify finding: `method_exists($object, 'getRetention')`
-        // is ALWAYS false for a real OpenRegister ObjectEntity -- its
-        // getters/setters are magic (`__call`, generated from `addType()`
-        // declarations on the Nextcloud `Entity` base class), never literal
-        // declared methods, so `method_exists()` cannot see them even though
-        // calling them works fine. A `method_exists` gate here silently
-        // short-circuited every real call. `is_object()` plus a try/catch
-        // around the actual magic-method calls is the correct guard.
-        if (is_object($object) === false) {
-            return ['held' => false, 'ceiling' => null, 'source' => null];
-        }
+		if ($ceiling === null) {
+			return ['held' => false, 'ceiling' => null, 'source' => null];
+		}
 
-        [$ceiling, $source] = $this->resolveCeiling($object);
+		$today = (new DateTimeImmutable('today'));
+		if ($ceiling < $today) {
+			// Ceiling already passed -- nothing to newly protect here;
+			// NlDossierRetentionChecks::nl-bewaartermijn-verstreken flags
+			// this moment separately (never acted on automatically).
+			return ['held' => $this->retentionService()->hasActiveLegalHold(object: $object), 'ceiling' => $ceiling->format('Y-m-d'), 'source' => $source];
+		}
 
-        if ($ceiling === null) {
-            return ['held' => false, 'ceiling' => null, 'source' => null];
-        }
+		if ($this->retentionService()->hasActiveLegalHold(object: $object) === true) {
+			return ['held' => true, 'ceiling' => $ceiling->format('Y-m-d'), 'source' => $source];
+		}
 
-        $today = (new DateTimeImmutable('today'));
-        if ($ceiling < $today) {
-            // Ceiling already passed -- nothing to newly protect here;
-            // NlDossierRetentionChecks::nl-bewaartermijn-verstreken flags
-            // this moment separately (never acted on automatically).
-            return ['held' => $this->retentionService()->hasActiveLegalHold(object: $object), 'ceiling' => $ceiling->format('Y-m-d'), 'source' => $source];
-        }
+		$reason = self::HOLD_REASON_PREFIX . $ceiling->format('Y-m-d') . ' (' . $source . ')';
+		$held = $this->retentionService()->placeLegalHold(object: $object, reason: $reason);
 
-        if ($this->retentionService()->hasActiveLegalHold(object: $object) === true) {
-            return ['held' => true, 'ceiling' => $ceiling->format('Y-m-d'), 'source' => $source];
-        }
+		if ($this->persist(held: $held, schema: $schema) === false) {
+			return ['held' => false, 'ceiling' => $ceiling->format('Y-m-d'), 'source' => $source];
+		}
 
-        $reason = self::HOLD_REASON_PREFIX.$ceiling->format('Y-m-d').' ('.$source.')';
-        $held   = $this->retentionService()->placeLegalHold(object: $object, reason: $reason);
+		return ['held' => true, 'ceiling' => $ceiling->format('Y-m-d'), 'source' => $source];
+	}//end syncLegalHold()
 
-        if ($this->persist(held: $held, schema: $schema) === false) {
-            return ['held' => false, 'ceiling' => $ceiling->format('Y-m-d'), 'source' => $source];
-        }
+	/**
+	 * Place a legal hold deriving the statutory floor directly from a
+	 * period-shaped field (`YYYY-MM`/`YYYY-Pnn`/`YYYY-MM-DD`) -- "31 December
+	 * of (period year + `$years`)" -- when no OpenRegister-native ceiling
+	 * (`retainedUntil`/`archiefactiedatum`) is available to sync instead
+	 * (`syncLegalHold()`). THE single place this formula is computed for the
+	 * write/hold-placing side of this concern (see the class docblock's
+	 * REGRESSION note) -- never duplicate this derivation elsewhere; extend
+	 * this method's callers instead. Idempotent (never re-places an
+	 * already-active hold) and safe to call on every save.
+	 *
+	 * @param mixed $object The OpenRegister ObjectEntity to place the hold on.
+	 * @param string $schema The schema name (for the warning log message only).
+	 * @param string $periodField The period-shaped field to read the year from (e.g. `period`).
+	 * @param int $years The statutory retention duration in years (e.g. 7 for AWR art. 52 lid 4).
+	 * @param string $lawReference A short citation recorded on the hold reason (e.g. "AWR art. 52 lid 4").
+	 *
+	 * @return array{held: bool, ceiling: string|null} Whether a hold is (now) active and its derived ceiling date.
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+	 */
+	public function placeStatutoryFloorHold(mixed $object, string $schema, string $periodField, int $years, string $lawReference): array {
+		if (is_object($object) === false) {
+			return ['held' => false, 'ceiling' => null];
+		}
 
-        return ['held' => true, 'ceiling' => $ceiling->format('Y-m-d'), 'source' => $source];
+		if ($this->retentionService()->hasActiveLegalHold(object: $object) === true) {
+			return ['held' => true, 'ceiling' => null];
+		}
 
-    }//end syncLegalHold()
+		[$periodYear, $periodValue] = $this->extractPeriodYear($object, $periodField);
+		if ($periodYear === null) {
+			return ['held' => false, 'ceiling' => null];
+		}
 
+		$ceiling = sprintf('%04d-12-31', ($periodYear + $years));
+		$reason = sprintf(
+			'Statutaire bewaarplicht (hrmq#99): %s, tot %s (periode %s + %d jaar).',
+			$lawReference,
+			$ceiling,
+			$periodValue,
+			$years
+		);
 
-    /**
-     * Place a legal hold deriving the statutory floor directly from a
-     * period-shaped field (`YYYY-MM`/`YYYY-Pnn`/`YYYY-MM-DD`) -- "31 December
-     * of (period year + `$years`)" -- when no OpenRegister-native ceiling
-     * (`retainedUntil`/`archiefactiedatum`) is available to sync instead
-     * (`syncLegalHold()`). THE single place this formula is computed for the
-     * write/hold-placing side of this concern (see the class docblock's
-     * REGRESSION note) -- never duplicate this derivation elsewhere; extend
-     * this method's callers instead. Idempotent (never re-places an
-     * already-active hold) and safe to call on every save.
-     *
-     * @param mixed  $object       The OpenRegister ObjectEntity to place the hold on.
-     * @param string $schema       The schema name (for the warning log message only).
-     * @param string $periodField  The period-shaped field to read the year from (e.g. `period`).
-     * @param int    $years        The statutory retention duration in years (e.g. 7 for AWR art. 52 lid 4).
-     * @param string $lawReference A short citation recorded on the hold reason (e.g. "AWR art. 52 lid 4").
-     *
-     * @return array{held: bool, ceiling: string|null} Whether a hold is (now) active and its derived ceiling date.
-     *
-     * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
-     */
-    public function placeStatutoryFloorHold(mixed $object, string $schema, string $periodField, int $years, string $lawReference): array
-    {
-        if (is_object($object) === false) {
-            return ['held' => false, 'ceiling' => null];
-        }
+		$held = $this->retentionService()->placeLegalHold(object: $object, reason: $reason);
 
-        if ($this->retentionService()->hasActiveLegalHold(object: $object) === true) {
-            return ['held' => true, 'ceiling' => null];
-        }
+		if ($this->persist(held: $held, schema: $schema) === false) {
+			return ['held' => false, 'ceiling' => $ceiling];
+		}
 
-        [$periodYear, $periodValue] = $this->extractPeriodYear($object, $periodField);
-        if ($periodYear === null) {
-            return ['held' => false, 'ceiling' => null];
-        }
+		return ['held' => true, 'ceiling' => $ceiling];
+	}//end placeStatutoryFloorHold()
 
-        $ceiling = sprintf('%04d-12-31', ($periodYear + $years));
-        $reason  = sprintf(
-            'Statutaire bewaarplicht (hrmq#99): %s, tot %s (periode %s + %d jaar).',
-            $lawReference,
-            $ceiling,
-            $periodValue,
-            $years
-        );
+	/**
+	 * Extract a 4-digit year from a period-shaped field
+	 * (`YYYY-MM`/`YYYY-Pnn`/`YYYY-MM-DD`) on `$object`'s payload, alongside
+	 * the field's raw value (for the hold reason message).
+	 *
+	 * @param mixed $object The OpenRegister ObjectEntity.
+	 * @param string $periodField The field name to read.
+	 *
+	 * @return array{0: int|null, 1: string}
+	 */
+	private function extractPeriodYear(mixed $object, string $periodField): array {
+		try {
+			$payload = ($object->getObject() ?? []);
+		} catch (\Throwable $e) {
+			return [null, ''];
+		}
 
-        $held = $this->retentionService()->placeLegalHold(object: $object, reason: $reason);
+		$value = (string)($payload[$periodField] ?? '');
+		if (preg_match('/^(\d{4})/', $value, $matches) === 1) {
+			return [(int)$matches[1], $value];
+		}
 
-        if ($this->persist(held: $held, schema: $schema) === false) {
-            return ['held' => false, 'ceiling' => $ceiling];
-        }
+		return [null, $value];
+	}//end extractPeriodYear()
 
-        return ['held' => true, 'ceiling' => $ceiling];
+	/**
+	 * Whether `$object` is currently under active retention -- an active
+	 * legal hold, an immutable archival status, or (defensively) a still-open
+	 * ceiling that has not yet been synced onto a hold. Used to decide
+	 * whether a DERIVED object (a generated PDF) must inherit the same
+	 * protection (hrmq#99 hole #1).
+	 *
+	 * @param mixed $object The OpenRegister ObjectEntity to check.
+	 *
+	 * @return bool
+	 */
+	public function isUnderActiveRetention(mixed $object): bool {
+		// See syncLegalHold()'s docblock note: `method_exists` cannot see a
+		// real ObjectEntity's magic getters -- `is_object()` is the correct
+		// guard here.
+		if (is_object($object) === false) {
+			return false;
+		}
 
-    }//end placeStatutoryFloorHold()
+		if ($this->retentionService()->hasActiveLegalHold(object: $object) === true) {
+			return true;
+		}
 
+		if ($this->retentionService()->validateNotImmutable(object: $object) !== null) {
+			return true;
+		}
 
-    /**
-     * Extract a 4-digit year from a period-shaped field
-     * (`YYYY-MM`/`YYYY-Pnn`/`YYYY-MM-DD`) on `$object`'s payload, alongside
-     * the field's raw value (for the hold reason message).
-     *
-     * @param mixed  $object      The OpenRegister ObjectEntity.
-     * @param string $periodField The field name to read.
-     *
-     * @return array{0: int|null, 1: string}
-     */
-    private function extractPeriodYear(mixed $object, string $periodField): array
-    {
-        try {
-            $payload = ($object->getObject() ?? []);
-        } catch (\Throwable $e) {
-            return [null, ''];
-        }
+		[$ceiling] = $this->resolveCeiling($object);
+		if ($ceiling === null) {
+			return false;
+		}
 
-        $value = (string) ($payload[$periodField] ?? '');
-        if (preg_match('/^(\d{4})/', $value, $matches) === 1) {
-            return [(int) $matches[1], $value];
-        }
+		return $ceiling >= (new DateTimeImmutable('today'));
+	}//end isUnderActiveRetention()
 
-        return [null, $value];
+	/**
+	 * Place a legal hold on a DERIVED object (e.g. a generated loonstrook/
+	 * jaaropgaaf PDF's `GeneratedDocument`) inheriting its source's retention
+	 * (hrmq#99 hole #1) -- never a fresh `retainedUntil` field on the derived
+	 * object.
+	 *
+	 * @param mixed $object The derived OpenRegister ObjectEntity.
+	 * @param string $schema The schema name (for the warning log message only).
+	 * @param string $sourceDescription A short, non-PII description of the source (e.g. "Payslip <uuid>") for the hold reason.
+	 *
+	 * @return bool Whether the hold is (now) active on the derived object.
+	 */
+	public function inheritLegalHold(mixed $object, string $schema, string $sourceDescription): bool {
+		// See syncLegalHold()'s docblock note: `method_exists` cannot see a
+		// real ObjectEntity's magic getters -- `is_object()` is the correct
+		// guard here.
+		if (is_object($object) === false) {
+			return false;
+		}
 
-    }//end extractPeriodYear()
+		if ($this->retentionService()->hasActiveLegalHold(object: $object) === true) {
+			return true;
+		}
 
+		$reason = 'Geërfd van retentie-/legal-hold-status van ' . $sourceDescription . ' (hrmq#99).';
+		$held = $this->retentionService()->placeLegalHold(object: $object, reason: $reason);
 
-    /**
-     * Whether `$object` is currently under active retention -- an active
-     * legal hold, an immutable archival status, or (defensively) a still-open
-     * ceiling that has not yet been synced onto a hold. Used to decide
-     * whether a DERIVED object (a generated PDF) must inherit the same
-     * protection (hrmq#99 hole #1).
-     *
-     * @param mixed $object The OpenRegister ObjectEntity to check.
-     *
-     * @return bool
-     */
-    public function isUnderActiveRetention(mixed $object): bool
-    {
-        // See syncLegalHold()'s docblock note: `method_exists` cannot see a
-        // real ObjectEntity's magic getters -- `is_object()` is the correct
-        // guard here.
-        if (is_object($object) === false) {
-            return false;
-        }
+		return $this->persist(held: $held, schema: $schema);
+	}//end inheritLegalHold()
 
-        if ($this->retentionService()->hasActiveLegalHold(object: $object) === true) {
-            return true;
-        }
+	/**
+	 * Resolve the authoritative, already-known retention ceiling for an
+	 * object -- a populated `retainedUntil` field wins (mirrors the deleted
+	 * classifier's own precedence for the objects that already carry one),
+	 * else OpenRegister's own computed `retention.archiefactiedatum`. Reads
+	 * only; derives nothing.
+	 *
+	 * @param mixed $object The OpenRegister ObjectEntity.
+	 *
+	 * @return array{0: DateTimeImmutable|null, 1: string|null}
+	 */
+	private function resolveCeiling(mixed $object): array {
+		// See syncLegalHold()'s docblock note: a real ObjectEntity's
+		// getObject()/getRetention() are magic methods, invisible to
+		// `method_exists()` -- a try/catch around the actual call is the
+		// correct defensive guard, not a `method_exists` pre-check.
+		try {
+			$payload = ($object->getObject() ?? []);
+		} catch (\Throwable $e) {
+			$payload = [];
+		}
 
-        if ($this->retentionService()->validateNotImmutable(object: $object) !== null) {
-            return true;
-        }
+		$retainedUntil = trim((string)($payload['retainedUntil'] ?? ''));
+		if ($retainedUntil !== '') {
+			$timestamp = strtotime($retainedUntil);
+			if ($timestamp !== false) {
+				return [(new DateTimeImmutable())->setTimestamp($timestamp), 'retainedUntil'];
+			}
+		}
 
-        [$ceiling] = $this->resolveCeiling($object);
-        if ($ceiling === null) {
-            return false;
-        }
+		try {
+			$retention = ($object->getRetention() ?? []);
+		} catch (\Throwable $e) {
+			$retention = [];
+		}
 
-        return $ceiling >= (new DateTimeImmutable('today'));
+		$archiefactiedatum = trim((string)($retention['archiefactiedatum'] ?? ''));
+		if ($archiefactiedatum !== '') {
+			$timestamp = strtotime($archiefactiedatum);
+			if ($timestamp !== false) {
+				return [(new DateTimeImmutable())->setTimestamp($timestamp), 'retention.archiefactiedatum'];
+			}
+		}
 
-    }//end isUnderActiveRetention()
+		return [null, null];
+	}//end resolveCeiling()
 
+	/**
+	 * Persist a mutated (held) entity via `MagicMapper::update()` -- shared
+	 * by every method that places a hold, logging and reporting failure
+	 * uniformly instead of duplicating the try/catch three times.
+	 *
+	 * @param mixed $held The entity, already mutated by `RetentionService::placeLegalHold()`.
+	 * @param string $schema The schema name (for the warning log message only).
+	 *
+	 * @return bool Whether the persist succeeded.
+	 */
+	private function persist(mixed $held, string $schema): bool {
+		try {
+			$this->objectMapper()->update($held);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'PayrollRetentionGuardService: kon legal hold niet opslaan voor ' . $schema . ': ' . $e->getMessage()
+			);
+			return false;
+		}
 
-    /**
-     * Place a legal hold on a DERIVED object (e.g. a generated loonstrook/
-     * jaaropgaaf PDF's `GeneratedDocument`) inheriting its source's retention
-     * (hrmq#99 hole #1) -- never a fresh `retainedUntil` field on the derived
-     * object.
-     *
-     * @param mixed  $object            The derived OpenRegister ObjectEntity.
-     * @param string $schema            The schema name (for the warning log message only).
-     * @param string $sourceDescription A short, non-PII description of the source (e.g. "Payslip <uuid>") for the hold reason.
-     *
-     * @return bool Whether the hold is (now) active on the derived object.
-     */
-    public function inheritLegalHold(mixed $object, string $schema, string $sourceDescription): bool
-    {
-        // See syncLegalHold()'s docblock note: `method_exists` cannot see a
-        // real ObjectEntity's magic getters -- `is_object()` is the correct
-        // guard here.
-        if (is_object($object) === false) {
-            return false;
-        }
+		return true;
+	}//end persist()
 
-        if ($this->retentionService()->hasActiveLegalHold(object: $object) === true) {
-            return true;
-        }
+	/**
+	 * @return mixed OpenRegister's RetentionService.
+	 */
+	private function retentionService(): mixed {
+		return $this->container->get(self::RETENTION_SERVICE_FQCN);
+	}//end retentionService()
 
-        $reason = 'Geërfd van retentie-/legal-hold-status van '.$sourceDescription.' (hrmq#99).';
-        $held   = $this->retentionService()->placeLegalHold(object: $object, reason: $reason);
-
-        return $this->persist(held: $held, schema: $schema);
-
-    }//end inheritLegalHold()
-
-
-    /**
-     * Resolve the authoritative, already-known retention ceiling for an
-     * object -- a populated `retainedUntil` field wins (mirrors the deleted
-     * classifier's own precedence for the objects that already carry one),
-     * else OpenRegister's own computed `retention.archiefactiedatum`. Reads
-     * only; derives nothing.
-     *
-     * @param mixed $object The OpenRegister ObjectEntity.
-     *
-     * @return array{0: DateTimeImmutable|null, 1: string|null}
-     */
-    private function resolveCeiling(mixed $object): array
-    {
-        // See syncLegalHold()'s docblock note: a real ObjectEntity's
-        // getObject()/getRetention() are magic methods, invisible to
-        // `method_exists()` -- a try/catch around the actual call is the
-        // correct defensive guard, not a `method_exists` pre-check.
-        try {
-            $payload = ($object->getObject() ?? []);
-        } catch (\Throwable $e) {
-            $payload = [];
-        }
-
-        $retainedUntil = trim((string) ($payload['retainedUntil'] ?? ''));
-        if ($retainedUntil !== '') {
-            $timestamp = strtotime($retainedUntil);
-            if ($timestamp !== false) {
-                return [(new DateTimeImmutable())->setTimestamp($timestamp), 'retainedUntil'];
-            }
-        }
-
-        try {
-            $retention = ($object->getRetention() ?? []);
-        } catch (\Throwable $e) {
-            $retention = [];
-        }
-
-        $archiefactiedatum = trim((string) ($retention['archiefactiedatum'] ?? ''));
-        if ($archiefactiedatum !== '') {
-            $timestamp = strtotime($archiefactiedatum);
-            if ($timestamp !== false) {
-                return [(new DateTimeImmutable())->setTimestamp($timestamp), 'retention.archiefactiedatum'];
-            }
-        }
-
-        return [null, null];
-
-    }//end resolveCeiling()
-
-
-    /**
-     * Persist a mutated (held) entity via `MagicMapper::update()` -- shared
-     * by every method that places a hold, logging and reporting failure
-     * uniformly instead of duplicating the try/catch three times.
-     *
-     * @param mixed  $held   The entity, already mutated by `RetentionService::placeLegalHold()`.
-     * @param string $schema The schema name (for the warning log message only).
-     *
-     * @return bool Whether the persist succeeded.
-     */
-    private function persist(mixed $held, string $schema): bool
-    {
-        try {
-            $this->objectMapper()->update($held);
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                'PayrollRetentionGuardService: kon legal hold niet opslaan voor '.$schema.': '.$e->getMessage()
-            );
-            return false;
-        }
-
-        return true;
-
-    }//end persist()
-
-
-    /**
-     * @return mixed OpenRegister's RetentionService.
-     */
-    private function retentionService(): mixed
-    {
-        return $this->container->get(self::RETENTION_SERVICE_FQCN);
-
-    }//end retentionService()
-
-
-    /**
-     * @return mixed OpenRegister's MagicMapper -- `update()` persists an
-     *               entity's entity-level columns (including `retention`)
-     *               directly (see the class docblock's Persistence gotcha).
-     */
-    private function objectMapper(): mixed
-    {
-        return $this->container->get(self::OBJECT_MAPPER_FQCN);
-
-    }//end objectMapper()
-
+	/**
+	 * @return mixed OpenRegister's MagicMapper -- `update()` persists an
+	 *               entity's entity-level columns (including `retention`)
+	 *               directly (see the class docblock's Persistence gotcha).
+	 */
+	private function objectMapper(): mixed {
+		return $this->container->get(self::OBJECT_MAPPER_FQCN);
+	}//end objectMapper()
 
 }//end class

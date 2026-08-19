@@ -50,345 +50,327 @@ use OCA\Hrmq\Standards\RuleEngine;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * On-demand Arbeidstijdenwet cross-check over one roster's RosterAssignments.
  */
-class RosterCheckService
-{
+class RosterCheckService {
 
-    /**
-     * Max objects loaded per type for a check run.
-     *
-     * @var int
-     */
-    private const LIMIT = 10000;
+	/**
+	 * Max objects loaded per type for a check run.
+	 *
+	 * @var int
+	 */
+	private const LIMIT = 10000;
 
+	/**
+	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
+	 * @param IAppConfig $appConfig App config for the register slug.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+		private readonly IAppConfig $appConfig,
+		private readonly LoggerInterface $logger,
+	) {
 
-    /**
-     * @param ContainerInterface $container DI container for lazy ObjectService resolution.
-     * @param IAppConfig         $appConfig App config for the register slug.
-     * @param LoggerInterface    $logger    Logger.
-     */
-    public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly IAppConfig $appConfig,
-        private readonly LoggerInterface $logger,
-    ) {
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * Check one Roster (by id) against the ATW cross-check, regardless of
+	 * its publish status.
+	 *
+	 * @param string $rosterId The Roster id.
+	 * @param array<string, mixed> $context Evaluation context (e.g. jurisdiction).
+	 *
+	 * @return array<string, mixed> {rostersChecked, assignmentsChecked, violations: [{objectType, objectId, ruleId, severity, statement}], mandatoryViolations}.
+	 *
+	 * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
+	 */
+	public function checkRoster(string $rosterId, array $context = []): array {
+		$rosterId = trim($rosterId);
+		if ($rosterId === '') {
+			return $this->emptyReport();
+		}
 
+		$rosters = [];
+		foreach ($this->loadAll('Roster') as $roster) {
+			if ((string)($roster['id'] ?? $roster['@self']['id'] ?? '') === $rosterId) {
+				$rosters[] = $roster;
+				break;
+			}
+		}
 
-    /**
-     * Check one Roster (by id) against the ATW cross-check, regardless of
-     * its publish status.
-     *
-     * @param string               $rosterId The Roster id.
-     * @param array<string, mixed> $context  Evaluation context (e.g. jurisdiction).
-     *
-     * @return array<string, mixed> {rostersChecked, assignmentsChecked, violations: [{objectType, objectId, ruleId, severity, statement}], mandatoryViolations}.
-     *
-     * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
-     */
-    public function checkRoster(string $rosterId, array $context=[]): array
-    {
-        $rosterId = trim($rosterId);
-        if ($rosterId === '') {
-            return $this->emptyReport();
-        }
+		return $this->evaluateRosters($rosters, $context);
+	}//end checkRoster()
 
-        $rosters = [];
-        foreach ($this->loadAll('Roster') as $roster) {
-            if ((string) ($roster['id'] ?? $roster['@self']['id'] ?? '') === $rosterId) {
-                $rosters[] = $roster;
-                break;
-            }
-        }
+	/**
+	 * Check every Roster of a planning period (optionally scoped to one
+	 * administration) against the ATW cross-check, regardless of publish
+	 * status.
+	 *
+	 * @param string $period Planning period (`YYYY-Www` or `YYYY-MM`).
+	 * @param string|null $administrationId Only rosters of this administration, or null for all.
+	 * @param array<string, mixed> $context Evaluation context (e.g. jurisdiction).
+	 *
+	 * @return array<string, mixed> {rostersChecked, assignmentsChecked, violations, mandatoryViolations}.
+	 *
+	 * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
+	 */
+	public function checkPeriod(string $period, ?string $administrationId = null, array $context = []): array {
+		$period = trim($period);
+		if ($period === '') {
+			return $this->emptyReport();
+		}
 
-        return $this->evaluateRosters($rosters, $context);
+		$rosters = [];
+		foreach ($this->loadAll('Roster') as $roster) {
+			if ((string)($roster['period'] ?? '') !== $period) {
+				continue;
+			}
 
-    }//end checkRoster()
+			if ($administrationId !== null && $administrationId !== ''
+				&& (string)($roster['administrationId'] ?? '') !== $administrationId
+			) {
+				continue;
+			}
 
+			$rosters[] = $roster;
+		}
 
-    /**
-     * Check every Roster of a planning period (optionally scoped to one
-     * administration) against the ATW cross-check, regardless of publish
-     * status.
-     *
-     * @param string               $period           Planning period (`YYYY-Www` or `YYYY-MM`).
-     * @param string|null          $administrationId Only rosters of this administration, or null for all.
-     * @param array<string, mixed> $context          Evaluation context (e.g. jurisdiction).
-     *
-     * @return array<string, mixed> {rostersChecked, assignmentsChecked, violations, mandatoryViolations}.
-     *
-     * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
-     */
-    public function checkPeriod(string $period, ?string $administrationId=null, array $context=[]): array
-    {
-        $period = trim($period);
-        if ($period === '') {
-            return $this->emptyReport();
-        }
+		return $this->evaluateRosters($rosters, $context);
+	}//end checkPeriod()
 
-        $rosters = [];
-        foreach ($this->loadAll('Roster') as $roster) {
-            if ((string) ($roster['period'] ?? '') !== $period) {
-                continue;
-            }
+	/**
+	 * Load the RosterAssignments of the given rosters, fill any missing
+	 * planned-clock fields in-memory from their Shift, build the local
+	 * daily-rest sibling index, and run the RuleEngine over exactly that
+	 * assignment set.
+	 *
+	 * @param array<int, array<string, mixed>> $rosters The resolved Roster row(s).
+	 * @param array<string, mixed> $context Evaluation context (e.g. jurisdiction).
+	 *
+	 * @return array<string, mixed> {rostersChecked, assignmentsChecked, violations, mandatoryViolations}.
+	 */
+	private function evaluateRosters(array $rosters, array $context): array {
+		if ($rosters === []) {
+			return $this->emptyReport();
+		}
 
-            if ($administrationId !== null && $administrationId !== ''
-                && (string) ($roster['administrationId'] ?? '') !== $administrationId
-            ) {
-                continue;
-            }
+		$rosterIds = [];
+		foreach ($rosters as $roster) {
+			$id = (string)($roster['id'] ?? $roster['@self']['id'] ?? '');
+			if ($id !== '') {
+				$rosterIds[$id] = true;
+			}
+		}
 
-            $rosters[] = $roster;
-        }
+		$assignments = [];
+		foreach ($this->loadAll('RosterAssignment') as $assignment) {
+			$rosterId = (string)($assignment['rosterId'] ?? '');
+			if ($rosterId !== '' && isset($rosterIds[$rosterId]) === true) {
+				$assignments[] = $assignment;
+			}
+		}
 
-        return $this->evaluateRosters($rosters, $context);
+		$shiftsById = [];
+		foreach ($this->loadAll('Shift') as $shift) {
+			$id = (string)($shift['id'] ?? $shift['@self']['id'] ?? '');
+			if ($id !== '') {
+				$shiftsById[$id] = $shift;
+			}
+		}
 
-    }//end checkPeriod()
+		$projected = [];
+		foreach ($assignments as $assignment) {
+			$projected[] = $this->withProjection($assignment, $shiftsById);
+		}
 
+		$context['rostering'] = ['plannedClockByEmployeeDate' => $this->buildLocalIndex($projected)];
 
-    /**
-     * Load the RosterAssignments of the given rosters, fill any missing
-     * planned-clock fields in-memory from their Shift, build the local
-     * daily-rest sibling index, and run the RuleEngine over exactly that
-     * assignment set.
-     *
-     * @param array<int, array<string, mixed>> $rosters The resolved Roster row(s).
-     * @param array<string, mixed>             $context Evaluation context (e.g. jurisdiction).
-     *
-     * @return array<string, mixed> {rostersChecked, assignmentsChecked, violations, mandatoryViolations}.
-     */
-    private function evaluateRosters(array $rosters, array $context): array
-    {
-        if ($rosters === []) {
-            return $this->emptyReport();
-        }
+		$report = [
+			'rostersChecked' => count($rosters),
+			'assignmentsChecked' => count($projected),
+			'violations' => [],
+			'mandatoryViolations' => 0,
+		];
 
-        $rosterIds = [];
-        foreach ($rosters as $roster) {
-            $id = (string) ($roster['id'] ?? $roster['@self']['id'] ?? '');
-            if ($id !== '') {
-                $rosterIds[$id] = true;
-            }
-        }
+		foreach ($projected as $assignment) {
+			foreach (RuleEngine::evaluate('RosterAssignment', $assignment, $context) as $violation) {
+				$report['violations'][] = [
+					'objectType' => 'RosterAssignment',
+					'objectId' => (string)($assignment['id'] ?? $assignment['@self']['id'] ?? ''),
+					'ruleId' => $violation->ruleId,
+					'severity' => $violation->severity,
+					'statement' => $violation->statement,
+				];
 
-        $assignments = [];
-        foreach ($this->loadAll('RosterAssignment') as $assignment) {
-            $rosterId = (string) ($assignment['rosterId'] ?? '');
-            if ($rosterId !== '' && isset($rosterIds[$rosterId]) === true) {
-                $assignments[] = $assignment;
-            }
-        }
+				if ($violation->severity === 'mandatory') {
+					$report['mandatoryViolations']++;
+				}
+			}
+		}
 
-        $shiftsById = [];
-        foreach ($this->loadAll('Shift') as $shift) {
-            $id = (string) ($shift['id'] ?? $shift['@self']['id'] ?? '');
-            if ($id !== '') {
-                $shiftsById[$id] = $shift;
-            }
-        }
+		return $report;
+	}//end evaluateRosters()
 
-        $projected = [];
-        foreach ($assignments as $assignment) {
-            $projected[] = $this->withProjection($assignment, $shiftsById);
-        }
+	/**
+	 * Fill an assignment's `plannedStart`/`plannedEnd`/`plannedBreakMinutes`
+	 * from its referenced Shift ONLY when they are missing — an
+	 * already-projected assignment is returned unchanged (design D2
+	 * stability: never re-derive a value the write path already stored).
+	 *
+	 * @param array<string, mixed> $assignment The RosterAssignment.
+	 * @param array<string, array<string, mixed>> $shiftsById Shift rows keyed by id.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withProjection(array $assignment, array $shiftsById): array {
+		$hasPlannedStart = (trim((string)($assignment['plannedStart'] ?? '')) !== '');
+		$hasPlannedEnd = (trim((string)($assignment['plannedEnd'] ?? '')) !== '');
+		if ($hasPlannedStart === true && $hasPlannedEnd === true) {
+			return $assignment;
+		}
 
-        $context['rostering'] = ['plannedClockByEmployeeDate' => $this->buildLocalIndex($projected)];
+		$shiftId = (string)($assignment['shiftId'] ?? '');
+		$shift = ($shiftsById[$shiftId] ?? null);
+		if (is_array($shift) === false) {
+			return $assignment;
+		}
 
-        $report = [
-            'rostersChecked'      => count($rosters),
-            'assignmentsChecked'  => count($projected),
-            'violations'          => [],
-            'mandatoryViolations' => 0,
-        ];
+		$date = (string)($assignment['date'] ?? '');
+		if ($date === '') {
+			return $assignment;
+		}
 
-        foreach ($projected as $assignment) {
-            foreach (RuleEngine::evaluate('RosterAssignment', $assignment, $context) as $violation) {
-                $report['violations'][] = [
-                    'objectType' => 'RosterAssignment',
-                    'objectId'   => (string) ($assignment['id'] ?? $assignment['@self']['id'] ?? ''),
-                    'ruleId'     => $violation->ruleId,
-                    'severity'   => $violation->severity,
-                    'statement'  => $violation->statement,
-                ];
+		$planned = RosterAssignmentProjectionService::project($shift, $date);
 
-                if ($violation->severity === 'mandatory') {
-                    $report['mandatoryViolations']++;
-                }
-            }
-        }
+		return array_merge(
+			$assignment,
+			[
+				'plannedStart' => $assignment['plannedStart'] ?? $planned['plannedStart'],
+				'plannedEnd' => $assignment['plannedEnd'] ?? $planned['plannedEnd'],
+				'plannedBreakMinutes' => $assignment['plannedBreakMinutes'] ?? $planned['plannedBreakMinutes'],
+			]
+		);
 
-        return $report;
+	}//end withProjection()
 
-    }//end evaluateRosters()
+	/**
+	 * Build the `employeeId => [date => ['clockIn' => plannedStart, 'clockOut' => plannedEnd]]`
+	 * sibling index from exactly the given (already-projected) assignment
+	 * set — the `RuleAuditService::buildRosterContext()` shape, scoped to
+	 * this check's own assignments only.
+	 *
+	 * @param array<int, array<string, mixed>> $assignments The (projected) RosterAssignment rows.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function buildLocalIndex(array $assignments): array {
+		$index = [];
+		foreach ($assignments as $assignment) {
+			$employeeId = (string)($assignment['employeeId'] ?? '');
+			$date = (string)($assignment['date'] ?? '');
+			if ($employeeId === '' || $date === '') {
+				continue;
+			}
 
+			$index[$employeeId][$date] = [
+				'clockIn' => ($assignment['plannedStart'] ?? null),
+				'clockOut' => ($assignment['plannedEnd'] ?? null),
+			];
+		}
 
-    /**
-     * Fill an assignment's `plannedStart`/`plannedEnd`/`plannedBreakMinutes`
-     * from its referenced Shift ONLY when they are missing — an
-     * already-projected assignment is returned unchanged (design D2
-     * stability: never re-derive a value the write path already stored).
-     *
-     * @param array<string, mixed>               $assignment The RosterAssignment.
-     * @param array<string, array<string, mixed>> $shiftsById Shift rows keyed by id.
-     *
-     * @return array<string, mixed>
-     */
-    private function withProjection(array $assignment, array $shiftsById): array
-    {
-        $hasPlannedStart = (trim((string) ($assignment['plannedStart'] ?? '')) !== '');
-        $hasPlannedEnd   = (trim((string) ($assignment['plannedEnd'] ?? '')) !== '');
-        if ($hasPlannedStart === true && $hasPlannedEnd === true) {
-            return $assignment;
-        }
+		return $index;
+	}//end buildLocalIndex()
 
-        $shiftId = (string) ($assignment['shiftId'] ?? '');
-        $shift   = ($shiftsById[$shiftId] ?? null);
-        if (is_array($shift) === false) {
-            return $assignment;
-        }
+	/**
+	 * The zero-result report shape.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function emptyReport(): array {
+		return [
+			'rostersChecked' => 0,
+			'assignmentsChecked' => 0,
+			'violations' => [],
+			'mandatoryViolations' => 0,
+		];
 
-        $date = (string) ($assignment['date'] ?? '');
-        if ($date === '') {
-            return $assignment;
-        }
+	}//end emptyReport()
 
-        $planned = RosterAssignmentProjectionService::project($shift, $date);
+	/**
+	 * Load all objects of a schema (capped), as plain arrays. Never throws —
+	 * degrades to an empty list and logs a warning (the RuleAuditService
+	 * idiom).
+	 *
+	 * @param string $schema The schema name.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function loadAll(string $schema): array {
+		try {
+			$rows = $this->objectService()
+				->setRegister($this->register())
+				->setSchema($schema)
+				->findAll(['limit' => self::LIMIT]);
+		} catch (\Throwable $e) {
+			$this->logger->warning('RosterCheckService: could not load ' . $schema . ': ' . $e->getMessage());
+			return [];
+		}
 
-        return array_merge(
-            $assignment,
-            [
-                'plannedStart'        => $assignment['plannedStart'] ?? $planned['plannedStart'],
-                'plannedEnd'          => $assignment['plannedEnd'] ?? $planned['plannedEnd'],
-                'plannedBreakMinutes' => $assignment['plannedBreakMinutes'] ?? $planned['plannedBreakMinutes'],
-            ]
-        );
+		return $this->normaliseRows($rows);
+	}//end loadAll()
 
-    }//end withProjection()
+	/**
+	 * Normalise a list of ObjectService rows (entities or arrays) to arrays.
+	 *
+	 * @param mixed $rows Raw rows.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function normaliseRows(mixed $rows): array {
+		$out = [];
+		foreach ((is_array($rows) === true ? $rows : []) as $row) {
+			if (is_array($row) === true) {
+				$out[] = $row;
+				continue;
+			}
 
+			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+				$out[] = (array)$row->jsonSerialize();
+			}
+		}
 
-    /**
-     * Build the `employeeId => [date => ['clockIn' => plannedStart, 'clockOut' => plannedEnd]]`
-     * sibling index from exactly the given (already-projected) assignment
-     * set — the `RuleAuditService::buildRosterContext()` shape, scoped to
-     * this check's own assignments only.
-     *
-     * @param array<int, array<string, mixed>> $assignments The (projected) RosterAssignment rows.
-     *
-     * @return array<string, mixed>
-     */
-    private function buildLocalIndex(array $assignments): array
-    {
-        $index = [];
-        foreach ($assignments as $assignment) {
-            $employeeId = (string) ($assignment['employeeId'] ?? '');
-            $date       = (string) ($assignment['date'] ?? '');
-            if ($employeeId === '' || $date === '') {
-                continue;
-            }
+		return $out;
+	}//end normaliseRows()
 
-            $index[$employeeId][$date] = [
-                'clockIn'  => ($assignment['plannedStart'] ?? null),
-                'clockOut' => ($assignment['plannedEnd'] ?? null),
-            ];
-        }
+	/**
+	 * @return mixed The OpenRegister ObjectService.
+	 */
+	private function objectService(): mixed {
+		// ADR-083: establish availability before reaching. class_exists() rather
+		// than SettingsService::isOpenRegisterAvailable(), because this class
+		// does not inject SettingsService and adding a constructor dependency
+		// purely to ask a yes/no question is the wrong trade. It answers the
+		// same question the container would otherwise have answered fatally,
+		// with a message that names the app the admin has to install.
+		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
+			throw new RuntimeException(
+				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+			);
+		}
 
-        return $index;
+		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+	}//end objectService()
 
-    }//end buildLocalIndex()
-
-
-    /**
-     * The zero-result report shape.
-     *
-     * @return array<string, mixed>
-     */
-    private function emptyReport(): array
-    {
-        return [
-            'rostersChecked'      => 0,
-            'assignmentsChecked'  => 0,
-            'violations'          => [],
-            'mandatoryViolations' => 0,
-        ];
-
-    }//end emptyReport()
-
-
-    /**
-     * Load all objects of a schema (capped), as plain arrays. Never throws —
-     * degrades to an empty list and logs a warning (the RuleAuditService
-     * idiom).
-     *
-     * @param string $schema The schema name.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function loadAll(string $schema): array
-    {
-        try {
-            $rows = $this->objectService()
-                ->setRegister($this->register())
-                ->setSchema($schema)
-                ->findAll(['limit' => self::LIMIT]);
-        } catch (\Throwable $e) {
-            $this->logger->warning('RosterCheckService: could not load '.$schema.': '.$e->getMessage());
-            return [];
-        }
-
-        return $this->normaliseRows($rows);
-
-    }//end loadAll()
-
-
-    /**
-     * Normalise a list of ObjectService rows (entities or arrays) to arrays.
-     *
-     * @param mixed $rows Raw rows.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function normaliseRows(mixed $rows): array
-    {
-        $out = [];
-        foreach ((is_array($rows) === true ? $rows : []) as $row) {
-            if (is_array($row) === true) {
-                $out[] = $row;
-                continue;
-            }
-
-            if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-                $out[] = (array) $row->jsonSerialize();
-            }
-        }
-
-        return $out;
-
-    }//end normaliseRows()
-
-
-    /**
-     * @return mixed The OpenRegister ObjectService.
-     */
-    private function objectService(): mixed
-    {
-        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-    }//end objectService()
-
-
-    /**
-     * @return string The configured register slug.
-     */
-    private function register(): string
-    {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');
-        return $register === '' ? 'hrmq' : $register;
-
-    }//end register()
-
+	/**
+	 * @return string The configured register slug.
+	 */
+	private function register(): string {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');
+		return $register === '' ? 'hrmq' : $register;
+	}//end register()
 
 }//end class

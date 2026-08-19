@@ -47,152 +47,137 @@ use PHPUnit\Framework\TestCase;
  * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-004
  * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
  */
-class AdministrationControllerTest extends TestCase
-{
+class AdministrationControllerTest extends TestCase {
 
+	/**
+	 * REQ-MULTI-003 "Activating an accessible administratie succeeds"
+	 * scenario.
+	 *
+	 * @return void
+	 */
+	public function testActivatingAnAccessibleAdministratiePersistsAndReturnsIt(): void {
+		$service = $this->createMock(AdministrationService::class);
+		$service->method('hasAccess')->with('admin', 'ADM-002')->willReturn(true);
+		$service->expects($this->once())->method('setActiveAdministrationId')->with('admin', 'ADM-002');
 
-    /**
-     * REQ-MULTI-003 "Activating an accessible administratie succeeds"
-     * scenario.
-     *
-     * @return void
-     */
-    public function testActivatingAnAccessibleAdministratiePersistsAndReturnsIt(): void
-    {
-        $service = $this->createMock(AdministrationService::class);
-        $service->method('hasAccess')->with('admin', 'ADM-002')->willReturn(true);
-        $service->expects($this->once())->method('setActiveAdministrationId')->with('admin', 'ADM-002');
+		$controller = $this->buildController($service, 'admin');
 
-        $controller = $this->buildController($service, 'admin');
+		$response = $controller->setActive('ADM-002');
 
-        $response = $controller->setActive('ADM-002');
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('ADM-002', $response->getData()['activeAdministrationId']);
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame('ADM-002', $response->getData()['activeAdministrationId']);
+	}//end testActivatingAnAccessibleAdministratiePersistsAndReturnsIt()
 
-    }//end testActivatingAnAccessibleAdministratiePersistsAndReturnsIt()
+	/**
+	 * REQ-MULTI-003 "Activating an inaccessible administratie is refused"
+	 * scenario: no AdministrationAccess row -> 404, the pointer is NEVER
+	 * written (the no-admin-idor guard runs before the persist step).
+	 *
+	 * @return void
+	 */
+	public function testActivatingAnInaccessibleAdministratieReturns404AndNeverWrites(): void {
+		$service = $this->createMock(AdministrationService::class);
+		$service->method('hasAccess')->with('admin', 'ADM-099')->willReturn(false);
+		$service->expects($this->never())->method('setActiveAdministrationId');
 
+		$controller = $this->buildController($service, 'admin');
 
-    /**
-     * REQ-MULTI-003 "Activating an inaccessible administratie is refused"
-     * scenario: no AdministrationAccess row -> 404, the pointer is NEVER
-     * written (the no-admin-idor guard runs before the persist step).
-     *
-     * @return void
-     */
-    public function testActivatingAnInaccessibleAdministratieReturns404AndNeverWrites(): void
-    {
-        $service = $this->createMock(AdministrationService::class);
-        $service->method('hasAccess')->with('admin', 'ADM-099')->willReturn(false);
-        $service->expects($this->never())->method('setActiveAdministrationId');
+		$response = $controller->setActive('ADM-099');
 
-        $controller = $this->buildController($service, 'admin');
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertArrayHasKey('error', $response->getData());
 
-        $response = $controller->setActive('ADM-099');
+	}//end testActivatingAnInaccessibleAdministratieReturns404AndNeverWrites()
 
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
-        $this->assertArrayHasKey('error', $response->getData());
+	/**
+	 * An unknown administrationId (no catalog row at all, distinct from "has
+	 * no access row") collapses to the identical 404 — existence is never
+	 * leaked either way.
+	 *
+	 * @return void
+	 */
+	public function testUnknownAdministrationIdAlsoReturns404(): void {
+		$service = $this->createMock(AdministrationService::class);
+		$service->method('hasAccess')->willReturn(false);
+		$service->expects($this->never())->method('setActiveAdministrationId');
 
-    }//end testActivatingAnInaccessibleAdministratieReturns404AndNeverWrites()
+		$controller = $this->buildController($service, 'admin');
 
+		$response = $controller->setActive('does-not-exist');
 
-    /**
-     * An unknown administrationId (no catalog row at all, distinct from "has
-     * no access row") collapses to the identical 404 — existence is never
-     * leaked either way.
-     *
-     * @return void
-     */
-    public function testUnknownAdministrationIdAlsoReturns404(): void
-    {
-        $service = $this->createMock(AdministrationService::class);
-        $service->method('hasAccess')->willReturn(false);
-        $service->expects($this->never())->method('setActiveAdministrationId');
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
 
-        $controller = $this->buildController($service, 'admin');
+	}//end testUnknownAdministrationIdAlsoReturns404()
 
-        $response = $controller->setActive('does-not-exist');
+	/**
+	 * A missing/blank administrationId is refused with 400 before any
+	 * resolve (hasAccess is never even called).
+	 *
+	 * @return void
+	 */
+	public function testMissingAdministrationIdReturns400(): void {
+		$service = $this->createMock(AdministrationService::class);
+		$service->expects($this->never())->method('hasAccess');
+		$service->expects($this->never())->method('setActiveAdministrationId');
 
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$controller = $this->buildController($service, 'admin');
 
-    }//end testUnknownAdministrationIdAlsoReturns404()
+		$response = $controller->setActive('   ');
 
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 
-    /**
-     * A missing/blank administrationId is refused with 400 before any
-     * resolve (hasAccess is never even called).
-     *
-     * @return void
-     */
-    public function testMissingAdministrationIdReturns400(): void
-    {
-        $service = $this->createMock(AdministrationService::class);
-        $service->expects($this->never())->method('hasAccess');
-        $service->expects($this->never())->method('setActiveAdministrationId');
+	}//end testMissingAdministrationIdReturns400()
 
-        $controller = $this->buildController($service, 'admin');
+	/**
+	 * REQ-MULTI-004 `context()` returns exactly the service's resolved
+	 * context for the caller (active id + accessible administraties only).
+	 *
+	 * @return void
+	 */
+	public function testContextReturnsTheCallersResolvedContext(): void {
+		$expected = [
+			'activeAdministrationId' => 'ADM-001',
+			'administrations' => [
+				// single-person-modes (REQ-SPM-002): every administratie entry
+				// carries its resolved `mode` — the controller surfaces exactly
+				// what AdministrationService::context() resolves.
+				['administrationId' => 'ADM-001', 'name' => 'Example: Conduction Demo B.V.', 'role' => 'accountant', 'mode' => 'standard'],
+				['administrationId' => 'ADM-002', 'name' => 'Example: Tweede Klant B.V.', 'role' => 'accountant', 'mode' => 'dga_single_person'],
+			],
+		];
 
-        $response = $controller->setActive('   ');
+		$service = $this->createMock(AdministrationService::class);
+		$service->method('context')->with('admin')->willReturn($expected);
 
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$controller = $this->buildController($service, 'admin');
 
-    }//end testMissingAdministrationIdReturns400()
+		$response = $controller->context();
 
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame($expected, $response->getData());
 
-    /**
-     * REQ-MULTI-004 `context()` returns exactly the service's resolved
-     * context for the caller (active id + accessible administraties only).
-     *
-     * @return void
-     */
-    public function testContextReturnsTheCallersResolvedContext(): void
-    {
-        $expected = [
-            'activeAdministrationId' => 'ADM-001',
-            'administrations'        => [
-                // single-person-modes (REQ-SPM-002): every administratie entry
-                // carries its resolved `mode` — the controller surfaces exactly
-                // what AdministrationService::context() resolves.
-                ['administrationId' => 'ADM-001', 'name' => 'Example: Conduction Demo B.V.', 'role' => 'accountant', 'mode' => 'standard'],
-                ['administrationId' => 'ADM-002', 'name' => 'Example: Tweede Klant B.V.', 'role' => 'accountant', 'mode' => 'dga_single_person'],
-            ],
-        ];
+	}//end testContextReturnsTheCallersResolvedContext()
 
-        $service = $this->createMock(AdministrationService::class);
-        $service->method('context')->with('admin')->willReturn($expected);
+	/**
+	 * Build an `AdministrationController` with the given (mocked)
+	 * `AdministrationService` and a session resolving to `$userId`.
+	 *
+	 * @param AdministrationService $service The (mocked) administration service.
+	 * @param string $userId The acting user id.
+	 *
+	 * @return AdministrationController
+	 */
+	private function buildController(AdministrationService $service, string $userId): AdministrationController {
+		$request = $this->createMock(IRequest::class);
 
-        $controller = $this->buildController($service, 'admin');
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn($userId);
 
-        $response = $controller->context();
+		$userSession = $this->createMock(IUserSession::class);
+		$userSession->method('getUser')->willReturn($user);
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame($expected, $response->getData());
-
-    }//end testContextReturnsTheCallersResolvedContext()
-
-
-    /**
-     * Build an `AdministrationController` with the given (mocked)
-     * `AdministrationService` and a session resolving to `$userId`.
-     *
-     * @param AdministrationService $service The (mocked) administration service.
-     * @param string                $userId  The acting user id.
-     *
-     * @return AdministrationController
-     */
-    private function buildController(AdministrationService $service, string $userId): AdministrationController
-    {
-        $request = $this->createMock(IRequest::class);
-
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn($userId);
-
-        $userSession = $this->createMock(IUserSession::class);
-        $userSession->method('getUser')->willReturn($user);
-
-        return new AdministrationController($request, $service, $userSession);
-
-    }//end buildController()
-
+		return new AdministrationController($request, $service, $userSession);
+	}//end buildController()
 
 }//end class

@@ -91,9 +91,24 @@ explicit mapping from each old F-00x feature to why it is out of scope.
   is ordinary BW7 mechanics already covered generically, and formal tuchtrecht for the three
   non-normalized sectors is a named fast-follow requiring case-management machinery this change does
   not build.
-- **F-009 Vertrouwelijkheid & toegangsbeheer, F-010 Bewaartermijnen & archivering** — confidentiality
-  tiers and automated retention/destruction for the case types above; moot without the case-management
-  capability those features assumed.
+- **F-009 Vertrouwelijkheid & toegangsbeheer** — **STOPPED, not deferred (decision 2026-08-19).**
+  The earlier rationale here read "moot without the case-management capability those features
+  assumed", which is a come-back-to-it-later placeholder, and it would have brought this back as an
+  hrmq feature the moment case management existed. It is not ours to build. OpenRegister already owns
+  confidentiality tiering and the enforcement half of it: `GdprEntity` classifies data as
+  `pii` / `sensitive_pii` / `business_data`, `PropertyRbacHandler` enforces access at field level,
+  schema `authorization` blocks carry `{group, match}` entries for row-level scoping, and
+  `Verwerkingsactiviteit` is the AVG Art 30 verwerkingenregister those tiers are declared against.
+  An hrmq tier would be a fourth parallel implementation of one concept, and the one that does not
+  enforce anything. **If OpenRegister's tiering is genuinely insufficient for AOR, the proposal is
+  against OpenRegister, not against hrmq** — say what an ambtenaar dossier needs that
+  `sensitive_pii` plus property RBAC cannot express, and take it there.
+- **F-010 Bewaartermijnen & archivering** — out of scope here, and **the same argument very likely
+  applies**: OpenRegister ships `Gdpr/Retention/RetentionSweepService`, `AvgRetentionService` and a
+  scheduled `DsarRetentionSweepJob`. This bullet does not decide it — retention schedules for
+  ambtenaar dossiers may carry statutory periods that are genuinely hrmq domain knowledge, which
+  confidentiality tiering is not. Decide it before anyone builds it, on the same test: is this a
+  fact about the data, or a mechanism for handling data?
 - **Auto-deriving `publicSectorRegime` from a sector/function taxonomy** — hrmq has no employer-sector
   or function-category schema today (the same gap `abp-aansluiting` names for its own admin-set flag);
   the field is HR-set, not derived.

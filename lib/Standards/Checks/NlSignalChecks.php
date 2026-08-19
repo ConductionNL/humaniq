@@ -59,275 +59,253 @@ use DateTimeImmutable;
 /**
  * Contract-expiry signal + statutory aanzegtermijn executable checks.
  */
-final class NlSignalChecks implements CheckProvider
-{
+final class NlSignalChecks implements CheckProvider {
 
-    /**
-     * `nl-signaal-contract-verloopt` window, days (parameters.windowDays in
-     * labour.json -- kept in sync here since the predicate is code, not data).
-     *
-     * @var int
-     */
-    private const WINDOW_DAYS = 60;
+	/**
+	 * `nl-signaal-contract-verloopt` window, days (parameters.windowDays in
+	 * labour.json -- kept in sync here since the predicate is code, not data).
+	 *
+	 * @var int
+	 */
+	private const WINDOW_DAYS = 60;
 
-    /**
-     * `nl-aanzegtermijn-bewaking` minimum fixed-term duration, months
-     * (parameters.minContractMonths in labour.json).
-     *
-     * @var int
-     */
-    private const MIN_CONTRACT_MONTHS = 6;
+	/**
+	 * `nl-aanzegtermijn-bewaking` minimum fixed-term duration, months
+	 * (parameters.minContractMonths in labour.json).
+	 *
+	 * @var int
+	 */
+	private const MIN_CONTRACT_MONTHS = 6;
 
-    /**
-     * `nl-aanzegtermijn-bewaking` required notice period, months
-     * (parameters.noticeMonths in labour.json).
-     *
-     * @var int
-     */
-    private const NOTICE_MONTHS = 1;
+	/**
+	 * `nl-aanzegtermijn-bewaking` required notice period, months
+	 * (parameters.noticeMonths in labour.json).
+	 *
+	 * @var int
+	 */
+	private const NOTICE_MONTHS = 1;
 
-    /**
-     * `nl-bhv-certificaat-verloopt` window, days (parameters.windowDays in
-     * labour.json -- kept in sync here since the predicate is code, not
-     * data; also the window the "Aflopende BHV-certificaten" dashboard
-     * widget filter must stay in sync with, src/manifest.json).
-     *
-     * @var int
-     */
-    private const BHV_WINDOW_DAYS = 90;
+	/**
+	 * `nl-bhv-certificaat-verloopt` window, days (parameters.windowDays in
+	 * labour.json -- kept in sync here since the predicate is code, not
+	 * data; also the window the "Aflopende BHV-certificaten" dashboard
+	 * widget filter must stay in sync with, src/manifest.json).
+	 *
+	 * @var int
+	 */
+	private const BHV_WINDOW_DAYS = 90;
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, callable>>
+	 */
+	public static function checks(): array {
+		return [
+			'EmploymentContract' => [
+				// HR contract-lifecycle control -- expiring temporary contract
+				// with no successor is signalled for HR follow-up.
+				'nl-signaal-contract-verloopt' => static fn (array $o, array $context): bool => self::contractVerloeptSatisfied($o, $context),
+				// BW art. 7:668 lid 1 -- written aanzegging at least one month
+				// before the end date of a fixed-term contract of >= 6 months.
+				'nl-aanzegtermijn-bewaking' => static fn (array $o): bool => self::aanzegtermijnSatisfied($o),
+			],
+			'BhvCertificering' => [
+				// bhv-organisatie -- expiring BHV-related certification is
+				// signalled for HR follow-up (herhalingscursus /
+				// herbeoordeling van de aanwijzing). Same hr-signals
+				// framework, same object-local shape as the two
+				// EmploymentContract predicates above -- no second alerting
+				// mechanism (design.md D1).
+				'nl-bhv-certificaat-verloopt' => static fn (array $o): bool => self::bhvCertificaatVerloeptSatisfied($o),
+			],
+		];
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, callable>>
-     */
-    public static function checks(): array
-    {
-        return [
-            'EmploymentContract' => [
-                // HR contract-lifecycle control -- expiring temporary contract
-                // with no successor is signalled for HR follow-up.
-                'nl-signaal-contract-verloopt' => static fn(array $o, array $context): bool => self::contractVerloeptSatisfied($o, $context),
-                // BW art. 7:668 lid 1 -- written aanzegging at least one month
-                // before the end date of a fixed-term contract of >= 6 months.
-                'nl-aanzegtermijn-bewaking'    => static fn(array $o): bool => self::aanzegtermijnSatisfied($o),
-            ],
-            'BhvCertificering'   => [
-                // bhv-organisatie -- expiring BHV-related certification is
-                // signalled for HR follow-up (herhalingscursus /
-                // herbeoordeling van de aanwijzing). Same hr-signals
-                // framework, same object-local shape as the two
-                // EmploymentContract predicates above -- no second alerting
-                // mechanism (design.md D1).
-                'nl-bhv-certificaat-verloopt' => static fn(array $o): bool => self::bhvCertificaatVerloeptSatisfied($o),
-            ],
-        ];
+	}//end checks()
 
-    }//end checks()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
+	/**
+	 * `nl-signaal-contract-verloopt`: true unless the contract is temporary,
+	 * its `endDate` is a parseable date, and today is within
+	 * `[today, today + WINDOW_DAYS]` of it AND no successor contract resolves
+	 * for the same employee. Permanent/agency/minijob contracts, open-ended
+	 * contracts, contracts further out than the window, and already-expired
+	 * contracts all pass vacuously (design.md D2).
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 * @param array<string, mixed> $context Evaluation context; reads `signals.contractsByEmployeeId`.
+	 *
+	 * @return bool
+	 */
+	private static function contractVerloeptSatisfied(array $o, array $context): bool {
+		if ((string)($o['type'] ?? '') !== 'temporary') {
+			return true;
+		}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public static function seedSpec(): array
-    {
-        return [];
+		$endDate = strtotime((string)($o['endDate'] ?? ''));
+		if ($endDate === false) {
+			return true;
+		}
 
-    }//end seedSpec()
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
+		$windowEnd = strtotime('+' . self::WINDOW_DAYS . ' days', $today);
+		$withinWindow = $endDate >= $today && $endDate <= $windowEnd;
+		if ($withinWindow === false) {
+			return true;
+		}
 
+		return self::hasSuccessor($o, $context);
+	}//end contractVerloeptSatisfied()
 
-    /**
-     * `nl-signaal-contract-verloopt`: true unless the contract is temporary,
-     * its `endDate` is a parseable date, and today is within
-     * `[today, today + WINDOW_DAYS]` of it AND no successor contract resolves
-     * for the same employee. Permanent/agency/minijob contracts, open-ended
-     * contracts, contracts further out than the window, and already-expired
-     * contracts all pass vacuously (design.md D2).
-     *
-     * @param array<string, mixed> $o       The EmploymentContract.
-     * @param array<string, mixed> $context Evaluation context; reads `signals.contractsByEmployeeId`.
-     *
-     * @return bool
-     */
-    private static function contractVerloeptSatisfied(array $o, array $context): bool
-    {
-        if ((string) ($o['type'] ?? '') !== 'temporary') {
-            return true;
-        }
+	/**
+	 * True when another contract for the same employeeId (a different object
+	 * id) starts after this one AND either has no endDate or an endDate after
+	 * this one's -- the shape-based successor heuristic (design.md D2/Risks).
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract being evaluated.
+	 * @param array<string, mixed> $context Evaluation context; reads `signals.contractsByEmployeeId`.
+	 *
+	 * @return bool
+	 */
+	private static function hasSuccessor(array $o, array $context): bool {
+		$employeeId = (string)($o['employeeId'] ?? '');
+		$ownId = (string)($o['id'] ?? $o['@self']['id'] ?? '');
+		$ownStart = strtotime((string)($o['startDate'] ?? ''));
+		if ($ownStart === false) {
+			return false;
+		}
 
-        $endDate = strtotime((string) ($o['endDate'] ?? ''));
-        if ($endDate === false) {
-            return true;
-        }
+		$siblings = self::contractsByEmployeeId($context)[$employeeId] ?? [];
 
-        $today       = (new DateTimeImmutable('today'))->getTimestamp();
-        $windowEnd   = strtotime('+'.self::WINDOW_DAYS.' days', $today);
-        $withinWindow = $endDate >= $today && $endDate <= $windowEnd;
-        if ($withinWindow === false) {
-            return true;
-        }
+		foreach ($siblings as $sibling) {
+			$siblingId = (string)($sibling['id'] ?? '');
+			if ($ownId !== '' && $siblingId !== '' && $siblingId === $ownId) {
+				// Never count itself as its own successor.
+				continue;
+			}
 
-        return self::hasSuccessor($o, $context);
+			$siblingStart = strtotime((string)($sibling['startDate'] ?? ''));
+			if ($siblingStart === false || $siblingStart <= $ownStart) {
+				continue;
+			}
 
-    }//end contractVerloeptSatisfied()
+			$siblingEndRaw = trim((string)($sibling['endDate'] ?? ''));
+			if ($siblingEndRaw === '') {
+				// Open-ended successor.
+				return true;
+			}
 
+			$siblingEnd = strtotime($siblingEndRaw);
+			$ownEnd = strtotime((string)($o['endDate'] ?? ''));
+			if ($siblingEnd !== false && $ownEnd !== false && $siblingEnd > $ownEnd) {
+				return true;
+			}
+		}
 
-    /**
-     * True when another contract for the same employeeId (a different object
-     * id) starts after this one AND either has no endDate or an endDate after
-     * this one's -- the shape-based successor heuristic (design.md D2/Risks).
-     *
-     * @param array<string, mixed> $o       The EmploymentContract being evaluated.
-     * @param array<string, mixed> $context Evaluation context; reads `signals.contractsByEmployeeId`.
-     *
-     * @return bool
-     */
-    private static function hasSuccessor(array $o, array $context): bool
-    {
-        $employeeId = (string) ($o['employeeId'] ?? '');
-        $ownId      = (string) ($o['id'] ?? $o['@self']['id'] ?? '');
-        $ownStart   = strtotime((string) ($o['startDate'] ?? ''));
-        if ($ownStart === false) {
-            return false;
-        }
+		return false;
+	}//end hasSuccessor()
 
-        $siblings = self::contractsByEmployeeId($context)[$employeeId] ?? [];
+	/**
+	 * The `signals.contractsByEmployeeId` index from the context, or an empty
+	 * array when the pre-pass has not populated it.
+	 *
+	 * @param array<string, mixed> $context Evaluation context.
+	 *
+	 * @return array<string, array<int, array<string, mixed>>>
+	 */
+	private static function contractsByEmployeeId(array $context): array {
+		$byEmployeeId = ($context['signals']['contractsByEmployeeId'] ?? []);
+		return is_array($byEmployeeId) === true ? $byEmployeeId : [];
+	}//end contractsByEmployeeId()
 
-        foreach ($siblings as $sibling) {
-            $siblingId = (string) ($sibling['id'] ?? '');
-            if ($ownId !== '' && $siblingId !== '' && $siblingId === $ownId) {
-                // Never count itself as its own successor.
-                continue;
-            }
+	/**
+	 * `nl-aanzegtermijn-bewaking`: true unless the contract is temporary, its
+	 * `startDate`/`endDate` are parseable dates, the fixed term runs at least
+	 * `MIN_CONTRACT_MONTHS`, the contract is still live (`endDate >= today`),
+	 * the aanzeg deadline (`endDate` minus `NOTICE_MONTHS`) has passed, AND
+	 * `aanzegdOn` is empty or later than that deadline. Short fixed terms,
+	 * non-temporary contracts, contracts whose deadline has not yet passed,
+	 * and already-expired contracts all pass vacuously (design.md D2).
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 *
+	 * @return bool
+	 */
+	private static function aanzegtermijnSatisfied(array $o): bool {
+		if ((string)($o['type'] ?? '') !== 'temporary') {
+			return true;
+		}
 
-            $siblingStart = strtotime((string) ($sibling['startDate'] ?? ''));
-            if ($siblingStart === false || $siblingStart <= $ownStart) {
-                continue;
-            }
+		$startDate = strtotime((string)($o['startDate'] ?? ''));
+		$endDate = strtotime((string)($o['endDate'] ?? ''));
+		if ($startDate === false || $endDate === false) {
+			return true;
+		}
 
-            $siblingEndRaw = trim((string) ($sibling['endDate'] ?? ''));
-            if ($siblingEndRaw === '') {
-                // Open-ended successor.
-                return true;
-            }
+		$minTermEnd = strtotime('+' . self::MIN_CONTRACT_MONTHS . ' months', $startDate);
+		if ($endDate < $minTermEnd) {
+			// Fixed term shorter than the statutory threshold -- out of scope.
+			return true;
+		}
 
-            $siblingEnd = strtotime($siblingEndRaw);
-            $ownEnd     = strtotime((string) ($o['endDate'] ?? ''));
-            if ($siblingEnd !== false && $ownEnd !== false && $siblingEnd > $ownEnd) {
-                return true;
-            }
-        }
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
+		if ($endDate < $today) {
+			// Already expired -- historical breaches are not re-flagged
+			// (monitoring-window scope, design.md D2).
+			return true;
+		}
 
-        return false;
+		$deadline = strtotime('-' . self::NOTICE_MONTHS . ' months', $endDate);
+		if ($today <= $deadline) {
+			// Deadline has not passed yet.
+			return true;
+		}
 
-    }//end hasSuccessor()
+		$aanzegdOn = trim((string)($o['aanzegdOn'] ?? ''));
+		if ($aanzegdOn === '') {
+			return false;
+		}
 
+		$aanzegdOnDate = strtotime($aanzegdOn);
+		if ($aanzegdOnDate === false) {
+			return false;
+		}
 
-    /**
-     * The `signals.contractsByEmployeeId` index from the context, or an empty
-     * array when the pre-pass has not populated it.
-     *
-     * @param array<string, mixed> $context Evaluation context.
-     *
-     * @return array<string, array<int, array<string, mixed>>>
-     */
-    private static function contractsByEmployeeId(array $context): array
-    {
-        $byEmployeeId = ($context['signals']['contractsByEmployeeId'] ?? []);
-        return is_array($byEmployeeId) === true ? $byEmployeeId : [];
+		return $aanzegdOnDate <= $deadline;
+	}//end aanzegtermijnSatisfied()
 
-    }//end contractsByEmployeeId()
+	/**
+	 * `nl-bhv-certificaat-verloopt`: true unless `certificaatGeldigTot` is a
+	 * parseable date AND today is within `[today, today + BHV_WINDOW_DAYS]`
+	 * of it. A certificate further out, or already expired, passes vacuously
+	 * -- the same "expiring date, no successor-equivalent needed" shape as
+	 * `nl-signaal-contract-verloopt`, minus the successor lookup (a BHV
+	 * certificate has no "successor contract" concept; a renewal is simply a
+	 * new record, bhv-organisatie design.md D4). Object-local: no context
+	 * needed.
+	 *
+	 * @param array<string, mixed> $o The BhvCertificering.
+	 *
+	 * @return bool
+	 */
+	private static function bhvCertificaatVerloeptSatisfied(array $o): bool {
+		$geldigTot = strtotime((string)($o['certificaatGeldigTot'] ?? ''));
+		if ($geldigTot === false) {
+			return true;
+		}
 
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
+		$windowEnd = strtotime('+' . self::BHV_WINDOW_DAYS . ' days', $today);
 
-    /**
-     * `nl-aanzegtermijn-bewaking`: true unless the contract is temporary, its
-     * `startDate`/`endDate` are parseable dates, the fixed term runs at least
-     * `MIN_CONTRACT_MONTHS`, the contract is still live (`endDate >= today`),
-     * the aanzeg deadline (`endDate` minus `NOTICE_MONTHS`) has passed, AND
-     * `aanzegdOn` is empty or later than that deadline. Short fixed terms,
-     * non-temporary contracts, contracts whose deadline has not yet passed,
-     * and already-expired contracts all pass vacuously (design.md D2).
-     *
-     * @param array<string, mixed> $o The EmploymentContract.
-     *
-     * @return bool
-     */
-    private static function aanzegtermijnSatisfied(array $o): bool
-    {
-        if ((string) ($o['type'] ?? '') !== 'temporary') {
-            return true;
-        }
-
-        $startDate = strtotime((string) ($o['startDate'] ?? ''));
-        $endDate   = strtotime((string) ($o['endDate'] ?? ''));
-        if ($startDate === false || $endDate === false) {
-            return true;
-        }
-
-        $minTermEnd = strtotime('+'.self::MIN_CONTRACT_MONTHS.' months', $startDate);
-        if ($endDate < $minTermEnd) {
-            // Fixed term shorter than the statutory threshold -- out of scope.
-            return true;
-        }
-
-        $today = (new DateTimeImmutable('today'))->getTimestamp();
-        if ($endDate < $today) {
-            // Already expired -- historical breaches are not re-flagged
-            // (monitoring-window scope, design.md D2).
-            return true;
-        }
-
-        $deadline = strtotime('-'.self::NOTICE_MONTHS.' months', $endDate);
-        if ($today <= $deadline) {
-            // Deadline has not passed yet.
-            return true;
-        }
-
-        $aanzegdOn = trim((string) ($o['aanzegdOn'] ?? ''));
-        if ($aanzegdOn === '') {
-            return false;
-        }
-
-        $aanzegdOnDate = strtotime($aanzegdOn);
-        if ($aanzegdOnDate === false) {
-            return false;
-        }
-
-        return $aanzegdOnDate <= $deadline;
-
-    }//end aanzegtermijnSatisfied()
-
-
-    /**
-     * `nl-bhv-certificaat-verloopt`: true unless `certificaatGeldigTot` is a
-     * parseable date AND today is within `[today, today + BHV_WINDOW_DAYS]`
-     * of it. A certificate further out, or already expired, passes vacuously
-     * -- the same "expiring date, no successor-equivalent needed" shape as
-     * `nl-signaal-contract-verloopt`, minus the successor lookup (a BHV
-     * certificate has no "successor contract" concept; a renewal is simply a
-     * new record, bhv-organisatie design.md D4). Object-local: no context
-     * needed.
-     *
-     * @param array<string, mixed> $o The BhvCertificering.
-     *
-     * @return bool
-     */
-    private static function bhvCertificaatVerloeptSatisfied(array $o): bool
-    {
-        $geldigTot = strtotime((string) ($o['certificaatGeldigTot'] ?? ''));
-        if ($geldigTot === false) {
-            return true;
-        }
-
-        $today     = (new DateTimeImmutable('today'))->getTimestamp();
-        $windowEnd = strtotime('+'.self::BHV_WINDOW_DAYS.' days', $today);
-
-        return ($geldigTot >= $today && $geldigTot <= $windowEnd) === false;
-
-    }//end bhvCertificaatVerloeptSatisfied()
-
+		return ($geldigTot >= $today && $geldigTot <= $windowEnd) === false;
+	}//end bhvCertificaatVerloeptSatisfied()
 
 }//end class
