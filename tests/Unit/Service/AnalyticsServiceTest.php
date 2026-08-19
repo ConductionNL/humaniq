@@ -318,6 +318,139 @@ class AnalyticsServiceTest extends TestCase {
 	}//end bucketFor()
 
 	/**
+	 * REQ-DSI-002: a bucket with no registered hours at all is `null`, not
+	 * `0.0`. A 0% billable ratio is a catastrophic reading and "nobody
+	 * logged hours" is an absent measurement — the chart must not draw them
+	 * the same way.
+	 *
+	 * @return void
+	 */
+	public function testBillableRatioBucketWithNoHoursIsNullNotZero(): void {
+		$service = $this->buildService([]);
+
+		$result = $service->getTrends('billable-ratio', 'quarter', 'ADM-001');
+
+		$bucket = $this->bucketFor($result['series'], $this->thisMonth());
+		$this->assertNull($bucket['value']);
+	}//end testBillableRatioBucketWithNoHoursIsNullNotZero()
+
+	/**
+	 * REQ-DSI-002: the ratio is billable hours over ALL hours — the
+	 * denominator includes the non-billable rows, which the replaced
+	 * `filter: {billable: true}` GraphQL query could never see.
+	 *
+	 * @return void
+	 */
+	public function testBillableRatioDividesByAllRegisteredHours(): void {
+		$thisMonth = $this->thisMonth();
+		$service = $this->buildService([
+			'Timesheet' => [
+				['period' => $thisMonth, 'administrationId' => 'ADM-001', 'hours' => 30.0, 'billable' => true],
+				['period' => $thisMonth, 'administrationId' => 'ADM-001', 'hours' => 10.0, 'billable' => false],
+			],
+		]);
+
+		$result = $service->getTrends('billable-ratio', 'quarter', 'ADM-001');
+
+		$bucket = $this->bucketFor($result['series'], $thisMonth);
+		$this->assertSame(75.0, $bucket['value']);
+	}//end testBillableRatioDividesByAllRegisteredHours()
+
+	/**
+	 * REQ-DSI-002: a bucket where hours WERE registered but none were
+	 * billable really is `0.0` — the honest zero, distinguished from the
+	 * `null` above. Without this the null-not-zero rule would be
+	 * indistinguishable from "always null".
+	 *
+	 * @return void
+	 */
+	public function testBillableRatioAllNonBillableIsZeroNotNull(): void {
+		$thisMonth = $this->thisMonth();
+		$service = $this->buildService([
+			'Timesheet' => [
+				['period' => $thisMonth, 'administrationId' => 'ADM-001', 'hours' => 8.0, 'billable' => false],
+			],
+		]);
+
+		$result = $service->getTrends('billable-ratio', 'quarter', 'ADM-001');
+
+		$bucket = $this->bucketFor($result['series'], $thisMonth);
+		$this->assertSame(0.0, $bucket['value']);
+	}//end testBillableRatioAllNonBillableIsZeroNotNull()
+
+	/**
+	 * REQ-DSI-003: headcount counts who is active at the period's END,
+	 * while starters and leavers count events WITHIN the period. One
+	 * employee who started this month and one who left this month exercise
+	 * all three at once.
+	 *
+	 * @return void
+	 */
+	public function testHeadcountSeparatesActiveFromStartersAndLeavers(): void {
+		$thisMonth = $this->thisMonth();
+		$service = $this->buildService([
+			'Employee' => [
+				['administrationId' => 'ADM-001', 'startDate' => '2020-01-01', 'endDate' => null],
+				['administrationId' => 'ADM-001', 'startDate' => ($thisMonth . '-01'), 'endDate' => null],
+				['administrationId' => 'ADM-001', 'startDate' => '2019-01-01', 'endDate' => ($thisMonth . '-02')],
+			],
+		]);
+
+		$result = $service->getTrends('headcount', 'quarter', 'ADM-001');
+
+		$bucket = $this->bucketFor($result['series'], $thisMonth);
+		$this->assertSame(2, $bucket['headcount'], 'the leaver is not active at period end');
+		$this->assertSame(1, $bucket['starters']);
+		$this->assertSame(1, $bucket['leavers']);
+	}//end testHeadcountSeparatesActiveFromStartersAndLeavers()
+
+	/**
+	 * REQ-DSI-003: an `Employee` with no parseable `startDate` cannot be
+	 * placed on the timeline, so it is excluded rather than assumed to have
+	 * started at some convenient moment — the same refusal
+	 * `AbsenceRateService` makes for an absence with no covering contract.
+	 *
+	 * @return void
+	 */
+	public function testEmployeeWithoutStartDateIsExcludedNotAssumed(): void {
+		$thisMonth = $this->thisMonth();
+		$service = $this->buildService([
+			'Employee' => [
+				['administrationId' => 'ADM-001', 'startDate' => '2020-01-01', 'endDate' => null],
+				['administrationId' => 'ADM-001', 'startDate' => null, 'endDate' => null],
+				['administrationId' => 'ADM-001', 'endDate' => null],
+			],
+		]);
+
+		$result = $service->getTrends('headcount', 'quarter', 'ADM-001');
+
+		$bucket = $this->bucketFor($result['series'], $thisMonth);
+		$this->assertSame(1, $bucket['headcount']);
+		$this->assertSame(0, $bucket['starters']);
+	}//end testEmployeeWithoutStartDateIsExcludedNotAssumed()
+
+	/**
+	 * Both new metrics read their objects from the hrmq REGISTER through
+	 * `ObjectService`, never from a GraphQL type resolved by name across
+	 * every register on the instance. That resolution is what shipped
+	 * broken: measured live, the `Employee` root field resolved to schema
+	 * 5050 in an unrelated register (`Employee5050Connection`) instead of
+	 * hrmq's 1080. This asserts the schemas actually queried.
+	 *
+	 * @return void
+	 */
+	public function testNewMetricsQueryTheRegisterScopedSchemas(): void {
+		$fake = $this->fakeObjectService([]);
+		$service = $this->buildServiceWithObjectService($fake);
+
+		$service->getTrends('billable-ratio', 'quarter', 'ADM-001');
+		$service->getTrends('headcount', 'quarter', 'ADM-001');
+
+		$this->assertContains('Timesheet', $fake->schemasQueried);
+		$this->assertContains('Employee', $fake->schemasQueried);
+	}//end testNewMetricsQueryTheRegisterScopedSchemas()
+
+	/**
 	 * Build an `AnalyticsService` backed by a fresh fake ObjectService
 	 * pre-loaded with `$rowsBySchema`.
 	 *
