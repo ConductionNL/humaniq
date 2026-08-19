@@ -1162,59 +1162,65 @@ class PayrollRunServiceTest extends TestCase {
 	}//end testRecalculatingALoonbeslagAffectedRunIsIdempotent()
 
 	/**
-	 * The Vehicle fixture (fleet-bijtelling design.md D4 anchor:
-	 * cataloguswaarde €45.000,00, bijtellingCategorie standaard/22%),
-	 * overridable per test.
+	 * The vehicle-category Asset fixture (fleet-bijtelling design.md D4
+	 * anchor: listPrice €45.000,00, companyCarTaxCategory standard/22%;
+	 * hrmq-asset-fleet-merge -- renamed from the retired Vehicle schema's
+	 * `vehicle()` fixture), overridable per test.
 	 *
 	 * @param array<string, mixed> $overrides Fields to override.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function vehicle(array $overrides = []): array {
+	private function vehicleAsset(array $overrides = []): array {
 		return array_merge(
 			[
 				'id' => 'veh-1',
 				'name' => 'Tesla Model Y',
-				'kenteken' => '1-ABC-23',
-				'cataloguswaarde' => 45000.00,
-				'fuelType' => 'volledigElektrisch',
-				'bijtellingCategorie' => 'standaard',
+				'category' => 'vehicle',
+				'licencePlate' => '1-ABC-23',
+				'listPrice' => 45000.00,
+				'fuelType' => 'fullyElectric',
+				'companyCarTaxCategory' => 'standard',
+				'status' => 'available',
 				'active' => true,
 			],
 			$overrides
 		);
 
-	}//end vehicle()
+	}//end vehicleAsset()
 
 	/**
-	 * The CarAssignment fixture covering 2026-02 for the anchor employee
-	 * (fleet-bijtelling design.md D4 anchor: eigenBijdrage €325,00),
+	 * The AssetAssignment fixture covering 2026-02 for the anchor employee,
+	 * referencing the vehicle-category Asset (fleet-bijtelling design.md D4
+	 * anchor: employeeContribution €325,00; hrmq-asset-fleet-merge -- renamed
+	 * from the retired CarAssignment schema's `carAssignment()` fixture),
 	 * overridable per test.
 	 *
 	 * @param array<string, mixed> $overrides Fields to override.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function carAssignment(array $overrides = []): array {
+	private function vehicleAssignment(array $overrides = []): array {
 		return array_merge(
 			[
 				'id' => 'ca-1',
-				'vehicleId' => 'veh-1',
+				'assetId' => 'veh-1',
 				'employeeId' => 'emp-1',
-				'effectiveFrom' => '2026-01-01',
-				'effectiveTo' => null,
-				'eigenBijdrage' => 325.00,
+				'issuedOn' => '2026-01-01',
+				'returnedOn' => null,
+				'employeeContribution' => 325.00,
 			],
 			$overrides
 		);
 
-	}//end carAssignment()
+	}//end vehicleAssignment()
 
 	/**
 	 * fleet-bijtelling REQ-FLEET-003 Scenario 1 — the design.md D4
 	 * bijtelling-anchor case: the €3.800,00 anchor employee with a covering
-	 * CarAssignment (cataloguswaarde €45.000,00 standaard 22%, eigenBijdrage
-	 * €325,00) reproduces every hand-computed D4 figure digit-for-digit.
+	 * vehicle AssetAssignment (listPrice €45.000,00 standard 22%,
+	 * employeeContribution €325,00) reproduces every hand-computed D4 figure
+	 * digit-for-digit.
 	 *
 	 * @return void
 	 */
@@ -1225,8 +1231,8 @@ class PayrollRunServiceTest extends TestCase {
 				'EmploymentContract' => [$this->contract()],
 				'PayrollRun' => [],
 				'Payslip' => [],
-				'Vehicle' => [$this->vehicle()],
-				'CarAssignment' => [$this->carAssignment()],
+				'Asset' => [$this->vehicleAsset()],
+				'AssetAssignment' => [$this->vehicleAssignment()],
 			]
 		);
 
@@ -1240,7 +1246,7 @@ class PayrollRunServiceTest extends TestCase {
 
 		// The design.md D4 anchor figures, euro-denominated, digit-for-digit.
 		$this->assertSame(500.00, $payslip['bijtelling']);
-		$this->assertSame('ca-1', $payslip['carAssignmentId']);
+		$this->assertSame('ca-1', $payslip['assetAssignmentId']);
 		$this->assertSame(4300.00, $payslip['grossPay'], 'grossPay already includes the bijtelling -- the calculator received the larger tvl.');
 		$this->assertSame(970.83, $payslip['loonheffing']);
 		$this->assertSame(441.33, $payslip['arbeidskorting']);
@@ -1252,10 +1258,10 @@ class PayrollRunServiceTest extends TestCase {
 	}//end testBijtellingFoldsIntoTaxableGrossBeforeTheCalculatorRuns()
 
 	/**
-	 * fleet-bijtelling REQ-FLEET-003 Scenario 2 — no covering CarAssignment
-	 * leaves the payslip byte-identical to the pre-change (no company car)
-	 * shape: `bijtelling`/`carAssignmentId` both null, `grossPay`/`nettoPay`
-	 * the plain D2 anchor figures.
+	 * fleet-bijtelling REQ-FLEET-003 Scenario 2 — no covering vehicle
+	 * AssetAssignment leaves the payslip byte-identical to the pre-change (no
+	 * company car) shape: `bijtelling`/`assetAssignmentId` both null,
+	 * `grossPay`/`nettoPay` the plain D2 anchor figures.
 	 *
 	 * @return void
 	 */
@@ -1266,8 +1272,8 @@ class PayrollRunServiceTest extends TestCase {
 				'EmploymentContract' => [$this->contract()],
 				'PayrollRun' => [],
 				'Payslip' => [],
-				'Vehicle' => [$this->vehicle()],
-				'CarAssignment' => [],
+				'Asset' => [$this->vehicleAsset()],
+				'AssetAssignment' => [],
 			]
 		);
 
@@ -1277,18 +1283,18 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertCount(1, $payslips);
 
 		$this->assertNull($payslips[0]['bijtelling']);
-		$this->assertNull($payslips[0]['carAssignmentId']);
+		$this->assertNull($payslips[0]['assetAssignmentId']);
 		$this->assertSame(3800.00, $payslips[0]['grossPay']);
 		$this->assertSame(3081.17, $payslips[0]['nettoPay']);
 
 	}//end testNoCoveringCarAssignmentLeavesThePayslipUnchanged()
 
 	/**
-	 * fleet-bijtelling REQ-FLEET-003 Scenario 3 — a large eigen bijdrage
-	 * floors the bijtelling at zero, never negative: `bijtelling` is €0,00
-	 * (not null -- the CarAssignment genuinely covers the period, only the
-	 * amount is zero) and the taxable gross is unchanged from the plain
-	 * salary.
+	 * fleet-bijtelling REQ-FLEET-003 Scenario 3 — a large employee
+	 * contribution floors the bijtelling at zero, never negative: `bijtelling`
+	 * is €0,00 (not null -- the AssetAssignment genuinely covers the period,
+	 * only the amount is zero) and the taxable gross is unchanged from the
+	 * plain salary.
 	 *
 	 * @return void
 	 */
@@ -1299,9 +1305,9 @@ class PayrollRunServiceTest extends TestCase {
 				'EmploymentContract' => [$this->contract()],
 				'PayrollRun' => [],
 				'Payslip' => [],
-				'Vehicle' => [$this->vehicle()],
-				// base/12 = €825,00; an eigenBijdrage of €900,00 exceeds it.
-				'CarAssignment' => [$this->carAssignment(['eigenBijdrage' => 900.00])],
+				'Asset' => [$this->vehicleAsset()],
+				// base/12 = €825,00; an employeeContribution of €900,00 exceeds it.
+				'AssetAssignment' => [$this->vehicleAssignment(['employeeContribution' => 900.00])],
 			]
 		);
 
@@ -1311,18 +1317,18 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertCount(1, $payslips);
 
 		$this->assertSame(0.00, $payslips[0]['bijtelling'], 'Floored at zero, never negative.');
-		$this->assertSame('ca-1', $payslips[0]['carAssignmentId'], 'The covering assignment is still stamped even though the amount is zero.');
+		$this->assertSame('ca-1', $payslips[0]['assetAssignmentId'], 'The covering assignment is still stamped even though the amount is zero.');
 		$this->assertSame(3800.00, $payslips[0]['grossPay'], 'The taxable gross is unchanged from the plain salary.');
 		$this->assertSame(3081.17, $payslips[0]['nettoPay']);
 
 	}//end testLargeEigenBijdrageFloorsTheBijtellingAtZero()
 
 	/**
-	 * fleet-bijtelling design.md D3 — the two-tier `elektrischGeplafonneerd`
-	 * blend: cataloguswaarde €45.000,00 with an evReducedCataloguswaardeCap
-	 * of €30.000,00 (nl-2026) -> base = 30.000 x 18% + 15.000 x 22% =
-	 * 5.400,00 + 3.300,00 = 8.700,00; monthly = 8.700,00 / 12 = 725,00,
-	 * eigenBijdrage 0 -> bijtelling €725,00.
+	 * fleet-bijtelling design.md D3 — the two-tier `evReducedCapped` blend:
+	 * listPrice €45.000,00 with an evReducedCataloguswaardeCap of €30.000,00
+	 * (nl-2026) -> base = 30.000 x 18% + 15.000 x 22% = 5.400,00 + 3.300,00 =
+	 * 8.700,00; monthly = 8.700,00 / 12 = 725,00, employeeContribution 0 ->
+	 * bijtelling €725,00.
 	 *
 	 * @return void
 	 */
@@ -1333,8 +1339,8 @@ class PayrollRunServiceTest extends TestCase {
 				'EmploymentContract' => [$this->contract()],
 				'PayrollRun' => [],
 				'Payslip' => [],
-				'Vehicle' => [$this->vehicle(['bijtellingCategorie' => 'elektrischGeplafonneerd'])],
-				'CarAssignment' => [$this->carAssignment(['eigenBijdrage' => 0.00])],
+				'Asset' => [$this->vehicleAsset(['companyCarTaxCategory' => 'evReducedCapped'])],
+				'AssetAssignment' => [$this->vehicleAssignment(['employeeContribution' => 0.00])],
 			]
 		);
 
@@ -1346,6 +1352,49 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertSame(725.00, $payslips[0]['bijtelling']);
 
 	}//end testElektrischGeplafonneerdAppliesTheTwoTierBlend()
+
+	/**
+	 * hrmq-asset-fleet-merge spec.md REQ-FLEET-003 scenario "An open
+	 * AssetAssignment on a non-vehicle Asset does not contribute a
+	 * bijtelling": an employee's only open AssetAssignment covering the
+	 * period references a `category: laptop` Asset -- the category filter
+	 * (`openVehicleAssignmentFor()`) must never treat it as a covering
+	 * vehicle assignment, so `bijtelling` stays null and the gross is
+	 * unaffected.
+	 *
+	 * @return void
+	 */
+	public function testAssetAssignmentOnNonVehicleAssetContributesNoBijtelling(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee()],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+				'Asset' => [
+					[
+						'id' => 'asset-laptop-1',
+						'name' => 'Dell Latitude 5450',
+						'category' => 'laptop',
+						'status' => 'issued',
+						'active' => true,
+					],
+				],
+				'AssetAssignment' => [$this->vehicleAssignment(['assetId' => 'asset-laptop-1'])],
+			]
+		);
+
+		$result = $service->runFor('2026-02');
+
+		$payslips = $this->savedFor($fake, 'Payslip');
+		$this->assertCount(1, $payslips);
+
+		$this->assertNull($payslips[0]['bijtelling'], 'A laptop uitgifte never contributes a company-car tax addition.');
+		$this->assertNull($payslips[0]['assetAssignmentId']);
+		$this->assertSame(3800.00, $payslips[0]['grossPay']);
+		$this->assertSame(3081.17, $payslips[0]['nettoPay']);
+
+	}//end testAssetAssignmentOnNonVehicleAssetContributesNoBijtelling()
 
 	/**
 	 * Objects saved to a given schema, in save order.
