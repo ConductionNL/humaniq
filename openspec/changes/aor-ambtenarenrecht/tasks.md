@@ -45,4 +45,6 @@ Acceptance criteria (plain reminders, not tasks):
   seeded employee
 - no ontslagprocedure, transitievergoeding, integriteitsmelding case system, tuchtbesluit workflow,
   disciplinaire-maatregelen workflow, college-escalation, CRvB bundling, SLA dashboard,
-  confidentiality tiering, or retention automation is built by this change (design.md D4 table)
+  confidentiality tiering, or retention automation is built by this change (design.md D4 table) —
+  and confidentiality tiering (F-009) is now STOPPED outright rather than deferred, because
+  OpenRegister owns it (2026-08-19 decision; see proposal.md and the D4 table)
