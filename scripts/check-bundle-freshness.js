@@ -42,6 +42,21 @@ const REPO_ROOT = path.resolve(__dirname, '..')
 const BUNDLE = path.join(REPO_ROOT, 'js', 'hrmq-main.js')
 
 /**
+ * A stamp written by `postbuild` on EVERY successful build.
+ *
+ * The bundle's own mtime cannot serve as "when was this built": webpack 5's
+ * `output.compareBeforeEmit` skips writing an asset whose bytes are unchanged,
+ * so the mtime records when the OUTPUT last CHANGED, not when a build last
+ * ran. Measured here — a `@spec` comment added to a .vue file is stripped in
+ * production, the bundle came out byte-identical, webpack left the file alone,
+ * and this check failed a bundle that was provably current.
+ *
+ * A check that cries wolf is a check people stop reading, so the signal is a
+ * stamp the build writes unconditionally.
+ */
+const STAMP = path.join(REPO_ROOT, 'js', '.build-stamp')
+
+/**
  * Last commit time touching a path, as a Date.
  *
  * @param {string} rel Repo-relative path.
@@ -64,7 +79,18 @@ if (!fs.existsSync(BUNDLE)) {
 	process.exit(1)
 }
 
-const builtAt = fs.statSync(BUNDLE).mtime
+// Prefer the stamp; fall back to the bundle's mtime for a tree built before
+// `postbuild` existed, and say which was used.
+let builtAt
+if (fs.existsSync(STAMP)) {
+	const raw = fs.readFileSync(STAMP, 'utf8').trim()
+	const parsed = new Date(raw)
+	builtAt = isNaN(parsed.getTime()) ? fs.statSync(STAMP).mtime : parsed
+} else {
+	console.log('[check-bundle-freshness] no js/.build-stamp — falling back to the bundle mtime,')
+	console.log('  which under webpack compareBeforeEmit can be older than the last build.')
+	builtAt = fs.statSync(BUNDLE).mtime
+}
 const srcCommittedAt = lastCommitTime('src')
 
 if (srcCommittedAt === null) {

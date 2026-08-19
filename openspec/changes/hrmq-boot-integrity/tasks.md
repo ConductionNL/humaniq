@@ -167,3 +167,22 @@ The deeper point is unchanged: the deps-drift check added here would have PASSED
 - [ ] 7.3 Extend `check-node-deps-drift.js` to report WHICH source the last build resolved
       `@conduction/nextcloud-vue` from — the check currently proves the tree is correct, not that
       the bundle came from it.
+
+### A false positive in this change's own check, found by using it
+
+`check-bundle-freshness.js` failed a bundle that was provably current. The cause is worth keeping:
+
+**Webpack 5's `output.compareBeforeEmit` skips writing an asset whose bytes are unchanged.** So the
+bundle's mtime records when the OUTPUT last CHANGED, not when a build last RAN. Adding a `@spec`
+comment to `TrendChartWidget.vue` changed `src/`, the comment was stripped in the production build,
+the output came out byte-identical, webpack left the file untouched — and the check reported the
+bundle as stale against a newer `src/` commit.
+
+That is the same failure shape this whole change is about, pointed the other way: an instrument
+whose signal does not mean what its name says. And a check that cries wolf is a check people stop
+reading, which would have made it worse than nothing.
+
+- [x] 7.4 `postbuild` writes `js/.build-stamp` unconditionally on every successful build; the check
+      reads that instead of the bundle mtime, falling back to the old behaviour (and saying so) for
+      a tree built before the stamp existed. The stamp is covered by the existing `/js/` gitignore
+      entry, so it stays a local artefact like the bundle.
