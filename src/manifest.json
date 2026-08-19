@@ -754,7 +754,7 @@
 								"path": "value"
 							}
 						],
-						"emptyLabel": "Nog geen verzuimgegevens"
+						"emptyLabel": "No absence data yet"
 					}
 				},
 				{
@@ -815,7 +815,7 @@
 								"path": "value"
 							}
 						],
-						"emptyLabel": "Nog geen afgeronde loonruns"
+						"emptyLabel": "No completed payroll runs yet"
 					}
 				},
 				{
@@ -847,7 +847,7 @@
 								"path": "p90"
 							}
 						],
-						"emptyLabel": "Nog geen goedgekeurde aanvragen"
+						"emptyLabel": "No approved requests yet"
 					}
 				},
 				{
