@@ -517,6 +517,64 @@ if [ "$ACT_OK" != "1" ]; then
 	echo "[ci-seed] WARNING: no active administration set — AnalyticsController will answer 403 and the Dashboard spec will fail on console errors."
 fi
 
+# ---------------------------------------------------------------------------
+# Prove the guard the Dashboard depends on actually opens.
+#
+# Seeding the two objects and the pointer is necessary but demonstrably not
+# sufficient: run 32304177761 seeded Administration 201, AdministrationAccess
+# 201, AND read the pointer back as the exact value it wrote — and the
+# Dashboard still failed on six 403s four minutes later. Every input the seed
+# controls looked right while the thing that matters, whether
+# AnalyticsController::authorizeCaller() opens for this caller, was never
+# asked.
+#
+# So ask it here, against the same endpoint the widgets call. This turns an
+# unexplained spec failure into a one-line seed diagnosis naming which half of
+# the guard refused:
+#
+#   * `authorizeCaller()` needs BOTH the per-user active-administration
+#     pointer AND an AdministrationAccess row for THIS user whose role is
+#     `hr`/`accountant` (AdministrationService::accessRowsForUser() matches on
+#     `userId` exactly).
+#   * a 403 here with the pointer read back OK above therefore isolates the
+#     failure to the access row / role half.
+#
+# Non-fatal, like the pointer step: the rest of the suite is still worth
+# running. But it will no longer be silent.
+# ---------------------------------------------------------------------------
+GUARD_BODY="${WORK}/guard.json"
+GUARD_CODE="$(http_get_code "$GUARD_BODY" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${BASE}/index.php/apps/hrmq/api/analytics/trends?metric=absence-rate")"
+echo "[ci-seed] guard probe: GET /api/analytics/trends -> ${GUARD_CODE}"
+if [ "$GUARD_CODE" != "200" ]; then
+	echo "[ci-seed] WARNING: the analytics guard did NOT open for '${USER_NAME}' (HTTP ${GUARD_CODE})."
+	echo "[ci-seed]   The Dashboard spec will fail on console errors. Diagnosis:"
+	echo "[ci-seed]   - active-administration pointer: see the read-back line above."
+	echo "[ci-seed]   - AdministrationAccess rows visible to this caller:"
+	ACC_BODY="${WORK}/access.json"
+	ACC_CODE="$(http_get_code "$ACC_BODY" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+		"${BASE}/index.php/apps/openregister/api/objects/hrmq/AdministrationAccess?_limit=50")"
+	echo "[ci-seed]     listing HTTP ${ACC_CODE}"
+	if [ -s "$ACC_BODY" ]; then
+		python3 - "$ACC_BODY" "$USER_NAME" <<'PY' || true
+import json, sys
+try:
+    doc = json.load(open(sys.argv[1], encoding='utf-8'))
+except Exception as exc:
+    print(f'[ci-seed]     could not parse the listing: {exc}')
+    raise SystemExit(0)
+rows = doc.get('results') or []
+print(f'[ci-seed]     total={doc.get("total")} rows_returned={len(rows)}')
+for row in rows:
+    print(f'[ci-seed]       userId={row.get("userId")!r} '
+          f'administrationId={row.get("administrationId")!r} role={row.get("role")!r}')
+mine = [r for r in rows if r.get('userId') == sys.argv[2]]
+print(f'[ci-seed]     rows matching userId={sys.argv[2]!r}: {len(mine)} '
+      f'(authorizeCaller needs >=1 with role hr/accountant)')
+PY
+	fi
+fi
+
 APP_HTML="${WORK}/app.html"
 curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	"${BASE}/index.php/apps/hrmq/" -o "$APP_HTML" || true
