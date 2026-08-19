@@ -140,10 +140,29 @@ jobs:
       # WageTaxFiling are all OpenRegister objects — so core-journeys.spec.ts
       # has nothing to seed against either.
       #
-      # Pinned to `main` rather than `development` (larpingapp uses the latter)
-      # only because this is hrmq's first CI run ever and the foundation app
-      # should not be a moving confound while we read the baseline.
-      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"main"}]'
+      # Was pinned to `main` "only because this is hrmq's first CI run ever and
+      # the foundation app should not be a moving confound while we read the
+      # baseline". That baseline has long since been read, and the pin has
+      # stopped being conservative and started being wrong:
+      #
+      #   * MEASURED 2026-08-20: the openregister checkout this app is actually
+      #     developed against is 3644 commits ahead of `origin/main`, including
+      #     98 commits on `lib/Service/ObjectService.php` alone.
+      #   * That file is not incidental — `AdministrationService::loadAll()`
+      #     calls `ObjectService::findAll()` to resolve the caller's
+      #     AdministrationAccess rows, and wraps it in
+      #     `catch (\Throwable) { return []; }`. Against `main` the load yields
+      #     nothing, the role resolves to null, and
+      #     `AnalyticsController::authorizeCaller()` answers 403 — while the
+      #     identical fixture returns 200 locally. The Dashboard e2e spec has
+      #     been failing on six 403s for exactly this reason, with the seed
+      #     proving pointer AND access row were both correctly in place.
+      #   * hrmq was the only app pinning `main`: docudesk, opencatalogi,
+      #     openconnector, hermiq and softwarecatalog all pin `development`.
+      #
+      # So this pin made hrmq's CI test the app against a foundation it is not
+      # built on, and reported the difference as an application bug.
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
 
       # ── Hydra mechanical gates ───────────────────────────────────────────
       # Enabled here for the FIRST time. This repo previously left
