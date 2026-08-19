@@ -446,6 +446,18 @@ do
 	echo "[ci-seed] seed ${schema} -> ${code}"
 done
 
+# The access row alone is not enough: `AnalyticsController::authorizeCaller()`
+# reads the caller's ACTIVE administration, which `AdministrationService` stores
+# as a per-USER config value — not derived from the access rows. Without this
+# pointer `getActiveAdministrationId()` returns null and every analytics
+# endpoint answers 403, which is what the first cut of this seed missed: both
+# objects were created (201/201) and the Dashboard still failed on eight 403s.
+ACT_CODE="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+	-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	-H 'Content-Type: application/json' -d "{\"administrationId\":\"${ADM_ID}\"}" \
+	"${BASE}/index.php/apps/hrmq/api/administration/active" || true)"
+echo "[ci-seed] set active administration ${ADM_ID} -> ${ACT_CODE}"
+
 APP_HTML="${WORK}/app.html"
 curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	"${BASE}/index.php/apps/hrmq/" -o "$APP_HTML" || true
