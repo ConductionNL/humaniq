@@ -555,6 +555,23 @@ if [ "$GUARD_CODE" != "200" ]; then
 	ACC_CODE="$(http_get_code "$ACC_BODY" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 		"${BASE}/index.php/apps/openregister/api/objects/hrmq/AdministrationAccess?_limit=50")"
 	echo "[ci-seed]     listing HTTP ${ACC_CODE}"
+	# The app log is the ONLY place the real reason can appear.
+	# `AdministrationService::loadAll()` wraps its ObjectService call in
+	# `catch (\Throwable) { logger->warning(...); return []; }` — so a failing
+	# load is indistinguishable from "this user has no access rows", and the
+	# difference is written to nextcloud.log and nowhere else. Without this,
+	# a run where the rows exist AND the pointer is set AND the guard still
+	# refuses (observed: run 32304177761) has no visible cause at all.
+	if [ -n "$OCC" ]; then
+		NC_LOG="$(dirname "$OCC")/data/nextcloud.log"
+		if [ -f "$NC_LOG" ]; then
+			echo "[ci-seed]   - last hrmq/AdministrationService lines in nextcloud.log:"
+			grep -aiE "administrationservice|analyticsservice|hrmq" "$NC_LOG" 2>/dev/null \
+				| tail -8 | cut -c1-400 | sed 's/^/[ci-seed]     /' || true
+		else
+			echo "[ci-seed]   - nextcloud.log not found at ${NC_LOG}"
+		fi
+	fi
 	if [ -s "$ACC_BODY" ]; then
 		python3 - "$ACC_BODY" "$USER_NAME" <<'PY' || true
 import json, sys
