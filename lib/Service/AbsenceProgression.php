@@ -64,6 +64,8 @@ class AbsenceProgression {
 	 * @param DateTimeImmutable    $firstSickDay The case anchor date.
 	 *
 	 * @return list<array{from: DateTimeImmutable, percentage: float}> Ordered by `from`, ascending.
+	 *
+	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	public function steps(array $case, DateTimeImmutable $firstSickDay): array {
 		$raw = ($case['absenceProgression'] ?? null);
@@ -111,6 +113,8 @@ class AbsenceProgression {
 	 * @param float                                                   $fte         The employee's FTE over the period.
 	 *
 	 * @return float Day-equivalents, already FTE-weighted.
+	 *
+	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	public function sum(
 		array $steps,
@@ -146,6 +150,8 @@ class AbsenceProgression {
 	 * @param DateTimeImmutable $to   Last day, inclusive.
 	 *
 	 * @return int Number of days, at least 1 when from <= to.
+	 *
+	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	public function inclusiveDays(DateTimeImmutable $from, DateTimeImmutable $to): int {
 		return ((int) $from->diff($to)->days + 1);
@@ -161,6 +167,8 @@ class AbsenceProgression {
 	 * @param mixed $value The raw value.
 	 *
 	 * @return DateTimeImmutable|null Null when absent, blank, or unparseable.
+	 *
+	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	public function date(mixed $value): ?DateTimeImmutable {
 		if (is_string($value) === false || trim($value) === '') {
@@ -180,6 +188,8 @@ class AbsenceProgression {
 	 * @param DateTimeImmutable $day The step's first day.
 	 *
 	 * @return array{from: DateTimeImmutable, percentage: float}
+	 *
+	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	private function fullAbsenceFrom(DateTimeImmutable $day): array {
 		return [
@@ -201,6 +211,8 @@ class AbsenceProgression {
 	 * @param DateTimeImmutable $firstSickDay The case anchor date.
 	 *
 	 * @return array{from: DateTimeImmutable, percentage: float}|null Null when the entry is malformed.
+	 *
+	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	private function parseStep(mixed $entry, DateTimeImmutable $firstSickDay): ?array {
 		if (is_array($entry) === false) {

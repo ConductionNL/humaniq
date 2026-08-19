@@ -101,6 +101,8 @@ class AbsenceRateService {
 
 	/**
 	 * @param AbsenceProgression $progression The step-function half of the calculation.
+	 *
+	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	public function __construct(
 		private readonly AbsenceProgression $progression = new AbsenceProgression(),
@@ -244,6 +246,8 @@ class AbsenceRateService {
 	 * @param DateTimeImmutable    $periodEnd    Last day of the period, inclusive.
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}|null Clipped window, or null when the case does not overlap the period at all.
+	 *
+	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	private function caseWindow(
 		array $case,
@@ -278,6 +282,8 @@ class AbsenceRateService {
 	 * @param float                $fullTimeHoursWeek Hours per week a 1.0 FTE works.
 	 *
 	 * @return float Day-equivalents.
+	 *
+	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	private function contractAvailability(
 		array $contract,
@@ -315,6 +321,8 @@ class AbsenceRateService {
 	 * @param float                       $fullTimeHoursWeek Hours per week a 1.0 FTE works.
 	 *
 	 * @return array<string, float> Employee id to FTE, only for employees with a contract overlapping the period.
+	 *
+	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	private function fteByEmployee(
 		array $contracts,
@@ -353,6 +361,8 @@ class AbsenceRateService {
 	 * @param float                $fullTimeHoursWeek Hours per week a 1.0 FTE works.
 	 *
 	 * @return float FTE, or 0.0 when hoursPerWeek is absent or unusable.
+	 *
+	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	private function contractFte(array $contract, float $fullTimeHoursWeek): float {
 		$hours = ($contract['hoursPerWeek'] ?? null);
@@ -371,6 +381,8 @@ class AbsenceRateService {
 	 * @param mixed $value The raw value.
 	 *
 	 * @return string|null Null when absent, not a string, or blank.
+	 *
+	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	private function stringOrNull(mixed $value): ?string {
 		if (is_string($value) === false || trim($value) === '') {
