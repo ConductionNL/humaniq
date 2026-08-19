@@ -100,15 +100,14 @@ class AbsenceRateService {
 	public const DEFAULT_FULL_TIME_HOURS_PER_WEEK = 40.0;
 
 	/**
-	 * Absence percentage applied to a case that carries no progression steps.
-	 *
-	 * `absenceProgression`'s own contract: empty or absent means full absence
-	 * for the whole case window. This is the no-regression default -- every
-	 * case recorded before the field existed keeps counting exactly as it did.
-	 *
-	 * @var float
+	 * @param AbsenceProgression $progression The step-function half of the calculation.
 	 */
-	private const FULL_ABSENCE_PERCENTAGE = 100.0;
+	public function __construct(
+		private readonly AbsenceProgression $progression = new AbsenceProgression(),
+	) {
+
+	}//end __construct()
+
 
 	/**
 	 * Compute the verzuimpercentage over a closed period.
@@ -205,7 +204,7 @@ class AbsenceRateService {
 		DateTimeImmutable $periodEnd,
 		float $fte,
 	): float {
-		$firstSickDay = $this->dateOrNull(value: ($case['firstSickDay'] ?? null));
+		$firstSickDay = $this->progression->date(value: ($case['firstSickDay'] ?? null));
 		if ($firstSickDay === null) {
 			// firstSickDay is a required property; a case missing it is
 			// unmeasurable rather than zero-length, but there is no channel to
@@ -213,12 +212,47 @@ class AbsenceRateService {
 			return 0.0;
 		}
 
-		// The case window closes on recoveredDate ONLY when the case actually
-		// recovered. A reopened case (heropenen clears recoveredDate) is open
-		// again, and a stale recoveredDate on a `gemeld` case must not truncate
-		// it -- the lifecycle status is the authority, not the date field.
+		$window = $this->caseWindow(
+			case: $case,
+			firstSickDay: $firstSickDay,
+			periodStart: $periodStart,
+			periodEnd: $periodEnd
+		);
+		if ($window === null) {
+			return 0.0;
+		}
+
+		return $this->progression->sum(
+			steps: $this->progression->steps(case: $case, firstSickDay: $firstSickDay),
+			windowStart: $window[0],
+			windowEnd: $window[1],
+			fte: $fte
+		);
+	}//end caseAbsenceDayEquivalents()
+
+	/**
+	 * The intersection of one case's own window with the reporting period.
+	 *
+	 * The case window closes on `recoveredDate` ONLY when the case actually
+	 * recovered. A reopened case (`heropenen` clears `recoveredDate`) is open
+	 * again, and a stale `recoveredDate` left on a `gemeld` case must not
+	 * truncate it -- the lifecycle status is the authority, not the date field.
+	 *
+	 * @param array<string, mixed> $case         The SickLeaveCase.
+	 * @param DateTimeImmutable    $firstSickDay The case anchor date.
+	 * @param DateTimeImmutable    $periodStart  First day of the period, inclusive.
+	 * @param DateTimeImmutable    $periodEnd    Last day of the period, inclusive.
+	 *
+	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}|null Clipped window, or null when the case does not overlap the period at all.
+	 */
+	private function caseWindow(
+		array $case,
+		DateTimeImmutable $firstSickDay,
+		DateTimeImmutable $periodStart,
+		DateTimeImmutable $periodEnd,
+	): ?array {
 		$caseEnd = $periodEnd;
-		$recovered = $this->dateOrNull(value: ($case['recoveredDate'] ?? null));
+		$recovered = $this->progression->date(value: ($case['recoveredDate'] ?? null));
 		if ($recovered !== null && ($case['status'] ?? null) === 'hersteld') {
 			$caseEnd = $recovered;
 		}
@@ -226,103 +260,14 @@ class AbsenceRateService {
 		$windowStart = ($firstSickDay > $periodStart) ? $firstSickDay : $periodStart;
 		$windowEnd = ($caseEnd < $periodEnd) ? $caseEnd : $periodEnd;
 		if ($windowStart > $windowEnd) {
-			return 0.0;
+			return null;
 		}
 
-		$steps = $this->normalisedSteps(case: $case, firstSickDay: $firstSickDay);
+		return [$windowStart, $windowEnd];
+	}//end caseWindow()
 
-		$total = 0.0;
-		$count = count($steps);
-		for ($i = 0; $i < $count; $i++) {
-			$segmentStart = $steps[$i]['from'];
-			// A step runs until the day before the next step begins; the last
-			// step runs to the end of the case window.
-			$segmentEnd = $windowEnd;
-			if (isset($steps[($i + 1)]) === true) {
-				$segmentEnd = $steps[($i + 1)]['from']->modify('-1 day');
-			}
 
-			$clippedStart = ($segmentStart > $windowStart) ? $segmentStart : $windowStart;
-			$clippedEnd = ($segmentEnd < $windowEnd) ? $segmentEnd : $windowEnd;
-			if ($clippedStart > $clippedEnd) {
-				continue;
-			}
 
-			$days = $this->inclusiveDays(from: $clippedStart, to: $clippedEnd);
-			$total += ($days * ($steps[$i]['percentage'] / 100.0) * $fte);
-		}
-
-		return $total;
-	}//end caseAbsenceDayEquivalents()
-
-	/**
-	 * Normalise a case's `absenceProgression` into an ordered step list.
-	 *
-	 * Absent or empty yields the single full-absence step from `firstSickDay`,
-	 * which is `absenceProgression`'s documented no-regression default. Steps
-	 * dated before `firstSickDay` are clipped onto it rather than dropped, so a
-	 * back-dated correction still counts; malformed entries are skipped.
-	 *
-	 * @param array<string, mixed> $case         The SickLeaveCase.
-	 * @param DateTimeImmutable    $firstSickDay The case anchor date.
-	 *
-	 * @return list<array{from: DateTimeImmutable, percentage: float}> Ordered by `from`, ascending.
-	 */
-	private function normalisedSteps(array $case, DateTimeImmutable $firstSickDay): array {
-		$raw = ($case['absenceProgression'] ?? null);
-		if (is_array($raw) === false || $raw === []) {
-			return [
-				[
-					'from'       => $firstSickDay,
-					'percentage' => self::FULL_ABSENCE_PERCENTAGE,
-				],
-			];
-		}
-
-		$steps = [];
-		foreach ($raw as $entry) {
-			if (is_array($entry) === false) {
-				continue;
-			}
-
-			$from = $this->dateOrNull(value: ($entry['effectiveFrom'] ?? null));
-			$percentage = ($entry['absencePercentage'] ?? null);
-			if ($from === null || is_numeric($percentage) === false) {
-				continue;
-			}
-
-			$steps[] = [
-				'from'       => ($from < $firstSickDay) ? $firstSickDay : $from,
-				'percentage' => max(0.0, min(100.0, (float) $percentage)),
-			];
-		}
-
-		if ($steps === []) {
-			return [
-				[
-					'from'       => $firstSickDay,
-					'percentage' => self::FULL_ABSENCE_PERCENTAGE,
-				],
-			];
-		}
-
-		usort($steps, static fn (array $a, array $b): int => ($a['from'] <=> $b['from']));
-
-		// A progression that starts after firstSickDay leaves the opening
-		// stretch undescribed. That stretch is full absence -- the case was
-		// reported, and the first resumption step is what changed it.
-		if ($steps[0]['from'] > $firstSickDay) {
-			array_unshift(
-				$steps,
-				[
-					'from'       => $firstSickDay,
-					'percentage' => self::FULL_ABSENCE_PERCENTAGE,
-				]
-			);
-		}
-
-		return $steps;
-	}//end normalisedSteps()
 
 	/**
 	 * Available day-equivalents one contract contributes to a period.
@@ -345,8 +290,8 @@ class AbsenceRateService {
 			return 0.0;
 		}
 
-		$start = ($this->dateOrNull(value: ($contract['startDate'] ?? null)) ?? $periodStart);
-		$end = ($this->dateOrNull(value: ($contract['endDate'] ?? null)) ?? $periodEnd);
+		$start = ($this->progression->date(value: ($contract['startDate'] ?? null)) ?? $periodStart);
+		$end = ($this->progression->date(value: ($contract['endDate'] ?? null)) ?? $periodEnd);
 
 		$from = ($start > $periodStart) ? $start : $periodStart;
 		$to = ($end < $periodEnd) ? $end : $periodEnd;
@@ -354,7 +299,7 @@ class AbsenceRateService {
 			return 0.0;
 		}
 
-		return ($this->inclusiveDays(from: $from, to: $to) * $fte);
+		return ($this->progression->inclusiveDays(from: $from, to: $to) * $fte);
 	}//end contractAvailability()
 
 	/**
@@ -389,8 +334,8 @@ class AbsenceRateService {
 				continue;
 			}
 
-			$start = ($this->dateOrNull(value: ($contract['startDate'] ?? null)) ?? $periodStart);
-			$end = ($this->dateOrNull(value: ($contract['endDate'] ?? null)) ?? $periodEnd);
+			$start = ($this->progression->date(value: ($contract['startDate'] ?? null)) ?? $periodStart);
+			$end = ($this->progression->date(value: ($contract['endDate'] ?? null)) ?? $periodEnd);
 			if ($start > $periodEnd || $end < $periodStart) {
 				continue;
 			}
@@ -418,40 +363,7 @@ class AbsenceRateService {
 		return max(0.0, ((float) $hours / $fullTimeHoursWeek));
 	}//end contractFte()
 
-	/**
-	 * Inclusive day count between two dates.
-	 *
-	 * @param DateTimeImmutable $from First day, inclusive.
-	 * @param DateTimeImmutable $to   Last day, inclusive.
-	 *
-	 * @return int Number of days, at least 1 when from <= to.
-	 */
-	private function inclusiveDays(DateTimeImmutable $from, DateTimeImmutable $to): int {
-		return ((int) $from->diff($to)->days + 1);
-	}//end inclusiveDays()
 
-	/**
-	 * Parse a stored date value, normalised to midnight.
-	 *
-	 * Midnight normalisation matters: `diff()` between two dates carrying
-	 * different times rounds the day count down, which would silently shorten
-	 * an absence by a day whenever the stored values disagree on time.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return DateTimeImmutable|null Null when absent, blank, or unparseable.
-	 */
-	private function dateOrNull(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return (new DateTimeImmutable($value))->setTime(hour: 0, minute: 0);
-		} catch (\Exception) {
-			return null;
-		}
-	}//end dateOrNull()
 
 	/**
 	 * Narrow a raw value to a non-empty string.
