@@ -186,3 +186,28 @@ reading, which would have made it worse than nothing.
       reads that instead of the bundle mtime, falling back to the old behaviour (and saying so) for
       a tree built before the stamp existed. The stamp is covered by the existing `/js/` gitignore
       entry, so it stays a local artefact like the bundle.
+
+### Correction: `validate-widget-keys.js` was NOT a drift symptom
+
+Throughout this programme I recorded the local `node tests/validate-widget-keys.js` failure as
+"consistent with the `node_modules` drift" and told every applying agent to baseline it. That
+attribution was **wrong**, and `npm ci` disproved it: with `node_modules` now matching the lockfile
+exactly, the script still fails on `object-list` and `stats-block`.
+
+What it actually is:
+
+- CI's `Frontend Check (check:widget-keys)` **passes** on the identical manifest (verified on PR
+  #103's check list).
+- The widgets in question render correctly in the live app — `EmployeeDetail`'s FK-scoped lists are
+  `object-list` and they display.
+- The script resolves `BUILT_IN_WIDGETS` by importing `@conduction/nextcloud-vue`, which is ESM;
+  the same import style defeated `check-manifest-sentinels.js` until it was converted to `.mjs`.
+
+So the manifest is fine and the local script has an ESM-resolution weakness. Two things I had
+attributed to one cause were three separate things, and "consistent with" did a lot of unearned work
+in that sentence.
+
+- [ ] 7.5 Convert `tests/validate-widget-keys.js` to `.mjs` with a dynamic import, matching the fix
+      already applied to `check-manifest-sentinels`. Not done here: it is a pre-existing local-only
+      script defect, CI is green on the gate that matters, and changing a validator at the end of a
+      long session is how a green run stops meaning anything.
