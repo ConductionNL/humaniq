@@ -10,6 +10,7 @@ built_by: openspec/changes/archive/2026-07-17-bhv-organisatie
 **Scope**: hrmq
 **OpenSpec changes**:
 - [bhv-organisatie](../../changes/archive/2026-07-17-bhv-organisatie/) _(archived 2026-07-17)_ — `BhvCertificering` schema (plain dated facts: employee, role, obtained/valid-until dates, training provider, optional `OrgUnit` scope), a third `hr-signals` predicate (`nl-bhv-certificaat-verloopt`, extending `NlSignalChecks`), the "Aflopende BHV-certificaten" dashboard widget, the `BhvCertificeringen`/`BhvCertificeringDetail` pages under the existing `Verlof & verzuim` menu group, and two seeded certificates (one clean, one intended violation).
+- [hrmq-dashboard-steering-indicators](../../changes/hrmq-dashboard-steering-indicators/) — **Status**: in-progress — modifies REQ-BHV-005: the "Aflopende BHV-certificaten" dashboard widget folds into the Dashboard's merged Obligations list; the menu placement clause, the 90-day window, and REQ-BHV-001–004 are unchanged
 
 ## Purpose
 

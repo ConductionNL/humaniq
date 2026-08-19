@@ -10,6 +10,7 @@ built_by: openspec/changes/archive/2026-07-13-hr-signals
 **Scope**: hrmq
 **OpenSpec changes**:
 - [hr-signals](../../changes/archive/2026-07-13-hr-signals/) _(archived 2026-07-13)_ — corpus-first HR-moment signalling: `nl-signaal-contract-verloopt` (temporary contract ending ≤60 days, no successor — advisory) + `nl-aanzegtermijn-bewaking` (BW 7:668 lid 1, mandatory) with the new `aanzegdOn` field, `NlSignalChecks` + the `signals` audit context, the 'Aflopende contracten' dashboard widget, and one intended-violation seed (kind: config)
+- [hrmq-dashboard-steering-indicators](../../changes/hrmq-dashboard-steering-indicators/) — **Status**: in-progress — modifies REQ-SIG-005: the 'Aflopende contracten' signal folds into the Dashboard's merged Obligations list instead of a dedicated widget; the rule, the 60-day window, and REQ-SIG-001–004/006 are unchanged
 
 ## Purpose
 

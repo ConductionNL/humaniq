@@ -11,6 +11,7 @@ built_by: openspec/changes/archive/2026-07-13-verzuim-analytics-widgets
 **Kind**: config (manifest + seeds only — no schemas, no PHP, no corpus changes)
 **OpenSpec changes**:
 - [verzuim-analytics-widgets](../../changes/archive/2026-07-13-verzuim-analytics-widgets/) _(archived 2026-07-13)_ — four absence-analytics stat widgets on the Dashboard (open ziektegevallen, langdurig verzuim past the WVP 42-weken horizon via `@today-294d`, verlofaanvragen in behandeling, this-month approved verlofuren sum) plus the `VerzuimOverzicht` open-cases werkvoorraad sorted by the UWV 42-weken deadline; manifest + seeds only, with Bradford/trend charts named non-goals for verified technical reasons (kind: config)
+- [hrmq-dashboard-steering-indicators](../../changes/hrmq-dashboard-steering-indicators/) — **Status**: in-progress — removes REQ-VZA-001 (the four Dashboard stat widgets), superseded by the `absence-rate`-backed Absence rate trend widget; `VerzuimOverzicht` (REQ-VZA-002) and seed data (REQ-VZA-003) are unchanged
 
 ## Purpose
 
