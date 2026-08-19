@@ -152,6 +152,15 @@ export default {
 		},
 	},
 
+	/**
+	 * Compose the chart's series from the endpoint payload.
+	 *
+	 * @param {object} props The widget props.
+	 *
+	 * @return {object} The render context.
+	 *
+	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
+	 */
 	setup(props) {
 		const ep = useEndpointSource(() => props.endpointSource)
 

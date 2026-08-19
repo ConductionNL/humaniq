@@ -412,6 +412,40 @@ do
 	echo "[ci-seed] warm ${path} -> ${code}"
 done
 
+# ---------------------------------------------------------------------------
+# Administration + AdministrationAccess for the e2e caller.
+#
+# WHY THIS EXISTS
+# ---------------
+# The Dashboard's analytics widgets call `/apps/hrmq/api/analytics/*`, and that
+# controller requires the caller to hold an `AdministrationAccess` row with role
+# `hr` or `accountant` — the first surface in hrmq that actually enforces that
+# field. Without one the endpoints correctly answer 403, four of the six
+# dashboard widgets fail to load, and `manifest-pages.spec.ts` fails the
+# Dashboard on "emitted console errors".
+#
+# That failure was RIGHT: the guard did its job and the seed was incomplete. An
+# e2e run with no access row cannot exercise any tenant-scoped surface at all,
+# so seeding one is provisioning the fixture, not weakening the check.
+#
+# Both writes are idempotent-by-tolerance: a duplicate simply fails and is
+# ignored, because this script may run against an instance seeded by a previous
+# job.
+# ---------------------------------------------------------------------------
+ADM_ID="E2E-ADM-001"
+for payload in \
+	"{\"administrationId\":\"${ADM_ID}\",\"name\":\"E2E Administration\",\"active\":true,\"mode\":\"standard\"}|Administration" \
+	"{\"userId\":\"${USER_NAME}\",\"administrationId\":\"${ADM_ID}\",\"role\":\"hr\"}|AdministrationAccess"
+do
+	body="${payload%|*}"
+	schema="${payload##*|}"
+	code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+		-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+		-H 'Content-Type: application/json' -d "${body}" \
+		"${BASE}/index.php/apps/openregister/api/objects/hrmq/${schema}" || true)"
+	echo "[ci-seed] seed ${schema} -> ${code}"
+done
+
 APP_HTML="${WORK}/app.html"
 curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	"${BASE}/index.php/apps/hrmq/" -o "$APP_HTML" || true
