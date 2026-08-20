@@ -1,5 +1,48 @@
 # Tasks — hrmq-boot-integrity
 
+## Status — MEASURED 2026-08-20, after PR #109 merged to `development`
+
+This change is **partly applied and deliberately NOT archived**: the three guards
+ship and pass, but four named items below are genuinely undone, and archiving a
+change with real remaining work would make this file read as finished.
+
+**Shipped and verified** (each RUN, not inferred, on the merged `development`):
+
+| check | wired as | result |
+|---|---|---|
+| `scripts/check-node-deps-drift.js` | `check:deps-drift` | **PASS** — `@conduction/nextcloud-vue 2.2.0-vue3.2` matches the lockfile |
+| `scripts/check-manifest-sentinels.mjs` | `check:manifest-sentinels` | **PASS** — all 42 optional clauses drop against an empty context |
+| `scripts/check-bundle-freshness.js` | `check:bundle-freshness` | **PASS**, and proven in BOTH directions: it FAILED on a fresh branch whose bundle predated committed `src/`, then passed after `npm run build`. A guard only ever seen passing is indistinguishable from one that cannot fail. |
+
+Also shipped: the webpack alias is opt-**IN** (`USE_LOCAL_LIB === 'true'`), so a
+build no longer silently prefers a sibling source tree that happens to exist
+(task 7.1), and `postbuild` writes `js/.build-stamp` because webpack's
+`compareBeforeEmit` leaves an unchanged bundle's mtime stale — the freshness
+check cried wolf on a current bundle until that landed.
+
+**Task 6.1 is resolved, and its original diagnosis here was WRONG.** It recorded
+`validate-widget-keys` failing because `node_modules` held `beta.215` against a
+`2.2.0-vue3.2` lockfile pin. Re-measured: the installed version matches the
+lockfile exactly — there was no drift. The local failure is that the layer-3
+probe cannot build on this host (`@nextcloud/webpack-vue-config` throws on a
+missing appName) and correctly fails closed. The REAL defect was the opposite
+and far worse: the gate passed GREEN in CI while `object-list` and
+`stats-block` resolved to nothing in the running app, because its probe imports
+`registerDashboardWidgets.js` by path and so supplies the very side effect the
+app was missing (ConductionNL/nextcloud-vue#704; fixed app-side in hrmq#111).
+
+**Genuinely NOT done — the reason this stays open:**
+
+- 1.4 / 1.5 — the Composer-side vendor-drift check has no equivalent of the npm one.
+- 3.3 / 3.4 — `js/build-info.json` and the `--sidecar` mode; only local mode ships.
+- 5.1-5.6 — blocked on this host: `vendor/` is root-owned, so `composer install`
+  cannot run. Worked around for measurement by repointing hrmq's own phpcs/phpmd
+  rulesets at a sibling app's copy of the SAME package version (v1.8.0), which
+  gave phpcs 0 errors / 172 files and phpmd 0 findings — but the underlying
+  permission problem is untouched.
+- 7.2 / 7.3 / 7.5 — fail the npm build on webpack errors; report which source the
+  last build resolved; convert `validate-widget-keys.js` to `.mjs`.
+
 ## 1. Dependency-drift checks
 
 - [ ] 1.1 `scripts/check-node-deps-drift.js` — read `package-lock.json`'s resolved
