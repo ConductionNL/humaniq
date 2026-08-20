@@ -1,3 +1,45 @@
+## Status — 2026-08-20: the OUTCOME shipped, by a shorter route than this plan
+
+The user-visible goal of this change — a main menu inside the ADR-097 budget —
+**is done and merged** (hrmq#114). It did not go through the fragment pipeline
+this plan opens with, and that is worth being explicit about rather than
+quietly ticking boxes that describe a different implementation.
+
+**What shipped:** 11 top-level entries → **5 budgeted** (cap 6, target 4), by
+editing `menu[]` in `src/manifest.json` directly and setting
+`section: "settings"` on the configuration group. Measured no-functionality-loss:
+62 navigable leaves before and 62 after, the same SET by `(id, route)`, and all
+109 pages byte-identical.
+
+**Why not the pipeline:** sections 1.1-1.5 below adopt `manifest.d/` +
+`menu-layout.json` + `buildManifest()` purely so that a RELOCATION can be
+expressed declaratively. That is the right long-term shape and
+`hrmq-manifest-fragment-pipeline` still owns it — but it is a 109-page
+restructure whose only purpose here was to move five menu entries. Doing the
+restructure first would have put a large, hard-to-review diff between the brief
+("its main menu, that is huge") and its answer.
+
+**What this change still owns**, and why it stays open:
+
+- 1.1-1.5 — the fragment pipeline adoption itself. Deferred to
+  `hrmq-manifest-fragment-pipeline`, which is where it belongs; this change
+  should not be the reason it happens.
+- 2.1 / 2.2 — `VerlofVerzuim` exists and now owns the timesheet entries; a
+  distinct `DeclaratiesAssets` group was NOT created. The existing
+  `ExpensesGroup` was relabelled "Declaraties & assets" instead, because it
+  already held Assets and Uitgiftes after the asset/fleet merge, so a new group
+  would have been the same children under a new id.
+- 3.1-3.3 — relocations done, but as direct edits rather than
+  `menu-layout.json` `relocations`. The retired groups were `TimesheetsGroup`
+  and `OnboardingAtsGroup`; `ExpensesGroup` survives under a new label.
+- 3.4 — **done and asserted**: all four routes unchanged, part of the 62-leaf
+  identity check above.
+- 4.1 / 4.2 — the two spec texts still say "reached from an 'Onkosten' menu
+  group" and the old timesheet placement. Genuinely outstanding.
+- 5.1 / 5.2 — 5.1 done live (7 main entries render, Configuratie in the settings
+  foldout, 0 console errors); 5.2 (other apps' deepLinks into these routes) not
+  checked.
+
 ## 1. Adopt the ADR-037/ADR-044 fragment pipeline (prerequisite)
 
 - [ ] 1.1 Create `src/manifest.d/` and move the current `src/manifest.json` contents into a single

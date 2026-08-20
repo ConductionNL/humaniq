@@ -1,0 +1,14 @@
+schema: spec-driven
+created: 2026-08-20
+
+# This change bumps a dependency and wires nothing app-side: nc-vue installs
+# `liveUpdatesPlugin` on every store by default, so adoption is entirely inside
+# the library. There is no requirement of hrmq's own that changes, which is why
+# `specs/` is empty — and an empty `specs/` is exactly what `openspec validate`
+# refuses without this flag ("Change must have at least one delta"), because the
+# far commoner cause is an author who forgot to write the delta.
+#
+# Declaring it here rather than inventing a delta: a spec written only to satisfy
+# a validator states a requirement nobody agreed to, and it would then be
+# promoted into openspec/specs/ on archive and read as binding.
+skip_specs: true
