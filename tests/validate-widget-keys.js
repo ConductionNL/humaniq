@@ -141,6 +141,27 @@ function collectManifestWidgetKeys(manifest) {
 			record(node.widgetKey, `${pageLabel} / slot:${slot}`)
 		}
 
+		// A widget def under `config.widgets[]` names its component with `type`,
+		// not `widgetKey` — that is the shape CnDetailPage / CnDashboardPage
+		// resolve (hrmq#112 moved all 154 detail-page body widgets onto it).
+		// Without this the check silently narrowed from 236 widgets to the 3
+		// still spelled `widgetKey`, and a phantom type would sail through
+		// exactly like the three defects in the docblock above.
+		//
+		// Only entries of a `widgets` ARRAY count. `type` is an overloaded key
+		// in this manifest — pages carry `type:"detail"`, and `headerActions[]`
+		// entries carry `type:"api-call"` — and matching those turned every
+		// action verb into a phantom widget.
+		if (Array.isArray(node.widgets)) {
+			for (const def of node.widgets) {
+				if (def && typeof def === 'object'
+					&& typeof def.type === 'string' && def.type.length > 0) {
+					const label = typeof node.id === 'string' ? `page:${node.id}` : pageLabel
+					record(def.type, `${label} / config.widgets:${def.id ?? '(no id)'}`)
+				}
+			}
+		}
+
 		const nextLabel = typeof node.id === 'string' && typeof node.route === 'string'
 			? `page:${node.id}`
 			: pageLabel

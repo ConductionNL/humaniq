@@ -300,7 +300,11 @@
 					"label": "Mijn gebruikelijk loon",
 					"icon": "ScaleBalance",
 					"route": "MijnGebruikelijkLoon",
-					"visibleIf": {"user.administrationMode": {"eq": "dga_single_person"}}
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "dga_single_person"
+						}
+					}
 				}
 			]
 		},
@@ -357,14 +361,22 @@
 					"label": "Organisatie-eenheden",
 					"icon": "OfficeBuildingOutline",
 					"route": "OrgUnits",
-					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
 				},
 				{
 					"id": "OrgAssignments",
 					"label": "Plaatsingen",
 					"icon": "AccountArrowRightOutline",
 					"route": "OrgAssignments",
-					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
 				},
 				{
 					"id": "GeneratedDocuments",
@@ -427,14 +439,22 @@
 					"label": "Urengoedkeuring",
 					"icon": "CheckDecagramOutline",
 					"route": "TimesheetApproval",
-					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
 				},
 				{
 					"id": "TeamUrengoedkeuring",
 					"label": "Team-urengoedkeuring",
 					"icon": "CheckDecagramOutline",
 					"route": "TeamUrengoedkeuring",
-					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
 				},
 				{
 					"id": "LeaveRequests",
@@ -447,14 +467,22 @@
 					"label": "Verlofgoedkeuring",
 					"icon": "CheckDecagramOutline",
 					"route": "LeaveApproval",
-					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
 				},
 				{
 					"id": "TeamVerlofgoedkeuring",
 					"label": "Team-verlofgoedkeuring",
 					"icon": "CheckDecagramOutline",
 					"route": "TeamVerlofgoedkeuring",
-					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
 				},
 				{
 					"id": "LeaveBalances",
@@ -505,14 +533,22 @@
 					"label": "Declaratiegoedkeuring",
 					"icon": "CheckDecagramOutline",
 					"route": "ExpenseApproval",
-					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
 				},
 				{
 					"id": "TeamDeclaratiegoedkeuring",
 					"label": "Team-declaratiegoedkeuring",
 					"icon": "CheckDecagramOutline",
 					"route": "TeamDeclaratiegoedkeuring",
-					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
 				},
 				{
 					"id": "Assets",
@@ -533,7 +569,13 @@
 			"label": "Loonadministratie",
 			"icon": "CashSync",
 			"order": 120,
-			"visibleIf": {"user.administrationMode": {"notIn": ["eenmanszaak_no_payroll"]}},
+			"visibleIf": {
+				"user.administrationMode": {
+					"notIn": [
+						"eenmanszaak_no_payroll"
+					]
+				}
+			},
 			"children": [
 				{
 					"id": "Payslips",
@@ -624,7 +666,13 @@
 					"label": "Simuleer loonstrook",
 					"icon": "Calculator",
 					"route": "ProformaPayslip",
-					"visibleIf": {"user.administrationMode": {"notIn": ["eenmanszaak_no_payroll"]}}
+					"visibleIf": {
+						"user.administrationMode": {
+							"notIn": [
+								"eenmanszaak_no_payroll"
+							]
+						}
+					}
 				}
 			]
 		},
@@ -633,7 +681,11 @@
 			"label": "Roostering",
 			"icon": "CalendarMonthOutline",
 			"order": 107,
-			"visibleIf": {"user.administrationMode": {"eq": "standard"}},
+			"visibleIf": {
+				"user.administrationMode": {
+					"eq": "standard"
+				}
+			},
 			"children": [
 				{
 					"id": "Rosters",
@@ -1123,65 +1175,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "submit",
-									"from": [
-										"draft",
-										"rejected"
-									],
-									"to": "submitted",
-									"label": "Submit"
-								},
-								{
-									"action": "approve",
-									"from": [
-										"submitted"
-									],
-									"to": "approved",
-									"label": "Approve"
-								},
-								{
-									"action": "reject",
-									"from": [
-										"submitted"
-									],
-									"to": "rejected",
-									"label": "Reject"
-								},
-								{
-									"action": "reopen",
-									"from": [
-										"approved"
-									],
-									"to": "draft",
-									"label": "Reopen"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 2,
-					"props": {
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
 						"title": "Total hours",
 						"icon": "Timeline",
 						"content": {
@@ -1203,34 +1201,23 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 2,
-					"gridWidth": 8,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Time entry",
 						"icon": "ClipboardList",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"employeeId"
-							]
+							],
+							"title": "Time entry"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 6,
-					"gridWidth": 8,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Approval",
 						"icon": "CheckCircleOutline",
 						"content": {
@@ -1241,45 +1228,107 @@
 								"approvedBy",
 								"approvedAt",
 								"rejectionReason"
-							]
+							],
+							"title": "Approval"
 						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 10,
-					"props": {
+					},
+					{
+						"id": "related",
+						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "integration",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 10,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "files",
+						"type": "files",
 						"title": "Approval documents",
-						"only": "files",
 						"icon": "FolderOutline"
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 2
+					},
+					{
+						"id": 2,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": 3,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": 4,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 10
+					},
+					{
+						"id": 5,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "submit",
+							"from": [
+								"draft",
+								"rejected"
+							],
+							"to": "submitted",
+							"label": "Submit"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"submitted"
+							],
+							"to": "approved",
+							"label": "Approve"
+						},
+						{
+							"action": "reject",
+							"from": [
+								"submitted"
+							],
+							"to": "rejected",
+							"label": "Reject"
+						},
+						{
+							"action": "reopen",
+							"from": [
+								"approved"
+							],
+							"to": "draft",
+							"label": "Reopen"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "Expenses",
@@ -1389,91 +1438,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 4,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "submit",
-									"from": [
-										"draft",
-										"rejected"
-									],
-									"to": "submitted",
-									"label": "Submit"
-								},
-								{
-									"action": "approve",
-									"from": [
-										"submitted"
-									],
-									"to": "approved",
-									"label": "Approve"
-								},
-								{
-									"action": "reject",
-									"from": [
-										"submitted"
-									],
-									"to": "rejected",
-									"label": "Reject"
-								},
-								{
-									"action": "reimburse",
-									"from": [
-										"approved"
-									],
-									"to": "reimbursed",
-									"label": "Reimburse"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "extract-receipt",
-								"label": "Extract receipt data",
-								"type": "api-call",
-								"icon": "TextRecognition",
-								"url": "/api/expenses/extract-receipt",
-								"method": "POST",
-								"params": {
-									"expenseId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "Extraction started.",
-								"errorMessage": "Extraction failed."
-							}
-						]
-					}
-				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 2,
-					"props": {
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
 						"title": "Claimed amount",
 						"icon": "CashMultiple",
 						"content": {
@@ -1496,29 +1465,16 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "integration",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 10,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "files",
+						"type": "files",
 						"title": "Receipt / bon",
-						"only": "files",
 						"icon": "FolderOutline"
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+					},
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Claim",
 						"icon": "ClipboardList",
 						"content": {
@@ -1533,18 +1489,13 @@
 								"receiptFile",
 								"vendor",
 								"vatAmount"
-							]
+							],
+							"title": "Claim"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 6,
-					"gridWidth": 8,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Approval",
 						"icon": "CheckCircleOutline",
 						"content": {
@@ -1556,32 +1507,117 @@
 								"approvedAt",
 								"rejectionReason",
 								"reimbursedAt"
-							]
+							],
+							"title": "Approval"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 2,
-					"gridWidth": 4,
-					"gridHeight": 8,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 2,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 3,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 4,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": 5,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 8
 					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "submit",
+							"from": [
+								"draft",
+								"rejected"
+							],
+							"to": "submitted",
+							"label": "Submit"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"submitted"
+							],
+							"to": "approved",
+							"label": "Approve"
+						},
+						{
+							"action": "reject",
+							"from": [
+								"submitted"
+							],
+							"to": "rejected",
+							"label": "Reject"
+						},
+						{
+							"action": "reimburse",
+							"from": [
+								"approved"
+							],
+							"to": "reimbursed",
+							"label": "Reimburse"
+						}
+					]
 				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				"headerActions": [
+					{
+						"id": "extract-receipt",
+						"label": "Extract receipt data",
+						"type": "api-call",
+						"icon": "TextRecognition",
+						"url": "/api/expenses/extract-receipt",
+						"method": "POST",
+						"params": {
+							"expenseId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Extraction started.",
+						"errorMessage": "Extraction failed."
+					}
+				]
+			}
 		},
 		{
 			"id": "Employees",
@@ -1623,17 +1659,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Person",
 						"icon": "Account",
 						"content": {
@@ -1644,125 +1674,104 @@
 								"lastName",
 								"dateOfBirth",
 								"bsn"
-							]
+							],
+							"title": "Person"
 						}
-					}
-				},
-				{
-					"widgetKey": "stats-block",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 2,
-					"props": {
-						"_note": "`entries` is a FLAT prop. CnStatsBlockWidget declares dataSource/entries/title/countLabel/variant/showZeroCount/horizontal/route/iconClass and no `content` prop at all, so the previous `content: {entries: […]}` shape never reached the component — it errored `Exactly one of dataSource / entries must be provided`. That error was invisible until the dashboard widget catalog started resolving at all (see src/main.js): with the catalog empty, CnWidgetGrid never mounted the component and never ran its contract check.",
+					},
+					{
+						"id": "stats-block",
+						"type": "stats-block",
 						"title": "Contracts",
 						"icon": "ChartBar",
-						"entries": [
-							{
-								"title": "Contracts",
-								"register": "hrmq",
-								"schema": "EmploymentContract",
-								"metric": "count",
-								"filter": {
-									"employeeId": "@objectId"
-								},
-								"route": {
-									"name": "EmploymentContracts"
+						"_note": "`entries` is a FLAT prop. CnStatsBlockWidget declares dataSource/entries/title/countLabel/variant/showZeroCount/horizontal/route/iconClass and no `content` prop at all, so the previous `content: {entries: […]}` shape never reached the component — it errored `Exactly one of dataSource / entries must be provided`. That error was invisible until the dashboard widget catalog started resolving at all (see src/main.js): with the catalog empty, CnWidgetGrid never mounted the component and never ran its contract check.",
+						"content": {
+							"entries": [
+								{
+									"title": "Contracts",
+									"register": "hrmq",
+									"schema": "EmploymentContract",
+									"metric": "count",
+									"filter": {
+										"employeeId": "@objectId"
+									},
+									"route": {
+										"name": "EmploymentContracts"
+									}
 								}
-							}
-						]
-					}
-				},
-				{
-					"widgetKey": "stats-block",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 2,
-					"gridWidth": 4,
-					"gridHeight": 2,
-					"props": {
+							]
+						}
+					},
+					{
+						"id": "stats-block-2",
+						"type": "stats-block",
 						"title": "Payslips",
 						"icon": "ChartBar",
-						"entries": [
-							{
-								"title": "Payslips",
-								"register": "hrmq",
-								"schema": "Payslip",
-								"metric": "count",
-								"filter": {
-									"employeeId": "@objectId"
-								},
-								"route": {
-									"name": "Payslips"
+						"content": {
+							"entries": [
+								{
+									"title": "Payslips",
+									"register": "hrmq",
+									"schema": "Payslip",
+									"metric": "count",
+									"filter": {
+										"employeeId": "@objectId"
+									},
+									"route": {
+										"name": "Payslips"
+									}
 								}
-							}
-						]
-					}
-				},
-				{
-					"widgetKey": "stats-block",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 4,
-					"gridWidth": 4,
-					"gridHeight": 2,
-					"props": {
+							]
+						}
+					},
+					{
+						"id": "stats-block-3",
+						"type": "stats-block",
 						"title": "Pending expenses",
 						"icon": "ChartBar",
-						"entries": [
-							{
-								"title": "Pending expenses",
-								"register": "hrmq",
-								"schema": "Expense",
-								"metric": "count",
-								"filter": {
-									"employeeId": "@objectId",
-									"status": "submitted"
-								},
-								"route": {
-									"name": "ExpenseApproval"
+						"content": {
+							"entries": [
+								{
+									"title": "Pending expenses",
+									"register": "hrmq",
+									"schema": "Expense",
+									"metric": "count",
+									"filter": {
+										"employeeId": "@objectId",
+										"status": "submitted"
+									},
+									"route": {
+										"name": "ExpenseApproval"
+									}
 								}
-							}
-						]
-					}
-				},
-				{
-					"widgetKey": "stats-block",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 6,
-					"gridWidth": 4,
-					"gridHeight": 2,
-					"props": {
+							]
+						}
+					},
+					{
+						"id": "stats-block-4",
+						"type": "stats-block",
 						"title": "Hours logged",
 						"icon": "ChartBar",
-						"entries": [
-							{
-								"title": "Hours logged",
-								"register": "hrmq",
-								"schema": "Timesheet",
-								"metric": "sum",
-								"field": "hours",
-								"filter": {
-									"employeeId": "@objectId"
-								},
-								"route": {
-									"name": "Timesheets"
+						"content": {
+							"entries": [
+								{
+									"title": "Hours logged",
+									"register": "hrmq",
+									"schema": "Timesheet",
+									"metric": "sum",
+									"field": "hours",
+									"filter": {
+										"employeeId": "@objectId"
+									},
+									"route": {
+										"name": "Timesheets"
+									}
 								}
-							}
-						]
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 8,
-					"gridWidth": 12,
-					"gridHeight": 7,
-					"props": {
+							]
+						}
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Employment & compliance",
 						"icon": "ShieldCheckOutline",
 						"content": {
@@ -1773,18 +1782,13 @@
 								"lastName",
 								"dateOfBirth",
 								"bsn"
-							]
+							],
+							"title": "Employment & compliance"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 15,
-					"gridWidth": 6,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
 						"title": "Contracts",
 						"icon": "FileSign",
 						"content": {
@@ -1827,16 +1831,10 @@
 							},
 							"emptyText": "No contracts yet"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 6,
-					"gridY": 15,
-					"gridWidth": 6,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "object-list-2",
+						"type": "object-list",
 						"title": "Timesheets",
 						"icon": "Timeline",
 						"content": {
@@ -1871,16 +1869,10 @@
 							},
 							"emptyText": "No timesheets logged yet"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 19,
-					"gridWidth": 6,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "object-list-3",
+						"type": "object-list",
 						"title": "Payslips",
 						"icon": "Cash",
 						"content": {
@@ -1920,16 +1912,10 @@
 							"emptyText": "No payslips yet",
 							"allowCreate": false
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 6,
-					"gridY": 19,
-					"gridWidth": 6,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "object-list-4",
+						"type": "object-list",
 						"title": "Expenses",
 						"icon": "CashMultiple",
 						"content": {
@@ -1964,16 +1950,10 @@
 							},
 							"emptyText": "No expense claims yet"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 23,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "object-list-5",
+						"type": "object-list",
 						"title": "Assignments",
 						"icon": "AccountArrowRightOutline",
 						"content": {
@@ -2012,16 +1992,10 @@
 							},
 							"emptyText": "No placements yet"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 27,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "object-list-6",
+						"type": "object-list",
 						"title": "Beoordelingen",
 						"icon": "ClipboardAccountOutline",
 						"content": {
@@ -2056,16 +2030,10 @@
 							"rowRoute": "PerformanceReviewDetail",
 							"emptyText": "No reviews yet"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 31,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "object-list-7",
+						"type": "object-list",
 						"title": "Doelen & OKR's",
 						"icon": "BullseyeArrow",
 						"content": {
@@ -2100,16 +2068,10 @@
 							"rowRoute": "ObjectiveDetail",
 							"emptyText": "No objectives yet"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 35,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "object-list-8",
+						"type": "object-list",
 						"title": "Beloningsvoorstellen",
 						"icon": "CashPlus",
 						"content": {
@@ -2145,16 +2107,10 @@
 							"viewAllRoute": "CompReviewCycles",
 							"emptyText": "No compensation adjustments yet"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 39,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "object-list-9",
+						"type": "object-list",
 						"title": "Verlof kopen/verkopen",
 						"icon": "SwapHorizontal",
 						"content": {
@@ -2189,31 +2145,145 @@
 							"rowRoute": "LeaveTransactionDetail",
 							"emptyText": "No leave buy/sell transactions yet"
 						}
-					}
-				},
-				{
-					"widgetKey": "integration",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 43,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "files",
+						"type": "files",
 						"title": "Personnel file",
-						"only": "files",
 						"icon": "FolderOutline"
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "stats-block",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 3,
+						"widgetId": "stats-block-2",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 4,
+						"widgetId": "stats-block-3",
+						"gridX": 8,
+						"gridY": 4,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 5,
+						"widgetId": "stats-block-4",
+						"gridX": 8,
+						"gridY": 6,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 6,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 8,
+						"gridWidth": 12,
+						"gridHeight": 7
+					},
+					{
+						"id": 7,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 15,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 8,
+						"widgetId": "object-list-2",
+						"gridX": 6,
+						"gridY": 15,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 9,
+						"widgetId": "object-list-3",
+						"gridX": 0,
+						"gridY": 19,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 10,
+						"widgetId": "object-list-4",
+						"gridX": 6,
+						"gridY": 19,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 11,
+						"widgetId": "object-list-5",
+						"gridX": 0,
+						"gridY": 23,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 12,
+						"widgetId": "object-list-6",
+						"gridX": 0,
+						"gridY": 27,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 13,
+						"widgetId": "object-list-7",
+						"gridX": 0,
+						"gridY": 31,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 14,
+						"widgetId": "object-list-8",
+						"gridX": 0,
+						"gridY": 35,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 15,
+						"widgetId": "object-list-9",
+						"gridX": 0,
+						"gridY": 39,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 16,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 43,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				]
+			}
 		},
 		{
 			"id": "EmploymentContracts",
@@ -2256,44 +2326,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "generate-arbeidsovereenkomst",
-								"label": "Genereer arbeidsovereenkomst",
-								"type": "api-call",
-								"icon": "FileDocumentPlusOutline",
-								"url": "/api/documents/generate",
-								"method": "POST",
-								"params": {
-									"contractId": "@objectId",
-									"documentType": "arbeidsovereenkomst"
-								},
-								"confirm": true,
-								"successMessage": "Arbeidsovereenkomst wordt gegenereerd.",
-								"errorMessage": "Genereren van de arbeidsovereenkomst is mislukt."
-							}
-						]
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 7,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Contract",
 						"icon": "FileSign",
 						"content": {
@@ -2301,32 +2338,56 @@
 							"exclude": [
 								"employeeId",
 								"normfunctieId"
-							]
+							],
+							"title": "Contract"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 7,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 7
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 7
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"headerActions": [
+					{
+						"id": "generate-arbeidsovereenkomst",
+						"label": "Genereer arbeidsovereenkomst",
+						"type": "api-call",
+						"icon": "FileDocumentPlusOutline",
+						"url": "/api/documents/generate",
+						"method": "POST",
+						"params": {
+							"contractId": "@objectId",
+							"documentType": "arbeidsovereenkomst"
+						},
+						"confirm": true,
+						"successMessage": "Arbeidsovereenkomst wordt gegenereerd.",
+						"errorMessage": "Genereren van de arbeidsovereenkomst is mislukt."
+					}
+				]
+			}
 		},
 		{
 			"id": "GeneratedDocuments",
@@ -2370,17 +2431,11 @@
 						"tags",
 						"tasks"
 					]
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 3,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Status",
 						"icon": "CheckCircleOutline",
 						"content": {
@@ -2389,18 +2444,13 @@
 								"status",
 								"generatedAt",
 								"errorMessage"
-							]
+							],
+							"title": "Status"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 3,
-					"gridWidth": 8,
-					"gridHeight": 7,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Document",
 						"icon": "FileDocumentOutline",
 						"content": {
@@ -2410,23 +2460,47 @@
 								"contractId",
 								"payslipId",
 								"jaaropgaafId"
-							]
+							],
+							"title": "Document"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 10,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 7
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 10
 					}
-				}
-			]
+				]
+			}
 		},
 		{
 			"id": "Payslips",
@@ -2468,44 +2542,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "generate-loonstrook",
-								"label": "Genereer PDF",
-								"type": "api-call",
-								"icon": "FileDocumentPlusOutline",
-								"url": "/api/documents/generate",
-								"method": "POST",
-								"params": {
-									"payslipId": "@objectId",
-									"documentType": "loonstrook"
-								},
-								"confirm": true,
-								"successMessage": "Loonstrook-PDF wordt gegenereerd.",
-								"errorMessage": "Genereren van de loonstrook-PDF is mislukt."
-							}
-						]
-					}
 				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 3,
-					"props": {
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
 						"title": "Gross pay",
 						"icon": "Cash",
 						"content": {
@@ -2527,16 +2568,10 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 4,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 3,
-					"props": {
+					},
+					{
+						"id": "stat-2",
+						"type": "stat",
 						"title": "Net pay",
 						"icon": "CurrencyEur",
 						"content": {
@@ -2558,28 +2593,19 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 3,
-					"props": {
+					},
+					{
+						"id": "related",
+						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 3,
-					"gridWidth": 12,
-					"gridHeight": 14,
-					"props": {
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Payslip breakdown",
 						"icon": "TableColumn",
 						"content": {
@@ -2587,20 +2613,63 @@
 							"exclude": [
 								"employeeId",
 								"loonbeslagId"
-							]
+							],
+							"title": "Payslip breakdown"
 						}
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "stat-2",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 12,
+						"gridHeight": 14
+					}
+				],
+				"headerActions": [
+					{
+						"id": "generate-loonstrook",
+						"label": "Genereer PDF",
+						"type": "api-call",
+						"icon": "FileDocumentPlusOutline",
+						"url": "/api/documents/generate",
+						"method": "POST",
+						"params": {
+							"payslipId": "@objectId",
+							"documentType": "loonstrook"
+						},
+						"confirm": true,
+						"successMessage": "Loonstrook-PDF wordt gegenereerd.",
+						"errorMessage": "Genereren van de loonstrook-PDF is mislukt."
+					}
+				]
+			}
 		},
 		{
 			"id": "Jaaropgaven",
@@ -2639,49 +2708,50 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 7,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Jaaropgaaf",
 						"icon": "FileCertificateOutline",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"employeeId"
-							]
+							],
+							"title": "Jaaropgaaf"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 7,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 7
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 7
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				]
+			}
 		},
 		{
 			"id": "PayrollRuns",
@@ -2736,68 +2806,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "recalculate",
-								"label": "(Her)berekenen",
-								"type": "api-call",
-								"icon": "Calculator",
-								"url": "/api/payroll/calculate",
-								"method": "POST",
-								"params": {
-									"runId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "Loonrun (her)berekend — loonstroken en totalen zijn bijgewerkt.",
-								"errorMessage": "(Her)berekenen van de loonrun is mislukt."
-							},
-							{
-								"id": "mutations",
-								"label": "Mutatieoverzicht",
-								"type": "api-call",
-								"icon": "SwapHorizontal",
-								"url": "/api/payroll/mutations",
-								"method": "POST",
-								"params": {
-									"toRunId": "@objectId"
-								},
-								"confirm": true,
-								"onSuccessRoute": "PayrollMutationReportDetail",
-								"successMessage": "Mutatierapport gegenereerd — vergeleken met de vorige periode.",
-								"errorMessage": "Genereren van het mutatierapport is mislukt."
-							},
-							{
-								"id": "book-correction",
-								"label": "Correctie boeken (TWK)",
-								"type": "open-form",
-								"icon": "CashSync",
-								"register": "hrmq",
-								"schema": "PayrollAdjustment",
-								"onSuccessRoute": "PayrollAdjustmentDetail",
-								"successMessage": "Concept-correctie aangemaakt — gebruik Herrekenen om de delta te berekenen."
-							}
-						]
-					}
 				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 3,
-					"props": {
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
 						"title": "Total gross",
 						"icon": "CashMultiple",
 						"content": {
@@ -2819,16 +2832,10 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 4,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 3,
-					"props": {
+					},
+					{
+						"id": "stat-2",
+						"type": "stat",
 						"title": "Total net",
 						"icon": "CurrencyEur",
 						"content": {
@@ -2850,16 +2857,10 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 3,
-					"props": {
+					},
+					{
+						"id": "stat-3",
+						"type": "stat",
 						"title": "Withholding liability balance",
 						"icon": "ScaleBalance",
 						"content": {
@@ -2881,31 +2882,20 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 3,
-					"gridWidth": 12,
-					"gridHeight": 7,
-					"props": {
+					},
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Payroll run",
 						"icon": "TableColumn",
 						"content": {
-							"columns": 2
+							"columns": 2,
+							"title": "Payroll run"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 10,
-					"gridWidth": 12,
-					"gridHeight": 5,
-					"props": {
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
 						"title": "Loonstroken",
 						"icon": "ReceiptTextOutline",
 						"content": {
@@ -2946,17 +2936,91 @@
 							"allowCreate": false
 						}
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "stat-2",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "stat-3",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 12,
+						"gridHeight": 7
+					},
+					{
+						"id": 5,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"headerActions": [
+					{
+						"id": "recalculate",
+						"label": "(Her)berekenen",
+						"type": "api-call",
+						"icon": "Calculator",
+						"url": "/api/payroll/calculate",
+						"method": "POST",
+						"params": {
+							"runId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Loonrun (her)berekend — loonstroken en totalen zijn bijgewerkt.",
+						"errorMessage": "(Her)berekenen van de loonrun is mislukt."
+					},
+					{
+						"id": "mutations",
+						"label": "Mutatieoverzicht",
+						"type": "api-call",
+						"icon": "SwapHorizontal",
+						"url": "/api/payroll/mutations",
+						"method": "POST",
+						"params": {
+							"toRunId": "@objectId"
+						},
+						"confirm": true,
+						"onSuccessRoute": "PayrollMutationReportDetail",
+						"successMessage": "Mutatierapport gegenereerd — vergeleken met de vorige periode.",
+						"errorMessage": "Genereren van het mutatierapport is mislukt."
+					},
+					{
+						"id": "book-correction",
+						"label": "Correctie boeken (TWK)",
+						"type": "open-form",
+						"icon": "CashSync",
+						"register": "hrmq",
+						"schema": "PayrollAdjustment",
+						"onSuccessRoute": "PayrollAdjustmentDetail",
+						"successMessage": "Concept-correctie aangemaakt — gebruik Herrekenen om de delta te berekenen."
+					}
+				]
+			}
 		},
 		{
 			"id": "PayrollAdjustments",
@@ -2997,43 +3061,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "recompute",
-								"label": "Herrekenen",
-								"type": "api-call",
-								"icon": "Calculator",
-								"url": "/api/payroll/adjust",
-								"method": "POST",
-								"params": {
-									"adjustmentId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "Correctie herrekend — de delta is bijgewerkt.",
-								"errorMessage": "Herrekenen van de correctie is mislukt."
-							}
-						]
-					}
 				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 3,
-					"props": {
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
 						"title": "Delta net",
 						"icon": "CashSync",
 						"content": {
@@ -3055,28 +3087,19 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 12,
-					"props": {
+					},
+					{
+						"id": "related",
+						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 3,
-					"gridWidth": 8,
-					"gridHeight": 9,
-					"props": {
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Correctie",
 						"icon": "CashSync",
 						"content": {
@@ -3086,20 +3109,54 @@
 								"originalPayrollRunId",
 								"originalPayslipId",
 								"settlementPayrollRunId"
-							]
+							],
+							"title": "Correctie"
 						}
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 12
+					},
+					{
+						"id": 3,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 9
+					}
+				],
+				"headerActions": [
+					{
+						"id": "recompute",
+						"label": "Herrekenen",
+						"type": "api-call",
+						"icon": "Calculator",
+						"url": "/api/payroll/adjust",
+						"method": "POST",
+						"params": {
+							"adjustmentId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Correctie herrekend — de delta is bijgewerkt.",
+						"errorMessage": "Herrekenen van de correctie is mislukt."
+					}
+				]
+			}
 		},
 		{
 			"id": "LoonaangifteFilings",
@@ -3144,73 +3201,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "klaarzetten",
-									"from": [
-										"concept"
-									],
-									"to": "klaargezet",
-									"label": "Klaarzetten"
-								},
-								{
-									"action": "bevestigen",
-									"from": [
-										"klaargezet"
-									],
-									"to": "bevestigd",
-									"label": "Bevestigen"
-								},
-								{
-									"action": "verzenden",
-									"from": [
-										"bevestigd"
-									],
-									"to": "verzonden",
-									"label": "Verzenden"
-								},
-								{
-									"action": "heropenen",
-									"from": [
-										"klaargezet",
-										"bevestigd"
-									],
-									"to": "concept",
-									"label": "Heropenen"
-								},
-								{
-									"action": "corrigeren",
-									"from": [
-										"verzonden"
-									],
-									"to": "concept",
-									"label": "Corrigeren"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 3,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Status & deadline",
 						"icon": "CalendarClock",
 						"content": {
@@ -3222,48 +3217,100 @@
 								"submittedDate",
 								"responseStatus",
 								"responseMessage"
-							]
+							],
+							"title": "Status & deadline"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 3,
-					"gridWidth": 12,
-					"gridHeight": 9,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Filing",
 						"icon": "FileDocument",
 						"content": {
-							"columns": 2
+							"columns": 2,
+							"title": "Filing"
 						}
-					}
-				},
-				{
-					"widgetKey": "integration",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 12,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "files",
+						"type": "files",
 						"title": "Filing proof / deposit confirmation",
-						"only": "files",
 						"icon": "FolderOutline"
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 12,
+						"gridHeight": 9
+					},
+					{
+						"id": 3,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 12,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "klaarzetten",
+							"from": [
+								"concept"
+							],
+							"to": "klaargezet",
+							"label": "Klaarzetten"
+						},
+						{
+							"action": "bevestigen",
+							"from": [
+								"klaargezet"
+							],
+							"to": "bevestigd",
+							"label": "Bevestigen"
+						},
+						{
+							"action": "verzenden",
+							"from": [
+								"bevestigd"
+							],
+							"to": "verzonden",
+							"label": "Verzenden"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"klaargezet",
+								"bevestigd"
+							],
+							"to": "concept",
+							"label": "Heropenen"
+						},
+						{
+							"action": "corrigeren",
+							"from": [
+								"verzonden"
+							],
+							"to": "concept",
+							"label": "Corrigeren"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "PensionFilings",
@@ -3306,73 +3353,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "controleren",
-									"from": [
-										"concept"
-									],
-									"to": "gecontroleerd",
-									"label": "Controleren"
-								},
-								{
-									"action": "bevestigen",
-									"from": [
-										"gecontroleerd"
-									],
-									"to": "bevestigd",
-									"label": "Bevestigen"
-								},
-								{
-									"action": "verzenden",
-									"from": [
-										"bevestigd"
-									],
-									"to": "verzonden",
-									"label": "Verzenden"
-								},
-								{
-									"action": "heropenen",
-									"from": [
-										"gecontroleerd",
-										"bevestigd"
-									],
-									"to": "concept",
-									"label": "Heropenen"
-								},
-								{
-									"action": "corrigeren",
-									"from": [
-										"verzonden"
-									],
-									"to": "concept",
-									"label": "Corrigeren"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 3,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Status & deadline",
 						"icon": "CalendarClock",
 						"content": {
@@ -3383,50 +3368,106 @@
 								"responseStatus",
 								"responseMessage",
 								"submittedDate"
-							]
+							],
+							"title": "Status & deadline"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 3,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Filing",
 						"icon": "PiggyBankOutline",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"payrollRunId"
-							]
+							],
+							"title": "Filing"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 9,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 9
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "controleren",
+							"from": [
+								"concept"
+							],
+							"to": "gecontroleerd",
+							"label": "Controleren"
+						},
+						{
+							"action": "bevestigen",
+							"from": [
+								"gecontroleerd"
+							],
+							"to": "bevestigd",
+							"label": "Bevestigen"
+						},
+						{
+							"action": "verzenden",
+							"from": [
+								"bevestigd"
+							],
+							"to": "verzonden",
+							"label": "Verzenden"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"gecontroleerd",
+								"bevestigd"
+							],
+							"to": "concept",
+							"label": "Heropenen"
+						},
+						{
+							"action": "corrigeren",
+							"from": [
+								"verzonden"
+							],
+							"to": "concept",
+							"label": "Corrigeren"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "WntDisclosures",
@@ -3468,40 +3509,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "publiceren",
-									"from": [
-										"concept"
-									],
-									"to": "gepubliceerd",
-									"label": "Publiceren"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 3,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Bezoldiging & status",
 						"icon": "ScaleBalance",
 						"content": {
@@ -3510,50 +3522,73 @@
 								"year",
 								"totalCompensation",
 								"status"
-							]
+							],
+							"title": "Bezoldiging & status"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 3,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Verantwoording",
 						"icon": "ScaleBalance",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"employeeId"
-							]
+							],
+							"title": "Verantwoording"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 9,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 9
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "publiceren",
+							"from": [
+								"concept"
+							],
+							"to": "gepubliceerd",
+							"label": "Publiceren"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "PayrollMutations",
@@ -3596,17 +3631,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 3,
-					"gridHeight": 3,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
 						"title": "Total wage-cost delta",
 						"icon": "CashMultiple",
 						"content": {
@@ -3628,16 +3657,10 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 3,
-					"gridY": 0,
-					"gridWidth": 3,
-					"gridHeight": 3,
-					"props": {
+					},
+					{
+						"id": "stat-2",
+						"type": "stat",
 						"title": "Entered",
 						"icon": "AccountPlusOutline",
 						"content": {
@@ -3659,16 +3682,10 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 6,
-					"gridY": 0,
-					"gridWidth": 3,
-					"gridHeight": 3,
-					"props": {
+					},
+					{
+						"id": "stat-3",
+						"type": "stat",
 						"title": "Left",
 						"icon": "AccountMinusOutline",
 						"content": {
@@ -3690,16 +3707,10 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 9,
-					"gridY": 0,
-					"gridWidth": 3,
-					"gridHeight": 3,
-					"props": {
+					},
+					{
+						"id": "stat-4",
+						"type": "stat",
 						"title": "Changed",
 						"icon": "SwapHorizontal",
 						"content": {
@@ -3721,45 +3732,78 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 3,
-					"gridWidth": 8,
-					"gridHeight": 10,
-					"props": {
+					},
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Mutatieoverzicht",
 						"icon": "TableColumn",
 						"content": {
-							"columns": 2
+							"columns": 2,
+							"title": "Mutatieoverzicht"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 3,
-					"gridWidth": 4,
-					"gridHeight": 10,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "stat-2",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "stat-3",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "stat-4",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 5,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 10
+					},
+					{
+						"id": 6,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 3,
+						"gridWidth": 4,
+						"gridHeight": 10
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				]
+			}
 		},
 		{
 			"id": "WkrDeclarations",
@@ -3816,49 +3860,50 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 7,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "WKR-verstrekking",
 						"icon": "GiftOutline",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"employeeId"
-							]
+							],
+							"title": "WKR-verstrekking"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 7,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 7
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 7
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				]
+			}
 		},
 		{
 			"id": "WkrAssessments",
@@ -3902,43 +3947,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "wkr-assess",
-								"label": "Beoordelen",
-								"type": "api-call",
-								"icon": "Calculator",
-								"url": "/api/payroll/wkr-assess",
-								"method": "POST",
-								"params": {
-									"assessmentId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "WKR-beoordeling herberekend.",
-								"errorMessage": "Herberekenen van de WKR-beoordeling is mislukt."
-							}
-						]
-					}
 				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 3,
-					"gridHeight": 3,
-					"props": {
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
 						"title": "Fiscale loonsom",
 						"icon": "CashMultiple",
 						"content": {
@@ -3960,16 +3973,10 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 3,
-					"gridY": 0,
-					"gridWidth": 3,
-					"gridHeight": 3,
-					"props": {
+					},
+					{
+						"id": "stat-2",
+						"type": "stat",
 						"title": "Vrije ruimte",
 						"icon": "GiftOutline",
 						"content": {
@@ -3991,16 +3998,10 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 6,
-					"gridY": 0,
-					"gridWidth": 3,
-					"gridHeight": 3,
-					"props": {
+					},
+					{
+						"id": "stat-3",
+						"type": "stat",
 						"title": "Vrije ruimte gebruikt",
 						"icon": "CashRemove",
 						"content": {
@@ -4022,16 +4023,10 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 9,
-					"gridY": 0,
-					"gridWidth": 3,
-					"gridHeight": 3,
-					"props": {
+					},
+					{
+						"id": "stat-4",
+						"type": "stat",
 						"title": "Eindheffing verschuldigd",
 						"icon": "AlertOutline",
 						"content": {
@@ -4053,45 +4048,94 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 3,
-					"gridWidth": 8,
-					"gridHeight": 10,
-					"props": {
+					},
+					{
+						"id": "data",
+						"type": "data",
 						"title": "WKR-beoordeling",
 						"icon": "TableColumn",
 						"content": {
-							"columns": 2
+							"columns": 2,
+							"title": "WKR-beoordeling"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 3,
-					"gridWidth": 4,
-					"gridHeight": 10,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "stat-2",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "stat-3",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "stat-4",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 5,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 10
+					},
+					{
+						"id": 6,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 3,
+						"gridWidth": 4,
+						"gridHeight": 10
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"headerActions": [
+					{
+						"id": "wkr-assess",
+						"label": "Beoordelen",
+						"type": "api-call",
+						"icon": "Calculator",
+						"url": "/api/payroll/wkr-assess",
+						"method": "POST",
+						"params": {
+							"assessmentId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "WKR-beoordeling herberekend.",
+						"errorMessage": "Herberekenen van de WKR-beoordeling is mislukt."
+					}
+				]
+			}
 		},
 		{
 			"id": "Loonbeslagen",
@@ -4144,72 +4188,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "loonbeslag-activate",
-								"label": "Verifiëren en activeren",
-								"type": "api-call",
-								"icon": "CheckCircleOutline",
-								"url": "/api/loonbeslag/activate",
-								"method": "POST",
-								"params": {
-									"loonbeslagId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "Loonbeslag geverifieerd en geactiveerd.",
-								"errorMessage": "Activeren van het loonbeslag is mislukt."
-							},
-							{
-								"id": "loonbeslag-settle",
-								"label": "Markeer voldaan",
-								"type": "api-call",
-								"icon": "CashCheck",
-								"url": "/api/loonbeslag/settle",
-								"method": "POST",
-								"params": {
-									"loonbeslagId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "Loonbeslag gemarkeerd als voldaan.",
-								"errorMessage": "Markeren als voldaan is mislukt."
-							},
-							{
-								"id": "loonbeslag-withdraw",
-								"label": "Intrekken",
-								"type": "api-call",
-								"icon": "CloseCircleOutline",
-								"url": "/api/loonbeslag/withdraw",
-								"method": "POST",
-								"params": {
-									"loonbeslagId": "@objectId",
-									"reason": "Ingetrokken door beheerder/HR via het beheerpaneel."
-								},
-								"confirm": true,
-								"successMessage": "Loonbeslag ingetrokken.",
-								"errorMessage": "Intrekken van het loonbeslag is mislukt."
-							}
-						]
-					}
 				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 3,
-					"props": {
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
 						"title": "Ordered amount",
 						"icon": "CashMinus",
 						"content": {
@@ -4231,16 +4214,10 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 4,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 3,
-					"props": {
+					},
+					{
+						"id": "stat-2",
+						"type": "stat",
 						"title": "Beslagvrije voet",
 						"icon": "ShieldCheckOutline",
 						"content": {
@@ -4262,16 +4239,10 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "stat",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 3,
-					"props": {
+					},
+					{
+						"id": "stat-3",
+						"type": "stat",
 						"title": "Totale vordering",
 						"icon": "CashMultiple",
 						"content": {
@@ -4293,48 +4264,118 @@
 								}
 							}
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 3,
-					"gridWidth": 8,
-					"gridHeight": 12,
-					"props": {
+					},
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Loonbeslag",
 						"icon": "Gavel",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"employeeId"
-							]
+							],
+							"title": "Loonbeslag"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 3,
-					"gridWidth": 4,
-					"gridHeight": 12,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "stat-2",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "stat-3",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 12
+					},
+					{
+						"id": 5,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 3,
+						"gridWidth": 4,
+						"gridHeight": 12
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"headerActions": [
+					{
+						"id": "loonbeslag-activate",
+						"label": "Verifiëren en activeren",
+						"type": "api-call",
+						"icon": "CheckCircleOutline",
+						"url": "/api/loonbeslag/activate",
+						"method": "POST",
+						"params": {
+							"loonbeslagId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Loonbeslag geverifieerd en geactiveerd.",
+						"errorMessage": "Activeren van het loonbeslag is mislukt."
+					},
+					{
+						"id": "loonbeslag-settle",
+						"label": "Markeer voldaan",
+						"type": "api-call",
+						"icon": "CashCheck",
+						"url": "/api/loonbeslag/settle",
+						"method": "POST",
+						"params": {
+							"loonbeslagId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Loonbeslag gemarkeerd als voldaan.",
+						"errorMessage": "Markeren als voldaan is mislukt."
+					},
+					{
+						"id": "loonbeslag-withdraw",
+						"label": "Intrekken",
+						"type": "api-call",
+						"icon": "CloseCircleOutline",
+						"url": "/api/loonbeslag/withdraw",
+						"method": "POST",
+						"params": {
+							"loonbeslagId": "@objectId",
+							"reason": "Ingetrokken door beheerder/HR via het beheerpaneel."
+						},
+						"confirm": true,
+						"successMessage": "Loonbeslag ingetrokken.",
+						"errorMessage": "Intrekken van het loonbeslag is mislukt."
+					}
+				]
+			}
 		},
 		{
 			"id": "PayrollGLPosts",
@@ -4375,17 +4416,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 3,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Status",
 						"icon": "CheckCircleOutline",
 						"content": {
@@ -4394,50 +4429,60 @@
 								"status",
 								"postedAt",
 								"errorMessage"
-							]
+							],
+							"title": "Status"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 3,
-					"gridWidth": 8,
-					"gridHeight": 8,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "GL post",
 						"icon": "BookEditOutline",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"payrollRunId"
-							]
+							],
+							"title": "GL post"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 11,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 8
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 11
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				]
+			}
 		},
 		{
 			"id": "PayrollPaymentBatches",
@@ -4479,17 +4524,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 3,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Status",
 						"icon": "CheckCircleOutline",
 						"content": {
@@ -4498,50 +4537,60 @@
 								"status",
 								"createdAt",
 								"errorMessage"
-							]
+							],
+							"title": "Status"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 3,
-					"gridWidth": 8,
-					"gridHeight": 8,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Betaalbatch",
 						"icon": "BankTransfer",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"payrollRunId"
-							]
+							],
+							"title": "Betaalbatch"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 11,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 8
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 11
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				]
+			}
 		},
 		{
 			"id": "LeaveRequests",
@@ -4651,75 +4700,24 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "submit",
-									"from": [
-										"draft",
-										"rejected"
-									],
-									"to": "submitted",
-									"label": "Submit"
-								},
-								{
-									"action": "approve",
-									"from": [
-										"submitted"
-									],
-									"to": "approved",
-									"label": "Approve"
-								},
-								{
-									"action": "reject",
-									"from": [
-										"submitted"
-									],
-									"to": "rejected",
-									"label": "Reject"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 5,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Request",
 						"icon": "CalendarClock",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"employeeId"
-							]
+							],
+							"title": "Request"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 5,
-					"gridWidth": 8,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Approval",
 						"icon": "CheckCircleOutline",
 						"content": {
@@ -4730,45 +4728,91 @@
 								"approvedBy",
 								"approvedAt",
 								"rejectionReason"
-							]
+							],
+							"title": "Approval"
 						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 9,
-					"props": {
+					},
+					{
+						"id": "related",
+						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "integration",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 9,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "files",
+						"type": "files",
 						"title": "Supporting documents",
-						"only": "files",
 						"icon": "FolderOutline"
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 5
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 9
+					},
+					{
+						"id": 4,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 9,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "submit",
+							"from": [
+								"draft",
+								"rejected"
+							],
+							"to": "submitted",
+							"label": "Submit"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"submitted"
+							],
+							"to": "approved",
+							"label": "Approve"
+						},
+						{
+							"action": "reject",
+							"from": [
+								"submitted"
+							],
+							"to": "rejected",
+							"label": "Reject"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "LeaveBalances",
@@ -4853,17 +4897,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 6,
-					"gridHeight": 7,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "CAO",
 						"icon": "FileDocumentMultipleOutline",
 						"content": {
@@ -4877,18 +4915,13 @@
 								"payScalesVerified",
 								"leaveEntitlementVerified",
 								"source"
-							]
+							],
+							"title": "CAO"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 6,
-					"gridY": 0,
-					"gridWidth": 6,
-					"gridHeight": 7,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Loonschalen & verlof",
 						"icon": "ScaleBalance",
 						"content": {
@@ -4898,20 +4931,30 @@
 								"allowances",
 								"leaveEntitlement",
 								"workingTime"
-							]
+							],
+							"title": "Loonschalen & verlof"
 						}
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 7
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 7
+					}
+				]
+			}
 		},
 		{
 			"id": "Normfuncties",
@@ -4963,17 +5006,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 7,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Normfunctie",
 						"icon": "BriefcaseOutline",
 						"content": {
@@ -4985,20 +5022,22 @@
 								"caoSchaal",
 								"caoSchaalVerified",
 								"caoSchaalSource"
-							]
+							],
+							"title": "Normfunctie"
 						}
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 7
+					}
+				]
+			}
 		},
 		{
 			"id": "SalaryBands",
@@ -5053,34 +5092,30 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 7,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Salarisschaal",
 						"icon": "CurrencyEur",
 						"content": {
-							"columns": 2
+							"columns": 2,
+							"title": "Salarisschaal"
 						}
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 7
+					}
+				]
+			}
 		},
 		{
 			"id": "CompReviewCycles",
@@ -5130,77 +5165,21 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 4,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "sluiten",
-									"from": [
-										"open"
-									],
-									"to": "closed",
-									"label": "Sluiten"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "propose-comp-adjustment",
-								"label": "Aanpassing voorstellen",
-								"type": "open-form",
-								"icon": "PlusCircleOutline",
-								"register": "hrmq",
-								"schema": "CompAdjustment",
-								"onSuccessRoute": "CompAdjustmentDetail",
-								"successMessage": "Beloningsvoorstel aangemaakt."
-							}
-						]
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 6,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Cyclus",
 						"icon": "CalendarRange",
 						"content": {
-							"columns": 2
+							"columns": 2,
+							"title": "Cyclus"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 6,
-					"gridWidth": 12,
-					"gridHeight": 5,
-					"props": {
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
 						"title": "Voorstellen in deze cyclus",
 						"icon": "CashPlus",
 						"content": {
@@ -5232,17 +5211,51 @@
 							"emptyText": "No adjustments in this cycle yet"
 						}
 					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "sluiten",
+							"from": [
+								"open"
+							],
+							"to": "closed",
+							"label": "Sluiten"
+						}
+					]
 				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				"headerActions": [
+					{
+						"id": "propose-comp-adjustment",
+						"label": "Aanpassing voorstellen",
+						"type": "open-form",
+						"icon": "PlusCircleOutline",
+						"register": "hrmq",
+						"schema": "CompAdjustment",
+						"onSuccessRoute": "CompAdjustmentDetail",
+						"successMessage": "Beloningsvoorstel aangemaakt."
+					}
+				]
+			}
 		},
 		{
 			"id": "CompAdjustmentDetail",
@@ -5256,82 +5269,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 4,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "propose",
-									"from": [
-										"draft"
-									],
-									"to": "proposed",
-									"label": "Voorstellen"
-								},
-								{
-									"action": "approve",
-									"from": [
-										"proposed"
-									],
-									"to": "approved",
-									"label": "Goedkeuren"
-								},
-								{
-									"action": "reject",
-									"from": [
-										"proposed"
-									],
-									"to": "draft",
-									"label": "Afwijzen"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "effectueren",
-								"label": "Effectueren",
-								"type": "api-call",
-								"icon": "CashCheck",
-								"url": "/api/comp/effectuate",
-								"method": "POST",
-								"params": {
-									"adjustmentId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "Beloningsvoorstel geëffectueerd; het brutomaandsalaris is bijgewerkt.",
-								"errorMessage": "Effectueren van het beloningsvoorstel is mislukt."
-							}
-						]
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 9,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Aanpassing",
 						"icon": "CashPlus",
 						"content": {
@@ -5341,32 +5283,84 @@
 								"employeeId",
 								"contractId",
 								"targetBandId"
-							]
+							],
+							"title": "Aanpassing"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 9,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 9
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 9
 					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "propose",
+							"from": [
+								"draft"
+							],
+							"to": "proposed",
+							"label": "Voorstellen"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"proposed"
+							],
+							"to": "approved",
+							"label": "Goedkeuren"
+						},
+						{
+							"action": "reject",
+							"from": [
+								"proposed"
+							],
+							"to": "draft",
+							"label": "Afwijzen"
+						}
+					]
 				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				"headerActions": [
+					{
+						"id": "effectueren",
+						"label": "Effectueren",
+						"type": "api-call",
+						"icon": "CashCheck",
+						"url": "/api/comp/effectuate",
+						"method": "POST",
+						"params": {
+							"adjustmentId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Beloningsvoorstel geëffectueerd; het brutomaandsalaris is bijgewerkt.",
+						"errorMessage": "Effectueren van het beloningsvoorstel is mislukt."
+					}
+				]
+			}
 		},
 		{
 			"id": "LeaveTransactionDetail",
@@ -5380,83 +5374,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 4,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "submit",
-									"from": [
-										"draft",
-										"rejected"
-									],
-									"to": "submitted",
-									"label": "Indienen"
-								},
-								{
-									"action": "approve",
-									"from": [
-										"submitted"
-									],
-									"to": "approved",
-									"label": "Goedkeuren"
-								},
-								{
-									"action": "reject",
-									"from": [
-										"submitted"
-									],
-									"to": "rejected",
-									"label": "Afwijzen"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "verrekenen",
-								"label": "Verrekenen",
-								"type": "api-call",
-								"icon": "CashCheck",
-								"url": "/api/leave/settle",
-								"method": "POST",
-								"params": {
-									"transactionId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "Transactie verrekend; het verlofsaldo is bijgewerkt.",
-								"errorMessage": "Verrekenen van de transactie is mislukt."
-							}
-						]
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 9,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Transactie",
 						"icon": "SwapHorizontal",
 						"content": {
@@ -5464,32 +5386,85 @@
 							"exclude": [
 								"employeeId",
 								"settlementPayrollRunId"
-							]
+							],
+							"title": "Transactie"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 9,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 9
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 9
 					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "submit",
+							"from": [
+								"draft",
+								"rejected"
+							],
+							"to": "submitted",
+							"label": "Indienen"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"submitted"
+							],
+							"to": "approved",
+							"label": "Goedkeuren"
+						},
+						{
+							"action": "reject",
+							"from": [
+								"submitted"
+							],
+							"to": "rejected",
+							"label": "Afwijzen"
+						}
+					]
 				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				"headerActions": [
+					{
+						"id": "verrekenen",
+						"label": "Verrekenen",
+						"type": "api-call",
+						"icon": "CashCheck",
+						"url": "/api/leave/settle",
+						"method": "POST",
+						"params": {
+							"transactionId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Transactie verrekend; het verlofsaldo is bijgewerkt.",
+						"errorMessage": "Verrekenen van de transactie is mislukt."
+					}
+				]
+			}
 		},
 		{
 			"id": "SickLeaveCases",
@@ -5558,48 +5533,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "herstellen",
-									"from": [
-										"gemeld"
-									],
-									"to": "hersteld",
-									"label": "Herstellen"
-								},
-								{
-									"action": "heropenen",
-									"from": [
-										"hersteld"
-									],
-									"to": "gemeld",
-									"label": "Heropenen"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 5,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Case",
 						"icon": "EmoticonSickOutline",
 						"content": {
@@ -5616,18 +5554,13 @@
 								"eerstejaarsevaluatieDone",
 								"currentAbsencePercentage",
 								"absenceProgression"
-							]
+							],
+							"title": "Case"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 5,
-					"gridWidth": 8,
-					"gridHeight": 8,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Poortwachter milestones",
 						"icon": "CalendarClock",
 						"content": {
@@ -5641,30 +5574,22 @@
 								"uwv42WeekMeldingDone",
 								"eerstejaarsevaluatieDue",
 								"eerstejaarsevaluatieDone"
-							]
+							],
+							"title": "Poortwachter milestones"
 						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 13,
-					"props": {
+					},
+					{
+						"id": "related",
+						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 13,
-					"gridWidth": 12,
-					"gridHeight": 3,
-					"props": {
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "data-3",
+						"type": "data",
 						"title": "Work resumption",
 						"icon": "Timeline",
 						"content": {
@@ -5672,33 +5597,81 @@
 							"include": [
 								"currentAbsencePercentage",
 								"absenceProgression"
-							]
+							],
+							"title": "Work resumption"
 						}
-					}
-				},
-				{
-					"widgetKey": "integration",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 16,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "files",
+						"type": "files",
 						"title": "Gespreksverslagen & plan van aanpak",
-						"only": "files",
 						"icon": "FolderOutline"
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 5
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 8,
+						"gridHeight": 8
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 13
+					},
+					{
+						"id": 4,
+						"widgetId": "data-3",
+						"gridX": 0,
+						"gridY": 13,
+						"gridWidth": 12,
+						"gridHeight": 3
+					},
+					{
+						"id": 5,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 16,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "herstellen",
+							"from": [
+								"gemeld"
+							],
+							"to": "hersteld",
+							"label": "Herstellen"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"hersteld"
+							],
+							"to": "gemeld",
+							"label": "Heropenen"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "AttendanceRecords",
@@ -5742,80 +5715,71 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "sluiten",
-									"from": [
-										"open"
-									],
-									"to": "gesloten",
-									"label": "Sluiten"
-								},
-								{
-									"action": "heropenen",
-									"from": [
-										"gesloten"
-									],
-									"to": "open",
-									"label": "Heropenen"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Attendance",
 						"icon": "ClockOutline",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"employeeId"
-							]
+							],
+							"title": "Attendance"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 6,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "sluiten",
+							"from": [
+								"open"
+							],
+							"to": "gesloten",
+							"label": "Sluiten"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"gesloten"
+							],
+							"to": "open",
+							"label": "Heropenen"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "BhvCertificeringen",
@@ -5858,17 +5822,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Certificering",
 						"icon": "ShieldCheckOutline",
 						"content": {
@@ -5876,32 +5834,39 @@
 							"exclude": [
 								"employeeId",
 								"orgUnitId"
-							]
+							],
+							"title": "Certificering"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 6,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				]
+			}
 		},
 		{
 			"id": "Onboardings",
@@ -5942,84 +5907,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "contract_bevestigen",
-									"from": [
-										"aangenomen"
-									],
-									"to": "contract_getekend",
-									"label": "Contract bevestigen"
-								},
-								{
-									"action": "gegevens_valideren",
-									"from": [
-										"contract_getekend"
-									],
-									"to": "gegevens_gevalideerd",
-									"label": "Gegevens valideren"
-								},
-								{
-									"action": "gereed_melden",
-									"from": [
-										"gegevens_gevalideerd"
-									],
-									"to": "gereed_eerste_werkdag",
-									"label": "Gereed melden"
-								},
-								{
-									"action": "starten",
-									"from": [
-										"gereed_eerste_werkdag"
-									],
-									"to": "proeftijd_lopend",
-									"label": "Starten"
-								},
-								{
-									"action": "afronden",
-									"from": [
-										"proeftijd_lopend"
-									],
-									"to": "afgerond",
-									"label": "Afronden"
-								},
-								{
-									"action": "annuleren",
-									"from": [
-										"aangenomen",
-										"contract_getekend",
-										"gegevens_gevalideerd",
-										"gereed_eerste_werkdag",
-										"proeftijd_lopend"
-									],
-									"to": "geannuleerd",
-									"label": "Annuleren"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 5,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Case",
 						"icon": "AccountPlus",
 						"content": {
@@ -6034,18 +5926,13 @@
 								"itProvisioned",
 								"pensioenAangemeld",
 								"notes"
-							]
+							],
+							"title": "Case"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 5,
-					"gridWidth": 8,
-					"gridHeight": 8,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Checklist",
 						"icon": "CheckDecagramOutline",
 						"content": {
@@ -6059,45 +5946,118 @@
 								"itProvisioned",
 								"pensioenAangemeld",
 								"notes"
-							]
+							],
+							"title": "Checklist"
 						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 13,
-					"props": {
+					},
+					{
+						"id": "related",
+						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "integration",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 13,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "files",
+						"type": "files",
 						"title": "Contract & WID-documenten",
-						"only": "files",
 						"icon": "FolderOutline"
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 5
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 8,
+						"gridHeight": 8
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 13
+					},
+					{
+						"id": 4,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 13,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "contract_bevestigen",
+							"from": [
+								"aangenomen"
+							],
+							"to": "contract_getekend",
+							"label": "Contract bevestigen"
+						},
+						{
+							"action": "gegevens_valideren",
+							"from": [
+								"contract_getekend"
+							],
+							"to": "gegevens_gevalideerd",
+							"label": "Gegevens valideren"
+						},
+						{
+							"action": "gereed_melden",
+							"from": [
+								"gegevens_gevalideerd"
+							],
+							"to": "gereed_eerste_werkdag",
+							"label": "Gereed melden"
+						},
+						{
+							"action": "starten",
+							"from": [
+								"gereed_eerste_werkdag"
+							],
+							"to": "proeftijd_lopend",
+							"label": "Starten"
+						},
+						{
+							"action": "afronden",
+							"from": [
+								"proeftijd_lopend"
+							],
+							"to": "afgerond",
+							"label": "Afronden"
+						},
+						{
+							"action": "annuleren",
+							"from": [
+								"aangenomen",
+								"contract_getekend",
+								"gegevens_gevalideerd",
+								"gereed_eerste_werkdag",
+								"proeftijd_lopend"
+							],
+							"to": "geannuleerd",
+							"label": "Annuleren"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "Stagiairs",
@@ -6141,89 +6101,80 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "starten",
-									"from": [
-										"aangemeld"
-									],
-									"to": "lopend",
-									"label": "Starten"
-								},
-								{
-									"action": "afronden",
-									"from": [
-										"lopend"
-									],
-									"to": "afgerond",
-									"label": "Afronden"
-								},
-								{
-									"action": "stoppen",
-									"from": [
-										"aangemeld",
-										"lopend"
-									],
-									"to": "gestopt",
-									"label": "Stoppen"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 8,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Stage",
 						"icon": "SchoolOutline",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"begeleiderId"
-							]
+							],
+							"title": "Stage"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Begeleider",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Begeleider"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 8,
-					"props": {
-						"title": "Begeleider",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 8
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 8
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "starten",
+							"from": [
+								"aangemeld"
+							],
+							"to": "lopend",
+							"label": "Starten"
+						},
+						{
+							"action": "afronden",
+							"from": [
+								"lopend"
+							],
+							"to": "afgerond",
+							"label": "Afronden"
+						},
+						{
+							"action": "stoppen",
+							"from": [
+								"aangemeld",
+								"lopend"
+							],
+							"to": "gestopt",
+							"label": "Stoppen"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "Vacancies",
@@ -6266,48 +6217,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "publiceren",
-									"from": [
-										"concept"
-									],
-									"to": "gepubliceerd",
-									"label": "Publiceren"
-								},
-								{
-									"action": "sluiten",
-									"from": [
-										"gepubliceerd"
-									],
-									"to": "gesloten",
-									"label": "Sluiten"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 8,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Vacancy",
 						"icon": "BriefcaseSearchOutline",
 						"content": {
@@ -6319,32 +6233,60 @@
 								"status",
 								"publishedDate",
 								"closingDate"
-							]
+							],
+							"title": "Vacancy"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Sollicitaties",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Sollicitaties"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 8,
-					"props": {
-						"title": "Sollicitaties",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 8
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 8
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "publiceren",
+							"from": [
+								"concept"
+							],
+							"to": "gepubliceerd",
+							"label": "Publiceren"
+						},
+						{
+							"action": "sluiten",
+							"from": [
+								"gepubliceerd"
+							],
+							"to": "gesloten",
+							"label": "Sluiten"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "Applications",
@@ -6386,101 +6328,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 4,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "screenen",
-									"from": [
-										"nieuw"
-									],
-									"to": "screening",
-									"label": "Screenen"
-								},
-								{
-									"action": "uitnodigen",
-									"from": [
-										"screening"
-									],
-									"to": "gesprek",
-									"label": "Uitnodigen"
-								},
-								{
-									"action": "aanbieden",
-									"from": [
-										"gesprek"
-									],
-									"to": "aanbod",
-									"label": "Aanbieden"
-								},
-								{
-									"action": "aannemen",
-									"from": [
-										"aanbod"
-									],
-									"to": "aangenomen",
-									"label": "Aannemen"
-								},
-								{
-									"action": "afwijzen",
-									"from": [
-										"nieuw",
-										"screening",
-										"gesprek",
-										"aanbod"
-									],
-									"to": "afgewezen",
-									"label": "Afwijzen"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "request-offer-signature",
-								"label": "Aanbiedingsbrief + e-handtekening aanvragen",
-								"type": "api-call",
-								"icon": "FileDocumentPlusOutline",
-								"url": "/api/offer/request-signature",
-								"method": "POST",
-								"params": {
-									"applicationId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "Aanbiedingsbrief wordt gegenereerd en e-handtekening aangevraagd.",
-								"errorMessage": "Aanvragen van de aanbiedingsbrief/e-handtekening is mislukt."
-							}
-						]
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 5,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Application",
 						"icon": "FileAccountOutline",
 						"content": {
@@ -6492,18 +6344,13 @@
 								"retentionExpiryDate",
 								"offerLetterFileId",
 								"offerSigningRequestId"
-							]
+							],
+							"title": "Application"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 5,
-					"gridWidth": 8,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Privacy & retention",
 						"icon": "ShieldLockOutline",
 						"content": {
@@ -6512,43 +6359,28 @@
 								"talentPoolOptIn",
 								"rejectedDate",
 								"retentionExpiryDate"
-							]
+							],
+							"title": "Privacy & retention"
 						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 9,
-					"props": {
+					},
+					{
+						"id": "related",
+						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "integration",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 9,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "files",
+						"type": "files",
 						"title": "CV & motivatiebrief",
-						"only": "files",
 						"icon": "FolderOutline"
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 13,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
 						"title": "Gesprekken",
 						"icon": "CalendarAccountOutline",
 						"content": {
@@ -6588,17 +6420,114 @@
 							"emptyText": "Nog geen gesprekken gepland"
 						}
 					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 5
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 9
+					},
+					{
+						"id": 4,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 9,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 5,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 13,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "screenen",
+							"from": [
+								"nieuw"
+							],
+							"to": "screening",
+							"label": "Screenen"
+						},
+						{
+							"action": "uitnodigen",
+							"from": [
+								"screening"
+							],
+							"to": "gesprek",
+							"label": "Uitnodigen"
+						},
+						{
+							"action": "aanbieden",
+							"from": [
+								"gesprek"
+							],
+							"to": "aanbod",
+							"label": "Aanbieden"
+						},
+						{
+							"action": "aannemen",
+							"from": [
+								"aanbod"
+							],
+							"to": "aangenomen",
+							"label": "Aannemen"
+						},
+						{
+							"action": "afwijzen",
+							"from": [
+								"nieuw",
+								"screening",
+								"gesprek",
+								"aanbod"
+							],
+							"to": "afgewezen",
+							"label": "Afwijzen"
+						}
+					]
 				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				"headerActions": [
+					{
+						"id": "request-offer-signature",
+						"label": "Aanbiedingsbrief + e-handtekening aanvragen",
+						"type": "api-call",
+						"icon": "FileDocumentPlusOutline",
+						"url": "/api/offer/request-signature",
+						"method": "POST",
+						"params": {
+							"applicationId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Aanbiedingsbrief wordt gegenereerd en e-handtekening aangevraagd.",
+						"errorMessage": "Aanvragen van de aanbiedingsbrief/e-handtekening is mislukt."
+					}
+				]
+			}
 		},
 		{
 			"id": "Interviews",
@@ -6638,106 +6567,87 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 4,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "voltooien",
-									"from": [
-										"scheduled"
-									],
-									"to": "completed",
-									"label": "Voltooien"
-								},
-								{
-									"action": "annuleren",
-									"from": [
-										"scheduled"
-									],
-									"to": "cancelled",
-									"label": "Annuleren"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "sync-to-calendar",
-								"label": "Sync naar agenda",
-								"type": "api-call",
-								"icon": "CalendarSyncOutline",
-								"url": "/api/interviews/sync",
-								"method": "POST",
-								"params": {
-									"interviewId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "Gesprek gesynchroniseerd naar de gedeelde agenda.",
-								"errorMessage": "Synchroniseren naar de agenda is mislukt."
-							}
-						]
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Interview",
 						"icon": "CalendarAccountOutline",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"applicationId"
-							]
+							],
+							"title": "Interview"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 6,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
 					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "voltooien",
+							"from": [
+								"scheduled"
+							],
+							"to": "completed",
+							"label": "Voltooien"
+						},
+						{
+							"action": "annuleren",
+							"from": [
+								"scheduled"
+							],
+							"to": "cancelled",
+							"label": "Annuleren"
+						}
+					]
 				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				"headerActions": [
+					{
+						"id": "sync-to-calendar",
+						"label": "Sync naar agenda",
+						"type": "api-call",
+						"icon": "CalendarSyncOutline",
+						"url": "/api/interviews/sync",
+						"method": "POST",
+						"params": {
+							"interviewId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Gesprek gesynchroniseerd naar de gedeelde agenda.",
+						"errorMessage": "Synchroniseren naar de agenda is mislukt."
+					}
+				]
+			}
 		},
 		{
 			"id": "Offboardings",
@@ -6776,66 +6686,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "afronding_plannen",
-									"from": [
-										"aangekondigd"
-									],
-									"to": "afronding_gepland",
-									"label": "Afronding plannen"
-								},
-								{
-									"action": "eindafrekening_gereedmelden",
-									"from": [
-										"afronding_gepland"
-									],
-									"to": "eindafrekening_gereed",
-									"label": "Eindafrekening gereedmelden"
-								},
-								{
-									"action": "afronden",
-									"from": [
-										"eindafrekening_gereed"
-									],
-									"to": "afgerond",
-									"label": "Afronden"
-								},
-								{
-									"action": "annuleren",
-									"from": [
-										"aangekondigd",
-										"afronding_gepland",
-										"eindafrekening_gereed"
-									],
-									"to": "geannuleerd",
-									"label": "Annuleren"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 5,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Case",
 						"icon": "AccountMinus",
 						"content": {
@@ -6850,18 +6705,13 @@
 								"transitievergoedingBedrag",
 								"getuigschriftVerstrekt",
 								"notes"
-							]
+							],
+							"title": "Case"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 5,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+					},
+					{
+						"id": "data-2",
+						"type": "data",
 						"title": "Checklist",
 						"icon": "CheckDecagramOutline",
 						"content": {
@@ -6870,18 +6720,13 @@
 								"exitGesprekDone",
 								"assetsIngeleverd",
 								"toegangIngetrokken"
-							]
+							],
+							"title": "Checklist"
 						}
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 11,
-					"gridWidth": 8,
-					"gridHeight": 8,
-					"props": {
+					},
+					{
+						"id": "data-3",
+						"type": "data",
 						"title": "Eindafrekening",
 						"icon": "ReceiptTextOutline",
 						"content": {
@@ -6892,45 +6737,108 @@
 								"transitievergoedingBedrag",
 								"getuigschriftVerstrekt",
 								"notes"
-							]
+							],
+							"title": "Eindafrekening"
 						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 19,
-					"props": {
+					},
+					{
+						"id": "related",
+						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "integration",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 19,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "files",
+						"type": "files",
 						"title": "VSO & getuigschrift-documenten",
-						"only": "files",
 						"icon": "FolderOutline"
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 5
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 3,
+						"widgetId": "data-3",
+						"gridX": 0,
+						"gridY": 11,
+						"gridWidth": 8,
+						"gridHeight": 8
+					},
+					{
+						"id": 4,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 19
+					},
+					{
+						"id": 5,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 19,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "afronding_plannen",
+							"from": [
+								"aangekondigd"
+							],
+							"to": "afronding_gepland",
+							"label": "Afronding plannen"
+						},
+						{
+							"action": "eindafrekening_gereedmelden",
+							"from": [
+								"afronding_gepland"
+							],
+							"to": "eindafrekening_gereed",
+							"label": "Eindafrekening gereedmelden"
+						},
+						{
+							"action": "afronden",
+							"from": [
+								"eindafrekening_gereed"
+							],
+							"to": "afgerond",
+							"label": "Afronden"
+						},
+						{
+							"action": "annuleren",
+							"from": [
+								"aangekondigd",
+								"afronding_gepland",
+								"eindafrekening_gereed"
+							],
+							"to": "geannuleerd",
+							"label": "Annuleren"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "OrgUnits",
@@ -6973,17 +6881,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Organisatie-eenheid",
 						"icon": "SitemapOutline",
 						"content": {
@@ -6991,30 +6893,22 @@
 							"exclude": [
 								"parentUnitId",
 								"managerId"
-							]
+							],
+							"title": "Organisatie-eenheid"
 						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 6,
-					"props": {
+					},
+					{
+						"id": "related",
+						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 6,
-					"gridWidth": 6,
-					"gridHeight": 4,
-					"props": {
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
 						"title": "Child units",
 						"icon": "SitemapOutline",
 						"content": {
@@ -7053,16 +6947,10 @@
 							},
 							"emptyText": "No child units yet"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 6,
-					"gridY": 6,
-					"gridWidth": 6,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "object-list-2",
+						"type": "object-list",
 						"title": "Assignments",
 						"icon": "AccountArrowRightOutline",
 						"content": {
@@ -7102,17 +6990,42 @@
 							"emptyText": "No placements yet"
 						}
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": 3,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 4,
+						"widgetId": "object-list-2",
+						"gridX": 6,
+						"gridY": 6,
+						"gridWidth": 6,
+						"gridHeight": 4
+					}
+				]
+			}
 		},
 		{
 			"id": "OrgAssignments",
@@ -7154,17 +7067,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 5,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Plaatsing",
 						"icon": "AccountArrowRightOutline",
 						"content": {
@@ -7172,32 +7079,39 @@
 							"exclude": [
 								"employeeId",
 								"orgUnitId"
-							]
+							],
+							"title": "Plaatsing"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 5,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 5
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 5
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				]
+			}
 		},
 		{
 			"id": "Assets",
@@ -7239,65 +7153,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "issue",
-									"from": [
-										"available"
-									],
-									"to": "issued",
-									"label": "Uitgeven"
-								},
-								{
-									"action": "checkIn",
-									"from": [
-										"issued"
-									],
-									"to": "checkedIn",
-									"label": "Innemen"
-								},
-								{
-									"action": "release",
-									"from": [
-										"checkedIn"
-									],
-									"to": "available",
-									"label": "Vrijgeven"
-								},
-								{
-									"action": "writeOff",
-									"from": [
-										"available",
-										"checkedIn"
-									],
-									"to": "writtenOff",
-									"label": "Afschrijven"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Asset",
 						"icon": "PackageVariantClosed",
 						"content": {
@@ -7315,30 +7175,22 @@
 								"listPrice",
 								"fuelType",
 								"companyCarTaxCategory"
-							]
+							],
+							"title": "Asset"
 						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 6,
-					"props": {
+					},
+					{
+						"id": "related",
+						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 6,
-					"gridWidth": 12,
-					"gridHeight": 5,
-					"props": {
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
 						"title": "Uitgiftes",
 						"icon": "HandshakeOutline",
 						"content": {
@@ -7377,31 +7229,87 @@
 							},
 							"emptyText": "No uitgiftes yet"
 						}
-					}
-				},
-				{
-					"widgetKey": "integration",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 11,
-					"gridWidth": 12,
-					"gridHeight": 4,
-					"props": {
+					},
+					{
+						"id": "files",
+						"type": "files",
 						"title": "Uitgiftebonnen",
-						"only": "files",
 						"icon": "FolderOutline"
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": 3,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": 4,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 11,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "issue",
+							"from": [
+								"available"
+							],
+							"to": "issued",
+							"label": "Uitgeven"
+						},
+						{
+							"action": "checkIn",
+							"from": [
+								"issued"
+							],
+							"to": "checkedIn",
+							"label": "Innemen"
+						},
+						{
+							"action": "release",
+							"from": [
+								"checkedIn"
+							],
+							"to": "available",
+							"label": "Vrijgeven"
+						},
+						{
+							"action": "writeOff",
+							"from": [
+								"available",
+								"checkedIn"
+							],
+							"to": "writtenOff",
+							"label": "Afschrijven"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "AssetAssignments",
@@ -7440,17 +7348,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 5,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Uitgifte",
 						"icon": "HandshakeOutline",
 						"content": {
@@ -7458,32 +7360,39 @@
 							"exclude": [
 								"assetId",
 								"employeeId"
-							]
+							],
+							"title": "Uitgifte"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 5,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 5
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 5
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				]
+			}
 		},
 		{
 			"id": "ReviewCycles",
@@ -7527,63 +7436,21 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "openen",
-									"from": [
-										"concept"
-									],
-									"to": "open",
-									"label": "Openen"
-								},
-								{
-									"action": "sluiten",
-									"from": [
-										"open"
-									],
-									"to": "gesloten",
-									"label": "Sluiten"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 6,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Cycle",
 						"icon": "CalendarSyncOutline",
 						"content": {
-							"columns": 2
+							"columns": 2,
+							"title": "Cycle"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 6,
-					"gridWidth": 12,
-					"gridHeight": 5,
-					"props": {
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
 						"title": "Beoordelingen in deze cyclus",
 						"icon": "ClipboardAccountOutline",
 						"content": {
@@ -7614,16 +7481,10 @@
 							"rowRoute": "PerformanceReviewDetail",
 							"emptyText": "No reviews in this cycle yet"
 						}
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 11,
-					"gridWidth": 12,
-					"gridHeight": 5,
-					"props": {
+					},
+					{
+						"id": "object-list-2",
+						"type": "object-list",
 						"title": "OKR's in deze cyclus",
 						"icon": "BullseyeArrow",
 						"content": {
@@ -7659,17 +7520,55 @@
 							"emptyText": "No OKRs in this cycle yet"
 						}
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": 3,
+						"widgetId": "object-list-2",
+						"gridX": 0,
+						"gridY": 11,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "openen",
+							"from": [
+								"concept"
+							],
+							"to": "open",
+							"label": "Openen"
+						},
+						{
+							"action": "sluiten",
+							"from": [
+								"open"
+							],
+							"to": "gesloten",
+							"label": "Sluiten"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "PerformanceReviewDetail",
@@ -7683,64 +7582,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "indienen",
-									"from": [
-										"concept"
-									],
-									"to": "ingediend",
-									"label": "Indienen"
-								},
-								{
-									"action": "bespreken",
-									"from": [
-										"ingediend"
-									],
-									"to": "besproken",
-									"label": "Bespreken"
-								},
-								{
-									"action": "vaststellen",
-									"from": [
-										"besproken"
-									],
-									"to": "vastgesteld",
-									"label": "Vaststellen"
-								},
-								{
-									"action": "heropenen",
-									"from": [
-										"vastgesteld"
-									],
-									"to": "besproken",
-									"label": "Heropenen"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 9,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Beoordeling",
 						"icon": "ClipboardAccountOutline",
 						"content": {
@@ -7750,32 +7596,76 @@
 								"cycleId",
 								"reviewerId",
 								"userId"
-							]
+							],
+							"title": "Beoordeling"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 9,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 9
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 9
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "indienen",
+							"from": [
+								"concept"
+							],
+							"to": "ingediend",
+							"label": "Indienen"
+						},
+						{
+							"action": "bespreken",
+							"from": [
+								"ingediend"
+							],
+							"to": "besproken",
+							"label": "Bespreken"
+						},
+						{
+							"action": "vaststellen",
+							"from": [
+								"besproken"
+							],
+							"to": "vastgesteld",
+							"label": "Vaststellen"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"vastgesteld"
+							],
+							"to": "besproken",
+							"label": "Heropenen"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "MijnBeoordelingen",
@@ -7814,48 +7704,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "activeren",
-									"from": [
-										"concept"
-									],
-									"to": "actief",
-									"label": "Activeren"
-								},
-								{
-									"action": "afsluiten",
-									"from": [
-										"actief"
-									],
-									"to": "afgesloten",
-									"label": "Afsluiten"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 9,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Objective",
 						"icon": "BullseyeArrow",
 						"content": {
@@ -7865,30 +7718,22 @@
 								"orgUnitId",
 								"cycleId",
 								"userId"
-							]
+							],
+							"title": "Objective"
 						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 9,
-					"props": {
+					},
+					{
+						"id": "related",
+						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 9,
-					"gridWidth": 12,
-					"gridHeight": 5,
-					"props": {
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
 						"title": "Key results",
 						"icon": "TargetVariant",
 						"content": {
@@ -7932,17 +7777,55 @@
 							"emptyText": "No key results yet"
 						}
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 9
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 9
+					},
+					{
+						"id": 3,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 9,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "activeren",
+							"from": [
+								"concept"
+							],
+							"to": "actief",
+							"label": "Activeren"
+						},
+						{
+							"action": "afsluiten",
+							"from": [
+								"actief"
+							],
+							"to": "afgesloten",
+							"label": "Afsluiten"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"id": "KeyResultDetail",
@@ -7956,17 +7839,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 8,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Key result",
 						"icon": "TargetVariant",
 						"content": {
@@ -7974,32 +7851,39 @@
 							"exclude": [
 								"objectiveId",
 								"userId"
-							]
+							],
+							"title": "Key result"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 8,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 8
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 8
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				]
+			}
 		},
 		{
 			"id": "MijnDoelen",
@@ -8155,34 +8039,30 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 6,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Integratie",
 						"icon": "PowerPlugOutline",
 						"content": {
-							"columns": 2
+							"columns": 2,
+							"title": "Integratie"
 						}
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 6
+					}
+				]
+			}
 		},
 		{
 			"id": "Shifts",
@@ -8233,49 +8113,50 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Dienst",
 						"icon": "TimelineClockOutline",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"orgUnitId"
-							]
+							],
+							"title": "Dienst"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 6,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				]
+			}
 		},
 		{
 			"id": "Rosters",
@@ -8328,104 +8209,33 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "lifecycle-actions",
-					"slot": "header-actions",
-					"gridX": 4,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 1,
-					"props": {
-						"config": {
-							"field": "status",
-							"transitions": [
-								{
-									"action": "publiceren",
-									"from": [
-										"concept"
-									],
-									"to": "gepubliceerd",
-									"label": "Publiceren"
-								},
-								{
-									"action": "intrekken",
-									"from": [
-										"gepubliceerd"
-									],
-									"to": "concept",
-									"label": "Intrekken"
-								}
-							]
-						}
-					}
 				},
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "atw-controle",
-								"label": "ATW-controle",
-								"type": "api-call",
-								"icon": "ClipboardCheckOutline",
-								"url": "/api/roster/check",
-								"method": "POST",
-								"params": {
-									"rosterId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "ATW-controle uitgevoerd — bekijk de uitkomst per roosterindeling.",
-								"errorMessage": "ATW-controle van het rooster is mislukt."
-							}
-						]
-					}
-				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Rooster",
 						"icon": "CalendarMonthOutline",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"orgUnitId"
-							]
+							],
+							"title": "Rooster"
 						}
-					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 6,
-					"props": {
+					},
+					{
+						"id": "related",
+						"type": "related",
 						"title": "Related",
-						"icon": "LinkVariant"
-					}
-				},
-				{
-					"widgetKey": "object-list",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 6,
-					"gridWidth": 12,
-					"gridHeight": 6,
-					"props": {
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
 						"title": "Roosterindelingen",
 						"icon": "AccountClockOutline",
 						"content": {
@@ -8469,17 +8279,71 @@
 							"emptyText": "Nog geen roosterindelingen"
 						}
 					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": 3,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 6
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "publiceren",
+							"from": [
+								"concept"
+							],
+							"to": "gepubliceerd",
+							"label": "Publiceren"
+						},
+						{
+							"action": "intrekken",
+							"from": [
+								"gepubliceerd"
+							],
+							"to": "concept",
+							"label": "Intrekken"
+						}
+					]
 				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				"headerActions": [
+					{
+						"id": "atw-controle",
+						"label": "ATW-controle",
+						"type": "api-call",
+						"icon": "ClipboardCheckOutline",
+						"url": "/api/roster/check",
+						"method": "POST",
+						"params": {
+							"rosterId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "ATW-controle uitgevoerd — bekijk de uitkomst per roosterindeling.",
+						"errorMessage": "ATW-controle van het rooster is mislukt."
+					}
+				]
+			}
 		},
 		{
 			"id": "RosterAssignments",
@@ -8519,17 +8383,11 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "Roosterindeling",
 						"icon": "AccountClockOutline",
 						"content": {
@@ -8539,32 +8397,39 @@
 								"employeeId",
 								"shiftId",
 								"userId"
-							]
+							],
+							"title": "Roosterindeling"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 6,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				]
+			}
 		},
 		{
 			"id": "DsrRequests",
@@ -8604,122 +8469,113 @@
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
-				}
-			},
-			"widgets": [
-				{
-					"widgetKey": "actions",
-					"slot": "header-actions",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"props": {
-						"actions": [
-							{
-								"id": "dsr-export",
-								"label": "Exporteer",
-								"type": "api-call",
-								"icon": "DownloadOutline",
-								"url": "/api/dsr/export",
-								"method": "POST",
-								"params": {
-									"employeeId": "@object.employeeId",
-									"right": "@object.right",
-									"dsrRequestId": "@objectId"
-								},
-								"confirm": false,
-								"successMessage": "AVG-export uitgevoerd.",
-								"errorMessage": "Exporteren is mislukt."
-							},
-							{
-								"id": "dsr-erase-preview",
-								"label": "Voorbeeld verwijdering",
-								"type": "api-call",
-								"icon": "EyeOutline",
-								"url": "/api/dsr/erase-preview",
-								"method": "POST",
-								"params": {
-									"employeeId": "@object.employeeId",
-									"dsrRequestId": "@objectId"
-								},
-								"confirm": false,
-								"successMessage": "Voorbeeld verwijdering opgehaald (geen schrijfacties).",
-								"errorMessage": "Voorbeeld verwijdering kon niet worden opgehaald."
-							},
-							{
-								"id": "dsr-erase-confirm",
-								"label": "Bevestig verwijdering",
-								"type": "api-call",
-								"icon": "DeleteAlertOutline",
-								"url": "/api/dsr/erase-confirm",
-								"method": "POST",
-								"params": {
-									"employeeId": "@object.employeeId",
-									"dsrRequestId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "Verwijdering uitgevoerd (retained objecten uitgesloten, wettelijke bewaarplicht).",
-								"errorMessage": "Verwijdering is mislukt of geweigerd — voer eerst Voorbeeld verwijdering uit."
-							},
-							{
-								"id": "dsr-rectify",
-								"label": "Rectificeer",
-								"type": "api-call",
-								"icon": "PencilOutline",
-								"url": "/api/dsr/rectify",
-								"method": "POST",
-								"params": {
-									"employeeId": "@object.employeeId",
-									"dsrRequestId": "@objectId"
-								},
-								"confirm": true,
-								"successMessage": "Rectificatie toegepast.",
-								"errorMessage": "Rectificatie is mislukt."
-							}
-						]
-					}
 				},
-				{
-					"widgetKey": "data",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 8,
-					"gridHeight": 6,
-					"props": {
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
 						"title": "AVG-verzoek",
 						"icon": "ShieldAccountOutline",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"employeeId"
-							]
+							],
+							"title": "AVG-verzoek"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
 						}
 					}
-				},
-				{
-					"widgetKey": "related",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 6,
-					"props": {
-						"title": "Related",
-						"icon": "LinkVariant"
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
 					}
-				},
-				{
-					"widgetKey": "audit-trail",
-					"slot": "sidebar",
-					"tabGroup": "audit",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 1,
-					"gridHeight": 1
-				}
-			]
+				],
+				"headerActions": [
+					{
+						"id": "dsr-export",
+						"label": "Exporteer",
+						"type": "api-call",
+						"icon": "DownloadOutline",
+						"url": "/api/dsr/export",
+						"method": "POST",
+						"params": {
+							"employeeId": "@object.employeeId",
+							"right": "@object.right",
+							"dsrRequestId": "@objectId"
+						},
+						"confirm": false,
+						"successMessage": "AVG-export uitgevoerd.",
+						"errorMessage": "Exporteren is mislukt."
+					},
+					{
+						"id": "dsr-erase-preview",
+						"label": "Voorbeeld verwijdering",
+						"type": "api-call",
+						"icon": "EyeOutline",
+						"url": "/api/dsr/erase-preview",
+						"method": "POST",
+						"params": {
+							"employeeId": "@object.employeeId",
+							"dsrRequestId": "@objectId"
+						},
+						"confirm": false,
+						"successMessage": "Voorbeeld verwijdering opgehaald (geen schrijfacties).",
+						"errorMessage": "Voorbeeld verwijdering kon niet worden opgehaald."
+					},
+					{
+						"id": "dsr-erase-confirm",
+						"label": "Bevestig verwijdering",
+						"type": "api-call",
+						"icon": "DeleteAlertOutline",
+						"url": "/api/dsr/erase-confirm",
+						"method": "POST",
+						"params": {
+							"employeeId": "@object.employeeId",
+							"dsrRequestId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Verwijdering uitgevoerd (retained objecten uitgesloten, wettelijke bewaarplicht).",
+						"errorMessage": "Verwijdering is mislukt of geweigerd — voer eerst Voorbeeld verwijdering uit."
+					},
+					{
+						"id": "dsr-rectify",
+						"label": "Rectificeer",
+						"type": "api-call",
+						"icon": "PencilOutline",
+						"url": "/api/dsr/rectify",
+						"method": "POST",
+						"params": {
+							"employeeId": "@object.employeeId",
+							"dsrRequestId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Rectificatie toegepast.",
+						"errorMessage": "Rectificatie is mislukt."
+					}
+				]
+			}
 		}
 	]
 }
