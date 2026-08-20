@@ -17,6 +17,17 @@
  * update to an already-approved timesheet, or any non-approval transition, is
  * silent (idempotent).
  *
+ * On the SAME edge, this service ALSO dispatches a typed
+ * {@see \OCA\Hrmq\Event\TimesheetApprovedEvent} through Nextcloud's
+ * `IEventDispatcher` — the ADR-041 cross-app command recipe. The webhook is an
+ * admin-configured outbound HTTP delivery with no in-process consumer surface;
+ * the typed event is what lets a sibling Conduction app (shillinq) react to
+ * the SAME approval within the same request via a plain `IEventListener`,
+ * without standing up an HTTP receiver. The two dispatches are independent and
+ * additive — mirroring pipelinq's `PosTransactionService::emitStockMovedEvent()`
+ * (typed `dispatchTyped()` + webhook fire-and-forget, neither gating the
+ * other): a typed-dispatch failure never blocks the webhook, and vice versa.
+ *
  * @category Service
  * @package  OCA\Hrmq\Service
  *
@@ -30,6 +41,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md
+ * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
  */
 
 declare(strict_types=1);
@@ -38,7 +50,9 @@ namespace OCA\Hrmq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\Hrmq\Event\TimesheetApprovedEvent;
 use OCP\EventDispatcher\Event;
+use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -82,10 +96,12 @@ class TimeEntryEventService {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OpenRegister WebhookService lookup).
+	 * @param IEventDispatcher $eventDispatcher Nextcloud's typed event dispatcher (ADR-041 cross-app event).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
+		private readonly IEventDispatcher $eventDispatcher,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -103,9 +119,14 @@ class TimeEntryEventService {
 	 * @param array<string, mixed>|null $oldData The object payload BEFORE the change (null on create).
 	 * @param array<string, mixed> $newData The object payload AFTER the change.
 	 *
-	 * @return bool True when the CloudEvent was dispatched.
+	 * @return bool True when the CloudEvent was dispatched through the webhook.
+	 *              The typed {@see TimesheetApprovedEvent} dispatch (ADR-041) is
+	 *              always attempted alongside it, independently — its own
+	 *              success/failure does not affect this return value, mirroring
+	 *              the fire-and-forget contract of the webhook dispatch itself.
 	 *
 	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function maybeDispatchApproved(string $schemaSlug, ?array $oldData, array $newData): bool {
 		if (strtolower($schemaSlug) !== self::TIMESHEET_SLUG) {
@@ -115,6 +136,8 @@ class TimeEntryEventService {
 		if ($this->isApprovalTransition($oldData, $newData) === false) {
 			return false;
 		}
+
+		$this->dispatchTypedEvent($newData);
 
 		return $this->dispatch($this->buildApprovedEvent($newData));
 	}//end maybeDispatchApproved()
@@ -191,6 +214,79 @@ class TimeEntryEventService {
 	}//end buildApprovedEvent()
 
 	/**
+	 * Build the typed {@see TimesheetApprovedEvent} for an approved timesheet.
+	 *
+	 * Carries the same approval-provenance data as {@see buildApprovedEvent()}'s
+	 * CloudEvent `data` object, plus an explicit `periodGrain` marker
+	 * classifying the RAW `period` string — hrmq's Timesheet.period is
+	 * polymorphic-grain (`YYYY-MM` | `YYYY-Www` | `YYYY-Wnn-D`) and this event
+	 * never flattens it to a single day; a consumer that needs one date decides
+	 * that projection itself using the grain marker.
+	 *
+	 * @param array<string, mixed> $timeEntry The approved Timesheet payload.
+	 *
+	 * @return TimesheetApprovedEvent The typed cross-app event.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) TimesheetApprovedEvent::classifyPeriodGrain()
+	 *  is a pure, side-effect-free classifier — the same "pure value-object
+	 *  factory method" precedent already used unguarded in PayrollReproduceService.
+	 *
+	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 */
+	public function buildTypedEvent(array $timeEntry): TimesheetApprovedEvent {
+		$uuid = (string)($timeEntry['id'] ?? $timeEntry['uuid'] ?? '');
+		$approvedAt = (string)($timeEntry['approvedAt'] ?? '');
+		$time = $approvedAt;
+		if ($time === '') {
+			$time = $this->now();
+		}
+
+		$period = (string)($timeEntry['period'] ?? '');
+
+		return new TimesheetApprovedEvent(
+			eventId: $uuid,
+			timesheetId: $uuid,
+			employeeId: (string)($timeEntry['employeeId'] ?? ''),
+			period: $period,
+			periodGrain: TimesheetApprovedEvent::classifyPeriodGrain($period),
+			hours: (float)($timeEntry['hours'] ?? 0),
+			projectId: (string)($timeEntry['projectId'] ?? ''),
+			costCenter: (string)($timeEntry['costCenter'] ?? ''),
+			billable: (bool)($timeEntry['billable'] ?? false),
+			clientRef: (string)($timeEntry['clientRef'] ?? ''),
+			administrationId: (string)($timeEntry['administrationId'] ?? ''),
+			approvedBy: (string)($timeEntry['approvedBy'] ?? ''),
+			approvedAt: $time,
+		);
+
+	}//end buildTypedEvent()
+
+	/**
+	 * Dispatch the typed {@see TimesheetApprovedEvent} through Nextcloud's
+	 * `IEventDispatcher` (ADR-041). Fire-and-forget: any failure is logged and
+	 * never thrown — this dispatch is additive to the webhook and must never
+	 * block or fail the approval write, nor the webhook dispatch that follows
+	 * it in {@see maybeDispatchApproved()}.
+	 *
+	 * @param array<string, mixed> $timeEntry The approved Timesheet payload.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 */
+	private function dispatchTypedEvent(array $timeEntry): void {
+		try {
+			$this->eventDispatcher->dispatchTyped($this->buildTypedEvent($timeEntry));
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'hrmq: TimesheetApprovedEvent typed dispatch failed (webhook dispatch still attempted)',
+				['exception' => $e->getMessage()]
+			);
+		}//end try
+
+	}//end dispatchTypedEvent()
+
+	/**
 	 * Dispatch a CloudEvent through OpenRegister's WebhookService.
 	 *
 	 * Fire-and-forget: any failure to resolve or invoke the WebhookService is
@@ -227,6 +323,8 @@ class TimeEntryEventService {
 	 * `approvedAt`.
 	 *
 	 * @return string The ISO 8601 timestamp.
+	 *
+	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-003
 	 */
 	public function now(): string {
 		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');

@@ -6,8 +6,11 @@
  * Pins the emit contract of the time-entry-capture approval event: a Timesheet
  * crossing into `approved` emits exactly one `nl.conduction.hrmq.timeentry.approved`
  * CloudEvent carrying the approved hours / project / billable a finance consumer
- * needs; an unapproved change, a non-approval transition, a re-save of an
- * already-approved timesheet, and a non-Timesheet schema all stay silent.
+ * needs, AND dispatches the typed {@see \OCA\Hrmq\Event\TimesheetApprovedEvent}
+ * (ADR-041) with the same provenance plus an explicit period-grain marker; an
+ * unapproved change, a non-approval transition, a re-save of an
+ * already-approved timesheet, and a non-Timesheet schema all stay silent on
+ * BOTH dispatch paths.
  *
  * @category Test
  * @package  OCA\Hrmq\Tests\Unit\Service
@@ -22,13 +25,16 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md
+ * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
  */
 
 declare(strict_types=1);
 
 namespace OCA\Hrmq\Tests\Unit\Service;
 
+use OCA\Hrmq\Event\TimesheetApprovedEvent;
 use OCA\Hrmq\Service\TimeEntryEventService;
+use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -50,7 +56,25 @@ class TimeEntryEventServiceTest extends TestCase {
 	private object $spy;
 
 	/**
-	 * Build a service whose lazily-resolved WebhookService is a recording spy.
+	 * Every {@see TimesheetApprovedEvent} passed to `dispatchTyped()`, recorded
+	 * by the mocked `IEventDispatcher` `serviceWithSpy()` wires in.
+	 *
+	 * @var array<int, TimesheetApprovedEvent>
+	 */
+	private array $typedDispatches = [];
+
+	/**
+	 * Whether the mocked `IEventDispatcher::dispatchTyped()` should throw, to
+	 * exercise the fail-soft path.
+	 *
+	 * @var bool
+	 */
+	private bool $typedDispatchThrows = false;
+
+	/**
+	 * Build a service whose lazily-resolved WebhookService is a recording spy,
+	 * and whose `IEventDispatcher` is a mock recording every typed dispatch
+	 * into {@see $typedDispatches}.
 	 *
 	 * @return TimeEntryEventService
 	 */
@@ -110,8 +134,23 @@ class TimeEntryEventServiceTest extends TestCase {
 			}//end has()
 		};
 
+		$this->typedDispatches = [];
+		$eventDispatcher = $this->createMock(IEventDispatcher::class);
+		$eventDispatcher->method('dispatchTyped')->willReturnCallback(
+			function (object $event): void {
+				if ($this->typedDispatchThrows === true) {
+					throw new \RuntimeException('no listener');
+				}
+
+				if ($event instanceof TimesheetApprovedEvent) {
+					$this->typedDispatches[] = $event;
+				}
+			}
+		);
+
 		return new TimeEntryEventService(
 			container: $container,
+			eventDispatcher: $eventDispatcher,
 			logger: $this->createMock(LoggerInterface::class)
 		);
 
@@ -141,11 +180,14 @@ class TimeEntryEventServiceTest extends TestCase {
 
 	/**
 	 * A submitted→approved transition emits one CloudEvent with the hours,
-	 * project and billable flag a finance consumer needs.
+	 * project and billable flag a finance consumer needs, AND dispatches the
+	 * typed {@see TimesheetApprovedEvent} with the same provenance plus a
+	 * `month` period-grain marker (period `2026-07`).
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function testSubmittedToApprovedEmitsEvent(): void {
 		$service = $this->serviceWithSpy();
@@ -176,14 +218,32 @@ class TimeEntryEventServiceTest extends TestCase {
 		$this->assertSame('manager-jansen', $data['approvedBy']);
 		$this->assertSame('2026-07-15T10:00:00Z', $data['approvedAt']);
 
+		// The typed cross-app event (ADR-041) is dispatched ADDITIVELY,
+		// alongside the webhook above, on the exact same approval edge.
+		$this->assertCount(1, $this->typedDispatches);
+		$typed = $this->typedDispatches[0];
+		$this->assertSame('ts-0001', $typed->getTimesheetId());
+		$this->assertSame('emp-devries', $typed->getEmployeeId());
+		$this->assertSame('2026-07', $typed->getPeriod());
+		$this->assertSame(TimesheetApprovedEvent::GRAIN_MONTH, $typed->getPeriodGrain());
+		$this->assertSame(36.5, $typed->getHours());
+		$this->assertTrue($typed->isBillable());
+		$this->assertSame('proj-alpha', $typed->getProjectId());
+		$this->assertSame('cc-42', $typed->getCostCenter());
+		$this->assertSame('client-7', $typed->getClientRef());
+		$this->assertSame('manager-jansen', $typed->getApprovedBy());
+		$this->assertSame('2026-07-15T10:00:00Z', $typed->getApprovedAt());
+
 	}//end testSubmittedToApprovedEmitsEvent()
 
 	/**
-	 * An unapproved change (draft→submitted) emits nothing.
+	 * An unapproved change (draft→submitted) emits nothing on either dispatch
+	 * path.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function testUnapprovedTransitionDoesNotEmit(): void {
 		$service = $this->serviceWithSpy();
@@ -196,15 +256,18 @@ class TimeEntryEventServiceTest extends TestCase {
 
 		$this->assertFalse($emitted);
 		$this->assertCount(0, $this->spy->calls);
+		$this->assertCount(0, $this->typedDispatches);
 
 	}//end testUnapprovedTransitionDoesNotEmit()
 
 	/**
-	 * Re-saving an already-approved timesheet does not re-emit (idempotent edge).
+	 * Re-saving an already-approved timesheet does not re-emit (idempotent
+	 * edge), on either dispatch path.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function testAlreadyApprovedDoesNotReEmit(): void {
 		$service = $this->serviceWithSpy();
@@ -217,6 +280,7 @@ class TimeEntryEventServiceTest extends TestCase {
 
 		$this->assertFalse($emitted);
 		$this->assertCount(0, $this->spy->calls);
+		$this->assertCount(0, $this->typedDispatches);
 
 	}//end testAlreadyApprovedDoesNotReEmit()
 
@@ -238,6 +302,7 @@ class TimeEntryEventServiceTest extends TestCase {
 
 		$this->assertFalse($emitted);
 		$this->assertCount(0, $this->spy->calls);
+		$this->assertCount(0, $this->typedDispatches);
 
 	}//end testNonTimesheetSchemaDoesNotEmit()
 
@@ -281,5 +346,121 @@ class TimeEntryEventServiceTest extends TestCase {
 		$this->assertFalse($event['data']['billable']);
 
 	}//end testBuildApprovedEventEnvelope()
+
+	/**
+	 * A typed-dispatch failure (e.g. no listener registered — shillinq not
+	 * installed) never blocks the webhook dispatch that follows it — the two
+	 * paths are independent, mirroring pipelinq's
+	 * `PosTransactionService::emitStockMovedEvent()` fail-soft contract.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 */
+	public function testTypedDispatchFailureDoesNotBlockWebhook(): void {
+		$this->typedDispatchThrows = true;
+		$service = $this->serviceWithSpy();
+
+		$emitted = $service->maybeDispatchApproved(
+			schemaSlug: 'Timesheet',
+			oldData: ['status' => 'submitted'],
+			newData: $this->approvedTimesheet()
+		);
+
+		$this->assertTrue($emitted);
+		$this->assertCount(1, $this->spy->calls);
+		$this->assertCount(0, $this->typedDispatches);
+
+	}//end testTypedDispatchFailureDoesNotBlockWebhook()
+
+	/**
+	 * buildTypedEvent() classifies a `YYYY-MM` period as `month`.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
+	 */
+	public function testBuildTypedEventClassifiesMonthGrain(): void {
+		$service = $this->serviceWithSpy();
+
+		$typed = $service->buildTypedEvent(['id' => 'ts-1', 'period' => '2026-07']);
+
+		$this->assertSame('2026-07', $typed->getPeriod());
+		$this->assertSame(TimesheetApprovedEvent::GRAIN_MONTH, $typed->getPeriodGrain());
+
+	}//end testBuildTypedEventClassifiesMonthGrain()
+
+	/**
+	 * buildTypedEvent() classifies a `YYYY-Www` period as `week`.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
+	 */
+	public function testBuildTypedEventClassifiesWeekGrain(): void {
+		$service = $this->serviceWithSpy();
+
+		$typed = $service->buildTypedEvent(['id' => 'ts-2', 'period' => '2026-W29']);
+
+		$this->assertSame('2026-W29', $typed->getPeriod());
+		$this->assertSame(TimesheetApprovedEvent::GRAIN_WEEK, $typed->getPeriodGrain());
+
+	}//end testBuildTypedEventClassifiesWeekGrain()
+
+	/**
+	 * buildTypedEvent() classifies a `YYYY-Wnn-D` period as `day`.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
+	 */
+	public function testBuildTypedEventClassifiesDayGrain(): void {
+		$service = $this->serviceWithSpy();
+
+		$typed = $service->buildTypedEvent(['id' => 'ts-3', 'period' => '2026-W29-3']);
+
+		$this->assertSame('2026-W29-3', $typed->getPeriod());
+		$this->assertSame(TimesheetApprovedEvent::GRAIN_DAY, $typed->getPeriodGrain());
+
+	}//end testBuildTypedEventClassifiesDayGrain()
+
+	/**
+	 * buildTypedEvent() carries an unrecognised period shape as-is, marked
+	 * `unknown` rather than refusing to build the event — the producer never
+	 * decides an unrecognised shape is fatal; that is a consumer decision.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
+	 */
+	public function testBuildTypedEventClassifiesUnknownGrain(): void {
+		$service = $this->serviceWithSpy();
+
+		$typed = $service->buildTypedEvent(['id' => 'ts-4', 'period' => 'Q3-2026']);
+
+		$this->assertSame('Q3-2026', $typed->getPeriod());
+		$this->assertSame(TimesheetApprovedEvent::GRAIN_UNKNOWN, $typed->getPeriodGrain());
+
+	}//end testBuildTypedEventClassifiesUnknownGrain()
+
+	/**
+	 * buildTypedEvent() carries administrationId when the payload has one, for
+	 * shillinq's multi-tenant cost-allocation projection.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 */
+	public function testBuildTypedEventCarriesAdministrationId(): void {
+		$service = $this->serviceWithSpy();
+
+		$timeEntry = $this->approvedTimesheet();
+		$timeEntry['administrationId'] = 'ADM-001';
+
+		$typed = $service->buildTypedEvent($timeEntry);
+
+		$this->assertSame('ADM-001', $typed->getAdministrationId());
+
+	}//end testBuildTypedEventCarriesAdministrationId()
 
 }//end class
