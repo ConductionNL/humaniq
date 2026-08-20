@@ -377,14 +377,44 @@
 					"label": "Beoordelingscycli",
 					"icon": "CalendarSyncOutline",
 					"route": "ReviewCycles"
+				},
+				{
+					"id": "Onboardings",
+					"label": "Onboardings",
+					"icon": "AccountPlusOutline",
+					"route": "Onboardings"
+				},
+				{
+					"id": "Vacancies",
+					"label": "Vacatures",
+					"icon": "AccountBoxOutline",
+					"route": "Vacancies"
+				},
+				{
+					"id": "Applications",
+					"label": "Sollicitaties",
+					"icon": "FileAccountOutline",
+					"route": "Applications"
+				},
+				{
+					"id": "Interviews",
+					"label": "Gesprekken",
+					"icon": "CalendarAccountOutline",
+					"route": "Interviews"
+				},
+				{
+					"id": "Offboardings",
+					"label": "Offboardings",
+					"icon": "AccountMinusOutline",
+					"route": "Offboardings"
 				}
 			]
 		},
 		{
-			"id": "TimesheetsGroup",
-			"label": "Uren",
-			"icon": "ClockCheckOutline",
-			"order": 100,
+			"id": "VerlofVerzuimGroup",
+			"label": "Verlof & verzuim",
+			"icon": "CalendarWeekendOutline",
+			"order": 105,
 			"children": [
 				{
 					"id": "Timesheets",
@@ -405,15 +435,7 @@
 					"icon": "CheckDecagramOutline",
 					"route": "TeamUrengoedkeuring",
 					"visibleIf": {"user.administrationMode": {"eq": "standard"}}
-				}
-			]
-		},
-		{
-			"id": "VerlofVerzuimGroup",
-			"label": "Verlof & verzuim",
-			"icon": "CalendarWeekendOutline",
-			"order": 105,
-			"children": [
+				},
 				{
 					"id": "LeaveRequests",
 					"label": "Verlofaanvragen",
@@ -467,46 +489,8 @@
 			]
 		},
 		{
-			"id": "OnboardingAtsGroup",
-			"label": "Onboarding & ATS",
-			"icon": "AccountPlusOutline",
-			"order": 106,
-			"children": [
-				{
-					"id": "Onboardings",
-					"label": "Onboardings",
-					"icon": "AccountPlusOutline",
-					"route": "Onboardings"
-				},
-				{
-					"id": "Vacancies",
-					"label": "Vacatures",
-					"icon": "AccountBoxOutline",
-					"route": "Vacancies"
-				},
-				{
-					"id": "Applications",
-					"label": "Sollicitaties",
-					"icon": "FileAccountOutline",
-					"route": "Applications"
-				},
-				{
-					"id": "Interviews",
-					"label": "Gesprekken",
-					"icon": "CalendarAccountOutline",
-					"route": "Interviews"
-				},
-				{
-					"id": "Offboardings",
-					"label": "Offboardings",
-					"icon": "AccountMinusOutline",
-					"route": "Offboardings"
-				}
-			]
-		},
-		{
 			"id": "ExpensesGroup",
-			"label": "Onkosten",
+			"label": "Declaraties & assets",
 			"icon": "ReceiptOutline",
 			"order": 110,
 			"children": [
@@ -634,12 +618,19 @@
 					"label": "AVG-verzoeken",
 					"icon": "Magnify",
 					"route": "DsrRequests"
+				},
+				{
+					"id": "ProformaPayslipMenu",
+					"label": "Simuleer loonstrook",
+					"icon": "Calculator",
+					"route": "ProformaPayslip",
+					"visibleIf": {"user.administrationMode": {"notIn": ["eenmanszaak_no_payroll"]}}
 				}
 			]
 		},
 		{
 			"id": "PlanningGroup",
-			"label": "Planning",
+			"label": "Roostering",
 			"icon": "CalendarMonthOutline",
 			"order": 107,
 			"visibleIf": {"user.administrationMode": {"eq": "standard"}},
@@ -665,17 +656,10 @@
 			]
 		},
 		{
-			"id": "ProformaPayslipMenu",
-			"label": "Simuleer loonstrook",
-			"icon": "Calculator",
-			"order": 125,
-			"route": "ProformaPayslip",
-			"visibleIf": {"user.administrationMode": {"notIn": ["eenmanszaak_no_payroll"]}}
-		},
-		{
 			"id": "ConfiguratieGroup",
 			"label": "Configuratie",
 			"icon": "CogOutline",
+			"section": "settings",
 			"order": 200,
 			"children": [
 				{
