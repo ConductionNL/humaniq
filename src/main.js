@@ -48,11 +48,24 @@ import appIcons from './icons.js'
 // RosterDetail). The Dashboard was unaffected only because src/registry.js
 // overrides `chart` and `stat` locally, at layer 1.
 //
-// Filed upstream against @conduction/nextcloud-vue. This explicit import is
-// the leaf-app workaround and is safe to keep afterwards: the module is
-// idempotent, and `sideEffects` in the package already lists it, so webpack
-// will not drop it.
-import '@conduction/nextcloud-vue/dist/esm/components/CnWidgetGrid/registerDashboardWidgets.js'
+// Filed upstream against @conduction/nextcloud-vue (#704).
+//
+// The remedy is the library's OWN documented one, not a path into its build
+// output. `src/index.js`'s comment above that import ends: "Consumers on a
+// bundler that still strips it can additionally call
+// `registerBuiltinDashboardWidgets()` at bootstrap" — and that export exists
+// for exactly this, an empty function whose only job is to be a binding whose
+// import forces the module (and every widget's self-registration) to evaluate.
+//
+// This replaces a deep `dist/esm/...` import that worked but was wrong twice
+// over: it reached into build output the package does not promise as an entry
+// point, and it broke outright when the app was built against the library
+// SOURCE tree (`USE_LOCAL_LIB=true`), where no `dist/` exists — measured, a
+// hard `Module not found` at `src/main.js:55`. Importing a named export from
+// the package root resolves identically in both trees.
+import { registerBuiltinDashboardWidgets } from '@conduction/nextcloud-vue'
+
+registerBuiltinDashboardWidgets()
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
