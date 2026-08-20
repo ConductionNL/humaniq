@@ -1229,7 +1229,21 @@
 								"approvedAt",
 								"rejectionReason"
 							],
-							"title": "Approval"
+							"title": "Approval",
+							"overrides": {
+								"status": {
+									"editable": false
+								},
+								"submittedAt": {
+									"editable": false
+								},
+								"approvedBy": {
+									"editable": false
+								},
+								"approvedAt": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -1508,7 +1522,24 @@
 								"rejectionReason",
 								"reimbursedAt"
 							],
-							"title": "Approval"
+							"title": "Approval",
+							"overrides": {
+								"status": {
+									"editable": false
+								},
+								"submittedAt": {
+									"editable": false
+								},
+								"approvedBy": {
+									"editable": false
+								},
+								"approvedAt": {
+									"editable": false
+								},
+								"reimbursedAt": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -2445,7 +2476,15 @@
 								"generatedAt",
 								"errorMessage"
 							],
-							"title": "Status"
+							"title": "Status",
+							"overrides": {
+								"status": {
+									"editable": false
+								},
+								"generatedAt": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -3218,7 +3257,12 @@
 								"responseStatus",
 								"responseMessage"
 							],
-							"title": "Status & deadline"
+							"title": "Status & deadline",
+							"overrides": {
+								"status": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -3369,7 +3413,12 @@
 								"responseMessage",
 								"submittedDate"
 							],
-							"title": "Status & deadline"
+							"title": "Status & deadline",
+							"overrides": {
+								"status": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -3523,7 +3572,12 @@
 								"totalCompensation",
 								"status"
 							],
-							"title": "Bezoldiging & status"
+							"title": "Bezoldiging & status",
+							"overrides": {
+								"status": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -4430,7 +4484,15 @@
 								"postedAt",
 								"errorMessage"
 							],
-							"title": "Status"
+							"title": "Status",
+							"overrides": {
+								"status": {
+									"editable": false
+								},
+								"postedAt": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -4538,7 +4600,15 @@
 								"createdAt",
 								"errorMessage"
 							],
-							"title": "Status"
+							"title": "Status",
+							"overrides": {
+								"status": {
+									"editable": false
+								},
+								"createdAt": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -4729,7 +4799,21 @@
 								"approvedAt",
 								"rejectionReason"
 							],
-							"title": "Approval"
+							"title": "Approval",
+							"overrides": {
+								"status": {
+									"editable": false
+								},
+								"submittedAt": {
+									"editable": false
+								},
+								"approvedBy": {
+									"editable": false
+								},
+								"approvedAt": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -6234,7 +6318,12 @@
 								"publishedDate",
 								"closingDate"
 							],
-							"title": "Vacancy"
+							"title": "Vacancy",
+							"overrides": {
+								"status": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -7176,7 +7265,12 @@
 								"fuelType",
 								"companyCarTaxCategory"
 							],
-							"title": "Asset"
+							"title": "Asset",
+							"overrides": {
+								"status": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
