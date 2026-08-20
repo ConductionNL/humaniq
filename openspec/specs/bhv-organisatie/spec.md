@@ -104,7 +104,12 @@ The `BhvCertificeringen` index page SHALL support filtering and grouping by `Bhv
 
 ### Requirement: BHV pages SHALL live under the existing Verlof & verzuim menu group, never a new top-level menu (REQ-BHV-005)
 
-`src/manifest.json` SHALL expose `BhvCertificeringen` (index) and `BhvCertificeringDetail` (data + related Employee/OrgUnit + audit sidebar) as `SUB_PAGE`/`DETAIL_TAB` placements under the existing `Verlof & verzuim` menu group (`VerlofVerzuimGroup`), and SHALL add the "Aflopende BHV-certificaten" widget to the existing Dashboard page. No new top-level menu SHALL be added.
+`src/manifest.json` SHALL expose `BhvCertificeringen` (index) and `BhvCertificeringDetail` (data +
+related Employee/OrgUnit + audit sidebar) as `SUB_PAGE`/`DETAIL_TAB` placements under the existing
+`Verlof & verzuim` menu group (`VerlofVerzuimGroup`). No new top-level menu SHALL be added. The
+expiring-certificate signal SHALL surface as rows in the Obligations `object-table` widget on the
+Dashboard (`hrmq-dashboard-steering-indicators` REQ-DSI-008) rather than as a dedicated
+"Aflopende BHV-certificaten" widget — the 90-day `certificaatGeldigTot` window is unchanged.
 
 #### Scenario: BHV pages are reachable under Verlof & verzuim
 - **GIVEN** the manifest after this change
@@ -114,6 +119,4 @@ The `BhvCertificeringen` index page SHALL support filtering and grouping by `Bhv
 #### Scenario: The dashboard widget mirrors the existing contracten-expiry widget shape
 - **GIVEN** the Dashboard page after this change
 - **WHEN** its widget list is inspected
-- **THEN** "Aflopende BHV-certificaten" is an `object-table` widget with the same structural shape (`source`/`filter`/`order`/`limit`) as the existing "Aflopende contracten" widget, filtering `BhvCertificering.certificaatGeldigTot`
-
-**Verified 2026-07-17**: `BhvCertificeringen` added as a child of `VerlofVerzuimGroup` (no new top-level `menu` entry — diff-checked: only `BhvCertificering*`-named ids were added, zero new top-level menu ids); the Dashboard's "Aflopende BHV-certificaten" widget is `object-table` with `source`/`filter`/`order`/`limit`, gridY 18 (directly below "Aflopende contracten" at gridY 13-18, no overlap); `npm run check:manifest` PASS (0 errors, 104 pages).
+- **THEN** no "Aflopende BHV-certificaten" `object-table` widget exists on the page, and a `BhvCertificering` record with `certificaatGeldigTot` within 90 days instead appears as a row in the same Obligations list a `contract-devries-tijdelijk`-shaped expiring-contract row appears in — one shared merged-list shape, not two mirrored dedicated widgets

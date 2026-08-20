@@ -99,18 +99,25 @@ A NEW provider `lib/Standards/Checks/NlSignalChecks.php` SHALL register both pre
 
 ### Requirement: The dashboard shows 'Aflopende contracten' (REQ-SIG-005)
 
-The existing `Dashboard` page in `src/manifest.json` SHALL gain an `object-table` widget `dash-expiring-contracts` titled "Aflopende contracten" (icon `FileSignOutline`): `source: {register: "hrmq", schema: "EmploymentContract", filter: {type: "temporary", endDate: {gte: "@today", lte: "@today+60d"}}, order: {endDate: "asc"}, limit: 5}`, columns `employeeId`/`endDate`/`aanzegdOn`, `rowRoute: EmploymentContractDetail`, `viewAllRoute: EmploymentContracts`, `emptyText` for the empty state, plus a full-width layout row appended below the existing grid (gridY 9, width 12, height 5 — mirroring `dash-my-recent-hours`). The `@today`/`@today+60d` tokens and the `{gte, lte}` operator filter shape are the verified widget filter grammar at HEAD. `npm run check:manifest` SHALL stay green. No `x-openregister-notifications` SHALL be added anywhere in this change — the gate-18 canonical dialect is not yet adopted app-wide (the round-1 deferral, repeated deliberately and recorded in the design).
+The existing `Dashboard` page in `src/manifest.json` SHALL surface the expiring-temporary-contract
+signal as rows in the Obligations `object-table` widget (`hrmq-dashboard-steering-indicators`
+REQ-DSI-008), not as a dedicated full-width `object-table` widget. The underlying filter SHALL be
+unchanged: `EmploymentContract` records with `type: "temporary"` and `endDate` within the next 60
+days, columns `employeeId`/`endDate`/`aanzegdOn` equivalent data, `rowRoute: EmploymentContractDetail`.
+The 60-day window SHALL stay in sync with `nl-signaal-contract-verloopt`'s
+`parameters.windowDays` (`lib/Standards/rules/labour.json`) exactly as before — a window change
+still touches both. `npm run check:manifest` SHALL stay green.
 
 #### Scenario: Widget lists the expiring seed contract
 
 - GIVEN the seeded data on a day inside the seed window
 - WHEN the Dashboard renders
-- THEN "Aflopende contracten" lists `contract-devries-tijdelijk` with its `endDate`, and clicking the row opens `EmploymentContractDetail`
+- THEN the Obligations list includes a row for `contract-devries-tijdelijk` with its `endDate`, and activating the row opens `EmploymentContractDetail` — no separate "Aflopende contracten" widget exists on the page
 
 #### Scenario: Manifest stays valid
 
 - WHEN `npm run check:manifest` runs
-- THEN it exits 0 with the new widget and layout row present
+- THEN it exits 0 with the Dashboard's six-widget layout present and no `dash-expiring-contracts` widget id remaining
 
 ### Requirement: One seed exercises both signals at the seed anchor (REQ-SIG-006)
 

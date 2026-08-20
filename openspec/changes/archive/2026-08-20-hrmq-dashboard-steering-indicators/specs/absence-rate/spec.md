@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: `AbsenceRateService` SHALL be exposed as a period trend through a guarded analytics endpoint (REQ-ABSRATE-006)
 
