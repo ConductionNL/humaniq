@@ -71,6 +71,8 @@ class CompleteHoursMigrationJob extends QueuedJob {
 	 * @return void
 	 *
 	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) -- $argument is mandated by the QueuedJob::run() signature; this one-shot job takes no argument.
 	 */
 	protected function run($argument): void {
 		try {

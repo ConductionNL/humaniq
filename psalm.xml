@@ -56,6 +56,7 @@
                 <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectDeletingEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Exception\FolderAccessDeniedException"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatingEvent"/>
                 <referencedClass name="OCA\OpenRegister\Lifecycle\GuardResult"/>
                 <referencedClass name="OCA\OpenRegister\Lifecycle\LifecycleGuardInterface"/>

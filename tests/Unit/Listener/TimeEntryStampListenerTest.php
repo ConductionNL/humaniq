@@ -396,4 +396,164 @@ class TimeEntryStampListenerTest extends TestCase {
 		$this->assertSame([], $event->getModifiedData());
 	}//end testForeignSchemaIsIgnored()
 
+	/**
+	 * An UPDATE of a foreign schema is equally ignored — the update arm has
+	 * its own slug gate.
+	 *
+	 * @return void
+	 */
+	public function testForeignSchemaUpdateIsIgnored(): void {
+		$entity = new ObjectEntity();
+		$entity->setSchema('Timesheet');
+		$entity->setObject(['period' => '2026-05']);
+
+		$event = new ObjectUpdatingEvent($entity, $entity);
+		$this->listener->handle($event);
+
+		$this->assertFalse($event->isPropagationStopped());
+		$this->assertSame([], $event->getModifiedData());
+	}//end testForeignSchemaUpdateIsIgnored()
+
+	/**
+	 * An update whose write omits employeeId keeps the STORED employee — the
+	 * form not resending an identity field must never re-resolve the booking
+	 * to the acting user.
+	 *
+	 * @return void
+	 */
+	public function testUpdateWithoutIncomingEmployeeIdKeepsTheStoredOne(): void {
+		$this->store->seed('Employee', 'employee-devries', ['administrationId' => 'ADM-002']);
+		$this->store->seed('Timesheet', 'ts-open', [
+			'employeeId' => 'employee-devries',
+			'period' => '2026-05',
+			'status' => 'rejected',
+		]);
+
+		$stored = [
+			'employeeId' => 'employee-devries',
+			'timesheetId' => 'ts-open',
+			'startedAt' => '2026-05-01T09:00:00Z',
+			'endedAt' => '2026-05-01T17:00:00Z',
+		];
+		$incoming = [
+			'timesheetId' => 'ts-open',
+			'startedAt' => '2026-05-01T09:00:00Z',
+			'endedAt' => '2026-05-01T17:00:00Z',
+			'description' => 'zonder identiteit',
+		];
+
+		$event = new ObjectUpdatingEvent(
+			$this->entryEntity($incoming, 'entry-1'),
+			$this->entryEntity($stored, 'entry-1')
+		);
+		$this->listener->handle($event);
+
+		$this->assertFalse($event->isPropagationStopped());
+		$this->assertSame('employee-devries', $event->getModifiedData()['employeeId'], 'The stored employee wins, not the acting admin.');
+	}//end testUpdateWithoutIncomingEmployeeIdKeepsTheStoredOne()
+
+	/**
+	 * Unparseable times and a negative break are refused with their own
+	 * structured messages (REQ-TEC-001).
+	 *
+	 * @return void
+	 */
+	public function testUnparseableTimesAndNegativeBreakAreRefused(): void {
+		$event = new ObjectCreatingEvent($this->entryEntity([
+			'startedAt' => 'geen-datum',
+			'endedAt' => '2026-05-04T17:00:00Z',
+		]));
+		$this->listener->handle($event);
+		$this->assertTrue($event->isPropagationStopped());
+		$this->assertStringContainsString('ongeldig', (string)$event->getErrors()['message']);
+
+		$event = new ObjectCreatingEvent($this->entryEntity([
+			'startedAt' => '2026-05-04T09:00:00Z',
+			'endedAt' => '2026-05-04T17:00:00Z',
+			'breakMinutes' => -10,
+		]));
+		$this->listener->handle($event);
+		$this->assertTrue($event->isPropagationStopped());
+		$this->assertStringContainsString('nul minuten', (string)$event->getErrors()['message']);
+	}//end testUnparseableTimesAndNegativeBreakAreRefused()
+
+	/**
+	 * An explicit reparent checks the TARGET's mutability too: a locked
+	 * target refuses, while a dangling target (a data problem, not a lock)
+	 * lets the write through.
+	 *
+	 * @return void
+	 */
+	public function testReparentChecksTheTargetParent(): void {
+		$this->store->seed('Timesheet', 'ts-open', [
+			'employeeId' => 'employee-jansen',
+			'period' => '2026-05',
+			'status' => 'rejected',
+		]);
+		$this->store->seed('Timesheet', 'ts-locked', [
+			'employeeId' => 'employee-jansen',
+			'period' => '2026-06',
+			'status' => 'submitted',
+		]);
+
+		$stored = [
+			'employeeId' => 'employee-jansen',
+			'timesheetId' => 'ts-open',
+			'startedAt' => '2026-05-01T09:00:00Z',
+			'endedAt' => '2026-05-01T17:00:00Z',
+		];
+
+		// Reparent onto a locked timesheet: refused.
+		$event = new ObjectUpdatingEvent(
+			$this->entryEntity(array_merge($stored, ['timesheetId' => 'ts-locked']), 'entry-1'),
+			$this->entryEntity($stored, 'entry-1')
+		);
+		$this->listener->handle($event);
+		$this->assertTrue($event->isPropagationStopped());
+		$this->assertStringContainsString('heropenen', (string)$event->getErrors()['message']);
+
+		// Reparent onto a MISSING timesheet: a dangling reference is a data
+		// problem for the aggregate recompute, not a lock — allowed.
+		$event = new ObjectUpdatingEvent(
+			$this->entryEntity(array_merge($stored, ['timesheetId' => 'ts-gone']), 'entry-1'),
+			$this->entryEntity($stored, 'entry-1')
+		);
+		$this->listener->handle($event);
+		$this->assertFalse($event->isPropagationStopped());
+		$this->assertSame('ts-gone', $event->getModifiedData()['timesheetId']);
+	}//end testReparentChecksTheTargetParent()
+
+	/**
+	 * A non-refusal failure (infrastructure, not validation) fails CLOSED
+	 * with the generic Dutch message — a half-stamped entry would silently
+	 * vanish from every @me page, which is worse than a refused write.
+	 *
+	 * @return void
+	 */
+	public function testInfrastructureFailureFailsClosed(): void {
+		$gateway = $this->createMock(HoursRegisterGateway::class);
+		$gateway->method('resolveSchemaSlug')->willReturn('timeentry');
+		$gateway->method('findObjectData')->willThrowException(new \RuntimeException('register down'));
+
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+
+		$listener = new TimeEntryStampListener(
+			gateway: $gateway,
+			userSession: $session,
+			marker: new InternalWriteMarker(),
+			logger: new NullLogger()
+		);
+
+		$event = new ObjectCreatingEvent($this->entryEntity([
+			'employeeId' => 'employee-jansen',
+			'startedAt' => '2026-05-04T09:00:00Z',
+			'endedAt' => '2026-05-04T17:00:00Z',
+		]));
+		$listener->handle($event);
+
+		$this->assertTrue($event->isPropagationStopped());
+		$this->assertStringContainsString('niet worden verwerkt', (string)$event->getErrors()['message']);
+	}//end testInfrastructureFailureFailsClosed()
+
 }//end class

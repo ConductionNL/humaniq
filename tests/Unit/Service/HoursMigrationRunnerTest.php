@@ -202,4 +202,42 @@ class HoursMigrationRunnerTest extends TestCase {
 
 		self::assertTrue($runner->deferIfMaintenanceDenied($denial, self::JOB_CLASS));
 	}//end testAlreadyQueuedJobIsNotDuplicated()
+
+	/**
+	 * A failing admin-group lookup is logged and the pass STILL runs with no
+	 * acting user — the runner degrades to the sessionless posture rather
+	 * than letting infrastructure trouble abort the migration.
+	 *
+	 * @return void
+	 */
+	public function testFailingAdminResolutionIsLoggedAndThePassStillRuns(): void {
+		$this->setUserCalls = [];
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$session->method('setUser')->willReturnCallback(
+			function (?IUser $user): void {
+				$this->setUserCalls[] = $user?->getUID();
+			}
+		);
+
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('get')->willThrowException(new \RuntimeException('directory down'));
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())
+			->method('warning')
+			->with(self::stringContains('could not resolve an acting admin user'));
+
+		$runner = new HoursMigrationRunner(
+			$session,
+			$groupManager,
+			$this->createMock(IJobList::class),
+			$logger
+		);
+
+		$result = $runner->runAsActingUser(static fn (): array => ['processed' => 1, 'entriesCreated' => 0, 'unresolvableUserLinks' => 0]);
+
+		self::assertSame(1, $result['processed']);
+		self::assertSame([], $this->setUserCalls, 'No impersonation may happen when no admin resolves.');
+	}//end testFailingAdminResolutionIsLoggedAndThePassStillRuns()
 }//end class

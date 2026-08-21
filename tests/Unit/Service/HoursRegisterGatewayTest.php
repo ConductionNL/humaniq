@@ -143,4 +143,123 @@ class HoursRegisterGatewayTest extends TestCase {
 		$this->assertSame('', $this->gateway->resolveSchemaSlug(''));
 	}//end testSlugResolutionAndDegradation()
 
+	/**
+	 * Build a gateway over an arbitrary ObjectService double, WITHOUT a
+	 * SchemaMapper registration (its absence is one of the degradations
+	 * under test).
+	 *
+	 * @param object $store The ObjectService double.
+	 *
+	 * @return HoursRegisterGateway The subject.
+	 */
+	private function gatewayWith(object $store): HoursRegisterGateway {
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('hrmq');
+
+		return new HoursRegisterGateway(
+			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $store]),
+			settingsService: $settings,
+			orgResolution: new OrgResolutionService()
+		);
+	}//end gatewayWith()
+
+	/**
+	 * findObjectData degrades a THROWING find to null, and echoes the uuid
+	 * ONLY when the payload does not already carry an id. (An entity whose
+	 * payload is not an array cannot be produced through the real
+	 * ObjectEntity — its getObject() always answers an array — so that
+	 * defensive branch is deliberately not fabricated here.)
+	 *
+	 * @return void
+	 */
+	public function testFindObjectDataDegradationAndIdEcho(): void {
+		$store = new class extends FakeObjectStore {
+
+			/**
+			 * {@inheritDoc}
+			 */
+			public function find(
+				int | string $id,
+				?array $_extend = [],
+				bool $files = false,
+				mixed $register = null,
+				mixed $schema = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+			): ?\OCA\OpenRegister\Db\ObjectEntity {
+				if ((string)$id === 'ts-throw') {
+					throw new \RuntimeException('register down');
+				}
+
+				$entity = new \OCA\OpenRegister\Db\ObjectEntity();
+				$entity->setUuid((string)$id);
+				$entity->setSchema((string)$schema);
+				$entity->setObject(['period' => '2026-05']);
+
+				return $entity;
+			}//end find()
+
+		};
+		$gateway = $this->gatewayWith($store);
+
+		$this->assertNull($gateway->findObjectData('ts-throw', 'Timesheet'), 'A throwing find degrades to null.');
+
+		$data = $gateway->findObjectData('ts-noid', 'Timesheet');
+		$this->assertSame('ts-noid', $data['id'], 'The uuid is echoed into a payload that lacks an id.');
+	}//end testFindObjectDataDegradationAndIdEcho()
+
+	/**
+	 * A missing SchemaMapper degrades slug resolution to '' — the listeners
+	 * then treat the object as a foreign schema rather than crashing.
+	 *
+	 * @return void
+	 */
+	public function testMissingSchemaMapperDegradesSlugToEmpty(): void {
+		$gateway = $this->gatewayWith(new FakeObjectStore());
+
+		$this->assertSame('', $gateway->resolveSchemaSlug('Timesheet'));
+	}//end testMissingSchemaMapperDegradesSlugToEmpty()
+
+	/**
+	 * findFiltered RE-CHECKS the filters in PHP: a store whose pushed-down
+	 * filter grammar drifted (returns everything) is caught by the belt-and-
+	 * braces re-check, and rows arriving as jsonSerializable objects or
+	 * garbage are unwrapped/dropped by toArray().
+	 *
+	 * @return void
+	 */
+	public function testFindFilteredReChecksInPhpAndUnwrapsObjectRows(): void {
+		$store = new class extends FakeObjectStore {
+
+			/**
+			 * {@inheritDoc}
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				// A drifted filter grammar: the filters are IGNORED.
+				return [
+					['id' => 'ts-1', 'employeeId' => 'e1', 'period' => '2026-05'],
+					['id' => 'ts-2', 'employeeId' => 'e2', 'period' => '2026-05'],
+					new class implements \JsonSerializable {
+
+						/**
+						 * @return array<string, mixed>
+						 */
+						public function jsonSerialize(): array {
+							return ['id' => 'ts-3', 'employeeId' => 'e1', 'period' => '2026-05'];
+						}//end jsonSerialize()
+
+					},
+					17,
+				];
+			}//end findAll()
+
+		};
+		$gateway = $this->gatewayWith($store);
+
+		$matches = $gateway->findFiltered('Timesheet', ['employeeId' => 'e1']);
+
+		$ids = array_map(static fn (array $row): string => (string)$row['id'], $matches);
+		$this->assertSame(['ts-1', 'ts-3'], $ids, 'e2 is dropped by the PHP re-check; the object row is unwrapped; the garbage row is dropped.');
+	}//end testFindFilteredReChecksInPhpAndUnwrapsObjectRows()
+
 }//end class

@@ -38,6 +38,7 @@ declare(strict_types=1);
 namespace OCA\Hrmq\Service;
 
 use Psr\Container\ContainerInterface;
+use RuntimeException;
 
 /**
  * Recomputes and persists a Timesheet's aggregates from its entries.
@@ -254,6 +255,15 @@ class TimesheetAggregationService {
 	 * @return object The cloned ObjectService.
 	 */
 	private function objects(): object {
+		// ADR-083: establish availability before reaching. class_exists()
+		// answers the same question the container would otherwise have
+		// answered fatally (the AssetDialectMigrationService precedent).
+		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
+			throw new RuntimeException(
+				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+			);
+		}
+
 		$service = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
 		return clone $service;

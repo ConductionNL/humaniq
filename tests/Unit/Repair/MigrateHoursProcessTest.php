@@ -32,12 +32,18 @@ declare(strict_types=1);
 namespace OCA\Hrmq\Tests\Unit\Repair;
 
 use OCA\Hrmq\Repair\MigrateHoursProcess;
+use OCA\Hrmq\Service\HoursMigrationRunner;
 use OCA\Hrmq\Service\InternalWriteMarker;
 use OCA\Hrmq\Service\OrgResolutionService;
 use OCA\Hrmq\Service\SettingsService;
 use OCA\Hrmq\Service\TimesheetAggregationService;
 use OCA\Hrmq\Tests\Unit\Support\FakeContainer;
 use OCA\Hrmq\Tests\Unit\Support\FakeObjectStore;
+use OCP\BackgroundJob\IJobList;
+use OCP\IGroupManager;
+use OCP\IUser;
+use OCP\IUserSession;
+use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -66,6 +72,13 @@ class MigrateHoursProcessTest extends TestCase {
 	 * @var MigrateHoursProcess
 	 */
 	private MigrateHoursProcess $repair;
+
+	/**
+	 * The container the subject resolves its collaborators from.
+	 *
+	 * @var FakeContainer
+	 */
+	private FakeContainer $container;
 
 	/**
 	 * The spying store handed to the migration (records marker state).
@@ -172,6 +185,7 @@ class MigrateHoursProcessTest extends TestCase {
 		$settings->method('getRegisterSlug')->willReturn('hrmq');
 
 		$container = new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $this->spy]);
+		$this->container = $container;
 		$this->repair = new MigrateHoursProcess(
 			container: $container,
 			marker: $this->marker,
@@ -185,6 +199,52 @@ class MigrateHoursProcessTest extends TestCase {
 			logger: new NullLogger()
 		);
 	}//end setUp()
+
+	/**
+	 * A real HoursMigrationRunner whose session already carries a user, so
+	 * runAsActingUser() runs the pass directly (no impersonation involved).
+	 *
+	 * @return HoursMigrationRunner The runner.
+	 */
+	private function directRunner(): HoursMigrationRunner {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('admin');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+
+		return new HoursMigrationRunner(
+			$session,
+			$this->createMock(IGroupManager::class),
+			$this->createMock(IJobList::class),
+			new NullLogger()
+		);
+	}//end directRunner()
+
+	/**
+	 * Build a MigrateHoursProcess over a custom store (loadAll edge cases).
+	 *
+	 * @param object $store The ObjectService double.
+	 *
+	 * @return MigrateHoursProcess The subject.
+	 */
+	private function repairWith(object $store): MigrateHoursProcess {
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$container = new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $store]);
+
+		return new MigrateHoursProcess(
+			container: $container,
+			marker: $this->marker,
+			orgResolution: new OrgResolutionService(),
+			aggregationService: new TimesheetAggregationService(
+				container: $container,
+				marker: $this->marker,
+				settingsService: $settings
+			),
+			settingsService: $settings,
+			logger: new NullLogger()
+		);
+	}//end repairWith()
 
 	/**
 	 * One pass over the three seed rows: N=3, M=3, K=2 — jansen resolves,
@@ -286,5 +346,250 @@ class MigrateHoursProcessTest extends TestCase {
 		$this->assertNotContains(false, $this->recorder->markerStates, 'EVERY migration write must run under the marker.');
 		$this->assertFalse($this->marker->isInternal(), 'The marker must not leak past the run.');
 	}//end testApprovedRowsSynthesizeViaTheMarkerPath()
+
+	/**
+	 * The IRepairStep display name names the step.
+	 *
+	 * @return void
+	 */
+	public function testGetNameNamesTheStep(): void {
+		$this->assertStringContainsString('hours-process', $this->repair->getName());
+	}//end testGetNameNamesTheStep()
+
+	/**
+	 * run() executes the pass through the runner and reports exactly ONE
+	 * summary line — the warn-once semantics — through the repair output.
+	 *
+	 * @return void
+	 */
+	public function testRunReportsTheSummaryThroughOutput(): void {
+		$this->container->set(HoursMigrationRunner::class, $this->directRunner());
+
+		$output = $this->createMock(IOutput::class);
+		$output->expects($this->once())
+			->method('info')
+			->with($this->logicalAnd(
+				$this->stringContains('3 timesheets processed'),
+				$this->stringContains('3 entries created'),
+				$this->stringContains('2 rows with unresolvable user link')
+			));
+		$output->expects($this->never())->method('warning');
+
+		$this->repair->run($output);
+	}//end testRunReportsTheSummaryThroughOutput()
+
+	/**
+	 * runDeferred() (the background-job completion vehicle) runs the SAME
+	 * idempotent pass and returns the same summary shape.
+	 *
+	 * @return void
+	 */
+	public function testRunDeferredRunsTheSamePass(): void {
+		$this->container->set(HoursMigrationRunner::class, $this->directRunner());
+
+		$summary = $this->repair->runDeferred();
+
+		$this->assertSame(3, $summary['processed']);
+		$this->assertSame(3, $summary['entriesCreated']);
+		$this->assertSame(2, $summary['unresolvableUserLinks']);
+	}//end testRunDeferredRunsTheSamePass()
+
+	/**
+	 * A pass failing on anything but a maintenance-mode folder denial is
+	 * reported as a warning through the output — never rethrown out of a
+	 * repair step.
+	 *
+	 * @return void
+	 */
+	public function testRunWarnsWhenThePassFails(): void {
+		$runner = $this->createMock(HoursMigrationRunner::class);
+		$runner->method('runAsActingUser')->willThrowException(new \RuntimeException('register unavailable'));
+		$runner->method('deferIfMaintenanceDenied')->willReturn(false);
+		$this->container->set(HoursMigrationRunner::class, $runner);
+
+		$output = $this->createMock(IOutput::class);
+		$output->expects($this->never())->method('info');
+		$output->expects($this->once())
+			->method('warning')
+			->with($this->stringContains('register unavailable'));
+
+		$this->repair->run($output);
+	}//end testRunWarnsWhenThePassFails()
+
+	/**
+	 * A maintenance-mode folder denial defers to the one-shot background
+	 * job: the run reports the deferral as INFO (not a failure) and stops.
+	 *
+	 * @return void
+	 */
+	public function testRunDefersOnMaintenanceDenied(): void {
+		$runner = $this->createMock(HoursMigrationRunner::class);
+		$runner->method('runAsActingUser')->willThrowException(new \RuntimeException('folders unreachable'));
+		$runner->method('deferIfMaintenanceDenied')->willReturn(true);
+		$this->container->set(HoursMigrationRunner::class, $runner);
+
+		$output = $this->createMock(IOutput::class);
+		$output->expects($this->once())
+			->method('info')
+			->with($this->stringContains('deferred to a background job'));
+		$output->expects($this->never())->method('warning');
+
+		$this->repair->run($output);
+	}//end testRunDefersOnMaintenanceDenied()
+
+	/**
+	 * An unparseable period cannot anchor a synthetic booking: no entry is
+	 * created for it, while the parseable rows still synthesize theirs.
+	 *
+	 * @return void
+	 */
+	public function testUnparseablePeriodSynthesizesNothing(): void {
+		$this->store->seed('Timesheet', 'timesheet-legacy-q2', [
+			'employeeId' => 'employee-jansen',
+			'period' => 'Q2-2026',
+			'hours' => 10,
+			'status' => 'draft',
+		]);
+
+		$summary = $this->repair->migrate();
+
+		$this->assertSame(4, $summary['processed']);
+		$this->assertSame(3, $summary['entriesCreated'], 'Only the three parseable periods synthesize.');
+		$legacyEntries = array_filter(
+			($this->store->state->objects['TimeEntry'] ?? []),
+			static fn (array $e): bool => ($e['timesheetId'] ?? '') === 'timesheet-legacy-q2'
+		);
+		$this->assertCount(0, $legacyEntries);
+	}//end testUnparseablePeriodSynthesizesNothing()
+
+	/**
+	 * Week-grain periods (`YYYY-Www`, `YYYY-Www-D`) anchor the synthetic
+	 * entry at the ISO week start / week day at 00:00 UTC — the same grain
+	 * family the typed event's classifier recognises.
+	 *
+	 * @return void
+	 */
+	public function testWeekGrainPeriodsAnchorAtIsoWeekStart(): void {
+		$this->store->seed('Timesheet', 'timesheet-week', [
+			'employeeId' => 'employee-jansen',
+			'period' => '2026-W23',
+			'hours' => 8,
+			'status' => 'draft',
+		]);
+		$this->store->seed('Timesheet', 'timesheet-week-day', [
+			'employeeId' => 'employee-jansen',
+			'period' => '2026-W23-3',
+			'hours' => 4,
+			'status' => 'draft',
+		]);
+
+		$this->repair->migrate();
+
+		$byParent = [];
+		foreach (($this->store->state->objects['TimeEntry'] ?? []) as $entry) {
+			$byParent[(string)($entry['timesheetId'] ?? '')] = $entry;
+		}
+
+		$this->assertSame('2026-06-01T00:00:00Z', $byParent['timesheet-week']['startedAt'], 'ISO week 23 of 2026 starts Monday June 1.');
+		$this->assertSame('2026-06-03T00:00:00Z', $byParent['timesheet-week-day']['startedAt'], 'Day 3 of ISO week 23 is Wednesday June 3.');
+	}//end testWeekGrainPeriodsAnchorAtIsoWeekStart()
+
+	/**
+	 * A resolvable org chain backfills `managerUserId` onto the timesheet —
+	 * through the SAME OrgResolutionService chain the runtime stamp uses.
+	 *
+	 * @return void
+	 */
+	public function testManagerChainBackfillsManagerUserId(): void {
+		$this->store->seed('Employee', 'employee-manager', ['nextcloudUserId' => 'manager1']);
+		$this->store->seed('OrgAssignment', 'assignment-jansen', [
+			'employeeId' => 'employee-jansen',
+			'orgUnitId' => 'unit-dev',
+			'endDate' => '',
+		]);
+		$this->store->seed('OrgAssignment', 'assignment-dangling', [
+			'employeeId' => '',
+			'orgUnitId' => 'unit-dev',
+		]);
+		$this->store->seed('OrgUnit', 'unit-dev', ['managerId' => 'employee-manager']);
+
+		$this->repair->migrate();
+
+		$jansen = $this->store->state->objects['Timesheet']['timesheet-jansen-2026-05'];
+		$this->assertSame('manager1', $jansen['managerUserId']);
+	}//end testManagerChainBackfillsManagerUserId()
+
+	/**
+	 * A schema whose load fails is degraded to an empty set (logged, never
+	 * fatal), and rows arriving as jsonSerializable OBJECTS (the real
+	 * ObjectService shape) are unwrapped while garbage rows are dropped.
+	 *
+	 * @return void
+	 */
+	public function testLoadAllDegradesFailuresAndUnwrapsObjectRows(): void {
+		$store = new class extends FakeObjectStore {
+
+			/**
+			 * The schema selected via setSchema (parent keeps it private).
+			 *
+			 * @var string
+			 */
+			private string $schemaSeen = '';
+
+			/**
+			 * {@inheritDoc}
+			 */
+			public function setSchema(mixed $schema): self {
+				$this->schemaSeen = (string)$schema;
+
+				return parent::setSchema($schema);
+			}//end setSchema()
+
+			/**
+			 * {@inheritDoc}
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				if ($this->schemaSeen === 'OrgUnit') {
+					throw new \RuntimeException('OrgUnit collection unavailable');
+				}
+
+				if ($this->schemaSeen === 'Employee') {
+					// The real ObjectService returns entities, not arrays.
+					return [
+						new class implements \JsonSerializable {
+
+							/**
+							 * @return array<string, mixed>
+							 */
+							public function jsonSerialize(): array {
+								return [
+									'id' => 'employee-jansen',
+									'nextcloudUserId' => 'admin',
+									'administrationId' => 'ADM-001',
+								];
+							}//end jsonSerialize()
+
+						},
+						42,
+					];
+				}
+
+				return parent::findAll($config, $_rbac, $_multitenancy);
+			}//end findAll()
+
+		};
+		$store->seed('Timesheet', 'timesheet-jansen-2026-05', [
+			'employeeId' => 'employee-jansen',
+			'period' => '2026-05',
+			'hours' => 152,
+			'status' => 'submitted',
+		]);
+
+		$summary = $this->repairWith($store)->migrate();
+
+		$this->assertSame(1, $summary['processed'], 'The failing OrgUnit load degrades to [] and the pass completes.');
+		$this->assertSame(0, $summary['unresolvableUserLinks'], 'The object-shaped Employee row was unwrapped and resolves the link.');
+		$this->assertSame('admin', $store->state->objects['Timesheet']['timesheet-jansen-2026-05']['userId']);
+	}//end testLoadAllDegradesFailuresAndUnwrapsObjectRows()
 
 }//end class

@@ -36,6 +36,7 @@ import CalculatorVariantOutline from 'vue-material-design-icons/CalculatorVarian
 import CalendarAccountOutline from 'vue-material-design-icons/CalendarAccountOutline.vue'
 import CalendarCheck from 'vue-material-design-icons/CalendarCheck.vue'
 import CalendarClock from 'vue-material-design-icons/CalendarClock.vue'
+import CalendarClockOutline from 'vue-material-design-icons/CalendarClockOutline.vue'
 import CalendarMonthOutline from 'vue-material-design-icons/CalendarMonthOutline.vue'
 import CalendarRange from 'vue-material-design-icons/CalendarRange.vue'
 import CalendarSyncOutline from 'vue-material-design-icons/CalendarSyncOutline.vue'
@@ -60,6 +61,7 @@ import ClipboardListOutline from 'vue-material-design-icons/ClipboardListOutline
 import ClipboardPulseOutline from 'vue-material-design-icons/ClipboardPulseOutline.vue'
 import ClockCheckOutline from 'vue-material-design-icons/ClockCheckOutline.vue'
 import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
+import ClockPlusOutline from 'vue-material-design-icons/ClockPlusOutline.vue'
 import CloseCircleOutline from 'vue-material-design-icons/CloseCircleOutline.vue'
 import CogOutline from 'vue-material-design-icons/CogOutline.vue'
 import CogPlayOutline from 'vue-material-design-icons/CogPlayOutline.vue'
@@ -137,6 +139,7 @@ export default {
 	CalendarAccountOutline,
 	CalendarCheck,
 	CalendarClock,
+	CalendarClockOutline,
 	CalendarMonthOutline,
 	CalendarRange,
 	CalendarSyncOutline,
@@ -161,6 +164,7 @@ export default {
 	ClipboardPulseOutline,
 	ClockCheckOutline,
 	ClockOutline,
+	ClockPlusOutline,
 	CloseCircleOutline,
 	CogOutline,
 	CogPlayOutline,

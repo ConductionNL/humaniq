@@ -255,4 +255,108 @@ class TimesheetAggregationServiceTest extends TestCase {
 		$this->assertCount(0, $this->store->state->saves);
 	}//end testMissingTimesheetIsANoOp()
 
+	/**
+	 * A THROWING timesheet load degrades to the missing-timesheet no-op —
+	 * infrastructure trouble during a post-save recompute must never bubble
+	 * back into the save path that triggered it.
+	 *
+	 * @return void
+	 */
+	public function testThrowingTimesheetLoadIsANoOp(): void {
+		$store = new class extends FakeObjectStore {
+
+			/**
+			 * {@inheritDoc}
+			 */
+			public function find(
+				int | string $id,
+				?array $_extend = [],
+				bool $files = false,
+				mixed $register = null,
+				mixed $schema = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+			): ?\OCA\OpenRegister\Db\ObjectEntity {
+				throw new \RuntimeException('register down');
+			}//end find()
+
+		};
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$service = new TimesheetAggregationService(
+			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $store]),
+			marker: $this->marker,
+			settingsService: $settings
+		);
+
+		$this->assertNull($service->recomputeForTimesheet('ts-1'));
+		$this->assertCount(0, $store->state->saves);
+	}//end testThrowingTimesheetLoadIsANoOp()
+
+	/**
+	 * Entry rows arriving as jsonSerializable OBJECTS (the real
+	 * ObjectService shape) are unwrapped and garbage rows are dropped
+	 * before aggregation.
+	 *
+	 * @return void
+	 */
+	public function testObjectShapedEntryRowsAreUnwrapped(): void {
+		$store = new class extends FakeObjectStore {
+
+			/**
+			 * The schema selected via setSchema (parent keeps it private).
+			 *
+			 * @var string
+			 */
+			private string $schemaSeen = '';
+
+			/**
+			 * {@inheritDoc}
+			 */
+			public function setSchema(mixed $schema): self {
+				$this->schemaSeen = (string)$schema;
+
+				return parent::setSchema($schema);
+			}//end setSchema()
+
+			/**
+			 * {@inheritDoc}
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				if ($this->schemaSeen !== 'TimeEntry') {
+					return parent::findAll($config, $_rbac, $_multitenancy);
+				}
+
+				return [
+					new class implements \JsonSerializable {
+
+						/**
+						 * @return array<string, mixed>
+						 */
+						public function jsonSerialize(): array {
+							return ['timesheetId' => 'ts-1', 'hours' => 5.5, 'billable' => true];
+						}//end jsonSerialize()
+
+					},
+					17,
+				];
+			}//end findAll()
+
+		};
+		$store->seed('Timesheet', 'ts-1', ['status' => 'draft', 'hours' => 0, 'entryCount' => 0]);
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$service = new TimesheetAggregationService(
+			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $store]),
+			marker: $this->marker,
+			settingsService: $settings
+		);
+
+		$aggregates = $service->recomputeForTimesheet('ts-1');
+
+		$this->assertSame(5.5, $aggregates['hours'], 'The object row was unwrapped; the garbage row was dropped.');
+		$this->assertSame(1, $aggregates['entryCount']);
+	}//end testObjectShapedEntryRowsAreUnwrapped()
+
 }//end class

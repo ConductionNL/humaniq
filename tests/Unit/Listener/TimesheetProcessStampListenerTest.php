@@ -395,4 +395,131 @@ class TimesheetProcessStampListenerTest extends TestCase {
 		$this->assertSame([], $event->getModifiedData());
 	}//end testForeignSchemaIsIgnored()
 
+	/**
+	 * Event types this listener does not stamp — a foreign event class and
+	 * an UPDATE of a foreign schema — pass through untouched.
+	 *
+	 * @return void
+	 */
+	public function testForeignEventTypesAndForeignUpdatesAreIgnored(): void {
+		// Neither creating nor updating: not this listener's subject.
+		$foreign = new class extends \OCP\EventDispatcher\Event {
+		};
+		$this->listener->handle($foreign);
+
+		// An update of a non-Timesheet schema: the update arm's own gate.
+		$entity = new ObjectEntity();
+		$entity->setSchema('TimeEntry');
+		$entity->setObject(['startedAt' => '2026-05-04T09:00:00Z']);
+		$event = new ObjectUpdatingEvent($entity, $entity);
+		$this->listener->handle($event);
+
+		$this->assertFalse($event->isPropagationStopped());
+		$this->assertSame([], $event->getModifiedData());
+	}//end testForeignEventTypesAndForeignUpdatesAreIgnored()
+
+	/**
+	 * An update that omits employeeId derives the identity caches from the
+	 * STORED employee link — omitting a field must never detach the caches.
+	 *
+	 * @return void
+	 */
+	public function testUpdateWithoutIncomingEmployeeIdDerivesFromTheStoredOne(): void {
+		$modified = $this->update(
+			['period' => '2026-05', 'status' => 'draft', 'description' => 'bijgewerkt'],
+			['employeeId' => 'employee-jansen', 'period' => '2026-05', 'status' => 'draft']
+		);
+
+		$this->assertSame('admin', $modified['userId'], 'Derived from the STORED employeeId.');
+		$this->assertSame('ADM-001', $modified['administrationId']);
+	}//end testUpdateWithoutIncomingEmployeeIdDerivesFromTheStoredOne()
+
+	/**
+	 * A create without any employee link keeps the caches empty (nothing to
+	 * derive from) — and still forces draft.
+	 *
+	 * @return void
+	 */
+	public function testCreateWithoutEmployeeIdKeepsEmptyCaches(): void {
+		$event = new ObjectCreatingEvent($this->timesheetEntity([
+			'period' => '2026-05',
+			'userId' => 'attacker',
+		]));
+		$this->listener->handle($event);
+
+		$modified = $event->getModifiedData();
+		$this->assertSame('draft', $modified['status']);
+		$this->assertNull($modified['userId'], 'No employee link: the cache is NULL, never the client value.');
+		$this->assertNull($modified['managerUserId']);
+	}//end testCreateWithoutEmployeeIdKeepsEmptyCaches()
+
+	/**
+	 * A DANGLING employee link keeps the stored caches — an unresolvable
+	 * Employee and an infra failure are indistinguishable here, and wiping
+	 * possibly-valid values on a flake would be worse (REQ-MHS-002).
+	 *
+	 * @return void
+	 */
+	public function testDanglingEmployeeLinkKeepsStoredCaches(): void {
+		$modified = $this->update(
+			['employeeId' => 'employee-gone', 'period' => '2026-05', 'status' => 'draft'],
+			[
+				'employeeId' => 'employee-gone',
+				'period' => '2026-05',
+				'status' => 'draft',
+				'userId' => 'previous-user',
+				'managerUserId' => 'previous-manager',
+				'administrationId' => 'ADM-009',
+			]
+		);
+
+		$this->assertSame('previous-user', $modified['userId']);
+		$this->assertSame('previous-manager', $modified['managerUserId']);
+		$this->assertSame('ADM-009', $modified['administrationId']);
+	}//end testDanglingEmployeeLinkKeepsStoredCaches()
+
+	/**
+	 * A THROWING chain lookup during cache derivation is logged and the
+	 * fallback values are kept — while a failure OUTSIDE the derive (the
+	 * stored-state load) fails closed with the generic refusal.
+	 *
+	 * @return void
+	 */
+	public function testChainFailureKeepsFallbackAndStoredLoadFailureRefuses(): void {
+		$gateway = $this->createMock(HoursRegisterGateway::class);
+		$gateway->method('resolveSchemaSlug')->willReturn('timesheet');
+		$gateway->method('findObjectData')->willThrowException(new \RuntimeException('register down'));
+
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+
+		$listener = new TimesheetProcessStampListener(
+			gateway: $gateway,
+			userSession: $session,
+			marker: new InternalWriteMarker(),
+			logger: new NullLogger()
+		);
+
+		// CREATE: the throwing lookup happens INSIDE deriveIdentityCaches —
+		// logged, fallback kept, the write itself goes through as draft.
+		$event = new ObjectCreatingEvent($this->timesheetEntity([
+			'employeeId' => 'employee-jansen',
+			'period' => '2026-05',
+		]));
+		$listener->handle($event);
+		$this->assertFalse($event->isPropagationStopped());
+		$this->assertSame('draft', $event->getModifiedData()['status']);
+		$this->assertNull($event->getModifiedData()['userId']);
+
+		// UPDATE without a resolvable old object: the stored-state load
+		// throws OUTSIDE the derive — fail closed.
+		$event = new ObjectUpdatingEvent(
+			$this->timesheetEntity(['employeeId' => 'employee-jansen', 'period' => '2026-05'], 'ts-1'),
+			null
+		);
+		$listener->handle($event);
+		$this->assertTrue($event->isPropagationStopped());
+		$this->assertStringContainsString('niet worden verwerkt', (string)$event->getErrors()['message']);
+	}//end testChainFailureKeepsFallbackAndStoredLoadFailureRefuses()
+
 }//end class

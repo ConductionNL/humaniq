@@ -201,4 +201,51 @@ class OrgResolutionServiceTest extends TestCase {
 		$this->assertFalse($this->service->isActiveOn(['endDate' => '2020-01-01'], '2026-08-21'));
 	}//end testMalformedDatesAreTreatedAsAbsent()
 
+	/**
+	 * An unparseable REFERENCE date falls back to today — a caller handing a
+	 * malformed onDate gets today's activeness, never a crash or vacuous no.
+	 *
+	 * @return void
+	 */
+	public function testUnparseableReferenceDateFallsBackToToday(): void {
+		$this->assertTrue($this->service->isActiveOn(['startDate' => '2020-01-01', 'endDate' => ''], 'geen-datum'));
+		$this->assertFalse($this->service->isActiveOn(['endDate' => '2020-01-01'], 'geen-datum'), 'A long-ended placement is inactive against today.');
+	}//end testUnparseableReferenceDateFallsBackToToday()
+
+	/**
+	 * Malformed index shapes resolve to nothing, never to an error: an empty
+	 * employeeId, a non-array assignments entry, and a placement without an
+	 * orgUnitId all contribute zero hops.
+	 *
+	 * @return void
+	 */
+	public function testMalformedIndexShapesResolveNothing(): void {
+		$unitsById = ['unit-1' => ['managerId' => 'employee-m', 'costCenter' => 'CC-1']];
+		$employeesById = ['employee-m' => ['nextcloudUserId' => 'manager1']];
+
+		$this->assertSame([], $this->service->resolveManagerUserIds(
+			employeeId: '',
+			assignmentsByEmployeeId: ['employee-x' => [['orgUnitId' => 'unit-1']]],
+			unitsById: $unitsById,
+			employeesById: $employeesById,
+			onDate: '2026-08-21'
+		), 'An empty employeeId resolves nothing.');
+
+		$this->assertSame([], $this->service->resolveManagerUserIds(
+			employeeId: 'employee-x',
+			assignmentsByEmployeeId: ['employee-x' => 'not-an-array'],
+			unitsById: $unitsById,
+			employeesById: $employeesById,
+			onDate: '2026-08-21'
+		), 'A non-array assignments entry resolves nothing.');
+
+		$this->assertSame([], $this->service->resolveManagerUserIds(
+			employeeId: 'employee-x',
+			assignmentsByEmployeeId: ['employee-x' => [['orgUnitId' => '', 'endDate' => '']]],
+			unitsById: $unitsById,
+			employeesById: $employeesById,
+			onDate: '2026-08-21'
+		), 'A placement without an orgUnitId contributes no hop.');
+	}//end testMalformedIndexShapesResolveNothing()
+
 }//end class

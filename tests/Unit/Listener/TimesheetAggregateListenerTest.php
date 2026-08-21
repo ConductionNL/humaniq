@@ -208,4 +208,53 @@ class TimesheetAggregateListenerTest extends TestCase {
 		$this->assertSame(0, $this->store->state->objects['Timesheet']['ts-a']['hours']);
 	}//end testInternalWritesAreSkipped()
 
+	/**
+	 * An event type this listener does not know is a no-op — the subject
+	 * resolution answers "no entities" rather than guessing.
+	 *
+	 * @return void
+	 */
+	public function testForeignEventTypeTriggersNothing(): void {
+		$this->listener->handle(
+			new class extends \OCP\EventDispatcher\Event {
+			}
+		);
+
+		$this->assertCount(0, $this->store->state->saves);
+	}//end testForeignEventTypeTriggersNothing()
+
+	/**
+	 * A failing recompute NEVER breaks the save path that triggered it — it
+	 * is logged and swallowed; the next entry write self-heals.
+	 *
+	 * @return void
+	 */
+	public function testRecomputeFailureNeverBreaksTheSavePath(): void {
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('hrmq');
+
+		$aggregation = $this->createMock(TimesheetAggregationService::class);
+		$aggregation->method('recomputeForTimesheet')->willThrowException(new \RuntimeException('register down'));
+
+		$logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('warning')
+			->with($this->stringContains('could not recompute aggregates'));
+
+		$listener = new TimesheetAggregateListener(
+			aggregationService: $aggregation,
+			marker: $this->marker,
+			gateway: new HoursRegisterGateway(
+				container: new FakeContainer(['OCA\OpenRegister\Db\SchemaMapper' => new FakeSchemaMapper()]),
+				settingsService: $settings,
+				orgResolution: new OrgResolutionService()
+			),
+			logger: $logger
+		);
+
+		$listener->handle(new ObjectCreatedEvent($this->entryEntity(['timesheetId' => 'ts-a', 'hours' => 8.0])));
+
+		$this->assertCount(0, $this->store->state->saves, 'The failure is contained; nothing else is written.');
+	}//end testRecomputeFailureNeverBreaksTheSavePath()
+
 }//end class
