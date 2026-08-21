@@ -190,7 +190,7 @@
                     "schema": "EmploymentContract",
                     "slug": "contract-jansen-permanent"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "type": "permanent",
                 "writtenContract": true,
                 "startDate": "2024-01-01",
@@ -207,8 +207,8 @@
                     "slug": "gendoc-arbeidsovereenkomst-jansen"
                 },
                 "documentType": "arbeidsovereenkomst",
-                "employeeId": "employee-jansen",
-                "contractId": "contract-jansen-permanent",
+                "employeeId": "@ref:employee-jansen",
+                "contractId": "@ref:contract-jansen-permanent",
                 "templateRef": "docudesk-template-placeholder-uuid",
                 "status": "generated",
                 "filePath": "arbeidsovereenkomst-EMP-0001-2026-01-15.pdf",
@@ -222,7 +222,7 @@
                     "slug": "gendoc-werkgeversverklaring-jansen-skipped"
                 },
                 "documentType": "werkgeversverklaring",
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "contractId": null,
                 "templateRef": null,
                 "status": "skipped-no-docudesk",
@@ -236,7 +236,7 @@
                     "schema": "Jaaropgaaf",
                     "slug": "jaaropgaaf-jansen-2026"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "year": 2026,
                 "totalGrossPay": 3800.0,
                 "totalLoonheffing": 1102.0,
@@ -256,9 +256,9 @@
                     "slug": "gendoc-loonstrook-jansen-2026-05"
                 },
                 "documentType": "loonstrook",
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "contractId": null,
-                "payslipId": "payslip-jansen-2026-05",
+                "payslipId": "@ref:payslip-jansen-2026-05",
                 "jaaropgaafId": null,
                 "templateRef": "docudesk-template-placeholder-uuid",
                 "status": "generated",

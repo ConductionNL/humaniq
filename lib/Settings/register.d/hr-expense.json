@@ -307,7 +307,7 @@
                     "schema": "ReceiptExtraction",
                     "slug": "receiptextraction-devries-lunch"
                 },
-                "expenseId": "expense-devries-lunch-receipt",
+                "expenseId": "@ref:expense-devries-lunch-receipt",
                 "status": "extracted",
                 "overallConfidence": 0.92,
                 "extractedAmount": 32.75,
