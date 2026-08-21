@@ -77,6 +77,12 @@ export default {
 		 * module docblock).
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec exclude Untouched behaviourally — this method appears in the diff
+		 * only because an eslint 10 rule flagged its unused catch binding
+		 * (`catch (e)` -> `catch`). No lifecycle requirement covers a
+		 * best-effort refetch backstop, so anchoring one here would assert a
+		 * traceability that does not exist.
 		 */
 		async onReload() {
 			if (!this.store || typeof this.store.fetchObject !== 'function') return
