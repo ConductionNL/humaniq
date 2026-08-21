@@ -1,0 +1,280 @@
+{
+	"pageTemplates": [
+		{
+			"id": "indexScaffold",
+			"_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the one shape every hrmq index page shares — a schema-bound CnIndexPage with columns/sort and no widgets. All 58 index pages instantiate this template; the only variance is the presence of the optional keys below, which expandPageTemplates() drops from the expanded page when the instantiation omits them (exact-match placeholder + absent optional param). `filters` is optional because the nine Mijn* self-service pages and VerzuimOverzicht pin their result set with `filter` alone and offer no user-facing filter bar. `actions` (page-level create buttons, e.g. PayrollRuns' 'Loonrun aanmaken') and `note` (the page's own maintainer prose, landing as config._note) ride along as ordinary parameters so an instantiation stays the single complete description of its page.",
+			"params": [
+				{ "name": "id", "required": true },
+				{ "name": "route", "required": true },
+				{ "name": "title", "required": true },
+				{ "name": "register", "required": true },
+				{ "name": "schema", "required": true },
+				{ "name": "columns", "required": true },
+				{ "name": "sort", "required": true },
+				{ "name": "filters", "required": false },
+				{ "name": "filter", "required": false },
+				{ "name": "description", "required": false },
+				{ "name": "allowCreate", "required": false },
+				{ "name": "actionToggles", "required": false },
+				{ "name": "defaultFilters", "required": false },
+				{ "name": "note", "required": false },
+				{ "name": "actions", "required": false }
+			],
+			"page": {
+				"id": "{{id}}",
+				"route": "{{route}}",
+				"type": "index",
+				"title": "{{title}}",
+				"actions": "{{actions}}",
+				"config": {
+					"register": "{{register}}",
+					"schema": "{{schema}}",
+					"_note": "{{note}}",
+					"description": "{{description}}",
+					"filter": "{{filter}}",
+					"filters": "{{filters}}",
+					"defaultFilters": "{{defaultFilters}}",
+					"columns": "{{columns}}",
+					"sort": "{{sort}}",
+					"allowCreate": "{{allowCreate}}",
+					"actionToggles": "{{actionToggles}}"
+				}
+			}
+		},
+		{
+			"id": "simpleDetailScaffold",
+			"_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the two-panel leaf detail — one `data` panel 8-wide beside one `related` panel 4-wide, equal heights, metadata sidebar, no child collections. 17 detail pages share this exact grid (verified coordinate-identical, only gridHeight varies with field count). Workflow affordances are parameters, not structure: a page whose schema declares x-openregister-lifecycle passes `lifecycleActions` (its own transitions list) and one with server-side document/API actions passes `headerActions`; both keys are dropped from the expanded page when absent. Each instantiation's `note` param carries that page's full original maintainer prose verbatim (relocated intact per the fragment-pipeline change; the shared two-panel rationale lives here so the per-page notes no longer need to restate it).",
+			"params": [
+				{ "name": "id", "required": true },
+				{ "name": "route", "required": true },
+				{ "name": "title", "required": true },
+				{ "name": "register", "required": true },
+				{ "name": "schema", "required": true },
+				{ "name": "dataTitle", "required": true },
+				{ "name": "dataIcon", "required": true },
+				{ "name": "relatedTitle", "required": true },
+				{ "name": "gridHeight", "required": true },
+				{ "name": "note", "required": false },
+				{ "name": "include", "required": false },
+				{ "name": "exclude", "required": false },
+				{ "name": "overrides", "required": false },
+				{ "name": "headerActions", "required": false },
+				{ "name": "lifecycleActions", "required": false }
+			],
+			"page": {
+				"id": "{{id}}",
+				"route": "{{route}}",
+				"type": "detail",
+				"title": "{{title}}",
+				"config": {
+					"register": "{{register}}",
+					"schema": "{{schema}}",
+					"_note": "{{note}}",
+					"sidebar": {
+						"enabled": true,
+						"showMetadata": true
+					},
+					"headerActions": "{{headerActions}}",
+					"lifecycleActions": "{{lifecycleActions}}",
+					"widgets": [
+						{
+							"id": "data",
+							"type": "data",
+							"title": "{{dataTitle}}",
+							"icon": "{{dataIcon}}",
+							"content": {
+								"columns": 2,
+								"include": "{{include}}",
+								"exclude": "{{exclude}}",
+								"overrides": "{{overrides}}",
+								"title": "{{dataTitle}}"
+							}
+						},
+						{
+							"id": "related",
+							"type": "related",
+							"title": "{{relatedTitle}}",
+							"icon": "LinkVariant",
+							"content": {
+								"title": "{{relatedTitle}}"
+							}
+						}
+					],
+					"layout": [
+						{
+							"id": 1,
+							"widgetId": "data",
+							"gridX": 0,
+							"gridY": 0,
+							"gridWidth": 8,
+							"gridHeight": "{{gridHeight}}"
+						},
+						{
+							"id": 2,
+							"widgetId": "related",
+							"gridX": 8,
+							"gridY": 0,
+							"gridWidth": 4,
+							"gridHeight": "{{gridHeight}}"
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": "dualDataScaffold",
+			"_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the outcome-record detail — a 4-column `data` status strip (include + read-only overrides) over a 2-column `data` body panel (exclude), with `related` filling the right rail at the two panels' combined height. 5 filing/ledger-style pages share this exact grid (status strip fixed at height 3; body and rail heights are the two height parameters). Pages whose transitions are user-driven pass `lifecycleActions`; GeneratedDocumentDetail alone passes `hiddenTabs` to keep the sidebar's Files tab (its stored PDF) while hiding Notes/Tags/Tasks — see its own note param for why. Each instantiation's `note` param carries that page's full original maintainer prose verbatim.",
+			"params": [
+				{ "name": "id", "required": true },
+				{ "name": "route", "required": true },
+				{ "name": "title", "required": true },
+				{ "name": "register", "required": true },
+				{ "name": "schema", "required": true },
+				{ "name": "statusTitle", "required": true },
+				{ "name": "statusIcon", "required": true },
+				{ "name": "statusInclude", "required": true },
+				{ "name": "statusOverrides", "required": true },
+				{ "name": "dataTitle", "required": true },
+				{ "name": "dataIcon", "required": true },
+				{ "name": "dataExclude", "required": true },
+				{ "name": "dataHeight", "required": true },
+				{ "name": "relatedHeight", "required": true },
+				{ "name": "note", "required": false },
+				{ "name": "hiddenTabs", "required": false },
+				{ "name": "lifecycleActions", "required": false }
+			],
+			"page": {
+				"id": "{{id}}",
+				"route": "{{route}}",
+				"type": "detail",
+				"title": "{{title}}",
+				"config": {
+					"register": "{{register}}",
+					"schema": "{{schema}}",
+					"_note": "{{note}}",
+					"sidebar": {
+						"enabled": true,
+						"showMetadata": true,
+						"hiddenTabs": "{{hiddenTabs}}"
+					},
+					"lifecycleActions": "{{lifecycleActions}}",
+					"widgets": [
+						{
+							"id": "data",
+							"type": "data",
+							"title": "{{statusTitle}}",
+							"icon": "{{statusIcon}}",
+							"content": {
+								"columns": 4,
+								"include": "{{statusInclude}}",
+								"title": "{{statusTitle}}",
+								"overrides": "{{statusOverrides}}"
+							}
+						},
+						{
+							"id": "data-2",
+							"type": "data",
+							"title": "{{dataTitle}}",
+							"icon": "{{dataIcon}}",
+							"content": {
+								"columns": 2,
+								"exclude": "{{dataExclude}}",
+								"title": "{{dataTitle}}"
+							}
+						},
+						{
+							"id": "related",
+							"type": "related",
+							"title": "Related",
+							"icon": "LinkVariant",
+							"content": {
+								"title": "Related"
+							}
+						}
+					],
+					"layout": [
+						{
+							"id": 1,
+							"widgetId": "data",
+							"gridX": 0,
+							"gridY": 0,
+							"gridWidth": 8,
+							"gridHeight": 3
+						},
+						{
+							"id": 2,
+							"widgetId": "data-2",
+							"gridX": 0,
+							"gridY": 3,
+							"gridWidth": 8,
+							"gridHeight": "{{dataHeight}}"
+						},
+						{
+							"id": 3,
+							"widgetId": "related",
+							"gridX": 8,
+							"gridY": 0,
+							"gridWidth": 4,
+							"gridHeight": "{{relatedHeight}}"
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": "singleDataScaffold",
+			"_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the reference-data detail — one full-width (12-wide) 2-column `data` panel, metadata sidebar, no related rail and no child collections, for records that are pure lookup rows (norm functions, salary bands, integration accounts). The page title doubles as the widget and content title (true for all 3 instances). `allowCreate` and `include` ride along as optional parameters. Each instantiation's `note` param carries that page's full original maintainer prose verbatim.",
+			"params": [
+				{ "name": "id", "required": true },
+				{ "name": "route", "required": true },
+				{ "name": "title", "required": true },
+				{ "name": "register", "required": true },
+				{ "name": "schema", "required": true },
+				{ "name": "dataIcon", "required": true },
+				{ "name": "gridHeight", "required": true },
+				{ "name": "note", "required": false },
+				{ "name": "allowCreate", "required": false },
+				{ "name": "include", "required": false }
+			],
+			"page": {
+				"id": "{{id}}",
+				"route": "{{route}}",
+				"type": "detail",
+				"title": "{{title}}",
+				"config": {
+					"register": "{{register}}",
+					"schema": "{{schema}}",
+					"allowCreate": "{{allowCreate}}",
+					"_note": "{{note}}",
+					"sidebar": {
+						"enabled": true,
+						"showMetadata": true
+					},
+					"widgets": [
+						{
+							"id": "data",
+							"type": "data",
+							"title": "{{title}}",
+							"icon": "{{dataIcon}}",
+							"content": {
+								"columns": 2,
+								"include": "{{include}}",
+								"title": "{{title}}"
+							}
+						}
+					],
+					"layout": [
+						{
+							"id": 1,
+							"widgetId": "data",
+							"gridX": 0,
+							"gridY": 0,
+							"gridWidth": 12,
+							"gridHeight": "{{gridHeight}}"
+						}
+					]
+				}
+			}
+		}
+	]
+}

@@ -1,0 +1,224 @@
+[
+  {
+    "displayName": "Timesheet",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Timesheet",
+    "urlTemplate": "/apps/hrmq/timesheets/{uuid}"
+  },
+  {
+    "displayName": "Expense",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Expense",
+    "urlTemplate": "/apps/hrmq/expenses/{uuid}"
+  },
+  {
+    "displayName": "Employee",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Employee",
+    "urlTemplate": "/apps/hrmq/employees/{uuid}"
+  },
+  {
+    "displayName": "Employment Contract",
+    "registerSlug": "hrmq",
+    "schemaSlug": "EmploymentContract",
+    "urlTemplate": "/apps/hrmq/contracts/{uuid}"
+  },
+  {
+    "displayName": "Payslip",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Payslip",
+    "urlTemplate": "/apps/hrmq/payslips/{uuid}"
+  },
+  {
+    "displayName": "Payroll Run",
+    "registerSlug": "hrmq",
+    "schemaSlug": "PayrollRun",
+    "urlTemplate": "/apps/hrmq/payroll-runs/{uuid}"
+  },
+  {
+    "displayName": "Payroll Mutation Report",
+    "registerSlug": "hrmq",
+    "schemaSlug": "PayrollMutationReport",
+    "urlTemplate": "/apps/hrmq/payroll-mutations/{uuid}"
+  },
+  {
+    "displayName": "Wage Tax Filing",
+    "registerSlug": "hrmq",
+    "schemaSlug": "LoonaangifteFiling",
+    "urlTemplate": "/apps/hrmq/filings/{uuid}"
+  },
+  {
+    "displayName": "Pension Filing",
+    "registerSlug": "hrmq",
+    "schemaSlug": "PensionFiling",
+    "urlTemplate": "/apps/hrmq/pension-filings/{uuid}"
+  },
+  {
+    "displayName": "Payroll GL Post",
+    "registerSlug": "hrmq",
+    "schemaSlug": "PayrollGLPost",
+    "urlTemplate": "/apps/hrmq/gl-posts/{uuid}"
+  },
+  {
+    "displayName": "Payroll Payment Batch",
+    "registerSlug": "hrmq",
+    "schemaSlug": "PayrollPaymentBatch",
+    "urlTemplate": "/apps/hrmq/payment-batches/{uuid}"
+  },
+  {
+    "displayName": "Leave Request",
+    "registerSlug": "hrmq",
+    "schemaSlug": "LeaveRequest",
+    "urlTemplate": "/apps/hrmq/leave-requests/{uuid}"
+  },
+  {
+    "displayName": "Leave Balance",
+    "registerSlug": "hrmq",
+    "schemaSlug": "LeaveBalance",
+    "urlTemplate": "/apps/hrmq/leave-balances/{uuid}"
+  },
+  {
+    "displayName": "Sick Leave Case",
+    "registerSlug": "hrmq",
+    "schemaSlug": "SickLeaveCase",
+    "urlTemplate": "/apps/hrmq/sick-leave/{uuid}"
+  },
+  {
+    "displayName": "Onboarding",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Onboarding",
+    "urlTemplate": "/apps/hrmq/onboardings/{uuid}"
+  },
+  {
+    "displayName": "Stagiair",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Stagiair",
+    "urlTemplate": "/apps/hrmq/stagiairs/{uuid}"
+  },
+  {
+    "displayName": "Vacancy",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Vacancy",
+    "urlTemplate": "/apps/hrmq/vacancies/{uuid}"
+  },
+  {
+    "displayName": "Application",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Application",
+    "urlTemplate": "/apps/hrmq/applications/{uuid}"
+  },
+  {
+    "displayName": "Organisational Unit",
+    "registerSlug": "hrmq",
+    "schemaSlug": "OrgUnit",
+    "urlTemplate": "/apps/hrmq/org-units/{uuid}"
+  },
+  {
+    "displayName": "Organisational Assignment",
+    "registerSlug": "hrmq",
+    "schemaSlug": "OrgAssignment",
+    "urlTemplate": "/apps/hrmq/org-assignments/{uuid}"
+  },
+  {
+    "displayName": "Attendance Record",
+    "registerSlug": "hrmq",
+    "schemaSlug": "AttendanceRecord",
+    "urlTemplate": "/apps/hrmq/attendance/{uuid}"
+  },
+  {
+    "displayName": "Asset",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Asset",
+    "urlTemplate": "/apps/hrmq/assets/{uuid}"
+  },
+  {
+    "displayName": "Asset Assignment",
+    "registerSlug": "hrmq",
+    "schemaSlug": "AssetAssignment",
+    "urlTemplate": "/apps/hrmq/asset-assignments/{uuid}"
+  },
+  {
+    "displayName": "Review Cycle",
+    "registerSlug": "hrmq",
+    "schemaSlug": "ReviewCycle",
+    "urlTemplate": "/apps/hrmq/review-cycles/{uuid}"
+  },
+  {
+    "displayName": "Performance Review",
+    "registerSlug": "hrmq",
+    "schemaSlug": "PerformanceReview",
+    "urlTemplate": "/apps/hrmq/reviews/{uuid}"
+  },
+  {
+    "displayName": "Shift",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Shift",
+    "urlTemplate": "/apps/hrmq/shifts/{uuid}"
+  },
+  {
+    "displayName": "Roster",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Roster",
+    "urlTemplate": "/apps/hrmq/rosters/{uuid}"
+  },
+  {
+    "displayName": "Roster Assignment",
+    "registerSlug": "hrmq",
+    "schemaSlug": "RosterAssignment",
+    "urlTemplate": "/apps/hrmq/roster-assignments/{uuid}"
+  },
+  {
+    "displayName": "Objective",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Objective",
+    "urlTemplate": "/apps/hrmq/objectives/{uuid}"
+  },
+  {
+    "displayName": "Key Result",
+    "registerSlug": "hrmq",
+    "schemaSlug": "KeyResult",
+    "urlTemplate": "/apps/hrmq/key-results/{uuid}"
+  },
+  {
+    "displayName": "Salary Band",
+    "registerSlug": "hrmq",
+    "schemaSlug": "SalaryBand",
+    "urlTemplate": "/apps/hrmq/salary-bands/{uuid}"
+  },
+  {
+    "displayName": "Compensation Review Cycle",
+    "registerSlug": "hrmq",
+    "schemaSlug": "CompReviewCycle",
+    "urlTemplate": "/apps/hrmq/comp-review-cycles/{uuid}"
+  },
+  {
+    "displayName": "Compensation Adjustment",
+    "registerSlug": "hrmq",
+    "schemaSlug": "CompAdjustment",
+    "urlTemplate": "/apps/hrmq/comp-adjustments/{uuid}"
+  },
+  {
+    "displayName": "Leave Transaction",
+    "registerSlug": "hrmq",
+    "schemaSlug": "LeaveTransaction",
+    "urlTemplate": "/apps/hrmq/leave-transactions/{uuid}"
+  },
+  {
+    "displayName": "WKR Declaration",
+    "registerSlug": "hrmq",
+    "schemaSlug": "WkrDeclaration",
+    "urlTemplate": "/apps/hrmq/wkr-declarations/{uuid}"
+  },
+  {
+    "displayName": "WKR Assessment",
+    "registerSlug": "hrmq",
+    "schemaSlug": "WkrAssessment",
+    "urlTemplate": "/apps/hrmq/wkr-assessments/{uuid}"
+  },
+  {
+    "displayName": "Loonbeslag",
+    "registerSlug": "hrmq",
+    "schemaSlug": "Loonbeslag",
+    "urlTemplate": "/apps/hrmq/loonbeslagen/{uuid}"
+  }
+]

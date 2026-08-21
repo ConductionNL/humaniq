@@ -1,0 +1,52 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "BhvCertificering",
+			"params": {
+				"id": "BhvCertificeringen",
+				"route": "/bhv-certificeringen",
+				"title": "BHV-certificeringen",
+				"columns": [
+					"employeeId",
+					"rol",
+					"certificaatGeldigTot",
+					"orgUnitId"
+				],
+				"sort": {
+					"field": "certificaatGeldigTot",
+					"order": "asc"
+				},
+				"filters": [
+					"orgUnitId",
+					"rol"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "BHV-gerelateerde certificeringen per medewerker: rol, geldigheid en organisatie-eenheid. Geen numerieke dekkingsnorm -- de Arbowet (art. 15) vraagt een RI&E-gebaseerde, kwalitatieve beoordeling.",
+				"note": "bhv-organisatie (2026-07-17): coverage VISIBILITY, not a coverage formula (REQ-BHV-003/-004, design.md D2) -- this index lists who is currently certified, filterable/groupable by orgUnitId and rol, so HR/a safety officer can judge adequacy against their own RI&E. No red/green adequacy indicator, no computed ratio anywhere on this page."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "BhvCertificering",
+			"params": {
+				"id": "BhvCertificeringDetail",
+				"route": "/bhv-certificeringen/:id",
+				"title": "BHV-certificering",
+				"dataTitle": "Certificering",
+				"dataIcon": "ShieldCheckOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 6,
+				"note": "bhv-organisatie (2026-07-17): plain dated-fact record, no x-openregister-lifecycle (design.md D4) -- a renewal is a new BhvCertificering object, not a status transition, so this page carries NO lifecycleActions widget (the OrgUnitDetail/OrgAssignmentDetail precedent for lifecycle-less schemas). The 'Certificering' data widget excludes employeeId/orgUnitId since Related already resolves and links both by name (the EmployeeDetail exclude convention). No stat/files/comms leaves -- a certification record has no numeric headline aggregate or document field. Audit history is a sidebar tab.",
+				"exclude": [
+					"employeeId",
+					"orgUnitId"
+				]
+			}
+		}
+	]
+}

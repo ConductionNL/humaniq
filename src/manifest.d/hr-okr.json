@@ -1,0 +1,184 @@
+{
+	"pages": [
+		{
+			"id": "ObjectiveDetail",
+			"route": "/objectives/:id",
+			"type": "detail",
+			"title": "Objective",
+			"config": {
+				"register": "hrmq",
+				"schema": "Objective",
+				"_note": "goals-okr (2026-07-15): the measurable, cross-review sibling of PerformanceReviewDetail (ADR-001 Rule 6 — the primary surface is the EmployeeDetail emp-objectives row / ReviewCycleDetail rc-objectives row; this page is a routed detail, reached from those rows or the deepLink, and is deliberately NOT a menu child, the PerformanceReviewDetail/TimesheetDetail convention). The 'Objective' data widget carries title/ownerType/period/status/uitkomst/progress, excluding employeeId/orgUnitId/cycleId (Related resolves and links all three by name) and userId (the internal @me self-service field, not a display fact). The 'Key results' object-list (KeyResult.objectiveId = @objectId) lists this objective's measurable children, rowRoute to KeyResultDetail. lifecycleActions expose exactly activeren/afsluiten (concept->actief->afgesloten, hr-okr.json) -- no guard, no re-open edge, a closed objective is history (the ReviewCycle no-resurrection precedent). Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Objective",
+						"icon": "BullseyeArrow",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"orgUnitId",
+								"cycleId",
+								"userId"
+							],
+							"title": "Objective"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
+						"title": "Key results",
+						"icon": "TargetVariant",
+						"content": {
+							"register": "hrmq",
+							"schema": "KeyResult",
+							"filter": {
+								"objectiveId": "@objectId"
+							},
+							"sort": {
+								"field": "title",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Title"
+								},
+								{
+									"key": "currentValue",
+									"label": "Current"
+								},
+								{
+									"key": "targetValue",
+									"label": "Target"
+								},
+								{
+									"key": "unit",
+									"label": "Unit"
+								},
+								{
+									"key": "progress",
+									"label": "Progress"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "KeyResultDetail",
+							"emptyText": "No key results yet"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 9
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 9
+					},
+					{
+						"id": 3,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 9,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "activeren",
+							"from": [
+								"concept"
+							],
+							"to": "actief",
+							"label": "Activeren"
+						},
+						{
+							"action": "afsluiten",
+							"from": [
+								"actief"
+							],
+							"to": "afgesloten",
+							"label": "Afsluiten"
+						}
+					]
+				}
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "KeyResult",
+			"params": {
+				"id": "KeyResultDetail",
+				"route": "/key-results/:id",
+				"title": "Key Result",
+				"dataTitle": "Key result",
+				"dataIcon": "TargetVariant",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"note": "goals-okr (2026-07-15): a leaf under ObjectiveDetail's 'Key results' list (routed detail, reached from that row or the deepLink, deliberately NOT a menu child). The 'Key result' data widget carries title/unit/startValue/targetValue/currentValue/progress/status, excluding objectiveId and userId (Related resolves and links the parent Objective by name; userId is the internal @me-adjacent denorm field, not a display fact). No lifecycleActions -- KeyResult carries only a plain status enum, no x-openregister-lifecycle. Audit history is a sidebar tab.",
+				"exclude": [
+					"objectiveId",
+					"userId"
+				]
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Objective",
+			"params": {
+				"id": "MijnDoelen",
+				"route": "/mijn/doelen",
+				"title": "Mijn doelen",
+				"columns": [
+					"title",
+					"status",
+					"progress",
+					"cycleId"
+				],
+				"sort": {
+					"field": "title",
+					"order": "asc"
+				},
+				"filter": {
+					"userId": "@me"
+				},
+				"description": "Jouw eigen doelen en OKR's."
+			}
+		}
+	]
+}

@@ -1,0 +1,63 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Normfunctie",
+			"params": {
+				"id": "Normfuncties",
+				"route": "/normfuncties",
+				"title": "Functiehuis",
+				"columns": [
+					"functiecode",
+					"naam",
+					"functiegroep",
+					"caoSchaal",
+					"caoSchaalVerified"
+				],
+				"sort": {
+					"field": "functiecode",
+					"order": "asc"
+				},
+				"filters": [
+					"functiegroep"
+				],
+				"description": "HR21-normfuncties en hun gekoppelde Cao Gemeenten-schaal (illustratieve subset, geen volledige bibliotheek). Alleen-lezen referentiedata.",
+				"allowCreate": false,
+				"actionToggles": {
+					"showAdd": false,
+					"showFormDialog": false,
+					"showEditAction": false,
+					"showDeleteAction": false,
+					"showCopyAction": false,
+					"showMassImport": false,
+					"showMassCopy": false,
+					"showMassDelete": false
+				},
+				"note": "functiehuis-hr21 (2026-07-18): read-only HR21 (VNG municipal functiewaarderingssysteem) normfunctie reference index (ADR-001 Rule 1 sub-page under the existing Personeel menu, sibling of CAO's/Salarisschalen — the Caos allowCreate:false + actionToggles shape). Illustrative subset seeded by NlHr21Checks::seedObjects() -- explicitly NOT a claimed-complete ~150-function library (proposal.md 'Honesty about verification'). Rows navigate to NormfunctieDetail."
+			}
+		},
+		{
+			"templateRef": "singleDataScaffold",
+			"register": "hrmq",
+			"schema": "Normfunctie",
+			"params": {
+				"id": "NormfunctieDetail",
+				"route": "/normfuncties/:id",
+				"title": "Normfunctie",
+				"dataIcon": "BriefcaseOutline",
+				"gridHeight": 7,
+				"note": "functiehuis-hr21 (2026-07-18): read-only HR21 normfunctie reference detail (the CaoDetail allowCreate:false shape). The 'Normfunctie' data widget carries every field (functiecode/naam/functiegroep/caoSchaal/caoSchaalVerified/caoSchaalSource) -- no Related widget, since no other schema in hrmq references Normfunctie's own object identity here (EmploymentContract.normfunctieId points AT a Normfunctie, not the reverse). No lifecycleActions (Normfunctie has no x-openregister-lifecycle). No create/edit affordances (seeded reference data). Audit history is a sidebar tab.",
+				"allowCreate": false,
+				"include": [
+					"functiecode",
+					"naam",
+					"functiegroep",
+					"caoSchaal",
+					"caoSchaalVerified",
+					"caoSchaalSource"
+				]
+			}
+		}
+	]
+}

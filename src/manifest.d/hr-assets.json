@@ -1,0 +1,253 @@
+{
+	"pages": [
+		{
+			"id": "AssetDetail",
+			"route": "/assets/:id",
+			"type": "detail",
+			"title": "Asset",
+			"config": {
+				"register": "hrmq",
+				"schema": "Asset",
+				"_note": "asset-management-mvp (2026-07-13), field/enum names renamed to English and three vehicle-only fiscal fields added by hrmq-asset-fleet-merge (2026-08-19): a company-owned item with a guarded custody lifecycle (available -> issued -> checkedIn -> available, or available/checkedIn -> writtenOff, terminal -- the Expense precedent). The data widget shows every field including the three fiscal ones (listPrice/fuelType/companyCarTaxCategory) absorbed from the retired Vehicle schema, with hideEmpty so a non-vehicle Asset's detail page does not render them as empty (design.md D3); lifecycleActions expose exactly the four fragment transitions (issue/checkIn/release/writeOff), never invented. An FK-scoped 'Uitgiftes' object-list (AssetAssignment.assetId = @objectId) is the inbound-relation direction (D2) -- who has held this asset, ordered most-recent-first, rowRoute to AssetAssignmentDetail. The Files widget (signed uitgiftebonnen) runs full-width after the domain cards, the ExpenseDetail receipt placement. Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Asset",
+						"icon": "PackageVariantClosed",
+						"content": {
+							"columns": 2,
+							"hideEmpty": true,
+							"include": [
+								"name",
+								"category",
+								"serialNumber",
+								"licencePlate",
+								"purchaseDate",
+								"purchaseValue",
+								"status",
+								"active",
+								"listPrice",
+								"fuelType",
+								"companyCarTaxCategory"
+							],
+							"title": "Asset",
+							"overrides": {
+								"status": {
+									"editable": false
+								}
+							}
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
+						"title": "Uitgiftes",
+						"icon": "HandshakeOutline",
+						"content": {
+							"register": "hrmq",
+							"schema": "AssetAssignment",
+							"filter": {
+								"assetId": "@objectId"
+							},
+							"sort": {
+								"field": "issuedOn",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "issuedOn",
+									"label": "Uitgifte"
+								},
+								{
+									"key": "returnedOn",
+									"label": "Inname"
+								},
+								{
+									"key": "issueReceiptSigned",
+									"label": "Bon getekend"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "AssetAssignmentDetail",
+							"viewAllRoute": "AssetAssignments",
+							"viewAllQuery": {
+								"assetId": "@objectId"
+							},
+							"emptyText": "No uitgiftes yet"
+						}
+					},
+					{
+						"id": "files",
+						"type": "files",
+						"title": "Uitgiftebonnen",
+						"icon": "FolderOutline"
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": 3,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": 4,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 11,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "issue",
+							"from": [
+								"available"
+							],
+							"to": "issued",
+							"label": "Uitgeven"
+						},
+						{
+							"action": "checkIn",
+							"from": [
+								"issued"
+							],
+							"to": "checkedIn",
+							"label": "Innemen"
+						},
+						{
+							"action": "release",
+							"from": [
+								"checkedIn"
+							],
+							"to": "available",
+							"label": "Vrijgeven"
+						},
+						{
+							"action": "writeOff",
+							"from": [
+								"available",
+								"checkedIn"
+							],
+							"to": "writtenOff",
+							"label": "Afschrijven"
+						}
+					]
+				}
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Asset",
+			"params": {
+				"id": "Assets",
+				"route": "/assets",
+				"title": "Assets",
+				"columns": [
+					"name",
+					"category",
+					"status",
+					"serialNumber"
+				],
+				"sort": {
+					"field": "name",
+					"order": "asc"
+				},
+				"filters": [
+					"category",
+					"status"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Bedrijfseigendommen uitgegeven aan werknemers: laptops, telefoons, voertuigen, gereedschap, toegangspassen en kleding, met een bewaakte innamestatus."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "AssetAssignment",
+			"params": {
+				"id": "AssetAssignments",
+				"route": "/asset-assignments",
+				"title": "Uitgiftes",
+				"columns": [
+					"assetId",
+					"employeeId",
+					"issuedOn",
+					"returnedOn",
+					"issueReceiptSigned"
+				],
+				"sort": {
+					"field": "issuedOn",
+					"order": "desc"
+				},
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Effectief-gedateerde uitgiftes van assets aan werknemers."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "AssetAssignment",
+			"params": {
+				"id": "AssetAssignmentDetail",
+				"route": "/asset-assignments/:id",
+				"title": "Uitgifte",
+				"dataTitle": "Uitgifte",
+				"dataIcon": "HandshakeOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 5,
+				"note": "asset-management-mvp (2026-07-13), field names renamed and employeeContribution absorbed from the retired CarAssignment schema by hrmq-asset-fleet-merge (2026-08-19): a simple two-panel leaf like OrgAssignmentDetail -- the data widget (issuedOn/returnedOn/issueReceiptSigned/notes/employeeContribution, the last meaningful only when the referenced Asset is category vehicle) excludes assetId/employeeId since Related already resolves and links both the issued Asset and the receiving Employee by name; employeeContribution needs no explicit include -- the widget's exclude-only content shows every other property by default. No child lists (nothing references an AssetAssignment by FK). No lifecycleActions: AssetAssignment carries no x-openregister-lifecycle -- effective-dating lives on issuedOn/returnedOn, not a workflow status (design.md D1). Audit history is a sidebar tab.",
+				"exclude": [
+					"assetId",
+					"employeeId"
+				]
+			}
+		}
+	]
+}

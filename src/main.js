@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Conduction B.V.
 
 import {
+	buildManifest,
 	CnPageRenderer,
 	defaultPageTypes,
 	registerIcons,
@@ -14,6 +15,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import appIcons from './icons.js'
 import bundledManifest from './manifest.json'
+import menuLayout from './menu-layout.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
 
@@ -96,6 +98,26 @@ function tryLoadTranslations() {
 	}
 }
 
+// ADR-037/ADR-044 fragment pipeline: collect every src/manifest.d/*.json
+// fragment and let the library's shared buildManifest() merge them onto the
+// bundled base and apply menu-layout.json, then expand pageTemplates/
+// pageInstances into concrete pages. The base manifest.json is only the shell
+// ($schema/version/dependencies/deepLinks/runtime + menu group shells + the
+// 3 app-shell pages); everything else lives in manifest.d/ — see its README.
+//
+// `require.context` is a WEBPACK build-time API, not CommonJS `require`: the
+// bundler rewrites this call at compile time and no `require` exists at
+// runtime. eslint's browser globals therefore report `no-undef` correctly —
+// the code is right and the linter is right. Scoped to this one identifier so
+// a genuinely undefined name elsewhere in the file still fails.
+/* global require */
+const fragmentCtx = require.context('./manifest.d/', false, /\.json$/)
+const fragments = fragmentCtx
+	.keys()
+	.sort()
+	.map((key) => fragmentCtx(key))
+const mergedManifest = buildManifest(bundledManifest, fragments, menuLayout)
+
 // Shallow-clone CnPageRenderer before handing it to vue-router. The library's
 // barrel exports are frozen module records (nc-vue API friction, playbook
 // §4.1) and `markRaw` writes a `__v_skip` marker through
@@ -108,7 +130,7 @@ const RoutePageRenderer = markRaw({ ...CnPageRenderer })
  * Build the vue-router config from the manifest. Each manifest page becomes
  * one route; the route name IS page.id (per the lib's manifest contract).
  *
- * @param {object} manifest The bundled manifest (with `pages[]`).
+ * @param {object} manifest The merged manifest (with `pages[]`).
  * @return {Array<object>} vue-router 4 routes config.
  */
 function routesFromManifest(manifest) {
@@ -138,7 +160,7 @@ function routesFromManifest(manifest) {
 
 const router = createRouter({
 	history: createWebHistory(generateUrl('/apps/hrmq')),
-	routes: routesFromManifest(bundledManifest),
+	routes: routesFromManifest(mergedManifest),
 })
 
 tryLoadTranslations()
@@ -157,7 +179,7 @@ const registryProp = { ...registry }
 // with no manifest at all.
 const app = createApp({
 	render: () => h(App, {
-		manifest: bundledManifest,
+		manifest: mergedManifest,
 		registry: registryProp,
 		pageTypes: pageTypesProp,
 	}),

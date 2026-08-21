@@ -1,0 +1,213 @@
+{
+	"pages": [
+		{
+			"id": "SickLeaveCaseDetail",
+			"route": "/sick-leave/:id",
+			"type": "detail",
+			"title": "Ziekmelding",
+			"config": {
+				"register": "hrmq",
+				"schema": "SickLeaveCase",
+				"_note": "leave-verzuim-mvp (2026-07-12): administrative-only sickness case -- NO medical/diagnosis data exists on this schema or its widgets (REQ-VWP-002). The 'Case' data widget (firstSickDay/recoveredDate/status/wachtdag/loondoorbetalingPercentage) excludes employeeId since Related already resolves and links the sick Employee by name; the 'Poortwachter milestones' widget surfaces all eight Due/Done WVP dates (probleemanalyse/plan van aanpak/UWV 42-wekenmelding/eerstejaarsevaluatie) so the re-integration clock is the page's second headline fact. Files is labeled and described for gespreksverslagen & plan-van-aanpak process documents ONLY -- repeating the no-medical-data warning, matching the schema's own privacy stance. lifecycleActions expose exactly herstellen/heropenen (gemeld<->hersteld) -- no invented edges. Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Case",
+						"icon": "EmoticonSickOutline",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"probleemanalyseDue",
+								"probleemanalyseDone",
+								"planVanAanpakDue",
+								"planVanAanpakDone",
+								"uwv42WeekMeldingDue",
+								"uwv42WeekMeldingDone",
+								"eerstejaarsevaluatieDue",
+								"eerstejaarsevaluatieDone",
+								"currentAbsencePercentage",
+								"absenceProgression"
+							],
+							"title": "Case"
+						}
+					},
+					{
+						"id": "data-2",
+						"type": "data",
+						"title": "Poortwachter milestones",
+						"icon": "CalendarClock",
+						"content": {
+							"columns": 2,
+							"include": [
+								"probleemanalyseDue",
+								"probleemanalyseDone",
+								"planVanAanpakDue",
+								"planVanAanpakDone",
+								"uwv42WeekMeldingDue",
+								"uwv42WeekMeldingDone",
+								"eerstejaarsevaluatieDue",
+								"eerstejaarsevaluatieDone"
+							],
+							"title": "Poortwachter milestones"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "data-3",
+						"type": "data",
+						"title": "Work resumption",
+						"icon": "Timeline",
+						"content": {
+							"columns": 1,
+							"include": [
+								"currentAbsencePercentage",
+								"absenceProgression"
+							],
+							"title": "Work resumption"
+						}
+					},
+					{
+						"id": "files",
+						"type": "files",
+						"title": "Gespreksverslagen & plan van aanpak",
+						"icon": "FolderOutline"
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 5
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 8,
+						"gridHeight": 8
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 13
+					},
+					{
+						"id": 4,
+						"widgetId": "data-3",
+						"gridX": 0,
+						"gridY": 13,
+						"gridWidth": 12,
+						"gridHeight": 3
+					},
+					{
+						"id": 5,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 16,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "herstellen",
+							"from": [
+								"gemeld"
+							],
+							"to": "hersteld",
+							"label": "Herstellen"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"hersteld"
+							],
+							"to": "gemeld",
+							"label": "Heropenen"
+						}
+					]
+				}
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "SickLeaveCase",
+			"params": {
+				"id": "SickLeaveCases",
+				"route": "/sick-leave",
+				"title": "Ziekmeldingen",
+				"columns": [
+					"employeeId",
+					"firstSickDay",
+					"recoveredDate",
+					"status"
+				],
+				"sort": {
+					"field": "firstSickDay",
+					"order": "desc"
+				},
+				"filters": [
+					"status"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Ziektegevallen en de Wet-verbetering-poortwachter-mijlpalen (administratieve gegevens, geen medische gegevens)."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "SickLeaveCase",
+			"params": {
+				"id": "VerzuimOverzicht",
+				"route": "/verzuim",
+				"title": "Verzuimoverzicht",
+				"columns": [
+					"employeeId",
+					"firstSickDay",
+					"probleemanalyseDue",
+					"planVanAanpakDue",
+					"uwv42WeekMeldingDue",
+					"eerstejaarsevaluatieDue"
+				],
+				"sort": {
+					"field": "uwv42WeekMeldingDue",
+					"order": "asc"
+				},
+				"filter": {
+					"status": "gemeld",
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Open ziektegevallen gesorteerd op de UWV 42-wekenmelding-deadline (administratieve gegevens, geen medische gegevens).",
+				"note": "verzuim-analytics-widgets (2026-07-13): pre-filtered werkvoorraad, not a replacement for the unfiltered SickLeaveCases index (TimesheetApproval-vs-Timesheets precedent) -- fixed base filter (the MijnUren mechanism, not a togglable UI filter), sorted uwv42WeekMeldingDue ascending (ZW art. 38 — the most consequential open-case deadline), mirroring the LoonaangifteFilings deadline-asc queue. Rows navigate to the existing SickLeaveCaseDetail; no new detail page."
+			}
+		}
+	]
+}

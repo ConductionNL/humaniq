@@ -1,0 +1,338 @@
+{
+	"pages": [
+		{
+			"id": "ExpenseDetail",
+			"route": "/expenses/:id",
+			"type": "detail",
+			"title": "Declaratie",
+			"config": {
+				"register": "hrmq",
+				"schema": "Expense",
+				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab. receipt-ocr (2026-07-16): page-level action \"Extract receipt data\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/expenses/extract-receipt with {expenseId: @objectId}, guarded server-side by ExpenseController::authorizeExpense() (resolve-first RBAC) then an admin-or-owner ownership check.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
+						"title": "Claimed amount",
+						"icon": "CashMultiple",
+						"content": {
+							"label": "Claimed amount",
+							"caption": "to reimburse",
+							"icon": "CashMultiple",
+							"valueColor": "#46ba61",
+							"format": {
+								"style": "currency",
+								"currency": "EUR",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "Expense",
+								"metric": "sum",
+								"field": "amount",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "files",
+						"type": "files",
+						"title": "Receipt / bon",
+						"icon": "FolderOutline"
+					},
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Claim",
+						"icon": "ClipboardList",
+						"content": {
+							"columns": 2,
+							"include": [
+								"title",
+								"description",
+								"amount",
+								"currency",
+								"category",
+								"expenseDate",
+								"receiptFile",
+								"vendor",
+								"vatAmount"
+							],
+							"title": "Claim"
+						}
+					},
+					{
+						"id": "data-2",
+						"type": "data",
+						"title": "Approval",
+						"icon": "CheckCircleOutline",
+						"content": {
+							"columns": 2,
+							"include": [
+								"status",
+								"submittedAt",
+								"approvedBy",
+								"approvedAt",
+								"rejectionReason",
+								"reimbursedAt"
+							],
+							"title": "Approval",
+							"overrides": {
+								"status": {
+									"editable": false
+								},
+								"submittedAt": {
+									"editable": false
+								},
+								"approvedBy": {
+									"editable": false
+								},
+								"approvedAt": {
+									"editable": false
+								},
+								"reimbursedAt": {
+									"editable": false
+								}
+							}
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 2,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 3,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 4,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": 5,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 8
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "submit",
+							"from": [
+								"draft",
+								"rejected"
+							],
+							"to": "submitted",
+							"label": "Submit"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"submitted"
+							],
+							"to": "approved",
+							"label": "Approve"
+						},
+						{
+							"action": "reject",
+							"from": [
+								"submitted"
+							],
+							"to": "rejected",
+							"label": "Reject"
+						},
+						{
+							"action": "reimburse",
+							"from": [
+								"approved"
+							],
+							"to": "reimbursed",
+							"label": "Reimburse"
+						}
+					]
+				},
+				"headerActions": [
+					{
+						"id": "extract-receipt",
+						"label": "Extract receipt data",
+						"type": "api-call",
+						"icon": "TextRecognition",
+						"url": "/api/expenses/extract-receipt",
+						"method": "POST",
+						"params": {
+							"expenseId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Extraction started.",
+						"errorMessage": "Extraction failed."
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Expense",
+			"params": {
+				"id": "MijnDeclaraties",
+				"route": "/mijn/declaraties",
+				"title": "Mijn declaraties",
+				"columns": [
+					"title",
+					"amount",
+					"category",
+					"expenseDate",
+					"status"
+				],
+				"sort": {
+					"field": "expenseDate",
+					"order": "desc"
+				},
+				"filter": {
+					"userId": "@me",
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Jouw eigen declaraties."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Expense",
+			"params": {
+				"id": "Expenses",
+				"route": "/expenses",
+				"title": "Declaraties",
+				"columns": [
+					"employeeId",
+					"title",
+					"amount",
+					"category",
+					"expenseDate",
+					"status"
+				],
+				"sort": {
+					"field": "expenseDate",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"category"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Expense",
+			"params": {
+				"id": "ExpenseApproval",
+				"route": "/expenses/approval",
+				"title": "Declaratiegoedkeuring",
+				"columns": [
+					"employeeId",
+					"title",
+					"amount",
+					"category",
+					"submittedAt",
+					"status"
+				],
+				"sort": {
+					"field": "submittedAt",
+					"order": "asc"
+				},
+				"filters": [
+					"status",
+					"category"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Ingediende declaraties die wachten op goedkeuring of afkeuring.",
+				"defaultFilters": {
+					"status": "submitted"
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Expense",
+			"params": {
+				"id": "TeamDeclaratiegoedkeuring",
+				"route": "/expenses/team-approval",
+				"title": "Team-declaratiegoedkeuring",
+				"columns": [
+					"employeeId",
+					"title",
+					"amount",
+					"category",
+					"submittedAt",
+					"status"
+				],
+				"sort": {
+					"field": "submittedAt",
+					"order": "asc"
+				},
+				"filters": [
+					"status",
+					"category"
+				],
+				"filter": {
+					"managerUserId": "@me",
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Ingediende declaraties van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door HR/back-office bijgehouden managerUserId-koppeling.",
+				"defaultFilters": {
+					"status": "submitted"
+				}
+			}
+		}
+	]
+}

@@ -2,15 +2,26 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
-// validate-manifest.js — schema-validates src/manifest.json against the
-// @conduction/nextcloud-vue v2 app-manifest schema using Ajv.
+// validate-manifest.js — schema-validates hrmq's EFFECTIVE manifest against
+// the @conduction/nextcloud-vue v2 app-manifest schema using Ajv.
+//
+// Since hrmq-manifest-fragment-pipeline, src/manifest.json is only the shell
+// (~3 pages); the page surface lives in src/manifest.d/*.json fragments and
+// pageTemplates/pageInstances. This script therefore builds the effective
+// manifest first — base + fragments + the library's real buildManifest()
+// (which expands page templates) — via tests/verify-manifest-parity.js's
+// shared buildEffectiveManifest(), and validates THAT. Validating the base
+// file alone would still print PASS while covering ~3% of the actual page
+// surface, silently — exactly the failure mode the change's spec forbids.
+// The validated page count is printed so a coverage regression is visible in
+// this script's own output.
 //
 // Usage:
 //   node tests/validate-manifest.js
 //
 // Exit codes:
-//   0 — manifest validates against the schema with zero errors
-//   1 — manifest fails validation (or schema/manifest cannot be loaded)
+//   0 — effective manifest validates against the schema with zero errors
+//   1 — validation fails (or schema/manifest/fragments cannot be loaded)
 //
 // src/manifest.json declares the v2 schema ($schema → app-manifest-v2.schema.json),
 // so we validate against v2.
@@ -25,6 +36,7 @@
 
 const fs = require('fs')
 const path = require('path')
+const { buildEffectiveManifest } = require('./verify-manifest-parity.js')
 
 const REPO_ROOT = path.resolve(__dirname, '..')
 
@@ -62,7 +74,7 @@ function loadAjv() {
 	// entry point. Prefer Ajv 8 (`ajv/dist/2020`) when available; otherwise
 	// fall back to whichever ajv resolves first.
 	let Ajv2020 = null
-	let addFormats = null
+	let addFormats
 	const ajvCandidates = [
 		'ajv/dist/2020',
 		path.join(REPO_ROOT, 'node_modules', 'ajv-formats', 'node_modules', 'ajv', 'dist', '2020.js'),
@@ -132,10 +144,15 @@ function main() {
 		process.exit(1)
 	}
 
-	const manifest = loadJson(MANIFEST_PATH)
-	console.log(`[validate-manifest] manifest: ${MANIFEST_PATH}`)
+	// Build the EFFECTIVE manifest: base + src/manifest.d/*.json fragments +
+	// menu-layout.json through the library's real buildManifest() (including
+	// pageTemplates/pageInstances expansion). Shared implementation with the
+	// parity harness — one merge path, not two.
+	const basePageCount = (loadJson(MANIFEST_PATH).pages || []).length
+	const manifest = buildEffectiveManifest()
+	console.log(`[validate-manifest] base manifest: ${MANIFEST_PATH} (${basePageCount} shell pages)`)
 	console.log(`[validate-manifest] manifest.version: ${manifest.version}`)
-	console.log(`[validate-manifest] pages: ${(manifest.pages || []).length}`)
+	console.log(`[validate-manifest] effective pages validated: ${(manifest.pages || []).length} (base + manifest.d fragments + expanded page templates)`)
 
 	const schemaPath = findSchemaPath()
 	if (!schemaPath) {

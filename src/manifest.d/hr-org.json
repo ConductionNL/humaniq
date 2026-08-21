@@ -1,0 +1,240 @@
+{
+	"pages": [
+		{
+			"id": "OrgUnitDetail",
+			"route": "/org-units/:id",
+			"type": "detail",
+			"title": "Organisatie-eenheid",
+			"config": {
+				"register": "hrmq",
+				"schema": "OrgUnit",
+				"_note": "org-chart-basic (2026-07-13): hrmq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Organisatie-eenheid",
+						"icon": "SitemapOutline",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"parentUnitId",
+								"managerId"
+							],
+							"title": "Organisatie-eenheid"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
+						"title": "Child units",
+						"icon": "SitemapOutline",
+						"content": {
+							"register": "hrmq",
+							"schema": "OrgUnit",
+							"filter": {
+								"parentUnitId": "@objectId"
+							},
+							"sort": {
+								"field": "name",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Name"
+								},
+								{
+									"key": "type",
+									"label": "Type"
+								},
+								{
+									"key": "costCenter",
+									"label": "Cost center"
+								},
+								{
+									"key": "active",
+									"label": "Active"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "OrgUnitDetail",
+							"viewAllRoute": "OrgUnits",
+							"viewAllQuery": {
+								"parentUnitId": "@objectId"
+							},
+							"emptyText": "No child units yet"
+						}
+					},
+					{
+						"id": "object-list-2",
+						"type": "object-list",
+						"title": "Assignments",
+						"icon": "AccountArrowRightOutline",
+						"content": {
+							"register": "hrmq",
+							"schema": "OrgAssignment",
+							"filter": {
+								"orgUnitId": "@objectId"
+							},
+							"sort": {
+								"field": "startDate",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "role",
+									"label": "Role"
+								},
+								{
+									"key": "startDate",
+									"label": "Start"
+								},
+								{
+									"key": "endDate",
+									"label": "End"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "OrgAssignmentDetail",
+							"viewAllRoute": "OrgAssignments",
+							"viewAllQuery": {
+								"orgUnitId": "@objectId"
+							},
+							"emptyText": "No placements yet"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": 3,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 4,
+						"widgetId": "object-list-2",
+						"gridX": 6,
+						"gridY": 6,
+						"gridWidth": 6,
+						"gridHeight": 4
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "OrgUnit",
+			"params": {
+				"id": "OrgUnits",
+				"route": "/org-units",
+				"title": "Organisatie-eenheden",
+				"columns": [
+					"name",
+					"type",
+					"costCenter",
+					"managerId",
+					"active"
+				],
+				"sort": {
+					"field": "name",
+					"order": "asc"
+				},
+				"filters": [
+					"type",
+					"active"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Organisatiehiërarchie: afdelingen, teams en kostenplaatsen, elk optioneel onder een bovenliggende eenheid."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "OrgAssignment",
+			"params": {
+				"id": "OrgAssignments",
+				"route": "/org-assignments",
+				"title": "Plaatsingen",
+				"columns": [
+					"employeeId",
+					"orgUnitId",
+					"role",
+					"startDate",
+					"endDate"
+				],
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				},
+				"filters": [
+					"role"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Effectief-gedateerde plaatsingen van medewerkers in organisatie-eenheden."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "OrgAssignment",
+			"params": {
+				"id": "OrgAssignmentDetail",
+				"route": "/org-assignments/:id",
+				"title": "Plaatsing",
+				"dataTitle": "Plaatsing",
+				"dataIcon": "AccountArrowRightOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 5,
+				"note": "org-chart-basic (2026-07-13): a simple two-panel leaf like EmploymentContractDetail -- the data widget (role/startDate/endDate) excludes employeeId/orgUnitId since Related already resolves and links both the placed Employee and the OrgUnit by name. No child lists (nothing references an OrgAssignment by FK). No lifecycleActions: OrgAssignment carries no x-openregister-lifecycle -- effective-dating lives on startDate/endDate, not a workflow status (design.md D1). No files/calendar/comms leaves -- the schema declares no such linkedType or document field. Audit history is a sidebar tab.",
+				"exclude": [
+					"employeeId",
+					"orgUnitId"
+				]
+			}
+		}
+	]
+}

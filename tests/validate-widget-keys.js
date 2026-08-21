@@ -62,7 +62,7 @@
 //       declaration), which is a BUNDLER-TIME fact — you cannot determine it
 //       by reading nc-vue's src/ (a gate that greps source would FALSE-PASS
 //       "stat", which is exactly how this defect shipped). See
-//       `layer3_checkDashboardCatalogAgainstRealBuild()` below for the method
+//       `layer3CheckDashboardCatalogAgainstRealBuild()` below for the method
 //       this gate uses to establish that fact empirically, against the REAL
 //       built output, every run.
 //
@@ -98,9 +98,9 @@
 
 'use strict'
 
+const babelParser = require('@babel/parser')
 const fs = require('fs')
 const path = require('path')
-const babelParser = require('@babel/parser')
 const traverse = require('@babel/traverse').default
 
 const REPO_ROOT = path.resolve(__dirname, '..')
@@ -330,9 +330,14 @@ const PROBE_KEYS_MAX_BUILD_MS = 180000
  * @param {string} ncVuePkgDir absolute path to the installed nc-vue package.
  * @return {Promise<Record<string, boolean>>} key → resolved.
  */
-async function layer3_checkDashboardCatalogAgainstRealBuild(candidateKeys, ncVuePkgDir) {
+async function layer3CheckDashboardCatalogAgainstRealBuild(candidateKeys, ncVuePkgDir) {
 	const registerDashboardWidgetsPath = path.join(
-		ncVuePkgDir, 'dist', 'esm', 'components', 'CnWidgetGrid', 'registerDashboardWidgets.js',
+		ncVuePkgDir, 
+'dist', 
+'esm', 
+'components', 
+'CnWidgetGrid', 
+'registerDashboardWidgets.js',
 	)
 	if (!fs.existsSync(registerDashboardWidgetsPath)) {
 		throw new Error(`[validate-widget-keys] expected built nc-vue file missing: ${registerDashboardWidgetsPath}`)
@@ -398,7 +403,6 @@ function buildProbeBundle(entryPath, outDir) {
 		// module cache to worry about, but delete it anyway for safety if this
 		// function is ever called twice on the same process.
 		delete require.cache[require.resolve(WEBPACK_CONFIG_PATH)]
-		// eslint-disable-next-line global-require, import/no-dynamic-require
 		const webpackConfig = require(WEBPACK_CONFIG_PATH)
 		const webpack = require('webpack')
 
@@ -460,7 +464,7 @@ function buildProbeBundle(entryPath, outDir) {
  * @return {Record<string, boolean>} the probe's reported key → resolved map.
  */
 function executeProbeBundle(bundlePath) {
-	// eslint-disable-next-line global-require
+	 
 	const { JSDOM } = require('jsdom')
 	const dom = new JSDOM('<!doctype html><html><body><div id="content"></div></body></html>', {
 		url: 'http://localhost/apps/hrmq/',
@@ -486,7 +490,7 @@ function executeProbeBundle(bundlePath) {
 		} catch (_) {
 			try {
 				Object.defineProperty(global, key, { value: window[key], configurable: true, writable: true, enumerable: true })
-			} catch (_2) {
+			} catch {
 				// A handful of jsdom window getters throw when accessed detached
 				// from a real browsing context (e.g. `frameElement`) — skip those.
 			}
@@ -507,7 +511,6 @@ function executeProbeBundle(bundlePath) {
 	})
 
 	delete require.cache[bundlePath]
-	// eslint-disable-next-line global-require, import/no-dynamic-require
 	require(bundlePath)
 
 	const result = globalThis.__WIDGET_PROBE_RESULT__
@@ -526,10 +529,18 @@ async function main() {
 		console.error(`[validate-widget-keys] manifest not found: ${MANIFEST_PATH}`)
 		process.exit(1)
 	}
-	const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'))
+	// Collect widgetKeys from the EFFECTIVE manifest (base + manifest.d
+	// fragments + expanded page templates), not the base shell alone. Since
+	// hrmq-manifest-fragment-pipeline the base carries only 3 pages; reading
+	// it alone silently narrowed this gate from 9 distinct widget keys to 3
+	// and turned a red baseline green — the exact silent-coverage-loss defect
+	// tests/validate-manifest.js was fixed for. Same shared merge path.
+	 
+	const { buildEffectiveManifest } = require('./verify-manifest-parity.js')
+	const manifest = buildEffectiveManifest()
 	const usages = collectManifestWidgetKeys(manifest)
 	const allKeys = [...usages.keys()].sort()
-	console.log(`[validate-widget-keys] manifest: ${MANIFEST_PATH}`)
+	console.log(`[validate-widget-keys] effective manifest (base + manifest.d + templates): ${(manifest.pages || []).length} pages`)
 	console.log(`[validate-widget-keys] distinct widgetKeys used: ${allKeys.length} (${allKeys.join(', ')})`)
 
 	// Layer 1
@@ -550,12 +561,12 @@ async function main() {
 
 	const layer3Candidates = allKeys.filter((key) => !resolvedBy.has(key))
 
-	let layer3Result = {}
+	let layer3Result
 	if (layer3Candidates.length > 0) {
 		console.log(`[validate-widget-keys] layer 3 candidates needing a real build check: ${layer3Candidates.join(', ')}`)
 		console.log('[validate-widget-keys] building throwaway probe bundle against the REAL installed @conduction/nextcloud-vue (USE_LOCAL_LIB=false, NODE_ENV=production)…')
 		try {
-			layer3Result = await layer3_checkDashboardCatalogAgainstRealBuild(layer3Candidates, ncVuePkgDir)
+			layer3Result = await layer3CheckDashboardCatalogAgainstRealBuild(layer3Candidates, ncVuePkgDir)
 		} catch (err) {
 			// Fail CLOSED: an inconclusive build/execution is never a pass.
 			console.error('[validate-widget-keys] layer 3 check could not complete — treating all pending keys as UNRESOLVED.')
