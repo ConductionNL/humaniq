@@ -69,7 +69,9 @@ final class BracketOp extends AbstractOp {
 	 * @param array<string, mixed> $spec The declared spec.
 	 * @param StepContext $ctx The run context.
 	 *
-	 * @return int|float
+	 * @return float The affine result. Never an int: the sole return divides by
+	 *         100 and adds a float constant, so the value is always a float even
+	 *         when the arithmetic happens to land on a whole number.
 	 *
 	 * @throws DslException When the mode/unit is unknown or the table is malformed.
 	 */
