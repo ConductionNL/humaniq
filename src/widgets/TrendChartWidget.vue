@@ -64,27 +64,27 @@
 <template>
 	<CnWidgetWrapper
 		:title="title"
-		:widget-id="widgetId"
-		:documentation-url="documentationUrl"
+		:widgetId="widgetId"
+		:documentationUrl="documentationUrl"
 		flush>
 		<CnChartWidget
 			v-if="endpointSource"
 			v-bind="$attrs"
 			:series="nullSafeSeries"
 			:categories="nullSafeCategories"
-			:widget-id="widgetId" />
+			:widgetId="widgetId" />
 		<!-- No endpointSource configured (the two dataSource-native trend
 		     widgets, Billable ratio / Headcount & turnover): CnChartWidget's
 		     OWN dataSource handling has no equivalent null-coercion bug in
 		     scope for THIS change (neither widget carries a null-sensitive
 		     metric), so it is forwarded through unmodified. -->
-		<CnChartWidget v-else v-bind="$attrs" :widget-id="widgetId" />
+		<CnChartWidget v-else v-bind="$attrs" :widgetId="widgetId" />
 	</CnWidgetWrapper>
 </template>
 
 <script>
-import { computed } from 'vue'
 import { CnChartWidget, CnWidgetWrapper, useEndpointSource } from '@conduction/nextcloud-vue'
+import { computed } from 'vue'
 
 export default {
 	name: 'TrendChartWidget',
@@ -107,16 +107,19 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/** Widget id, merged in by CnWidgetGrid's `props.widgetId` — drives the `cn:widget:refresh` bus target on both the wrapper's Refresh action and the chart's own subscription. */
 		widgetId: {
 			type: String,
 			default: '',
 		},
+
 		/** Optional docs link surfaced in the wrapper's overflow Actions menu. */
 		documentationUrl: {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * Null-safe endpoint binding. Same shape CnChartWidget's own
 		 * `endpointSource` prop takes (`{url, method?, params?,
@@ -131,6 +134,7 @@ export default {
 			type: Object,
 			default: null,
 		},
+
 		/**
 		 * Per-item field name read as the x-axis category label — the
 		 * ARRAY-payload sibling of CnChartWidget's own `endpointSource.labelsPath`.
@@ -139,6 +143,7 @@ export default {
 			type: String,
 			default: 'date',
 		},
+
 		/**
 		 * One series per entry: `{name, path}` — `path` is the per-item
 		 * field name read as that series' value. The ARRAY-payload sibling

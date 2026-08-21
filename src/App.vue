@@ -24,19 +24,19 @@
 -->
 <template>
 	<CnAppRoot
-		:ai-companion="true"
+		:aiCompanion="true"
 		:manifest="effectiveManifest"
 		:registry="registry"
-		:page-types="pageTypes"
-		app-id="hrmq"
+		:pageTypes="pageTypes"
+		appId="hrmq"
 		:translate="translateForApp" />
 </template>
 
 <script>
-import { ref, provide } from 'vue'
-import { translate as ncT } from '@nextcloud/l10n'
-import { loadState } from '@nextcloud/initial-state'
 import { CnAppRoot } from '@conduction/nextcloud-vue'
+import { loadState } from '@nextcloud/initial-state'
+import { translate as ncT } from '@nextcloud/l10n'
+import { provide, ref } from 'vue'
 
 export default {
 	name: 'App',
@@ -50,10 +50,12 @@ export default {
 			type: Object,
 			required: true,
 		},
+
 		registry: {
 			type: Object,
 			default: () => ({}),
 		},
+
 		pageTypes: {
 			type: Object,
 			default: () => ({}),

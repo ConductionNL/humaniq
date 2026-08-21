@@ -43,7 +43,7 @@
 <template>
 	<CnLifecycleActions
 		:object="objectData"
-		:object-id="objectId"
+		:objectId="objectId"
 		:config="config"
 		@reload="onReload" />
 </template>
@@ -83,7 +83,7 @@ export default {
 			if (!this.objectType || !this.objectId) return
 			try {
 				await this.store.fetchObject(this.objectType, String(this.objectId))
-			} catch (e) {
+			} catch {
 				// Best-effort only — the live-update subscription is the
 				// primary refresh path; a failed backstop fetch is not fatal.
 			}
