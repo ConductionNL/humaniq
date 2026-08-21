@@ -17,15 +17,10 @@
       <code><![CDATA[PayrollRunApprovedGuard]]></code>
       <code><![CDATA[PayrollRunApprovedGuard]]></code>
       <code><![CDATA[PayrollRunApprovedGuard]]></code>
+      <code><![CDATA[TimesheetNotEmptyGuard]]></code>
+      <code><![CDATA[TimesheetNotEmptyGuard]]></code>
+      <code><![CDATA[TimesheetNotEmptyGuard]]></code>
     </MissingDependency>
-    <UndefinedClass>
-      <code><![CDATA[ObjectUpdatedEvent]]></code>
-    </UndefinedClass>
-  </file>
-  <file src="lib/Listener/TimesheetApprovalListener.php">
-    <UndefinedClass>
-      <code><![CDATA[ObjectUpdatedEvent]]></code>
-    </UndefinedClass>
   </file>
   <file src="lib/Service/RuleAuditService.php">
     <EmptyArrayAccess>

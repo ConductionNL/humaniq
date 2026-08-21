@@ -29,6 +29,7 @@ parameters:
         - lib/Lifecycle/LeaveSettlementPeriodGuard.php
         - lib/Lifecycle/NoSelfApprovalGuard.php
         - lib/Lifecycle/PayrollRunApprovedGuard.php
+        - lib/Lifecycle/TimesheetNotEmptyGuard.php
 
     ignoreErrors:
         # AuthorizedAdminSetting's constructor is typed

@@ -81,3 +81,16 @@ if (class_exists('OCA\\OpenRegister\\Service\\ObjectService') === false) {
 if (class_exists('OCA\\OpenRegister\\Db\\SchemaMapper') === false) {
 	require __DIR__ . '/stubs/OpenRegisterSchemaMapperStub.php';
 }
+
+// Same rule, different classes: the hours-process listeners
+// (TimeEntryStampListener, TimesheetProcessStampListener,
+// TimesheetAggregateListener) consume OpenRegister's object lifecycle events
+// and ObjectEntity. The stub file mirrors their REAL API (not name-only) so
+// the standalone suite can drive the listeners' decision logic; each class is
+// individually class_exists()-guarded inside the stub, so the real classes
+// always win in a full server checkout.
+if (class_exists('OCA\\OpenRegister\\Event\\ObjectCreatingEvent') === false
+	|| class_exists('OCA\\OpenRegister\\Event\\ObjectUpdatedEvent') === false
+) {
+	require __DIR__ . '/stubs/OpenRegisterObjectEventsStub.php';
+}

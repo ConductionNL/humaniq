@@ -51,6 +51,12 @@
                 <referencedClass name="OCA\DAV\CalDAV\CalDavBackend"/>
                 <!-- Cross-app classes: OpenRegister and DocuDesk are only available
                      at runtime once those apps are installed alongside hrmq -->
+                <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectCreatingEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectDeletingEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatingEvent"/>
                 <referencedClass name="OCA\OpenRegister\Lifecycle\GuardResult"/>
                 <referencedClass name="OCA\OpenRegister\Lifecycle\LifecycleGuardInterface"/>
                 <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
