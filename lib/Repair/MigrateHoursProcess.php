@@ -60,8 +60,6 @@ declare(strict_types=1);
 
 namespace OCA\Hrmq\Repair;
 
-use DateTimeImmutable;
-use DateTimeZone;
 use OCA\Hrmq\Service\InternalWriteMarker;
 use OCA\Hrmq\Service\OrgResolutionService;
 use OCA\Hrmq\Service\SettingsService;
@@ -135,8 +133,16 @@ class MigrateHoursProcess implements IRepairStep {
 		}
 
 		try {
-			$summary = $this->migrate();
+			$summary = $this->runner()->runAsActingUser(fn (): array => $this->migrate());
 		} catch (\Throwable $e) {
+			if ($this->runner()->deferIfMaintenanceDenied($e, 'OCA\Hrmq\BackgroundJob\CompleteHoursMigrationJob') === true) {
+				$message = 'hrmq: hours-process migration deferred to a background job '
+					. '(object folders are unreachable while maintenance mode is on).';
+				$output->info($message);
+				$this->logger->info($message);
+				return;
+			}
+
 			$this->logger->warning(
 				'hrmq: hours-process migration failed',
 				['exception' => $e->getMessage()]
@@ -154,6 +160,28 @@ class MigrateHoursProcess implements IRepairStep {
 		$output->info($line);
 		$this->logger->info($line);
 	}//end run()
+
+	/**
+	 * Run the full migration pass for the background-job completion vehicle.
+	 *
+	 * @return array{processed: int, entriesCreated: int, unresolvableUserLinks: int} The summary counters.
+	 *
+	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+	 */
+	public function runDeferred(): array {
+		return $this->runner()->runAsActingUser(fn (): array => $this->migrate());
+	}//end runDeferred()
+
+	/**
+	 * The lazily resolved execution-context runner (acting user + deferral).
+	 *
+	 * @return \OCA\Hrmq\Service\HoursMigrationRunner The runner.
+	 *
+	 * @spec exclude Trivial lazy container accessor; behaviour lives on HoursMigrationRunner.
+	 */
+	private function runner(): \OCA\Hrmq\Service\HoursMigrationRunner {
+		return $this->container->get(\OCA\Hrmq\Service\HoursMigrationRunner::class);
+	}//end runner()
 
 	/**
 	 * The migration pass. Public-facing summary counts; exactly one caller
@@ -244,7 +272,7 @@ class MigrateHoursProcess implements IRepairStep {
 				assignmentsByEmployeeId: $assignmentsByEmployeeId,
 				unitsById: $unitsById,
 				employeesById: $employeesById,
-				onDate: (new DateTimeImmutable('today'))->format('Y-m-d')
+				onDate: gmdate('Y-m-d')
 			)
 		);
 
@@ -298,13 +326,13 @@ class MigrateHoursProcess implements IRepairStep {
 		}
 
 		$hours = (float)($timesheet['hours'] ?? 0);
-		$endedAt = $startedAt->modify(sprintf('+%d seconds', (int)round($hours * 3600)));
+		$endedAt = ($startedAt + (int)round($hours * 3600));
 
 		$entry = [
 			'employeeId' => trim((string)($timesheet['employeeId'] ?? '')),
 			'timesheetId' => $timesheetId,
-			'startedAt' => $startedAt->format('Y-m-d\TH:i:s\Z'),
-			'endedAt' => $endedAt->format('Y-m-d\TH:i:s\Z'),
+			'startedAt' => gmdate('Y-m-d\TH:i:s\Z', $startedAt),
+			'endedAt' => gmdate('Y-m-d\TH:i:s\Z', $endedAt),
 			'breakMinutes' => 0,
 			'hours' => round($hours, 2),
 			'description' => (string)($timesheet['description'] ?? ''),
@@ -336,21 +364,19 @@ class MigrateHoursProcess implements IRepairStep {
 	 *
 	 * @param string $period The period string.
 	 *
-	 * @return DateTimeImmutable|null The UTC start, or null when unparseable.
+	 * @return int|null The UTC start timestamp, or null when unparseable.
 	 */
-	private function periodStart(string $period): ?DateTimeImmutable {
-		$utc = new DateTimeZone('UTC');
-
+	private function periodStart(string $period): ?int {
 		if (preg_match('/^(\d{4})-(\d{2})$/', $period, $match) === 1) {
-			return new DateTimeImmutable(sprintf('%s-%s-01T00:00:00', $match[1], $match[2]), $utc);
+			$start = strtotime(sprintf('%s-%s-01T00:00:00Z', $match[1], $match[2]));
+			return ($start === false) ? null : $start;
 		}
 
 		if (preg_match('/^(\d{4})-W(\d{2})(?:-(\d))?$/', $period, $match) === 1) {
+			// strtotime understands ISO week dates; anchor to UTC midnight.
 			$day = isset($match[3]) === true ? (int)$match[3] : 1;
-
-			return (new DateTimeImmutable('now', $utc))
-				->setISODate((int)$match[1], (int)$match[2], $day)
-				->setTime(0, 0, 0);
+			$start = strtotime(sprintf('%d-W%02d-%dT00:00:00Z', (int)$match[1], (int)$match[2], $day));
+			return ($start === false) ? null : $start;
 		}
 
 		return null;

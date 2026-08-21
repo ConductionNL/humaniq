@@ -340,3 +340,16 @@ namespace OCA\OpenRegister\Event {
 		}//end class
 	}//end if
 }//end namespace
+
+namespace OCA\OpenRegister\Exception {
+
+	if (class_exists('OCA\OpenRegister\Exception\FolderAccessDeniedException') === false) {
+		/**
+		 * Standalone double of OpenRegister's folder-access denial, so the
+		 * HoursMigrationRunner deferral classification is testable without a
+		 * live server. Mirrors only the surface hrmq consumes (the type).
+		 */
+		class FolderAccessDeniedException extends \Exception {
+		}//end class
+	}//end if
+}//end namespace

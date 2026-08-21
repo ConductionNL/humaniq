@@ -12,22 +12,19 @@
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [
-                    "employeeId",
                     "startedAt",
                     "endedAt"
                 ],
                 "properties": {
                     "employeeId": {
                         "type": "string",
-                        "format": "uuid",
                         "$ref": "Employee",
                         "title": "Employee",
                         "description": "The employee these hours were worked by.",
-                        "x-notes": "Self-service surfaces never show this field: TimeEntryStampListener resolves it from the signed-in user's own Employee record (nextcloudUserId match). The HR entry page (TimeEntries) offers it as a picker."
+                        "x-notes": "Self-service surfaces never show this field: TimeEntryStampListener resolves it from the signed-in user's own Employee record (nextcloudUserId match) and REFUSES the write when no employee is linked — the listener is the enforcement point, which is why the property is deliberately NOT in the schema's required list: OpenRegister validates required-ness BEFORE the pre-save creating event, so a schema-required employeeId would reject every self-service booking before the listener could resolve it. The HR entry page (TimeEntries) offers it as a picker. No format:uuid — object references carry the target's identifier, and seeded objects legitimately use slug-style identifiers (employee-jansen); the $ref is the contract, the format was a lie the validated write path started enforcing."
                     },
                     "timesheetId": {
                         "type": "string",
-                        "format": "uuid",
                         "$ref": "Timesheet",
                         "nullable": true,
                         "title": "Timesheet",
@@ -172,7 +169,6 @@
                 "properties": {
                     "employeeId": {
                         "type": "string",
-                        "format": "uuid",
                         "$ref": "Employee",
                         "title": "Employee",
                         "description": "The employee whose hours this timesheet collects.",
