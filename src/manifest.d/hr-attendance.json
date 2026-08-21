@@ -1,0 +1,99 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "AttendanceRecord",
+			"params": {
+				"id": "MijnAanwezigheid",
+				"route": "/mijn/aanwezigheid",
+				"title": "Mijn aanwezigheid",
+				"columns": [
+					"date",
+					"clockIn",
+					"clockOut",
+					"workedHours",
+					"status"
+				],
+				"sort": {
+					"field": "date",
+					"order": "desc"
+				},
+				"filter": {
+					"userId": "@me",
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Jouw eigen aanwezigheid."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "AttendanceRecord",
+			"params": {
+				"id": "AttendanceRecords",
+				"route": "/attendance",
+				"title": "Aanwezigheid",
+				"columns": [
+					"employeeId",
+					"date",
+					"clockIn",
+					"clockOut",
+					"workedHours",
+					"status"
+				],
+				"sort": {
+					"field": "date",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"location"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Klokregistraties per medewerker per werkdag, met de Arbeidstijdenwet-nalevingscontroles op rusttijd, maximale diensttijd en pauze."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "AttendanceRecord",
+			"params": {
+				"id": "AttendanceRecordDetail",
+				"route": "/attendance/:id",
+				"title": "Aanwezigheid",
+				"dataTitle": "Attendance",
+				"dataIcon": "ClockOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 6,
+				"note": "time-attendance-mvp (2026-07-13): raw per-day clock record (klokregistratie) -- AttendanceRecord is raw clock data, Timesheet stays the per-period approved-hours record (design D5, no automation between them). The 'Attendance' data widget excludes employeeId since Related already resolves and links the Employee by name. lifecycleActions expose exactly sluiten/heropenen (open<->gesloten, design D4) -- no invented approval edges (approval lives on Timesheet, not here). No files widget -- the schema carries no document/retention field (the EmploymentContractDetail no-fabricated-leaves reasoning). No stat KPI -- a single day's hours is not a headline aggregate (the LeaveRequestDetail precedent). No comms/calendar leaves. Audit history is a sidebar tab.",
+				"exclude": [
+					"employeeId"
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "sluiten",
+							"from": [
+								"open"
+							],
+							"to": "gesloten",
+							"label": "Sluiten"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"gesloten"
+							],
+							"to": "open",
+							"label": "Heropenen"
+						}
+					]
+				}
+			}
+		}
+	]
+}

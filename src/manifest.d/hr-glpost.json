@@ -1,0 +1,64 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "PayrollGLPost",
+			"params": {
+				"id": "PayrollGLPosts",
+				"route": "/gl-posts",
+				"title": "Loonjournaalposten",
+				"columns": [
+					"period",
+					"status",
+					"journalEntryId",
+					"postedAt"
+				],
+				"sort": {
+					"field": "postedAt",
+					"order": "desc"
+				},
+				"filters": [
+					"status"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Payroll-to-GL posting attempts: one balanced loonjournaalpost handed off to shillinq per approved loonrun."
+			}
+		},
+		{
+			"templateRef": "dualDataScaffold",
+			"register": "hrmq",
+			"schema": "PayrollGLPost",
+			"params": {
+				"id": "PayrollGLPostDetail",
+				"route": "/gl-posts/:id",
+				"title": "Loonjournaalpost",
+				"statusTitle": "Status",
+				"statusIcon": "CheckCircleOutline",
+				"statusInclude": [
+					"status",
+					"postedAt",
+					"errorMessage"
+				],
+				"statusOverrides": {
+					"status": {
+						"editable": false
+					},
+					"postedAt": {
+						"editable": false
+					}
+				},
+				"dataTitle": "GL post",
+				"dataIcon": "BookEditOutline",
+				"dataExclude": [
+					"payrollRunId"
+				],
+				"dataHeight": 8,
+				"relatedHeight": 11,
+				"note": "payroll-glpost-shillinq (2026-07-12): a PayrollGLPost is hrmq's log of ONE handoff attempt into shillinq's JournalEntry register -- never the journal itself (design.md D1). TimesheetDetail/PensionFilingDetail split: pg-status leads top-left with the prominent outcome facts (status/postedAt/errorMessage), pg-related sits top-right to resolve and link the referenced PayrollRun (a real $ref, unlike journalEntryId), then pg-data runs below with the remaining record fields including the journalNumber/journalEntryId pointer into shillinq (plain display only -- no cross-app deep link in MVP, per design.md's 'posted != materialised' risk note) and the lines snapshot. NO lifecycleActions: status has no x-openregister-lifecycle transition map -- PayrollGLPostService drives every transition server-side from `occ hrmq:glpost:run`, exactly the PayrollRunDetail precedent (never invent a user-facing transition the backend does not guard). No Files/calendar/comms leaves -- this is a system-generated audit record, not a document or event. Audit history is a sidebar tab."
+			}
+		}
+	]
+}

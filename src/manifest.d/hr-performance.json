@@ -1,0 +1,265 @@
+{
+	"pages": [
+		{
+			"id": "ReviewCycleDetail",
+			"route": "/review-cycles/:id",
+			"type": "detail",
+			"title": "Beoordelingscyclus",
+			"config": {
+				"register": "hrmq",
+				"schema": "ReviewCycle",
+				"_note": "performance-reviews-mvp (2026-07-13): the orchestration half of the performance-review MVP (ADR-001 Rule 6 — sub-pages under the EXISTING Personeel/EmployeesGroup, no new top-level menu). The 'Cycle' data widget carries every field (name/year/type/status/startDate/endDate — no $ref to exclude, ReviewCycle has no outbound relations). The 'Beoordelingen in deze cyclus' object-list (PerformanceReview.cycleId = @objectId) is the cycle's in-progress roster, rowRoute to PerformanceReviewDetail. lifecycleActions expose exactly openen/sluiten (concept->open->gesloten, hr-performance.json) -- no re-open edge, a closed cycle is history (the Vacancy no-resurrection precedent). Audit history is a sidebar tab. goals-okr (2026-07-15) adds the 'OKR's in deze cyclus' object-list (Objective.cycleId = @objectId) — the review-period tie: an OKR set can optionally be tied to a beoordelingscyclus.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Cycle",
+						"icon": "CalendarSyncOutline",
+						"content": {
+							"columns": 2,
+							"title": "Cycle"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
+						"title": "Beoordelingen in deze cyclus",
+						"icon": "ClipboardAccountOutline",
+						"content": {
+							"register": "hrmq",
+							"schema": "PerformanceReview",
+							"filter": {
+								"cycleId": "@objectId"
+							},
+							"sort": {
+								"field": "besprokenOp",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "rating",
+									"label": "Rating"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "PerformanceReviewDetail",
+							"emptyText": "No reviews in this cycle yet"
+						}
+					},
+					{
+						"id": "object-list-2",
+						"type": "object-list",
+						"title": "OKR's in deze cyclus",
+						"icon": "BullseyeArrow",
+						"content": {
+							"register": "hrmq",
+							"schema": "Objective",
+							"filter": {
+								"cycleId": "@objectId"
+							},
+							"sort": {
+								"field": "title",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Title"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "progress",
+									"label": "Progress"
+								},
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "ObjectiveDetail",
+							"emptyText": "No OKRs in this cycle yet"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": 3,
+						"widgetId": "object-list-2",
+						"gridX": 0,
+						"gridY": 11,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "openen",
+							"from": [
+								"concept"
+							],
+							"to": "open",
+							"label": "Openen"
+						},
+						{
+							"action": "sluiten",
+							"from": [
+								"open"
+							],
+							"to": "gesloten",
+							"label": "Sluiten"
+						}
+					]
+				}
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "ReviewCycle",
+			"params": {
+				"id": "ReviewCycles",
+				"route": "/review-cycles",
+				"title": "Beoordelingscycli",
+				"columns": [
+					"name",
+					"year",
+					"type",
+					"status",
+					"startDate",
+					"endDate"
+				],
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"type"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Beoordelingscycli (jaargesprekken, beoordelingen, tussentijdse gesprekken) waaronder PerformanceReview-dossiers per medewerker worden verzameld."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "PerformanceReview",
+			"params": {
+				"id": "PerformanceReviewDetail",
+				"route": "/reviews/:id",
+				"title": "Beoordeling",
+				"dataTitle": "Beoordeling",
+				"dataIcon": "ClipboardAccountOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 9,
+				"note": "performance-reviews-mvp (2026-07-13): the dossier half of the performance-review MVP (ADR-001 Rule 6 — the primary surface is actually the EmployeeDetail emp-reviews row; this page is a routed detail, reached from that row, the cycle's review list, or the deepLink, and is deliberately NOT a menu child, the TimesheetDetail convention). The 'Beoordeling' data widget carries rating/sterktes/ontwikkelpunten/afspraken/goals/besprokenOp/vastgesteldDoor, excluding employeeId/cycleId/reviewerId (Related resolves and links all three by name) and userId (the internal @me self-service field, not a display fact). Goals are recorded INSIDE this review (design D2 — no separate Goal entity anywhere in the register); besprokenOp/vastgesteldDoor are stamped on the carrying writes of bespreken/vaststellen. lifecycleActions expose exactly indienen/bespreken/vaststellen/heropenen (hr-performance.json) -- vaststellen is guarded server-side by the existing NoSelfApprovalGuard (the employee under review may not vaststellen their own beoordeling); heropenen is the correction edge back to besproken. Audit history is a sidebar tab.",
+				"exclude": [
+					"employeeId",
+					"cycleId",
+					"reviewerId",
+					"userId"
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "indienen",
+							"from": [
+								"concept"
+							],
+							"to": "ingediend",
+							"label": "Indienen"
+						},
+						{
+							"action": "bespreken",
+							"from": [
+								"ingediend"
+							],
+							"to": "besproken",
+							"label": "Bespreken"
+						},
+						{
+							"action": "vaststellen",
+							"from": [
+								"besproken"
+							],
+							"to": "vastgesteld",
+							"label": "Vaststellen"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"vastgesteld"
+							],
+							"to": "besproken",
+							"label": "Heropenen"
+						}
+					]
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "PerformanceReview",
+			"params": {
+				"id": "MijnBeoordelingen",
+				"route": "/mijn/beoordelingen",
+				"title": "Mijn beoordelingen",
+				"columns": [
+					"cycleId",
+					"status",
+					"rating",
+					"besprokenOp"
+				],
+				"sort": {
+					"field": "besprokenOp",
+					"order": "desc"
+				},
+				"filter": {
+					"userId": "@me",
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Jouw eigen beoordelingen."
+			}
+		}
+	]
+}

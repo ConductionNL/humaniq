@@ -1,0 +1,266 @@
+{
+	"pages": [
+		{
+			"id": "CompReviewCycleDetail",
+			"route": "/comp-review-cycles/:id",
+			"type": "detail",
+			"title": "Beloningscyclus",
+			"config": {
+				"register": "hrmq",
+				"schema": "CompReviewCycle",
+				"_note": "comp-cycles (2026-07-15): the round-container half of the compensation-review MVP (ADR-001 Rule 6 sub-page under the existing Personeel menu, the ReviewCycleDetail precedent). The 'Cyclus' data widget carries every field (name/period/effectiveDate/status/description — no $ref to exclude). The 'Voorstellen in deze cyclus' object-list (CompAdjustment.cycleId = @objectId) is the round's in-progress roster, rowRoute to CompAdjustmentDetail. lifecycleActions expose exactly sluiten (open->closed, hr-comp.json) -- no reopen edge, a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent); approval/effectuation lives per-adjustment, not here. The 'Aanpassing voorstellen' open-form action opens a plain CompAdjustment create form -- verified: this manifest version has no declarative field-prefill primitive (no existing open-form action in the codebase carries default field values), so cycleId is entered on the created form rather than auto-seeded, a deliberate scope-down from design.md's aspirational 'scoped to the cycle' prose. Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Cyclus",
+						"icon": "CalendarRange",
+						"content": {
+							"columns": 2,
+							"title": "Cyclus"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
+						"title": "Voorstellen in deze cyclus",
+						"icon": "CashPlus",
+						"content": {
+							"register": "hrmq",
+							"schema": "CompAdjustment",
+							"filter": {
+								"cycleId": "@objectId"
+							},
+							"sort": {
+								"field": "effectiveDate",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "proposedSalary",
+									"label": "Proposed"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "CompAdjustmentDetail",
+							"emptyText": "No adjustments in this cycle yet"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "sluiten",
+							"from": [
+								"open"
+							],
+							"to": "closed",
+							"label": "Sluiten"
+						}
+					]
+				},
+				"headerActions": [
+					{
+						"id": "propose-comp-adjustment",
+						"label": "Aanpassing voorstellen",
+						"type": "open-form",
+						"icon": "PlusCircleOutline",
+						"register": "hrmq",
+						"schema": "CompAdjustment",
+						"onSuccessRoute": "CompAdjustmentDetail",
+						"successMessage": "Beloningsvoorstel aangemaakt."
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "SalaryBand",
+			"params": {
+				"id": "SalaryBands",
+				"route": "/salary-bands",
+				"title": "Salarisschalen",
+				"columns": [
+					"bandId",
+					"title",
+					"grade",
+					"minSalary",
+					"maxSalary",
+					"currency",
+					"active"
+				],
+				"sort": {
+					"field": "bandId",
+					"order": "asc"
+				},
+				"filters": [
+					"active",
+					"grade"
+				],
+				"description": "Interne salarisschalen (min/richt/max brutomaandsalaris in centen) waartegen beloningsvoorstellen worden getoetst. Alleen-lezen referentiedata.",
+				"allowCreate": false,
+				"actionToggles": {
+					"showAdd": false,
+					"showFormDialog": false,
+					"showEditAction": false,
+					"showDeleteAction": false,
+					"showCopyAction": false,
+					"showMassImport": false,
+					"showMassCopy": false,
+					"showMassDelete": false
+				},
+				"note": "comp-cycles (2026-07-15): read-only internal salary-band reference index (ADR-001 Rule 6 sub-page under the existing Personeel menu, sibling of CAO's — the Caos allowCreate:false + actionToggles shape). Bands are the employer's own internal min/reference/max structure, not an external market benchmark (explicitly out of scope). Rows navigate to SalaryBandDetail."
+			}
+		},
+		{
+			"templateRef": "singleDataScaffold",
+			"register": "hrmq",
+			"schema": "SalaryBand",
+			"params": {
+				"id": "SalaryBandDetail",
+				"route": "/salary-bands/:id",
+				"title": "Salarisschaal",
+				"dataIcon": "CurrencyEur",
+				"gridHeight": 7,
+				"note": "comp-cycles (2026-07-15): read-only internal salary-band reference detail (the CaoDetail allowCreate:false shape). The 'Salarisschaal' data widget carries every field (bandId/title/grade/minSalary/referenceSalary/maxSalary/currency/cao/caoSchaal/effectiveFrom/active) — no Related widget, since cao/caoSchaal are plain string links into the CAO corpus (mirroring EmploymentContract.cao), not $ref relations. No lifecycleActions (SalaryBand has no x-openregister-lifecycle). No create/edit affordances — bands are authored reference data. Audit history is a sidebar tab.",
+				"allowCreate": false
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "CompReviewCycle",
+			"params": {
+				"id": "CompReviewCycles",
+				"route": "/comp-review-cycles",
+				"title": "Beloningscycli",
+				"columns": [
+					"name",
+					"period",
+					"effectiveDate",
+					"status"
+				],
+				"sort": {
+					"field": "period",
+					"order": "desc"
+				},
+				"filters": [
+					"status"
+				],
+				"description": "Periodieke beloningsronden waaronder per-medewerker beloningsvoorstellen (CompAdjustment) worden verzameld.",
+				"actions": [
+					{
+						"id": "create-comp-cycle",
+						"label": "Beloningscyclus aanmaken",
+						"type": "open-form",
+						"icon": "PlusCircleOutline",
+						"register": "hrmq",
+						"schema": "CompReviewCycle",
+						"onSuccessRoute": "CompReviewCycleDetail",
+						"successMessage": "Beloningscyclus aangemaakt."
+					}
+				]
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "CompAdjustment",
+			"params": {
+				"id": "CompAdjustmentDetail",
+				"route": "/comp-adjustments/:id",
+				"title": "Beloningsvoorstel",
+				"dataTitle": "Aanpassing",
+				"dataIcon": "CashPlus",
+				"relatedTitle": "Related",
+				"gridHeight": 9,
+				"note": "comp-cycles (2026-07-15): the per-employee proposal half of the compensation-review MVP (ADR-001 Rule 6 — reached from EmployeeDetail's emp-comp-adjustments row, the cycle's adjustment list, or the deepLink; deliberately NOT a menu child, the PerformanceReviewDetail/TimesheetDetail convention). The 'Aanpassing' data widget carries currentSalary/proposedSalary/effectiveDate/status/rationale/proposedBy/approvedBy/appliedAt, excluding cycleId/employeeId/contractId/targetBandId (Related resolves and links all four by name). lifecycleActions expose ONLY propose/approve/reject (hr-comp.json) — approve/reject are guarded server-side by the reused NoSelfApprovalGuard (the proposer may not approve/reject their own proposal). effectuate is deliberately NOT exposed as a plain lifecycleActions button: D5/D7 gate the write (within-band + the Employee.grossMonthlySalary stamp) inside CompAdjustmentService, and CompEffectiveDateGuard alone is read-only, so a bare declarative transition would flip status to effective without ever writing the salary (the orphaned-capability trap) — the ONLY effectuate path is the guarded 'Effectueren' api-call action (POST /api/comp/effectuate, CompController::effectuate, the PayrollRunDetail '(Her)berekenen' precedent). Audit history is a sidebar tab.",
+				"exclude": [
+					"cycleId",
+					"employeeId",
+					"contractId",
+					"targetBandId"
+				],
+				"headerActions": [
+					{
+						"id": "effectueren",
+						"label": "Effectueren",
+						"type": "api-call",
+						"icon": "CashCheck",
+						"url": "/api/comp/effectuate",
+						"method": "POST",
+						"params": {
+							"adjustmentId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Beloningsvoorstel geëffectueerd; het brutomaandsalaris is bijgewerkt.",
+						"errorMessage": "Effectueren van het beloningsvoorstel is mislukt."
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "propose",
+							"from": [
+								"draft"
+							],
+							"to": "proposed",
+							"label": "Voorstellen"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"proposed"
+							],
+							"to": "approved",
+							"label": "Goedkeuren"
+						},
+						{
+							"action": "reject",
+							"from": [
+								"proposed"
+							],
+							"to": "draft",
+							"label": "Afwijzen"
+						}
+					]
+				}
+			}
+		}
+	]
+}

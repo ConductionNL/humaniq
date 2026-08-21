@@ -1,0 +1,547 @@
+[
+  {
+    "id": "Administraties",
+    "route": "/configuratie/administraties",
+    "type": "custom"
+  },
+  {
+    "id": "ApplicationDetail",
+    "route": "/applications/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Applications",
+    "route": "/applications",
+    "type": "index"
+  },
+  {
+    "id": "AssetAssignmentDetail",
+    "route": "/asset-assignments/:id",
+    "type": "detail"
+  },
+  {
+    "id": "AssetAssignments",
+    "route": "/asset-assignments",
+    "type": "index"
+  },
+  {
+    "id": "AssetDetail",
+    "route": "/assets/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Assets",
+    "route": "/assets",
+    "type": "index"
+  },
+  {
+    "id": "AttendanceRecordDetail",
+    "route": "/attendance/:id",
+    "type": "detail"
+  },
+  {
+    "id": "AttendanceRecords",
+    "route": "/attendance",
+    "type": "index"
+  },
+  {
+    "id": "BhvCertificeringDetail",
+    "route": "/bhv-certificeringen/:id",
+    "type": "detail"
+  },
+  {
+    "id": "BhvCertificeringen",
+    "route": "/bhv-certificeringen",
+    "type": "index"
+  },
+  {
+    "id": "CaoDetail",
+    "route": "/caos/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Caos",
+    "route": "/caos",
+    "type": "index"
+  },
+  {
+    "id": "CompAdjustmentDetail",
+    "route": "/comp-adjustments/:id",
+    "type": "detail"
+  },
+  {
+    "id": "CompReviewCycleDetail",
+    "route": "/comp-review-cycles/:id",
+    "type": "detail"
+  },
+  {
+    "id": "CompReviewCycles",
+    "route": "/comp-review-cycles",
+    "type": "index"
+  },
+  {
+    "id": "Dashboard",
+    "route": "/dashboard",
+    "type": "dashboard"
+  },
+  {
+    "id": "DsrRequestDetail",
+    "route": "/dsr-requests/:id",
+    "type": "detail"
+  },
+  {
+    "id": "DsrRequests",
+    "route": "/dsr-requests",
+    "type": "index"
+  },
+  {
+    "id": "EmployeeDetail",
+    "route": "/employees/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Employees",
+    "route": "/employees",
+    "type": "index"
+  },
+  {
+    "id": "EmploymentContractDetail",
+    "route": "/contracts/:id",
+    "type": "detail"
+  },
+  {
+    "id": "EmploymentContracts",
+    "route": "/contracts",
+    "type": "index"
+  },
+  {
+    "id": "ExpenseApproval",
+    "route": "/expenses/approval",
+    "type": "index"
+  },
+  {
+    "id": "ExpenseDetail",
+    "route": "/expenses/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Expenses",
+    "route": "/expenses",
+    "type": "index"
+  },
+  {
+    "id": "GeneratedDocumentDetail",
+    "route": "/documents/:id",
+    "type": "detail"
+  },
+  {
+    "id": "GeneratedDocuments",
+    "route": "/documents",
+    "type": "index"
+  },
+  {
+    "id": "IntegrationAccountDetail",
+    "route": "/configuratie/integraties/:id",
+    "type": "detail"
+  },
+  {
+    "id": "IntegrationAccounts",
+    "route": "/configuratie/integraties",
+    "type": "index"
+  },
+  {
+    "id": "InterviewDetail",
+    "route": "/interviews/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Interviews",
+    "route": "/interviews",
+    "type": "index"
+  },
+  {
+    "id": "JaaropgaafDetail",
+    "route": "/jaaropgaven/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Jaaropgaven",
+    "route": "/jaaropgaven",
+    "type": "index"
+  },
+  {
+    "id": "KeyResultDetail",
+    "route": "/key-results/:id",
+    "type": "detail"
+  },
+  {
+    "id": "LeaveApproval",
+    "route": "/leave-requests/approval",
+    "type": "index"
+  },
+  {
+    "id": "LeaveBalances",
+    "route": "/leave-balances",
+    "type": "index"
+  },
+  {
+    "id": "LeaveRequestDetail",
+    "route": "/leave-requests/:id",
+    "type": "detail"
+  },
+  {
+    "id": "LeaveRequests",
+    "route": "/leave-requests",
+    "type": "index"
+  },
+  {
+    "id": "LeaveTransactionDetail",
+    "route": "/leave-transactions/:id",
+    "type": "detail"
+  },
+  {
+    "id": "LoonaangifteFilingDetail",
+    "route": "/filings/:id",
+    "type": "detail"
+  },
+  {
+    "id": "LoonaangifteFilings",
+    "route": "/filings",
+    "type": "index"
+  },
+  {
+    "id": "LoonbeslagDetail",
+    "route": "/loonbeslagen/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Loonbeslagen",
+    "route": "/loonbeslagen",
+    "type": "index"
+  },
+  {
+    "id": "MijnAanwezigheid",
+    "route": "/mijn/aanwezigheid",
+    "type": "index"
+  },
+  {
+    "id": "MijnBeoordelingen",
+    "route": "/mijn/beoordelingen",
+    "type": "index"
+  },
+  {
+    "id": "MijnDeclaraties",
+    "route": "/mijn/declaraties",
+    "type": "index"
+  },
+  {
+    "id": "MijnDoelen",
+    "route": "/mijn/doelen",
+    "type": "index"
+  },
+  {
+    "id": "MijnGebruikelijkLoon",
+    "route": "/mijn-hr/gebruikelijk-loon",
+    "type": "dashboard"
+  },
+  {
+    "id": "MijnLoonstroken",
+    "route": "/mijn/loonstroken",
+    "type": "index"
+  },
+  {
+    "id": "MijnUren",
+    "route": "/mijn/uren",
+    "type": "index"
+  },
+  {
+    "id": "MijnVerlof",
+    "route": "/mijn/verlof",
+    "type": "index"
+  },
+  {
+    "id": "MijnVerlofKopenVerkopen",
+    "route": "/mijn/verlof-kopen-verkopen",
+    "type": "index"
+  },
+  {
+    "id": "NormfunctieDetail",
+    "route": "/normfuncties/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Normfuncties",
+    "route": "/normfuncties",
+    "type": "index"
+  },
+  {
+    "id": "ObjectiveDetail",
+    "route": "/objectives/:id",
+    "type": "detail"
+  },
+  {
+    "id": "OffboardingDetail",
+    "route": "/offboardings/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Offboardings",
+    "route": "/offboardings",
+    "type": "index"
+  },
+  {
+    "id": "OnboardingDetail",
+    "route": "/onboardings/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Onboardings",
+    "route": "/onboardings",
+    "type": "index"
+  },
+  {
+    "id": "OrgAssignmentDetail",
+    "route": "/org-assignments/:id",
+    "type": "detail"
+  },
+  {
+    "id": "OrgAssignments",
+    "route": "/org-assignments",
+    "type": "index"
+  },
+  {
+    "id": "OrgUnitDetail",
+    "route": "/org-units/:id",
+    "type": "detail"
+  },
+  {
+    "id": "OrgUnits",
+    "route": "/org-units",
+    "type": "index"
+  },
+  {
+    "id": "PayrollAdjustmentDetail",
+    "route": "/payroll-adjustments/:id",
+    "type": "detail"
+  },
+  {
+    "id": "PayrollAdjustments",
+    "route": "/payroll-adjustments",
+    "type": "index"
+  },
+  {
+    "id": "PayrollGLPostDetail",
+    "route": "/gl-posts/:id",
+    "type": "detail"
+  },
+  {
+    "id": "PayrollGLPosts",
+    "route": "/gl-posts",
+    "type": "index"
+  },
+  {
+    "id": "PayrollMutationReportDetail",
+    "route": "/payroll-mutations/:id",
+    "type": "detail"
+  },
+  {
+    "id": "PayrollMutations",
+    "route": "/payroll-mutations",
+    "type": "index"
+  },
+  {
+    "id": "PayrollPaymentBatchDetail",
+    "route": "/payment-batches/:id",
+    "type": "detail"
+  },
+  {
+    "id": "PayrollPaymentBatches",
+    "route": "/payment-batches",
+    "type": "index"
+  },
+  {
+    "id": "PayrollRunDetail",
+    "route": "/payroll-runs/:id",
+    "type": "detail"
+  },
+  {
+    "id": "PayrollRuns",
+    "route": "/payroll-runs",
+    "type": "index"
+  },
+  {
+    "id": "PayslipDetail",
+    "route": "/payslips/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Payslips",
+    "route": "/payslips",
+    "type": "index"
+  },
+  {
+    "id": "PensionFilingDetail",
+    "route": "/pension-filings/:id",
+    "type": "detail"
+  },
+  {
+    "id": "PensionFilings",
+    "route": "/pension-filings",
+    "type": "index"
+  },
+  {
+    "id": "PerformanceReviewDetail",
+    "route": "/reviews/:id",
+    "type": "detail"
+  },
+  {
+    "id": "ProformaPayslip",
+    "route": "/payroll/proforma",
+    "type": "custom"
+  },
+  {
+    "id": "ReviewCycleDetail",
+    "route": "/review-cycles/:id",
+    "type": "detail"
+  },
+  {
+    "id": "ReviewCycles",
+    "route": "/review-cycles",
+    "type": "index"
+  },
+  {
+    "id": "RosterAssignmentDetail",
+    "route": "/roster-assignments/:id",
+    "type": "detail"
+  },
+  {
+    "id": "RosterAssignments",
+    "route": "/roster-assignments",
+    "type": "index"
+  },
+  {
+    "id": "RosterDetail",
+    "route": "/rosters/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Rosters",
+    "route": "/rosters",
+    "type": "index"
+  },
+  {
+    "id": "SalaryBandDetail",
+    "route": "/salary-bands/:id",
+    "type": "detail"
+  },
+  {
+    "id": "SalaryBands",
+    "route": "/salary-bands",
+    "type": "index"
+  },
+  {
+    "id": "ShiftDetail",
+    "route": "/shifts/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Shifts",
+    "route": "/shifts",
+    "type": "index"
+  },
+  {
+    "id": "SickLeaveCaseDetail",
+    "route": "/sick-leave/:id",
+    "type": "detail"
+  },
+  {
+    "id": "SickLeaveCases",
+    "route": "/sick-leave",
+    "type": "index"
+  },
+  {
+    "id": "StagiairDetail",
+    "route": "/stagiairs/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Stagiairs",
+    "route": "/stagiairs",
+    "type": "index"
+  },
+  {
+    "id": "TeamDeclaratiegoedkeuring",
+    "route": "/expenses/team-approval",
+    "type": "index"
+  },
+  {
+    "id": "TeamUrengoedkeuring",
+    "route": "/timesheets/team-approval",
+    "type": "index"
+  },
+  {
+    "id": "TeamVerlofgoedkeuring",
+    "route": "/leave-requests/team-approval",
+    "type": "index"
+  },
+  {
+    "id": "TimesheetApproval",
+    "route": "/timesheets/approval",
+    "type": "index"
+  },
+  {
+    "id": "TimesheetDetail",
+    "route": "/timesheets/:id",
+    "type": "detail"
+  },
+  {
+    "id": "Timesheets",
+    "route": "/timesheets",
+    "type": "index"
+  },
+  {
+    "id": "Vacancies",
+    "route": "/vacancies",
+    "type": "index"
+  },
+  {
+    "id": "VacancyDetail",
+    "route": "/vacancies/:id",
+    "type": "detail"
+  },
+  {
+    "id": "VerzuimOverzicht",
+    "route": "/verzuim",
+    "type": "index"
+  },
+  {
+    "id": "WkrAssessmentDetail",
+    "route": "/wkr-assessments/:id",
+    "type": "detail"
+  },
+  {
+    "id": "WkrAssessments",
+    "route": "/wkr-assessments",
+    "type": "index"
+  },
+  {
+    "id": "WkrDeclarationDetail",
+    "route": "/wkr-declarations/:id",
+    "type": "detail"
+  },
+  {
+    "id": "WkrDeclarations",
+    "route": "/wkr-declarations",
+    "type": "index"
+  },
+  {
+    "id": "WntDisclosureDetail",
+    "route": "/wnt-disclosures/:id",
+    "type": "detail"
+  },
+  {
+    "id": "WntDisclosures",
+    "route": "/wnt-disclosures",
+    "type": "index"
+  }
+]

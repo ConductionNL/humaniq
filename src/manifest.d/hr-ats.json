@@ -1,0 +1,406 @@
+{
+	"pages": [
+		{
+			"id": "ApplicationDetail",
+			"route": "/applications/:id",
+			"type": "detail",
+			"title": "Sollicitatie",
+			"config": {
+				"register": "hrmq",
+				"schema": "Application",
+				"_note": "recruiting-ats-basic (2026-07-13): candidate PII (candidateName/email/phone/cvFile/motivation) lives DIRECTLY on this Application -- there is deliberately no separate Candidate entity (AVG data-minimisation, design D2): one object = one retention clock = one delete. The 'Application' widget excludes vacancyId (Related resolves the Vacancy) and the three privacy fields (talentPoolOptIn/rejectedDate/retentionExpiryDate), which instead surface on the dedicated 'Privacy & retention' widget so the AVG retention clock is never buried among ordinary fields. lifecycleActions expose exactly screenen/uitnodigen/aanbieden/aannemen/afwijzen (design D3) -- no invented edges; aannemen's onboarding hand-off (creating the Employee from this data) is a MANUAL follow-up action in the MVP, no cross-object write hook fires here. Audit history is a sidebar tab. offer-esign (2026-07-16): page-level action \"request-offer-signature\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/offer/request-signature with {applicationId: @objectId}, guarded server-side by OfferController::authorizeApplication() (resolve-first RBAC) + isAdminOrHr() + the aanbod-stage guard. The 'Application' data widget's exclude list additionally hides offerLetterFileId/offerSigningRequestId (internal correlation ids) -- offerSigningStatus stays visible as the human-readable state.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Application",
+						"icon": "FileAccountOutline",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"vacancyId",
+								"talentPoolOptIn",
+								"rejectedDate",
+								"retentionExpiryDate",
+								"offerLetterFileId",
+								"offerSigningRequestId"
+							],
+							"title": "Application"
+						}
+					},
+					{
+						"id": "data-2",
+						"type": "data",
+						"title": "Privacy & retention",
+						"icon": "ShieldLockOutline",
+						"content": {
+							"columns": 2,
+							"include": [
+								"talentPoolOptIn",
+								"rejectedDate",
+								"retentionExpiryDate"
+							],
+							"title": "Privacy & retention"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "files",
+						"type": "files",
+						"title": "CV & motivatiebrief",
+						"icon": "FolderOutline"
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
+						"title": "Gesprekken",
+						"icon": "CalendarAccountOutline",
+						"content": {
+							"register": "hrmq",
+							"schema": "Interview",
+							"filter": {
+								"applicationId": "@objectId"
+							},
+							"sort": {
+								"field": "scheduledStart",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "scheduledStart",
+									"label": "Start"
+								},
+								{
+									"key": "mode",
+									"label": "Mode"
+								},
+								{
+									"key": "location",
+									"label": "Location"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "InterviewDetail",
+							"viewAllRoute": "Interviews",
+							"viewAllQuery": {
+								"applicationId": "@objectId"
+							},
+							"emptyText": "Nog geen gesprekken gepland"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 5
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 9
+					},
+					{
+						"id": 4,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 9,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 5,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 13,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "screenen",
+							"from": [
+								"nieuw"
+							],
+							"to": "screening",
+							"label": "Screenen"
+						},
+						{
+							"action": "uitnodigen",
+							"from": [
+								"screening"
+							],
+							"to": "gesprek",
+							"label": "Uitnodigen"
+						},
+						{
+							"action": "aanbieden",
+							"from": [
+								"gesprek"
+							],
+							"to": "aanbod",
+							"label": "Aanbieden"
+						},
+						{
+							"action": "aannemen",
+							"from": [
+								"aanbod"
+							],
+							"to": "aangenomen",
+							"label": "Aannemen"
+						},
+						{
+							"action": "afwijzen",
+							"from": [
+								"nieuw",
+								"screening",
+								"gesprek",
+								"aanbod"
+							],
+							"to": "afgewezen",
+							"label": "Afwijzen"
+						}
+					]
+				},
+				"headerActions": [
+					{
+						"id": "request-offer-signature",
+						"label": "Aanbiedingsbrief + e-handtekening aanvragen",
+						"type": "api-call",
+						"icon": "FileDocumentPlusOutline",
+						"url": "/api/offer/request-signature",
+						"method": "POST",
+						"params": {
+							"applicationId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Aanbiedingsbrief wordt gegenereerd en e-handtekening aangevraagd.",
+						"errorMessage": "Aanvragen van de aanbiedingsbrief/e-handtekening is mislukt."
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Vacancy",
+			"params": {
+				"id": "Vacancies",
+				"route": "/vacancies",
+				"title": "Vacatures",
+				"columns": [
+					"title",
+					"department",
+					"status",
+					"publishedDate",
+					"closingDate"
+				],
+				"sort": {
+					"field": "publishedDate",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"department"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Vacatures (recruiting-ats-basic): concept -> gepubliceerd -> gesloten publish-lifecycle. Geen externe multiposting (werk.nl/LinkedIn) en geen publieke vacaturepagina in de MVP."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "Vacancy",
+			"params": {
+				"id": "VacancyDetail",
+				"route": "/vacancies/:id",
+				"title": "Vacature",
+				"dataTitle": "Vacancy",
+				"dataIcon": "BriefcaseSearchOutline",
+				"relatedTitle": "Sollicitaties",
+				"gridHeight": 8,
+				"note": "recruiting-ats-basic (2026-07-13): the 'Vacancy' widget carries every field (title/description/department/status/publishedDate/closingDate). The 'Sollicitaties' related widget resolves the incoming Application.vacancyId references -- the candidate list per vacancy. lifecycleActions expose exactly publiceren/sluiten (design D3) -- no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected. Audit history is a sidebar tab.",
+				"include": [
+					"title",
+					"description",
+					"department",
+					"status",
+					"publishedDate",
+					"closingDate"
+				],
+				"overrides": {
+					"status": {
+						"editable": false
+					}
+				},
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "publiceren",
+							"from": [
+								"concept"
+							],
+							"to": "gepubliceerd",
+							"label": "Publiceren"
+						},
+						{
+							"action": "sluiten",
+							"from": [
+								"gepubliceerd"
+							],
+							"to": "gesloten",
+							"label": "Sluiten"
+						}
+					]
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Application",
+			"params": {
+				"id": "Applications",
+				"route": "/applications",
+				"title": "Sollicitaties",
+				"columns": [
+					"candidateName",
+					"vacancyId",
+					"status",
+					"talentPoolOptIn",
+					"retentionExpiryDate"
+				],
+				"sort": {
+					"field": "candidateName",
+					"order": "asc"
+				},
+				"filters": [
+					"status"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Sollicitatiepipeline (recruiting-ats-basic): nieuw -> screening -> gesprek -> aanbod -> aangenomen/afgewezen. De status-filter is de MVP-pipeline-surface -- elke fase is een filterwaarde; een kanban-board is een nc-vue widget follow-up (design D7)."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Interview",
+			"params": {
+				"id": "Interviews",
+				"route": "/interviews",
+				"title": "Gesprekken",
+				"columns": [
+					"applicationId",
+					"scheduledStart",
+					"scheduledEnd",
+					"mode",
+					"status"
+				],
+				"sort": {
+					"field": "scheduledStart",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"mode"
+				],
+				"description": "interview-scheduling: geplande, voltooide en geannuleerde sollicitatiegesprekken. Een gesprek wordt via de InterviewDetail-pagina of 'occ hrmq:interview:sync' naar de gedeelde agenda gesynchroniseerd (design D1/D6)."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "Interview",
+			"params": {
+				"id": "InterviewDetail",
+				"route": "/interviews/:id",
+				"title": "Interview",
+				"dataTitle": "Interview",
+				"dataIcon": "CalendarAccountOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 6,
+				"note": "interview-scheduling (2026-07-16): one interview round (gesprek) for an Application -- a SEPARATE schema, not fields on Application, because one Application can have multiple interview rounds each with its own lifecycle/calendarEventUid (design.md D2). The 'Interview' data widget excludes applicationId (Related resolves the Application) and calendarEventUid stays visible as the system-managed idempotency marker (design.md D3) -- an inspectable 'has this ever reached the calendar' signal, never user-editable. lifecycleActions expose exactly voltooien/annuleren (design D2) -- no invented edges; rescheduling is a plain field update to scheduledStart/scheduledEnd, not a status transition. The page-level 'Sync naar agenda' api-call action mirrors ApplicationDetail's 'request-offer-signature' shape -- POST /api/interviews/sync with {interviewId: @objectId}, guarded server-side by InterviewController::authorizeInterview() (resolve-first RBAC) + isAdminOrHr(). No files widget -- the schema carries no document/retention field. Audit history is a sidebar tab.",
+				"exclude": [
+					"applicationId"
+				],
+				"headerActions": [
+					{
+						"id": "sync-to-calendar",
+						"label": "Sync naar agenda",
+						"type": "api-call",
+						"icon": "CalendarSyncOutline",
+						"url": "/api/interviews/sync",
+						"method": "POST",
+						"params": {
+							"interviewId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Gesprek gesynchroniseerd naar de gedeelde agenda.",
+						"errorMessage": "Synchroniseren naar de agenda is mislukt."
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "voltooien",
+							"from": [
+								"scheduled"
+							],
+							"to": "completed",
+							"label": "Voltooien"
+						},
+						{
+							"action": "annuleren",
+							"from": [
+								"scheduled"
+							],
+							"to": "cancelled",
+							"label": "Annuleren"
+						}
+					]
+				}
+			}
+		}
+	]
+}

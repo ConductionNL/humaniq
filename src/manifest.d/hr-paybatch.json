@@ -1,0 +1,65 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "PayrollPaymentBatch",
+			"params": {
+				"id": "PayrollPaymentBatches",
+				"route": "/payment-batches",
+				"title": "Betaalbatches",
+				"columns": [
+					"period",
+					"status",
+					"totalAmount",
+					"lineCount",
+					"createdAt"
+				],
+				"sort": {
+					"field": "createdAt",
+					"order": "desc"
+				},
+				"filters": [
+					"status"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Netto-loon betaalbatches: per betaalbare loonrun een concept SEPA PaymentRun klaargezet in shillinq."
+			}
+		},
+		{
+			"templateRef": "dualDataScaffold",
+			"register": "hrmq",
+			"schema": "PayrollPaymentBatch",
+			"params": {
+				"id": "PayrollPaymentBatchDetail",
+				"route": "/payment-batches/:id",
+				"title": "Betaalbatch",
+				"statusTitle": "Status",
+				"statusIcon": "CheckCircleOutline",
+				"statusInclude": [
+					"status",
+					"createdAt",
+					"errorMessage"
+				],
+				"statusOverrides": {
+					"status": {
+						"editable": false
+					},
+					"createdAt": {
+						"editable": false
+					}
+				},
+				"dataTitle": "Betaalbatch",
+				"dataIcon": "BankTransfer",
+				"dataExclude": [
+					"payrollRunId"
+				],
+				"dataHeight": 8,
+				"relatedHeight": 11,
+				"note": "payroll-sepa-netpay-shillinq (2026-07-13): a PayrollPaymentBatch is hrmq's log of ONE net-pay handoff attempt into shillinq's PaymentRun register -- never the payment batch itself (design.md D1), same PayrollGLPostDetail shape. pb-status leads top-left with the prominent outcome facts (status/createdAt/errorMessage), pb-related sits top-right to resolve and link the referenced PayrollRun (a real $ref, unlike shillinqPaymentRunRef), then pb-data runs below with the remaining record fields including the runNumber/shillinqPaymentRunRef pointer into shillinq (plain display only -- no cross-app deep link in MVP). Copy says 'klaargezet in shillinq', NEVER 'betaald': created != paid, money only moves after shillinq's controller approves and exports (design.md D4). NO lifecycleActions: status has no x-openregister-lifecycle transition map -- PayrollNetPayService drives every transition server-side from `occ hrmq:netpay:run`, exactly the PayrollGLPostDetail precedent (never invent a user-facing transition the backend does not guard). No Files/calendar/comms leaves -- this is a system-generated audit record, not a document or event. Audit history is a sidebar tab."
+			}
+		}
+	]
+}

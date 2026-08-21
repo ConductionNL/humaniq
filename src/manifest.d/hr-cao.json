@@ -1,0 +1,116 @@
+{
+	"pages": [
+		{
+			"id": "CaoDetail",
+			"route": "/caos/:id",
+			"type": "detail",
+			"title": "CAO",
+			"config": {
+				"register": "hrmq",
+				"schema": "Cao",
+				"allowCreate": false,
+				"_note": "cao-library (2026-07-14): read-only reference detail for one CAO (derived projection of lib/Standards/cao/{caoId}.json). The 'CAO' data widget surfaces the identity + verification flags (caoId/name/sector/version/effectiveDate/payScalesVerified/leaveEntitlementVerified/source); the 'Loonschalen & verlof' widget surfaces the actual scales/allowances/leave/working-time maps -- the reference facts a maintainer checks a contract against. No lifecycleActions (Cao has no x-openregister-lifecycle), no create/edit affordances (corpus-authored). Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "CAO",
+						"icon": "FileDocumentMultipleOutline",
+						"content": {
+							"columns": 2,
+							"include": [
+								"caoId",
+								"name",
+								"sector",
+								"version",
+								"effectiveDate",
+								"payScalesVerified",
+								"leaveEntitlementVerified",
+								"source"
+							],
+							"title": "CAO"
+						}
+					},
+					{
+						"id": "data-2",
+						"type": "data",
+						"title": "Loonschalen & verlof",
+						"icon": "ScaleBalance",
+						"content": {
+							"columns": 2,
+							"include": [
+								"payScales",
+								"allowances",
+								"leaveEntitlement",
+								"workingTime"
+							],
+							"title": "Loonschalen & verlof"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 7
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 6,
+						"gridHeight": 7
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Cao",
+			"params": {
+				"id": "Caos",
+				"route": "/caos",
+				"title": "CAO's",
+				"columns": [
+					"caoId",
+					"name",
+					"sector",
+					"version",
+					"effectiveDate",
+					"payScalesVerified"
+				],
+				"sort": {
+					"field": "name",
+					"order": "asc"
+				},
+				"filters": [
+					"sector"
+				],
+				"description": "Beschikbare CAO's uit de onderhouden CAO-bibliotheek (referentie, alleen-lezen).",
+				"allowCreate": false,
+				"actionToggles": {
+					"showAdd": false,
+					"showFormDialog": false,
+					"showEditAction": false,
+					"showDeleteAction": false,
+					"showCopyAction": false,
+					"showMassImport": false,
+					"showMassCopy": false,
+					"showMassDelete": false
+				},
+				"note": "cao-library (2026-07-14): read-only reference index over the maintained CAO corpus (lib/Standards/cao/), seeded from CaoRegistry via NlCaoChecks::seedObjects(). allowCreate:false plus actionToggles hiding Add/edit/delete/mass-actions -- the corpus is the single authoring source; these Cao objects are a derived display projection and MUST NOT be hand-authored. Rows navigate to CaoDetail."
+			}
+		}
+	]
+}

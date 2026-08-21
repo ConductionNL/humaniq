@@ -1,0 +1,111 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "PensionFiling",
+			"params": {
+				"id": "PensionFilings",
+				"route": "/pension-filings",
+				"title": "Pensioenaangiftes",
+				"columns": [
+					"period",
+					"fund",
+					"status",
+					"deadline",
+					"responseStatus"
+				],
+				"sort": {
+					"field": "deadline",
+					"order": "asc"
+				},
+				"filters": [
+					"fund",
+					"status"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "UPA (Uniforme Pensioenaangifte) deliveries by period and sector fund, gated on the referenced payroll run's approval."
+			}
+		},
+		{
+			"templateRef": "dualDataScaffold",
+			"register": "hrmq",
+			"schema": "PensionFiling",
+			"params": {
+				"id": "PensionFilingDetail",
+				"route": "/pension-filings/:id",
+				"title": "Pensioenaangifte",
+				"statusTitle": "Status & deadline",
+				"statusIcon": "CalendarClock",
+				"statusInclude": [
+					"status",
+					"deadline",
+					"responseStatus",
+					"responseMessage",
+					"submittedDate"
+				],
+				"statusOverrides": {
+					"status": {
+						"editable": false
+					}
+				},
+				"dataTitle": "Filing",
+				"dataIcon": "PiggyBankOutline",
+				"dataExclude": [
+					"payrollRunId"
+				],
+				"dataHeight": 6,
+				"relatedHeight": 9,
+				"note": "pension-filing-upa-mvp (2026-07-12): same statutory-filing shape as LoonaangifteFilingDetail (create->review->confirm->send, gated on an external precondition), but this schema ALSO carries a real FK (payrollRunId -> PayrollRun, the run the delivery reports on), so the layout follows the TimesheetDetail split instead: pf-status leads top-left with the prominent status/deadline/response facts, pf-related sits top-right at matching height to resolve and link the referenced PayrollRun, then pf-data runs below with the remaining record fields (period/fund/aanleverkenmerk/verzondenDoor), excluding payrollRunId since Related already resolves it. Same reasoning as loonaangifte for NOT using a stats-block: the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports count/sum aggregation over a collection, which cannot echo a non-numeric field (enum/date) of the current object, so pf-status is a `data` widget instead -- schema-valid and functionally equivalent (prominent, top-of-page). No Files leaf: unlike LoonaangifteFiling, PensionFiling carries no retention/proof-of-filing fields (no retainedUntil/furnishedToRecipientDate equivalent) -- the response is captured in-record (responseStatus/responseMessage), not as an attached document. No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. lifecycleActions expose controleren/bevestigen/verzenden/heropenen/corrigeren, controleren guarded server-side by PayrollRunApprovedGuard. Audit history is a sidebar tab.",
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "controleren",
+							"from": [
+								"concept"
+							],
+							"to": "gecontroleerd",
+							"label": "Controleren"
+						},
+						{
+							"action": "bevestigen",
+							"from": [
+								"gecontroleerd"
+							],
+							"to": "bevestigd",
+							"label": "Bevestigen"
+						},
+						{
+							"action": "verzenden",
+							"from": [
+								"bevestigd"
+							],
+							"to": "verzonden",
+							"label": "Verzenden"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"gecontroleerd",
+								"bevestigd"
+							],
+							"to": "concept",
+							"label": "Heropenen"
+						},
+						{
+							"action": "corrigeren",
+							"from": [
+								"verzonden"
+							],
+							"to": "concept",
+							"label": "Corrigeren"
+						}
+					]
+				}
+			}
+		}
+	]
+}

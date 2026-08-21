@@ -307,3 +307,16 @@ a candidate fleet-wide follow-up.
 - Exact wording split of which sentence from each of the 19 templated pages' original `_note` moves
   to the template vs. stays per-instance (Decision 4) — an editorial judgment call on already-written
   prose, left to the implementer, reviewable in the PR diff.
+
+## Errata (recorded at apply time, 2026-08-21)
+
+The counts in this document were measured on `spec/hrmq-refactor-wave-1`. By the time the change
+was applied, the asset/fleet merge and menu work had landed: the manifest at apply-HEAD had
+**109 pages** (not 113), **8 top-level menu nodes / 62 navigable entries** (not 11/64), **37
+deepLinks** (not 39), and the split produced **28 domain fragments + `00-templates.json` +
+`05-menu.json`** (not 29 domain fragments). The four detail templates that shipped are
+`simpleDetailScaffold` ×17, `dualDataScaffold` ×5, `singleDataScaffold` ×3 (plus `indexScaffold`
+×58) — the B/D signatures this document described no longer existed at HEAD. Menu children live in
+the single `05-menu.json` because `mergeMenuItems` append semantics cannot reproduce the canonical
+interleaved order from per-domain contributions. Instance notes are carried via the template `note`
+param (the `pageInstance` schema forbids `_note`), preserving every baseline note verbatim.

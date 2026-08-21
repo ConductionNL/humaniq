@@ -1,0 +1,70 @@
+[validate-widget-keys] manifest: /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/hrmq/src/manifest.json
+[validate-widget-keys] distinct widgetKeys used: 9 (banner, chart, data, files, object-list, object-table, related, stat, stats-block)
+[validate-widget-keys] layer 1 (src/registry.js consumer override): AdministrationSwitcher, ProformaPayslip, actions, chart, lifecycle-actions, stat
+[validate-widget-keys] layer 2 (nc-vue BUILT_IN_WIDGETS, static object — always safe): audit-trail, banner, card-grid, data, divider, form-renderer, header, integration, map-viewer, metadata, nav-card-grid, object-geo, object-table, related, text
+[validate-widget-keys] layer 3 candidates needing a real build check: files, object-list, stats-block
+[validate-widget-keys] building throwaway probe bundle against the REAL installed @conduction/nextcloud-vue (USE_LOCAL_LIB=false, NODE_ENV=production)…
+Building undefined undefined 
+
+[validate-widget-keys] layer 3 check could not complete — treating all pending keys as UNRESOLVED.
+TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received undefined
+    at Object.join (node:path:1354:7)
+    at Object.<anonymous> (/home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/hrmq/node_modules/@nextcloud/webpack-vue-config/webpack.config.js:31:20)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+
+[validate-widget-keys] resolution summary:
+  ✓ "banner" → layer2:BUILT_IN_WIDGETS
+  ✓ "chart" → layer1:registry.js
+  ✓ "data" → layer2:BUILT_IN_WIDGETS
+  ✗ "files" → UNRESOLVED
+  ✗ "object-list" → UNRESOLVED
+  ✓ "object-table" → layer2:BUILT_IN_WIDGETS
+  ✓ "related" → layer2:BUILT_IN_WIDGETS
+  ✓ "stat" → layer1:registry.js
+  ✗ "stats-block" → UNRESOLVED
+
+[validate-widget-keys] FAIL — the following widgetKey(s) do not resolve to any component:
+  - "files" used at:
+      page:TimesheetDetail / config.widgets:files
+      page:ExpenseDetail / config.widgets:files
+      page:EmployeeDetail / config.widgets:files
+      page:LoonaangifteFilingDetail / config.widgets:files
+      page:LeaveRequestDetail / config.widgets:files
+      page:SickLeaveCaseDetail / config.widgets:files
+      page:OnboardingDetail / config.widgets:files
+      page:ApplicationDetail / config.widgets:files
+      page:OffboardingDetail / config.widgets:files
+      page:AssetDetail / config.widgets:files
+  - "object-list" used at:
+      page:EmployeeDetail / config.widgets:object-list
+      page:EmployeeDetail / config.widgets:object-list-2
+      page:EmployeeDetail / config.widgets:object-list-3
+      page:EmployeeDetail / config.widgets:object-list-4
+      page:EmployeeDetail / config.widgets:object-list-5
+      page:EmployeeDetail / config.widgets:object-list-6
+      page:EmployeeDetail / config.widgets:object-list-7
+      page:EmployeeDetail / config.widgets:object-list-8
+      page:EmployeeDetail / config.widgets:object-list-9
+      page:PayrollRunDetail / config.widgets:object-list
+      page:CompReviewCycleDetail / config.widgets:object-list
+      page:ApplicationDetail / config.widgets:object-list
+      page:OrgUnitDetail / config.widgets:object-list
+      page:OrgUnitDetail / config.widgets:object-list-2
+      page:AssetDetail / config.widgets:object-list
+      page:ReviewCycleDetail / config.widgets:object-list
+      page:ReviewCycleDetail / config.widgets:object-list-2
+      page:ObjectiveDetail / config.widgets:object-list
+      page:RosterDetail / config.widgets:object-list
+  - "stats-block" used at:
+      page:EmployeeDetail / config.widgets:stats-block
+      page:EmployeeDetail / config.widgets:stats-block-2
+      page:EmployeeDetail / config.widgets:stats-block-3
+      page:EmployeeDetail / config.widgets:stats-block-4
+exit=1

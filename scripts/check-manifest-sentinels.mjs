@@ -42,10 +42,16 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
+// CJS module; its default export carries buildEffectiveManifest (base +
+// src/manifest.d/*.json fragments + page-template expansion). Since
+// hrmq-manifest-fragment-pipeline the base manifest.json holds only 3 shell
+// pages — scanning it alone would silently narrow this check from 40+
+// @workspace.*? clauses to ~0 and report an empty PASS.
+import parityHarness from '../tests/verify-manifest-parity.js'
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const MANIFEST = path.join(REPO_ROOT, 'src', 'manifest.json')
 const OPTIONAL_SENTINEL = /^@workspace\..+\?$/
 
 /**
@@ -56,7 +62,7 @@ const OPTIONAL_SENTINEL = /^@workspace\..+\?$/
  * that reason and said so rather than claiming a pass it had not earned.
  * Dynamic `import()` loads it properly.
  *
- * @return {Promise<{resolve: Function}|null>} The resolver, or null when unavailable.
+ * @return {Promise<{resolve: (filter: object, ctx: object) => object}|null>} The resolver, or null when unavailable.
  */
 async function loadResolver() {
 	const file = path.join(REPO_ROOT, 'node_modules', '@conduction', 'nextcloud-vue', 'src', 'utils', 'resolveFilterTokens.js')
@@ -78,7 +84,7 @@ async function loadResolver() {
 	}
 }
 
-const manifest = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'))
+const manifest = parityHarness.buildEffectiveManifest()
 const clauses = []
 
 for (const page of manifest.pages || []) {
@@ -131,7 +137,7 @@ if (resolver === null) {
 		// Present-but-literal is the shipped defect; present-but-resolved is
 		// impossible from an empty context and would mean the resolver
 		// invented a value.
-		if (out && Object.prototype.hasOwnProperty.call(out, c.key)) {
+		if (out && Object.hasOwn(out, c.key)) {
 			failures.push({ ...c, note: `key survived as ${JSON.stringify(out[c.key])}` })
 		}
 	}

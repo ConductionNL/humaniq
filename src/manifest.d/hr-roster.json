@@ -1,0 +1,295 @@
+{
+	"pages": [
+		{
+			"id": "RosterDetail",
+			"route": "/rosters/:id",
+			"type": "detail",
+			"title": "Rooster",
+			"config": {
+				"register": "hrmq",
+				"schema": "Roster",
+				"_note": "rostering (2026-07-14): the publishable roster header. Unlike PayrollRun, Roster carries a REAL x-openregister-lifecycle (concept <-> gepubliceerd via publiceren/intrekken), so RosterDetail legitimately renders a lifecycleActions widget for exactly those two transitions -- no invented edge (the AttendanceRecordDetail sluiten/heropenen precedent). The 'Rooster' data widget carries period/administrationId/status; Related resolves and links the optional orgUnitId scope (excluded from data). The page-level 'ATW-controle' api-call action posts {rosterId: @objectId} to POST /api/roster/check (guarded server-side by RosterController::authorizeRoster()) and surfaces the Arbeidstijdenwet verdict over the roster's assignments regardless of publish status -- publishing itself is NOT hard-blocked on a violation (guard wiring is hrmq-rule-compliance-enforcement's scope, design.md Non-Goal). The FK-scoped 'Roosterindelingen' child object-list (RosterAssignment.rosterId = @objectId) is the plan itself. No stat KPI -- a header has no numeric headline. Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Rooster",
+						"icon": "CalendarMonthOutline",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"orgUnitId"
+							],
+							"title": "Rooster"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
+						"title": "Roosterindelingen",
+						"icon": "AccountClockOutline",
+						"content": {
+							"register": "hrmq",
+							"schema": "RosterAssignment",
+							"filter": {
+								"rosterId": "@objectId"
+							},
+							"sort": {
+								"field": "date",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "date",
+									"label": "Date"
+								},
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "shiftId",
+									"label": "Shift"
+								},
+								{
+									"key": "plannedStart",
+									"label": "Planned start"
+								},
+								{
+									"key": "plannedEnd",
+									"label": "Planned end"
+								}
+							],
+							"limit": 50,
+							"rowRoute": "RosterAssignmentDetail",
+							"viewAllRoute": "RosterAssignments",
+							"viewAllQuery": {
+								"rosterId": "@objectId"
+							},
+							"emptyText": "Nog geen roosterindelingen"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": 3,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 6
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "publiceren",
+							"from": [
+								"concept"
+							],
+							"to": "gepubliceerd",
+							"label": "Publiceren"
+						},
+						{
+							"action": "intrekken",
+							"from": [
+								"gepubliceerd"
+							],
+							"to": "concept",
+							"label": "Intrekken"
+						}
+					]
+				},
+				"headerActions": [
+					{
+						"id": "atw-controle",
+						"label": "ATW-controle",
+						"type": "api-call",
+						"icon": "ClipboardCheckOutline",
+						"url": "/api/roster/check",
+						"method": "POST",
+						"params": {
+							"rosterId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "ATW-controle uitgevoerd — bekijk de uitkomst per roosterindeling.",
+						"errorMessage": "ATW-controle van het rooster is mislukt."
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Shift",
+			"params": {
+				"id": "Shifts",
+				"route": "/shifts",
+				"title": "Diensten",
+				"columns": [
+					"name",
+					"startTime",
+					"endTime",
+					"breakMinutes",
+					"active"
+				],
+				"sort": {
+					"field": "name",
+					"order": "asc"
+				},
+				"filters": [
+					"active"
+				],
+				"description": "Herbruikbare dienstdefinities (klok-vorm): naam, begin- en eindtijd (HH:MM), pauze en optionele organisatie-eenheid. Een eindtijd niet later dan de begintijd duidt een nachtdienst over middernacht aan.",
+				"actions": [
+					{
+						"id": "create-shift",
+						"label": "Dienst aanmaken",
+						"type": "open-form",
+						"icon": "PlusCircleOutline",
+						"register": "hrmq",
+						"schema": "Shift",
+						"onSuccessRoute": "ShiftDetail",
+						"successMessage": "Dienst aangemaakt."
+					}
+				]
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "Shift",
+			"params": {
+				"id": "ShiftDetail",
+				"route": "/shifts/:id",
+				"title": "Dienst",
+				"dataTitle": "Dienst",
+				"dataIcon": "TimelineClockOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 6,
+				"note": "rostering (2026-07-14): a reusable shift definition (klok-vorm template), authored once and reused across many RosterAssignments. The 'Dienst' data widget carries name/startTime/endTime/breakMinutes/active; the 'Related' panel resolves and links the optional orgUnitId scope (excluded from the data widget, the EmployeeDetail exclude convention). No lifecycleActions: Shift carries no x-openregister-lifecycle -- a plain record toggled active/inactive, not a workflow (OrgUnitDetail precedent). No stat/files/comms leaves -- a template definition has no numeric headline aggregate or document. Audit history is a sidebar tab.",
+				"exclude": [
+					"orgUnitId"
+				]
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Roster",
+			"params": {
+				"id": "Rosters",
+				"route": "/rosters",
+				"title": "Roosters",
+				"columns": [
+					"period",
+					"orgUnitId",
+					"administrationId",
+					"status"
+				],
+				"sort": {
+					"field": "period",
+					"order": "desc"
+				},
+				"filters": [
+					"status"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Publiceerbare roosters per planningsperiode: een concept -> gepubliceerd levenscyclus, met per rooster de Arbeidstijdenwet-controle over de geplande roosterindelingen.",
+				"actions": [
+					{
+						"id": "create-roster",
+						"label": "Rooster aanmaken",
+						"type": "open-form",
+						"icon": "PlusCircleOutline",
+						"register": "hrmq",
+						"schema": "Roster",
+						"onSuccessRoute": "RosterDetail",
+						"successMessage": "Concept-rooster aangemaakt. Voeg roosterindelingen toe en gebruik ATW-controle voordat je publiceert."
+					}
+				]
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "RosterAssignment",
+			"params": {
+				"id": "RosterAssignments",
+				"route": "/roster-assignments",
+				"title": "Roosterindelingen",
+				"columns": [
+					"date",
+					"employeeId",
+					"shiftId",
+					"plannedStart",
+					"plannedEnd"
+				],
+				"sort": {
+					"field": "date",
+					"order": "asc"
+				},
+				"filters": [
+					"rosterId",
+					"employeeId"
+				],
+				"description": "Geplande roosterindelingen: een medewerker op een dienst op een datum binnen een rooster, met de geprojecteerde plannedStart/plannedEnd voor de Arbeidstijdenwet-controle. Datum-gesorteerd (de MVP-planningsweergave; een visueel planbord is een Non-Goal)."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "RosterAssignment",
+			"params": {
+				"id": "RosterAssignmentDetail",
+				"route": "/roster-assignments/:id",
+				"title": "Roosterindeling",
+				"dataTitle": "Roosterindeling",
+				"dataIcon": "AccountClockOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 6,
+				"note": "rostering (2026-07-14): one employee x one shift x one date within a Roster. The 'Roosterindeling' data widget carries date/plannedStart/plannedEnd/plannedBreakMinutes -- the projected planned-clock fields the ATW check reads -- excluding rosterId/employeeId/shiftId (Related resolves and links all three by name, the EmployeeDetail exclude convention) and userId (the internal @me self-service copy). No lifecycleActions: the assignment carries no approval status of its own -- the plan's only lifecycle lives on the Roster header (design D1). No stat/files/comms leaves. Audit history is a sidebar tab.",
+				"exclude": [
+					"rosterId",
+					"employeeId",
+					"shiftId",
+					"userId"
+				]
+			}
+		}
+	]
+}

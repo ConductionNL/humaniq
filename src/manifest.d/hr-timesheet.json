@@ -1,0 +1,306 @@
+{
+	"pages": [
+		{
+			"id": "TimesheetDetail",
+			"route": "/timesheets/:id",
+			"type": "detail",
+			"title": "Urenstaat",
+			"config": {
+				"register": "hrmq",
+				"schema": "Timesheet",
+				"_note": "HR/labour approval record (urenstaat). A single Timesheet captures the hours an employee logged for one period plus a submit -> approve/reject -> reopen approval workflow (x-openregister-lifecycle on `status`). ADR-062 round-2 rework: (1) total-hours KPI stat top-left so the approver sees the claimed volume at a glance; (2) the data widget SPLIT into 'Time entry' (period/description/project/cost centre/billable -- what was worked) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason -- the workflow trail), each excluding employeeId since the Related panel already resolves and links the claiming Employee by name; (3) related alongside both, matching their combined height. Files sits full-width below for approval evidence and signed timesheets (approval documents matter, so they are on the body, not a tab). NO email/calendar/talk widgets -- the Timesheet schema declares no comms linkedTypes and a labour record does not correspond; any communication is with the person (Employee), not the record. lifecycleActions expose the schema's own submit/approve/reject/reopen transitions (guarded server-side by NoSelfApprovalGuard). Audit history is pushed to a sidebar tab as a rarely-scanned surface.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
+						"title": "Total hours",
+						"icon": "Timeline",
+						"content": {
+							"label": "Total hours",
+							"caption": "logged this period",
+							"icon": "Timeline",
+							"valueColor": "#0082c9",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "Timesheet",
+								"metric": "sum",
+								"field": "hours",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Time entry",
+						"icon": "ClipboardList",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId"
+							],
+							"title": "Time entry"
+						}
+					},
+					{
+						"id": "data-2",
+						"type": "data",
+						"title": "Approval",
+						"icon": "CheckCircleOutline",
+						"content": {
+							"columns": 2,
+							"include": [
+								"status",
+								"submittedAt",
+								"approvedBy",
+								"approvedAt",
+								"rejectionReason"
+							],
+							"title": "Approval",
+							"overrides": {
+								"status": {
+									"editable": false
+								},
+								"submittedAt": {
+									"editable": false
+								},
+								"approvedBy": {
+									"editable": false
+								},
+								"approvedAt": {
+									"editable": false
+								}
+							}
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "files",
+						"type": "files",
+						"title": "Approval documents",
+						"icon": "FolderOutline"
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 2
+					},
+					{
+						"id": 2,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": 3,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": 4,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 10
+					},
+					{
+						"id": 5,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "submit",
+							"from": [
+								"draft",
+								"rejected"
+							],
+							"to": "submitted",
+							"label": "Submit"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"submitted"
+							],
+							"to": "approved",
+							"label": "Approve"
+						},
+						{
+							"action": "reject",
+							"from": [
+								"submitted"
+							],
+							"to": "rejected",
+							"label": "Reject"
+						},
+						{
+							"action": "reopen",
+							"from": [
+								"approved"
+							],
+							"to": "draft",
+							"label": "Reopen"
+						}
+					]
+				}
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Timesheet",
+			"params": {
+				"id": "MijnUren",
+				"route": "/mijn/uren",
+				"title": "Mijn uren",
+				"columns": [
+					"period",
+					"hours",
+					"billable",
+					"status"
+				],
+				"sort": {
+					"field": "period",
+					"order": "desc"
+				},
+				"filter": {
+					"userId": "@me",
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Jouw eigen urenregistraties."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Timesheet",
+			"params": {
+				"id": "Timesheets",
+				"route": "/timesheets",
+				"title": "Urenregistratie",
+				"columns": [
+					"employeeId",
+					"period",
+					"hours",
+					"billable",
+					"status"
+				],
+				"sort": {
+					"field": "period",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"period",
+					"billable"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Timesheet",
+			"params": {
+				"id": "TimesheetApproval",
+				"route": "/timesheets/approval",
+				"title": "Urengoedkeuring",
+				"columns": [
+					"employeeId",
+					"period",
+					"hours",
+					"submittedAt",
+					"status"
+				],
+				"sort": {
+					"field": "submittedAt",
+					"order": "asc"
+				},
+				"filters": [
+					"status",
+					"period"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Ingediende urenstaten die wachten op goedkeuring of afkeuring.",
+				"defaultFilters": {
+					"status": "submitted"
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Timesheet",
+			"params": {
+				"id": "TeamUrengoedkeuring",
+				"route": "/timesheets/team-approval",
+				"title": "Team-urengoedkeuring",
+				"columns": [
+					"employeeId",
+					"period",
+					"hours",
+					"submittedAt",
+					"status"
+				],
+				"sort": {
+					"field": "submittedAt",
+					"order": "asc"
+				},
+				"filters": [
+					"status",
+					"period"
+				],
+				"filter": {
+					"managerUserId": "@me",
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Ingediende urenstaten van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door HR/back-office bijgehouden managerUserId-koppeling.",
+				"defaultFilters": {
+					"status": "submitted"
+				}
+			}
+		}
+	]
+}

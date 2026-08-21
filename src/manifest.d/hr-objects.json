@@ -1,0 +1,1873 @@
+{
+	"pages": [
+		{
+			"id": "EmployeeDetail",
+			"route": "/employees/:id",
+			"type": "detail",
+			"title": "Werknemer",
+			"config": {
+				"register": "hrmq",
+				"schema": "Employee",
+				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in hrmq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Person",
+						"icon": "Account",
+						"content": {
+							"columns": 2,
+							"include": [
+								"employeeNumber",
+								"firstName",
+								"lastName",
+								"dateOfBirth",
+								"bsn"
+							],
+							"title": "Person"
+						}
+					},
+					{
+						"id": "stats-block",
+						"type": "stats-block",
+						"title": "Contracts",
+						"icon": "ChartBar",
+						"_note": "`entries` is a FLAT prop. CnStatsBlockWidget declares dataSource/entries/title/countLabel/variant/showZeroCount/horizontal/route/iconClass and no `content` prop at all, so the previous `content: {entries: […]}` shape never reached the component — it errored `Exactly one of dataSource / entries must be provided`. That error was invisible until the dashboard widget catalog started resolving at all (see src/main.js): with the catalog empty, CnWidgetGrid never mounted the component and never ran its contract check.",
+						"content": {
+							"entries": [
+								{
+									"title": "Contracts",
+									"register": "hrmq",
+									"schema": "EmploymentContract",
+									"metric": "count",
+									"filter": {
+										"employeeId": "@objectId"
+									},
+									"route": {
+										"name": "EmploymentContracts"
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "stats-block-2",
+						"type": "stats-block",
+						"title": "Payslips",
+						"icon": "ChartBar",
+						"content": {
+							"entries": [
+								{
+									"title": "Payslips",
+									"register": "hrmq",
+									"schema": "Payslip",
+									"metric": "count",
+									"filter": {
+										"employeeId": "@objectId"
+									},
+									"route": {
+										"name": "Payslips"
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "stats-block-3",
+						"type": "stats-block",
+						"title": "Pending expenses",
+						"icon": "ChartBar",
+						"content": {
+							"entries": [
+								{
+									"title": "Pending expenses",
+									"register": "hrmq",
+									"schema": "Expense",
+									"metric": "count",
+									"filter": {
+										"employeeId": "@objectId",
+										"status": "submitted"
+									},
+									"route": {
+										"name": "ExpenseApproval"
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "stats-block-4",
+						"type": "stats-block",
+						"title": "Hours logged",
+						"icon": "ChartBar",
+						"content": {
+							"entries": [
+								{
+									"title": "Hours logged",
+									"register": "hrmq",
+									"schema": "Timesheet",
+									"metric": "sum",
+									"field": "hours",
+									"filter": {
+										"employeeId": "@objectId"
+									},
+									"route": {
+										"name": "Timesheets"
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "data-2",
+						"type": "data",
+						"title": "Employment & compliance",
+						"icon": "ShieldCheckOutline",
+						"content": {
+							"columns": 3,
+							"exclude": [
+								"employeeNumber",
+								"firstName",
+								"lastName",
+								"dateOfBirth",
+								"bsn"
+							],
+							"title": "Employment & compliance"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
+						"title": "Contracts",
+						"icon": "FileSign",
+						"content": {
+							"register": "hrmq",
+							"schema": "EmploymentContract",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "startDate",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "type",
+									"label": "Type"
+								},
+								{
+									"key": "startDate",
+									"label": "Start"
+								},
+								{
+									"key": "endDate",
+									"label": "End"
+								},
+								{
+									"key": "hourlyWage",
+									"label": "Hourly wage"
+								},
+								{
+									"key": "awfTariff",
+									"label": "Awf tariff"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "EmploymentContractDetail",
+							"viewAllRoute": "EmploymentContracts",
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"emptyText": "No contracts yet"
+						}
+					},
+					{
+						"id": "object-list-2",
+						"type": "object-list",
+						"title": "Timesheets",
+						"icon": "Timeline",
+						"content": {
+							"register": "hrmq",
+							"schema": "Timesheet",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "period",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "period",
+									"label": "Period"
+								},
+								{
+									"key": "hours",
+									"label": "Hours"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "TimesheetDetail",
+							"viewAllRoute": "Timesheets",
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"emptyText": "No timesheets logged yet"
+						}
+					},
+					{
+						"id": "object-list-3",
+						"type": "object-list",
+						"title": "Payslips",
+						"icon": "Cash",
+						"content": {
+							"register": "hrmq",
+							"schema": "Payslip",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "period",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "period",
+									"label": "Period"
+								},
+								{
+									"key": "jurisdiction",
+									"label": "Jurisdiction"
+								},
+								{
+									"key": "grossPay",
+									"label": "Gross"
+								},
+								{
+									"key": "nettoPay",
+									"label": "Net"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "PayslipDetail",
+							"viewAllRoute": "Payslips",
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"emptyText": "No payslips yet",
+							"allowCreate": false
+						}
+					},
+					{
+						"id": "object-list-4",
+						"type": "object-list",
+						"title": "Expenses",
+						"icon": "CashMultiple",
+						"content": {
+							"register": "hrmq",
+							"schema": "Expense",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "expenseDate",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Title"
+								},
+								{
+									"key": "amount",
+									"label": "Amount"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "ExpenseDetail",
+							"viewAllRoute": "Expenses",
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"emptyText": "No expense claims yet"
+						}
+					},
+					{
+						"id": "object-list-5",
+						"type": "object-list",
+						"title": "Assignments",
+						"icon": "AccountArrowRightOutline",
+						"content": {
+							"register": "hrmq",
+							"schema": "OrgAssignment",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "startDate",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "orgUnitId",
+									"label": "Unit"
+								},
+								{
+									"key": "role",
+									"label": "Role"
+								},
+								{
+									"key": "startDate",
+									"label": "Start"
+								},
+								{
+									"key": "endDate",
+									"label": "End"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "OrgAssignmentDetail",
+							"viewAllRoute": "OrgAssignments",
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"emptyText": "No placements yet"
+						}
+					},
+					{
+						"id": "object-list-6",
+						"type": "object-list",
+						"title": "Beoordelingen",
+						"icon": "ClipboardAccountOutline",
+						"content": {
+							"register": "hrmq",
+							"schema": "PerformanceReview",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "besprokenOp",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "cycleId",
+									"label": "Cycle"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "rating",
+									"label": "Rating"
+								},
+								{
+									"key": "besprokenOp",
+									"label": "Besproken op"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "PerformanceReviewDetail",
+							"emptyText": "No reviews yet"
+						}
+					},
+					{
+						"id": "object-list-7",
+						"type": "object-list",
+						"title": "Doelen & OKR's",
+						"icon": "BullseyeArrow",
+						"content": {
+							"register": "hrmq",
+							"schema": "Objective",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "title",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Title"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "progress",
+									"label": "Progress"
+								},
+								{
+									"key": "cycleId",
+									"label": "Cycle"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "ObjectiveDetail",
+							"emptyText": "No objectives yet"
+						}
+					},
+					{
+						"id": "object-list-8",
+						"type": "object-list",
+						"title": "Beloningsvoorstellen",
+						"icon": "CashPlus",
+						"content": {
+							"register": "hrmq",
+							"schema": "CompAdjustment",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "effectiveDate",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "cycleId",
+									"label": "Cycle"
+								},
+								{
+									"key": "proposedSalary",
+									"label": "Proposed"
+								},
+								{
+									"key": "effectiveDate",
+									"label": "Effective"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "CompAdjustmentDetail",
+							"viewAllRoute": "CompReviewCycles",
+							"emptyText": "No compensation adjustments yet"
+						}
+					},
+					{
+						"id": "object-list-9",
+						"type": "object-list",
+						"title": "Verlof kopen/verkopen",
+						"icon": "SwapHorizontal",
+						"content": {
+							"register": "hrmq",
+							"schema": "LeaveTransaction",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "submittedAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "transactionType",
+									"label": "Type"
+								},
+								{
+									"key": "hours",
+									"label": "Hours"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "settlementPeriod",
+									"label": "Settlement period"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "LeaveTransactionDetail",
+							"emptyText": "No leave buy/sell transactions yet"
+						}
+					},
+					{
+						"id": "files",
+						"type": "files",
+						"title": "Personnel file",
+						"icon": "FolderOutline"
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": 2,
+						"widgetId": "stats-block",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 3,
+						"widgetId": "stats-block-2",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 4,
+						"widgetId": "stats-block-3",
+						"gridX": 8,
+						"gridY": 4,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 5,
+						"widgetId": "stats-block-4",
+						"gridX": 8,
+						"gridY": 6,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 6,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 8,
+						"gridWidth": 12,
+						"gridHeight": 7
+					},
+					{
+						"id": 7,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 15,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 8,
+						"widgetId": "object-list-2",
+						"gridX": 6,
+						"gridY": 15,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 9,
+						"widgetId": "object-list-3",
+						"gridX": 0,
+						"gridY": 19,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 10,
+						"widgetId": "object-list-4",
+						"gridX": 6,
+						"gridY": 19,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 11,
+						"widgetId": "object-list-5",
+						"gridX": 0,
+						"gridY": 23,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 12,
+						"widgetId": "object-list-6",
+						"gridX": 0,
+						"gridY": 27,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 13,
+						"widgetId": "object-list-7",
+						"gridX": 0,
+						"gridY": 31,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 14,
+						"widgetId": "object-list-8",
+						"gridX": 0,
+						"gridY": 35,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 15,
+						"widgetId": "object-list-9",
+						"gridX": 0,
+						"gridY": 39,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 16,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 43,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				]
+			}
+		},
+		{
+			"id": "PayslipDetail",
+			"route": "/payslips/:id",
+			"type": "detail",
+			"title": "Loonstrook",
+			"config": {
+				"register": "hrmq",
+				"schema": "Payslip",
+				"_note": "Financial-document archetype (x-schema-org: schema:Invoice), same family as Expense's amount-first design: three headline tiles (gross pay, net pay, Related-to-Employee) lead the page since that is what an employee or approver checks first, followed by the dense data widget carrying the full gross-to-net withholding breakdown (NL loonheffing/zvw/wkr, DE Lohnsteuer/Soli/Kirchensteuer, FR cotisations/PAS, US FICA/Medicare -- the schema is genuinely multi-jurisdiction: only one jurisdiction's fields populate per real record, but which one varies per payslip so a static manifest cannot cherry-pick per-instance; all fields surface via one widget, sized to its true field count and set to 4 columns full-width rather than clipped at 2). ADR-062 round-2: data widget now excludes employeeId (resolved via Related instead of raw uuid) and the height budget was corrected from the round-1 h7 (which clipped ~54 fields behind a scrollbar) to match content. Stat format uses 'number' not 'currency' because Payslip.currency varies per record (EUR/USD) and a widget's format is static. No files/calendar/comms leaves: nothing in the schema models an attachable payslip document or appointment, and Payslip carries no x-openregister-lifecycle so there are no lifecycleActions. Audit history is a sidebar tab. payslip-pdf-docudesk (2026-07-14): page-level action \"Genereer PDF\" mirrors EmploymentContractDetail's \"Genereer arbeidsovereenkomst\" shape -- POST /api/documents/generate with {payslipId: @objectId, documentType: loonstrook}, guarded server-side by DocumentController::authorizePayslip().",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
+						"title": "Gross pay",
+						"icon": "Cash",
+						"content": {
+							"label": "Gross pay",
+							"caption": "this period",
+							"icon": "Cash",
+							"valueColor": "#0082c9",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "Payslip",
+								"metric": "sum",
+								"field": "grossPay",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "stat-2",
+						"type": "stat",
+						"title": "Net pay",
+						"icon": "CurrencyEur",
+						"content": {
+							"label": "Net pay",
+							"caption": "paid out",
+							"icon": "CurrencyEur",
+							"valueColor": "#46ba61",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "Payslip",
+								"metric": "sum",
+								"field": "nettoPay",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Payslip breakdown",
+						"icon": "TableColumn",
+						"content": {
+							"columns": 4,
+							"exclude": [
+								"employeeId",
+								"loonbeslagId"
+							],
+							"title": "Payslip breakdown"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "stat-2",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 12,
+						"gridHeight": 14
+					}
+				],
+				"headerActions": [
+					{
+						"id": "generate-loonstrook",
+						"label": "Genereer PDF",
+						"type": "api-call",
+						"icon": "FileDocumentPlusOutline",
+						"url": "/api/documents/generate",
+						"method": "POST",
+						"params": {
+							"payslipId": "@objectId",
+							"documentType": "loonstrook"
+						},
+						"confirm": true,
+						"successMessage": "Loonstrook-PDF wordt gegenereerd.",
+						"errorMessage": "Genereren van de loonstrook-PDF is mislukt."
+					}
+				]
+			}
+		},
+		{
+			"id": "PayrollRunDetail",
+			"route": "/payroll-runs/:id",
+			"type": "detail",
+			"title": "Loonrun",
+			"config": {
+				"register": "hrmq",
+				"schema": "PayrollRun",
+				"_note": "Batch/reconciliation archetype: a PayrollRun is a per-period aggregate of an administration's payslips, so its page leads with the GL-reconciliation totals (totalGross/totalNet/withholdingLiabilityBalance -- exactly the numbers xc-payroll-gl-reconciliation and xc-withholding-liability-clearing check) as stat KPIs, then the full record (period/administrationId/jurisdiction/status/glLiabilityPosted/glExpensePosted/withholdingsClearedToZero plus the engine stamps engineVersion/calculatedAt) in the data widget below. payroll-core-engine (2026-07-14): Payslip NOW carries a real payrollRunId $ref back to PayrollRun (added by payroll-core-schema), so the page gains the FK-scoped Payslips child list (allowCreate:false -- generation via the engine is the only create path, design.md D5) and the page-level api-call action \"(Her)berekenen\" (POST /api/payroll/calculate with {runId: @objectId}, guarded server-side by PayrollController::authorizeRun(), draft-only -- non-draft runs get a 400). Still NO lifecycleActions: `status` is a plain enum (draft/approved/posted/paid) with no `x-openregister-lifecycle` transition map on this schema -- driving lifecycleActions here would invent transition names the backend does not guard; the recalculate action is a page action, not a transition. Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
+						"title": "Total gross",
+						"icon": "CashMultiple",
+						"content": {
+							"label": "Total gross",
+							"caption": "this period",
+							"icon": "CashMultiple",
+							"valueColor": "#0082c9",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "PayrollRun",
+								"metric": "sum",
+								"field": "totalGross",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "stat-2",
+						"type": "stat",
+						"title": "Total net",
+						"icon": "CurrencyEur",
+						"content": {
+							"label": "Total net",
+							"caption": "paid out",
+							"icon": "CurrencyEur",
+							"valueColor": "#46ba61",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "PayrollRun",
+								"metric": "sum",
+								"field": "totalNet",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "stat-3",
+						"type": "stat",
+						"title": "Withholding liability balance",
+						"icon": "ScaleBalance",
+						"content": {
+							"label": "Liability balance",
+							"caption": "should clear to zero",
+							"icon": "ScaleBalance",
+							"valueColor": "#e9322d",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "PayrollRun",
+								"metric": "sum",
+								"field": "withholdingLiabilityBalance",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Payroll run",
+						"icon": "TableColumn",
+						"content": {
+							"columns": 2,
+							"title": "Payroll run"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
+						"title": "Loonstroken",
+						"icon": "ReceiptTextOutline",
+						"content": {
+							"register": "hrmq",
+							"schema": "Payslip",
+							"filter": {
+								"payrollRunId": "@objectId"
+							},
+							"sort": {
+								"field": "employeeId",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "grossPay",
+									"label": "Gross"
+								},
+								{
+									"key": "loonheffing",
+									"label": "Loonheffing"
+								},
+								{
+									"key": "nettoPay",
+									"label": "Net"
+								}
+							],
+							"limit": 50,
+							"rowRoute": "PayslipDetail",
+							"viewAllRoute": "Payslips",
+							"viewAllQuery": {
+								"payrollRunId": "@objectId"
+							},
+							"emptyText": "Nog geen loonstroken — voer (Her)berekenen uit",
+							"allowCreate": false
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "stat-2",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "stat-3",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 12,
+						"gridHeight": 7
+					},
+					{
+						"id": 5,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"headerActions": [
+					{
+						"id": "recalculate",
+						"label": "(Her)berekenen",
+						"type": "api-call",
+						"icon": "Calculator",
+						"url": "/api/payroll/calculate",
+						"method": "POST",
+						"params": {
+							"runId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Loonrun (her)berekend — loonstroken en totalen zijn bijgewerkt.",
+						"errorMessage": "(Her)berekenen van de loonrun is mislukt."
+					},
+					{
+						"id": "mutations",
+						"label": "Mutatieoverzicht",
+						"type": "api-call",
+						"icon": "SwapHorizontal",
+						"url": "/api/payroll/mutations",
+						"method": "POST",
+						"params": {
+							"toRunId": "@objectId"
+						},
+						"confirm": true,
+						"onSuccessRoute": "PayrollMutationReportDetail",
+						"successMessage": "Mutatierapport gegenereerd — vergeleken met de vorige periode.",
+						"errorMessage": "Genereren van het mutatierapport is mislukt."
+					},
+					{
+						"id": "book-correction",
+						"label": "Correctie boeken (TWK)",
+						"type": "open-form",
+						"icon": "CashSync",
+						"register": "hrmq",
+						"schema": "PayrollAdjustment",
+						"onSuccessRoute": "PayrollAdjustmentDetail",
+						"successMessage": "Concept-correctie aangemaakt — gebruik Herrekenen om de delta te berekenen."
+					}
+				]
+			}
+		},
+		{
+			"id": "LoonaangifteFilingDetail",
+			"route": "/filings/:id",
+			"type": "detail",
+			"title": "Aangifte",
+			"config": {
+				"register": "hrmq",
+				"schema": "LoonaangifteFiling",
+				"_note": "Statutory-deadline archetype: a filing's whole purpose is 'was it filed on time and is proof retained'. loonaangifte-filing-lifecycle (2026-07-12) gave NL filings a real create->review->confirm->send workflow, so the page now leads with a compact status/tijdvakcode/deadline/response widget (fi-status) before the full filing data widget, and exposes the klaarzetten/bevestigen/verzenden/heropenen/corrigeren transitions via lifecycleActions (Timesheet pattern). No stats-block KPI tile is used for Status/Deadline: the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports count/sum aggregation, which cannot echo a non-numeric field (enum/date) of the current object, so fi-status is a `data` widget instead -- schema-valid and functionally equivalent (prominent, top-of-page). No related panel (the schema carries no employeeId/administrationId or any other object-FK -- a filing is an organisation-level record, not scoped to a person). Files is included full-width for the filed submission/deposit proof, justified by the schema's own retainedUntil/furnishedToRecipientDate/filedWithAuthorityDate retention-evidence fields (NL 7yr / DE 6yr / US 4yr retention obligations). No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Status & deadline",
+						"icon": "CalendarClock",
+						"content": {
+							"columns": 4,
+							"include": [
+								"status",
+								"tijdvakcode",
+								"deadline",
+								"submittedDate",
+								"responseStatus",
+								"responseMessage"
+							],
+							"title": "Status & deadline",
+							"overrides": {
+								"status": {
+									"editable": false
+								}
+							}
+						}
+					},
+					{
+						"id": "data-2",
+						"type": "data",
+						"title": "Filing",
+						"icon": "FileDocument",
+						"content": {
+							"columns": 2,
+							"title": "Filing"
+						}
+					},
+					{
+						"id": "files",
+						"type": "files",
+						"title": "Filing proof / deposit confirmation",
+						"icon": "FolderOutline"
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "data-2",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 12,
+						"gridHeight": 9
+					},
+					{
+						"id": 3,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 12,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "klaarzetten",
+							"from": [
+								"concept"
+							],
+							"to": "klaargezet",
+							"label": "Klaarzetten"
+						},
+						{
+							"action": "bevestigen",
+							"from": [
+								"klaargezet"
+							],
+							"to": "bevestigd",
+							"label": "Bevestigen"
+						},
+						{
+							"action": "verzenden",
+							"from": [
+								"bevestigd"
+							],
+							"to": "verzonden",
+							"label": "Verzenden"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"klaargezet",
+								"bevestigd"
+							],
+							"to": "concept",
+							"label": "Heropenen"
+						},
+						{
+							"action": "corrigeren",
+							"from": [
+								"verzonden"
+							],
+							"to": "concept",
+							"label": "Corrigeren"
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": "PayrollMutationReportDetail",
+			"route": "/payroll-mutations/:id",
+			"type": "detail",
+			"title": "Mutatieoverzicht",
+			"config": {
+				"register": "hrmq",
+				"schema": "PayrollMutationReport",
+				"_note": "payroll-mutation-reports (2026-07-14): a PayrollMutationReport is a PURE, read-only diff snapshot -- never recomputed, never written outside PayrollMutationService (design.md D3) -- so the page leads with the accountant's headline (totalWageCostDelta) plus the entered/left/changed counts as stat KPIs (the PayrollRunDetail stat-tile precedent), then the full record (header fromRunId/toRunId/fromPeriod/toPeriod/administrationId/generatedAt, the four component deltas, the four counts, and the embedded per-employee `lines` array) in the pmr-data widget below -- the PayrollGLPostDetail precedent for an embedded array snapshot rendered inside a plain data widget (its own `lines` field, same shape: a system-generated audit-style record, not user-editable). No lifecycleActions: the schema carries no x-openregister-lifecycle -- a report is either regenerated (superseding this one in place, design.md D7) or not; there is no user-facing status transition to guard. No Files/calendar/comms leaves -- not a document or event. Admin/HR only, mirroring the Payroll nav group.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
+						"title": "Total wage-cost delta",
+						"icon": "CashMultiple",
+						"content": {
+							"label": "Total wage-cost delta",
+							"caption": "vs. prior period",
+							"icon": "CashMultiple",
+							"valueColor": "#0082c9",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "PayrollMutationReport",
+								"metric": "sum",
+								"field": "totalWageCostDelta",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "stat-2",
+						"type": "stat",
+						"title": "Entered",
+						"icon": "AccountPlusOutline",
+						"content": {
+							"label": "Entered",
+							"caption": "new this run",
+							"icon": "AccountPlusOutline",
+							"valueColor": "#46ba61",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "PayrollMutationReport",
+								"metric": "sum",
+								"field": "enteredCount",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "stat-3",
+						"type": "stat",
+						"title": "Left",
+						"icon": "AccountMinusOutline",
+						"content": {
+							"label": "Left",
+							"caption": "not in this run",
+							"icon": "AccountMinusOutline",
+							"valueColor": "#e9322d",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "PayrollMutationReport",
+								"metric": "sum",
+								"field": "leftCount",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "stat-4",
+						"type": "stat",
+						"title": "Changed",
+						"icon": "SwapHorizontal",
+						"content": {
+							"label": "Changed",
+							"caption": "component delta",
+							"icon": "SwapHorizontal",
+							"valueColor": "#f4a742",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "PayrollMutationReport",
+								"metric": "sum",
+								"field": "changedCount",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Mutatieoverzicht",
+						"icon": "TableColumn",
+						"content": {
+							"columns": 2,
+							"title": "Mutatieoverzicht"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "stat-2",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "stat-3",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "stat-4",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 5,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 10
+					},
+					{
+						"id": 6,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 3,
+						"gridWidth": 4,
+						"gridHeight": 10
+					}
+				]
+			}
+		},
+		{
+			"id": "WkrAssessmentDetail",
+			"route": "/wkr-assessments/:id",
+			"type": "detail",
+			"title": "WKR-beoordeling",
+			"config": {
+				"register": "hrmq",
+				"schema": "WkrAssessment",
+				"_note": "wkr-administration (2026-07-15): a WkrAssessment is the persisted computed summary AND reporting record (design.md D1) -- the PayrollMutationReportDetail stat-tile precedent: four headline KPIs (fiscale loonsom, vrije ruimte, vrije-ruimte used, eindheffing due) lead the page since that is the exposure question an accountant checks first, then the full record (status/engineVersion/assessedAt/excess/eindheffingRate) in the wa-data widget below. No lifecycleActions: the schema carries no x-openregister-lifecycle -- an assessment is either (re)computed (upserting in place, design.md D5) or not; there is no user-facing status transition to guard, only the Beoordelen recompute action (backed by PayrollController::wkrAssess(), the mutations()/adjust() no-admin-idor + admin/HR-gate precedent). No Files/calendar/comms leaves -- not a document or event. Admin/HR only, mirroring the Payroll nav group. Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
+						"title": "Fiscale loonsom",
+						"icon": "CashMultiple",
+						"content": {
+							"label": "Fiscale loonsom",
+							"caption": "dit jaar",
+							"icon": "CashMultiple",
+							"valueColor": "#0082c9",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "WkrAssessment",
+								"metric": "sum",
+								"field": "fiscaleLoonsom",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "stat-2",
+						"type": "stat",
+						"title": "Vrije ruimte",
+						"icon": "GiftOutline",
+						"content": {
+							"label": "Vrije ruimte",
+							"caption": "beschikbaar",
+							"icon": "GiftOutline",
+							"valueColor": "#46ba61",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "WkrAssessment",
+								"metric": "sum",
+								"field": "vrijeRuimte",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "stat-3",
+						"type": "stat",
+						"title": "Vrije ruimte gebruikt",
+						"icon": "CashRemove",
+						"content": {
+							"label": "Vrije ruimte gebruikt",
+							"caption": "toegewezen",
+							"icon": "CashRemove",
+							"valueColor": "#f4a742",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "WkrAssessment",
+								"metric": "sum",
+								"field": "vrijeRuimteUsed",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "stat-4",
+						"type": "stat",
+						"title": "Eindheffing verschuldigd",
+						"icon": "AlertOutline",
+						"content": {
+							"label": "Eindheffing verschuldigd",
+							"caption": "80% over overschrijding",
+							"icon": "AlertOutline",
+							"valueColor": "#e9322d",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "WkrAssessment",
+								"metric": "sum",
+								"field": "eindheffingDue",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "data",
+						"type": "data",
+						"title": "WKR-beoordeling",
+						"icon": "TableColumn",
+						"content": {
+							"columns": 2,
+							"title": "WKR-beoordeling"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "stat-2",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "stat-3",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "stat-4",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 3
+					},
+					{
+						"id": 5,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 10
+					},
+					{
+						"id": 6,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 3,
+						"gridWidth": 4,
+						"gridHeight": 10
+					}
+				],
+				"headerActions": [
+					{
+						"id": "wkr-assess",
+						"label": "Beoordelen",
+						"type": "api-call",
+						"icon": "Calculator",
+						"url": "/api/payroll/wkr-assess",
+						"method": "POST",
+						"params": {
+							"assessmentId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "WKR-beoordeling herberekend.",
+						"errorMessage": "Herberekenen van de WKR-beoordeling is mislukt."
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Payslip",
+			"params": {
+				"id": "MijnLoonstroken",
+				"route": "/mijn/loonstroken",
+				"title": "Mijn loonstroken",
+				"columns": [
+					"period",
+					"jurisdiction",
+					"grossPay",
+					"nettoPay"
+				],
+				"sort": {
+					"field": "period",
+					"order": "desc"
+				},
+				"filter": {
+					"userId": "@me",
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Jouw eigen loonstroken (alleen-lezen).",
+				"actionToggles": {
+					"showAdd": false,
+					"showEditAction": false,
+					"showDeleteAction": false,
+					"showCopyAction": false
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Employee",
+			"params": {
+				"id": "Employees",
+				"route": "/employees",
+				"title": "Werknemers",
+				"columns": [
+					"employeeNumber",
+					"firstName",
+					"lastName",
+					"startDate",
+					"endDate",
+					"taxTableColor"
+				],
+				"sort": {
+					"field": "lastName",
+					"order": "asc"
+				},
+				"filters": [
+					"taxTableColor"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "EmploymentContract",
+			"params": {
+				"id": "EmploymentContracts",
+				"route": "/contracts",
+				"title": "Contracten",
+				"columns": [
+					"employeeId",
+					"type",
+					"startDate",
+					"endDate",
+					"hourlyWage",
+					"awfTariff"
+				],
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				},
+				"filters": [
+					"type",
+					"awfTariff"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				}
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "EmploymentContract",
+			"params": {
+				"id": "EmploymentContractDetail",
+				"route": "/contracts/:id",
+				"title": "Contract",
+				"dataTitle": "Contract",
+				"dataIcon": "FileSign",
+				"relatedTitle": "Related",
+				"gridHeight": 7,
+				"note": "Leaf compliance record: no other schema in hrmq references EmploymentContract by FK, so the page is a simple two-panel layout -- the data widget (type/writtenContract/dates/hoursPerWeek/hourlyWage/cao/caoSchaal/awfTariff plus the jurisdiction-specific fields: workingTimeDocumented, overtimeMultiplier, ftePartOfYearMinijob, dpaeFiledBeforeStart) at 8-wide, excluding employeeId since the Related panel already resolves and links the owning Employee by name -- and Related at 4-wide for that one meaningful outbound ref. cao-library (2026-07-14): the ct-data widget excludes only employeeId, so the contract's cao (the referenced CAO library id) and caoSchaal (its pay scale) render here for free -- no widget change needed. No child lists (nothing points at a contract), no files/calendar/comms leaves (no linkedType or document field evidence on this schema), no lifecycleActions (EmploymentContract has no x-openregister-lifecycle). Audit history is a sidebar tab. functiehuis-hr21 (2026-07-18): the ct-data widget now also excludes normfunctieId (the new $ref, the employeeId precedent) -- the Related panel resolves and links the assigned Normfunctie by name for free, confirmed rendering the contract's HR21 function assignment.",
+				"exclude": [
+					"employeeId",
+					"normfunctieId"
+				],
+				"headerActions": [
+					{
+						"id": "generate-arbeidsovereenkomst",
+						"label": "Genereer arbeidsovereenkomst",
+						"type": "api-call",
+						"icon": "FileDocumentPlusOutline",
+						"url": "/api/documents/generate",
+						"method": "POST",
+						"params": {
+							"contractId": "@objectId",
+							"documentType": "arbeidsovereenkomst"
+						},
+						"confirm": true,
+						"successMessage": "Arbeidsovereenkomst wordt gegenereerd.",
+						"errorMessage": "Genereren van de arbeidsovereenkomst is mislukt."
+					}
+				]
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Payslip",
+			"params": {
+				"id": "Payslips",
+				"route": "/payslips",
+				"title": "Loonstroken",
+				"columns": [
+					"employeeId",
+					"period",
+					"jurisdiction",
+					"grossPay",
+					"nettoPay"
+				],
+				"sort": {
+					"field": "period",
+					"order": "desc"
+				},
+				"filters": [
+					"jurisdiction",
+					"period"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "PayrollRun",
+			"params": {
+				"id": "PayrollRuns",
+				"route": "/payroll-runs",
+				"title": "Loonruns",
+				"columns": [
+					"period",
+					"administrationId",
+					"jurisdiction",
+					"status",
+					"totalGross",
+					"totalNet"
+				],
+				"sort": {
+					"field": "period",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"jurisdiction"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"actions": [
+					{
+						"id": "create-run",
+						"label": "Loonrun aanmaken",
+						"type": "open-form",
+						"icon": "PlusCircleOutline",
+						"register": "hrmq",
+						"schema": "PayrollRun",
+						"onSuccessRoute": "PayrollRunDetail",
+						"successMessage": "Concept-loonrun aangemaakt. Gebruik (Her)berekenen om de loonstroken te genereren."
+					}
+				]
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "LoonaangifteFiling",
+			"params": {
+				"id": "LoonaangifteFilings",
+				"route": "/filings",
+				"title": "Aangiftes",
+				"columns": [
+					"period",
+					"tijdvakcode",
+					"status",
+					"deadline",
+					"submittedDate",
+					"responseStatus"
+				],
+				"sort": {
+					"field": "deadline",
+					"order": "asc"
+				},
+				"filters": [
+					"jurisdiction",
+					"filingType",
+					"status"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Wage-tax / social-security filings by period and statutory deadline."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "PayrollMutationReport",
+			"params": {
+				"id": "PayrollMutations",
+				"route": "/payroll-mutations",
+				"title": "Mutatieoverzichten",
+				"columns": [
+					"toPeriod",
+					"fromPeriod",
+					"administrationId",
+					"changedCount",
+					"totalWageCostDelta",
+					"generatedAt"
+				],
+				"sort": {
+					"field": "generatedAt",
+					"order": "desc"
+				},
+				"filters": [
+					"administrationId"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Run-to-run loonmutatie-rapporten: per periode wie is ingestroomd/uitgestroomd en de totale loonkostenverandering (payroll-mutation-reports). Admin/HR only -- gegenereerd via de \"Mutatieoverzicht\"-actie op een loonrun of via occ hrmq:payroll:mutations --persist."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "WkrDeclaration",
+			"params": {
+				"id": "WkrDeclarations",
+				"route": "/wkr-declarations",
+				"title": "WKR-verstrekkingen",
+				"columns": [
+					"administrationId",
+					"year",
+					"date",
+					"description",
+					"amount",
+					"wkrCategory"
+				],
+				"sort": {
+					"field": "date",
+					"order": "desc"
+				},
+				"filters": [
+					"wkrCategory",
+					"year"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "De ledger van vergoedingen/verstrekkingen/terbeschikkingstellingen voor de werkkostenregeling (wkr-administration). Alleen de categorie vrije-ruimte telt mee in de vrije-ruimte-berekening.",
+				"allowCreate": true,
+				"actions": [
+					{
+						"id": "create-wkr-declaration",
+						"label": "Verstrekking registreren",
+						"type": "open-form",
+						"icon": "PlusCircleOutline",
+						"register": "hrmq",
+						"schema": "WkrDeclaration",
+						"onSuccessRoute": "WkrDeclarationDetail",
+						"successMessage": "WKR-verstrekking geregistreerd."
+					}
+				]
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "hrmq",
+			"schema": "WkrDeclaration",
+			"params": {
+				"id": "WkrDeclarationDetail",
+				"route": "/wkr-declarations/:id",
+				"title": "WKR-verstrekking",
+				"dataTitle": "WKR-verstrekking",
+				"dataIcon": "GiftOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 7,
+				"note": "wkr-administration (2026-07-15): the Jaaropgaaf/EmploymentContract two-panel leaf shape -- one hand-entered ledger row with exactly one optional outbound ref (employeeId, null for a collective allowance), so wd-data (administrationId/year/date/description/amount/wkrCategory/sourceReference, excluding employeeId) sits at 8-wide and wd-related resolves+links the Employee at 4-wide. No lifecycleActions: WkrDeclaration carries no x-openregister-lifecycle -- a declaration is either recorded or corrected/deleted, there is no status workflow. Audit history is a sidebar tab.",
+				"exclude": [
+					"employeeId"
+				]
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "WkrAssessment",
+			"params": {
+				"id": "WkrAssessments",
+				"route": "/wkr-assessments",
+				"title": "WKR-beoordelingen",
+				"columns": [
+					"administrationId",
+					"year",
+					"fiscaleLoonsom",
+					"vrijeRuimteUsed",
+					"eindheffingDue",
+					"status"
+				],
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"year"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Per administratie/jaar berekende werkkostenregeling-beoordelingen: fiscale loonsom, vrije ruimte, gebruikt, en de 80%-eindheffing bij overschrijding (wkr-administration). Gegenereerd via occ hrmq:wkr:assess of de Beoordelen-actie."
+			}
+		}
+	]
+}

@@ -1,0 +1,7 @@
+[validate-manifest] manifest: /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/hrmq/src/manifest.json
+[validate-manifest] manifest.version: 1.0.0
+[validate-manifest] pages: 109
+[validate-manifest] schema: /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/hrmq/node_modules/@conduction/nextcloud-vue/src/schemas/app-manifest-v2.schema.json
+[validate-manifest] schema.version: 2.23.0
+[validate-manifest] Ajv validation: PASS (0 errors)
+exit=0

@@ -1,0 +1,246 @@
+{
+	"pages": [
+		{
+			"id": "LoonbeslagDetail",
+			"route": "/loonbeslagen/:id",
+			"type": "detail",
+			"title": "Loonbeslag",
+			"config": {
+				"register": "hrmq",
+				"schema": "Loonbeslag",
+				"_note": "loonbeslag (2026-07-15): the WkrAssessmentDetail stat-tile precedent -- three headline KPIs (ordered amount, beslagvrije voet, total claim) lead the page since that is the exposure question HR checks first, then the full record (creditor/dossierRef/status/effectiveFrom/effectiveTo/activated*/settled*/withdrawn*) in the lb-data widget below. No lifecycleActions: Loonbeslag.status carries no x-openregister-lifecycle (design.md D5) -- the admin/HR-gate-before-resolve check a lifecycle guard's (object, action, userId) contract cannot express, so all three transitions are guarded api-call actions against LoonbeslagController instead. The withdraw action's `reason` param is currently a fixed default string (the manifest v2 api-call action type has no free-text prompt collection) -- a prompt-collecting modal is a named fast-follow (README). Admin/HR only, mirroring the Payroll nav group. Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
+						"title": "Ordered amount",
+						"icon": "CashMinus",
+						"content": {
+							"label": "Ordered amount",
+							"caption": "per periode",
+							"icon": "CashMinus",
+							"valueColor": "#e9322d",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "Loonbeslag",
+								"metric": "sum",
+								"field": "orderedAmount",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "stat-2",
+						"type": "stat",
+						"title": "Beslagvrije voet",
+						"icon": "ShieldCheckOutline",
+						"content": {
+							"label": "Beslagvrije voet",
+							"caption": "beschermd minimum",
+							"icon": "ShieldCheckOutline",
+							"valueColor": "#46ba61",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "Loonbeslag",
+								"metric": "sum",
+								"field": "beslagvrijeVoet",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "stat-3",
+						"type": "stat",
+						"title": "Totale vordering",
+						"icon": "CashMultiple",
+						"content": {
+							"label": "Totale vordering",
+							"caption": "totaal beslag",
+							"icon": "CashMultiple",
+							"valueColor": "#0082c9",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "Loonbeslag",
+								"metric": "sum",
+								"field": "totalClaim",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Loonbeslag",
+						"icon": "Gavel",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId"
+							],
+							"title": "Loonbeslag"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "stat-2",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "stat-3",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 12
+					},
+					{
+						"id": 5,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 3,
+						"gridWidth": 4,
+						"gridHeight": 12
+					}
+				],
+				"headerActions": [
+					{
+						"id": "loonbeslag-activate",
+						"label": "Verifiëren en activeren",
+						"type": "api-call",
+						"icon": "CheckCircleOutline",
+						"url": "/api/loonbeslag/activate",
+						"method": "POST",
+						"params": {
+							"loonbeslagId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Loonbeslag geverifieerd en geactiveerd.",
+						"errorMessage": "Activeren van het loonbeslag is mislukt."
+					},
+					{
+						"id": "loonbeslag-settle",
+						"label": "Markeer voldaan",
+						"type": "api-call",
+						"icon": "CashCheck",
+						"url": "/api/loonbeslag/settle",
+						"method": "POST",
+						"params": {
+							"loonbeslagId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Loonbeslag gemarkeerd als voldaan.",
+						"errorMessage": "Markeren als voldaan is mislukt."
+					},
+					{
+						"id": "loonbeslag-withdraw",
+						"label": "Intrekken",
+						"type": "api-call",
+						"icon": "CloseCircleOutline",
+						"url": "/api/loonbeslag/withdraw",
+						"method": "POST",
+						"params": {
+							"loonbeslagId": "@objectId",
+							"reason": "Ingetrokken door beheerder/HR via het beheerpaneel."
+						},
+						"confirm": true,
+						"successMessage": "Loonbeslag ingetrokken.",
+						"errorMessage": "Intrekken van het loonbeslag is mislukt."
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "Loonbeslag",
+			"params": {
+				"id": "Loonbeslagen",
+				"route": "/loonbeslagen",
+				"title": "Loonbeslagen",
+				"columns": [
+					"employeeId",
+					"creditor",
+					"dossierRef",
+					"orderedAmount",
+					"beslagvrijeVoet",
+					"status",
+					"effectiveFrom"
+				],
+				"sort": {
+					"field": "effectiveFrom",
+					"order": "desc"
+				},
+				"filters": [
+					"status"
+				],
+				"description": "Court/deurwaarder-ordered wage garnishments (loonbeslag): de floor-clamped periodieke deductie op nettoPay -- nooit onder de beslagvrije voet -- gevouwen in de lopende loonrun na verrekening en verlofkoop-verkoop. Admin/HR-only; activeren/voldaan-markeren/intrekken via de gegroeide acties, nooit een kaal lifecycle-transitieknop.",
+				"actions": [
+					{
+						"id": "create-loonbeslag",
+						"label": "Loonbeslag registreren",
+						"type": "open-form",
+						"icon": "PlusCircleOutline",
+						"register": "hrmq",
+						"schema": "Loonbeslag",
+						"onSuccessRoute": "LoonbeslagDetail",
+						"successMessage": "Loonbeslag geregistreerd (status concept -- gebruik Verifiëren en activeren om deducties te starten)."
+					}
+				]
+			}
+		}
+	]
+}

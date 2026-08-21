@@ -1,0 +1,142 @@
+{
+	"pages": [
+		{
+			"id": "PayrollAdjustmentDetail",
+			"route": "/payroll-adjustments/:id",
+			"type": "detail",
+			"title": "Correctie (TWK)",
+			"config": {
+				"register": "hrmq",
+				"schema": "PayrollAdjustment",
+				"_note": "retro-adjustments (2026-07-15): a PayrollAdjustment is a DELTA against a sealed original -- pa-delta leads top-left as the stat KPI an accountant reviews (the net nabetaling/terugvordering amount actually settling into the current run), pa-related sits top-right to resolve the four $ref fields (employeeId, originalPayrollRunId, originalPayslipId, settlementPayrollRunId) at matching height, and pa-data runs full-width below with the remaining record fields (excluding those four $refs, already resolved by Related). No lifecycleActions: status is a plain draft/applied enum with no x-openregister-lifecycle map (the PayrollRunDetail precedent -- design.md D8); the page-level 'Herrekenen' api-call is the only action, guarded server-side by PayrollController::adjust() (404 unresolvable/unauthorized, 400 already-applied). Audit history is a sidebar tab.",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "stat",
+						"type": "stat",
+						"title": "Delta net",
+						"icon": "CashSync",
+						"content": {
+							"label": "Delta net",
+							"caption": "nabetaling / terugvordering",
+							"icon": "CashSync",
+							"valueColor": "#0082c9",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "PayrollAdjustment",
+								"metric": "sum",
+								"field": "deltaNet",
+								"filter": {
+									"id": "@objectId"
+								}
+							}
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Correctie",
+						"icon": "CashSync",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"originalPayrollRunId",
+								"originalPayslipId",
+								"settlementPayrollRunId"
+							],
+							"title": "Correctie"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "stat",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 12
+					},
+					{
+						"id": 3,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 8,
+						"gridHeight": 9
+					}
+				],
+				"headerActions": [
+					{
+						"id": "recompute",
+						"label": "Herrekenen",
+						"type": "api-call",
+						"icon": "Calculator",
+						"url": "/api/payroll/adjust",
+						"method": "POST",
+						"params": {
+							"adjustmentId": "@objectId"
+						},
+						"confirm": true,
+						"successMessage": "Correctie herrekend — de delta is bijgewerkt.",
+						"errorMessage": "Herrekenen van de correctie is mislukt."
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "PayrollAdjustment",
+			"params": {
+				"id": "PayrollAdjustments",
+				"route": "/payroll-adjustments",
+				"title": "Correcties (TWK)",
+				"columns": [
+					"employeeId",
+					"originalPeriod",
+					"settlementPeriod",
+					"settlementLine",
+					"deltaNet",
+					"status"
+				],
+				"sort": {
+					"field": "originalPeriod",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"settlementLine"
+				],
+				"description": "Terugwerkende kracht (TWK) correcties op gesealde loonstroken -- elke rij is een berekende delta, nooit een wijziging van de oorspronkelijke loonstrook (retro-adjustments)."
+			}
+		}
+	]
+}

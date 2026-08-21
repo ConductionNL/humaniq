@@ -1,0 +1,75 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "hrmq",
+			"schema": "WntDisclosure",
+			"params": {
+				"id": "WntDisclosures",
+				"route": "/wnt-disclosures",
+				"title": "WNT-verantwoording",
+				"columns": [
+					"year",
+					"employeeId",
+					"totalCompensation",
+					"status"
+				],
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				},
+				"filters": [
+					"year",
+					"status"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Jaarlijkse WNT-verantwoording per topfunctionaris: de bezoldiging per jaar en de publicatiestatus. De verzameling regels van een jaar IS de WNT-verantwoording van dat jaar (wnt-disclosure)."
+			}
+		},
+		{
+			"templateRef": "dualDataScaffold",
+			"register": "hrmq",
+			"schema": "WntDisclosure",
+			"params": {
+				"id": "WntDisclosureDetail",
+				"route": "/wnt-disclosures/:id",
+				"title": "WNT-verantwoording",
+				"statusTitle": "Bezoldiging & status",
+				"statusIcon": "ScaleBalance",
+				"statusInclude": [
+					"year",
+					"totalCompensation",
+					"status"
+				],
+				"statusOverrides": {
+					"status": {
+						"editable": false
+					}
+				},
+				"dataTitle": "Verantwoording",
+				"dataIcon": "ScaleBalance",
+				"dataExclude": [
+					"employeeId"
+				],
+				"dataHeight": 6,
+				"relatedHeight": 9,
+				"note": "wnt-disclosure: the annual WNT-verantwoording record for one topfunctionaris (PensionFilingDetail shape -- a per-period disclosure carrying a real FK, employeeId -> Employee). wd-status leads top-left with the year/totalCompensation/status facts; wd-related sits top-right at matching height to resolve and link the referenced topfunctionaris Employee (whose wntTopfunctionaris/wntUitzonderingReden drive the nl-wnt-norm-overschrijding audit); wd-data runs below with the remaining fields excluding employeeId since Related already resolves it. No stats-block (the vendored schema's metric only aggregates over a collection, cannot echo a scalar field of the current object -- PensionFilingDetail reasoning). No Files/comms/calendar leaves -- the disclosure carries no attached-document/appointment fields. lifecycleActions expose the single publiceren transition (concept -> gepubliceerd, no guard). Audit history is a sidebar tab.",
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "publiceren",
+							"from": [
+								"concept"
+							],
+							"to": "gepubliceerd",
+							"label": "Publiceren"
+						}
+					]
+				}
+			}
+		}
+	]
+}
