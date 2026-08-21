@@ -737,204 +737,230 @@
 			"title": "Dashboard",
 			"config": {
 				"description": "Six steering indicators: five trends, and one list of obligations that carry a deadline.",
-				"_note": "hrmq-dashboard-steering-indicators replaces the prior 15-widget queue-depth Dashboard (12 stat tiles + 3 object-table lists) with 6 steering indicators. Billable ratio and Headcount & turnover bind via dataSource (raw GraphQL, no new backend endpoint, unguarded — the same exposure every Employees/Timesheets index page already has today); the filter/tenant-scoping token grammar (`@workspace.activeAdministrationId?`) does NOT apply to the raw-GraphQL dataSource form (`useDataSource.js`'s `queryAndVars` passes `graphql.query`/`graphql.variables` through unresolved — confirmed by reading the composable, both in the sibling source tree and the installed dist), so these two widgets are UNSCOPED across administrations rather than carrying the (broken, per brief §6) sentinel token — no worse than today's index-page exposure, but not literally what design.md D4 describes either. Both are also single-series, not the two-named-series design.md's D1 table describes: `useDataSource`'s raw-GraphQL `selectors` map performs one dot-path pluck per output key (`selectByPath` in `useGraphQL.js`) with no mechanism to assemble two differently-aliased root fields into one `[{name,data}]` series array — verified against the installed dist, not just the source tree. Absence rate / Payroll cost per period / Approval lead time bind via `endpointSource` to the new guarded `AnalyticsController::trends()` (REQ-DSI-004/006/007); Obligations binds via `endpointSource` to `AnalyticsController::obligations()` (REQ-DSI-008/009). All three trend `endpointSource` widgets go through the local `chart` widgetKey override (`registry.js` → `src/widgets/TrendChartWidget.vue`), which does its OWN null-safe series mapping rather than delegating to CnChartWidget's native `endpointSource` prop — that prop's own `Number(value) || 0` mapping (`CnChartWidget.vue`'s `endpointChartData`, confirmed in the installed dist) silently turns a `null` bucket into `0`, which is exactly the 'measurement that never ran reads as a good result' failure REQ-DSI-004's null-not-zero contract exists to prevent. The `chart` widgetKey is ALSO overridden for a second, independent reason: CnChartWidget (registered in the library's dashboard-widget catalog) was built to be embedded inside CnDashboardPage's own per-widget template, which supplies the title bar externally — it has no `title` prop and does not self-wrap in CnWidgetWrapper, and `CnWidgetGrid` (the only renderer hrmq's pages use, since every page has a `slot:\"body\"` widget) mounts it bare. `TrendChartWidget.vue` bridges both gaps — the SAME `effectiveRegistry`-wins-over-catalog mechanism `registry.js` already uses for `stat`, and the same bridge-a-mismatched-library-component pattern already used for `actions`/`lifecycle-actions`. The Obligations `object-table` widget uses CnWidgetObjectTable's REAL flat prop names directly (`endpointSource`/`columns`/`emptyText`, siblings of `title` under `props`) rather than nesting them under a `content` key the way the removed 'Aflopende contracten'/'Aflopende BHV-certificaten' widgets did — CnWidgetObjectTable declares no `content` prop (confirmed in both the source tree and the installed dist), so that nested shape would not have reached the component; a per-row route to each obligation's own detail page (SickLeaveCaseDetail/EmploymentContractDetail/BhvCertificeringDetail, varying by row TYPE) is not wired: CnWidgetObjectTable's `rowRoute` is a single STATIC route-name string for the whole table, not a per-row dynamic selector, so the endpoint's own per-row `route` field is carried in the response but not yet clickable from this widget."
-			},
-			"widgets": [
-				{
-					"widgetKey": "chart",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 4,
-					"props": {
-						"_note": "REQ-DSI-002. Bound to the GUARDED, register-scoped AnalyticsController::trends() endpoint, not to a raw-GraphQL dataSource. The dataSource form resolved a type by NAME across every register on the instance: measured live, the sibling Headcount widget's `Employee` root field resolved to schema 5050 in an unrelated register (the GraphQL type is named `Employee5050Connection`), NOT hrmq's Employee (1080) -- `startDate` answered 'not a declared property' while `employeeNumber` cheerfully returned three rows belonging to another app. It also could not carry an administrationId filter at all (useDataSource passes graphql.query through without resolving @workspace.* tokens), so it was unscoped across tenants. The endpoint is scoped by register AND by the caller's authorized administration, and emits null (never 0) for a period with no registered hours.",
+				"_note": "hrmq-dashboard-steering-indicators replaces the prior 15-widget queue-depth Dashboard (12 stat tiles + 3 object-table lists) with 6 steering indicators. Billable ratio and Headcount & turnover bind via dataSource (raw GraphQL, no new backend endpoint, unguarded — the same exposure every Employees/Timesheets index page already has today); the filter/tenant-scoping token grammar (`@workspace.activeAdministrationId?`) does NOT apply to the raw-GraphQL dataSource form (`useDataSource.js`'s `queryAndVars` passes `graphql.query`/`graphql.variables` through unresolved — confirmed by reading the composable, both in the sibling source tree and the installed dist), so these two widgets are UNSCOPED across administrations rather than carrying the (broken, per brief §6) sentinel token — no worse than today's index-page exposure, but not literally what design.md D4 describes either. Both are also single-series, not the two-named-series design.md's D1 table describes: `useDataSource`'s raw-GraphQL `selectors` map performs one dot-path pluck per output key (`selectByPath` in `useGraphQL.js`) with no mechanism to assemble two differently-aliased root fields into one `[{name,data}]` series array — verified against the installed dist, not just the source tree. Absence rate / Payroll cost per period / Approval lead time bind via `endpointSource` to the new guarded `AnalyticsController::trends()` (REQ-DSI-004/006/007); Obligations binds via `endpointSource` to `AnalyticsController::obligations()` (REQ-DSI-008/009). All three trend `endpointSource` widgets go through the local `chart` widgetKey override (`registry.js` → `src/widgets/TrendChartWidget.vue`), which does its OWN null-safe series mapping rather than delegating to CnChartWidget's native `endpointSource` prop — that prop's own `Number(value) || 0` mapping (`CnChartWidget.vue`'s `endpointChartData`, confirmed in the installed dist) silently turns a `null` bucket into `0`, which is exactly the 'measurement that never ran reads as a good result' failure REQ-DSI-004's null-not-zero contract exists to prevent. The `chart` widgetKey is ALSO overridden for a second, independent reason: CnChartWidget (registered in the library's dashboard-widget catalog) was built to be embedded inside CnDashboardPage's own per-widget template, which supplies the title bar externally — it has no `title` prop and does not self-wrap in CnWidgetWrapper, and `CnWidgetGrid` (the only renderer hrmq's pages use, since every page has a `slot:\"body\"` widget) mounts it bare. `TrendChartWidget.vue` bridges both gaps — the SAME `effectiveRegistry`-wins-over-catalog mechanism `registry.js` already uses for `stat`, and the same bridge-a-mismatched-library-component pattern already used for `actions`/`lifecycle-actions`. The Obligations `object-table` widget uses CnWidgetObjectTable's REAL flat prop names directly (`endpointSource`/`columns`/`emptyText`, siblings of `title` under `props`) rather than nesting them under a `content` key the way the removed 'Aflopende contracten'/'Aflopende BHV-certificaten' widgets did — CnWidgetObjectTable declares no `content` prop (confirmed in both the source tree and the installed dist), so that nested shape would not have reached the component; a per-row route to each obligation's own detail page (SickLeaveCaseDetail/EmploymentContractDetail/BhvCertificeringDetail, varying by row TYPE) is not wired: CnWidgetObjectTable's `rowRoute` is a single STATIC route-name string for the whole table, not a per-row dynamic selector, so the endpoint's own per-row `route` field is carried in the response but not yet clickable from this widget.",
+				"widgets": [
+					{
+						"id": "chart",
+						"type": "chart",
 						"title": "Billable ratio",
-						"type": "line",
-						"height": "100%",
-						"valueFormat": "percent",
-						"endpointSource": {
-							"url": "/apps/hrmq/api/analytics/trends",
-							"params": {
-								"metric": "billable-ratio"
+						"_note": "REQ-DSI-002. Bound to the GUARDED, register-scoped AnalyticsController::trends() endpoint, not to a raw-GraphQL dataSource. The dataSource form resolved a type by NAME across every register on the instance: measured live, the sibling Headcount widget's `Employee` root field resolved to schema 5050 in an unrelated register (the GraphQL type is named `Employee5050Connection`), NOT hrmq's Employee (1080) -- `startDate` answered 'not a declared property' while `employeeNumber` cheerfully returned three rows belonging to another app. It also could not carry an administrationId filter at all (useDataSource passes graphql.query through without resolving @workspace.* tokens), so it was unscoped across tenants. The endpoint is scoped by register AND by the caller's authorized administration, and emits null (never 0) for a period with no registered hours.",
+						"content": {
+							"type": "line",
+							"height": "100%",
+							"valueFormat": "percent",
+							"endpointSource": {
+								"url": "/apps/hrmq/api/analytics/trends",
+								"params": {
+									"metric": "billable-ratio"
+								},
+								"responsePath": "series"
 							},
-							"responsePath": "series"
-						},
-						"labelsPath": "date",
-						"seriesFields": [
-							{
-								"name": "Billable ratio",
-								"path": "value"
-							}
-						],
-						"emptyLabel": "No hours registered yet"
-					}
-				},
-				{
-					"widgetKey": "chart",
-					"slot": "body",
-					"gridX": 4,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 4,
-					"props": {
+							"labelsPath": "date",
+							"seriesFields": [
+								{
+									"name": "Billable ratio",
+									"path": "value"
+								}
+							],
+							"emptyLabel": "No hours registered yet"
+						}
+					},
+					{
+						"id": "chart-2",
+						"type": "chart",
 						"title": "Absence rate",
-						"type": "line",
-						"height": "100%",
-						"valueFormat": "percent",
-						"endpointSource": {
-							"url": "/apps/hrmq/api/analytics/trends",
-							"params": {
-								"metric": "absence-rate"
+						"content": {
+							"type": "line",
+							"height": "100%",
+							"valueFormat": "percent",
+							"endpointSource": {
+								"url": "/apps/hrmq/api/analytics/trends",
+								"params": {
+									"metric": "absence-rate"
+								},
+								"responsePath": "series"
 							},
-							"responsePath": "series"
-						},
-						"labelsPath": "date",
-						"seriesFields": [
-							{
-								"name": "Absence rate",
-								"path": "value"
-							}
-						],
-						"emptyLabel": "No absence data yet"
-					}
-				},
-				{
-					"widgetKey": "chart",
-					"slot": "body",
-					"gridX": 8,
-					"gridY": 0,
-					"gridWidth": 4,
-					"gridHeight": 4,
-					"props": {
-						"_note": "REQ-DSI-003. Bound to the GUARDED, register-scoped AnalyticsController::trends() endpoint. This is the widget that EXPOSED the cross-register resolution defect described on Billable ratio above: its raw-GraphQL `Employee` root field resolved to schema 5050 in another register, so `groupBy: {field: \"startDate\"}` returned `field \"startDate\" is not a declared property of the schema` and the widget threw `e.map is not a function` into the console on every Dashboard load. Now three honest series -- headcount at period END, starters and leavers WITHIN the period -- instead of the single starters series the dataSource form could produce (useGraphQL's selectors do one dot-path pluck per output key and cannot assemble two aliased root fields into one series array).",
+							"labelsPath": "date",
+							"seriesFields": [
+								{
+									"name": "Absence rate",
+									"path": "value"
+								}
+							],
+							"emptyLabel": "No absence data yet"
+						}
+					},
+					{
+						"id": "chart-3",
+						"type": "chart",
 						"title": "Headcount and turnover",
-						"type": "bar",
-						"height": "100%",
-						"endpointSource": {
-							"url": "/apps/hrmq/api/analytics/trends",
-							"params": {
-								"metric": "headcount"
+						"_note": "REQ-DSI-003. Bound to the GUARDED, register-scoped AnalyticsController::trends() endpoint. This is the widget that EXPOSED the cross-register resolution defect described on Billable ratio above: its raw-GraphQL `Employee` root field resolved to schema 5050 in another register, so `groupBy: {field: \"startDate\"}` returned `field \"startDate\" is not a declared property of the schema` and the widget threw `e.map is not a function` into the console on every Dashboard load. Now three honest series -- headcount at period END, starters and leavers WITHIN the period -- instead of the single starters series the dataSource form could produce (useGraphQL's selectors do one dot-path pluck per output key and cannot assemble two aliased root fields into one series array).",
+						"content": {
+							"type": "bar",
+							"height": "100%",
+							"endpointSource": {
+								"url": "/apps/hrmq/api/analytics/trends",
+								"params": {
+									"metric": "headcount"
+								},
+								"responsePath": "series"
 							},
-							"responsePath": "series"
-						},
-						"labelsPath": "date",
-						"seriesFields": [
-							{
-								"name": "Headcount",
-								"path": "headcount"
-							},
-							{
-								"name": "Starters",
-								"path": "starters"
-							},
-							{
-								"name": "Leavers",
-								"path": "leavers"
-							}
-						],
-						"emptyLabel": "No employees with a start date yet"
-					}
-				},
-				{
-					"widgetKey": "chart",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 4,
-					"gridWidth": 6,
-					"gridHeight": 4,
-					"props": {
+							"labelsPath": "date",
+							"seriesFields": [
+								{
+									"name": "Headcount",
+									"path": "headcount"
+								},
+								{
+									"name": "Starters",
+									"path": "starters"
+								},
+								{
+									"name": "Leavers",
+									"path": "leavers"
+								}
+							],
+							"emptyLabel": "No employees with a start date yet"
+						}
+					},
+					{
+						"id": "chart-4",
+						"type": "chart",
 						"title": "Payroll cost per period",
-						"type": "bar",
-						"height": "100%",
-						"valueFormat": {
-							"name": "currency",
-							"currency": "EUR",
-							"decimals": 0
-						},
-						"endpointSource": {
-							"url": "/apps/hrmq/api/analytics/trends",
-							"params": {
-								"metric": "payroll-cost"
+						"content": {
+							"type": "bar",
+							"height": "100%",
+							"valueFormat": {
+								"name": "currency",
+								"currency": "EUR",
+								"decimals": 0
 							},
-							"responsePath": "series"
-						},
-						"labelsPath": "date",
-						"seriesFields": [
-							{
-								"name": "Payroll cost",
-								"path": "value"
-							}
-						],
-						"emptyLabel": "No completed payroll runs yet"
-					}
-				},
-				{
-					"widgetKey": "chart",
-					"slot": "body",
-					"gridX": 6,
-					"gridY": 4,
-					"gridWidth": 6,
-					"gridHeight": 4,
-					"props": {
+							"endpointSource": {
+								"url": "/apps/hrmq/api/analytics/trends",
+								"params": {
+									"metric": "payroll-cost"
+								},
+								"responsePath": "series"
+							},
+							"labelsPath": "date",
+							"seriesFields": [
+								{
+									"name": "Payroll cost",
+									"path": "value"
+								}
+							],
+							"emptyLabel": "No completed payroll runs yet"
+						}
+					},
+					{
+						"id": "chart-5",
+						"type": "chart",
 						"title": "Approval lead time",
-						"type": "line",
-						"height": "100%",
-						"endpointSource": {
-							"url": "/apps/hrmq/api/analytics/trends",
-							"params": {
-								"metric": "approval-lead-time"
+						"content": {
+							"type": "line",
+							"height": "100%",
+							"endpointSource": {
+								"url": "/apps/hrmq/api/analytics/trends",
+								"params": {
+									"metric": "approval-lead-time"
+								},
+								"responsePath": "series"
 							},
-							"responsePath": "series"
-						},
-						"labelsPath": "date",
-						"seriesFields": [
-							{
-								"name": "Median (days)",
-								"path": "median"
-							},
-							{
-								"name": "P90 (days)",
-								"path": "p90"
-							}
-						],
-						"emptyLabel": "No approved requests yet"
-					}
-				},
-				{
-					"widgetKey": "object-table",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 8,
-					"gridWidth": 12,
-					"gridHeight": 5,
-					"props": {
+							"labelsPath": "date",
+							"seriesFields": [
+								{
+									"name": "Median (days)",
+									"path": "median"
+								},
+								{
+									"name": "P90 (days)",
+									"path": "p90"
+								}
+							],
+							"emptyLabel": "No approved requests yet"
+						}
+					},
+					{
+						"id": "object-table",
+						"type": "object-table",
 						"title": "Open obligations",
 						"_note": "REQ-DSI-008/009. Merges due-and-not-done WVP milestones (SickLeaveCase), expiring temporary contracts (EmploymentContract, unchanged hr-signals 60-day window), and expiring BHV certificates (BhvCertificering, unchanged bhv-organisatie 90-day window) into one list sorted by nearest dueDate, each row carrying a best-effort mandatory-violation badge. Replaces 'Mijn recente uren' / 'Aflopende contracten' / 'Aflopende BHV-certificaten' (mijn-hr-self-service REQ-MHS-005 removed; hr-signals REQ-SIG-005 and bhv-organisatie REQ-BHV-005 modified -- their signals now surface here instead of a dedicated widget). Flat props (endpointSource/columns/emptyText as siblings of title), NOT nested under a content key -- CnWidgetObjectTable declares no content prop (verified against both the nextcloud-vue source tree and the installed dist); no per-row route: CnWidgetObjectTable's rowRoute is a single static route-name string for the whole table, not a per-row dynamic selector, so the endpoint's own per-row route field (which varies by row type) is not yet clickable from here.",
-						"endpointSource": {
-							"url": "/apps/hrmq/api/analytics/obligations",
-							"responsePath": "obligations"
-						},
-						"columns": [
-							{
-								"key": "type",
-								"cellClass": "cn-cell--muted"
+						"content": {
+							"endpointSource": {
+								"url": "/apps/hrmq/api/analytics/obligations",
+								"responsePath": "obligations"
 							},
-							{
-								"key": "subject",
-								"cellClass": "cn-cell--strong"
-							},
-							{
-								"key": "dueDate"
-							},
-							{
-								"key": "violations"
-							}
-						],
-						"emptyText": "No open obligations"
+							"columns": [
+								{
+									"key": "type",
+									"cellClass": "cn-cell--muted"
+								},
+								{
+									"key": "subject",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "dueDate"
+								},
+								{
+									"key": "violations"
+								}
+							],
+							"emptyText": "No open obligations"
+						}
 					}
-				}
-			]
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "chart",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 4
+					},
+					{
+						"id": 2,
+						"widgetId": "chart-2",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 4
+					},
+					{
+						"id": 3,
+						"widgetId": "chart-3",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 4
+					},
+					{
+						"id": 4,
+						"widgetId": "chart-4",
+						"gridX": 0,
+						"gridY": 4,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 5,
+						"widgetId": "chart-5",
+						"gridX": 6,
+						"gridY": 4,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 6,
+						"widgetId": "object-table",
+						"gridX": 0,
+						"gridY": 8,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				]
+			}
 		},
 		{
 			"id": "MijnUren",
@@ -8042,40 +8068,50 @@
 			"title": "Mijn gebruikelijk loon",
 			"config": {
 				"description": "Zie of je loon als DGA voldoet aan de gebruikelijkloonnorm -- zonder accountant of occ-tool.",
-				"_note": "single-person-modes (REQ-SPM-006/D5): a self-service surface for the EXISTING nl-gebruikelijkloon-norm verdict for the caller's own DGA Employee. The whole menu entry is visibleIf-gated on administrationMode: dga_single_person (D2/D3). The warning banner is bound to the read-only, stateless GET /apps/hrmq/api/payroll/dga-status endpoint (PayrollController::dgaStatus, which REUSES NlDgaChecks' predicate -- zero new tax logic, zero new persistence): visibleWhen {endpoint, field: met, op: eq, value: false} renders it only when the caller's own annualised loon is below norm AND unjustified. The endpoint takes no per-object parameter (it always means 'my own record', D5.1), so the visibleWhen.endpoint non-templated same-origin path applies cleanly -- no object id to interpolate, the documented fallback (a custom widget) is not needed. Fail-safe: the banner stays hidden on a 404 (no Employee, or Employee not a DGA -- both collapse to the same status, D5.1) or any fetch failure, so a non-DGA caller who somehow reaches this route sees no alert. The info banner is always visible and explains the page. Both widgets are built-in `banner` (CnBannerWidget) -- no custom component, no single-widget-dashboard anti-pattern."
-			},
-			"widgets": [
-				{
-					"widgetKey": "banner",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 2,
-					"props": {
-						"variant": "info",
-						"text": "Als directeur-grootaandeelhouder (DGA) moet je jezelf minimaal het gebruikelijk loon uitbetalen. Ligt je loon eronder zonder vastgelegde onderbouwing, dan zie je hieronder een waarschuwing."
-					}
-				},
-				{
-					"widgetKey": "banner",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 2,
-					"gridWidth": 12,
-					"gridHeight": 2,
-					"props": {
-						"variant": "warning",
-						"text": "Je loon ligt onder de gebruikelijkloonnorm en er is geen onderbouwing vastgelegd. Verhoog je maandloon of leg een onderbouwing vast op je werknemersrecord.",
-						"visibleWhen": {
-							"endpoint": "/apps/hrmq/api/payroll/dga-status",
-							"field": "met",
-							"op": "eq",
-							"value": false
+				"_note": "single-person-modes (REQ-SPM-006/D5): a self-service surface for the EXISTING nl-gebruikelijkloon-norm verdict for the caller's own DGA Employee. The whole menu entry is visibleIf-gated on administrationMode: dga_single_person (D2/D3). The warning banner is bound to the read-only, stateless GET /apps/hrmq/api/payroll/dga-status endpoint (PayrollController::dgaStatus, which REUSES NlDgaChecks' predicate -- zero new tax logic, zero new persistence): visibleWhen {endpoint, field: met, op: eq, value: false} renders it only when the caller's own annualised loon is below norm AND unjustified. The endpoint takes no per-object parameter (it always means 'my own record', D5.1), so the visibleWhen.endpoint non-templated same-origin path applies cleanly -- no object id to interpolate, the documented fallback (a custom widget) is not needed. Fail-safe: the banner stays hidden on a 404 (no Employee, or Employee not a DGA -- both collapse to the same status, D5.1) or any fetch failure, so a non-DGA caller who somehow reaches this route sees no alert. The info banner is always visible and explains the page. Both widgets are built-in `banner` (CnBannerWidget) -- no custom component, no single-widget-dashboard anti-pattern.",
+				"widgets": [
+					{
+						"id": "banner",
+						"type": "banner",
+						"content": {
+							"variant": "info",
+							"text": "Als directeur-grootaandeelhouder (DGA) moet je jezelf minimaal het gebruikelijk loon uitbetalen. Ligt je loon eronder zonder vastgelegde onderbouwing, dan zie je hieronder een waarschuwing."
+						}
+					},
+					{
+						"id": "banner-2",
+						"type": "banner",
+						"content": {
+							"variant": "warning",
+							"text": "Je loon ligt onder de gebruikelijkloonnorm en er is geen onderbouwing vastgelegd. Verhoog je maandloon of leg een onderbouwing vast op je werknemersrecord.",
+							"visibleWhen": {
+								"endpoint": "/apps/hrmq/api/payroll/dga-status",
+								"field": "met",
+								"op": "eq",
+								"value": false
+							}
 						}
 					}
-				}
-			]
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "banner",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 2
+					},
+					{
+						"id": 2,
+						"widgetId": "banner-2",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 2
+					}
+				]
+			}
 		},
 		{
 			"id": "Administraties",
