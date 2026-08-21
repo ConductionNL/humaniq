@@ -463,6 +463,74 @@ class MigrateHoursProcessTest extends TestCase {
 	}//end testUnparseablePeriodSynthesizesNothing()
 
 	/**
+	 * The synthetic entry carries the parent timesheet's employee link
+	 * VERBATIM, so a uuid-shaped reference survives the copy unchanged —
+	 * `TimeEntry.employeeId` is `$ref: Employee` + `format: uuid`, and a
+	 * mangled or truncated value would fail that format on the migration
+	 * write.
+	 *
+	 * @return void
+	 */
+	public function testSynthesizedEntryCarriesTheUuidEmployeeLinkVerbatim(): void {
+		$uuid = '2f8b1c44-6d3e-4a17-9f02-5c7ab9e10d33';
+		$this->store->seed('Employee', $uuid, ['nextcloudUserId' => 'sanne', 'administrationId' => 'ADM-001']);
+		$this->store->seed('Timesheet', 'timesheet-uuid-link', [
+			'employeeId' => $uuid,
+			'period' => '2026-04',
+			'hours' => 8,
+			'status' => 'draft',
+		]);
+
+		$this->repair->migrate();
+
+		$entry = $this->entryFor('timesheet-uuid-link');
+		$this->assertSame($uuid, ($entry['employeeId'] ?? null), 'The uuid reference is copied through untouched.');
+		$this->assertSame('timesheet-uuid-link', $entry['timesheetId'], 'The parent link is the timesheet id itself.');
+	}//end testSynthesizedEntryCarriesTheUuidEmployeeLinkVerbatim()
+
+	/**
+	 * A legacy timesheet with no employee link contributes NO `employeeId`
+	 * key at all, rather than an empty string. `employeeId` is deliberately
+	 * absent from TimeEntry's `required` list, so omitting it is legal —
+	 * while `""` would violate the property's `format: uuid` and fail the
+	 * whole migration write.
+	 *
+	 * @return void
+	 */
+	public function testSynthesizedEntryOmitsAnUnlinkedEmployeeRatherThanWritingEmptyString(): void {
+		$this->store->seed('Timesheet', 'timesheet-unlinked', [
+			'employeeId' => '',
+			'period' => '2026-04',
+			'hours' => 8,
+			'status' => 'draft',
+		]);
+
+		$this->repair->migrate();
+
+		$entry = $this->entryFor('timesheet-unlinked');
+		$this->assertArrayNotHasKey('employeeId', $entry, 'No key beats an unvalidatable empty string.');
+	}//end testSynthesizedEntryOmitsAnUnlinkedEmployeeRatherThanWritingEmptyString()
+
+	/**
+	 * The single synthesized TimeEntry whose `timesheetId` is the given id.
+	 *
+	 * @param string $timesheetId The parent timesheet id.
+	 *
+	 * @return array<string, mixed> The entry payload.
+	 */
+	private function entryFor(string $timesheetId): array {
+		$matches = array_values(
+			array_filter(
+				($this->store->state->objects['TimeEntry'] ?? []),
+				static fn (array $e): bool => ($e['timesheetId'] ?? '') === $timesheetId
+			)
+		);
+		$this->assertCount(1, $matches, 'Exactly one migration entry per legacy timesheet.');
+
+		return $matches[0];
+	}//end entryFor()
+
+	/**
 	 * Week-grain periods (`YYYY-Www`, `YYYY-Www-D`) anchor the synthetic
 	 * entry at the ISO week start / week day at 00:00 UTC — the same grain
 	 * family the typed event's classifier recognises.

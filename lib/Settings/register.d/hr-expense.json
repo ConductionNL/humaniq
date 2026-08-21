@@ -288,7 +288,7 @@
                     "schema": "Expense",
                     "slug": "expense-devries-lunch-receipt"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "title": "Werklunch klantbezoek Rotterdam",
                 "description": "Lunch met klant, kassabon bijgevoegd voor automatische receipt-extractie (receipt-ocr voorbeeld).",
                 "amount": 32.75,

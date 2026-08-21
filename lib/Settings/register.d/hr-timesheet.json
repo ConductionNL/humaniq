@@ -19,17 +19,19 @@
                     "employeeId": {
                         "type": "string",
                         "$ref": "Employee",
+                        "format": "uuid",
                         "title": "Employee",
                         "description": "The employee these hours were worked by.",
-                        "x-notes": "Self-service surfaces never show this field: TimeEntryStampListener resolves it from the signed-in user's own Employee record (nextcloudUserId match) and REFUSES the write when no employee is linked — the listener is the enforcement point, which is why the property is deliberately NOT in the schema's required list: OpenRegister validates required-ness BEFORE the pre-save creating event, so a schema-required employeeId would reject every self-service booking before the listener could resolve it. The HR entry page (TimeEntries) offers it as a picker. No format:uuid — object references carry the target's identifier, and seeded objects legitimately use slug-style identifiers (employee-jansen); the $ref is the contract, the format was a lie the validated write path started enforcing."
+                        "x-notes": "Self-service surfaces never show this field: TimeEntryStampListener resolves it from the signed-in user's own Employee record (nextcloudUserId match) and REFUSES the write when no employee is linked — the listener is the enforcement point, which is why the property is deliberately NOT in the schema's required list: OpenRegister validates required-ness BEFORE the pre-save creating event, so a schema-required employeeId would reject every self-service booking before the listener could resolve it. The HR entry page (TimeEntries) offers it as a picker. format:uuid is correct and deliberate: OpenRegister's own ValidateObject rewrites a $ref relation to a uuid-patterned string, so a uuid IS the canonical stored form of a relation. Seed data addresses the target by slug through the `@ref:<slug>` token, which ImportHandler resolves to the real uuid BEFORE validation runs — so the format rejects nothing legitimate. It was briefly dropped here on the theory that slugs were a valid stored form; that was the wrong call, because the format is the only thing that makes a broken reference fail LOUDLY instead of persisting as referential garbage no surface can resolve."
                     },
                     "timesheetId": {
                         "type": "string",
                         "$ref": "Timesheet",
+                        "format": "uuid",
                         "nullable": true,
                         "title": "Timesheet",
                         "description": "The period timesheet this booking is part of. Assigned automatically from the start date.",
-                        "x-notes": "Never a form field. TimeEntryStampListener resolves the employee's draft/rejected Timesheet for the month of startedAt (YYYY-MM grain, fixed by design resolution 2) and creates a draft Timesheet when none exists. Booking into a period whose only timesheet is submitted/approved is refused — never silently forked into a second timesheet."
+                        "x-notes": "Never a form field. TimeEntryStampListener resolves the employee's draft/rejected Timesheet for the month of startedAt (YYYY-MM grain, fixed by design resolution 2) and creates a draft Timesheet when none exists. Booking into a period whose only timesheet is submitted/approved is refused — never silently forked into a second timesheet. Always a real uuid: the listener and MigrateHoursProcess both assign the parent timesheet's own id, and seed data uses the `@ref:<slug>` token that ImportHandler resolves before validation — see employeeId's note for why format:uuid stays."
                     },
                     "startedAt": {
                         "type": "string",
@@ -170,9 +172,10 @@
                     "employeeId": {
                         "type": "string",
                         "$ref": "Employee",
+                        "format": "uuid",
                         "title": "Employee",
                         "description": "The employee whose hours this timesheet collects.",
-                        "x-notes": "Drives the self-approval guard — the approver may not equal this employee."
+                        "x-notes": "Drives the self-approval guard — the approver may not equal this employee. Required here (unlike TimeEntry.employeeId, which the stamp listener resolves after validation), and format:uuid: a uuid is the canonical stored form of a $ref relation in OpenRegister, and seed data reaches the target through the `@ref:<slug>` token that ImportHandler resolves before validation. Dropping the format would let a broken employee link persist silently — every surface that joins on it (userId/managerUserId stamping, the Mijn and team pages, nl-mss-manager-consistency) would then read as 'no link' rather than 'bad data'."
                     },
                     "period": {
                         "type": "string",

@@ -121,7 +121,7 @@
                     "schema": "PayrollGLPost",
                     "slug": "glpost-2026-01-adm-001"
                 },
-                "payrollRunId": "payroll-run-2026-01-adm-001",
+                "payrollRunId": "@ref:payroll-run-2026-01-adm-001",
                 "period": "2026-01",
                 "status": "posted",
                 "journalNumber": "HRMQ-LOON-2026-01-ADM-001",

@@ -26,6 +26,60 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-devries"
+                },
+                "employeeNumber": "EMP-0002",
+                "firstName": "Sanne",
+                "lastName": "de Vries",
+                "dateOfBirth": "1988-11-02",
+                "startDate": "2025-03-01",
+                "grossMonthlySalary": 2912.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001",
+                "_note": "Officemanager of the Backoffice afdeling (orgassignment-devries-backoffice, from 2025-03-01) and the intern's begeleider (stagiair-bakker). Deliberately NO nextcloudUserId: hours-process.spec.ts asserts her approved 168h timesheet and its bookings are FAIL-CLOSED ABSENT from the @me Mijn pages, which is only true while the user link stays unresolvable (REQ-MHS-002) -- an employee without a Nextcloud account is the realistic case that makes that guarantee testable. NOT the same person as employee-devries-dga (Robin De Vries, the DGA of ADM-004). grossMonthlySalary mirrors contract-devries-tijdelijk: 32 h/week at EUR 21,00 hourly."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-bakker"
+                },
+                "employeeNumber": "EMP-0003",
+                "firstName": "Milan",
+                "lastName": "Bakker",
+                "dateOfBirth": "1996-04-17",
+                "startDate": "2025-09-01",
+                "grossMonthlySalary": 2600.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001",
+                "_note": "Junior consultant (orgassignment-bakker-consultancy, whose endDate deliberately precedes its startDate to trip nl-org-assignment-period). Long-term sick since 2025-09-29 (sickcase-bakker-longterm), which is why startDate sits just before it. Deliberately NO nextcloudUserId, for the same fail-closed reason as employee-devries: hours-process.spec.ts asserts his rejected 140h timesheet never leaks onto a @me page."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-degroot"
+                },
+                "employeeNumber": "EMP-0006",
+                "firstName": "Wilma",
+                "lastName": "de Groot",
+                "dateOfBirth": "1974-01-23",
+                "startDate": "2024-09-02",
+                "grossMonthlySalary": 3100.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001",
+                "_note": "Exists for sickcase-degroot-wvp42 -- the fully-compliant Wet verbetering poortwachter track (every milestone due AND done), the counterpart to the bakker case that misses its 42-week melding. Sick since 2025-06-02, so employment starts before that. No nextcloudUserId: she has no self-service surface in the seed and needs none."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "Timesheet",
                     "slug": "timesheet-jansen-2026-05"
                 },
@@ -49,7 +103,7 @@
                     "schema": "Timesheet",
                     "slug": "timesheet-devries-2026-05"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "period": "2026-05",
                 "hours": 168,
                 "entryCount": 2,
@@ -69,7 +123,7 @@
                     "schema": "Timesheet",
                     "slug": "timesheet-bakker-2026-05"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "period": "2026-05",
                 "hours": 140,
                 "entryCount": 2,
@@ -150,7 +204,7 @@
                     "schema": "TimeEntry",
                     "slug": "timeentry-devries-2026-05-04"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "timesheetId": "@ref:timesheet-devries-2026-05",
                 "startedAt": "2026-05-04T07:00:00Z",
                 "endedAt": "2026-05-04T15:30:00Z",
@@ -170,7 +224,7 @@
                     "schema": "TimeEntry",
                     "slug": "timeentry-devries-2026-05-rest"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "timesheetId": "@ref:timesheet-devries-2026-05",
                 "startedAt": "2026-05-05T08:00:00Z",
                 "endedAt": "2026-05-12T00:00:00Z",
@@ -189,7 +243,7 @@
                     "schema": "TimeEntry",
                     "slug": "timeentry-bakker-2026-05-04"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "timesheetId": "@ref:timesheet-bakker-2026-05",
                 "startedAt": "2026-05-04T08:00:00Z",
                 "endedAt": "2026-05-04T16:30:00Z",
@@ -206,7 +260,7 @@
                     "schema": "TimeEntry",
                     "slug": "timeentry-bakker-2026-05-rest"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "timesheetId": "@ref:timesheet-bakker-2026-05",
                 "startedAt": "2026-05-05T08:00:00Z",
                 "endedAt": "2026-05-10T20:00:00Z",
@@ -243,7 +297,7 @@
                     "schema": "Expense",
                     "slug": "expense-devries-train"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "title": "Treinreis Utrecht — Den Haag",
                 "description": "Retour tweede klas voor projectoverleg.",
                 "amount": 27.4,
@@ -262,7 +316,7 @@
                     "schema": "Expense",
                     "slug": "expense-bakker-software"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "title": "JetBrains licentie (jaarabonnement)",
                 "description": "Ontwikkeltooling, na goedkeuring uitbetaald.",
                 "amount": 219,
@@ -282,7 +336,7 @@
                     "schema": "Expense",
                     "slug": "expense-devries-mileage"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "title": "Kilometervergoeding klantbezoek Rotterdam",
                 "description": "Eigen auto, zakelijke kilometers naar klantlocatie.",
                 "amount": 34.50,
@@ -421,6 +475,27 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "PayrollRun",
+                    "slug": "payroll-run-2026-01-adm-001"
+                },
+                "period": "2026-01",
+                "administrationId": "ADM-001",
+                "jurisdiction": "NL",
+                "status": "posted",
+                "totalGross": 3800.00,
+                "totalLoonheffing": 1102.00,
+                "totalEmployerCharges": 649.80,
+                "totalWithholdings": 1102.00,
+                "totalNet": 2698.00,
+                "glExpensePosted": 4449.80,
+                "glLiabilityPosted": 1751.80,
+                "withholdingsClearedToZero": true,
+                "withholdingLiabilityBalance": 0.00,
+                "_note": "The run glpost-2026-01-adm-001 (hr-glpost.json) posts to the general ledger: status 'posted' matches that record's own status and its postedAt of 2026-02-05. Its journal lines are this run's figures -- debit 4001 EUR 3.800,00 bruto + 4002 EUR 649,80 werkgeverslasten = glExpensePosted, balanced by the loonheffing- and netto-loonschuld credits. Same single-employee ADM-001 shape as payrollrun-2026-05/06; the slug keeps its hyphenated payroll-run- form because hr-glpost.json's reference was authored against it."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "Payslip",
                     "slug": "payslip-jansen-2026-05"
                 },
@@ -541,7 +616,7 @@
                     "schema": "LeaveBalance",
                     "slug": "leavebalance-devries-2026-holiday"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "year": 2026,
                 "leaveType": "holiday",
                 "contractHoursPerWeek": 32,
@@ -557,7 +632,7 @@
                     "schema": "LeaveBalance",
                     "slug": "leavebalance-bakker-2026-holiday"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "year": 2026,
                 "leaveType": "holiday",
                 "contractHoursPerWeek": 36,
@@ -595,7 +670,7 @@
                     "schema": "SickLeaveCase",
                     "slug": "sickcase-devries-week7"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "firstSickDay": "2026-05-25",
                 "status": "gemeld",
                 "wachtdag": false,
@@ -612,7 +687,7 @@
                     "schema": "SickLeaveCase",
                     "slug": "sickcase-bakker-longterm"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "firstSickDay": "2025-09-29",
                 "status": "gemeld",
                 "wachtdag": false,
@@ -631,7 +706,7 @@
                     "schema": "SickLeaveCase",
                     "slug": "sickcase-degroot-wvp42"
                 },
-                "employeeId": "employee-degroot",
+                "employeeId": "@ref:employee-degroot",
                 "firstSickDay": "2025-06-02",
                 "status": "gemeld",
                 "wachtdag": false,
@@ -839,7 +914,7 @@
                     "schema": "OrgAssignment",
                     "slug": "orgassignment-devries-backoffice"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "orgUnitId": "@ref:orgunit-backoffice",
                 "role": "Officemanager",
                 "startDate": "2025-03-01",
@@ -851,7 +926,7 @@
                     "schema": "OrgAssignment",
                     "slug": "orgassignment-bakker-consultancy"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "orgUnitId": "@ref:orgunit-consultancy",
                 "role": "Junior consultant",
                 "startDate": "2026-06-01",
@@ -881,7 +956,7 @@
                     "schema": "AttendanceRecord",
                     "slug": "attendance-devries-0708"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "date": "2026-07-08",
                 "clockIn": "2026-07-08T14:00:00Z",
                 "clockOut": "2026-07-08T23:00:00Z",
@@ -897,7 +972,7 @@
                     "schema": "AttendanceRecord",
                     "slug": "attendance-devries-0709"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "date": "2026-07-09",
                 "clockIn": "2026-07-09T07:00:00Z",
                 "clockOut": "2026-07-09T15:30:00Z",
@@ -913,7 +988,7 @@
                     "schema": "AttendanceRecord",
                     "slug": "attendance-bakker-0710"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "date": "2026-07-10",
                 "clockIn": "2026-07-10T08:00:00Z",
                 "clockOut": "2026-07-10T16:00:00Z",
@@ -1209,7 +1284,7 @@
                     "schema": "EmploymentContract",
                     "slug": "contract-devries-tijdelijk"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "type": "temporary",
                 "writtenContract": true,
                 "startDate": "2025-09-01",
@@ -1351,7 +1426,7 @@
                 "stagetype": "meeloopstage",
                 "startDate": "2026-06-01",
                 "endDate": "2027-01-31",
-                "begeleiderId": "employee-devries",
+                "begeleiderId": "@ref:employee-devries",
                 "stagevergoedingPerMaand": 300.00,
                 "bpvOvereenkomstOndertekend": false,
                 "verzekeringGeverifieerd": false,
@@ -1456,7 +1531,7 @@
                     "schema": "EmploymentContract",
                     "slug": "contract-hr21-devries-schaal-match"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "type": "temporary",
                 "writtenContract": true,
                 "startDate": "2025-09-01",

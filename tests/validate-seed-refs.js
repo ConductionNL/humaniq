@@ -84,46 +84,22 @@ const REF_PREFIX = '@ref:'
 
 // Seed references whose TARGET OBJECT DOES NOT EXIST anywhere in the seed set.
 //
-// These are not a reference-syntax problem — they are missing seed rows. The
-// employees De Vries, Bakker and De Groot are referenced by contracts,
-// timesheets, bookings, expenses, leave balances, sick-leave cases, attendance
-// and org assignments, but no Employee object was ever authored for them
-// (confirmed by `git log -S` — the references were born dangling); likewise
-// PayrollGLPost points at a payroll run that was never seeded.
+// DELIBERATELY EMPTY, and it should stay that way. This list briefly held 24
+// entries: the employees De Vries, Bakker and De Groot were referenced by
+// contracts, timesheets, bookings, expenses, leave balances, sick-leave cases,
+// attendance and org assignments, and PayrollGLPost pointed at a payroll run —
+// none of which had ever been authored (`git log -S` confirmed the references
+// were born dangling). The four missing objects now exist in hr-seed.json and
+// every reference resolves.
 //
-// They are listed here rather than rewritten to `@ref:` on purpose: with the
-// target absent, `@ref:` resolves to nothing, ImportHandler leaves the literal
-// token in place and the object is dropped anyway — but it now LOOKS fixed.
-// A bare slug keeps the breakage visible. Fix the data (author the missing
-// objects, or repoint the references) and delete the entry.
+// Adding an entry here is an EXEMPTION, not a fix: the seed object will still
+// be dropped on import. It exists only so a reference waiting on data that has
+// to be authored elsewhere can be recorded honestly instead of being papered
+// over with an `@ref:` token that resolves to nothing. Write the reason next
+// to the entry, and delete it as soon as the target lands.
 //
 // Format: '<referring object slug>.<property> -> <missing target slug>'
-const KNOWN_UNRESOLVED = [
-	'attendance-bakker-0710.employeeId -> employee-bakker',
-	'expense-bakker-software.employeeId -> employee-bakker',
-	'leavebalance-bakker-2026-holiday.employeeId -> employee-bakker',
-	'orgassignment-bakker-consultancy.employeeId -> employee-bakker',
-	'sickcase-bakker-longterm.employeeId -> employee-bakker',
-	'timeentry-bakker-2026-05-04.employeeId -> employee-bakker',
-	'timeentry-bakker-2026-05-rest.employeeId -> employee-bakker',
-	'timesheet-bakker-2026-05.employeeId -> employee-bakker',
-	'sickcase-degroot-wvp42.employeeId -> employee-degroot',
-	'attendance-devries-0708.employeeId -> employee-devries',
-	'attendance-devries-0709.employeeId -> employee-devries',
-	'contract-devries-tijdelijk.employeeId -> employee-devries',
-	'contract-hr21-devries-schaal-match.employeeId -> employee-devries',
-	'expense-devries-lunch-receipt.employeeId -> employee-devries',
-	'expense-devries-mileage.employeeId -> employee-devries',
-	'expense-devries-train.employeeId -> employee-devries',
-	'leavebalance-devries-2026-holiday.employeeId -> employee-devries',
-	'orgassignment-devries-backoffice.employeeId -> employee-devries',
-	'sickcase-devries-week7.employeeId -> employee-devries',
-	'stagiair-bakker.begeleiderId -> employee-devries',
-	'timeentry-devries-2026-05-04.employeeId -> employee-devries',
-	'timeentry-devries-2026-05-rest.employeeId -> employee-devries',
-	'timesheet-devries-2026-05.employeeId -> employee-devries',
-	'glpost-2026-01-adm-001.payrollRunId -> payroll-run-2026-01-adm-001',
-]
+const KNOWN_UNRESOLVED = []
 
 function isPlainObject(value) {
 	return value !== null && typeof value === 'object' && Array.isArray(value) === false

@@ -329,7 +329,6 @@ class MigrateHoursProcess implements IRepairStep {
 		$endedAt = ($startedAt + (int)round($hours * 3600));
 
 		$entry = [
-			'employeeId' => trim((string)($timesheet['employeeId'] ?? '')),
 			'timesheetId' => $timesheetId,
 			'startedAt' => gmdate('Y-m-d\TH:i:s\Z', $startedAt),
 			'endedAt' => gmdate('Y-m-d\TH:i:s\Z', $endedAt),
@@ -343,6 +342,19 @@ class MigrateHoursProcess implements IRepairStep {
 			'administrationId' => $this->nullableTrim($timesheet['administrationId'] ?? null),
 			'origin' => 'migration',
 		];
+
+		// The synthetic entry inherits the timesheet's employee link verbatim —
+		// it is the SAME person's hours, and `TimeEntry.employeeId` is
+		// `$ref: Employee` + `format: uuid`, so the value carried over is the
+		// target's uuid. A legacy timesheet with no employee link contributes no
+		// key at all rather than an empty string: `employeeId` is deliberately
+		// absent from TimeEntry's `required` list (the stamp listener resolves it
+		// after validation), so omitting it is legal, whereas writing "" would be
+		// a uuid-format violation that fails the whole migration write.
+		$employeeId = trim((string)($timesheet['employeeId'] ?? ''));
+		if ($employeeId !== '') {
+			$entry['employeeId'] = $employeeId;
+		}
 
 		$this->marker->runInternal(function () use ($entry): void {
 			$this->objects()->saveObject(
