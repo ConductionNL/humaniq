@@ -13,10 +13,22 @@
  *
  * The state machine (submitted → approved/rejected; besproken → vastgesteld)
  * and the field defaults are fully declarative in the register fragments;
- * this guard adds only the cross-actor check
- * (`$userId !== $object['employeeId']`). Guards are read-only per
+ * this guard adds only the cross-actor check. Guards are read-only per
  * OpenRegister's contract — the approver/timestamp stamping happens through
  * the ordinary object write that carries the transition, not here.
+ *
+ * ⚠️ THE COMPARISON MUST STAY IN ONE IDENTIFIER NAMESPACE. This guard
+ * originally compared `$object['employeeId']` (an Employee OBJECT uuid)
+ * against `$userId` (a Nextcloud ACCOUNT uid such as `admin`). Those two
+ * namespaces can never produce equal strings, so the guard allowed every
+ * transition it was asked about: separation of duties was inert on
+ * Timesheet, Expense and PerformanceReview alike, while every spec, schema
+ * description and code comment asserted it was enforced. It was found by an
+ * e2e that actually attempted a self-approval instead of trusting the
+ * control. The claimant's ACCOUNT is `userId` — the denormalized copy of the
+ * linked Employee's `nextcloudUserId` that mijn-hr-self-service already
+ * requires on every approval-carrying schema (REQ-MHS-002) — so that is what
+ * the acting uid is compared against.
  *
  * Referenced from the Timesheet / Expense schema
  * `x-openregister-lifecycle.transitions.{approve,reject}.requires` and from
@@ -81,13 +93,21 @@ class NoSelfApprovalGuard implements LifecycleGuardInterface {
 			return GuardResult::deny('De indiener van deze declaratie/urenstaat is onbekend; goedkeuring is geweigerd.');
 		}
 
-		if ($employeeId === $userId) {
+		// Compare ACCOUNT to ACCOUNT. `userId` is the denormalized Nextcloud
+		// uid of the claiming employee (REQ-MHS-002), stamped server-side and
+		// re-derived from employeeId on every write, so it cannot drift.
+		$claimantUserId = trim((string)($object['userId'] ?? ''));
+		if ($claimantUserId !== '' && $claimantUserId === $userId) {
 			return GuardResult::deny(
 				'U mag uw eigen urenstaat of declaratie niet goedkeuren of afkeuren. '
 				. 'Een andere medewerker (manager) moet dit doen.'
 			);
 		}
 
+		// An empty `userId` on an identified claimant means that employee has
+		// no Nextcloud account at all (hrmq seeds several), so the acting user
+		// provably is not them — allow. This is NOT the unknown-claimant case,
+		// which is denied above on the missing employeeId.
 		return GuardResult::allow();
 	}//end check()
 
