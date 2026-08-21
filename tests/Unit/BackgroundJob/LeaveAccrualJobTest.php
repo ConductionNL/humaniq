@@ -500,4 +500,154 @@ class LeaveAccrualJobTest extends TestCase {
 
 	}//end testEmployeeInactiveInPeriodIsNotAccrued()
 
+	/**
+	 * REQ-ACCR-006 (a): the create path stamps the denormalized account link
+	 * from the resolved Employee's `nextcloudUserId`.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 */
+	public function testCreatedBalanceCarriesTheEmployeeAccountLink(): void {
+		[$job, $fake] = $this->job(
+			[
+				'Employee' => [$this->employee(['nextcloudUserId' => 'admin'])],
+				'EmploymentContract' => [$this->contract()],
+				'LeaveBalance' => [],
+			],
+			now: '2026-07-15'
+		);
+
+		$summary = $job->runAccrual();
+
+		$this->assertCount(1, $summary['provisioned']);
+		$this->assertCount(1, $fake->saved);
+		$this->assertSame('admin', $fake->saved[0]['object']['userId']);
+
+	}//end testCreatedBalanceCarriesTheEmployeeAccountLink()
+
+	/**
+	 * REQ-ACCR-006 (b): a pre-existing balance written before the property
+	 * existed self-heals on the next monthly slice — no repair step.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 */
+	public function testPreExistingNullUserIdSelfHealsOnTheNextAccrual(): void {
+		$existingBalance = [
+			'id' => 'bal-1',
+			'employeeId' => 'emp-1',
+			'year' => 2026,
+			'leaveType' => 'holiday',
+			'entitledHours' => 160.0,
+			'bovenwettelijkHours' => 4.0,
+			'usedHours' => 0.0,
+			'contractHoursPerWeek' => 40.0,
+			'expiryDate' => '2027-07-01',
+			'lastAccruedPeriod' => '2026-07',
+			'userId' => null,
+		];
+
+		[$job, $fake] = $this->job(
+			[
+				'Employee' => [$this->employee(['nextcloudUserId' => 'admin'])],
+				'EmploymentContract' => [$this->contract()],
+				'LeaveBalance' => [$existingBalance],
+			],
+			now: '2026-08-01',
+			annualBovenwettelijk: 48.0
+		);
+
+		$summary = $job->runAccrual();
+
+		$this->assertCount(1, $summary['accrued']);
+		$this->assertCount(1, $fake->saved);
+		$balance = $fake->saved[0]['object'];
+
+		$this->assertSame('admin', $balance['userId']);
+		// The accrual math is untouched by the stamping (REQ-ACCR-003/004).
+		$this->assertSame(8.0, $balance['bovenwettelijkHours']);
+		$this->assertSame('2026-08', $balance['lastAccruedPeriod']);
+
+	}//end testPreExistingNullUserIdSelfHealsOnTheNextAccrual()
+
+	/**
+	 * REQ-ACCR-006 (c): an employee with no linked account yields a null
+	 * link — never guessed, never another account (fail-closed for @me).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 */
+	public function testUnlinkedEmployeeKeepsANullAccountLink(): void {
+		[$job, $fake] = $this->job(
+			[
+				// No nextcloudUserId at all, and the empty-string shape a
+				// hand-maintained HR record can carry — both must land as null.
+				'Employee' => [
+					$this->employee(),
+					$this->employee(['id' => 'emp-2', 'nextcloudUserId' => '   ']),
+				],
+				'EmploymentContract' => [
+					$this->contract(),
+					$this->contract(['employeeId' => 'emp-2']),
+				],
+				'LeaveBalance' => [],
+			],
+			now: '2026-07-15'
+		);
+
+		$summary = $job->runAccrual();
+
+		$this->assertCount(2, $summary['provisioned']);
+		$this->assertCount(2, $fake->saved);
+		$this->assertNull($fake->saved[0]['object']['userId']);
+		$this->assertNull($fake->saved[1]['object']['userId']);
+
+	}//end testUnlinkedEmployeeKeepsANullAccountLink()
+
+	/**
+	 * REQ-ACCR-006 (d), custody regression guard: the idempotency no-op must
+	 * stay a no-op. Stamping is part of a WRITE the job was already making —
+	 * it never turns an already-accrued employee-month into a write just to
+	 * backfill the link, which would break REQ-ACCR-004.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-004
+	 */
+	public function testStampingNeverTurnsANoOpIntoAWrite(): void {
+		$existingBalance = [
+			'id' => 'bal-1',
+			'employeeId' => 'emp-1',
+			'year' => 2026,
+			'leaveType' => 'holiday',
+			'entitledHours' => 160.0,
+			'bovenwettelijkHours' => 0.0,
+			'usedHours' => 0.0,
+			'contractHoursPerWeek' => 40.0,
+			'expiryDate' => '2027-07-01',
+			'lastAccruedPeriod' => '2026-07',
+			'userId' => null,
+		];
+
+		[$job, $fake] = $this->job(
+			[
+				'Employee' => [$this->employee(['nextcloudUserId' => 'admin'])],
+				'EmploymentContract' => [$this->contract()],
+				'LeaveBalance' => [$existingBalance],
+			],
+			now: '2026-07-28'
+		);
+
+		$summary = $job->runAccrual();
+
+		$this->assertSame(1, $summary['noop']);
+		$this->assertCount(0, $fake->saved);
+		$this->assertSame($existingBalance, $fake->rowsBySchema['LeaveBalance'][0]);
+
+	}//end testStampingNeverTurnsANoOpIntoAWrite()
+
 }//end class

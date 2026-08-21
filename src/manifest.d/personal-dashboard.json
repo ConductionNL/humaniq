@@ -1,0 +1,232 @@
+{
+	"pages": [
+		{
+			"id": "MijnHr",
+			"route": "/mijn",
+			"type": "dashboard",
+			"title": "Mijn HR",
+			"config": {
+				"description": "Jouw persoonlijke overzicht: uren, verlof, declaraties en loonstroken.",
+				"_note": "hrmq-personal-dashboard (design.md D1/D3): the caller-scoped personal landing surface hydra ADR-097 Decision 3 requires — 'route to a type: \"dashboard\" page scoped to the caller … Not an index page, and not a bare parent with no route of its own'. The MijnHrGroup menu entry gains route: \"MijnHr\" through this fragment's menu block (mergeMenuItems fills the base group's undefined route key), so the group title lands here while its nine children stay under the collapse chevron — both of Decision 3's conditions, which moves hrmq's counted main-menu total from 6 to 5. Every widget carries a caller-scope filter (userId: \"@me\", or managerUserId: \"@me\" for the approver's own queue) plus the OPTIONAL administration token @workspace.activeAdministrationId? — unresolved means dropped, so a widget degrades to user-scoped-only, never to another user's rows. Only the built-in `stat` and `object-table` types are used (stat resolves through hrmq's own registry.js override, which is load-bearing: the library's self-registration is tree-shaken out of the production bundle); no custom widget, no new backend endpoint, no raw-GraphQL dataSource (the steering Dashboard's _note documents why that form resolves a schema by name across every register on the instance). Widget 6 has no conditional-visibility primitive available — the dashboard widget grammar has none for stat tiles (design.md D4) — so it always renders and shows 0 for a caller who manages nobody; its caption keeps the zero legible. The stat tiles' click-through uses content.route in the vue-router LOCATION-OBJECT form ({\"name\": \"…\"}), not the bare string design.md D3 writes: widgetLink passes a string straight to <router-link :to>, where vue-router 4 reads it as a PATH, so a bare route NAME would fall through to the catch-all. Same spelling the hr-objects nav-card entries already use. The three object-table widgets carry the FLAT content contract (register/schema/filter/sort{field,dir}/limit/columns/rowRoute/viewAllRoute/emptyText), NOT the nested `source` shape design.md D3 writes — measured live 2026-08-22, not inferred: on a type:\"dashboard\" page CnDashboardPage.registryRenderer looks up getWidgetTypeEntry(canonicalWidgetType(type)), and utils/widgetTypeAliases.js maps `object-table` -> `table`, which registerDashboardWidgets.js registers INLINE to CnObjectListWidget. The alias therefore never reaches CnWidgetObjectTable's dashboardRegistration (its `object-table` key is registered under a name the canonicaliser has already rewritten away, in a side-effect module ADR-061 tree-shaking drops anyway). With the `source` shape the widget rendered its emptyText and fired ZERO fetches, because CnObjectListWidget reads content.register/content.schema and has no `source` key at all. Consequences of the real contract, accepted: `limit` is a FETCH CAP (ADR-062), not a render promise — the visible row count fits the cell — and there is no per-row-route escape, which is fine since rowRoute is already a single static route name. All three also carry allowCreate: false — CnObjectListWidget renders a \"+ Toevoegen\" create affordance by DEFAULT (measured live), and all three collections are read-only to the employee: Timesheets are server-created by the booking flow (MijnUrenstaten already sets showAdd: false), LeaveBalance is written only by LeaveAccrualJob, and payslips are payroll-generated (REQ-MHS-004's read-only posture). Labels are Dutch literals; hrmq-i18n-locale-completeness owns their conversion and this change adds no English keys.",
+				"widgets": [
+					{
+						"id": "uren-maand",
+						"type": "stat",
+						"title": "Mijn uren deze maand",
+						"icon": "ClockCheckOutline",
+						"content": {
+							"label": "Mijn uren deze maand",
+							"caption": "geboekt deze maand",
+							"icon": "ClockCheckOutline",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"source": {
+								"register": "hrmq",
+								"schema": "TimeEntry",
+								"metric": "sum",
+								"field": "hours",
+								"filter": {
+									"userId": "@me",
+									"startedAt": {
+										"gte": "@monthStart"
+									},
+									"administrationId": "@workspace.activeAdministrationId?"
+								}
+							},
+							"route": {
+								"name": "MijnUren"
+							}
+						}
+					},
+					{
+						"id": "declaraties",
+						"type": "stat",
+						"title": "Mijn open declaraties",
+						"icon": "ReceiptOutline",
+						"content": {
+							"label": "Mijn open declaraties",
+							"caption": "in behandeling",
+							"icon": "ReceiptOutline",
+							"source": {
+								"register": "hrmq",
+								"schema": "Expense",
+								"metric": "count",
+								"filter": {
+									"userId": "@me",
+									"status": "submitted",
+									"administrationId": "@workspace.activeAdministrationId?"
+								}
+							},
+							"route": {
+								"name": "MijnDeclaraties"
+							}
+						}
+					},
+					{
+						"id": "te-beoordelen",
+						"type": "stat",
+						"title": "Te beoordelen urenstaten",
+						"icon": "CheckDecagramOutline",
+						"content": {
+							"label": "Te beoordelen urenstaten",
+							"caption": "wachten op jouw goedkeuring",
+							"icon": "CheckDecagramOutline",
+							"source": {
+								"register": "hrmq",
+								"schema": "Timesheet",
+								"metric": "count",
+								"filter": {
+									"managerUserId": "@me",
+									"status": "submitted",
+									"administrationId": "@workspace.activeAdministrationId?"
+								}
+							},
+							"route": {
+								"name": "TeamUrengoedkeuring"
+							}
+						}
+					},
+					{
+						"id": "urenstaten",
+						"type": "object-table",
+						"title": "Mijn urenstaten",
+						"content": {
+							"register": "hrmq",
+							"schema": "Timesheet",
+							"filter": {
+								"userId": "@me",
+								"administrationId": "@workspace.activeAdministrationId?"
+							},
+							"sort": {
+								"field": "period",
+								"dir": "desc"
+							},
+							"limit": 3,
+							"columns": [
+								"period",
+								"hours",
+								"entryCount",
+								"status"
+							],
+							"rowRoute": "TimesheetDetail",
+							"viewAllRoute": "MijnUrenstaten",
+							"emptyText": "Nog geen urenstaten",
+							"allowCreate": false
+						}
+					},
+					{
+						"id": "verlofsaldo",
+						"type": "object-table",
+						"title": "Mijn verlofsaldo",
+						"content": {
+							"register": "hrmq",
+							"schema": "LeaveBalance",
+							"filter": {
+								"userId": "@me",
+								"year": "@currentFiscalYear",
+								"administrationId": "@workspace.activeAdministrationId?"
+							},
+							"sort": {
+								"field": "leaveType",
+								"dir": "asc"
+							},
+							"columns": [
+								"leaveType",
+								"entitledHours",
+								"bovenwettelijkHours",
+								"usedHours"
+							],
+							"emptyText": "Nog geen verlofsaldo",
+							"allowCreate": false
+						}
+					},
+					{
+						"id": "loonstroken",
+						"type": "object-table",
+						"title": "Mijn recente loonstroken",
+						"content": {
+							"register": "hrmq",
+							"schema": "Payslip",
+							"filter": {
+								"userId": "@me",
+								"administrationId": "@workspace.activeAdministrationId?"
+							},
+							"sort": {
+								"field": "period",
+								"dir": "desc"
+							},
+							"limit": 3,
+							"columns": [
+								"period",
+								"grossPay",
+								"nettoPay"
+							],
+							"rowRoute": "PayslipDetail",
+							"viewAllRoute": "MijnLoonstroken",
+							"emptyText": "Nog geen loonstroken",
+							"allowCreate": false
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "uren-maand",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 2,
+						"widgetId": "declaraties",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 3,
+						"widgetId": "te-beoordelen",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": 4,
+						"widgetId": "urenstaten",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 5,
+						"widgetId": "verlofsaldo",
+						"gridX": 6,
+						"gridY": 3,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 6,
+						"widgetId": "loonstroken",
+						"gridX": 0,
+						"gridY": 7,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				]
+			}
+		}
+	],
+	"menu": [
+		{
+			"id": "MijnHrGroup",
+			"route": "MijnHr"
+		}
+	]
+}

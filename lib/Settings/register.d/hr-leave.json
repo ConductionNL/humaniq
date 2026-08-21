@@ -159,7 +159,7 @@
             "LeaveBalance": {
                 "slug": "LeaveBalance",
                 "icon": "ScaleBalance",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Leave balance",
                 "description": "Per-employee, per-year, per-leave-type entitlement and usage ledger (verlofsaldo): the statutory plus bovenwettelijk hours granted for a year, the hours used, and a declaratively calculated remaining balance (x-openregister-calculations). Read by the nl-verlof-wettelijk-minimum / nl-verlof-saldo-niet-negatief / nl-verlof-vervaltermijn rule checks (lib/Standards/rules/labour.json, leave-verzuim-mvp). usedHours is not yet auto-posted from approved LeaveRequests — that cross-object write hook is a declared follow-up; this MVP records and audits the balance.",
                 "type": "object",
@@ -257,6 +257,13 @@
                         "nullable": true,
                         "title": "Administration",
                         "description": "Denormalized administratie key this LeaveBalance is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "User",
+                        "description": "The account this leave balance belongs to. Kept up to date automatically.",
+                        "x-notes": "Denormalized Nextcloud user id of the employee (mijn-hr-self-service REQ-MHS-002, extended to LeaveBalance by hrmq-personal-dashboard) — a plain NC-user-id string mirroring the approvedBy convention, never a $ref. A copy of the linked Employee's nextcloudUserId, carried because the manifest filter grammar cannot join across schemas; the MijnHr dashboard's 'Mijn verlofsaldo' widget filters on it with the @me token. Never a form field on any surface. Population custody is LeaveAccrualJob — the schema's sole systematic writer — which stamps it on BOTH its create and its monthly update path (REQ-ACCR-006), so a balance created before this property existed self-heals on the next accrual run and no dedicated repair step is needed. A balance whose employee has no linked account keeps null and never appears on a Mijn surface (fail-closed, REQ-MHS-002). The buy/sell settlement path mutates usedHours on existing rows and never creates balances, so it neither needs nor gets stamping logic."
                     }
                 }
             },

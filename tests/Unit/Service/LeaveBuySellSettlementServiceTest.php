@@ -294,6 +294,38 @@ class LeaveBuySellSettlementServiceTest extends TestCase {
 	}//end testBuySettlementAddsToBalance()
 
 	/**
+	 * Custody regression guard (hrmq-personal-dashboard REQ-ACCR-006 / design
+	 * D5): the settlement path mutates `usedHours`/`bovenwettelijkHours` on an
+	 * EXISTING balance and never creates one, so it neither needs nor gets
+	 * userId-stamping logic — LeaveAccrualJob is the schema's sole systematic
+	 * writer of that link. What the settlement writes back is whatever the row
+	 * already carried: it must never invent a link, and never drop one.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 */
+	public function testSettlementNeitherInventsNorDropsTheAccountLink(): void {
+		[$service, $fake] = $this->service($this->fixture([], ['userId' => 'admin']));
+
+		$service->settle('txn-1');
+
+		$balanceSaves = array_values(array_filter($fake->saved, static fn (array $s): bool => $s['schema'] === 'LeaveBalance'));
+		$this->assertCount(1, $balanceSaves);
+		$this->assertSame('admin', $balanceSaves[0]['object']['userId'], 'an existing link survives the settlement write untouched.');
+
+		// And an unlinked balance stays unlinked — no stamping happens here.
+		[$service2, $fake2] = $this->service($this->fixture([], ['userId' => null]));
+
+		$service2->settle('txn-1');
+
+		$balanceSaves2 = array_values(array_filter($fake2->saved, static fn (array $s): bool => $s['schema'] === 'LeaveBalance'));
+		$this->assertCount(1, $balanceSaves2);
+		$this->assertNull($balanceSaves2[0]['object']['userId'], 'the settlement path never stamps a link of its own.');
+
+	}//end testSettlementNeitherInventsNorDropsTheAccountLink()
+
+	/**
 	 * REQ-BUYSELL-004: settling an already-settled transaction is an
 	 * idempotent no-op -- nothing is written a second time.
 	 *

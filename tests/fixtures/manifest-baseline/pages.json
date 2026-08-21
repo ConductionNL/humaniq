@@ -241,7 +241,12 @@
   },
   {
     "id": "MijnGebruikelijkLoon",
-    "route": "/mijn-hr/gebruikelijk-loon",
+    "route": "/mijn/gebruikelijk-loon",
+    "type": "dashboard"
+  },
+  {
+    "id": "MijnHr",
+    "route": "/mijn",
     "type": "dashboard"
   },
   {
