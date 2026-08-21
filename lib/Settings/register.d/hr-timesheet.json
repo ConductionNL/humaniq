@@ -18,6 +18,7 @@
                 "properties": {
                     "employeeId": {
                         "type": "string",
+                        "order": 80,
                         "$ref": "Employee",
                         "format": "uuid",
                         "title": "Employee",
@@ -26,6 +27,7 @@
                     },
                     "timesheetId": {
                         "type": "string",
+                        "order": 90,
                         "$ref": "Timesheet",
                         "format": "uuid",
                         "nullable": true,
@@ -35,18 +37,21 @@
                     },
                     "startedAt": {
                         "type": "string",
+                        "order": 10,
                         "format": "date-time",
                         "title": "Start",
                         "description": "When the work started."
                     },
                     "endedAt": {
                         "type": "string",
+                        "order": 20,
                         "format": "date-time",
                         "title": "End",
                         "description": "When the work ended."
                     },
                     "breakMinutes": {
                         "type": "integer",
+                        "order": 30,
                         "minimum": 0,
                         "default": 0,
                         "title": "Break (minutes)",
@@ -54,6 +59,7 @@
                     },
                     "hours": {
                         "type": "number",
+                        "order": 70,
                         "minimum": 0,
                         "title": "Hours",
                         "description": "Worked hours in this booking, calculated from start, end and break.",
@@ -61,12 +67,14 @@
                     },
                     "description": {
                         "type": "string",
+                        "order": 40,
                         "maxLength": 2000,
                         "title": "Description",
                         "description": "What was worked on."
                     },
                     "projectId": {
                         "type": "string",
+                        "order": 50,
                         "nullable": true,
                         "title": "Project",
                         "description": "The project these hours were worked on.",
@@ -74,12 +82,14 @@
                     },
                     "billable": {
                         "type": "boolean",
+                        "order": 60,
                         "default": false,
                         "title": "Billable",
                         "description": "Whether these hours are billable to a client or project."
                     },
                     "costCenter": {
                         "type": "string",
+                        "order": 100,
                         "nullable": true,
                         "title": "Cost centre",
                         "description": "The cost centre these hours count against, derived from the employee's team.",
@@ -87,6 +97,7 @@
                     },
                     "userId": {
                         "type": "string",
+                        "order": 110,
                         "nullable": true,
                         "title": "User",
                         "description": "The account these hours belong to.",
@@ -94,6 +105,7 @@
                     },
                     "administrationId": {
                         "type": "string",
+                        "order": 120,
                         "nullable": true,
                         "title": "Administration",
                         "description": "The administration these hours belong to.",
@@ -101,6 +113,7 @@
                     },
                     "origin": {
                         "type": "string",
+                        "order": 130,
                         "enum": [
                             "manual",
                             "migration",

@@ -329,6 +329,19 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 		const dialog = appDialog(page)
 		await expect(dialog).toBeVisible({ timeout: 10_000 })
 
+		// The booking form must read in PROCESS order — start, end, break,
+		// description, project, billable — which the TimeEntry schema declares
+		// via property `order`. Assert it: with no order, fieldsFromSchema
+		// falls back to ALPHABETICAL and the form shows End before Start, which
+		// is both unusable and silently inverts a positional fill (the server
+		// then correctly refuses the span).
+		const fieldText = (await dialog.locator('.cn-form-dialog__field').allInnerTexts()).join('\n|\n')
+		const startPos = fieldText.indexOf('Start')
+		const endPos = fieldText.indexOf('End')
+		expect(startPos, 'the form must offer a Start field').toBeGreaterThan(-1)
+		expect(endPos, 'the form must offer an End field').toBeGreaterThan(-1)
+		expect(startPos, 'Start must precede End on the booking form').toBeLessThan(endPos)
+
 		// 12:00–20:30 minus 30 min break = 8.00 hours (the REQ-TEC-001 rule;
 		// mid-month midday keeps the derived 2026-07 period timezone-safe).
 		await dialog.locator('input[type="datetime-local"]').nth(0).fill('2026-07-15T12:00')

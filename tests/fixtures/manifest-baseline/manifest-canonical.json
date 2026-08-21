@@ -5078,6 +5078,7 @@
     },
     {
       "config": {
+        "_fieldOrderNote": "Field order is declared once on the TimeEntry SCHEMA (property `order`: start 10, end 20, break 30, description 40, project 50, billable 60), not per page — fieldsFromSchema sorts by overrides.order > prop.order > ALPHABETICAL, so a schema with no order renders every form as an alphabetical wall. That is exactly what happened here: the booking form showed End before Start (breakMinutes, description, endedAt, projectId, startedAt), which the e2e caught by filling the two datetime inputs positionally and getting a span the server correctly refused. Declaring order on the schema fixes every surface at once; no page-level override is needed.",
         "_note": "hrmq-hours-process-redesign (design.md Decision 8): MijnUren is the self-service BOOKING surface and now lists TimeEntry (the individual booking), not Timesheet (the period aggregate). Converted from an indexScaffold pageInstance to a concrete page because the create-form allowlist keys (includeFields/fieldOverrides) are not indexScaffold params, and widening the shared template for one page is worse than an explicit page (the template file's own 80%-fit rule). Add is enabled via actionToggles.showAdd — NEVER the dead allowCreate key (not a CnIndexPage prop; fleet anti-pattern 11). includeFields is the exact self-service allowlist: the employee's own Employee record, userId, administrationId and costCenter are resolved/stamped server-side by TimeEntryStampListener, and hours is derived from start/end/break — none of them may appear on the form (spec: 'The booking form is an allowlist'). fieldOverrides orders billable last (times → break → what → project → billable).",
         "actionToggles": {
           "showAdd": true
@@ -5091,11 +5092,6 @@
           "billable"
         ],
         "description": "Boek je uren en zie je eigen urenregistraties.",
-        "fieldOverrides": {
-          "billable": {
-            "order": 60
-          }
-        },
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
