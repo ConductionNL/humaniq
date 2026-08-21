@@ -277,7 +277,12 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 			await expect(dialog.getByText(label, { exact: true }), `field "${label}" must NOT be on the form`)
 				.toHaveCount(0)
 		}
-		await page.keyboard.press('Escape')
+		// Dismiss via the Cancel button — the affordance the dialog actually
+		// offers. Escape does NOT close CnFormDialog (verified on a live
+		// instance with focus inside the dialog — nextcloud-vue#727), so
+		// asserting Escape here would pin a library defect into this app's
+		// suite instead of reporting it.
+		await dialog.getByRole('button', { name: /Annuleren|Cancel/i }).first().click()
 		await expect(dialog).toBeHidden({ timeout: 10_000 })
 	})
 
@@ -449,7 +454,12 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 
 		// The 422 keeps the dialog open with its error surface; nothing lands.
 		await expect(dialog, 'the dialog must not close on a refused write').toBeVisible({ timeout: 10_000 })
-		await page.keyboard.press('Escape')
+		// Dismiss via the Cancel button — the affordance the dialog actually
+		// offers. Escape does NOT close CnFormDialog (verified on a live
+		// instance with focus inside the dialog — nextcloud-vue#727), so
+		// asserting Escape here would pin a library defect into this app's
+		// suite instead of reporting it.
+		await dialog.getByRole('button', { name: /Annuleren|Cancel/i }).first().click()
 		await expect(dialog).toBeHidden({ timeout: 10_000 })
 		await expect(page.locator('#app-content, .app-content').first(), 'the refused booking must not appear')
 			.not.toContainText(`Onmogelijke boeking ${RUN_ID}`)
