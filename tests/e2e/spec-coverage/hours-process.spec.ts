@@ -220,12 +220,20 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 		await expect(page).toHaveURL(/\/apps\/hrmq\/timesheets$/, { timeout: 15_000 })
 		// New menu leaves: MijnUrenstaten directly under Mijn uren, TimeEntries
 		// (Urenboekingen) before Urenstaten. Click-through proves reachable.
+		// A fresh session starts with the nav GROUPS COLLAPSED (children exist
+		// but are hidden), so do what a user does: expand the group first.
 		const nav = page.locator('#app-navigation-vue, .app-navigation').first()
-		await expect(nav.getByText('Mijn urenstaten', { exact: true })).toBeVisible({ timeout: 15_000 })
-		await nav.getByText('Mijn urenstaten', { exact: true }).click()
+		const revealNavLeaf = async (leafLabel: string, groupLabel: string) => {
+			const leaf = nav.getByText(leafLabel, { exact: true })
+			if (!(await leaf.isVisible())) {
+				await nav.getByText(groupLabel, { exact: true }).click()
+			}
+			await expect(leaf).toBeVisible({ timeout: 15_000 })
+			return leaf
+		}
+		await (await revealNavLeaf('Mijn urenstaten', 'Mijn HR')).click()
 		await expect(page).toHaveURL(/\/mijn\/urenstaten$/, { timeout: 15_000 })
-		await expect(nav.getByText('Urenboekingen', { exact: true })).toBeVisible()
-		await nav.getByText('Urenboekingen', { exact: true }).click()
+		await (await revealNavLeaf('Urenboekingen', 'Verlof & verzuim')).click()
 		await expect(page).toHaveURL(/\/time-entries$/, { timeout: 15_000 })
 	})
 
