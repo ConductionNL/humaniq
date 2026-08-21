@@ -164,7 +164,7 @@ async function rootUrl(page: Page): Promise<string> {
 	// stand while asking the page which base the router actually uses.
 	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
 	const resolved = await page.evaluate(
-		() => (window as unknown as { OC?: { generateUrl?: (p: string) => string } }).OC?.generateUrl?.('/apps/hrmq'),
+		() => (window as unknown as { OC?: { generateUrl?: (_p: string) => string } }).OC?.generateUrl?.('/apps/hrmq'),
 	)
 	if (!resolved) {
 		throw new Error(
@@ -265,7 +265,9 @@ test.describe('manifest pages — schema-driven render', () => {
 	 * running both costs a full multi-MB page load and proves nothing the
 	 * first did not.
 	 *
-	 * Measured on this manifest: 47 detail pages collapse to 21 signatures.
+	 * Measured on this manifest: 47 detail pages collapse to 20 signatures.
+	 * (Was 21 before hrmq#112 — the `integration`/`only:"files"` widget became
+	 * the `files` catalog type, merging one pair of previously-distinct pages.)
 	 * Running all 47 pushed the suite past `globalTimeout` (38 min, tuned to
 	 * CI's 45-min job cap), and a suite that times out reports no tally at
 	 * all — strictly worse than one that finishes. This keeps every distinct
@@ -276,10 +278,28 @@ test.describe('manifest pages — schema-driven render', () => {
 	 */
 	const detailBySignature = new Map<string, ManifestPage[]>()
 	for (const pg of ALL_DETAIL_PAGES) {
-		const signature = [...new Set(
-			((pg as { widgets?: Array<{ widgetKey?: string }> }).widgets ?? [])
-				.map((w) => w.widgetKey ?? ''),
-		)].sort().join(',')
+		// Read BOTH spellings. Detail pages declare their body widgets as
+		// `config.widgets[].type` (hrmq#112 — that is the shape CnDetailPage
+		// actually renders); the older page-level `widgets[].widgetKey` is still
+		// legal and still used by dashboard pages.
+		//
+		// Keying on `widgetKey` ALONE silently collapsed all 47 detail pages
+		// into a single empty signature the moment the manifest moved, taking
+		// coverage from 21 render paths to 1 while the tally still read as a
+		// pass. Same defect as the one caught in tests/validate-widget-keys.js —
+		// when a field moves, every reader of the old name stops covering.
+		const typed = pg.config?.widgets as Array<{ type?: string }> | undefined
+		const legacy = (pg as { widgets?: Array<{ widgetKey?: string }> }).widgets
+		const keys = [
+			...(typed ?? []).map((w) => w.type ?? ''),
+			...(legacy ?? []).map((w) => w.widgetKey ?? ''),
+			// The header surfaces are their own render paths (CnLifecycleActions
+			// / CnActionButtons), so a page carrying them is not equivalent to
+			// one that does not.
+			...(pg.config?.lifecycleActions ? ['@lifecycleActions'] : []),
+			...((pg.config?.headerActions as unknown[] | undefined)?.length ? ['@headerActions'] : []),
+		].filter((k) => k !== '')
+		const signature = [...new Set(keys)].sort().join(',')
 		const bucket = detailBySignature.get(signature)
 		if (bucket) {
 			bucket.push(pg)
@@ -366,6 +386,28 @@ test.describe('manifest pages — schema-driven render', () => {
 			RESOLVABLE_DETAIL_PAGES.length,
 			'every signature must contribute exactly one opened page',
 		).toBe(detailBySignature.size)
+
+		// A detail page with NO widget keys means the signature reader is
+		// looking at the wrong field — every such page collapses into one empty
+		// bucket and coverage silently drops to a single render path while the
+		// tally still reads green. That is exactly what happened when the body
+		// widgets moved from `widgets[].widgetKey` to `config.widgets[].type`.
+		const unsigned = ALL_DETAIL_PAGES.filter((p) => {
+			const typed = (p.config?.widgets as unknown[] | undefined)?.length ?? 0
+			const legacy = ((p as { widgets?: unknown[] }).widgets)?.length ?? 0
+			return typed + legacy === 0
+		})
+		expect(
+			unsigned.map((p) => p.id),
+			'detail page(s) contributed NO widget keys — the signature reader is reading a field the manifest no longer uses',
+		).toEqual([])
+
+		// Guard the collapse ratio too: one bucket for many pages is the
+		// signature of a broken reader, not of genuinely identical pages.
+		expect(
+			detailBySignature.size,
+			`${ALL_DETAIL_PAGES.length} detail pages collapsed to ${detailBySignature.size} signature(s) — implausibly few`,
+		).toBeGreaterThan(5)
 	})
 
 	test('detail coverage: the quarantine is declared, or a page was actually opened', () => {
