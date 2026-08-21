@@ -255,6 +255,11 @@
     "type": "index"
   },
   {
+    "id": "MijnUrenstaten",
+    "route": "/mijn/urenstaten",
+    "type": "index"
+  },
+  {
     "id": "MijnVerlof",
     "route": "/mijn/verlof",
     "type": "index"
@@ -483,6 +488,16 @@
     "id": "TeamVerlofgoedkeuring",
     "route": "/leave-requests/team-approval",
     "type": "index"
+  },
+  {
+    "id": "TimeEntries",
+    "route": "/time-entries",
+    "type": "index"
+  },
+  {
+    "id": "TimeEntryDetail",
+    "route": "/time-entries/:id",
+    "type": "detail"
   },
   {
     "id": "TimesheetApproval",

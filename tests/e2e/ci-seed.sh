@@ -433,9 +433,22 @@ done
 # job.
 # ---------------------------------------------------------------------------
 ADM_ID="E2E-ADM-001"
+# hrmq-hours-process-redesign: the hours-process e2e journeys
+# (spec-coverage/hours-process.spec.ts) book time entries as the admin user.
+# The stamping listener resolves admin's own Employee (the register-seeded
+# employee-jansen, nextcloudUserId "admin") and stamps its administrationId —
+# ADM-001, the register-seeded administration — onto every booking, and every
+# hours page filters on `administrationId: @workspace.activeAdministrationId?`.
+# With the active pointer at E2E-ADM-001 those pages would filter out both the
+# register-seeded rows AND everything admin books, so the ACTIVE administration
+# below is set to ADM-001. An `hr`-role access row for ADM-001 is seeded here
+# too (hr-seed.json already carries an accountant row; this one keeps the
+# analytics guard independent of that seed's shape).
+ACTIVE_ADM_ID="ADM-001"
 for payload in \
 	"{\"administrationId\":\"${ADM_ID}\",\"name\":\"E2E Administration\",\"active\":true,\"mode\":\"standard\"}|Administration" \
-	"{\"userId\":\"${USER_NAME}\",\"administrationId\":\"${ADM_ID}\",\"role\":\"hr\"}|AdministrationAccess"
+	"{\"userId\":\"${USER_NAME}\",\"administrationId\":\"${ADM_ID}\",\"role\":\"hr\"}|AdministrationAccess" \
+	"{\"userId\":\"${USER_NAME}\",\"administrationId\":\"${ACTIVE_ADM_ID}\",\"role\":\"hr\"}|AdministrationAccess"
 do
 	body="${payload%|*}"
 	schema="${payload##*|}"
@@ -489,10 +502,10 @@ if [ -n "$OCC" ]; then
 	# instance: writes, reads back byte-identical, and reports
 	# 'The setting does not exist for user "..."' once deleted — so the
 	# comparison below can genuinely fail.
-	php "$OCC" user:setting "${USER_NAME}" hrmq "${ACT_KEY}" "${ADM_ID}" >/dev/null 2>&1 || true
+	php "$OCC" user:setting "${USER_NAME}" hrmq "${ACT_KEY}" "${ACTIVE_ADM_ID}" >/dev/null 2>&1 || true
 	READBACK="$(php "$OCC" user:setting "${USER_NAME}" hrmq "${ACT_KEY}" 2>/dev/null | tr -d '\r\n' || true)"
-	echo "[ci-seed] active administration read back as: '${READBACK}' (want '${ADM_ID}')"
-	if [ "$READBACK" = "$ADM_ID" ]; then ACT_OK=1; fi
+	echo "[ci-seed] active administration read back as: '${READBACK}' (want '${ACTIVE_ADM_ID}')"
+	if [ "$READBACK" = "$ACTIVE_ADM_ID" ]; then ACT_OK=1; fi
 else
 	echo "[ci-seed] occ not found (looked in NEXTCLOUD_ROOT, cwd, and two levels above the app dir)."
 fi
@@ -503,9 +516,9 @@ if [ "$ACT_OK" != "1" ]; then
 	for form in "/index.php/apps/hrmq/api/administration/active" "/apps/hrmq/api/administration/active"; do
 		code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
 			-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-			-H 'Content-Type: application/json' -d "{\"administrationId\":\"${ADM_ID}\"}" \
+			-H 'Content-Type: application/json' -d "{\"administrationId\":\"${ACTIVE_ADM_ID}\"}" \
 			"${BASE}${form}" || true)"
-		echo "[ci-seed] set active administration ${ADM_ID} via ${form} -> ${code}"
+		echo "[ci-seed] set active administration ${ACTIVE_ADM_ID} via ${form} -> ${code}"
 		case "$code" in 2*) ACT_OK=1; break ;; esac
 	done
 fi

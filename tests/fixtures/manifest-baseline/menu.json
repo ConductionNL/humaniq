@@ -15,6 +15,12 @@
         "route": "MijnUren"
       },
       {
+        "icon": "CalendarClockOutline",
+        "id": "MijnUrenstaten",
+        "label": "Mijn urenstaten",
+        "route": "MijnUrenstaten"
+      },
+      {
         "icon": "ReceiptOutline",
         "id": "MijnDeclaraties",
         "label": "Mijn declaraties",
@@ -190,9 +196,15 @@
   {
     "children": [
       {
+        "icon": "ClockPlusOutline",
+        "id": "TimeEntries",
+        "label": "Urenboekingen",
+        "route": "TimeEntries"
+      },
+      {
         "icon": "ClockCheckOutline",
         "id": "Timesheets",
-        "label": "Urenregistratie",
+        "label": "Urenstaten",
         "route": "Timesheets"
       },
       {

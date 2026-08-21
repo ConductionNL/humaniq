@@ -100,11 +100,11 @@ their own repos; sections 1–7 are hrmq work. Every task is small enough to ver
 
 ## 4. Manifest fragments (pages + forms — builds on hrmq-manifest-fragment-pipeline)
 
-- [ ] 4.1 Edit `src/manifest.d/hr-timesheet.json`: apply the Decision 8 modifications to
+- [x] 4.1 Edit `src/manifest.d/hr-timesheet.json`: apply the Decision 8 modifications to
       `MijnUren`, `Timesheets`, `TimesheetApproval`, `TeamUrengoedkeuring`, `TimesheetDetail`
       (exact configs in the design table — includeFields allowlists, actionToggles, stat-widget
       re-point, "Urenboekingen" object-list widget, `includeFields: ["description"]` edit form).
-- [ ] 4.2 New `src/manifest.d/hours-process-redesign.json` (per-change fragment, ADR-037):
+- [x] 4.2 New `src/manifest.d/hours-process-redesign.json` (per-change fragment, ADR-037):
       `MijnUrenstaten`, `TimeEntries`, `TimeEntryDetail` pages + menu leaf additions
       (`MijnHrGroup` after `MijnUren`; `TimesheetsGroup` before `Timesheets`) via the
       re-declare-group-by-id mechanism. No `deepLinks`/`runtime`/`dependencies` keys in the
@@ -124,7 +124,7 @@ their own repos; sections 1–7 are hrmq work. Every task is small enough to ver
 
 ## 5. Seed data
 
-- [ ] 5.1 `lib/Settings/register.d/hr-seed.json`: add 2–3 `TimeEntry` seed objects per seeded
+- [x] 5.1 `lib/Settings/register.d/hr-seed.json`: add 2–3 `TimeEntry` seed objects per seeded
       Timesheet (summing to the timesheet's `hours`, realistic start/stop values,
       `origin: "manual"`), so a fresh dev login shows a populated booking list and the aggregate
       pipeline is demonstrated. Keep every identifier an obvious placeholder. Do NOT stamp
@@ -138,7 +138,7 @@ their own repos; sections 1–7 are hrmq work. Every task is small enough to ver
 ## 6. e2e (Playwright — `tests/e2e/spec-coverage/`, CI seeds via `tests/e2e/ci-seed.sh`, which
       refuses :8080 by design; use the resolved router base per `core-journeys.spec.ts`)
 
-- [ ] 6.1 New `tests/e2e/spec-coverage/hours-process.spec.ts` referencing, by verbatim scenario
+- [x] 6.1 New `tests/e2e/spec-coverage/hours-process.spec.ts` referencing, by verbatim scenario
       name in comments, every non-excluded scenario of this change's spec deltas (gate-19
       traceability). Journeys: (a) book hours via the `MijnUren` create dialog and assert the
       exact form field set (expected present AND process fields absent); (b) the parent
@@ -148,7 +148,7 @@ their own repos; sections 1–7 are hrmq work. Every task is small enough to ver
       detail → Approve, assert status `approved` and `approvedBy` rendered (NoSelfApprovalGuard
       makes admin-approves-own impossible — use the seeded `managerUserId: "admin"` row);
       (e) an approved timesheet's entries show no edit affordance.
-- [ ] 6.2 Update `core-journeys.spec.ts` test "Timesheets index renders add button and
+- [x] 6.2 Update `core-journeys.spec.ts` test "Timesheets index renders add button and
       list-or-empty" — the Add button is now disabled/absent by design; re-point the assertion
       to the new expected state (and to `TimeEntries` for a positive add-button case).
 - [ ] 6.3 Extend `tests/e2e/ci-seed.sh` only if the register import does not already carry the
@@ -160,7 +160,7 @@ their own repos; sections 1–7 are hrmq work. Every task is small enough to ver
 - [ ] 7.1 `composer check:strict` + full PHPUnit + `npm run test` green; run the hydra gates
       wrapper (`scripts/run-hydra-gates.sh`) — gate-16 (`@spec` tags on every new/changed
       method, pointing at this change's spec deltas) and gate-19 (scenario traceability) clean.
-- [ ] 7.2 Update `docs/` feature docs for the hours process (booking vs timesheet vs approval)
+- [x] 7.2 Update `docs/` feature docs for the hours process (booking vs timesheet vs approval)
       if `docs/` covers timesheets today (check first — do not create docs that don't exist).
 - [ ] 7.3 Migration re-run proof on the dev instance (run repair twice, diff object counts).
 - [ ] 7.4 Hand the D1/D2/D3 issue links + open questions 1–3 (design.md) back to the

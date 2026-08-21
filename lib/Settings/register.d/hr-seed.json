@@ -31,6 +31,7 @@
                 "employeeId": "employee-jansen",
                 "period": "2026-05",
                 "hours": 152,
+                "entryCount": 3,
                 "description": "Reguliere uren mei 2026 — projectwerk en intern overleg.",
                 "projectId": "project-alpha",
                 "costCenter": "CC-100",
@@ -50,6 +51,7 @@
                 "employeeId": "employee-devries",
                 "period": "2026-05",
                 "hours": 168,
+                "entryCount": 2,
                 "description": "Uren mei 2026 — support en onboarding.",
                 "projectId": "project-beta",
                 "costCenter": "CC-200",
@@ -69,6 +71,7 @@
                 "employeeId": "employee-bakker",
                 "period": "2026-05",
                 "hours": 140,
+                "entryCount": 2,
                 "description": "Uren mei 2026 — gecorrigeerd na afkeuring.",
                 "billable": false,
                 "status": "rejected",
@@ -77,6 +80,142 @@
                 "approvedAt": "2026-06-02T14:00:00Z",
                 "rejectionReason": "Aantal uren komt niet overeen met de geregistreerde aanwezigheid; graag corrigeren en opnieuw indienen.",
                 "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-jansen-2026-05-04"
+                },
+                "employeeId": "employee-jansen",
+                "timesheetId": "timesheet-jansen-2026-05",
+                "startedAt": "2026-05-04T09:00:00Z",
+                "endedAt": "2026-05-04T17:30:00Z",
+                "breakMinutes": 30,
+                "hours": 8.00,
+                "description": "Projectwerk project-alpha, sprintoplevering.",
+                "projectId": "project-alpha",
+                "billable": true,
+                "costCenter": "CC-100",
+                "userId": "admin",
+                "administrationId": "ADM-001",
+                "origin": "manual",
+                "_note": "hrmq-hours-process-redesign (tasks.md 5.1): TimeEntry seeds linked to the seeded timesheets by real timesheetId slug links. The register seed import path may bypass the stamping/aggregation listeners, so every listener-owned value (hours, userId, costCenter, administrationId, the per-entry allocation copies) is carried as a literal CONSISTENT with what the listeners would derive: hours = (endedAt - startedAt - breakMinutes)/60, the entries of one timesheet sum exactly to its seeded hours, share its projectId/costCenter/billable (the homogeneous-aggregate contract, REQ-TEC-003/004), and userId mirrors the linked Employee's nextcloudUserId (absent where the employee link does not resolve — devries/bakker, the fail-closed K=2 rows)."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-jansen-2026-05-05"
+                },
+                "employeeId": "employee-jansen",
+                "timesheetId": "timesheet-jansen-2026-05",
+                "startedAt": "2026-05-05T09:00:00Z",
+                "endedAt": "2026-05-05T17:30:00Z",
+                "breakMinutes": 30,
+                "hours": 8.00,
+                "description": "Intern overleg en code-review.",
+                "projectId": "project-alpha",
+                "billable": true,
+                "costCenter": "CC-100",
+                "userId": "admin",
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-jansen-2026-05-rest"
+                },
+                "employeeId": "employee-jansen",
+                "timesheetId": "timesheet-jansen-2026-05",
+                "startedAt": "2026-05-06T08:00:00Z",
+                "endedAt": "2026-05-12T00:00:00Z",
+                "breakMinutes": 0,
+                "hours": 136.00,
+                "description": "Restant reguliere uren mei 2026 — verzameld in één boeking (seed-placeholder, geen werkelijke aaneengesloten dienst).",
+                "projectId": "project-alpha",
+                "billable": true,
+                "costCenter": "CC-100",
+                "userId": "admin",
+                "administrationId": "ADM-001",
+                "origin": "manual",
+                "_note": "Deliberate period roll-up entry so 2-3 seed entries can sum EXACTLY to the timesheet's seeded 152 hours (8 + 8 + 136) without inventing 19 per-day rows; the span (136h) is arithmetically consistent with hours but is a bookkeeping placeholder, flagged in its own description."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-devries-2026-05-04"
+                },
+                "employeeId": "employee-devries",
+                "timesheetId": "timesheet-devries-2026-05",
+                "startedAt": "2026-05-04T07:00:00Z",
+                "endedAt": "2026-05-04T15:30:00Z",
+                "breakMinutes": 30,
+                "hours": 8.00,
+                "description": "Supportdienst en onboarding nieuwe collega.",
+                "projectId": "project-beta",
+                "billable": false,
+                "costCenter": "CC-200",
+                "administrationId": "ADM-001",
+                "origin": "manual",
+                "_note": "No userId on the devries/bakker entries: their employeeId does not resolve to a seeded Employee with a nextcloudUserId, mirroring their parent timesheets (the migration summary's K=2 unresolvable-user-link rows) — fail-closed, they never appear on a Mijn page (REQ-MHS-002)."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-devries-2026-05-rest"
+                },
+                "employeeId": "employee-devries",
+                "timesheetId": "timesheet-devries-2026-05",
+                "startedAt": "2026-05-05T08:00:00Z",
+                "endedAt": "2026-05-12T00:00:00Z",
+                "breakMinutes": 0,
+                "hours": 160.00,
+                "description": "Restant uren mei 2026 — verzameld in één boeking (seed-placeholder).",
+                "projectId": "project-beta",
+                "billable": false,
+                "costCenter": "CC-200",
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-bakker-2026-05-04"
+                },
+                "employeeId": "employee-bakker",
+                "timesheetId": "timesheet-bakker-2026-05",
+                "startedAt": "2026-05-04T08:00:00Z",
+                "endedAt": "2026-05-04T16:30:00Z",
+                "breakMinutes": 30,
+                "hours": 8.00,
+                "description": "Consultancywerkzaamheden, gecorrigeerde boeking.",
+                "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-bakker-2026-05-rest"
+                },
+                "employeeId": "employee-bakker",
+                "timesheetId": "timesheet-bakker-2026-05",
+                "startedAt": "2026-05-05T08:00:00Z",
+                "endedAt": "2026-05-10T20:00:00Z",
+                "breakMinutes": 0,
+                "hours": 132.00,
+                "description": "Restant uren mei 2026 — verzameld in één boeking (seed-placeholder).",
+                "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual",
+                "_note": "The bakker entries carry no projectId/costCenter, matching their parent timesheet (rejected, no allocation) — sum 8 + 132 = the seeded 140 hours. The ADM-002 example timesheet deliberately keeps ZERO entries so a fresh install still exercises the MigrateHoursProcess synthesis path (origin: migration) on at least one hours>0 row."
             },
             {
                 "@self": {

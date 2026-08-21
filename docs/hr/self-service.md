@@ -11,21 +11,28 @@ already use with the OpenRegister renderer's `@me` filter token.
 
 ## Mijn HR
 
-The `Mijn HR` menu group holds four `@me`-scoped index pages: uren
-(Timesheets), declaraties (Expenses), verlof (LeaveRequests), and
+The `Mijn HR` menu group holds five `@me`-scoped index pages: uren
+(TimeEntry — the booking surface, see
+[Hours & timesheets](/docs/hr/timesheets)), urenstaten (Timesheet,
+read-only), declaraties (Expenses), verlof (LeaveRequests), and
 loonstroken (Payslips) — each pre-filtered to the current user's own
 records.
 
 Scoping works through a **denormalized `userId` property** on `Timesheet`,
-`Expense`, `LeaveRequest`, and `Payslip` — a plain copy of the linked
-`Employee.nextcloudUserId`, filtered with the renderer's `@me` token. This
-is the one mechanism verified to work with today's renderer and
-OpenRegister; it is not a live join. `Employee.nextcloudUserId` links an
-employee record to its Nextcloud account and stays `null` for
+`TimeEntry`, `Expense`, `LeaveRequest`, and `Payslip` — a plain copy of
+the linked `Employee.nextcloudUserId`, filtered with the renderer's `@me`
+token. This is the one mechanism verified to work with today's renderer
+and OpenRegister; it is not a live join. `Employee.nextcloudUserId` links
+an employee record to its Nextcloud account and stays `null` for
 portal-only external employees (that scoping remains UUID-claim based in
-portaliq and is untouched here). HR maintains `userId`; employees never
-set it themselves, and Payslip's `userId` is set by payroll alongside
-`employeeId` since employees never author their own payslips.
+portaliq and is untouched here). For `Timesheet` and `TimeEntry` the
+stamp is **server-maintained**: it is re-derived from `employeeId` on
+every write, so it can never drift and employees never set it. For
+`Expense` and `LeaveRequest` HR maintains it (their process redesigns
+follow), and Payslip's `userId` is set by payroll alongside `employeeId`
+since employees never author their own payslips. Records whose employee
+has no linked account keep `userId: null` and never appear on a Mijn
+page — fail-closed.
 
 External (no-NC-account) self-service — for candidates or contractors
 without a Nextcloud login — stays with portaliq and is out of scope here.
@@ -42,9 +49,13 @@ of the current user's five most recent timesheets.
 
 Managers get their own approval queues, never a "Manager portaal" — HRMQ
 adds Dashboard widgets and scoped pages inside the *existing* menus
-instead. A denormalized `managerUserId` (HR/back-office maintained, the
-same pattern as `userId`) on `Timesheet`, `Expense`, and `LeaveRequest`
-drives three team-scoped pages:
+instead. A denormalized `managerUserId` (the same pattern as `userId`)
+on `Timesheet`, `Expense`, and `LeaveRequest` drives three team-scoped
+pages. For `Timesheet` it is a **server-maintained cache** of the org
+chain (`OrgAssignment` → `OrgUnit.managerId` → the manager's
+`nextcloudUserId`), stamped on every write; for `Expense` and
+`LeaveRequest` it remains HR/back-office maintained until their own
+process redesigns:
 
 - `Team-urengoedkeuring` — Timesheet, filtered to `managerUserId: @me`
 - `Team-declaratiegoedkeuring` — Expense, same pattern

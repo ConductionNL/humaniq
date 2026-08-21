@@ -10,6 +10,12 @@
 					"route": "MijnUren"
 				},
 				{
+					"id": "MijnUrenstaten",
+					"label": "Mijn urenstaten",
+					"icon": "CalendarClockOutline",
+					"route": "MijnUrenstaten"
+				},
+				{
 					"id": "MijnDeclaraties",
 					"label": "Mijn declaraties",
 					"icon": "ReceiptOutline",
@@ -179,8 +185,14 @@
 			"id": "VerlofVerzuimGroup",
 			"children": [
 				{
+					"id": "TimeEntries",
+					"label": "Urenboekingen",
+					"icon": "ClockPlusOutline",
+					"route": "TimeEntries"
+				},
+				{
 					"id": "Timesheets",
-					"label": "Urenregistratie",
+					"label": "Urenstaten",
 					"icon": "ClockCheckOutline",
 					"route": "Timesheets"
 				},
