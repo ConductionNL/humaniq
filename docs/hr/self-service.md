@@ -11,7 +11,13 @@ already use with the OpenRegister renderer's `@me` filter token.
 
 ## Mijn HR
 
-The `Mijn HR` menu group holds five `@me`-scoped index pages: uren
+`Mijn HR` is a **routed group**: clicking its title opens the personal
+dashboard at `/mijn`, and the chevron still folds its children away. Every
+Mijn surface lives under the `/mijn/...` prefix (the older
+`/mijn-hr/gebruikelijk-loon` path redirects there, so existing bookmarks
+keep working).
+
+Its children are the `@me`-scoped index pages: uren
 (TimeEntry — the booking surface, see
 [Hours & timesheets](/docs/hr/timesheets)), urenstaten (Timesheet,
 read-only), declaraties (Expenses), verlof (LeaveRequests), and
@@ -19,7 +25,7 @@ loonstroken (Payslips) — each pre-filtered to the current user's own
 records.
 
 Scoping works through a **denormalized `userId` property** on `Timesheet`,
-`TimeEntry`, `Expense`, `LeaveRequest`, and `Payslip` — a plain copy of
+`TimeEntry`, `Expense`, `LeaveRequest`, `LeaveBalance` and `Payslip` — a plain copy of
 the linked `Employee.nextcloudUserId`, filtered with the renderer's `@me`
 token. This is the one mechanism verified to work with today's renderer
 and OpenRegister; it is not a live join. `Employee.nextcloudUserId` links
@@ -29,21 +35,43 @@ portaliq and is untouched here). For `Timesheet` and `TimeEntry` the
 stamp is **server-maintained**: it is re-derived from `employeeId` on
 every write, so it can never drift and employees never set it. For
 `Expense` and `LeaveRequest` HR maintains it (their process redesigns
-follow), and Payslip's `userId` is set by payroll alongside `employeeId`
-since employees never author their own payslips. Records whose employee
+follow), Payslip's `userId` is set by payroll alongside `employeeId`
+since employees never author their own payslips, and `LeaveBalance`'s is
+written by the leave-accrual job — the schema's only systematic writer —
+on both the balances it creates and the ones it accrues onto each month,
+so a balance from before the property existed picks the link up on the
+next run without a migration. Records whose employee
 has no linked account keep `userId: null` and never appear on a Mijn
 page — fail-closed.
 
 External (no-NC-account) self-service — for candidates or contractors
 without a Nextcloud login — stays with portaliq and is out of scope here.
 
-## Dashboard KPIs
+## The personal dashboard
 
-The Dashboard carries both "mine" and approver KPI widgets: a submitted
-timesheet count scoped to the logged-in user alongside a
-"te beoordelen" count scoped to everyone (approvers see the full queue,
-not just their own submissions), plus a "Mijn recente uren" object-table
-of the current user's five most recent timesheets.
+`/mijn` is the employee's own landing surface — the app Dashboard is the
+management steering view and carries no `@me`-scoped widgets. Six widgets,
+every one of them filtered to the caller:
+
+- **Mijn uren deze maand** — the sum of the caller's own booked hours since
+  the first of the current month, opening their booking page.
+- **Mijn open declaraties** — how many of their expense claims are with the
+  organisation awaiting a decision (`submitted`); drafts are their own
+  unfinished input and are not counted.
+- **Te beoordelen urenstaten** — the caller's own approval queue. It always
+  renders, so somebody who manages nobody sees a plain `0` rather than a
+  tile that silently disappears.
+- **Mijn urenstaten** — the most recent timesheets with their period, hours,
+  entry count and status; a row opens the timesheet, which is where
+  submission happens.
+- **Mijn verlofsaldo** — this year's balance per leave type: entitled,
+  bovenwettelijk and used hours. It reads the denormalized `userId` above,
+  so a balance not yet linked to an account is left out rather than shown
+  to the wrong person.
+- **Mijn recente loonstroken** — the last few payslips, read-only.
+
+Where a widget shows nothing it is saying "nothing of yours here", never
+"nothing exists" — the filters fail closed by design.
 
 ## Team-scoped approval for managers
 
@@ -64,10 +92,9 @@ process redesigns:
 Each sits directly under its existing menu group, right after the global
 approval entry — `TimesheetsGroup`, `ExpensesGroup`,
 `VerlofVerzuimGroup` — composing the manager's `@me` filter with the
-approval page's existing `status: submitted` filter. The Dashboard's
-approver widgets are similarly re-scoped to "(mijn team)", with a
-fallback row that restores the global submitted-counts for HR staff who
-need the full picture across every team.
+approval page's existing `status: submitted` filter. A manager's own
+queue also surfaces on the personal dashboard above, as the
+"Te beoordelen urenstaten" tile that opens `Team-urengoedkeuring`.
 
 ### Kept honest by a consistency rule
 

@@ -77,7 +77,8 @@
     "icon": "Account",
     "id": "MijnHrGroup",
     "label": "Mijn HR",
-    "order": 20
+    "order": 20,
+    "route": "MijnHr"
   },
   {
     "children": [

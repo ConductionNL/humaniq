@@ -540,7 +540,7 @@
 		},
 		{
 			"id": "MijnGebruikelijkLoon",
-			"route": "/mijn-hr/gebruikelijk-loon",
+			"route": "/mijn/gebruikelijk-loon",
 			"type": "dashboard",
 			"title": "Mijn gebruikelijk loon",
 			"config": {

@@ -608,7 +608,9 @@
                 "bovenwettelijkHours": 40,
                 "usedHours": 56,
                 "expiryDate": "2027-07-01",
-                "administrationId": "ADM-001"
+                "userId": "admin",
+                "administrationId": "ADM-001",
+                "_note": "hrmq-personal-dashboard (tasks.md 3.1): userId stamped ONLY here. The devries/bakker balances below deliberately stay unstamped so the @me exclusion stays demonstrable on a seeded instance — the REQ-MHS-006 pattern, and the fixture REQ-MHS-002's fail-closed scenario reads. In production this value is LeaveAccrualJob's to write (REQ-ACCR-006); the seed only saves dev/CI the wait for the next accrual run."
             },
             {
                 "@self": {
