@@ -93,7 +93,7 @@
                     "schema": "PayrollPaymentBatch",
                     "slug": "paybatch-2026-05-adm-001"
                 },
-                "payrollRunId": "payrollrun-2026-05",
+                "payrollRunId": "@ref:payrollrun-2026-05",
                 "period": "2026-05",
                 "status": "created",
                 "shillinqPaymentRunRef": "pr-hrmq-netpay-2026-05-placeholder",

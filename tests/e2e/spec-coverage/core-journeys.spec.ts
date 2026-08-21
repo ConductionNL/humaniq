@@ -24,9 +24,11 @@
  * (OpenRegister REST + basic auth; assertions stay in the UI).
  */
 
-import { test, expect, request, type APIRequestContext, type Page } from '@playwright/test'
+import type { APIRequestContext, Page } from '@playwright/test';
+
 import { appDialog } from '@conduction/nextcloud-vue/testing/playwright'
-import { ADMIN_CREDENTIALS, resolveBaseURL } from '../base-url'
+import { expect, request, test } from '@playwright/test'
+import { ADMIN_CREDENTIALS, resolveBaseURL } from '../base-url.ts'
 
 // PATH-form base: the hrmq router runs in HISTORY mode (`createWebHistory`,
 // src/main.js). Hash-form deep links are silently ignored and land on
@@ -47,7 +49,7 @@ async function appBase(page: Page): Promise<string> {
 	if (_appBase) return _appBase
 	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
 	const resolved = await page.evaluate(
-		() => (window as unknown as { OC?: { generateUrl?: (p: string) => string } }).OC?.generateUrl?.('/apps/hrmq'),
+		() => (window as unknown as { OC?: { generateUrl?: (_p: string) => string } }).OC?.generateUrl?.('/apps/hrmq'),
 	)
 	if (!resolved) {
 		throw new Error(
@@ -151,9 +153,30 @@ test.describe('core journeys — primary HR surfaces', () => {
 		await expectIndexRendered(page, /Add Employee/i)
 	})
 
-	test('Timesheets index renders add button and list-or-empty', async ({ page }) => {
+	test('Timesheets index renders read-only list without an add button', async ({ page }) => {
+		// hrmq-hours-process-redesign (design.md Decision 8): timesheets are
+		// server-created period aggregates of TimeEntry bookings, so the Add
+		// button is deliberately DISABLED here (actionToggles.showAdd: false).
+		// Page identity can no longer be asserted via its create button —
+		// assert the ABSENCE of Add plus a rendered listing/empty state, and
+		// keep the positive add-button case on TimeEntries below.
 		await gotoRoute(page, '/timesheets')
-		await expectIndexRendered(page, /Add Timesheet/i)
+		const content = page.locator(
+			'main table, main [role="table"], main [role="note"], '
+			+ 'main .empty-content, main [class*="emptyContent"], main [class*="empty-state"]',
+		).first()
+		await expect(content, 'index page must render a listing or an explicit empty state').toBeVisible({ timeout: 20_000 })
+		await expect(
+			page.getByRole('button', { name: /Add Timesheet/i }),
+			'timesheets are server-created — the Add button must be gone',
+		).toHaveCount(0)
+	})
+
+	test('TimeEntries index renders add button and list-or-empty', async ({ page }) => {
+		// The positive create-affordance case that /timesheets used to carry:
+		// the HR booking surface (hrmq-hours-process-redesign) offers Add.
+		await gotoRoute(page, '/time-entries')
+		await expectIndexRendered(page, /Add Time entry/i)
 	})
 
 	test('Expenses index renders add button and list-or-empty', async ({ page }) => {

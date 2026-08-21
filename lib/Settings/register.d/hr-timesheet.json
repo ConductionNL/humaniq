@@ -2,19 +2,143 @@
     "x-hrmq-fragment": "hr-timesheet",
     "components": {
         "schemas": {
+            "TimeEntry": {
+                "slug": "TimeEntry",
+                "icon": "ClockPlusOutline",
+                "version": "0.1.0",
+                "title": "Time entry",
+                "description": "One individual booking of worked hours (urenregistratie): when the work started and ended, what it was, and optionally which project it was for. Bookings are collected automatically into the employee's monthly timesheet, which is what gets submitted for approval.",
+                "x-notes": "hours-process-redesign Decision 1: the booking granularity split out of the former all-in-one Timesheet schema. English property names per fleet decision; NL only via l10n labels (verb surface 'uren boeken'). No status and no lifecycle here — the process lives on the parent Timesheet, and entry mutability is governed by the parent's state (Decision 3, enforced by TimeEntryStampListener). Concurrency: the aggregate listener recomputes from truth on every entry write, so a stale intermediate total is self-healed by the next write (accepted for dev-stage volumes).",
+                "type": "object",
+                "x-schema-org": "schema:Action",
+                "required": [
+                    "startedAt",
+                    "endedAt"
+                ],
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "order": 80,
+                        "$ref": "Employee",
+                        "format": "uuid",
+                        "title": "Employee",
+                        "description": "The employee these hours were worked by.",
+                        "x-notes": "Self-service surfaces never show this field: TimeEntryStampListener resolves it from the signed-in user's own Employee record (nextcloudUserId match) and REFUSES the write when no employee is linked — the listener is the enforcement point, which is why the property is deliberately NOT in the schema's required list: OpenRegister validates required-ness BEFORE the pre-save creating event, so a schema-required employeeId would reject every self-service booking before the listener could resolve it. The HR entry page (TimeEntries) offers it as a picker. format:uuid is correct and deliberate: OpenRegister's own ValidateObject rewrites a $ref relation to a uuid-patterned string, so a uuid IS the canonical stored form of a relation. Seed data addresses the target by slug through the `@ref:<slug>` token, which ImportHandler resolves to the real uuid BEFORE validation runs — so the format rejects nothing legitimate. It was briefly dropped here on the theory that slugs were a valid stored form; that was the wrong call, because the format is the only thing that makes a broken reference fail LOUDLY instead of persisting as referential garbage no surface can resolve."
+                    },
+                    "timesheetId": {
+                        "type": "string",
+                        "order": 90,
+                        "$ref": "Timesheet",
+                        "format": "uuid",
+                        "nullable": true,
+                        "title": "Timesheet",
+                        "description": "The period timesheet this booking is part of. Assigned automatically from the start date.",
+                        "x-notes": "Never a form field. TimeEntryStampListener resolves the employee's draft/rejected Timesheet for the month of startedAt (YYYY-MM grain, fixed by design resolution 2) and creates a draft Timesheet when none exists. Booking into a period whose only timesheet is submitted/approved is refused — never silently forked into a second timesheet. Always a real uuid: the listener and MigrateHoursProcess both assign the parent timesheet's own id, and seed data uses the `@ref:<slug>` token that ImportHandler resolves before validation — see employeeId's note for why format:uuid stays."
+                    },
+                    "startedAt": {
+                        "type": "string",
+                        "order": 10,
+                        "format": "date-time",
+                        "title": "Start",
+                        "description": "When the work started."
+                    },
+                    "endedAt": {
+                        "type": "string",
+                        "order": 20,
+                        "format": "date-time",
+                        "title": "End",
+                        "description": "When the work ended."
+                    },
+                    "breakMinutes": {
+                        "type": "integer",
+                        "order": 30,
+                        "minimum": 0,
+                        "default": 0,
+                        "title": "Break (minutes)",
+                        "description": "Unpaid break time to subtract from this booking."
+                    },
+                    "hours": {
+                        "type": "number",
+                        "order": 70,
+                        "minimum": 0,
+                        "title": "Hours",
+                        "description": "Worked hours in this booking, calculated from start, end and break.",
+                        "x-notes": "Server-derived on every write by TimeEntryStampListener: (endedAt - startedAt - breakMinutes)/60, rounded to 2 decimals. A booking whose end does not lie after its start, or whose break exceeds the span, is refused with a structured 422 (REQ-TEC-001). Not readOnly: the deriving listener itself must write it, and OpenRegister enforces readOnly on every UPDATE with no backend bypass."
+                    },
+                    "description": {
+                        "type": "string",
+                        "order": 40,
+                        "maxLength": 2000,
+                        "title": "Description",
+                        "description": "What was worked on."
+                    },
+                    "projectId": {
+                        "type": "string",
+                        "order": 50,
+                        "nullable": true,
+                        "title": "Project",
+                        "description": "The project these hours were worked on.",
+                        "x-notes": "Plain string, not a $ref relation: no Project schema is modeled in hrmq (ADR-062 rule 7 — only fields whose target exists in this register set get $ref). The one allocation-adjacent field an employee may choose on the booking form."
+                    },
+                    "billable": {
+                        "type": "boolean",
+                        "order": 60,
+                        "default": false,
+                        "title": "Billable",
+                        "description": "Whether these hours are billable to a client or project."
+                    },
+                    "costCenter": {
+                        "type": "string",
+                        "order": 100,
+                        "nullable": true,
+                        "title": "Cost centre",
+                        "description": "The cost centre these hours count against, derived from the employee's team.",
+                        "x-notes": "Never a form field (product decision 6). Stamped by TimeEntryStampListener via OrgResolutionService: the employee's active OrgAssignment unit's OrgUnit.costCenter. Null when the chain does not resolve — never guessed."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "order": 110,
+                        "nullable": true,
+                        "title": "User",
+                        "description": "The account these hours belong to.",
+                        "x-notes": "Denormalized Nextcloud user id (mijn-hr-self-service) — a plain NC-user-id string mirroring the approvedBy convention, never a $ref. A copy of the linked Employee's nextcloudUserId, carried because the manifest filter grammar cannot join across schemas; the MijnUren page filters on it with the @me token. Re-stamped from employeeId on every write by TimeEntryStampListener, so it cannot drift."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "order": 120,
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration these hours belong to.",
+                        "x-notes": "Denormalized administratie key (multi-administratie, REQ-MULTI-001) — plain string, NOT a $ref (ADR-062 rule 7). Stamped from the resolved Employee's administrationId by TimeEntryStampListener; for hours booking the administration is always derivable from the employment, so no hours surface carries an administration form field."
+                    },
+                    "origin": {
+                        "type": "string",
+                        "order": 130,
+                        "enum": [
+                            "manual",
+                            "migration",
+                            "import"
+                        ],
+                        "default": "manual",
+                        "readOnly": true,
+                        "title": "Origin",
+                        "description": "How this booking was created.",
+                        "x-notes": "The one safe readOnly use in this schema pair (Decision 2 analysis): genuinely immutable after create, optional, defaulted, and stamped only on the CREATE write where OpenRegister's readOnly enforcement does not apply. 'migration' marks the synthetic entries the MigrateHoursProcess repair step fabricates for legacy timesheets — their timestamps are bookkeeping artifacts, not claims about when work happened."
+                    }
+                }
+            },
             "Timesheet": {
                 "slug": "Timesheet",
                 "icon": "ClockCheckOutline",
-                "version": "0.5.0",
+                "version": "0.6.0",
                 "title": "Timesheet",
-                "description": "A per-employee, per-period record of worked hours submitted for approval (urenregistratie / time sheet). An employee logs hours against a period (and optionally a project/cost centre), submits the timesheet, and a manager approves or rejects it. The approval lifecycle (submitted → approved/rejected, with approver and timestamp) is the genuinely new, correctly-homed HR/labour surface that pipelinq's \"Timesheet approval\" deep-link previously pointed at shillinq for — shillinq's UrenRegistratie is an append-only billing time-log with no approval state, so this Timesheet schema owns the approval workflow in hrmq, the HR/labour app.",
+                "description": "The monthly collection of an employee's hour bookings (urenstaat). Totals are kept up to date automatically while the employee books; once submitted, a manager approves or rejects the whole month.",
+                "x-notes": "hours-process-redesign Decision 2: the period aggregate half of the former all-in-one schema — the approval lifecycle stays here and only here (a TimeEntry has none). The approval lifecycle is the correctly-homed HR/labour surface pipelinq's 'Timesheet approval' deep-link previously pointed at shillinq for; shillinq's UrenRegistratie is an append-only billing time-log with no approval state. hours/entryCount/projectId/costCenter/billable are server-recomputed aggregates (TimesheetAggregateListener, REQ-TEC-004) and the process fields are stamped on lifecycle edges (TimesheetProcessStampListener) — none of them is readOnly because hrmq's own listeners must write them and OpenRegister enforces readOnly on every UPDATE with no backend bypass; forms hide them via page-level includeFields allowlists instead. Two listeners write this schema (stamp + aggregate); both are recompute-style, so a stale intermediate total from concurrent entry writes is self-healed by the next write (accepted for dev-stage volumes).",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [
                     "employeeId",
-                    "period",
-                    "hours",
-                    "status"
+                    "period"
                 ],
                 "configuration": {
                     "x-openregister-lifecycle": {
@@ -28,7 +152,8 @@
                                     "rejected"
                                 ],
                                 "to": "submitted",
-                                "description": "The employee submits the timesheet for manager approval. A rejected timesheet may be corrected and re-submitted."
+                                "requires": "OCA\\Hrmq\\Lifecycle\\TimesheetNotEmptyGuard",
+                                "description": "The employee submits the timesheet for manager approval. A rejected timesheet may be corrected and re-submitted. An empty timesheet (no bookings, or zero hours) cannot be submitted."
                             },
                             "approve": {
                                 "from": [
@@ -59,45 +184,59 @@
                 "properties": {
                     "employeeId": {
                         "type": "string",
-                        "format": "uuid",
                         "$ref": "Employee",
+                        "format": "uuid",
                         "title": "Employee",
-                        "description": "Reference to the Employee who logged the hours (the claimant). Drives the self-approval guard — the approver may not equal this employee."
+                        "description": "The employee whose hours this timesheet collects.",
+                        "x-notes": "Drives the self-approval guard — the approver may not equal this employee. Required here (unlike TimeEntry.employeeId, which the stamp listener resolves after validation), and format:uuid: a uuid is the canonical stored form of a $ref relation in OpenRegister, and seed data reaches the target through the `@ref:<slug>` token that ImportHandler resolves before validation. Dropping the format would let a broken employee link persist silently — every surface that joins on it (userId/managerUserId stamping, the Mijn and team pages, nl-mss-manager-consistency) would then read as 'no link' rather than 'bad data'."
                     },
                     "period": {
                         "type": "string",
                         "title": "Period",
-                        "description": "The period the timesheet covers, in YYYY-MM (or YYYY-Www for a week / YYYY-Wnn-D for a day)."
+                        "description": "The month this timesheet covers, as YYYY-MM.",
+                        "x-notes": "Month grain is fixed for auto-created timesheets (design resolution 2). Week grains (YYYY-Www / YYYY-Wnn-D) remain accepted for pre-existing data only."
                     },
                     "hours": {
                         "type": "number",
+                        "minimum": 0,
                         "title": "Hours",
-                        "description": "Total hours worked in the period. Reused by OpenRegister aggregations for per-employee and per-period totals.",
-                        "minimum": 0
+                        "description": "Total hours worked this period, calculated automatically from the individual bookings.",
+                        "x-notes": "Server-recomputed aggregate: sum of hours over the TimeEntry rows referencing this timesheet (REQ-TEC-004, TimesheetAggregateListener). Client input is inert. Reused by OpenRegister aggregations for per-employee and per-period totals."
+                    },
+                    "entryCount": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "title": "Bookings",
+                        "description": "How many individual bookings this timesheet contains.",
+                        "x-notes": "Server-recomputed aggregate (REQ-TEC-004). Lets TimesheetNotEmptyGuard and the UI distinguish 'no bookings' from 'bookings summing to 0 hours' — a guard is read-only over the payload it is handed, so it needs this maintained value."
                     },
                     "description": {
                         "type": "string",
+                        "maxLength": 2000,
                         "title": "Description",
-                        "description": "Free-text description of the work performed.",
-                        "maxLength": 2000
+                        "description": "A note about this timesheet as a whole.",
+                        "x-notes": "The only field on the timesheet edit form (Decision 8: TimesheetDetail includeFields is exactly ['description'])."
                     },
                     "projectId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Project",
-                        "description": "Optional reference to the project the hours were worked on (for cost allocation). No Project schema is modeled in hrmq — plain string, not a $ref relation (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."
+                        "description": "The project all hours this period were worked on — filled in only when every booking names the same project.",
+                        "x-notes": "Denormalized aggregate for the approved-time-entry event contract (REQ-TEC-003): the single shared value when all entries agree, else null (emitted as ''). Plain string, not a $ref — no Project schema in hrmq (ADR-062 rule 7). Server-recomputed; client input inert."
                     },
                     "costCenter": {
                         "type": "string",
                         "nullable": true,
                         "title": "Cost centre",
-                        "description": "Optional cost centre / kostenplaats the hours are booked against. No CostCenter schema is modeled in hrmq — plain string, not a $ref relation."
+                        "description": "The cost centre all hours this period count against — filled in only when every booking shares one.",
+                        "x-notes": "Denormalized aggregate for the event contract, same homogeneous-or-null rule as projectId. Per-booking truth lives on TimeEntry.costCenter (derived from the org structure). Plain string, not a $ref — no CostCenter schema in hrmq."
                     },
                     "billable": {
                         "type": "boolean",
+                        "default": false,
                         "title": "Billable",
-                        "description": "Whether the hours are billable to a client/project.",
-                        "default": false
+                        "description": "Whether every booking this period is billable.",
+                        "x-notes": "Denormalized aggregate for the event contract: true iff all entries are billable (REQ-TEC-003). Server-recomputed; client input inert."
                     },
                     "clientRef": {
                         "type": "string",
@@ -105,64 +244,73 @@
                         "nullable": true,
                         "x-external-register": "pipelinq",
                         "title": "Client",
-                        "description": "Optional UUID reference to the client domain object (contact/organisation) who reviews and approves the billable hours on this timesheet — a domain-object reference, never a Nextcloud user id (ADR-046 A4). Cross-app reference: the target `client` schema lives in pipelinq's register, not hrmq's, so this is a plain identifier rather than an OpenRegister relation — see x-external-register. Deliberately NOT a $ref: OpenRegister resolves $ref within one register set, so a $ref here would name a schema it can never resolve. Scopes the read-only client view in the shared external portal (portaliq scopeField)."
+                        "description": "The client who reviews and approves the billable hours on this timesheet.",
+                        "x-notes": "A domain-object reference, never a Nextcloud user id (ADR-046 A4). Cross-app reference: the target `client` schema lives in pipelinq's register, not hrmq's, so this is a plain identifier rather than an OpenRegister relation — see x-external-register. Deliberately NOT a $ref: OpenRegister resolves $ref within one register set, so a $ref here would name a schema it can never resolve. Scopes the read-only client view in the shared external portal (portaliq scopeField)."
                     },
                     "userId": {
                         "type": "string",
                         "nullable": true,
                         "title": "User",
-                        "description": "Denormalized Nextcloud user id of the employee this timesheet belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the approvedBy convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnUren self-service page filters on it with the @me token."
+                        "description": "The account this timesheet belongs to. Kept up to date automatically.",
+                        "x-notes": "Denormalized Nextcloud user id of the employee (mijn-hr-self-service) — a plain NC-user-id string mirroring the approvedBy convention, never a $ref. A copy of the linked Employee's nextcloudUserId, carried because the manifest filter grammar cannot join across schemas; MijnUrenstaten filters on it with the @me token. Server-stamped on every write by TimesheetProcessStampListener (custody change: no longer HR hand-entry); rows whose employee has no linked account keep null and never appear on a Mijn page (fail-closed, REQ-MHS-002)."
                     },
                     "managerUserId": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Manager user id",
-                        "description": "Denormalized Nextcloud user id of the employee's manager (mss-team-scope) — a plain NC-user-id string, never a $ref relation. A copy of the nextcloudUserId of the manager (OrgUnit.managerId) of the record's employee's active OrgAssignment unit, populated by HR/back-office alongside userId because the manifest filter grammar cannot join across schemas. The TeamUrengoedkeuring team page filters on it with the @me token; audited by nl-mss-manager-consistency."
+                        "title": "Manager",
+                        "description": "The team manager who reviews this timesheet — kept up to date automatically from the organisation structure.",
+                        "x-notes": "Denormalized Nextcloud user id cache (mss-team-scope) — plain string, never a $ref. Assignment truth lives ONLY on the org structure (active OrgAssignment -> OrgUnit.managerId -> manager Employee's nextcloudUserId); this cache exists solely because the manifest filter grammar cannot join across schemas for the TeamUrengoedkeuring @me filter. Stamped by TimesheetProcessStampListener via the shared OrgResolutionService — the same code path the nl-mss-manager-consistency audit evaluates, so stamp and audit cannot disagree. Client input is inert."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Approval workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "description": "Where this timesheet is in the approval process.",
                         "enum": [
                             "draft",
                             "submitted",
                             "approved",
                             "rejected"
                         ],
-                        "default": "draft"
+                        "default": "draft",
+                        "x-notes": "Lifecycle field, moved only by the x-openregister-lifecycle transitions. TimesheetProcessStampListener forces 'draft' on create and lets only transition-carried edges through on update."
                     },
                     "submittedAt": {
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
                         "title": "Submitted at",
-                        "description": "ISO 8601 UTC timestamp the employee submitted the timesheet for approval."
+                        "description": "When the timesheet was submitted for approval.",
+                        "x-notes": "Process field: stamped (ISO 8601 UTC) by TimesheetProcessStampListener on the submit edge, cleared on reopen; inert to client input on every other write."
                     },
                     "approvedBy": {
                         "type": "string",
                         "nullable": true,
                         "title": "Approved by",
-                        "description": "Nextcloud user ID of the manager who approved (or rejected) the timesheet — an NC user id, not an object FK, so it stays plain per ADR-046. Must differ from the claiming employee (no self-approval)."
+                        "description": "Who approved or rejected this timesheet.",
+                        "x-notes": "Nextcloud user ID of the acting manager — an NC user id, not an object FK, so it stays plain per ADR-046. Stamped from the acting session uid on the approve/reject edges; must differ from the claiming employee (NoSelfApprovalGuard). Inert to client input."
                     },
                     "approvedAt": {
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
                         "title": "Approved at",
-                        "description": "ISO 8601 UTC timestamp of approval or rejection."
+                        "description": "When the timesheet was approved or rejected.",
+                        "x-notes": "Process field: ISO 8601 UTC, stamped on the approve/reject edges alongside approvedBy; inert to client input."
                     },
                     "rejectionReason": {
                         "type": "string",
                         "nullable": true,
+                        "maxLength": 2000,
                         "title": "Rejection reason",
-                        "description": "Reason the manager rejected the timesheet, shown to the employee so it can be corrected and re-submitted.",
-                        "maxLength": 2000
+                        "description": "Why the timesheet was rejected, shown to the employee so it can be corrected and re-submitted.",
+                        "x-notes": "The single allowlisted client-supplied process value, accepted ONLY on the submitted->rejected edge (Decision 4). On every other write the stored value is restored. Interactive capture at reject time is gated on dependency items D1 (openregister transition inputs) and D2 (nc-vue prompt dialog); until they land the interim reject path leaves it empty, matching pre-redesign behaviour."
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this Timesheet is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun/managerUserId convention), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+                        "description": "The administration this timesheet belongs to.",
+                        "x-notes": "Denormalized administratie key (multi-administratie, REQ-MULTI-001) — plain string, NOT a $ref (ADR-062 rule 7, the PayrollRun/managerUserId convention), mirroring its employee's administrationId. Custody change: stamped by TimesheetProcessStampListener from the Employee (no longer HR hand-maintained); still audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
             }

@@ -3,7 +3,7 @@
     "info": {
         "title": "Hrmq Register",
         "description": "Register containing all schemas for the Hrmq application.",
-        "version": "0.15.0"
+        "version": "0.16.0"
     },
     "x-openregister": {
         "type": "application",
@@ -18,7 +18,7 @@
                 "slug": "hrmq",
                 "title": "Hrmq Register",
                 "description": "Hrmq — open-source HR & payroll administration for Dutch SMBs. Holds every HR, verzuim, verlof, roostering, ATS, performance and payroll object the app reads and writes.",
-                "version": "0.15.0",
+                "version": "0.16.0",
                 "schemas": [
                     "Administration",
                     "AdministrationAccess",
@@ -68,6 +68,7 @@
                     "Shift",
                     "SickLeaveCase",
                     "Stagiair",
+                    "TimeEntry",
                     "Timesheet",
                     "Vacancy",
                     "WkrAssessment",

@@ -166,6 +166,23 @@ class NlOrgChecksTest extends TestCase {
 	/**
 	 * @return void
 	 */
+	public function testUnparseableEndDateReadsAsStillActiveAndChecksTheUnit(): void {
+		// An endDate that parses to nothing cannot prove the placement ended,
+		// so the placement reads as ACTIVE — and an active placement on an
+		// inactive unit violates.
+		$assignment = $this->assignment(['orgUnitId' => 'unit-x', 'endDate' => 'niet-een-datum']);
+
+		$activeUnit = $this->context(['unit-x' => ['id' => 'unit-x', 'parentUnitId' => '', 'active' => true]]);
+		$this->assertTrue(($this->assignmentChecks['nl-org-assignment-consistency'])($assignment, $activeUnit));
+
+		$inactiveUnit = $this->context(['unit-x' => ['id' => 'unit-x', 'parentUnitId' => '', 'active' => false]]);
+		$this->assertFalse(($this->assignmentChecks['nl-org-assignment-consistency'])($assignment, $inactiveUnit));
+
+	}//end testUnparseableEndDateReadsAsStillActiveAndChecksTheUnit()
+
+	/**
+	 * @return void
+	 */
 	public function testEndedAssignmentOnInactiveUnitSatisfied(): void {
 		$assignment = $this->assignment(
 			[

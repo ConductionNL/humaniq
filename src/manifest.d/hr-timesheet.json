@@ -8,7 +8,7 @@
 			"config": {
 				"register": "hrmq",
 				"schema": "Timesheet",
-				"_note": "HR/labour approval record (urenstaat). A single Timesheet captures the hours an employee logged for one period plus a submit -> approve/reject -> reopen approval workflow (x-openregister-lifecycle on `status`). ADR-062 round-2 rework: (1) total-hours KPI stat top-left so the approver sees the claimed volume at a glance; (2) the data widget SPLIT into 'Time entry' (period/description/project/cost centre/billable -- what was worked) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason -- the workflow trail), each excluding employeeId since the Related panel already resolves and links the claiming Employee by name; (3) related alongside both, matching their combined height. Files sits full-width below for approval evidence and signed timesheets (approval documents matter, so they are on the body, not a tab). NO email/calendar/talk widgets -- the Timesheet schema declares no comms linkedTypes and a labour record does not correspond; any communication is with the person (Employee), not the record. lifecycleActions expose the schema's own submit/approve/reject/reopen transitions (guarded server-side by NoSelfApprovalGuard). Audit history is pushed to a sidebar tab as a rarely-scanned surface.",
+				"_note": "HR/labour approval record (urenstaat). hrmq-hours-process-redesign (design.md Decision 8): the Timesheet is now the period AGGREGATE of TimeEntry bookings, so (1) the total-hours KPI stat sums the TRUTH — TimeEntry.hours filtered on timesheetId = @objectId — not the cached Timesheet.hours field; (2) the 'Urenstaat' data widget shows the aggregate facts (period/hours/entryCount/description/billable) with everything but the timesheet-level description read-only (hours/entryCount are server-recomputed aggregates, REQ-TEC-004). description is the ONLY page-editable field: the design's page-level includeFields [description] edit allowlist is expressed through this widget's editable overrides, because CnDetailPage has no page-level includeFields prop — a config key no component reads is a comment, so none is declared; (3) the 'Goedkeuring' panel (status/submittedAt/approvedBy/approvedAt/rejectionReason) is fully read-only — process fields are lifecycle-stamped server-side and inert to client input; (4) the new 'Urenboekingen' object-list lists the TimeEntry bookings (timesheetId = @objectId), rowRoute to TimeEntryDetail — entry mutability is governed server-side by the parent's state (REQ-TEC-005). Related resolves the claiming Employee (employeeId excluded from data widgets). Files keeps approval evidence full-width on the body. NO email/calendar/talk widgets — the Timesheet schema declares no comms linkedTypes; any communication is with the person (Employee), not the record. lifecycleActions expose the schema's own submit/approve/reject/reopen transitions (guarded server-side by NoSelfApprovalGuard, and TimesheetNotEmptyGuard on submit). Audit history stays a sidebar tab as a rarely-scanned surface.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -30,11 +30,11 @@
 							},
 							"source": {
 								"register": "hrmq",
-								"schema": "Timesheet",
+								"schema": "TimeEntry",
 								"metric": "sum",
 								"field": "hours",
 								"filter": {
-									"id": "@objectId"
+									"timesheetId": "@objectId"
 								}
 							}
 						}
@@ -42,20 +42,38 @@
 					{
 						"id": "data",
 						"type": "data",
-						"title": "Time entry",
+						"title": "Urenstaat",
 						"icon": "ClipboardList",
 						"content": {
 							"columns": 2,
-							"exclude": [
-								"employeeId"
+							"include": [
+								"period",
+								"hours",
+								"entryCount",
+								"description",
+								"billable"
 							],
-							"title": "Time entry"
+							"title": "Urenstaat",
+							"overrides": {
+								"period": {
+									"editable": false
+								},
+								"hours": {
+									"editable": false
+								},
+								"entryCount": {
+									"editable": false
+								},
+								"billable": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
 						"id": "data-2",
 						"type": "data",
-						"title": "Approval",
+						"title": "Goedkeuring",
 						"icon": "CheckCircleOutline",
 						"content": {
 							"columns": 2,
@@ -66,7 +84,7 @@
 								"approvedAt",
 								"rejectionReason"
 							],
-							"title": "Approval",
+							"title": "Goedkeuring",
 							"overrides": {
 								"status": {
 									"editable": false
@@ -79,6 +97,9 @@
 								},
 								"approvedAt": {
 									"editable": false
+								},
+								"rejectionReason": {
+									"editable": false
 								}
 							}
 						}
@@ -90,6 +111,53 @@
 						"icon": "LinkVariant",
 						"content": {
 							"title": "Related"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
+						"title": "Urenboekingen",
+						"icon": "ClockOutline",
+						"content": {
+							"register": "hrmq",
+							"schema": "TimeEntry",
+							"filter": {
+								"timesheetId": "@objectId"
+							},
+							"sort": {
+								"field": "startedAt",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "startedAt",
+									"label": "Start"
+								},
+								{
+									"key": "endedAt",
+									"label": "Einde"
+								},
+								{
+									"key": "hours",
+									"label": "Uren"
+								},
+								{
+									"key": "description",
+									"label": "Omschrijving"
+								},
+								{
+									"key": "projectId",
+									"label": "Project"
+								}
+							],
+							"limit": 50,
+							"allowCreate": false,
+							"rowRoute": "TimeEntryDetail",
+							"viewAllRoute": "TimeEntries",
+							"viewAllQuery": {
+								"timesheetId": "@objectId"
+							},
+							"emptyText": "Nog geen urenboekingen"
 						}
 					},
 					{
@@ -134,9 +202,17 @@
 					},
 					{
 						"id": 5,
-						"widgetId": "files",
+						"widgetId": "object-list",
 						"gridX": 0,
 						"gridY": 10,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": 6,
+						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 15,
 						"gridWidth": 12,
 						"gridHeight": 4
 					}
@@ -180,6 +256,46 @@
 					]
 				}
 			}
+		},
+		{
+			"id": "MijnUren",
+			"route": "/mijn/uren",
+			"type": "index",
+			"title": "Mijn uren",
+			"config": {
+				"register": "hrmq",
+				"schema": "TimeEntry",
+				"_note": "hrmq-hours-process-redesign (design.md Decision 8): MijnUren is the self-service BOOKING surface and now lists TimeEntry (the individual booking), not Timesheet (the period aggregate). Converted from an indexScaffold pageInstance to a concrete page because the create-form allowlist keys (includeFields/fieldOverrides) are not indexScaffold params, and widening the shared template for one page is worse than an explicit page (the template file's own 80%-fit rule). Add is enabled via actionToggles.showAdd — NEVER the dead allowCreate key (not a CnIndexPage prop; fleet anti-pattern 11). includeFields is the exact self-service allowlist: the employee's own Employee record, userId, administrationId and costCenter are resolved/stamped server-side by TimeEntryStampListener, and hours is derived from start/end/break — none of them may appear on the form (spec: 'The booking form is an allowlist'). fieldOverrides orders billable last (times → break → what → project → billable).",
+				"description": "Boek je uren en zie je eigen urenregistraties.",
+				"filter": {
+					"userId": "@me",
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"columns": [
+					"startedAt",
+					"endedAt",
+					"hours",
+					"description",
+					"projectId",
+					"billable"
+				],
+				"sort": {
+					"field": "startedAt",
+					"order": "desc"
+				},
+				"actionToggles": {
+					"showAdd": true
+				},
+				"includeFields": [
+					"startedAt",
+					"endedAt",
+					"breakMinutes",
+					"description",
+					"projectId",
+					"billable"
+				],
+				"_fieldOrderNote": "Field order is declared once on the TimeEntry SCHEMA (property `order`: start 10, end 20, break 30, description 40, project 50, billable 60), not per page — fieldsFromSchema sorts by overrides.order > prop.order > ALPHABETICAL, so a schema with no order renders every form as an alphabetical wall. That is exactly what happened here: the booking form showed End before Start (breakMinutes, description, endedAt, projectId, startedAt), which the e2e caught by filling the two datetime inputs positionally and getting a span the server correctly refused. Declaring order on the schema fixes every surface at once; no page-level override is needed."
+			}
 		}
 	],
 	"pageInstances": [
@@ -188,39 +304,14 @@
 			"register": "hrmq",
 			"schema": "Timesheet",
 			"params": {
-				"id": "MijnUren",
-				"route": "/mijn/uren",
-				"title": "Mijn uren",
-				"columns": [
-					"period",
-					"hours",
-					"billable",
-					"status"
-				],
-				"sort": {
-					"field": "period",
-					"order": "desc"
-				},
-				"filter": {
-					"userId": "@me",
-					"administrationId": "@workspace.activeAdministrationId?"
-				},
-				"description": "Jouw eigen urenregistraties."
-			}
-		},
-		{
-			"templateRef": "indexScaffold",
-			"register": "hrmq",
-			"schema": "Timesheet",
-			"params": {
 				"id": "Timesheets",
 				"route": "/timesheets",
-				"title": "Urenregistratie",
+				"title": "Urenstaten",
 				"columns": [
 					"employeeId",
 					"period",
 					"hours",
-					"billable",
+					"entryCount",
 					"status"
 				],
 				"sort": {
@@ -234,7 +325,12 @@
 				],
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
-				}
+				},
+				"actionToggles": {
+					"showAdd": false,
+					"showEditAction": false
+				},
+				"note": "hrmq-hours-process-redesign (design.md Decision 8): timesheets are server-created period aggregates of TimeEntry bookings, so Add and inline edit are disabled (actionToggles — never the dead allowCreate key); columns show the aggregate facts (hours/entryCount) instead of the retired per-period billable flag. Row click opens TimesheetDetail."
 			}
 		},
 		{
@@ -263,10 +359,16 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Ingediende urenstaten die wachten op goedkeuring of afkeuring.",
+				"description": "Ingediende urenstaten die wachten op goedkeuring of afkeuring — open een urenstaat om goed of af te keuren.",
 				"defaultFilters": {
 					"status": "submitted"
-				}
+				},
+				"actionToggles": {
+					"showAdd": false,
+					"showEditAction": false,
+					"showDeleteAction": false
+				},
+				"note": "hrmq-hours-process-redesign (design.md Decision 8): the approval queue is a read-only worklist — Add/edit/delete are disabled (aggregates are server-created; approve/reject happen through the lifecycle actions on TimesheetDetail, guarded server-side by NoSelfApprovalGuard). Filters/defaultFilters/sort unchanged."
 			}
 		},
 		{
@@ -296,10 +398,16 @@
 					"managerUserId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Ingediende urenstaten van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door HR/back-office bijgehouden managerUserId-koppeling.",
+				"description": "Ingediende urenstaten van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door de organisatiestructuur bepaalde managerUserId-koppeling.",
 				"defaultFilters": {
 					"status": "submitted"
-				}
+				},
+				"actionToggles": {
+					"showAdd": false,
+					"showEditAction": false,
+					"showDeleteAction": false
+				},
+				"note": "hrmq-hours-process-redesign (design.md Decision 8): same read-only worklist deltas as TimesheetApproval; the managerUserId: @me base filter is untouched — since this change, managerUserId is a server-maintained cache of the org chain (OrgAssignment → OrgUnit.managerId), stamped by TimesheetProcessStampListener via the shared OrgResolutionService, so the queue follows the org structure rather than hand-entered data."
 			}
 		}
 	]

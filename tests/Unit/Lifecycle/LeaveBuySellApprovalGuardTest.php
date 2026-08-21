@@ -137,6 +137,13 @@ class LeaveBuySellApprovalGuardTest extends TestCase {
 		return array_merge(
 			[
 				'employeeId' => 'emp-1',
+				// The claimant's ACCOUNT. A real LeaveTransaction carries this
+				// denormalized uid (it is what /mijn/verlof-kopen-verkopen
+				// filters on with @me); the fixture omitted it, which is why
+				// this suite passed against a NoSelfApprovalGuard that compared
+				// an employee uuid with an account uid and therefore never
+				// denied anything.
+				'userId' => 'user-emp-1',
 				'transactionType' => 'sell',
 				'year' => 2026,
 				'leaveType' => 'holiday',
@@ -156,7 +163,8 @@ class LeaveBuySellApprovalGuardTest extends TestCase {
 	 */
 	public function testSelfApprovalDeniedViaDelegation(): void {
 		$guard = $this->guardWithBalances([$this->balance()]);
-		$result = $guard->check($this->transaction(), 'approve', 'emp-1');
+		// Act as the claimant's ACCOUNT, not as their employee id.
+		$result = $guard->check($this->transaction(), 'approve', 'user-emp-1');
 
 		$this->assertFalse($result->isAllowed());
 

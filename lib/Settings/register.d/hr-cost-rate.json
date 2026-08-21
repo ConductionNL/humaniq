@@ -9,39 +9,45 @@
                         "nullable": true,
                         "minimum": 0,
                         "title": "Hourly cost rate override (cents)",
-                        "description": "Employer cost per hour in CENTS, set by hand to replace the payroll-derived loaded cost (ADR-081 decision 4). Null — the normal case — means the derived value is used. This is an EMPLOYER COST, not a wage: it is not comparable to EmploymentContract.hourlyWage, which is the employee's gross hourly wage and is never used as a cost rate. Integer cents, never a float, so a rate multiplied by logged hours cannot drift (the ActivityCostAllocationSplitter convention)."
+                        "description": "Employer cost per hour in cents, set by hand to replace the payroll-derived loaded cost. Leave empty — the normal case — to use the derived value.",
+                        "x-notes": "ADR-081 decision 4. This is an EMPLOYER COST, not a wage: it is not comparable to EmploymentContract.hourlyWage, which is the employee's gross hourly wage and is never used as a cost rate. Integer cents, never a float, so a rate multiplied by logged hours cannot drift (the ActivityCostAllocationSplitter convention)."
                     },
                     "hourlyCostRateOverrideReason": {
                         "type": "string",
                         "nullable": true,
                         "title": "Hourly cost rate override reason",
-                        "description": "Why the derived loaded cost was replaced (ADR-081 decision 4). REQUIRED whenever hourlyCostRateOverrideCents is set — an override with no reason is indistinguishable from a typo six months later, and this number reaches a statutory IV3 submission through Shillinq. Free text: the derivation cannot be told 'this employee is seconded and billed at the partner rate', so the reason is the only place that survives."
+                        "description": "Why the derived loaded cost was replaced. Required whenever an override amount is set — an override with no reason is indistinguishable from a typo six months later.",
+                        "x-notes": "ADR-081 decision 4. This number reaches a statutory IV3 submission through Shillinq. Free text: the derivation cannot be told 'this employee is seconded and billed at the partner rate', so the reason is the only place that survives."
                     },
                     "hourlyCostRateOverrideBy": {
                         "type": "string",
                         "nullable": true,
                         "title": "Hourly cost rate override set by",
-                        "description": "Nextcloud user id of whoever set the override (ADR-081 decision 4). A domain-object reference is deliberately NOT used here: this records the human who made an administrative decision, which is a Nextcloud identity, not an Employee record (ADR-046)."
+                        "description": "Who set the override.",
+                        "x-notes": "ADR-081 decision 4. Nextcloud user id. A domain-object reference is deliberately NOT used here: this records the human who made an administrative decision, which is a Nextcloud identity, not an Employee record (ADR-046)."
                     },
                     "hourlyCostRateOverrideAt": {
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
                         "title": "Hourly cost rate override set at",
-                        "description": "ISO 8601 UTC timestamp of the last override write (ADR-081 decision 4). Read together with hourlyCostRateOverrideAt on the payroll side to tell a stale override from a current one — an override set before the last salary change is a review signal, not an error."
+                        "description": "When the override was last changed. An override set before the last salary change is a review signal, not an error.",
+                        "x-notes": "ADR-081 decision 4. ISO 8601 UTC. Read together with the payroll side to tell a stale override from a current one."
                     },
                     "hourlyCostAdditions": {
                         "type": "array",
                         "nullable": true,
                         "title": "Hourly cost additions",
-                        "description": "Per-hour employer costs BEYOND the wage — overhead, equipment, workplace, tooling (ADR-081 decision 4). The hourly cost is `wageCost + sum(additions)`; there is exactly ONE rate, never a normal one and an overtime one. Each entry is named and sourced so a cost figure can be explained line by line, which is what an audit asks for, and so a new cost factor is data rather than a schema migration. An administrator may fill these in by hand; Shillinq is expected to calculate the overhead and equipment ones, because it holds the ledger those pools live in.",
+                        "description": "Per-hour employer costs beyond the wage — overhead, equipment, workplace, tooling. Each entry is named and sourced so a cost figure can be explained line by line. An administrator may fill these in by hand; the bookkeeping system calculates the overhead and equipment ones.",
+                        "x-notes": "ADR-081 decision 4. The hourly cost is `wageCost + sum(additions)`; there is exactly ONE rate, never a normal one and an overtime one. Line-by-line explicability is what an audit asks for, and a new cost factor is data rather than a schema migration. Shillinq is expected to calculate the overhead and equipment additions, because it holds the ledger those pools live in.",
                         "items": {
                             "type": "object",
                             "properties": {
                                 "key": {
                                     "type": "string",
                                     "title": "Addition key",
-                                    "description": "Short stable identifier for the cost factor — e.g. `overhead`, `equipment`, `workplace`, `overtime`. Not an enum: the set is deliberately open (ADR-081), because a jurisdiction, a sector or an audit will want a fourth."
+                                    "description": "Short stable identifier for the cost factor — e.g. `overhead`, `equipment`, `workplace`, `overtime`.",
+                                    "x-notes": "Not an enum: the set is deliberately open (ADR-081), because a jurisdiction, a sector or an audit will want a fourth."
                                 },
                                 "centsPerHour": {
                                     "type": "integer",
@@ -75,7 +81,8 @@
                 "icon": "CashPlus",
                 "version": "0.1.0",
                 "title": "Cost Addition Policy",
-                "description": "An employer cost that applies per worked hour on top of the wage — overhead, workplace, equipment, management fees — scoped to everyone under a given collective labour agreement, to a single contract, or to the whole organisation (ADR-081 decision 4). Deliberately NOT part of the CLA corpus: a collective labour agreement does not state what an employer's overhead is, and that corpus holds only figures transcribed from published CLA texts with a source citation. Scoping BY a CLA is a convenient way to select a group of employees ('everyone under the ICK CLA carries EUR 25/h for rent and management'), not a claim that the CLA says so. The most specific scope wins per key: contract beats cla beats organisation.",
+                "description": "An employer cost that applies per worked hour on top of the wage — overhead, workplace, equipment, management fees — scoped to everyone under a given collective labour agreement, to a single contract, or to the whole organisation. The most specific scope wins per cost factor: contract beats CLA beats organisation.",
+                "x-notes": "ADR-081 decision 4. Deliberately NOT part of the CLA corpus: a collective labour agreement does not state what an employer's overhead is, and that corpus holds only figures transcribed from published CLA texts with a source citation. Scoping BY a CLA is a convenient way to select a group of employees ('everyone under the ICK CLA carries EUR 25/h for rent and management'), not a claim that the CLA says so.",
                 "type": "object",
                 "required": ["key", "scope", "basis"],
                 "properties": {
@@ -185,25 +192,29 @@
                     }
                 }
             },
-            "Timesheet": {
+            "TimeEntry": {
+                "x-notes": "hours-process-redesign: this cost-allocation extension moved from Timesheet to TimeEntry — allocation describes what a specific booking was worked on, which is per-entry, not per-period. The former Timesheet-level copies were dropped rather than kept as denormalized aggregates: no PHP, manifest or event-contract consumer reads them (PayrollGLPostService and the approved-time-entry CloudEvent were checked), so a retained copy would be a dead declaration. None of these three properties ever appears on a form: they are written by integrations, not people.",
                 "properties": {
                     "domainObjectRef": {
                         "type": "string",
                         "nullable": true,
                         "title": "Domain object reference",
-                        "description": "Optional UUID of the external domain object the hours were worked on — a procest case, a decidesk dossier, anything outside hrmq (ADR-081 decision 5). Plain string, not a $ref relation, because the target schema does not exist in hrmq (ADR-062 rule 7 — the same reasoning as projectId and clientRef). Distinct from projectId: a case is not a project, and conflating them would make the resulting cost allocation ambiguous about what it is costing."
+                        "description": "The external case or dossier this booking was worked on, when hours are logged from another application.",
+                        "x-notes": "Optional UUID of the external domain object — a procest case, a decidesk dossier, anything outside hrmq (ADR-081 decision 5). Plain string, not a $ref relation, because the target schema does not exist in hrmq (ADR-062 rule 7 — the same reasoning as projectId and clientRef). Distinct from projectId: a case is not a project, and conflating them would make the resulting cost allocation ambiguous about what it is costing."
                     },
                     "domainObjectType": {
                         "type": "string",
                         "nullable": true,
                         "title": "Domain object type",
-                        "description": "What domainObjectRef points at, as `<app>:<schema>` — e.g. `procest:case` (ADR-081 decision 5). Without it a bare UUID is unresolvable: hrmq cannot ask 'which app owns this?' and neither can the receiving bookkeeping app. Set together with domainObjectRef or not at all."
+                        "description": "Which application and record type the domain object reference points at.",
+                        "x-notes": "Format `<app>:<schema>` — e.g. `procest:case` (ADR-081 decision 5). Without it a bare UUID is unresolvable: hrmq cannot ask 'which app owns this?' and neither can the receiving bookkeeping app. Set together with domainObjectRef or not at all."
                     },
                     "allocationKey": {
                         "type": "string",
                         "nullable": true,
                         "title": "Ledger allocation key",
-                        "description": "The ledger dimension the resulting cost is booked against, OPAQUE to hrmq (ADR-081 decision 5). For a Dutch municipality this is the BBV taakveld code the domain app resolved from its own classification (procest: caseType.iv3Taakveld); another jurisdiction books against something else entirely. hrmq deliberately does not model, validate or translate it — Shillinq owns the taakveld catalogue, and a BBV-shaped field in an HR app would couple hrmq to one country's accounting law. Stamped by the app that logs the hours, at the moment it logs them, so the allocation reflects the classification in force then rather than a later reclassification."
+                        "description": "The bookkeeping category these hours are charged to, filled in by the connected bookkeeping system.",
+                        "x-notes": "The ledger dimension the resulting cost is booked against, OPAQUE to hrmq (ADR-081 decision 5). For a Dutch municipality this is the BBV taakveld code the domain app resolved from its own classification (procest: caseType.iv3Taakveld); another jurisdiction books against something else entirely. hrmq deliberately does not model, validate or translate it — Shillinq owns the taakveld catalogue, and a BBV-shaped field in an HR app would couple hrmq to one country's accounting law. Stamped by the app that logs the hours, at the moment it logs them, so the allocation reflects the classification in force then rather than a later reclassification. Never hand-typed by an employee (product decision 5/6); outside every includeFields allowlist."
                     }
                 }
             }

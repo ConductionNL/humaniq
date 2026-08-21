@@ -118,6 +118,16 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  re-runs on `occ maintenance:repair`, not only on a real app
                  upgrade — see the step's own docblock. -->
             <step>OCA\Hrmq\Repair\MigrateAssetDialect</step>
+            <!-- hours-process-redesign (Decision 9): backfill the Timesheet
+                 identity caches (userId/managerUserId/administrationId),
+                 synthesize one origin:"migration" TimeEntry per legacy
+                 timesheet with hours but no entries, and recompute the
+                 aggregates through the same TimesheetAggregationService the
+                 runtime listener uses. Runs AFTER InitializeRegister so the
+                 TimeEntry schema is already imported. Idempotent (re-runs
+                 create nothing); one summary line per run; fails soft when
+                 OpenRegister is not installed. -->
+            <step>OCA\Hrmq\Repair\MigrateHoursProcess</step>
         </post-migration>
         <install>
             <!-- SAME step as post-migration, and that duplication is the point.
@@ -140,6 +150,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  whichever fires first wins and the other is a version-unchanged
                  skip. -->
             <step>OCA\Hrmq\Repair\InitializeRegister</step>
+            <!-- hours-process-redesign: <install> is the ONLY hook that runs
+                 unconditionally on a fresh install (see above) — without this
+                 entry a fresh install would seed legacy-shaped timesheets and
+                 never migrate them. Runs AFTER InitializeRegister; on fresh
+                 installs it finds the seed rows and behaves identically. -->
+            <step>OCA\Hrmq\Repair\MigrateHoursProcess</step>
         </install>
     </repair-steps>
 

@@ -35,12 +35,22 @@ use OCA\Hrmq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCA\Hrmq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Hrmq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Hrmq\Lifecycle\PayrollRunApprovedGuard;
+use OCA\Hrmq\Lifecycle\TimesheetNotEmptyGuard;
+use OCA\Hrmq\Listener\TimeEntryStampListener;
+use OCA\Hrmq\Listener\TimesheetAggregateListener;
 use OCA\Hrmq\Listener\TimesheetApprovalListener;
+use OCA\Hrmq\Listener\TimesheetProcessStampListener;
 use OCA\Hrmq\Payroll\PackRepository;
 use OCA\Hrmq\Payroll\PayrollCalculator;
+use OCA\Hrmq\Service\InternalWriteMarker;
 use OCA\Hrmq\Service\JurisdictionPackService;
 use OCA\Hrmq\Service\TimeEntryEventService;
+use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectCreatingEvent;
+use OCA\OpenRegister\Event\ObjectDeletedEvent;
+use OCA\OpenRegister\Event\ObjectDeletingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -49,6 +59,8 @@ use OCP\EventDispatcher\IEventDispatcher;
 
 /**
  * The hrmq application bootstrap.
+ *
+ * @spec exclude composition root — wires guards, services and listeners owned by many capabilities; no single requirement owns the bootstrap itself
  */
 class Application extends App implements IBootstrap {
 
@@ -79,6 +91,8 @@ class Application extends App implements IBootstrap {
 	 * @param IRegistrationContext $context Registration context.
 	 *
 	 * @return void
+	 *
+	 * @spec exclude composition root — registers services owned by many capabilities (rule engine, lifecycle guards, jurisdiction packs, hours process); each registration cites its own change in the adjacent comment
 	 */
 	public function register(IRegistrationContext $context): void {
 		$context->registerService(
@@ -119,6 +133,31 @@ class Application extends App implements IBootstrap {
 					container: $c,
 					appConfig: $c->get(\OCP\IAppConfig::class)
 				);
+			}
+		);
+
+		// OpenRegister lifecycle guard for the Timesheet `submit` transition
+		// (hours-process-redesign): an empty timesheet — no bookings, or zero
+		// hours — cannot be submitted. Stateless (reads only the payload passed
+		// to check()), constructed exactly like NoSelfApprovalGuard, keyed by
+		// its FQCN so OpenRegister's LifecycleGuardRegistry resolves the
+		// `requires` tag declared on the `submit` transition.
+		$context->registerService(
+			TimesheetNotEmptyGuard::class,
+			static function ($c): TimesheetNotEmptyGuard {
+				return new TimesheetNotEmptyGuard();
+			}
+		);
+
+		// hours-process-redesign: the request-scoped internal-writer marker MUST
+		// be shared — the aggregation service / repair step set it and the
+		// pre-save listeners read it, so they have to see the same instance.
+		// registerService() registers shared by default; the explicit
+		// registration makes that load-bearing property visible.
+		$context->registerService(
+			InternalWriteMarker::class,
+			static function ($c): InternalWriteMarker {
+				return new InternalWriteMarker();
 			}
 		);
 
@@ -261,6 +300,10 @@ class Application extends App implements IBootstrap {
 	 * @param IBootContext $context Boot context.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
+	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/hrmq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
+	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
 	 */
 	public function boot(IBootContext $context): void {
 		$dispatcher = $context->getServerContainer()->get(IEventDispatcher::class);
@@ -288,6 +331,49 @@ class Application extends App implements IBootstrap {
 			registers: null,
 			schemas: [TimeEntryEventService::TIMESHEET_SLUG]
 		);
+
+		// hours-process-redesign Decision 5 + 3: pre-save stamping + mutability
+		// guard for TimeEntry writes (employeeId/userId/administrationId/
+		// costCenter stamps, hours derivation, timesheet find-or-create, and
+		// the refusal of writes whose parent timesheet is not draft/rejected —
+		// the delete guard included).
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class, ObjectDeletingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: TimeEntryStampListener::class,
+				registers: null,
+				schemas: [TimeEntryStampListener::TIMEENTRY_SLUG]
+			);
+		}
+
+		// hours-process-redesign Decision 4: pre-save process-field inertness +
+		// lifecycle-edge stamping for Timesheet writes. Because the stamp lands
+		// INSIDE the carrying write, the post-save ObjectUpdatedEvent that
+		// TimesheetApprovalListener (above) consumes carries real provenance.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: TimesheetProcessStampListener::class,
+				registers: null,
+				schemas: [TimesheetProcessStampListener::TIMESHEET_SLUG]
+			);
+		}
+
+		// hours-process-redesign Decision 3: post-save aggregate recompute of
+		// the parent Timesheet on every TimeEntry create/update/delete (both
+		// parents on a reparent). Reacts only to timeentry events and writes
+		// only Timesheet objects — no cycle.
+		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class, ObjectDeletedEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: TimesheetAggregateListener::class,
+				registers: null,
+				schemas: [TimesheetAggregateListener::TIMEENTRY_SLUG]
+			);
+		}
 
 	}//end boot()
 

@@ -463,4 +463,76 @@ class TimeEntryEventServiceTest extends TestCase {
 
 	}//end testBuildTypedEventCarriesAdministrationId()
 
+	/**
+	 * hours-process-redesign regression (a): an AGGREGATION write on an
+	 * already-approved timesheet (approved → approved, new hours) emits
+	 * NOTHING on either dispatch path — the edge check keeps the aggregate
+	 * listener's recompute writes silent (Decision 7).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-The-event-carries-what-a-finance-consumer-needs-(REQ-TEC-003)
+	 */
+	public function testAggregationWriteOnApprovedTimesheetEmitsNothing(): void {
+		$service = $this->serviceWithSpy();
+
+		$before = $this->approvedTimesheet();
+		$after = $this->approvedTimesheet();
+		$after['hours'] = 40.0;
+		$after['entryCount'] = 5;
+
+		$emitted = $service->maybeDispatchApproved(
+			schemaSlug: 'Timesheet',
+			oldData: $before,
+			newData: $after
+		);
+
+		$this->assertFalse($emitted);
+		$this->assertCount(0, $this->spy->calls, 'An approved→approved recompute must not re-emit.');
+		$this->assertCount(0, $this->typedDispatches);
+
+	}//end testAggregationWriteOnApprovedTimesheetEmitsNothing()
+
+	/**
+	 * hours-process-redesign regression (b): a STAMPED approval write — the
+	 * shape TimesheetProcessStampListener now produces on the carrying write
+	 * — emits non-empty approvedBy/approvedAt, with zero change to this
+	 * service (Decision 7: the defect of empty provenance is closed upstream).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-The-event-carries-what-a-finance-consumer-needs-(REQ-TEC-003)
+	 */
+	public function testStampedApprovalWriteEmitsPopulatedProvenance(): void {
+		$service = $this->serviceWithSpy();
+
+		$stamped = $this->approvedTimesheet();
+		$stamped['approvedBy'] = 'manager1';
+		$stamped['approvedAt'] = '2026-08-21T09:30:00Z';
+		$stamped['entryCount'] = 3;
+
+		$emitted = $service->maybeDispatchApproved(
+			schemaSlug: 'Timesheet',
+			oldData: ['status' => 'submitted', 'hours' => 36.5],
+			newData: $stamped
+		);
+
+		$this->assertTrue($emitted);
+		$data = $this->spy->calls[0]['payload']['data'];
+		$this->assertSame('manager1', $data['approvedBy']);
+		$this->assertSame('2026-08-21T09:30:00Z', $data['approvedAt']);
+		$this->assertNotSame('', $data['approvedBy'], 'Provenance must be populated, not the legacy empty string.');
+		$this->assertNotSame('', $data['approvedAt']);
+
+		// Envelope compatibility: the entryCount aggregate does NOT leak into
+		// the event — no key added, removed or retyped (REQ-TEC-003).
+		$this->assertArrayNotHasKey('entryCount', $data);
+		$this->assertSame(
+			['timesheetId', 'employeeId', 'period', 'hours', 'billable', 'projectId', 'costCenter', 'clientRef', 'description', 'approvedBy', 'approvedAt'],
+			array_keys($data),
+			'The CloudEvent data keys must stay byte-compatible with the pre-redesign contract.'
+		);
+
+	}//end testStampedApprovalWriteEmitsPopulatedProvenance()
+
 }//end class

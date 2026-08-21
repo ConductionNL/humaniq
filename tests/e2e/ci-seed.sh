@@ -388,6 +388,189 @@ for schema in Employee Timesheet Expense; do
 	fi
 done
 
+# ── 4b. Walk the seeded 2026-05 timesheets onto their process states ─────────
+# TimesheetProcessStampListener (hours-process redesign Decision 4) makes the
+# process fields inert to client input and forces EVERY create to
+# status:"draft" — including the register seed import on a fresh instance,
+# which goes through the same ObjectCreatingEvent pipeline. Measured on run
+# 32504408914 (job 96841775960): all three seeded 2026-05 timesheets read back
+# without their seeded status and hours-process.spec.ts failed its beforeAll on
+# "seeded jansen 2026-05 submitted timesheet must exist". A seed literal cannot
+# carry process state, BY DESIGN — that is the custody the listener exists to
+# enforce.
+#
+# So the process states are reached the way the APP reaches them: each seeded
+# timesheet is walked through its real lifecycle edges with admin PATCH writes,
+# and the listener stamps submittedAt / approvedBy / approvedAt /
+# rejectionReason itself. The guards genuinely run (TimesheetNotEmptyGuard on
+# submit — satisfied, the seeded TimeEntries sum to each sheet's hours;
+# NoSelfApprovalGuard on approve/reject — satisfied, devries/bakker are not the
+# acting admin's own employee). Idempotent: a row already at or past an edge
+# skips it, so a re-run only re-verifies.
+TS_LIST="${WORK}/timesheets.json"
+TS_CODE="$(http_get_code "$TS_LIST" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${BASE}/index.php/apps/openregister/api/objects/hrmq/Timesheet?_limit=200")"
+if [ "$TS_CODE" != "200" ]; then
+	echo "::error::Could not list hrmq Timesheets to promote the seeded rows (HTTP ${TS_CODE})."
+	exit 1
+fi
+
+# Resolve a seeded 2026-05 row by its hours total — the same probe
+# hours-process.spec.ts uses, so the seed and the spec cannot disagree about
+# which row is which. Echoes "<id> <status>".
+resolve_ts() {
+	python3 - "$TS_LIST" "$1" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding='utf-8') as fh:
+    doc = json.load(fh)
+rows = doc if isinstance(doc, list) else (doc.get('results') or [])
+want = float(sys.argv[2])
+for row in rows:
+    if not isinstance(row, dict):
+        continue
+    try:
+        hours = float(row.get('hours'))
+    except (TypeError, ValueError):
+        continue
+    if hours == want and row.get('period') == '2026-05':
+        self_ = row.get('@self') or {}
+        print(f"{self_.get('id') or row.get('id') or ''} {row.get('status') or ''}")
+        break
+PY
+}
+
+# The rejection reason is READ OUT OF the seed declaration (JSON-encoded), not
+# retyped — the spec asserts on its exact wording.
+BAKKER_REASON="$(python3 - "$APP_DIR" <<'PY'
+import json
+import sys
+
+path = f'{sys.argv[1]}/lib/Settings/register.d/hr-seed.json'
+with open(path, encoding='utf-8') as fh:
+    doc = json.load(fh)
+for obj in doc['components']['objects']:
+    if (obj.get('@self') or {}).get('slug') == 'timesheet-bakker-2026-05':
+        print(json.dumps(obj.get('rejectionReason') or ''))
+        break
+PY
+)"
+
+status_rank() {
+	case "$1" in
+		draft) echo 0 ;;
+		submitted) echo 1 ;;
+		approved|rejected) echo 2 ;;
+		*) echo -1 ;;
+	esac
+}
+
+promote() {
+	local id="$1" body="$2" label="$3"
+	local code
+	code="$(curl -sS -o "${WORK}/promote.json" -w '%{http_code}' -X PATCH \
+		-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+		-H 'Content-Type: application/json' -d "${body}" \
+		"${BASE}/index.php/apps/openregister/api/objects/hrmq/Timesheet/${id}" || true)"
+	echo "[ci-seed] ${label} -> HTTP ${code}"
+	case "$code" in
+		2*) return 0 ;;
+		*)
+			echo "::error::Promoting a seeded timesheet failed (${label}, HTTP ${code}) — hours-process.spec.ts needs this row in that state and will fail its beforeAll."
+			head -c 800 "${WORK}/promote.json" 2>/dev/null || true
+			echo
+			return 1
+			;;
+	esac
+}
+
+# promote_chain <hours> <label> <target>|<payload> [<target>|<payload> ...]
+promote_chain() {
+	local hours="$1" label="$2" id status step target payload
+	shift 2
+	read -r id status <<<"$(resolve_ts "$hours")"
+	if [ -z "$id" ]; then
+		echo "::error::No 2026-05 timesheet with hours=${hours} found — the ${label} seed row is missing entirely (import gap, not a state gap)."
+		exit 1
+	fi
+	if [ "$(status_rank "$status")" = "-1" ]; then
+		echo "::error::${label} (id ${id}) is in unexpected status '${status}' — refusing to walk lifecycle edges from an unknown state."
+		exit 1
+	fi
+	echo "[ci-seed] ${label}: id=${id} status='${status}'"
+	for step in "$@"; do
+		target="${step%%|*}"
+		payload="${step#*|}"
+		if [ "$(status_rank "$target")" -le "$(status_rank "$status")" ]; then
+			continue
+		fi
+		promote "$id" "$payload" "${label}: ${status} -> ${target}" || exit 1
+		status="$target"
+	done
+}
+
+promote_chain 152 "timesheet-jansen-2026-05" \
+	'submitted|{"status":"submitted"}'
+promote_chain 168 "timesheet-devries-2026-05" \
+	'submitted|{"status":"submitted"}' \
+	'approved|{"status":"approved"}'
+promote_chain 140 "timesheet-bakker-2026-05" \
+	'submitted|{"status":"submitted"}' \
+	"rejected|{\"status\":\"rejected\",\"rejectionReason\":${BAKKER_REASON}}"
+
+# Verify BY READING BACK the exact facts the spec's beforeAll resolves on —
+# a write that reports success and a write that happened are different facts
+# (see the active-administration step above for how that difference bites).
+TS_AFTER="${WORK}/timesheets-after.json"
+TS_AFTER_CODE="$(http_get_code "$TS_AFTER" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${BASE}/index.php/apps/openregister/api/objects/hrmq/Timesheet?_limit=200")"
+python3 - "$TS_AFTER" "$TS_AFTER_CODE" <<'PY'
+import json
+import sys
+
+path, code = sys.argv[1], sys.argv[2]
+if code != '200':
+    print(f'::error::Timesheet read-back returned HTTP {code}; the promoted states are unverified.')
+    sys.exit(1)
+with open(path, encoding='utf-8') as fh:
+    doc = json.load(fh)
+rows = doc if isinstance(doc, list) else (doc.get('results') or [])
+
+
+def find(hours, status):
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        try:
+            if float(row.get('hours')) == hours and row.get('status') == status \
+                    and row.get('period') == '2026-05':
+                return row
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+failed = False
+for hours, status, stamped in ((152.0, 'submitted', 'submittedAt'),
+                               (168.0, 'approved', 'approvedAt'),
+                               (140.0, 'rejected', 'rejectionReason')):
+    row = find(hours, status)
+    if row is None:
+        print(f'::error::No 2026-05 timesheet with hours={hours} in status {status!r} after the '
+              f'lifecycle walk — hours-process.spec.ts will fail its beforeAll on exactly this.')
+        failed = True
+    elif not row.get(stamped):
+        print(f'::error::The 2026-05 {status!r} timesheet (hours={hours}) has no {stamped!r} — the '
+              f'listener did not stamp the edge.')
+        failed = True
+    else:
+        print(f'[ci-seed] timesheet hours={hours} status={status} {stamped} stamped OK')
+if failed:
+    sys.exit(1)
+print('[ci-seed] seeded 2026-05 timesheets are in their process states.')
+PY
+
 # ── 5. Warm the SPA, and gate on the bundle actually being JavaScript ────────
 # The shared workflow serves Nextcloud with `php -S`. The first hit pays a cold
 # opcache and the first parse of a multi-megabyte webpack bundle, and that cost
@@ -433,9 +616,22 @@ done
 # job.
 # ---------------------------------------------------------------------------
 ADM_ID="E2E-ADM-001"
+# hrmq-hours-process-redesign: the hours-process e2e journeys
+# (spec-coverage/hours-process.spec.ts) book time entries as the admin user.
+# The stamping listener resolves admin's own Employee (the register-seeded
+# employee-jansen, nextcloudUserId "admin") and stamps its administrationId —
+# ADM-001, the register-seeded administration — onto every booking, and every
+# hours page filters on `administrationId: @workspace.activeAdministrationId?`.
+# With the active pointer at E2E-ADM-001 those pages would filter out both the
+# register-seeded rows AND everything admin books, so the ACTIVE administration
+# below is set to ADM-001. An `hr`-role access row for ADM-001 is seeded here
+# too (hr-seed.json already carries an accountant row; this one keeps the
+# analytics guard independent of that seed's shape).
+ACTIVE_ADM_ID="ADM-001"
 for payload in \
 	"{\"administrationId\":\"${ADM_ID}\",\"name\":\"E2E Administration\",\"active\":true,\"mode\":\"standard\"}|Administration" \
-	"{\"userId\":\"${USER_NAME}\",\"administrationId\":\"${ADM_ID}\",\"role\":\"hr\"}|AdministrationAccess"
+	"{\"userId\":\"${USER_NAME}\",\"administrationId\":\"${ADM_ID}\",\"role\":\"hr\"}|AdministrationAccess" \
+	"{\"userId\":\"${USER_NAME}\",\"administrationId\":\"${ACTIVE_ADM_ID}\",\"role\":\"hr\"}|AdministrationAccess"
 do
 	body="${payload%|*}"
 	schema="${payload##*|}"
@@ -489,10 +685,10 @@ if [ -n "$OCC" ]; then
 	# instance: writes, reads back byte-identical, and reports
 	# 'The setting does not exist for user "..."' once deleted — so the
 	# comparison below can genuinely fail.
-	php "$OCC" user:setting "${USER_NAME}" hrmq "${ACT_KEY}" "${ADM_ID}" >/dev/null 2>&1 || true
+	php "$OCC" user:setting "${USER_NAME}" hrmq "${ACT_KEY}" "${ACTIVE_ADM_ID}" >/dev/null 2>&1 || true
 	READBACK="$(php "$OCC" user:setting "${USER_NAME}" hrmq "${ACT_KEY}" 2>/dev/null | tr -d '\r\n' || true)"
-	echo "[ci-seed] active administration read back as: '${READBACK}' (want '${ADM_ID}')"
-	if [ "$READBACK" = "$ADM_ID" ]; then ACT_OK=1; fi
+	echo "[ci-seed] active administration read back as: '${READBACK}' (want '${ACTIVE_ADM_ID}')"
+	if [ "$READBACK" = "$ACTIVE_ADM_ID" ]; then ACT_OK=1; fi
 else
 	echo "[ci-seed] occ not found (looked in NEXTCLOUD_ROOT, cwd, and two levels above the app dir)."
 fi
@@ -503,9 +699,9 @@ if [ "$ACT_OK" != "1" ]; then
 	for form in "/index.php/apps/hrmq/api/administration/active" "/apps/hrmq/api/administration/active"; do
 		code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
 			-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-			-H 'Content-Type: application/json' -d "{\"administrationId\":\"${ADM_ID}\"}" \
+			-H 'Content-Type: application/json' -d "{\"administrationId\":\"${ACTIVE_ADM_ID}\"}" \
 			"${BASE}${form}" || true)"
-		echo "[ci-seed] set active administration ${ADM_ID} via ${form} -> ${code}"
+		echo "[ci-seed] set active administration ${ACTIVE_ADM_ID} via ${form} -> ${code}"
 		case "$code" in 2*) ACT_OK=1; break ;; esac
 	done
 fi

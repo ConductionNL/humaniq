@@ -58,10 +58,14 @@ declare(strict_types=1);
 namespace OCA\Hrmq\Standards\Checks;
 
 use DateTimeImmutable;
+use OCA\Hrmq\Service\OrgResolutionService;
 
 /**
  * Organisational-structure integrity executable checks (assignment
  * consistency + unit-cycle freedom).
+ *
+ * @spec openspec/changes/org-chart-basic/specs/org-chart-basic/spec.md#REQ-ORG-005
+ * @spec openspec/changes/mss-team-scope/specs/mss-team-scope/spec.md#REQ-MSS-005
  */
 final class NlOrgChecks implements CheckProvider {
 
@@ -69,6 +73,9 @@ final class NlOrgChecks implements CheckProvider {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/org-chart-basic/specs/org-chart-basic/spec.md#REQ-ORG-005
+	 * @spec openspec/changes/mss-team-scope/specs/mss-team-scope/spec.md#REQ-MSS-005
 	 */
 	public static function checks(): array {
 		return [
@@ -106,6 +113,8 @@ final class NlOrgChecks implements CheckProvider {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec exclude deliberately empty SeedsObjects contract stub — the seed OrgUnit/OrgAssignment hierarchy lives in hr-seed.json (ADR-001, see the class header)
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -250,10 +259,18 @@ final class NlOrgChecks implements CheckProvider {
 	 * (any-match), mirroring how a person may legitimately be placed in more
 	 * than one unit.
 	 *
+	 * The chain walk itself lives in {@see OrgResolutionService} —
+	 * hours-process-redesign Decision 5 moved it there so this audit and the
+	 * server-side stamp (TimesheetProcessStampListener) share one code path
+	 * and cannot disagree. This predicate keeps only its audit posture: the
+	 * vacuous-pass wrapping and the any-match verdict.
+	 *
 	 * @param array<string, mixed> $o The Timesheet/Expense/LeaveRequest record.
 	 * @param array<string, mixed> $c Evaluation context (carries `related`).
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
 	private static function managerConsistent(array $o, array $c): bool {
 		$managerUserId = trim((string)($o['managerUserId'] ?? ''));
@@ -267,59 +284,16 @@ final class NlOrgChecks implements CheckProvider {
 			return true;
 		}
 
-		$assignments = (self::relatedOrgAssignmentsByEmployeeId($c)[$employeeId] ?? []);
-		if (is_array($assignments) === false || count($assignments) === 0) {
-			// No known placement at all — vacuous pass.
-			return true;
-		}
-
-		$unitsById = self::relatedOrgUnitsById($c);
-		$employeesById = self::relatedEmployeesById($c);
-
-		$resolvedManagerNextcloudUserIds = [];
-		foreach ($assignments as $assignment) {
-			if (is_array($assignment) === false) {
-				continue;
-			}
-
-			$endDate = trim((string)($assignment['endDate'] ?? ''));
-			if (self::isCurrentlyActive($endDate) === false) {
-				// Historical placement — irrelevant to who manages the
-				// employee today.
-				continue;
-			}
-
-			$orgUnitId = trim((string)($assignment['orgUnitId'] ?? ''));
-			if ($orgUnitId === '') {
-				continue;
-			}
-
-			$unit = ($unitsById[$orgUnitId] ?? null);
-			if (is_array($unit) === false) {
-				// Unresolvable unit — this hop dead-ends.
-				continue;
-			}
-
-			$unitManagerId = trim((string)($unit['managerId'] ?? ''));
-			if ($unitManagerId === '') {
-				// Unmanaged unit — this hop dead-ends.
-				continue;
-			}
-
-			$manager = ($employeesById[$unitManagerId] ?? null);
-			if (is_array($manager) === false) {
-				// Unresolvable manager Employee — this hop dead-ends.
-				continue;
-			}
-
-			$managerNextcloudUserId = trim((string)($manager['nextcloudUserId'] ?? ''));
-			if ($managerNextcloudUserId === '') {
-				// Manager has no Nextcloud account — this hop dead-ends.
-				continue;
-			}
-
-			$resolvedManagerNextcloudUserIds[] = $managerNextcloudUserId;
-		}//end foreach
+		// The service is pure/stateless; direct construction keeps this
+		// provider's static, container-free contract.
+		$resolver = new OrgResolutionService();
+		$resolvedManagerNextcloudUserIds = $resolver->resolveManagerUserIds(
+			employeeId: $employeeId,
+			assignmentsByEmployeeId: self::relatedOrgAssignmentsByEmployeeId($c),
+			unitsById: self::relatedOrgUnitsById($c),
+			employeesById: self::relatedEmployeesById($c),
+			onDate: (new DateTimeImmutable('today'))->format('Y-m-d')
+		);
 
 		if (count($resolvedManagerNextcloudUserIds) === 0) {
 			// No active placement's chain fully resolved — vacuous pass.

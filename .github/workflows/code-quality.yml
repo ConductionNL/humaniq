@@ -90,7 +90,18 @@ jobs:
       # Deliberately NON-EMPTY: an empty `frontend-checks` list does not skip
       # the job, it DELETES it from the run (see the shared workflow's comment,
       # and ConductionNL/.github#150).
-      frontend-checks: '["check:manifest", "check:widget-keys"]'
+      # `check:seed-refs` (tests/validate-seed-refs.js) joins them for the same
+      # reason one level down: the register fragments' seed objects reference
+      # each other by slug, and OpenRegister only resolves those references
+      # when they are written as `@ref:<slug>` tokens. A bare slug fails
+      # `format: uuid` validation inside saveObject() and the seed object is
+      # DROPPED with nothing but a log line — the import still reports success.
+      # 103 of the seed set's 107 references were in that state until
+      # 2026-08-21, so a fresh install and every e2e run came up against a
+      # largely empty register; it surfaced only as an unrelated-looking e2e
+      # failure (the seeded 2026-05 payslip never rendering on
+      # /mijn/loonstroken). Pure node, no deps, no container.
+      frontend-checks: '["check:manifest", "check:widget-keys", "check:seed-refs"]'
 
       # ── E2E browser tests ────────────────────────────────────────────────
       # tests/e2e has existed and been maintained for a while — a parametrised

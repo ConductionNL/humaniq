@@ -1,5 +1,6 @@
 {
     "x-hrmq-fragment": "hr-seed",
+    "x-notes": "Seed objects reference each other with the `@ref:<slug>` token (`@ref:<Schema>:<slug>` when a slug is not unique), NEVER with a bare slug. OpenRegister's ImportHandler::resolveSeedReferenceTokens() runs before the import loop: it mints or reuses a stable UUID for every referenced target, writes it into that target's `@self.id`, and replaces the tokens with that UUID -- so the relation properties (`$ref` + `format: uuid`) see a real UUID by the time saveObject() validates. A bare slug fails that validation and the whole seed object is DROPPED with only a log line, which is how 103 of 107 references in this seed set were silently eaten until 2026-08-21. Only `components.objects` is scanned, so seed never moves to a top-level `objects` key. Enforced by `npm run check:seed-refs` (tests/validate-seed-refs.js).",
     "components": {
         "objects": [
             {
@@ -25,12 +26,67 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-devries"
+                },
+                "employeeNumber": "EMP-0002",
+                "firstName": "Sanne",
+                "lastName": "de Vries",
+                "dateOfBirth": "1988-11-02",
+                "startDate": "2025-03-01",
+                "grossMonthlySalary": 2912.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001",
+                "_note": "Officemanager of the Backoffice afdeling (orgassignment-devries-backoffice, from 2025-03-01) and the intern's begeleider (stagiair-bakker). Deliberately NO nextcloudUserId: hours-process.spec.ts asserts her approved 168h timesheet and its bookings are FAIL-CLOSED ABSENT from the @me Mijn pages, which is only true while the user link stays unresolvable (REQ-MHS-002) -- an employee without a Nextcloud account is the realistic case that makes that guarantee testable. NOT the same person as employee-devries-dga (Robin De Vries, the DGA of ADM-004). grossMonthlySalary mirrors contract-devries-tijdelijk: 32 h/week at EUR 21,00 hourly."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-bakker"
+                },
+                "employeeNumber": "EMP-0003",
+                "firstName": "Milan",
+                "lastName": "Bakker",
+                "dateOfBirth": "1996-04-17",
+                "startDate": "2025-09-01",
+                "grossMonthlySalary": 2600.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001",
+                "_note": "Junior consultant (orgassignment-bakker-consultancy, whose endDate deliberately precedes its startDate to trip nl-org-assignment-period). Long-term sick since 2025-09-29 (sickcase-bakker-longterm), which is why startDate sits just before it. Deliberately NO nextcloudUserId, for the same fail-closed reason as employee-devries: hours-process.spec.ts asserts his rejected 140h timesheet never leaks onto a @me page."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "Employee",
+                    "slug": "employee-degroot"
+                },
+                "employeeNumber": "EMP-0006",
+                "firstName": "Wilma",
+                "lastName": "de Groot",
+                "dateOfBirth": "1974-01-23",
+                "startDate": "2024-09-02",
+                "grossMonthlySalary": 3100.00,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "administrationId": "ADM-001",
+                "_note": "Exists for sickcase-degroot-wvp42 -- the fully-compliant Wet verbetering poortwachter track (every milestone due AND done), the counterpart to the bakker case that misses its 42-week melding. Sick since 2025-06-02, so employment starts before that. No nextcloudUserId: she has no self-service surface in the seed and needs none."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "Timesheet",
                     "slug": "timesheet-jansen-2026-05"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "period": "2026-05",
                 "hours": 152,
+                "entryCount": 3,
                 "description": "Reguliere uren mei 2026 — projectwerk en intern overleg.",
                 "projectId": "project-alpha",
                 "costCenter": "CC-100",
@@ -47,9 +103,10 @@
                     "schema": "Timesheet",
                     "slug": "timesheet-devries-2026-05"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "period": "2026-05",
                 "hours": 168,
+                "entryCount": 2,
                 "description": "Uren mei 2026 — support en onboarding.",
                 "projectId": "project-beta",
                 "costCenter": "CC-200",
@@ -66,9 +123,10 @@
                     "schema": "Timesheet",
                     "slug": "timesheet-bakker-2026-05"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "period": "2026-05",
                 "hours": 140,
+                "entryCount": 2,
                 "description": "Uren mei 2026 — gecorrigeerd na afkeuring.",
                 "billable": false,
                 "status": "rejected",
@@ -81,10 +139,146 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-jansen-2026-05-04"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "timesheetId": "@ref:timesheet-jansen-2026-05",
+                "startedAt": "2026-05-04T09:00:00Z",
+                "endedAt": "2026-05-04T17:30:00Z",
+                "breakMinutes": 30,
+                "hours": 8.00,
+                "description": "Projectwerk project-alpha, sprintoplevering.",
+                "projectId": "project-alpha",
+                "billable": true,
+                "costCenter": "CC-100",
+                "userId": "admin",
+                "administrationId": "ADM-001",
+                "origin": "manual",
+                "_note": "hrmq-hours-process-redesign (tasks.md 5.1): TimeEntry seeds linked to the seeded timesheets by real timesheetId slug links. The register seed import runs through the ordinary ObjectCreatingEvent pipeline, so the stamping listeners DO fire on it: TimesheetProcessStampListener forces every created Timesheet to status draft with nulled process fields (measured on CI run 32504408914 — the seeded statuses below do NOT survive import). tests/e2e/ci-seed.sh therefore walks the three 2026-05 timesheets through their real lifecycle edges after import; the status/submittedAt/approvedBy/approvedAt/rejectionReason literals below document the TARGET states and feed that walk (the rejectionReason text is read from here). Every listener-owned value (hours, userId, costCenter, administrationId, the per-entry allocation copies) is carried as a literal CONSISTENT with what the listeners derive: hours = (endedAt - startedAt - breakMinutes)/60, the entries of one timesheet sum exactly to its seeded hours, share its projectId/costCenter/billable (the homogeneous-aggregate contract, REQ-TEC-003/004), and userId mirrors the linked Employee's nextcloudUserId (absent where the employee link does not resolve — devries/bakker, the fail-closed K=2 rows)."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-jansen-2026-05-05"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "timesheetId": "@ref:timesheet-jansen-2026-05",
+                "startedAt": "2026-05-05T09:00:00Z",
+                "endedAt": "2026-05-05T17:30:00Z",
+                "breakMinutes": 30,
+                "hours": 8.00,
+                "description": "Intern overleg en code-review.",
+                "projectId": "project-alpha",
+                "billable": true,
+                "costCenter": "CC-100",
+                "userId": "admin",
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-jansen-2026-05-rest"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "timesheetId": "@ref:timesheet-jansen-2026-05",
+                "startedAt": "2026-05-06T08:00:00Z",
+                "endedAt": "2026-05-12T00:00:00Z",
+                "breakMinutes": 0,
+                "hours": 136.00,
+                "description": "Restant reguliere uren mei 2026 — verzameld in één boeking (seed-placeholder, geen werkelijke aaneengesloten dienst).",
+                "projectId": "project-alpha",
+                "billable": true,
+                "costCenter": "CC-100",
+                "userId": "admin",
+                "administrationId": "ADM-001",
+                "origin": "manual",
+                "_note": "Deliberate period roll-up entry so 2-3 seed entries can sum EXACTLY to the timesheet's seeded 152 hours (8 + 8 + 136) without inventing 19 per-day rows; the span (136h) is arithmetically consistent with hours but is a bookkeeping placeholder, flagged in its own description."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-devries-2026-05-04"
+                },
+                "employeeId": "@ref:employee-devries",
+                "timesheetId": "@ref:timesheet-devries-2026-05",
+                "startedAt": "2026-05-04T07:00:00Z",
+                "endedAt": "2026-05-04T15:30:00Z",
+                "breakMinutes": 30,
+                "hours": 8.00,
+                "description": "Supportdienst en onboarding nieuwe collega.",
+                "projectId": "project-beta",
+                "billable": false,
+                "costCenter": "CC-200",
+                "administrationId": "ADM-001",
+                "origin": "manual",
+                "_note": "No userId on the devries/bakker entries: their employeeId does not resolve to a seeded Employee with a nextcloudUserId, mirroring their parent timesheets (the migration summary's K=2 unresolvable-user-link rows) — fail-closed, they never appear on a Mijn page (REQ-MHS-002)."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-devries-2026-05-rest"
+                },
+                "employeeId": "@ref:employee-devries",
+                "timesheetId": "@ref:timesheet-devries-2026-05",
+                "startedAt": "2026-05-05T08:00:00Z",
+                "endedAt": "2026-05-12T00:00:00Z",
+                "breakMinutes": 0,
+                "hours": 160.00,
+                "description": "Restant uren mei 2026 — verzameld in één boeking (seed-placeholder).",
+                "projectId": "project-beta",
+                "billable": false,
+                "costCenter": "CC-200",
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-bakker-2026-05-04"
+                },
+                "employeeId": "@ref:employee-bakker",
+                "timesheetId": "@ref:timesheet-bakker-2026-05",
+                "startedAt": "2026-05-04T08:00:00Z",
+                "endedAt": "2026-05-04T16:30:00Z",
+                "breakMinutes": 30,
+                "hours": 8.00,
+                "description": "Consultancywerkzaamheden, gecorrigeerde boeking.",
+                "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-bakker-2026-05-rest"
+                },
+                "employeeId": "@ref:employee-bakker",
+                "timesheetId": "@ref:timesheet-bakker-2026-05",
+                "startedAt": "2026-05-05T08:00:00Z",
+                "endedAt": "2026-05-10T20:00:00Z",
+                "breakMinutes": 0,
+                "hours": 132.00,
+                "description": "Restant uren mei 2026 — verzameld in één boeking (seed-placeholder).",
+                "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual",
+                "_note": "The bakker entries carry no projectId/costCenter, matching their parent timesheet (rejected, no allocation) — sum 8 + 132 = the seeded 140 hours. The ADM-002 example timesheet deliberately keeps ZERO entries so a fresh install still exercises the MigrateHoursProcess synthesis path (origin: migration) on at least one hours>0 row."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "Expense",
                     "slug": "expense-jansen-hotel"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "title": "Hotelovernachting Amsterdam",
                 "description": "Verblijf tijdens klantbezoek, 1 nacht.",
                 "amount": 185.5,
@@ -103,7 +297,7 @@
                     "schema": "Expense",
                     "slug": "expense-devries-train"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "title": "Treinreis Utrecht — Den Haag",
                 "description": "Retour tweede klas voor projectoverleg.",
                 "amount": 27.4,
@@ -122,7 +316,7 @@
                     "schema": "Expense",
                     "slug": "expense-bakker-software"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "title": "JetBrains licentie (jaarabonnement)",
                 "description": "Ontwikkeltooling, na goedkeuring uitbetaald.",
                 "amount": 219,
@@ -142,7 +336,7 @@
                     "schema": "Expense",
                     "slug": "expense-devries-mileage"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "title": "Kilometervergoeding klantbezoek Rotterdam",
                 "description": "Eigen auto, zakelijke kilometers naar klantlocatie.",
                 "amount": 34.50,
@@ -281,10 +475,31 @@
             {
                 "@self": {
                     "register": "hrmq",
+                    "schema": "PayrollRun",
+                    "slug": "payroll-run-2026-01-adm-001"
+                },
+                "period": "2026-01",
+                "administrationId": "ADM-001",
+                "jurisdiction": "NL",
+                "status": "posted",
+                "totalGross": 3800.00,
+                "totalLoonheffing": 1102.00,
+                "totalEmployerCharges": 649.80,
+                "totalWithholdings": 1102.00,
+                "totalNet": 2698.00,
+                "glExpensePosted": 4449.80,
+                "glLiabilityPosted": 1751.80,
+                "withholdingsClearedToZero": true,
+                "withholdingLiabilityBalance": 0.00,
+                "_note": "The run glpost-2026-01-adm-001 (hr-glpost.json) posts to the general ledger: status 'posted' matches that record's own status and its postedAt of 2026-02-05. Its journal lines are this run's figures -- debit 4001 EUR 3.800,00 bruto + 4002 EUR 649,80 werkgeverslasten = glExpensePosted, balanced by the loonheffing- and netto-loonschuld credits. Same single-employee ADM-001 shape as payrollrun-2026-05/06; the slug keeps its hyphenated payroll-run- form because hr-glpost.json's reference was authored against it."
+            },
+            {
+                "@self": {
+                    "register": "hrmq",
                     "schema": "Payslip",
                     "slug": "payslip-jansen-2026-05"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "period": "2026-05",
                 "jurisdiction": "NL",
                 "currency": "EUR",
@@ -302,7 +517,7 @@
                     "schema": "PensionFiling",
                     "slug": "pensionfiling-2026-05-abp"
                 },
-                "payrollRunId": "payrollrun-2026-05",
+                "payrollRunId": "@ref:payrollrun-2026-05",
                 "period": "2026-05",
                 "fund": "abp",
                 "aanleverkenmerk": "UPA-000000000000",
@@ -320,7 +535,7 @@
                     "schema": "PensionFiling",
                     "slug": "pensionfiling-2026-06-abp"
                 },
-                "payrollRunId": "payrollrun-2026-06",
+                "payrollRunId": "@ref:payrollrun-2026-06",
                 "period": "2026-06",
                 "fund": "abp",
                 "deadline": "2026-07-31",
@@ -334,7 +549,7 @@
                     "schema": "PensionFiling",
                     "slug": "pensionfiling-2026-05-spw"
                 },
-                "payrollRunId": "payrollrun-2026-05",
+                "payrollRunId": "@ref:payrollrun-2026-05",
                 "period": "2026-05",
                 "fund": "spw",
                 "deadline": "2026-06-30",
@@ -348,7 +563,7 @@
                     "schema": "LeaveRequest",
                     "slug": "leave-jansen-zomer"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "leaveType": "holiday",
                 "startDate": "2026-08-03",
                 "endDate": "2026-08-14",
@@ -366,7 +581,7 @@
                     "schema": "LeaveRequest",
                     "slug": "leave-jansen-juli"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "leaveType": "holiday",
                 "startDate": "2026-07-16",
                 "endDate": "2026-07-17",
@@ -385,7 +600,7 @@
                     "schema": "LeaveBalance",
                     "slug": "leavebalance-jansen-2026-holiday"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "year": 2026,
                 "leaveType": "holiday",
                 "contractHoursPerWeek": 40,
@@ -401,7 +616,7 @@
                     "schema": "LeaveBalance",
                     "slug": "leavebalance-devries-2026-holiday"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "year": 2026,
                 "leaveType": "holiday",
                 "contractHoursPerWeek": 32,
@@ -417,7 +632,7 @@
                     "schema": "LeaveBalance",
                     "slug": "leavebalance-bakker-2026-holiday"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "year": 2026,
                 "leaveType": "holiday",
                 "contractHoursPerWeek": 36,
@@ -433,7 +648,7 @@
                     "schema": "SickLeaveCase",
                     "slug": "sickcase-jansen-flu"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "firstSickDay": "2026-05-04",
                 "recoveredDate": "2026-05-08",
                 "status": "hersteld",
@@ -455,7 +670,7 @@
                     "schema": "SickLeaveCase",
                     "slug": "sickcase-devries-week7"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "firstSickDay": "2026-05-25",
                 "status": "gemeld",
                 "wachtdag": false,
@@ -472,7 +687,7 @@
                     "schema": "SickLeaveCase",
                     "slug": "sickcase-bakker-longterm"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "firstSickDay": "2025-09-29",
                 "status": "gemeld",
                 "wachtdag": false,
@@ -491,7 +706,7 @@
                     "schema": "SickLeaveCase",
                     "slug": "sickcase-degroot-wvp42"
                 },
-                "employeeId": "employee-degroot",
+                "employeeId": "@ref:employee-degroot",
                 "firstSickDay": "2025-06-02",
                 "status": "gemeld",
                 "wachtdag": false,
@@ -527,7 +742,7 @@
                     "schema": "Onboarding",
                     "slug": "onboarding-visser"
                 },
-                "employeeId": "employee-visser",
+                "employeeId": "@ref:employee-visser",
                 "startDate": "2026-07-01",
                 "proeftijdEndDate": "2026-08-01",
                 "status": "gegevens_gevalideerd",
@@ -545,7 +760,7 @@
                     "schema": "Onboarding",
                     "slug": "onboarding-jansen"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "startDate": "2024-01-01",
                 "proeftijdEndDate": "2024-02-01",
                 "status": "afgerond",
@@ -579,7 +794,7 @@
                     "schema": "Application",
                     "slug": "application-voorbeeld-nieuw"
                 },
-                "vacancyId": "vacancy-vue-developer",
+                "vacancyId": "@ref:vacancy-vue-developer",
                 "candidateName": "Jan Voorbeeld",
                 "email": "voorbeeld@example.org",
                 "phone": "+31 6 00000000",
@@ -595,7 +810,7 @@
                     "schema": "Application",
                     "slug": "application-voorbeeld-afgewezen"
                 },
-                "vacancyId": "vacancy-vue-developer",
+                "vacancyId": "@ref:vacancy-vue-developer",
                 "candidateName": "Piet Voorbeeld",
                 "email": "voorbeeld+afgewezen@example.org",
                 "phone": "+31 6 00000001",
@@ -613,7 +828,7 @@
                     "schema": "Application",
                     "slug": "application-voorbeeld-aangenomen"
                 },
-                "vacancyId": "vacancy-vue-developer",
+                "vacancyId": "@ref:vacancy-vue-developer",
                 "candidateName": "Anna Voorbeeld",
                 "email": "voorbeeld+aangenomen@example.org",
                 "phone": "+31 6 00000002",
@@ -629,7 +844,7 @@
                     "schema": "Application",
                     "slug": "application-voorbeeld-aanbod"
                 },
-                "vacancyId": "vacancy-vue-developer",
+                "vacancyId": "@ref:vacancy-vue-developer",
                 "candidateName": "Sanne Voorbeeld",
                 "email": "sanne.voorbeeld@example.org",
                 "phone": "+31 6 00000003",
@@ -650,7 +865,7 @@
                 },
                 "name": "Directie",
                 "type": "afdeling",
-                "managerId": "employee-jansen",
+                "managerId": "@ref:employee-jansen",
                 "active": true,
                 "administrationId": "ADM-001"
             },
@@ -662,9 +877,9 @@
                 },
                 "name": "Consultancy",
                 "type": "team",
-                "parentUnitId": "orgunit-directie",
+                "parentUnitId": "@ref:orgunit-directie",
                 "costCenter": "CC-100",
-                "managerId": "employee-jansen",
+                "managerId": "@ref:employee-jansen",
                 "active": true,
                 "administrationId": "ADM-001"
             },
@@ -676,7 +891,7 @@
                 },
                 "name": "Backoffice",
                 "type": "afdeling",
-                "parentUnitId": "orgunit-directie",
+                "parentUnitId": "@ref:orgunit-directie",
                 "costCenter": "CC-200",
                 "active": true,
                 "administrationId": "ADM-001"
@@ -687,8 +902,8 @@
                     "schema": "OrgAssignment",
                     "slug": "orgassignment-jansen-consultancy"
                 },
-                "employeeId": "employee-jansen",
-                "orgUnitId": "orgunit-consultancy",
+                "employeeId": "@ref:employee-jansen",
+                "orgUnitId": "@ref:orgunit-consultancy",
                 "role": "Consultant",
                 "startDate": "2024-01-01",
                 "administrationId": "ADM-001"
@@ -699,8 +914,8 @@
                     "schema": "OrgAssignment",
                     "slug": "orgassignment-devries-backoffice"
                 },
-                "employeeId": "employee-devries",
-                "orgUnitId": "orgunit-backoffice",
+                "employeeId": "@ref:employee-devries",
+                "orgUnitId": "@ref:orgunit-backoffice",
                 "role": "Officemanager",
                 "startDate": "2025-03-01",
                 "administrationId": "ADM-001"
@@ -711,8 +926,8 @@
                     "schema": "OrgAssignment",
                     "slug": "orgassignment-bakker-consultancy"
                 },
-                "employeeId": "employee-bakker",
-                "orgUnitId": "orgunit-consultancy",
+                "employeeId": "@ref:employee-bakker",
+                "orgUnitId": "@ref:orgunit-consultancy",
                 "role": "Junior consultant",
                 "startDate": "2026-06-01",
                 "endDate": "2026-05-01",
@@ -724,7 +939,7 @@
                     "schema": "AttendanceRecord",
                     "slug": "attendance-jansen-0709"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "date": "2026-07-09",
                 "clockIn": "2026-07-09T08:30:00Z",
                 "clockOut": "2026-07-09T17:00:00Z",
@@ -741,7 +956,7 @@
                     "schema": "AttendanceRecord",
                     "slug": "attendance-devries-0708"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "date": "2026-07-08",
                 "clockIn": "2026-07-08T14:00:00Z",
                 "clockOut": "2026-07-08T23:00:00Z",
@@ -757,7 +972,7 @@
                     "schema": "AttendanceRecord",
                     "slug": "attendance-devries-0709"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "date": "2026-07-09",
                 "clockIn": "2026-07-09T07:00:00Z",
                 "clockOut": "2026-07-09T15:30:00Z",
@@ -773,7 +988,7 @@
                     "schema": "AttendanceRecord",
                     "slug": "attendance-bakker-0710"
                 },
-                "employeeId": "employee-bakker",
+                "employeeId": "@ref:employee-bakker",
                 "date": "2026-07-10",
                 "clockIn": "2026-07-10T08:00:00Z",
                 "clockOut": "2026-07-10T16:00:00Z",
@@ -806,7 +1021,7 @@
                     "schema": "Offboarding",
                     "slug": "offboarding-jansen"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "lastWorkingDay": "2026-08-31",
                 "reason": "opzegging-werkgever",
                 "status": "eindafrekening_gereed",
@@ -825,7 +1040,7 @@
                     "schema": "Offboarding",
                     "slug": "offboarding-de-boer"
                 },
-                "employeeId": "employee-de-boer",
+                "employeeId": "@ref:employee-de-boer",
                 "lastWorkingDay": "2026-05-31",
                 "reason": "opzegging-werknemer",
                 "status": "afgerond",
@@ -953,9 +1168,9 @@
                     "schema": "PerformanceReview",
                     "slug": "review-jansen-2026"
                 },
-                "employeeId": "employee-jansen",
-                "cycleId": "review-cycle-2026",
-                "reviewerId": "employee-visser",
+                "employeeId": "@ref:employee-jansen",
+                "cycleId": "@ref:review-cycle-2026",
+                "reviewerId": "@ref:employee-visser",
                 "status": "vastgesteld",
                 "rating": "goed",
                 "sterktes": "Sterke samenwerking en proactieve communicatie richting het team.",
@@ -984,8 +1199,8 @@
                     "schema": "PerformanceReview",
                     "slug": "review-visser-2026"
                 },
-                "employeeId": "employee-visser",
-                "cycleId": "review-cycle-2026",
+                "employeeId": "@ref:employee-visser",
+                "cycleId": "@ref:review-cycle-2026",
                 "reviewerId": null,
                 "status": "vastgesteld",
                 "rating": null,
@@ -1006,9 +1221,9 @@
                 },
                 "title": "Verbeter klanttevredenheid in Q3",
                 "ownerType": "employee",
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "orgUnitId": null,
-                "cycleId": "review-cycle-2026",
+                "cycleId": "@ref:review-cycle-2026",
                 "period": null,
                 "status": "actief",
                 "uitkomst": null,
@@ -1021,7 +1236,7 @@
                     "schema": "KeyResult",
                     "slug": "keyresult-jansen-nps"
                 },
-                "objectiveId": "objective-jansen-klanttevredenheid",
+                "objectiveId": "@ref:objective-jansen-klanttevredenheid",
                 "title": "NPS-score naar 100%",
                 "unit": "percentage",
                 "startValue": 0,
@@ -1037,7 +1252,7 @@
                     "schema": "KeyResult",
                     "slug": "keyresult-jansen-klantbezoeken"
                 },
-                "objectiveId": "objective-jansen-klanttevredenheid",
+                "objectiveId": "@ref:objective-jansen-klanttevredenheid",
                 "title": "12 klantbezoeken afronden",
                 "unit": "aantal",
                 "startValue": 0,
@@ -1053,7 +1268,7 @@
                     "schema": "KeyResult",
                     "slug": "keyresult-jansen-nps-dashboard"
                 },
-                "objectiveId": "objective-jansen-klanttevredenheid",
+                "objectiveId": "@ref:objective-jansen-klanttevredenheid",
                 "title": "NPS-dashboard live",
                 "unit": "boolean",
                 "startValue": 0,
@@ -1069,7 +1284,7 @@
                     "schema": "EmploymentContract",
                     "slug": "contract-devries-tijdelijk"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "type": "temporary",
                 "writtenContract": true,
                 "startDate": "2025-09-01",
@@ -1092,7 +1307,7 @@
                     "schema": "EmploymentContract",
                     "slug": "contract-jansen-vast"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "type": "permanent",
                 "writtenContract": true,
                 "startDate": "2024-01-01",
@@ -1115,7 +1330,7 @@
                     "schema": "EmploymentContract",
                     "slug": "contract-visser-bbl"
                 },
-                "employeeId": "employee-visser",
+                "employeeId": "@ref:employee-visser",
                 "type": "bbl",
                 "writtenContract": true,
                 "startDate": "2026-07-01",
@@ -1159,7 +1374,7 @@
                     "schema": "EmploymentContract",
                     "slug": "contract-uitzend-abu-fase-a"
                 },
-                "employeeId": "employee-uitzend-abu",
+                "employeeId": "@ref:employee-uitzend-abu",
                 "type": "agency",
                 "writtenContract": true,
                 "startDate": "2026-03-01",
@@ -1192,7 +1407,7 @@
                 "stagetype": "afstudeerstage",
                 "startDate": "2026-02-01",
                 "endDate": "2026-08-31",
-                "begeleiderId": "employee-jansen",
+                "begeleiderId": "@ref:employee-jansen",
                 "stagevergoedingPerMaand": 400.00,
                 "bpvOvereenkomstOndertekend": true,
                 "verzekeringGeverifieerd": true,
@@ -1211,7 +1426,7 @@
                 "stagetype": "meeloopstage",
                 "startDate": "2026-06-01",
                 "endDate": "2027-01-31",
-                "begeleiderId": "employee-devries",
+                "begeleiderId": "@ref:employee-devries",
                 "stagevergoedingPerMaand": 300.00,
                 "bpvOvereenkomstOndertekend": false,
                 "verzekeringGeverifieerd": false,
@@ -1224,7 +1439,7 @@
                     "schema": "EmploymentContract",
                     "slug": "contract-uitzend-abu-beding-fase-b"
                 },
-                "employeeId": "employee-uitzend-abu",
+                "employeeId": "@ref:employee-uitzend-abu",
                 "type": "agency",
                 "writtenContract": true,
                 "startDate": "2024-06-01",
@@ -1316,7 +1531,7 @@
                     "schema": "EmploymentContract",
                     "slug": "contract-hr21-devries-schaal-match"
                 },
-                "employeeId": "employee-devries",
+                "employeeId": "@ref:employee-devries",
                 "type": "temporary",
                 "writtenContract": true,
                 "startDate": "2025-09-01",
@@ -1325,7 +1540,7 @@
                 "hourlyWage": 21.00,
                 "cao": "cao-gemeenten",
                 "caoSchaal": "10",
-                "normfunctieId": "normfunctie-hr21-002",
+                "normfunctieId": "@ref:normfunctie-hr21-002",
                 "awfTariff": "high",
                 "aanzegdOn": null,
                 "workingTimeDocumented": true,
@@ -1340,7 +1555,7 @@
                     "schema": "EmploymentContract",
                     "slug": "contract-hr21-jansen-schaal-mismatch"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "type": "permanent",
                 "writtenContract": true,
                 "startDate": "2024-01-01",
@@ -1349,7 +1564,7 @@
                 "hourlyWage": 24.36,
                 "cao": "cao-gemeenten",
                 "caoSchaal": "8",
-                "normfunctieId": "normfunctie-hr21-002",
+                "normfunctieId": "@ref:normfunctie-hr21-002",
                 "awfTariff": "low",
                 "aanzegdOn": null,
                 "workingTimeDocumented": true,
@@ -1412,12 +1627,12 @@
                     "schema": "CompAdjustment",
                     "slug": "compadjustment-jansen-2026"
                 },
-                "cycleId": "compcycle-2026",
-                "employeeId": "employee-jansen",
-                "contractId": "contract-jansen-vast",
+                "cycleId": "@ref:compcycle-2026",
+                "employeeId": "@ref:employee-jansen",
+                "contractId": "@ref:contract-jansen-vast",
                 "currentSalary": 380000,
                 "proposedSalary": 400000,
-                "targetBandId": "salaryband-a",
+                "targetBandId": "@ref:salaryband-a",
                 "effectiveDate": "2026-07-01",
                 "status": "draft",
                 "proposedBy": "admin",
@@ -1635,7 +1850,7 @@
                     "schema": "Timesheet",
                     "slug": "example-timesheet-adm002-2026-05"
                 },
-                "employeeId": "example-employee-adm002",
+                "employeeId": "@ref:example-employee-adm002",
                 "period": "2026-05",
                 "hours": 160,
                 "description": "Example — seed data: reguliere uren mei 2026 onder de tweede administratie (ADM-002), zodat het wisselen van actieve administratie een echt geïsoleerde wereld toont (design.md Seed Data).",
@@ -1653,7 +1868,7 @@
                     "schema": "Payslip",
                     "slug": "example-payslip-adm002-2026-05"
                 },
-                "employeeId": "example-employee-adm002",
+                "employeeId": "@ref:example-employee-adm002",
                 "period": "2026-05",
                 "jurisdiction": "NL",
                 "currency": "EUR",
@@ -1671,12 +1886,12 @@
                     "schema": "BhvCertificering",
                     "slug": "bhv-jansen-basis"
                 },
-                "employeeId": "employee-jansen",
+                "employeeId": "@ref:employee-jansen",
                 "rol": "bhv_basis",
                 "certificaatBehaaldOp": "2024-07-18",
                 "certificaatGeldigTot": "2027-07-18",
                 "opleider": "NIBHV",
-                "orgUnitId": "orgunit-consultancy",
+                "orgUnitId": "@ref:orgunit-consultancy",
                 "administrationId": "ADM-001"
             },
             {
@@ -1699,12 +1914,12 @@
                     "schema": "BhvCertificering",
                     "slug": "bhv-visser-ehbo"
                 },
-                "employeeId": "employee-visser",
+                "employeeId": "@ref:employee-visser",
                 "rol": "ehbo",
                 "certificaatBehaaldOp": "2023-09-01",
                 "certificaatGeldigTot": "2026-09-01",
                 "opleider": "Het Oranje Kruis",
-                "orgUnitId": "orgunit-backoffice",
+                "orgUnitId": "@ref:orgunit-backoffice",
                 "administrationId": "ADM-001"
             },
             {
@@ -1801,7 +2016,7 @@
                     "schema": "WntDisclosure",
                     "slug": "wnt-disclosure-schoenmaker-2026"
                 },
-                "employeeId": "employee-wnt-schoenmaker",
+                "employeeId": "@ref:employee-wnt-schoenmaker",
                 "year": "2026",
                 "totalCompensation": 245000,
                 "status": "concept",
@@ -1814,7 +2029,7 @@
                     "schema": "WntDisclosure",
                     "slug": "wnt-disclosure-dijkstra-2026"
                 },
-                "employeeId": "employee-wnt-dijkstra",
+                "employeeId": "@ref:employee-wnt-dijkstra",
                 "year": "2026",
                 "totalCompensation": 275000,
                 "status": "gepubliceerd",
@@ -1827,7 +2042,7 @@
                     "schema": "WntDisclosure",
                     "slug": "wnt-disclosure-molenaar-2026"
                 },
-                "employeeId": "employee-wnt-molenaar",
+                "employeeId": "@ref:employee-wnt-molenaar",
                 "year": "2026",
                 "totalCompensation": 280000,
                 "status": "concept",
