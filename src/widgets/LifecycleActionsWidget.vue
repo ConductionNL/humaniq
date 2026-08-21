@@ -43,7 +43,7 @@
 <template>
 	<CnLifecycleActions
 		:object="objectData"
-		:object-id="objectId"
+		:objectId="objectId"
 		:config="config"
 		@reload="onReload" />
 </template>
@@ -77,13 +77,19 @@ export default {
 		 * module docblock).
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec exclude Untouched behaviourally — this method appears in the diff
+		 * only because an eslint 10 rule flagged its unused catch binding
+		 * (`catch (e)` -> `catch`). No lifecycle requirement covers a
+		 * best-effort refetch backstop, so anchoring one here would assert a
+		 * traceability that does not exist.
 		 */
 		async onReload() {
 			if (!this.store || typeof this.store.fetchObject !== 'function') return
 			if (!this.objectType || !this.objectId) return
 			try {
 				await this.store.fetchObject(this.objectType, String(this.objectId))
-			} catch (e) {
+			} catch {
 				// Best-effort only — the live-update subscription is the
 				// primary refresh path; a failed backstop fetch is not fatal.
 			}

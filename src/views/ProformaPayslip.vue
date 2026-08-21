@@ -153,6 +153,7 @@ export default {
 				bijzonder: '0',
 				period: '',
 			},
+
 			loading: false,
 			breakdown: null,
 			errorMessage: '',

@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 
-import { createApp, h, markRaw } from 'vue'
-import { createRouter, createWebHistory } from 'vue-router'
-import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
-import { generateUrl } from '@nextcloud/router'
 import {
 	CnPageRenderer,
 	defaultPageTypes,
 	registerIcons,
 	registerTranslations,
 } from '@conduction/nextcloud-vue'
-import pinia from './pinia.js'
+import { loadTranslations, translatePlural as n, translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
+import { createApp, h, markRaw } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
-import bundledManifest from './manifest.json'
-import registry from './registry.js'
 import appIcons from './icons.js'
+import bundledManifest from './manifest.json'
+import pinia from './pinia.js'
+import registry from './registry.js'
 
 // Dashboard widget catalog — the side-effect import the PUBLISHED package drops.
 //
@@ -53,10 +53,8 @@ import appIcons from './icons.js'
 // idempotent, and `sideEffects` in the package already lists it, so webpack
 // will not drop it.
 import '@conduction/nextcloud-vue/dist/esm/components/CnWidgetGrid/registerDashboardWidgets.js'
-
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
-
 // gridstack is a REQUIRED peer of @conduction/nextcloud-vue that no consumer
 // declares, and its stylesheet is the silent half: hrmq ships two
 // `type: "dashboard"` pages, and gridstack v12 sizes every item with
@@ -65,7 +63,6 @@ import '@conduction/nextcloud-vue/css/index.css'
 // come from JS) while widths collapse. nc-vue's own `css/index.css` does not
 // bundle it (verified: no `--gs-column-width` anywhere in that file).
 import 'gridstack/dist/gridstack.min.css'
-
 // Global (unscoped) app styles
 import './assets/app.css'
 
@@ -77,7 +74,7 @@ try {
 	registerTranslations()
 } catch (e) {
 	// Non-fatal — lib translations fall back to English source.
-	// eslint-disable-next-line no-console
+	 
 	console.warn('[hrmq] registerTranslations failed; falling back to English', e)
 }
 
@@ -85,6 +82,9 @@ try {
 // JS/CSS allowlist through Apache — /custom_apps/<app>/l10n/<locale>.json
 // 404s in those environments. Wrapping mount in the callback means silent
 // boot failure. Strings fall back to their English source on miss.
+/**
+ *
+ */
 function tryLoadTranslations() {
 	try {
 		const result = loadTranslations('hrmq', () => {})
