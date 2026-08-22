@@ -63,6 +63,7 @@
 
 const fs = require('fs')
 const path = require('path')
+const vm = require('vm')
 
 const REPO_ROOT = path.resolve(__dirname, '..')
 const L10N_DIR = path.join(REPO_ROOT, 'l10n')
@@ -196,6 +197,7 @@ function main() {
 			failures.push(`l10n/${locale}.json has no "pluralForm" string (Nextcloud core catalogue shape).`)
 		}
 		catalogues[locale] = doc.translations
+		checkJsCatalogue(locale, doc.translations, failures)
 	}
 
 	if (failures.length > 0) {
@@ -263,6 +265,64 @@ function main() {
 	}
 
 	report(failures, enKeys.length, manifestStrings.size, translateKeys.size)
+}
+
+/**
+ * Every catalogue must ALSO exist as `l10n/<locale>.js`, and carry the same
+ * pairs. The JSON half is read server-side by Nextcloud for PHP `$l->t()`;
+ * the browser never sees it, because Nextcloud does not serve raw JSON out of
+ * an app directory — `/custom_apps/<app>/l10n/nl.json` is a 404 (measured).
+ * The client half is the `OC.L10N.register()` JS file, which IS served and is
+ * how `t('hrmq', …)` resolves at runtime. Shipping one without the other is
+ * the failure this check exists to prevent: a complete catalogue that never
+ * reaches the user.
+ *
+ * @param {string} locale - the locale to check
+ * @param {object} translations - the pairs from the JSON catalogue
+ * @param {string[]} failures - collected failure messages
+ */
+function checkJsCatalogue(locale, translations, failures) {
+	const jsPath = path.join(L10N_DIR, `${locale}.js`)
+	if (fs.existsSync(jsPath) === false) {
+		failures.push(`l10n/${locale}.js is missing — the JSON catalogue is server-side only;`
+			+ ' the browser loads the OC.L10N.register() JS file, so translations would never render.')
+		return
+	}
+
+	let registered = null
+	const sandbox = { OC: { L10N: { register: (app, pairs) => { registered = { app, pairs } } } } }
+	try {
+		vm.runInNewContext(fs.readFileSync(jsPath, 'utf8'), sandbox)
+	} catch (error) {
+		failures.push(`l10n/${locale}.js does not execute: ${error.message}`)
+		return
+	}
+
+	if (registered === null) {
+		failures.push(`l10n/${locale}.js did not call OC.L10N.register().`)
+		return
+	}
+
+	if (registered.app !== 'hrmq') {
+		failures.push(`l10n/${locale}.js registers app "${registered.app}", expected "hrmq".`)
+	}
+
+	const jsKeys = Object.keys(registered.pairs).sort()
+	const jsonKeys = Object.keys(translations).sort()
+	if (jsKeys.join('\u0000') !== jsonKeys.join('\u0000')) {
+		const onlyJson = jsonKeys.filter((k) => jsKeys.includes(k) === false)
+		const onlyJs = jsKeys.filter((k) => jsonKeys.includes(k) === false)
+		failures.push(`l10n/${locale}.js and l10n/${locale}.json have drifted:`
+			+ ` ${onlyJson.length} key(s) only in JSON, ${onlyJs.length} only in JS.`)
+		return
+	}
+
+	for (const key of jsonKeys) {
+		if (registered.pairs[key] !== translations[key]) {
+			failures.push(`l10n/${locale}: "${key}" differs between the JS and JSON catalogues.`)
+			return
+		}
+	}
 }
 
 /**
