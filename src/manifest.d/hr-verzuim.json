@@ -4,7 +4,7 @@
 			"id": "SickLeaveCaseDetail",
 			"route": "/sick-leave/:id",
 			"type": "detail",
-			"title": "Ziekmelding",
+			"title": "Sick leave case",
 			"config": {
 				"register": "hrmq",
 				"schema": "SickLeaveCase",
@@ -83,7 +83,7 @@
 					{
 						"id": "files",
 						"type": "files",
-						"title": "Gespreksverslagen & plan van aanpak",
+						"title": "Case notes & action plan",
 						"icon": "FolderOutline"
 					}
 				],
@@ -138,7 +138,7 @@
 								"gemeld"
 							],
 							"to": "hersteld",
-							"label": "Herstellen"
+							"label": "Mark recovered"
 						},
 						{
 							"action": "heropenen",
@@ -146,7 +146,7 @@
 								"hersteld"
 							],
 							"to": "gemeld",
-							"label": "Heropenen"
+							"label": "Reopen"
 						}
 					]
 				}
@@ -161,7 +161,7 @@
 			"params": {
 				"id": "SickLeaveCases",
 				"route": "/sick-leave",
-				"title": "Ziekmeldingen",
+				"title": "Sick leave cases",
 				"columns": [
 					"employeeId",
 					"firstSickDay",
@@ -178,7 +178,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Ziektegevallen en de Wet-verbetering-poortwachter-mijlpalen (administratieve gegevens, geen medische gegevens)."
+				"description": "Sick leave cases and the Gatekeeper Improvement Act milestones (administrative data, no medical data)."
 			}
 		},
 		{
@@ -188,7 +188,7 @@
 			"params": {
 				"id": "VerzuimOverzicht",
 				"route": "/verzuim",
-				"title": "Verzuimoverzicht",
+				"title": "Absence overview",
 				"columns": [
 					"employeeId",
 					"firstSickDay",
@@ -205,7 +205,7 @@
 					"status": "gemeld",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Open ziektegevallen gesorteerd op de UWV 42-wekenmelding-deadline (administratieve gegevens, geen medische gegevens).",
+				"description": "Open sick leave cases sorted by the UWV 42-week notification deadline (administrative data, no medical data).",
 				"note": "verzuim-analytics-widgets (2026-07-13): pre-filtered werkvoorraad, not a replacement for the unfiltered SickLeaveCases index (TimesheetApproval-vs-Timesheets precedent) -- fixed base filter (the MijnUren mechanism, not a togglable UI filter), sorted uwv42WeekMeldingDue ascending (ZW art. 38 — the most consequential open-case deadline), mirroring the LoonaangifteFilings deadline-asc queue. Rows navigate to the existing SickLeaveCaseDetail; no new detail page."
 			}
 		}

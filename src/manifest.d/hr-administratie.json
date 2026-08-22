@@ -4,7 +4,7 @@
 			"id": "Administraties",
 			"route": "/configuratie/administraties",
 			"type": "custom",
-			"title": "Administraties",
+			"title": "Administrations",
 			"component": "AdministrationSwitcher",
 			"_note": "multi-administratie design.md D4/D5 (REQ-MULTI-006): the ADR-001 Rule 3 active-administratie indicator + switch, homed under Configuratie as a SETTING surface (never a per-tenant menu duplication). The manifest v2 renderer chrome exposes no topbar-switcher slot (the known v2 renderer chrome gap), and no declarative primitive can gather the caller's accessible administraties, POST a guarded switch, and re-scope sibling pages -- open-form persists a register object (wrong: the active pointer is a per-user IConfig value, not domain data) and api-call cannot render the returned accessible-administration list. So this page is a host-app SFC (AdministrationSwitcher.vue, registered in src/registry.js) calling GET/POST /api/administration/* (AdministrationController, no-admin-idor guarded server-side). The true topbar chrome slot is a named upstream nc-vue fast-follow; the sibling hrmq-ia-navigation-alignment change owns the Configuratie menu-9 drawer -- this page lands under it as a clean union (neither re-declares the group)."
 		}

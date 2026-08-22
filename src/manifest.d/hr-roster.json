@@ -4,7 +4,7 @@
 			"id": "RosterDetail",
 			"route": "/rosters/:id",
 			"type": "detail",
-			"title": "Rooster",
+			"title": "Roster",
 			"config": {
 				"register": "hrmq",
 				"schema": "Roster",
@@ -17,14 +17,14 @@
 					{
 						"id": "data",
 						"type": "data",
-						"title": "Rooster",
+						"title": "Roster",
 						"icon": "CalendarMonthOutline",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"orgUnitId"
 							],
-							"title": "Rooster"
+							"title": "Roster"
 						}
 					},
 					{
@@ -39,7 +39,7 @@
 					{
 						"id": "object-list",
 						"type": "object-list",
-						"title": "Roosterindelingen",
+						"title": "Roster assignments",
 						"icon": "AccountClockOutline",
 						"content": {
 							"register": "hrmq",
@@ -79,7 +79,7 @@
 							"viewAllQuery": {
 								"rosterId": "@objectId"
 							},
-							"emptyText": "Nog geen roosterindelingen"
+							"emptyText": "No roster assignments yet"
 						}
 					}
 				],
@@ -118,7 +118,7 @@
 								"concept"
 							],
 							"to": "gepubliceerd",
-							"label": "Publiceren"
+							"label": "Publish"
 						},
 						{
 							"action": "intrekken",
@@ -126,14 +126,14 @@
 								"gepubliceerd"
 							],
 							"to": "concept",
-							"label": "Intrekken"
+							"label": "Withdraw"
 						}
 					]
 				},
 				"headerActions": [
 					{
 						"id": "atw-controle",
-						"label": "ATW-controle",
+						"label": "Working hours check",
 						"type": "api-call",
 						"icon": "ClipboardCheckOutline",
 						"url": "/api/roster/check",
@@ -142,8 +142,8 @@
 							"rosterId": "@objectId"
 						},
 						"confirm": true,
-						"successMessage": "ATW-controle uitgevoerd — bekijk de uitkomst per roosterindeling.",
-						"errorMessage": "ATW-controle van het rooster is mislukt."
+						"successMessage": "Working hours check completed — review the outcome per roster assignment.",
+						"errorMessage": "The working hours check of the roster failed."
 					}
 				]
 			}
@@ -157,7 +157,7 @@
 			"params": {
 				"id": "Shifts",
 				"route": "/shifts",
-				"title": "Diensten",
+				"title": "Shifts",
 				"columns": [
 					"name",
 					"startTime",
@@ -172,17 +172,17 @@
 				"filters": [
 					"active"
 				],
-				"description": "Herbruikbare dienstdefinities (klok-vorm): naam, begin- en eindtijd (HH:MM), pauze en optionele organisatie-eenheid. Een eindtijd niet later dan de begintijd duidt een nachtdienst over middernacht aan.",
+				"description": "Reusable shift definitions (clock shape): name, start and end time (HH:MM), break and optional organisational unit. An end time not later than the start time indicates a night shift crossing midnight.",
 				"actions": [
 					{
 						"id": "create-shift",
-						"label": "Dienst aanmaken",
+						"label": "Create shift",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
 						"register": "hrmq",
 						"schema": "Shift",
 						"onSuccessRoute": "ShiftDetail",
-						"successMessage": "Dienst aangemaakt."
+						"successMessage": "Shift created."
 					}
 				]
 			}
@@ -194,8 +194,8 @@
 			"params": {
 				"id": "ShiftDetail",
 				"route": "/shifts/:id",
-				"title": "Dienst",
-				"dataTitle": "Dienst",
+				"title": "Shift",
+				"dataTitle": "Shift",
 				"dataIcon": "TimelineClockOutline",
 				"relatedTitle": "Related",
 				"gridHeight": 6,
@@ -212,7 +212,7 @@
 			"params": {
 				"id": "Rosters",
 				"route": "/rosters",
-				"title": "Roosters",
+				"title": "Rosters",
 				"columns": [
 					"period",
 					"orgUnitId",
@@ -229,17 +229,17 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Publiceerbare roosters per planningsperiode: een concept -> gepubliceerd levenscyclus, met per rooster de Arbeidstijdenwet-controle over de geplande roosterindelingen.",
+				"description": "Publishable rosters per planning period: a draft -> published lifecycle, with the Working Hours Act check over the planned roster assignments per roster.",
 				"actions": [
 					{
 						"id": "create-roster",
-						"label": "Rooster aanmaken",
+						"label": "Create roster",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
 						"register": "hrmq",
 						"schema": "Roster",
 						"onSuccessRoute": "RosterDetail",
-						"successMessage": "Concept-rooster aangemaakt. Voeg roosterindelingen toe en gebruik ATW-controle voordat je publiceert."
+						"successMessage": "Draft roster created. Add roster assignments and run the working hours check before you publish."
 					}
 				]
 			}
@@ -251,7 +251,7 @@
 			"params": {
 				"id": "RosterAssignments",
 				"route": "/roster-assignments",
-				"title": "Roosterindelingen",
+				"title": "Roster assignments",
 				"columns": [
 					"date",
 					"employeeId",
@@ -267,7 +267,7 @@
 					"rosterId",
 					"employeeId"
 				],
-				"description": "Geplande roosterindelingen: een medewerker op een dienst op een datum binnen een rooster, met de geprojecteerde plannedStart/plannedEnd voor de Arbeidstijdenwet-controle. Datum-gesorteerd (de MVP-planningsweergave; een visueel planbord is een Non-Goal)."
+				"description": "Planned roster assignments: an employee on a shift on a date within a roster, with the projected plannedStart/plannedEnd for the Working Hours Act check. Date-sorted (the MVP planning view; a visual planning board is a Non-Goal)."
 			}
 		},
 		{
@@ -277,8 +277,8 @@
 			"params": {
 				"id": "RosterAssignmentDetail",
 				"route": "/roster-assignments/:id",
-				"title": "Roosterindeling",
-				"dataTitle": "Roosterindeling",
+				"title": "Roster assignment",
+				"dataTitle": "Roster assignment",
 				"dataIcon": "AccountClockOutline",
 				"relatedTitle": "Related",
 				"gridHeight": 6,

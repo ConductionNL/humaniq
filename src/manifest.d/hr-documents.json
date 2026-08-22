@@ -7,7 +7,7 @@
 			"params": {
 				"id": "GeneratedDocuments",
 				"route": "/documents",
-				"title": "Documenten",
+				"title": "Generated documents",
 				"columns": [
 					"documentType",
 					"status",
@@ -22,7 +22,7 @@
 					"documentType",
 					"status"
 				],
-				"description": "Gegenereerde HR-documenten (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift) via docudesk."
+				"description": "Generated HR documents (employment contract, offer letter, employer statement, reference letter) via docudesk."
 			}
 		},
 		{
@@ -73,7 +73,7 @@
 			"params": {
 				"id": "Jaaropgaven",
 				"route": "/jaaropgaven",
-				"title": "Jaaropgaven",
+				"title": "Annual statements",
 				"columns": [
 					"employeeId",
 					"year",
@@ -88,7 +88,7 @@
 				"filters": [
 					"year"
 				],
-				"description": "Jaarlijkse loonopgaven per medewerker, geaggregeerd uit de loonstroken van dat jaar (payslip-pdf-docudesk)."
+				"description": "Annual wage statements per employee, aggregated from that year's payslips (payslip-pdf-docudesk)."
 			}
 		},
 		{
@@ -98,8 +98,8 @@
 			"params": {
 				"id": "JaaropgaafDetail",
 				"route": "/jaaropgaven/:id",
-				"title": "Jaaropgaaf",
-				"dataTitle": "Jaaropgaaf",
+				"title": "Annual statement",
+				"dataTitle": "Annual statement",
 				"dataIcon": "FileCertificateOutline",
 				"relatedTitle": "Related",
 				"gridHeight": 7,

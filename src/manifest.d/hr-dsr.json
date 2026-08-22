@@ -7,7 +7,7 @@
 			"params": {
 				"id": "DsrRequests",
 				"route": "/dsr-requests",
-				"title": "AVG-verzoeken",
+				"title": "Data subject requests",
 				"columns": [
 					"employeeId",
 					"right",
@@ -23,7 +23,7 @@
 					"status",
 					"right"
 				],
-				"description": "AVG (GDPR) data-subject-rights verzoeken: inzage/portabiliteit, verwijdering (retention-guarded via de statutaire bewaarplicht) en rectificatie, uitgevoerd via OpenRegister's DsarService onder een expliciet vastgestelde beheerderssessie (avg-dsr). Alleen-beheerder surface."
+				"description": "AVG (GDPR) data-subject-rights requests: access/portability, erasure (retention-guarded via the statutory retention obligation) and rectification, executed through OpenRegister's DsarService under an explicitly established administrator session (avg-dsr). Administrator-only surface."
 			}
 		},
 		{
@@ -33,8 +33,8 @@
 			"params": {
 				"id": "DsrRequestDetail",
 				"route": "/dsr-requests/:id",
-				"title": "AVG-verzoek",
-				"dataTitle": "AVG-verzoek",
+				"title": "Data subject request",
+				"dataTitle": "Data subject request",
 				"dataIcon": "ShieldAccountOutline",
 				"relatedTitle": "Related",
 				"gridHeight": 6,
@@ -45,7 +45,7 @@
 				"headerActions": [
 					{
 						"id": "dsr-export",
-						"label": "Exporteer",
+						"label": "Export",
 						"type": "api-call",
 						"icon": "DownloadOutline",
 						"url": "/api/dsr/export",
@@ -56,12 +56,12 @@
 							"dsrRequestId": "@objectId"
 						},
 						"confirm": false,
-						"successMessage": "AVG-export uitgevoerd.",
-						"errorMessage": "Exporteren is mislukt."
+						"successMessage": "Data export completed.",
+						"errorMessage": "The export failed."
 					},
 					{
 						"id": "dsr-erase-preview",
-						"label": "Voorbeeld verwijdering",
+						"label": "Preview erasure",
 						"type": "api-call",
 						"icon": "EyeOutline",
 						"url": "/api/dsr/erase-preview",
@@ -71,12 +71,12 @@
 							"dsrRequestId": "@objectId"
 						},
 						"confirm": false,
-						"successMessage": "Voorbeeld verwijdering opgehaald (geen schrijfacties).",
-						"errorMessage": "Voorbeeld verwijdering kon niet worden opgehaald."
+						"successMessage": "Erasure preview retrieved (no write actions).",
+						"errorMessage": "The erasure preview could not be retrieved."
 					},
 					{
 						"id": "dsr-erase-confirm",
-						"label": "Bevestig verwijdering",
+						"label": "Confirm erasure",
 						"type": "api-call",
 						"icon": "DeleteAlertOutline",
 						"url": "/api/dsr/erase-confirm",
@@ -86,12 +86,12 @@
 							"dsrRequestId": "@objectId"
 						},
 						"confirm": true,
-						"successMessage": "Verwijdering uitgevoerd (retained objecten uitgesloten, wettelijke bewaarplicht).",
-						"errorMessage": "Verwijdering is mislukt of geweigerd — voer eerst Voorbeeld verwijdering uit."
+						"successMessage": "Erasure completed (retained objects excluded, statutory retention obligation).",
+						"errorMessage": "The erasure failed or was refused — run Preview erasure first."
 					},
 					{
 						"id": "dsr-rectify",
-						"label": "Rectificeer",
+						"label": "Rectify",
 						"type": "api-call",
 						"icon": "PencilOutline",
 						"url": "/api/dsr/rectify",
@@ -101,8 +101,8 @@
 							"dsrRequestId": "@objectId"
 						},
 						"confirm": true,
-						"successMessage": "Rectificatie toegepast.",
-						"errorMessage": "Rectificatie is mislukt."
+						"successMessage": "Rectification applied.",
+						"errorMessage": "The rectification failed."
 					}
 				]
 			}

@@ -121,7 +121,7 @@
 								"concept"
 							],
 							"to": "actief",
-							"label": "Activeren"
+							"label": "Activate"
 						},
 						{
 							"action": "afsluiten",
@@ -129,7 +129,7 @@
 								"actief"
 							],
 							"to": "afgesloten",
-							"label": "Afsluiten"
+							"label": "Close"
 						}
 					]
 				}
@@ -144,7 +144,7 @@
 			"params": {
 				"id": "KeyResultDetail",
 				"route": "/key-results/:id",
-				"title": "Key Result",
+				"title": "Key result",
 				"dataTitle": "Key result",
 				"dataIcon": "TargetVariant",
 				"relatedTitle": "Related",
@@ -163,7 +163,7 @@
 			"params": {
 				"id": "MijnDoelen",
 				"route": "/mijn/doelen",
-				"title": "Mijn doelen",
+				"title": "My goals",
 				"columns": [
 					"title",
 					"status",
@@ -177,7 +177,7 @@
 				"filter": {
 					"userId": "@me"
 				},
-				"description": "Jouw eigen doelen en OKR's."
+				"description": "Your own goals and OKRs."
 			}
 		}
 	]

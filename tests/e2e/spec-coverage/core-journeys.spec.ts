@@ -122,7 +122,7 @@ async function gotoRoute(page: Page, route: string): Promise<void> {
  * a different schema's page (the greenwash failure mode).
  *
  * NOTE (live finding, 2026-07-26): hrmq's CnIndexPage renders NO page
- * title heading at all — the manifest `title` ("Werknemers", …) appears
+ * title heading at all — the manifest `title` ("Employees", …) appears
  * only in the left nav, not as a role=heading in main. Page identity is
  * therefore asserted via the schema-specific create button, which IS
  * rendered ("Add Employee", "Add Timesheet", …). The missing page-title
