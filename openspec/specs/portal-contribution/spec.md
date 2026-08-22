@@ -7,20 +7,20 @@ built_by: openspec/changes/portal-contribution
 # portal-contribution Specification
 
 **Status**: in-progress
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [portal-contribution](../../changes/portal-contribution/) _(active)_ — ADR-046 provider class (external-employee + client audiences) + unit tests + standalone PHPUnit wiring (kind: code; depends on `portal-schemas`)
 
 ## Purpose
 
-hrmq contributes to portaliq, the shared external portal for people without
+humaniq contributes to portaliq, the shared external portal for people without
 Nextcloud accounts (hydra ADR-046 + 2026-07-06 amendment, contribution
 contract v2): external employees get UUID-scoped self-service over their own
 employee record, payslips, employment contracts, timesheets, expenses and
 leave requests (with strict create whitelists for timesheet/expense/leave),
 and clients get a read-only view over the timesheets whose billable hours
 they review. The contribution is one plain, dependency-free provider class
-(`OCA\Hrmq\Portal\PortalContributionProvider`, duck-typed by FQCN — inert
+(`OCA\Humaniq\Portal\PortalContributionProvider`, duck-typed by FQCN — inert
 without portaliq) over the register surface shipped by the `portal-schemas`
 capability.
 
@@ -32,28 +32,28 @@ active change's delta spec —
 — and are merged here when the change is archived. The umbrella requirement
 below anchors the capability until then.
 
-### Requirement: hrmq ships its portal contribution as one plain duck-typed provider (REQ-PORT-000)
+### Requirement: humaniq ships its portal contribution as one plain duck-typed provider (REQ-PORT-000)
 
 The app MUST serve its entire portal contribution through the single plain,
-dependency-free `OCA\Hrmq\Portal\PortalContributionProvider` class
+dependency-free `OCA\Humaniq\Portal\PortalContributionProvider` class
 (convention FQCN, duck-typed, inert without portaliq), whose manifests scope
 every collection by a UUID domain-object reference resolved from the
-server-managed claim map (`claims.hrmq.employeeId` / `claims.hrmq.clientId`)
+server-managed claim map (`claims.humaniq.employeeId` / `claims.humaniq.clientId`)
 — never a Nextcloud user id. No other portal logic, UI, endpoint or
-dependency may exist in hrmq.
+dependency may exist in humaniq.
 
 #### Scenario: Contribution surface is the single provider class
 
-- GIVEN the hrmq codebase at HEAD
+- GIVEN the humaniq codebase at HEAD
 - WHEN the portal surface is inspected
 - THEN `lib/Portal/PortalContributionProvider.php` is the only portal artefact, with no portaliq import, no info.xml dependency and no DI registration
-- @e2e exclude backend-only contract class with no hrmq UI surface; the portal renders inside portaliq — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
+- @e2e exclude backend-only contract class with no humaniq UI surface; the portal renders inside portaliq — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
 
 ### Requirement: Provider is a plain, dependency-free class (REQ-PORT-001)
 
-The app MUST ship `OCA\Hrmq\Portal\PortalContributionProvider` as a plain
+The app MUST ship `OCA\Humaniq\Portal\PortalContributionProvider` as a plain
 PHP class at `lib/Portal/PortalContributionProvider.php` (matching the
-repo's PSR-4 mapping `OCA\Hrmq\ → lib/`): no imports from portaliq, no
+repo's PSR-4 mapping `OCA\Humaniq\ → lib/`): no imports from portaliq, no
 `implements` clause, no `info.xml` dependency on portaliq, no constructor
 dependencies, and no DI registration in `Application.php`. Portaliq
 discovers it by convention FQCN and duck-types it via `method_exists`
@@ -66,7 +66,7 @@ and MUST NOT change any app behaviour (ADR-046 amendment A1).
 - WHEN `new PortalContributionProvider()` is called
 - THEN the class instantiates without error
 - AND it declares no interfaces, no parent class and no constructor
-- @e2e exclude backend-only contract class with no hrmq UI surface; the portal renders inside portaliq — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
+- @e2e exclude backend-only contract class with no humaniq UI surface; the portal renders inside portaliq — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
 
 ### Requirement: Provider declares both v2 and v1 audience methods (REQ-PORT-002)
 
@@ -83,14 +83,14 @@ A2).
 - WHEN `getAudiences()` and `getAudience()` are called
 - THEN `getAudiences()` returns exactly `['external-employee', 'client']`
 - AND `getAudience()` returns `'external-employee'`, which is contained in `getAudiences()`
-- @e2e exclude backend-only contract methods with no hrmq UI surface — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
+- @e2e exclude backend-only contract methods with no humaniq UI surface — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
 
 ### Requirement: External-employee manifest is UUID-scoped self-service (REQ-PORT-003)
 
 `getContribution(array $subject)` MUST return, for a subject whose
 `audience` is `'external-employee'`, a declarative manifest labelled
-`'HRMQ'` whose collections are all scoped via `scopeClaim: 'employeeId'`
-(resolving to `claims.hrmq.employeeId` — the UUID of the subject's Employee
+`'Humaniq'` whose collections are all scoped via `scopeClaim: 'employeeId'`
+(resolving to `claims.humaniq.employeeId` — the UUID of the subject's Employee
 domain object, never a Nextcloud user id, amendment A4) with `minTrust:
 'low'`: `myEmployeeRecord` (schema `Employee`, `scopeField: 'id'`, not
 listable), `payslips` (`Payslip`), `employmentContracts`
@@ -106,7 +106,7 @@ NOT be echoed back or trusted from the client.
 - WHEN `getContribution($subject)` is called
 - THEN the manifest contains exactly the six collections above, each with register `hrmq`, the contracted schema/scopeField pair, `scopeClaim` `'employeeId'` and `minTrust` `'low'`
 - AND `myEmployeeRecord` is the only non-listable collection
-- @e2e exclude manifest is consumed and rendered by portaliq, not by any hrmq UI — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
+- @e2e exclude manifest is consumed and rendered by portaliq, not by any humaniq UI — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
 
 ### Requirement: Create actions carry conservative field whitelists (REQ-PORT-004)
 
@@ -132,13 +132,13 @@ owns every transition (ADR-031) and an external must never self-approve.
 ### Requirement: Client manifest is read-only clientRef-scoped timesheets (REQ-PORT-005)
 
 For a subject whose `audience` is `'client'`, `getContribution()` MUST
-return a manifest labelled `'HRMQ'` with exactly one collection —
+return a manifest labelled `'Humaniq'` with exactly one collection —
 `clientTimesheets`: register `hrmq`, schema `Timesheet`, `scopeField:
 'clientRef'`, `scopeClaim: 'clientId'` (resolving to
-`claims.hrmq.clientId`), `minTrust: 'low'`, listable — and empty `actions`
+`claims.humaniq.clientId`), `minTrust: 'low'`, listable — and empty `actions`
 and `notifications`. The approve/reject of billable hours MUST NOT be
 declared this wave: it requires the bearer-forwarded endpoint action type
-(amendment A6) whose receiver-side verification hrmq does not implement
+(amendment A6) whose receiver-side verification humaniq does not implement
 yet. For any other or missing audience `getContribution()` MUST return
 `null` (fail-closed).
 
@@ -148,11 +148,11 @@ yet. For any other or missing audience `getContribution()` MUST return
 - WHEN `getContribution($subject)` is called
 - THEN the manifest contains only the `clientTimesheets` collection scoped by `clientRef` via the `clientId` claim
 - AND `actions` and `notifications` are empty
-- @e2e exclude manifest is consumed and rendered by portaliq, not by any hrmq UI — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
+- @e2e exclude manifest is consumed and rendered by portaliq, not by any humaniq UI — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
 
 #### Scenario: Unknown audience receives null
 
 - GIVEN a subject whose `audience` is `'supplier'`, empty, or absent
 - WHEN `getContribution($subject)` is called
 - THEN it returns `null`
-- @e2e exclude backend-only fail-closed filter logic with no hrmq UI surface — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
+- @e2e exclude backend-only fail-closed filter logic with no humaniq UI surface — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)

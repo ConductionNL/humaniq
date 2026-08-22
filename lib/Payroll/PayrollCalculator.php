@@ -43,7 +43,7 @@
  * bundled pack file the resolver reads (the `TaxTables::load()` precedent).
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll
+ * @package  OCA\Humaniq\Payroll
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -63,10 +63,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll;
+namespace OCA\Humaniq\Payroll;
 
-use OCA\Hrmq\Payroll\Dsl\PackInterpreter;
-use OCA\Hrmq\Payroll\Dsl\PackRunResult;
+use OCA\Humaniq\Payroll\Dsl\PackInterpreter;
+use OCA\Humaniq\Payroll\Dsl\PackRunResult;
 
 /**
  * Thin façade over the pack interpreter; holds no jurisdiction rules.

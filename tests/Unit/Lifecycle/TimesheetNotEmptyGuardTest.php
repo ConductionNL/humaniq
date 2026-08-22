@@ -8,7 +8,7 @@
  * scenario).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Lifecycle
+ * @package  OCA\Humaniq\Tests\Unit\Lifecycle
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -19,14 +19,14 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Lifecycle;
+namespace OCA\Humaniq\Tests\Unit\Lifecycle;
 
-use OCA\Hrmq\Lifecycle\TimesheetNotEmptyGuard;
+use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
 use PHPUnit\Framework\TestCase;
 
 /**

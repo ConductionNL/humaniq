@@ -4,14 +4,14 @@
  * Analytics Controller
  *
  * Backs the Dashboard's five trend widgets and the Obligations list
- * (hrmq-dashboard-steering-indicators): `GET /api/analytics/trends` and
+ * (humaniq-dashboard-steering-indicators): `GET /api/analytics/trends` and
  * `GET /api/analytics/obligations`, mirroring pipelinq's `AnalyticsController`
  * shape (401 no session, 403 wrong/no role, 400 unknown metric/period, 500 on
  * unexpected failure).
  *
- * hrmq has NO ambient access control today — 0 of 55 schemas declare an
+ * humaniq has NO ambient access control today — 0 of 55 schemas declare an
  * `authorization` block, and OpenRegister's `PermissionHandler` treats an
- * empty block as default-OPEN. This is the first hrmq endpoint that reads
+ * empty block as default-OPEN. This is the first humaniq endpoint that reads
  * `AdministrationAccess.role` past row presence: every action here requires
  * the caller's ACTIVE administration to carry a `hr` or `accountant` role row
  * — resolved server-side via `AdministrationService`, exactly as
@@ -22,7 +22,7 @@
  * `AdministrationAccess` rows grant (design.md D4).
  *
  * @category Controller
- * @package  OCA\Hrmq\Controller
+ * @package  OCA\Humaniq\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -33,18 +33,18 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Controller;
+namespace OCA\Humaniq\Controller;
 
 use InvalidArgumentException;
-use OCA\Hrmq\AppInfo\Application;
-use OCA\Hrmq\Service\AdministrationService;
-use OCA\Hrmq\Service\AnalyticsService;
-use OCA\Hrmq\Service\ObligationsService;
+use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\AdministrationService;
+use OCA\Humaniq\Service\AnalyticsService;
+use OCA\Humaniq\Service\ObligationsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -57,7 +57,7 @@ use Psr\Log\LoggerInterface;
  * Guarded read-only analytics endpoints for the Dashboard's steering
  * indicators.
  *
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
  */
 class AnalyticsController extends Controller {
 
@@ -77,7 +77,7 @@ class AnalyticsController extends Controller {
 	 * @param IUserSession $userSession The current user session (acting userId).
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	public function __construct(
 		IRequest $request,
@@ -97,10 +97,10 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse The trend payload, or an error envelope.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-004
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-006
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-004
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-006
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
 	 */
 	#[NoAdminRequired]
 	public function trends(): JSONResponse {
@@ -140,9 +140,9 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse `{obligations: [...]}`, or an error envelope.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-008
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-009
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-009
 	 */
 	#[NoAdminRequired]
 	public function obligations(): JSONResponse {
@@ -178,7 +178,7 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return string|null The authorized active administration id, or null when unauthorized.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function authorizeCaller(string $userId): ?string {
 		$administrationId = $this->administrationService->getActiveAdministrationId($userId);

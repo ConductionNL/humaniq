@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-ats",
+    "x-humaniq-fragment": "hr-ats",
     "components": {
         "schemas": {
             "Vacancy": {
@@ -27,7 +27,7 @@
                                     "concept"
                                 ],
                                 "to": "gepubliceerd",
-                                "description": "The vacancy is published (inside hrmq only — no external channel wiring in the MVP). publishedDate is stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern)."
+                                "description": "The vacancy is published (inside humaniq only — no external channel wiring in the MVP). publishedDate is stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern)."
                             },
                             "sluiten": {
                                 "from": [

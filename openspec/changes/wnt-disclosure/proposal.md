@@ -9,7 +9,7 @@ depends_on: [30-procent-regeling]
 
 The Wet normering topinkomens (WNT, 2013, BWBR0032249) caps and mandates public disclosure of
 compensation for topfunctionarissen (board members and directors who lead the whole organisation) at
-(semi-)public institutions. hrmq has no WNT concept anywhere today — no marker for which employees
+(semi-)public institutions. humaniq has no WNT concept anywhere today — no marker for which employees
 are topfunctionarissen, no disclosure record, and no check that flags pay above the norm.
 
 **Reuse, do not re-declare, the WNT-norm datum.** The active (not yet merged) sibling change
@@ -31,10 +31,10 @@ payroll + provisions + manual entry, interim-executive norm tiering, automated e
 klasse-indeling (A–G) derivation, a severance-plafond sub-system, a recovery-tracking workflow with
 quarterly reminders and hard-blocking escalation, immutable multi-version PDF report generation with
 a `wnt-auditor` RBAC role, ZIP audit exports with checksums, and multi-year retroactive
-reconciliation. None of that exists in hrmq today, and hrmq has no case-management, workflow-
+reconciliation. None of that exists in humaniq today, and humaniq has no case-management, workflow-
 escalation, or bespoke compensation-aggregation capability to build it on. This change deliberately
 does not build any of it — see design.md "Named gaps" for the explicit mapping. What genuinely
-belongs in hrmq's shipped, declarative-lifecycle architecture is exactly what the task named: a
+belongs in humaniq's shipped, declarative-lifecycle architecture is exactly what the task named: a
 topfunctionaris marker, the annual WNT-verantwoording disclosure record, and a machine check flagging
 pay above norm without a valid transitional exemption.
 
@@ -75,10 +75,10 @@ pay above norm without a valid transitional exemption.
   not computed" boundary `payroll-core-engine`'s own disclaimer accepts for pension. A named
   fast-follow once a shared aggregation capability exists.
 - **Real-time YTD-to-norm dashboards, hourly alerting, quarterly reminder sweeps** — no
-  case-management/notification-workflow capability exists in hrmq for this; `nl-wnt-norm-overschrijding`
-  is a point-in-time audit check (`occ hrmq:rules:audit`), not a live monitor.
+  case-management/notification-workflow capability exists in humaniq for this; `nl-wnt-norm-overschrijding`
+  is a point-in-time audit check (`occ humaniq:rules:audit`), not a live monitor.
 - **Interim-executive norm tiering, education/healthcare klasse-indeling (A–G) automation** — real
-  WNT nuance, genuinely out of scope: hrmq has no employer-sector/klasse taxonomy (the same gap
+  WNT nuance, genuinely out of scope: humaniq has no employer-sector/klasse taxonomy (the same gap
   `abp-aansluiting` and `aor-ambtenarenrecht` name for their own admin-set flags).
   `wntUitzonderingReden` and `totalCompensation` are the honest MVP surface; per-class norm variation
   is a named fast-follow.

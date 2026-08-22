@@ -21,7 +21,7 @@
  * yields one row per corpus CAO, keyed on caoId, values read from the corpus.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
+ * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -39,12 +39,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
+namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\CaoRegistry;
-use OCA\Hrmq\Standards\Checks\NlCaoChecks;
-use OCA\Hrmq\Standards\RuleCatalogue;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\CaoRegistry;
+use OCA\Humaniq\Standards\Checks\NlCaoChecks;
+use OCA\Humaniq\Standards\RuleCatalogue;
+use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -80,7 +80,7 @@ class NlCaoChecksTest extends TestCase {
 	/**
 	 * Whether the evaluated violations contain a given rule id.
 	 *
-	 * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
+	 * @param array<int, \OCA\Humaniq\Standards\Violation> $violations The violations.
 	 * @param string $ruleId The rule id to look for.
 	 *
 	 * @return bool
@@ -98,10 +98,10 @@ class NlCaoChecksTest extends TestCase {
 	/**
 	 * The single violation for a given rule id, or null.
 	 *
-	 * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
+	 * @param array<int, \OCA\Humaniq\Standards\Violation> $violations The violations.
 	 * @param string $ruleId The rule id.
 	 *
-	 * @return \OCA\Hrmq\Standards\Violation|null
+	 * @return \OCA\Humaniq\Standards\Violation|null
 	 */
 	private function violationFor(array $violations, string $ruleId): mixed {
 		foreach ($violations as $violation) {

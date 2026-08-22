@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-14-leave-accrual-job
 # leave-accrual-job Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [leave-accrual-job](../../changes/archive/2026-07-14-leave-accrual-job/) _(archived 2026-07-14)_ — `LeaveAccrualJob`, a monthly `OCP\BackgroundJob\TimedJob` that provisions each active employee's current-year holiday `LeaveBalance` with the full statutory (BW 7:634) entitlement and accrues the bovenwettelijk opbouw slice, idempotently per `(employee, year, month)` via the new additive nullable `lastAccruedPeriod` marker, gated by a `leave_accrual_enabled` toggle, written through OpenRegister's ObjectService (kind: code)
 
@@ -35,13 +35,13 @@ active employees — `loadAll('Employee')` filtered by `coversPeriod(startDate, 
 currentPeriod)` (the `PayrollRunService` idiom) — resolve each one's covering `EmploymentContract`
 and read its `hoursPerWeek`, and write the current-year `holiday` `LeaveBalance` through
 OpenRegister's ObjectService (container-resolved `OCA\OpenRegister\Service\ObjectService`, register
-`hrmq`, `saveObject`), degrading soft with a logged warning rather than throwing. Correctness SHALL
+`humaniq`, `saveObject`), degrading soft with a logged warning rather than throwing. Correctness SHALL
 NOT depend on the job's fire interval — the per-balance period guard (REQ-ACCR-004) defines the
 "once a month" semantics.
 
 #### Scenario: The registered job accrues each active employee once when it runs
 
-- **GIVEN** the app is enabled (so `OCA\Hrmq\BackgroundJob\LeaveAccrualJob` is enrolled in the job
+- **GIVEN** the app is enabled (so `OCA\Humaniq\BackgroundJob\LeaveAccrualJob` is enrolled in the job
   list) and one active employee with a covering contract of 40 hours/week
 - **WHEN** the TimedJob's `run()` executes for period 2026-07
 - **THEN** the employee's `(2026, holiday)` `LeaveBalance` is written through ObjectService and the
@@ -75,7 +75,7 @@ mandatory minimum from January through November), and MUST NOT lower an already-
 #### Scenario: A job-provisioned balance passes the mandatory verlof rules
 
 - **GIVEN** the balance provisioned in the previous scenario
-- **WHEN** `occ hrmq:rules:audit` runs the `labour.json` corpus over it
+- **WHEN** `occ humaniq:rules:audit` runs the `labour.json` corpus over it
 - **THEN** `nl-verlof-wettelijk-minimum` and `nl-verlof-vervaltermijn` report zero violations for it
 
 ### Requirement: Bovenwettelijk hours SHALL accrue as a monthly opbouw slice (REQ-ACCR-003)

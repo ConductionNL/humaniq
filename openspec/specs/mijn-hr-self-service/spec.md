@@ -7,14 +7,14 @@ built_by: openspec/changes/archive/2026-07-12-mijn-hr-self-service
 # mijn-hr-self-service Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [mijn-hr-self-service](../../changes/archive/2026-07-12-mijn-hr-self-service/) _(archived 2026-07-12)_ — `Mijn HR` menu group (ADR-001 menu 2) with four `@me`-scoped employee index pages (uren / declaraties / verlof / loonstroken), a `Dashboard` page (ADR-001 menu 1) with self-service + approver KPI widgets, `Employee.nextcloudUserId` account link, and the denormalized `userId` scoping property on Timesheet/Expense/LeaveRequest/Payslip (kind: config)
 - [hrmq-dashboard-steering-indicators](../../changes/hrmq-dashboard-steering-indicators/) — **Status**: in-progress — removes REQ-MHS-005 (the Dashboard self/approver KPI widgets); the menu group, the four self-service pages, and the account link are unchanged
 
 ## Purpose
 
-Give hrmq's logged-in employees an in-app self-service surface per ADR-001
+Give humaniq's logged-in employees an in-app self-service surface per ADR-001
 Rule 2 (role-filtered wrapper, never a sibling portal app): `Mijn HR` index
 pages that show only the current user's records — scoped by a denormalized
 `userId` property filtered with the renderer's `@me` token, the one mechanism
@@ -51,7 +51,7 @@ New property `userId` (string, nullable — the Nextcloud user id of the employe
 
 ### REQ-MHS-003: The manifest SHALL add the two frozen ADR-001 top menu slots without restructuring the rest
 
-`src/manifest.json` menu gains: `Dashboard` (icon `view-dashboard`, order 10, route `Dashboard`) and group `MijnHrGroup` (label `Mijn HR`, icon `account`, order 20) with children `MijnUren`, `MijnDeclaraties`, `MijnVerlof`, `MijnLoonstroken`. The existing groups (`EmployeesGroup` 90, `TimesheetsGroup` 100, `VerlofVerzuimGroup` 105, `ExpensesGroup` 110, `PayrollGroup` 120) keep their ids, labels, orders and children exactly as they are — the full IA realignment is owned by the active change `hrmq-ia-navigation-alignment`. Icon values are registered as the PascalCase MDI component names the app's icon registry (`src/icons.js`) actually resolves (`ViewDashboardOutline`, `Account`) — the ADR-001 kebab-case labels (`view-dashboard`, `account`) are the conceptual names, not literal manifest values, matching every other existing menu icon in this manifest.
+`src/manifest.json` menu gains: `Dashboard` (icon `view-dashboard`, order 10, route `Dashboard`) and group `MijnHrGroup` (label `Mijn HR`, icon `account`, order 20) with children `MijnUren`, `MijnDeclaraties`, `MijnVerlof`, `MijnLoonstroken`. The existing groups (`EmployeesGroup` 90, `TimesheetsGroup` 100, `VerlofVerzuimGroup` 105, `ExpensesGroup` 110, `PayrollGroup` 120) keep their ids, labels, orders and children exactly as they are — the full IA realignment is owned by the active change `humaniq-ia-navigation-alignment`. Icon values are registered as the PascalCase MDI component names the app's icon registry (`src/icons.js`) actually resolves (`ViewDashboardOutline`, `Account`) — the ADR-001 kebab-case labels (`view-dashboard`, `account`) are the conceptual names, not literal manifest values, matching every other existing menu icon in this manifest.
 
 #### Scenario: Menu order matches ADR-001
 - **WHEN** the app shell renders the manifest menu
@@ -96,7 +96,7 @@ New `type: dashboard` page `Dashboard` (route `/dashboard`) using `config.widget
 - **THEN** "Mijn ingediende uren" counts 1 while "Te beoordelen uren" counts every submitted timesheet
 
 #### Scenario: KPI deep-links land on the matching page
-@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer/CnDashboardPage library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer/CnDashboardPage library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **WHEN** the user activates the "Te beoordelen declaraties" stat
 - **THEN** the router navigates to `ExpenseApproval`
 

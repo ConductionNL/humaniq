@@ -1,14 +1,14 @@
 ## ADDED Requirements
 
 ### Requirement: Cross-surface feature vocabulary agreement
-HRMQ's code metadata (`appinfo/info.xml`), the public product page
-(`conduction-website/src/pages/apps/hrmq.mdx` + NL i18n), and any docs site SHALL describe the same
+Humaniq's code metadata (`appinfo/info.xml`), the public product page
+(`conduction-website/src/pages/apps/humaniq.mdx` + NL i18n), and any docs site SHALL describe the same
 canonical feature list, worded consistently, and SHALL NOT claim a capability that has no
 corresponding shipped code path.
 
 #### Scenario: Product page feature bullets match info.xml description
-- **WHEN** a reviewer compares the `<description>` in `hrmq/appinfo/info.xml` against the
-  `FeatureList` items in `conduction-website/src/pages/apps/hrmq.mdx`
+- **WHEN** a reviewer compares the `<description>` in `humaniq/appinfo/info.xml` against the
+  `FeatureList` items in `conduction-website/src/pages/apps/humaniq.mdx`
 - **THEN** both list the same three shipped feature areas — Timesheets with an approval workflow,
   Expense claims with an approval workflow, and the HR/payroll compliance rule engine — using
   matching terminology.
@@ -22,7 +22,7 @@ corresponding shipped code path.
 
 #### Scenario: Version is consistent across surfaces
 - **WHEN** a reviewer compares the version shown on the product page against
-  `hrmq/appinfo/info.xml`'s `<version>`
+  `humaniq/appinfo/info.xml`'s `<version>`
 - **THEN** the product page's `version` prop is derived from the same `0.1.x` line as
   `info.xml`'s `<version>0.1.0</version>`, labelled "Beta".
 
@@ -31,9 +31,9 @@ Any external app dependency the product page or docs assert SHALL be declared in
 `appinfo/info.xml`, and any dependency declared in `appinfo/info.xml` SHALL be verifiable in code.
 
 #### Scenario: OpenRegister dependency is declared
-- **WHEN** `src/manifest.json` declares `"dependencies": ["openregister"]` and HRMQ's Vue pages
+- **WHEN** `src/manifest.json` declares `"dependencies": ["openregister"]` and Humaniq's Vue pages
   read/write the OpenRegister object store directly
-- **THEN** `hrmq/appinfo/info.xml`'s `<dependencies>` block documents the OpenRegister dependency
+- **THEN** `humaniq/appinfo/info.xml`'s `<dependencies>` block documents the OpenRegister dependency
   (via an explanatory comment, since NC's `app-info.xsd` has no native cross-app dependency
   element).
 
@@ -49,5 +49,5 @@ an implemented check in `lib/Standards/`.
 
 #### Scenario: Unimplemented compliance marks are not claimed
 - **WHEN** a compliance mark is not found anywhere in `lib/Standards/`, `lib/`, or `src/` (e.g.
-  Peppol, SEPA, BBV, DigiD — vocabulary that belongs to other Conduction apps, not HRMQ)
-- **THEN** the product page and info.xml SHALL NOT claim it for HRMQ.
+  Peppol, SEPA, BBV, DigiD — vocabulary that belongs to other Conduction apps, not Humaniq)
+- **THEN** the product page and info.xml SHALL NOT claim it for Humaniq.

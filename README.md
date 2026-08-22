@@ -1,19 +1,14 @@
-> [!IMPORTANT]
-> ## 🚚 This repository has moved to Codeberg
->
-> Active development now happens at **https://codeberg.org/Conduction/hrmq**.
-> This GitHub mirror is read-only — issues, pull requests, and new commits should go to Codeberg.
-> Update your remote with: `git remote set-url origin https://codeberg.org/Conduction/hrmq`# hrmq
+# humaniq
 
 ConductionNL — Human Resources & Payroll administration for Dutch SMBs.
 
 Status: specs pending. See [openspec/](openspec/) for the change log.
 
-Part of the Conduction ecosystem alongside [shillinq](https://codeberg.org/Conduction/shillinq) (bookkeeping), [pipelinq](https://codeberg.org/Conduction/pipelinq) (CRM), and [openregister](https://codeberg.org/Conduction/openregister) (data layer).
+Part of the Conduction ecosystem alongside [shillinq](https://github.com/ConductionNL/shillinq) (bookkeeping), [pipelinq](https://github.com/ConductionNL/pipelinq) (CRM), and [openregister](https://github.com/ConductionNL/openregister) (data layer).
 
 ## Payroll engine — NOT certified (read this before production use)
 
-hrmq ships an open-source Dutch payroll calculation engine implementing the
+humaniq ships an open-source Dutch payroll calculation engine implementing the
 Belastingdienst *Rekenvoorschriften voor de geautomatiseerde loonadministratie
 2026* formula chain (witte/groene maandtabel, schijventarief, AHK/ARK/OUK
 heffingskortingen, Zvw werkgeversheffing, Awf/Aof/Wko/Whk employer charges) over
@@ -36,7 +31,7 @@ its output:
   and every computed `Payslip` reconciles cents-exact to the declared net
   equation — both enforced by the machine-checkable corpus rules
   `nl-engine-table-version` and `nl-engine-output-consistency`
-  (`occ hrmq:payroll:verify --period YYYY-MM` audits a run against the same
+  (`occ humaniq:payroll:verify --period YYYY-MM` audits a run against the same
   corpus that audits hand-entered data).
 - **Certification gap**: the golden tests
   (`tests/fixtures/payroll-2026/*.json`) are *self-consistent* with the
@@ -82,7 +77,7 @@ reference is `lib/Standards/packs/SCHEMA.md`; the machine-readable schema is
   a *name*, resolved at **validation time** against a compile-time allow-list. An
   unknown handler **rejects the upload with the name in the error** — it never
   reaches a run to be silently skipped, because a skipped step quietly
-  under-taxes someone. hrmq ships **zero** handlers and NL needs **zero**.
+  under-taxes someone. humaniq ships **zero** handlers and NL needs **zero**.
 - **A pack must prove itself before it can pay anybody.** Every pack carries
   golden vectors, run in-process at upload; any mismatch rejects it. **NL's 9
   golden fixtures are the NL pack's own self-test block**, so the machinery that
@@ -121,11 +116,11 @@ Upload: `POST /api/payroll/packs` (admin only).
 ## Retroactive corrections (TWK) — terugwerkende kracht herrekening
 
 Real payroll inputs change *after* a period is sealed (a backdated raise, a
-late-corrected sick day, a retroactive contract fix). hrmq settles these the
+late-corrected sick day, a retroactive contract fix). humaniq settles these the
 Dutch way — **terugwerkende kracht herrekening (TWK)** — via a
 `PayrollAdjustment` that models a **delta**, never a rewrite of the sealed
 original (`lib/Service/RetroAdjustmentService.php`,
-`occ hrmq:payroll:adjust`). Be aware of the following:
+`occ humaniq:payroll:adjust`). Be aware of the following:
 
 - **The sealed original is never mutated.** A correction reads the stored,
   already-approved/posted/paid `Payslip` only to diff against it; it writes a
@@ -156,7 +151,7 @@ original (`lib/Service/RetroAdjustmentService.php`,
   stamp plus the non-`draft` recompute refusal make that stamp immutable. The
   annual roll is therefore **data-only** — ship `lib/Standards/tables/nl-YYYY.json`
   and runs for `YYYY-MM` periods pick it up automatically;
-  `occ hrmq:payroll:year-transition --year YYYY` is the preflight that asserts
+  `occ humaniq:payroll:year-transition --year YYYY` is the preflight that asserts
   the new table exists and confirms the immutable-stamp guard, changing no
   engine state.
 - **Known MVP limitations**: no bijzonder tarief on the nabetaling (a
@@ -166,12 +161,12 @@ original (`lib/Service/RetroAdjustmentService.php`,
   (the delta is a period-vs-period recompute); no automated loonaangifte
   correctie-berichten (the filing lifecycle's `corrigeren` transition is the
   manual route). The `nl-retro-adjustment-consistency` corpus rule recomputes
-  every adjustment's delta during `occ hrmq:rules:audit`, so a tampered delta
+  every adjustment's delta during `occ humaniq:rules:audit`, so a tampered delta
   is a mandatory audit violation.
 
 ## Rostering (MVP)
 
-hrmq ships a forward-looking shift-planning MVP that plans *and* pre-checks a
+humaniq ships a forward-looking shift-planning MVP that plans *and* pre-checks a
 roster against the same Arbeidstijdenwet (working-time law) rules the app
 already enforces on realised clock data:
 
@@ -188,28 +183,28 @@ already enforces on realised clock data:
   **reuses the three existing corpus rules** (`nl-atw-dagelijkse-rust`,
   `nl-atw-max-werkdag`, `nl-atw-pauze`) over the *planned* assignments — no
   new working-time rule is invented. Run it on demand with
-  `occ hrmq:roster:check --roster ID | --period YYYY-Www [--administration ADM]`
+  `occ humaniq:roster:check --roster ID | --period YYYY-Www [--administration ADM]`
   (exits non-zero on any mandatory violation) or from the `RosterDetail`
   "ATW-controle" action; published assignments also join the standing
-  `occ hrmq:rules:audit`.
+  `occ humaniq:rules:audit`.
 
 **Non-goals (deeper workforce management is a future integration, not this
 change):** auto-optimisation, demand forecasting and rule-based
 auto-scheduling are deferred to a dedicated workforce-management tool
-integrated via **openconnector** — hrmq owns the plan of record and the ATW
+integrated via **openconnector** — humaniq owns the plan of record and the ATW
 compliance view, not the WFM optimiser. A drag-and-drop planbord,
 availability/preferences, skills-matching, open-shift bidding/shift-swap and
 coverage alerts are named fast-follows. There is no automation between a
 published roster and realised `AttendanceRecord`/`Timesheet` hours.
 
-## Uitzendkrachten & flexpool — hrmq serves the uitzendbureau, not the inlener
+## Uitzendkrachten & flexpool — humaniq serves the uitzendbureau, not the inlener
 
-hrmq models an uitzendkracht as **the agency's own `Employee`** on an
+humaniq models an uitzendkracht as **the agency's own `Employee`** on an
 `EmploymentContract` of `type: agency`, paid through the normal payroll path.
-This is a deliberate side choice: **hrmq serves the uitzendbureau (the agency),
+This is a deliberate side choice: **humaniq serves the uitzendbureau (the agency),
 never the inlener (the hirer).** Under WAADI the uitzendbureau is the werkgever
 and carries the payroll obligation; an inlener has *no* payroll relationship
-with a temp worker at all. hrmq's entire product is a payroll engine, so the
+with a temp worker at all. humaniq's entire product is a payroll engine, so the
 agency side is the only side its architecture fits. There is deliberately **no
 `Bureau`, no `InhuurOpdracht`, no SNA-keurmerk / G-rekening /
 ketenaansprakelijkheid / invoice-matching / TCO** schema or service anywhere in
@@ -252,7 +247,7 @@ by `employeeId` only, with no `type` branch.
 
 ## BHV (bedrijfshulpverlening) — certificate signalling, not a coverage formula
 
-hrmq tracks BHV-related certifications (`BhvCertificering`: employee, role
+humaniq tracks BHV-related certifications (`BhvCertificering`: employee, role
 `bhv_basis`/`hoofd_bhv`/`ehbo`/`ontruimingsleider`, obtained/valid-until
 dates, training provider, optional `OrgUnit` scope) and signals an expiring
 certificate through the **existing `hr-signals` mechanism** — the same
@@ -270,9 +265,9 @@ article sets a fixed number (no "1 per 50" or similar), so this feature does
 not invent one: the `BhvCertificeringen` index gives HR **visibility**
 (who is certified, in which role, in which `OrgUnit`, expiring when) so
 coverage adequacy can be judged against the organisation's own RI&E, not
-against a formula hrmq computes.
+against a formula humaniq computes.
 
-hrmq has no physical-`Location` concept (`OrgUnit` is an organisational
+humaniq has no physical-`Location` concept (`OrgUnit` is an organisational
 grouping — afdeling/team/kostenplaats — not a site register), so BHV
 coverage visibility is scoped by `OrgUnit`, an honest downgrade from "per
 building" named as such, not disguised as the real thing.
@@ -285,7 +280,7 @@ expiry-alert mechanism rather than build a third one.
 
 ## Multi-administratie (accountant multi-client)
 
-hrmq supports multiple administraties (companies/clients) in one instance — the
+humaniq supports multiple administraties (companies/clients) in one instance — the
 NL accountant channel where one office runs payroll for many SMBs:
 
 - **Tenant model** — an `Administration` (name, KvK, loonheffingennummer) plus
@@ -314,7 +309,7 @@ NL accountant channel where one office runs payroll for many SMBs:
 > active administratie needs an `@administration` filter token in the shared
 > nextcloud-vue manifest vocabulary (a closed, schema-validated set — it cannot
 > be invented app-side without failing `check:manifest`). This build ships the
-> full hrmq side (schemas, service, guarded endpoints, switcher UI, consistency
+> full humaniq side (schemas, service, guarded endpoints, switcher UI, consistency
 > rule, seeds); wiring `@administration` into `sentinelTokens.js` /
 > `resolveFilterTokens.js` + stamping `runtime.user.activeAdministrationId` into
 > the served manifest + adding `filter: { administrationId: "@administration?" }`
@@ -356,7 +351,7 @@ menu-visibility primitive.
 - **Headcount drift is a lamp, never a block.**
   `nl-single-person-mode-employee-count` (recommended severity, auto-discovered)
   flags a `dga_single_person` administratie whose active-Employee headcount is
-  not exactly one DGA — surfaced on the next `occ hrmq:rules:audit`, never a
+  not exactly one DGA — surfaced on the next `occ humaniq:rules:audit`, never a
   write-time block. Reversing `mode` back to `standard` deletes/alters nothing.
 - **Self-service gebruikelijkloon status.** `GET /api/payroll/dga-status`
   (`#[NoAdminRequired]`, read-only, stateless) resolves the caller's own
@@ -378,12 +373,12 @@ menu-visibility primitive.
 > `KilometerLog` entity (kilometer data already lives on the existing `Expense`
 > "Type reis"/"Afstand (km)" fields), a `TaxContext`/urencriterium engine, or an
 > IB-jaaroverzicht export. None compute a payroll figure or extend an existing
-> hrmq engine; all are a different compliance domain. Named here so this is not
+> humaniq engine; all are a different compliance domain. Named here so this is not
 > silently rediscovered as a gap by a future proposal.
 
 ## Loonbeslag (wage garnishment)
 
-hrmq models a court/deurwaarder-ordered wage garnishment (loonbeslag) as a
+humaniq models a court/deurwaarder-ordered wage garnishment (loonbeslag) as a
 `Loonbeslag` record: a fourth current-run, post-tax component folded into
 `Payslip.nettoPay` by `PayrollRunService::generate()` (the exact
 sick-pay/retro-adjustment/leave-buy-sell shape — the deduction is computed
@@ -404,11 +399,11 @@ re-invoked). Be aware of the following:
   computed as `min(orderedAmount, max(0, nettoPay − beslagvrijeVoet))` — by
   construction it can never push `nettoPay` below the voet — and
   `nl-loonbeslag-beslagvrije-voet-floor` (auto-discovered `CheckProvider`,
-  reachable via `occ hrmq:rules:audit`) flags any Payslip where a tampered or
+  reachable via `occ humaniq:rules:audit`) flags any Payslip where a tampered or
   otherwise inconsistent `nettoPay` falls below its referenced Loonbeslag's
   `beslagvrijeVoet`.
 - **Single-active-beslag is the MVP scope**, not a corner case glossed over:
-  hrmq selects at most ONE `actief` Loonbeslag per employee per period.
+  humaniq selects at most ONE `actief` Loonbeslag per employee per period.
   Priority/preferente-vordering ordering across multiple simultaneous
   garnishments for the same employee (e.g. alimony arriving mid-order on top
   of an existing tax-debt beslag — BW art. 475d governs the ordering) is a
@@ -429,9 +424,9 @@ re-invoked). Be aware of the following:
 
 ## AVG data-subject rights (inzage/portabiliteit, vergetelheid, rectificatie)
 
-hrmq orchestrates the four AVG (GDPR) data-subject rights — Art 15 inzage,
+humaniq orchestrates the four AVG (GDPR) data-subject rights — Art 15 inzage,
 Art 20 portabiliteit, Art 17 vergetelheid, and Art 16 rectificatie — as a thin
-layer (`AvgDsrService`) over OpenRegister's `DsarService`. hrmq owns no
+layer (`AvgDsrService`) over OpenRegister's `DsarService`. humaniq owns no
 entity-matching, soft-delete, or anonymisation logic of its own (ADR-022);
 `DsarService` has zero new call sites beyond its three existing public
 methods. Be aware of the following:
@@ -469,7 +464,7 @@ methods. Be aware of the following:
   `AvgDsrService::previewErasure()` performs zero writes to any subject's
   data object; `eraseSubject()` refuses (a controlled, non-write refusal) any
   `DsrRequest` whose preview was not first recorded onto it. `occ
-  hrmq:avg:erase` defaults to preview-only; `--confirm` requires
+  humaniq:avg:erase` defaults to preview-only; `--confirm` requires
   `--dsr-request-id` naming a request whose preview already ran.
 - **`AvgDsrController`'s admin gate is admin-ONLY, deliberately never
   `isAdminOrHr()`, and must stay that way.** Unlike `LoonbeslagController`/
@@ -478,7 +473,7 @@ methods. Be aware of the following:
   `DsarService::assertPrivileged()` hard-requires actual
   `IGroupManager::isAdmin()` — widening `AvgDsrController`'s gate to
   `isAdminOrHr()` after that fast-follow ships would let a non-admin HR
-  caller pass hrmq's gate and then hit the `RuntimeException`-to-403
+  caller pass humaniq's gate and then hit the `RuntimeException`-to-403
   translation instead of succeeding (a behaviour regression, not a security
   hole, but a named trap for that future change to avoid — design.md D3).
 - **The special-category `bsn` value is never persisted by this feature.**
@@ -490,13 +485,13 @@ methods. Be aware of the following:
 - **The Rectificeer manifest action's `changes` payload is not yet
   prompt-collected**, the same `LoonbeslagDetail` withdraw-`reason` gap: the
   manifest v2 `api-call` action type has no free-text field-map prompt. A
-  prompt-collecting modal is a named fast-follow; `occ hrmq:avg:rectify
+  prompt-collecting modal is a named fast-follow; `occ humaniq:avg:rectify
   --changes '{"field":"value"}'` and the `POST /api/dsr/rectify` endpoint
   are both fully functional today.
 
 ## Stagiairs & BBL-leerlingen (stageovereenkomst vs. arbeidsovereenkomst)
 
-hrmq distinguishes the two legally different things the word "stage" covers,
+humaniq distinguishes the two legally different things the word "stage" covers,
 and models each where it structurally belongs:
 
 - **A stagiair (HBO/WO/MBO-BOL, zonder dienstverband)** is a first-class
@@ -543,8 +538,8 @@ Be aware of the following boundaries:
   `checkAgainst` until confirmed).
 - **Out of scope (named fast-follows, not silently dropped):** SBB-erkenning/
   CREBO validation, RVO Subsidieregeling Praktijkleren submission/polling
-  (no `openconnector`-mediated integration surface exists in hrmq today);
-  automated 25%/50%/75% evaluation scheduling and reminders (hrmq has no
+  (no `openconnector`-mediated integration surface exists in humaniq today);
+  automated 25%/50%/75% evaluation scheduling and reminders (humaniq has no
   task-scheduling capability to create them against); BBL-staffel payscale
   data (a data-only follow-up on a sourced sector-CAO via the existing
   `caoSchaal` mechanism). The minimum-wage rules (`nl-minimumloon-2026`/
@@ -553,19 +548,21 @@ Be aware of the following boundaries:
 
 ## Public HRIS API — already delivered by OpenRegister, catalogued here
 
-hrmq needs no bespoke REST v1, GraphQL endpoint, webhook stack, or SCIM
+humaniq needs no bespoke REST v1, GraphQL endpoint, webhook stack, or SCIM
 provisioner to expose a public HRIS API: **it already has one**, provided by
-the sibling `openregister` app, and it is the exact same API hrmq's own Vue
-frontend calls for every declarative page (ADR-022 — hrmq consumes
+the sibling `openregister` app, and it is the exact same API humaniq's own Vue
+frontend calls for every declarative page (ADR-022 — humaniq consumes
 OpenRegister's abstractions, it does not rebuild CRUD). This section documents
 that existing surface for an external integrator; **this feature adds zero
-hrmq routes, controllers, or services** — its whole diff is one schema
+humaniq routes, controllers, or services** — its whole diff is one schema
 fragment (`IntegrationAccount`), one seed record, two manifest pages, this
 documentation, and a schema-validation test.
 
 ### Endpoint pattern and verbs
 
-Every hrmq schema lives in the OpenRegister `hrmq` register and is reachable
+Every humaniq schema lives in the OpenRegister `hrmq` register — the register
+slug is deliberately **unchanged** by the app rename, because OpenRegister looks
+registers up by slug — and is reachable
 under `openregister`'s generic object routes (verified against the live
 `openregister/appinfo/routes.php` + `ObjectsController` at HEAD):
 
@@ -592,12 +589,12 @@ issued per Nextcloud account under **Settings › Personal › Security › App
 passwords** and sent as HTTP **Basic Auth** (`Authorization: Basic <base64
 user:app-password>`). This is Nextcloud core, present on every instance, and is
 precisely the "a non-interactive client needs durable API access" primitive —
-so hrmq deliberately ships **no** custom API-key, token-scope, or rate-limit
+so humaniq deliberately ships **no** custom API-key, token-scope, or rate-limit
 system. Issue an app password on a **dedicated service account** (typically not
 a real employee's account), and revoke it from the same screen when the
 integration ends. The `IntegrationAccount.nextcloudUserId` catalog field
 records *which* NC account an integration uses; the app password itself is
-never issued or stored by hrmq.
+never issued or stored by humaniq.
 
 ### Authorization — OpenRegister RBAC, enforced server-side
 
@@ -624,16 +621,16 @@ grant and/or the app password — never editing this catalog. See
 
 Because the REST surface is ungated (any RBAC-granted caller reaches it, for any
 purpose), a new `IntegrationAccount` should start from the **same six read-only,
-non-special-category schemas** the `hrmq-mcp-adoption` change already vetted
+non-special-category schemas** the `humaniq-mcp-adoption` change already vetted
 against AVG art. 9 (special categories), the Wet BSN regime, and purpose
 limitation:
 
 > `Vacancy`, `OrgUnit`, `Asset`, `AssetAssignment`, `Timesheet`, `Expense`
 
-This is **guidance, not an enforced allow-list** — hrmq cannot enforce it (RBAC
-lives outside hrmq's schema fragments, D2). The classification is reused by
-reference from `hrmq-mcp-adoption`'s design.md rather than re-derived here (its
-reasoning — "what may leave hrmq's boundary toward a less-trusted external
+This is **guidance, not an enforced allow-list** — humaniq cannot enforce it (RBAC
+lives outside humaniq's schema fragments, D2). The classification is reused by
+reference from `humaniq-mcp-adoption`'s design.md rather than re-derived here (its
+reasoning — "what may leave humaniq's boundary toward a less-trusted external
 consumer" — describes a third-party REST integration exactly as well as an MCP
 tool call). **Any wider grant** — access to `Payslip`, `Employee`, or any
 schema carrying BSN/IBAN/health/special-category data — is legitimate when
@@ -641,23 +638,23 @@ genuinely needed (e.g. a payroll partner), but **requires an explicit,
 documented reason recorded in `IntegrationAccount.purpose`**. The catalog and
 its review fields (`reviewedBy`/`reviewedAt`) give HR/security a single place to
 see which external systems have HRIS access, for what, and when it was last
-reviewed — the governance question `hrmq-mcp-adoption` answers for the LLM tool
+reviewed — the governance question `humaniq-mcp-adoption` answers for the LLM tool
 surface, extended here to the wider REST surface.
-## Authentication (DigiD / Yivi / eHerkenning) — a Nextcloud platform layer, not an hrmq auth stack
+## Authentication (DigiD / Yivi / eHerkenning) — a Nextcloud platform layer, not an humaniq auth stack
 
-**hrmq installs, configures, and ships nothing for authentication.** Who a user
+**humaniq installs, configures, and ships nothing for authentication.** Who a user
 is, and how strongly that identity was proven, is entirely the responsibility of
-the Nextcloud instance hrmq runs on. hrmq consumes the authenticated session
+the Nextcloud instance humaniq runs on. humaniq consumes the authenticated session
 Nextcloud hands it (`OCP\IUserSession`) and does no identity work of its own.
 
 - **DigiD and eHerkenning** are configured at the instance level via the
   Nextcloud **`user_saml`** app (SAML 2.0), pointed at the Logius
   DigiD/eHerkenning broker. **Yivi** (formerly IRMA) is configured via the
   Nextcloud **`user_oidc`** app (OIDC) against a Yivi-compatible bridge. Both are
-  standard Nextcloud identity backends installed and administered outside hrmq's
-  footprint — there is no hrmq-side setup, certificate, endpoint, or
+  standard Nextcloud identity backends installed and administered outside humaniq's
+  footprint — there is no humaniq-side setup, certificate, endpoint, or
   configuration step, and none is needed. Once either backend authenticates a
-  person, hrmq requires nothing further.
+  person, humaniq requires nothing further.
 - **The superseded draft (`spec/irma-digid-auth`, 2026-05) is idea-source only.**
   Its bespoke federation stack — five hand-rolled IdP integrations plus app-local
   `IdentityProvider`/`AuthenticationContext`/`Session`/`AuthEvent`/`FraudSignal`/
@@ -672,7 +669,7 @@ Nextcloud hands it (`OCP\IUserSession`) and does no identity work of its own.
   where an end user, not HR/back-office, mutates a high-impact field such as
   `Employee.iban`/`tenaamstelling`; AND (2) a *concrete Nextcloud-exposed
   assurance signal* (e.g. a per-request AAL/LoA claim surfaced by `user_saml`/
-  `user_oidc`) is verified to exist and be readable by hrmq. As of this change
+  `user_oidc`) is verified to exist and be readable by humaniq. As of this change
   neither holds: `mijn-hr-self-service`'s `MijnLoonstroken` is **read-only**, and
   `Employee.iban`/`tenaamstelling` are payroll/back-office-authored (the SEPA
   net-pay path sources the debtor IBAN from config, never from a self-service

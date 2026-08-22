@@ -35,13 +35,13 @@
 -->
 <template>
 	<div class="administration-switcher">
-		<h2>{{ t('hrmq', 'Administrations') }}</h2>
+		<h2>{{ t('humaniq', 'Administrations') }}</h2>
 		<p class="administration-switcher__intro">
-			{{ t('hrmq', 'Choose the active administration. Every list and detail page in the app is scoped to it. You can only switch to administrations you have access to.') }}
+			{{ t('humaniq', 'Choose the active administration. Every list and detail page in the app is scoped to it. You can only switch to administrations you have access to.') }}
 		</p>
 
 		<NcNoteCard type="warning" class="administration-switcher__note">
-			{{ t('hrmq', 'Scoping is a convenience, not a security boundary — a determined user could still read another administration\'s data through the raw OpenRegister API. True per-tenant isolation (mapping each administration onto an OpenRegister organisation) is a named hardening follow-up.') }}
+			{{ t('humaniq', 'Scoping is a convenience, not a security boundary — a determined user could still read another administration\'s data through the raw OpenRegister API. True per-tenant isolation (mapping each administration onto an OpenRegister organisation) is a named hardening follow-up.') }}
 		</NcNoteCard>
 
 		<NcLoadingIcon v-if="loading" :size="32" class="administration-switcher__loading" />
@@ -51,7 +51,7 @@
 		</NcNoteCard>
 
 		<div v-else-if="administrations.length === 0" class="administration-switcher__empty">
-			{{ t('hrmq', 'You have no administration access rows. Ask an administrator to grant you access.') }}
+			{{ t('humaniq', 'You have no administration access rows. Ask an administrator to grant you access.') }}
 		</div>
 
 		<ul v-else class="administration-switcher__list">
@@ -127,12 +127,12 @@ export default {
 			this.errorMessage = ''
 
 			try {
-				const response = await axios.get(generateUrl('/apps/hrmq/api/administration/context'))
+				const response = await axios.get(generateUrl('/apps/humaniq/api/administration/context'))
 				this.activeAdministrationId = response.data.activeAdministrationId ?? null
 				this.administrations = response.data.administrations ?? []
 			} catch (error) {
 				this.errorMessage = error?.response?.data?.error
-					|| this.t('hrmq', 'Could not load your administrations. Try again.')
+					|| this.t('humaniq', 'Could not load your administrations. Try again.')
 			} finally {
 				this.loading = false
 			}
@@ -154,14 +154,14 @@ export default {
 			this.errorMessage = ''
 
 			try {
-				const response = await axios.post(generateUrl('/apps/hrmq/api/administration/active'), {
+				const response = await axios.post(generateUrl('/apps/humaniq/api/administration/active'), {
 					administrationId,
 				})
 				this.activeAdministrationId = response.data.activeAdministrationId ?? administrationId
 				this.writeWorkspaceContext(this.activeAdministrationId)
 			} catch (error) {
 				this.errorMessage = error?.response?.data?.error
-					|| this.t('hrmq', 'Could not switch administration. You may not have access to it.')
+					|| this.t('humaniq', 'Could not switch administration. You may not have access to it.')
 			} finally {
 				this.switching = false
 			}

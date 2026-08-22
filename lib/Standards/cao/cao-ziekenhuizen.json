@@ -49,7 +49,7 @@
         }
       }
     },
-    "source": "Illustrative ORT (onregelmatigheidstoeslag) reference-rate shape pending confirmation against the official CAO-tekst — day/time bands and stacking rules not transcribed in this pass. Display-only: no check, resolver, or payroll-calculator hook applies these rates to an actual worked shift (design.md Named gap 2 — no shift/roster object exists in hrmq's schema).",
+    "source": "Illustrative ORT (onregelmatigheidstoeslag) reference-rate shape pending confirmation against the official CAO-tekst — day/time bands and stacking rules not transcribed in this pass. Display-only: no check, resolver, or payroll-calculator hook applies these rates to an actual worked shift (design.md Named gap 2 — no shift/roster object exists in humaniq's schema).",
     "verified": false,
     "placeholder": true,
     "checkAgainst": "cao-ziekenhuizen.nl 'Salariëring en vakantiebijslag'"

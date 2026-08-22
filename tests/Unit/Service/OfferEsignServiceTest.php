@@ -23,7 +23,7 @@
  * suite -- mirrors the `HrDocumentServiceTest` pattern.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -39,13 +39,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Service\OfferApplicationRepository;
-use OCA\Hrmq\Service\OfferEsignService;
-use OCA\Hrmq\Service\OfferLetterService;
-use OCA\Hrmq\Service\OfferSigningRecoveryService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Service\OfferApplicationRepository;
+use OCA\Humaniq\Service\OfferEsignService;
+use OCA\Humaniq\Service\OfferLetterService;
+use OCA\Humaniq\Service\OfferSigningRecoveryService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -765,11 +765,11 @@ class OfferEsignServiceTest extends TestCase {
 	}//end testRealSignersPayloadNotSignerIds()
 
 	/**
-	 * REQ-OFFR-003 Scenario "Provenance fields correlate back to hrmq".
+	 * REQ-OFFR-003 Scenario "Provenance fields correlate back to humaniq".
 	 *
 	 * @return void
 	 */
-	public function testProvenanceFieldsCorrelateBackToHrmq(): void {
+	public function testProvenanceFieldsCorrelateBackToHumaniq(): void {
 		$signingService = $this->fakeSigningService();
 		[$service] = $this->service(['Application' => [$this->application()]], signingService: $signingService);
 
@@ -782,7 +782,7 @@ class OfferEsignServiceTest extends TestCase {
 		$this->assertSame('hrmq', $data['subjectRegister'] ?? null, 'subjectRegister carries the hrmq register slug.');
 		$this->assertSame('app-1', $data['correlationId']);
 
-	}//end testProvenanceFieldsCorrelateBackToHrmq()
+	}//end testProvenanceFieldsCorrelateBackToHumaniq()
 
 	/**
 	 * REQ-OFFR-003 Scenario "CLI session gap surfaces as a failed outcome,

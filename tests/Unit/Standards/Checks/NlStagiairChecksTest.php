@@ -21,7 +21,7 @@
  * and contract-visser-bbl pass; no non-bbl contract is ever flagged).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
+ * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -37,10 +37,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
+namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlStagiairChecks;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\Checks\NlStagiairChecks;
+use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -182,7 +182,7 @@ class NlStagiairChecksTest extends TestCase {
 	/**
 	 * REQ-STAG-005 — the Stagiair violation driven through the REAL
 	 * `RuleEngine::evaluate('Stagiair', ...)`, proving the rule is reachable
-	 * via `occ hrmq:rules:audit` and carries severity `mandatory`.
+	 * via `occ humaniq:rules:audit` and carries severity `mandatory`.
 	 *
 	 * @return void
 	 */
@@ -271,7 +271,7 @@ class NlStagiairChecksTest extends TestCase {
 	 * @return void
 	 */
 	public function testRuleIsMachineCheckableAndEnforceable(): void {
-		$machineCheckable = array_column(\OCA\Hrmq\Standards\RuleCatalogue::machineCheckable(), 'id');
+		$machineCheckable = array_column(\OCA\Humaniq\Standards\RuleCatalogue::machineCheckable(), 'id');
 		$this->assertContains('nl-bpv-overeenkomst-vereist', $machineCheckable);
 
 		$enforceable = RuleEngine::checkedRuleIds();

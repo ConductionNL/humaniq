@@ -5,7 +5,7 @@ description: The Mijn HR self-service surface for employees, and team-scoped app
 
 # Self-service
 
-HRMQ gives every logged-in employee an in-app self-service surface — never
+Humaniq gives every logged-in employee an in-app self-service surface — never
 a separate portal app — by scoping the same schemas and pages employees
 already use with the OpenRegister renderer's `@me` filter token.
 
@@ -75,7 +75,7 @@ Where a widget shows nothing it is saying "nothing of yours here", never
 
 ## Team-scoped approval for managers
 
-Managers get their own approval queues, never a "Manager portaal" — HRMQ
+Managers get their own approval queues, never a "Manager portaal" — Humaniq
 adds Dashboard widgets and scoped pages inside the *existing* menus
 instead. A denormalized `managerUserId` (the same pattern as `userId`)
 on `Timesheet`, `Expense`, and `LeaveRequest` drives three team-scoped
@@ -108,7 +108,7 @@ hops (no active assignment, an unmanaged unit, a manager without an NC
 account) pass vacuously rather than flagging false violations.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 See [The compliance rule engine](/docs/compliance/rule-engine) for how the

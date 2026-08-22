@@ -2,31 +2,31 @@
 kind: config
 ---
 
-# Uitzendkrachten & flexpool — hrmq serves the uitzendbureau, not the inlener
+# Uitzendkrachten & flexpool — humaniq serves the uitzendbureau, not the inlener
 
 ## Why
 
-The 2026-05-23 draft `spec/uitzend-flexpool-integration` designed hrmq as the **inlener's** tool: a
+The 2026-05-23 draft `spec/uitzend-flexpool-integration` designed humaniq as the **inlener's** tool: a
 new `InhuurOpdracht`/`Bureau` entity pair explicitly kept out of `Employee` ("Inhuur is geen
 Employee", REQ-UZI-001), validating a third-party bureau's SNA-keurmerk before allowing a booking,
 tracking G-rekening/ketenaansprakelijkheid risk, and matching monthly invoices. **That is the wrong
-side for hrmq.** hrmq's entire shipped product is a payroll engine (`payroll-core-engine`,
+side for humaniq.** humaniq's entire shipped product is a payroll engine (`payroll-core-engine`,
 `jurisdiction-packs`) that computes loon/loonheffing/premies for people **on its own payroll** — an
 inlener, by definition, has no payroll obligation toward an uitzendkracht at all (WAADI: the
-uitzendbureau is the werkgever). Building `InhuurOpdracht`/`Bureau` would add hrmq's first
+uitzendbureau is the werkgever). Building `InhuurOpdracht`/`Bureau` would add humaniq's first
 capability with **zero connection to `PayrollCalculator`**, mirroring `Stagiair` in
 `stagiair-bbl-admin` but for the wrong reason — there, "structurally outside payroll" is correct
 because a stagiair genuinely has no dienstverband; here, the person **does** have a dienstverband,
-with the agency, and hrmq already almost models it.
+with the agency, and humaniq already almost models it.
 
 **Verified against HEAD 2026-07-17**: `EmploymentContract.type` (`hr-objects.json`) already carries
 the enum value `agency` — added at some point in the schema's history but with **exactly one
 consuming line in the entire codebase** (`EuUsPayrollChecks.php:161`, which merely exempts
 `agency`/`minijob` contracts from a *German* `de-mindestlohn-arbeitszeit-doku` check; irrelevant to
 NL). No ABU/NBBU CAO, no fasensysteem, no uitzendbeding, no inlenersbeloning tracking exists
-anywhere in `lib/`. hrmq **already decided**, in its data model if not its behaviour, that an
-uitzendkracht is an `Employee` on an `EmploymentContract` of the agency running this hrmq instance
-— it just never finished the thought. This change finishes it: **hrmq serves the uitzendbureau**.
+anywhere in `lib/`. humaniq **already decided**, in its data model if not its behaviour, that an
+uitzendkracht is an `Employee` on an `EmploymentContract` of the agency running this humaniq instance
+— it just never finished the thought. This change finishes it: **humaniq serves the uitzendbureau**.
 The uitzendkracht is a real `Employee`, paid via the normal payroll path, with `type: agency`; the
 inlener is an external party this instance has no payroll relationship with and this change adds no
 schema for.
@@ -72,7 +72,7 @@ already** — this change adds nothing to either capability.
 
 - **No `InhuurOpdracht`/`Bureau` entity, no SNA-keurmerk validation, no G-rekening tracking, no
   ketenaansprakelijkheid risk model, no invoice-matching, no TCO dashboard** — all inlener-side
-  vendor-risk concerns; out of scope because hrmq serves the agency, not the inlener (Why, above).
+  vendor-risk concerns; out of scope because humaniq serves the agency, not the inlener (Why, above).
   If a future product needs the inlener side, it is a **different** capability with a different
   employer-of-record relationship, not an extension of this one.
 - **No exact fasensysteem week-thresholds asserted** — the post-WAB (2020) exact duration of fase A

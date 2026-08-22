@@ -7,7 +7,7 @@
  * now consumes OpenRegister's guarded, RBAC/tenant-scoped
  * `Gdpr\DataSubjectRequestService` directly -- retention enforcement is the
  * GUARDED SERVICE's own (a legal hold / immutable archival status refuses an
- * object, reported in `held`, REQ-DSR-005), never a bespoke hrmq
+ * object, reported in `held`, REQ-DSR-005), never a bespoke humaniq
  * classification. `AvgDsrService` performs NO retention computation of its
  * own: `eraseSubject()`/`previewErasure()` call `erase()` directly and relay
  * its `held`/`erased`/`failed` buckets unchanged. Export renders
@@ -24,7 +24,7 @@
  * LoonbeslagControllerTest/AdministrationServiceTest precedent.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -44,10 +44,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Service\AvgDsrService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Service\AvgDsrService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -94,7 +94,7 @@ class AvgDsrServiceTest extends TestCase {
 		$outcome = $service->eraseSubject('emp-1', 'dsr-1');
 
 		$this->assertSame('voldaan', $outcome['status']);
-		$this->assertCount(1, $guarded->eraseCalls, 'erase() is called exactly once -- no per-object loop in hrmq.');
+		$this->assertCount(1, $guarded->eraseCalls, 'erase() is called exactly once -- no per-object loop in humaniq.');
 		$this->assertFalse($guarded->eraseCalls[0]['dryRun']);
 
 		$this->assertCount(1, $outcome['retained']);

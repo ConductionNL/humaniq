@@ -344,7 +344,7 @@
 					"status",
 					"mode"
 				],
-				"description": "interview-scheduling: geplande, voltooide en geannuleerde sollicitatiegesprekken. Een gesprek wordt via de InterviewDetail-pagina of 'occ hrmq:interview:sync' naar de gedeelde agenda gesynchroniseerd (design D1/D6)."
+				"description": "interview-scheduling: geplande, voltooide en geannuleerde sollicitatiegesprekken. Een gesprek wordt via de InterviewDetail-pagina of 'occ humaniq:interview:sync' naar de gedeelde agenda gesynchroniseerd (design D1/D6)."
 			}
 		},
 		{

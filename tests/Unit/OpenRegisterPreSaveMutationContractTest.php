@@ -20,13 +20,13 @@
  * Integration-leaning: it needs a running Nextcloud with OpenRegister and the
  * imported hrmq register, so it SKIPS (loudly, with the reason) in the
  * standalone bare-container CI run. The container run
- * (`docker exec -u www-data -w /var/www/html/custom_apps/hrmq nextcloud
+ * (`docker exec -u www-data -w /var/www/html/custom_apps/humaniq nextcloud
  * php vendor/bin/phpunit tests/Unit/OpenRegisterPreSaveMutationContractTest.php`)
  * is the gate — verify it reports the tests as RUN, not skipped, before
  * trusting it.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit
+ * @package  OCA\Humaniq\Tests\Unit
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -37,12 +37,12 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/hrmq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit;
+namespace OCA\Humaniq\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 
@@ -182,7 +182,7 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/hrmq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
 	 */
 	public function testPreSaveMutationPersistsAndControlWriteDoesNot(): void {
 		// Phase 1 — CREATE: hook rewrites description; assert the PERSISTED row carries it.

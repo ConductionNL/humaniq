@@ -12,10 +12,10 @@
  * overlapping-effective-range group of two or more `actief` records for the
  * same employee). The suite closes with a REAL `RuleEngine::evaluate()`
  * integration test proving both rules are genuinely reachable via
- * `occ hrmq:rules:audit`, not an orphaned capability.
+ * `occ humaniq:rules:audit`, not an orphaned capability.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
+ * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -33,10 +33,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
+namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlWageGarnishmentChecks;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\Checks\NlWageGarnishmentChecks;
+use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -197,7 +197,7 @@ class NlWageGarnishmentChecksTest extends TestCase {
 	 * REQ-BESLAG-002 Scenario 4, through the REAL `RuleEngine::evaluate()`
 	 * (catalogue + auto-discovered CheckProviders), proving
 	 * `nl-loonbeslag-beslagvrije-voet-floor` is genuinely reachable via
-	 * `occ hrmq:rules:audit` and not an orphaned capability.
+	 * `occ humaniq:rules:audit` and not an orphaned capability.
 	 *
 	 * @return void
 	 */
@@ -301,7 +301,7 @@ class NlWageGarnishmentChecksTest extends TestCase {
 	/**
 	 * REQ-BESLAG-005 Scenario 2, through the REAL `RuleEngine::evaluate()`,
 	 * proving `nl-loonbeslag-single-active` is genuinely reachable via
-	 * `occ hrmq:rules:audit` and not an orphaned capability.
+	 * `occ humaniq:rules:audit` and not an orphaned capability.
 	 *
 	 * @return void
 	 */

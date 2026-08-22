@@ -9,11 +9,11 @@
  * date, and vacuous (not re-violated) once `archiefstatus` is `vernietigd`
  * (properly destroyed -- no longer "still present"). The predicate reads
  * ONLY OpenRegister's own `retention.archiefactiedatum` -- never a bespoke
- * hrmq field -- across the payroll/loonadministratie schema family plus
+ * humaniq field -- across the payroll/loonadministratie schema family plus
  * `GeneratedDocument`.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
+ * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,9 +29,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
+namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlDossierRetentionChecks;
+use OCA\Humaniq\Standards\Checks\NlDossierRetentionChecks;
 use PHPUnit\Framework\TestCase;
 
 /**

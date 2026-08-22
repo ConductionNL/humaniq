@@ -5,7 +5,7 @@ description: Raw per-day clock records with Arbeidstijdenwet (working-time) comp
 
 # Time & attendance
 
-`AttendanceRecord` gives HRMQ a raw clock surface with Dutch
+`AttendanceRecord` gives Humaniq a raw clock surface with Dutch
 working-time-law depth: a per-employee, per-day clock-in/clock-out record,
 checked against the Arbeidstijdenwet (ATW).
 
@@ -66,7 +66,7 @@ The once-per-7-days 8-hour daily-rest reduction allowed by the ATW is not
 modeled — the check applies the strict 11-hour default norm.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Pages

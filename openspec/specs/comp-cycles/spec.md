@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-15-comp-cycles
 # comp-cycles Specification
 
 **Status**: done
-**Scope**: hrmq (`kind: code` — reuses the existing declarative lifecycle/guard primitives and the
+**Scope**: humaniq (`kind: code` — reuses the existing declarative lifecycle/guard primitives and the
 `Employee.grossMonthlySalary` field the payroll engine already reads; adds zero new payroll-engine
 logic and zero external market-data integration)
 **OpenSpec changes**:
@@ -16,14 +16,14 @@ logic and zero external market-data integration)
   bands, `schema:MonetaryAmountDistribution`, `allowCreate:false`), a `CompReviewCycle` round container
   (`schema:Action`, plain `open → closed`), a per-employee `CompAdjustment` proposal
   (`schema:Action`) carrying a declarative `draft → proposed → approved → effective` lifecycle —
-  separation of duties on `approve`/`reject` via the **reused** `OCA\Hrmq\Lifecycle\NoSelfApprovalGuard`,
-  and a new read-only, fail-closed `OCA\Hrmq\Lifecycle\CompEffectiveDateGuard` gating `effectuate`
+  separation of duties on `approve`/`reject` via the **reused** `OCA\Humaniq\Lifecycle\NoSelfApprovalGuard`,
+  and a new read-only, fail-closed `OCA\Humaniq\Lifecycle\CompEffectiveDateGuard` gating `effectuate`
   on the adjustment's own `effectiveDate` — the imperative effective-dated write
   (`lib/Service/CompAdjustmentService.php`, the `PayrollRunService` idiom) that validates the
   within-band corpus rule (`comp-adjustment-within-band`, `lib/Standards/Checks/CompChecks.php`),
   converts the adjustment's integer-cents `proposedSalary` to the euro-denominated
   `Employee.grossMonthlySalary` field the payroll engine reads, and drives the `effectuate` transition,
-  via one occ command (`hrmq:comp:effectuate --cycle [--date] [--dry-run]`) and ONE guarded endpoint
+  via one occ command (`humaniq:comp:effectuate --cycle [--date] [--dry-run]`) and ONE guarded endpoint
   (`POST /api/comp/effectuate`, `CompController::effectuate`, RBAC-resolve-first → 404), and the
   `EmployeeDetail` dossier detail surface (`emp-comp-adjustments`) plus `SalaryBands`/`SalaryBandDetail`
   and `CompReviewCycles`/`CompReviewCycleDetail` reference sub-pages under the existing `Personeel`
@@ -32,7 +32,7 @@ logic and zero external market-data integration)
 
 ## Purpose
 
-hrmq owns the personnel dossier, the payroll engine that reads `Employee.grossMonthlySalary`, and a
+humaniq owns the personnel dossier, the payroll engine that reads `Employee.grossMonthlySalary`, and a
 maintained CAO corpus, but had no surface for the recurring management ritual every employer runs on
 top of those numbers: a periodic compensation review where managers propose salary adjustments against
 a band, a second actor approves them, and the approved figure lands on the employee's compensation on
@@ -106,7 +106,7 @@ bespoke Vue view or PHP status-writing SHALL implement these state changes.
 
 ### Requirement: The approve transition SHALL enforce separation of duties via the reused NoSelfApprovalGuard (REQ-COMP-004)
 
-The `approve` transition SHALL declare `requires: "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard"` so the
+The `approve` transition SHALL declare `requires: "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard"` so the
 approver may not be the proposer, reusing the guard already shipped for LeaveRequest / Timesheet /
 Expense. This change SHALL NOT add duplicate approver-not-equal-proposer logic.
 
@@ -146,7 +146,7 @@ effective-dated write: for an `approved` adjustment whose `effectiveDate` has ar
 onto the **Employee** (verified: the field the payroll engine reads — `EmploymentContract` carries only
 `hourlyWage`), stamp `appliedAt`, and drive the `effectuate` transition (re-running the date guard). It
 SHALL refuse non-approved, not-yet-due or out-of-band adjustments and SHALL be idempotent per
-adjustment (an already-`effective` adjustment is a no-op). `occ hrmq:comp:effectuate --cycle CYCLE
+adjustment (an already-`effective` adjustment is a no-op). `occ humaniq:comp:effectuate --cycle CYCLE
 [--date YYYY-MM-DD] [--dry-run]` SHALL batch-effectuate a cycle's due adjustments with a per-employee
 outcome, registered in `appinfo/info.xml`. `POST /api/comp/effectuate` (`CompController::effectuate`,
 `#[NoAdminRequired]`) SHALL resolve the posted `adjustmentId` through ObjectService under the caller's
@@ -160,7 +160,7 @@ boundary `PayrollRunService::euros()` and `NlCaoChecks::minimumloonSchaalSatisfi
 
 #### Scenario: A due approved adjustment writes the new salary and becomes effective
 - **GIVEN** an `approved` CompAdjustment with `proposedSalary` 360000 within its target band and `effectiveDate` today for an employee whose `grossMonthlySalary` is 330000
-- **WHEN** `occ hrmq:comp:effectuate --cycle <id>` (or the endpoint) runs
+- **WHEN** `occ humaniq:comp:effectuate --cycle <id>` (or the endpoint) runs
 - **THEN** the employee's `grossMonthlySalary` becomes 360000, the adjustment's `appliedAt` is stamped, and its status is `effective`
 
 #### Scenario: An unauthorized adjustment id never reaches the write
@@ -170,7 +170,7 @@ boundary `PayrollRunService::euros()` and `NlCaoChecks::minimumloonSchaalSatisfi
 
 #### Scenario: Re-running effectuation is a no-op
 - **GIVEN** an adjustment already in status `effective`
-- **WHEN** `occ hrmq:comp:effectuate --cycle <id>` runs again
+- **WHEN** `occ humaniq:comp:effectuate --cycle <id>` runs again
 - **THEN** the outcome skips it with a reason and the employee's `grossMonthlySalary` is unchanged
 
 ### Requirement: A within-band CheckProvider SHALL flag out-of-band proposals (REQ-COMP-007)
@@ -209,7 +209,7 @@ kept `allowCreate: false`. `npm run check:manifest` MUST pass.
 - **THEN** the top-level menu count is unchanged and the comp surfaces appear as an EmployeeDetail widget and as sub-pages under the existing `Personeel` menu
 
 #### Scenario: The dossier lists an employee's adjustments and effectuates a due one
-@e2e exclude declarative widget + action wiring is covered by the shared CnPageRenderer library tests; the app-level e2e suite does not yet exist (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget + action wiring is covered by the shared CnPageRenderer library tests; the app-level e2e suite does not yet exist (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** an EmployeeDetail page for an employee with an approved, due CompAdjustment
 - **WHEN** the user opens the comp-adjustments surface and executes "Effectueren" with confirm
 - **THEN** the endpoint effectuates the adjustment and the refreshed page shows it as `effective` with the new salary

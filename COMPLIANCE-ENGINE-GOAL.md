@@ -1,7 +1,7 @@
-# Goal: HRM compliance rule-engine for hrmq
+# Goal: HRM compliance rule-engine for humaniq
 
 > Kickoff brief for a **separate session**. Replicates the compliance-rule-engine
-> built in **shillinq** (bookkeeping) for the **HRM/labour** domain in hrmq.
+> built in **shillinq** (bookkeeping) for the **HRM/labour** domain in humaniq.
 > Reference implementation to copy: `apps-extra/shillinq/lib/Standards/`,
 > `lib/Service/RuleAuditService.php`, `lib/Service/RuleTestDataSeeder.php`,
 > `lib/Command/Rules*Command.php`, `lib/Lifecycle/RuleComplianceGuard.php`,
@@ -38,16 +38,16 @@
 4. **Lifecycle guards** (`RuleComplianceGuard`): block OR lifecycle transitions
    (e.g. contract `activate`, payroll `approve`) when a mandatory rule is violated.
 
-5. **Seeder + audit**: `RuleTestDataSeeder` + `occ hrmq:rules:seed-testdata`
+5. **Seeder + audit**: `RuleTestDataSeeder` + `occ humaniq:rules:seed-testdata`
    (idempotent compliant test data; all local data is test data) and
-   `RuleAuditService` + `occ hrmq:rules:audit` (reports enforced ÷ machine-checkable
+   `RuleAuditService` + `occ humaniq:rules:audit` (reports enforced ÷ machine-checkable
    = coverage, violations, per-object-type compliance). Drive test data to 100%
    compliant.
 
-6. **Scope discipline.** Define hrmq's **in-scope** domains; the coverage target is
+6. **Scope discipline.** Define humaniq's **in-scope** domains; the coverage target is
    **100% of in-scope**, not of the whole corpus. Route out-of-scope rules to the
    right app and skip them honestly (shillinq routed *payroll/loonheffing* rules
-   **to hrmq** — so payroll IS in scope here). Never fabricate vacuous `return true`
+   **to humaniq** — so payroll IS in scope here). Never fabricate vacuous `return true`
    checks or invent data just to inflate the number.
 
 7. **Scale with multi-agent workflows.** Once the engine + a few providers exist,
@@ -62,7 +62,7 @@
    compliance report files. Reuse the PHPOffice libs bundled in OpenRegister
    (PhpWord/PhpSpreadsheet + dompdf) — no new office dependency.
 
-## HRM domains & frameworks to catalogue (in-scope for hrmq)
+## HRM domains & frameworks to catalogue (in-scope for humaniq)
 
 - **EU labour directives**: Working Time Directive 2003/88/EC (max weekly hours,
   rest periods, paid annual leave, night work); Transparent & Predictable Working
@@ -89,7 +89,7 @@
   pension contributions, gross↔net reconciliation.
 - **Equal pay & reporting**: gender pay-gap thresholds, equal-pay-for-equal-work.
 
-## Likely hrmq object types the checks map to
+## Likely humaniq object types the checks map to
 `Employee`, `EmploymentContract`, `Payslip`/`PayrollRun`, `WorkingTimeRecord`,
 `LeaveRequest`/`LeaveBalance`, `Absence`/`SickLeave`, `PensionEnrolment`,
 `PerformanceReview`, `Vacancy`/`Application` (recruitment), `CollectiveAgreement`.
@@ -106,10 +106,10 @@ Model only what the rules need; add fields via schema fragments + `seedSpec`.
   named-parameters + no-ternary sniff already violated everywhere — match file style.
 - Coverage `enforced ÷ machine-checkable`: literal 100% of the full corpus is
   unreachable (national rules are jurisdiction-dormant for one tenant; some rules
-  need systems hrmq isn't). Target **100% of in-scope**, report honestly, don't fake.
+  need systems humaniq isn't). Target **100% of in-scope**, report honestly, don't fake.
 
 ## Definition of done
-- `occ hrmq:rules:audit` reports a meaningful coverage % of the in-scope HR corpus
+- `occ humaniq:rules:audit` reports a meaningful coverage % of the in-scope HR corpus
   and **0 violations** on seeded compliant test data across all modelled object types.
 - Lifecycle guards block non-compliant transitions on the key HR objects.
 - Corpus + engine + providers + seeder + audit committed; coverage trajectory and

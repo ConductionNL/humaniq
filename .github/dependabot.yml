@@ -1,6 +1,6 @@
 version: 2
 
-# hrmq had NO dependabot.yml at all, so neither ecosystem had a cooldown: every
+# humaniq had NO dependabot.yml at all, so neither ecosystem had a cooldown: every
 # dependency update landed the moment it was published. That is precisely the
 # window in which a compromised release is still on the registry, and an
 # instant update walks straight into it. Both entries below carry a cooldown

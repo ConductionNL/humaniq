@@ -20,7 +20,7 @@
  * Nextcloud bootstrap.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,12 +31,12 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 
@@ -60,7 +60,7 @@ class EmployeeTimeline {
 	 *
 	 * @return array{placed: array<int, array{start: DateTimeImmutable, end: DateTimeImmutable|null}>, excluded: int}
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
 	 */
 	public function place(array $rows): array {
 		$placed = [];
@@ -92,7 +92,7 @@ class EmployeeTimeline {
 	 *
 	 * @return array{headcount: int, starters: int, leavers: int}
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
 	 */
 	public function countOver(array $placed, DateTimeImmutable $start, DateTimeImmutable $end): array {
 		$headcount = 0;
@@ -116,7 +116,7 @@ class EmployeeTimeline {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
 	 */
 	private function isActiveAt(array $employee, DateTimeImmutable $moment): bool {
 		if ($employee['start'] > $moment) {
@@ -135,7 +135,7 @@ class EmployeeTimeline {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
 	 */
 	private function within(DateTimeImmutable $moment, DateTimeImmutable $start, DateTimeImmutable $end): bool {
 		return ($moment >= $start && $moment <= $end);
@@ -148,7 +148,7 @@ class EmployeeTimeline {
 	 *
 	 * @return DateTimeImmutable|null Null when absent, blank, or unparseable.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
 	 */
 	private function date(mixed $value): ?DateTimeImmutable {
 		if (is_string($value) === false || trim($value) === '') {

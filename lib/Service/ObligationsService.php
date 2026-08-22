@@ -4,7 +4,7 @@
  * Obligations Service
  *
  * Backs the Dashboard's full-width Obligations `object-table` widget
- * (hrmq-dashboard-steering-indicators REQ-DSI-008/009): merges every
+ * (humaniq-dashboard-steering-indicators REQ-DSI-008/009): merges every
  * due-and-not-done WVP milestone (`SickLeaveCase`), expiring temporary
  * contract (`EmploymentContract`), and expiring BHV certificate
  * (`BhvCertificering`) for the caller's administration into one list sorted
@@ -26,7 +26,7 @@
  * already-loaded row, for exactly the three obligation schemas.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -37,13 +37,13 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-008
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-009
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-008
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-009
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use Psr\Container\ContainerInterface;
@@ -110,7 +110,7 @@ class ObligationsService {
 	 * @param RuleAuditService $ruleAuditService Supplies the per-row mandatory-violation badge.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -132,8 +132,8 @@ class ObligationsService {
 	 *
 	 * @return array<int, array{type: string, employeeId: string, subject: string, dueDate: string, route: string, violations: array<int, string>}>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-008
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-009
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-009
 	 */
 	public function getObligations(string $administrationId): array {
 		$rows = array_merge(
@@ -161,7 +161,7 @@ class ObligationsService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function sickLeaveMilestoneRows(string $administrationId): array {
 		$rows = [];
@@ -195,7 +195,7 @@ class ObligationsService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function expiringContractRows(string $administrationId): array {
 		$rows = [];
@@ -231,7 +231,7 @@ class ObligationsService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function expiringBhvRows(string $administrationId): array {
 		$rows = [];
@@ -263,7 +263,7 @@ class ObligationsService {
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function expiryWindow(int $days): array {
 		$today = new DateTimeImmutable('today');
@@ -289,7 +289,7 @@ class ObligationsService {
 	 *
 	 * @return DateTimeImmutable|null Null when absent, blank, or unparseable.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function parseDate(mixed $value): ?DateTimeImmutable {
 		if (is_string($value) === false || trim($value) === '') {
@@ -314,7 +314,7 @@ class ObligationsService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function loadFiltered(string $schema, string $administrationId): array {
 		$rows = [];
@@ -335,7 +335,7 @@ class ObligationsService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function loadAll(string $schema): array {
 		try {
@@ -358,7 +358,7 @@ class ObligationsService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function normaliseRows(mixed $rows): array {
 		$out = [];
@@ -384,12 +384,12 @@ class ObligationsService {
 	 *
 	 * @throws \RuntimeException When OpenRegister is not installed.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function objectService(): mixed {
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance. '
+				'humaniq requires the OpenRegister app, which is not installed on this instance. '
 				. 'Install and enable it, then reload.'
 			);
 		}

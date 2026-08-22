@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-15-jurisdiction-packs
 # jurisdiction-packs Specification
 
 **Status**: done
-**Scope**: hrmq (re-expresses the merged `payroll-core-engine`'s chain; consumes `payroll-core-schema`)
+**Scope**: humaniq (re-expresses the merged `payroll-core-engine`'s chain; consumes `payroll-core-schema`)
 **OpenSpec changes**:
 - [jurisdiction-packs](../../changes/archive/2026-07-15-jurisdiction-packs/) _(archived 2026-07-15)_ —
   a jurisdiction becomes uploadable configuration: an ordered step-DSL (`lib/Payroll/Dsl/`) that a
@@ -19,7 +19,7 @@ built_by: openspec/changes/archive/2026-07-15-jurisdiction-packs
 
 ## Purpose
 
-hrmq owns the first open-source Dutch payroll engine, and its *parameters* were already data
+humaniq owns the first open-source Dutch payroll engine, and its *parameters* were already data
 (`lib/Standards/tables/nl-2026.json`). The **chain that consumed them was hardcoded Dutch PHP**:
 `PayrollCalculator::calculate()` was 130 lines of numbered NL steps ending in a netto line that was
 literally `tvl - loonheffing`. A second country meant a second calculator class, a second result DTO
@@ -143,7 +143,7 @@ The AOW-age switch, the groen table-set switch, the `loonheffingskortingToegepas
 
 ### Requirement: The escape hatch SHALL name an allow-listed handler and SHALL fail at validation time (REQ-JP-005)
 
-A pack step MAY declare `op: "phpStep"` with a `handler` name. The interpreter SHALL resolve that name against a compile-time allow-list of handlers implementing `JurisdictionStepHandlerInterface` that already ship inside hrmq. A pack SHALL NOT be able to supply code, a class path, a callable, a file, or any other executable artefact — only a name and parameters.
+A pack step MAY declare `op: "phpStep"` with a `handler` name. The interpreter SHALL resolve that name against a compile-time allow-list of handlers implementing `JurisdictionStepHandlerInterface` that already ship inside humaniq. A pack SHALL NOT be able to supply code, a class path, a callable, a file, or any other executable artefact — only a name and parameters.
 
 Handler resolution SHALL happen at pack-validation time, never at runtime. A pack naming a handler that does not exist SHALL be rejected at upload with the offending handler name in the error, and SHALL NOT be stored, activated, or executed. The interpreter SHALL NOT skip, ignore, or degrade gracefully around an unresolvable handler at runtime.
 
@@ -225,7 +225,7 @@ Re-expressing NL as a pack SHALL reproduce all 9 existing golden fixtures under 
 
 ### Requirement: An uploaded pack SHALL be bounded and unable to exhaust the host (REQ-JP-008)
 
-Because a pack is authored outside hrmq and executed inside it, the interpreter SHALL evaluate every pack as a total function that terminates. The DSL SHALL provide no loop, no recursion and no function definition, and the validator SHALL enforce a maximum step count and a maximum expression nesting depth, rejecting packs that exceed either.
+Because a pack is authored outside humaniq and executed inside it, the interpreter SHALL evaluate every pack as a total function that terminates. The DSL SHALL provide no loop, no recursion and no function definition, and the validator SHALL enforce a maximum step count and a maximum expression nesting depth, rejecting packs that exceed either.
 
 The interpreter SHALL perform no IO, no network access and no clock reads during evaluation. Validation rejections SHALL always name the offending op, reference, handler or bound, so a rejected pack is diagnosable by its author rather than opaquely refused.
 

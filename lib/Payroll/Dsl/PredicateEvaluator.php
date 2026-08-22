@@ -22,7 +22,7 @@
  * `dateOfBirth` is not a required Employee field), exactly as at HEAD.
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll\Dsl
+ * @package  OCA\Humaniq\Payroll\Dsl
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -39,7 +39,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll\Dsl;
+namespace OCA\Humaniq\Payroll\Dsl;
 
 use DateTimeImmutable;
 use Throwable;

@@ -14,7 +14,7 @@
  * co-existing (the risk noted in design.md Risks).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Payroll
+ * @package  OCA\Humaniq\Tests\Unit\Payroll
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,11 +31,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Payroll;
+namespace OCA\Humaniq\Tests\Unit\Payroll;
 
-use OCA\Hrmq\Payroll\CalculationInput;
-use OCA\Hrmq\Payroll\PayrollCalculator;
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Payroll\TaxTables;
 use PHPUnit\Framework\TestCase;
 
 /**

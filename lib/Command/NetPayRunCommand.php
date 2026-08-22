@@ -3,17 +3,17 @@
 /**
  * Net Pay Run Command
  *
- * `occ hrmq:netpay:run [--period YYYY-MM]` — the MVP trigger for
+ * `occ humaniq:netpay:run [--period YYYY-MM]` — the MVP trigger for
  * payroll-sepa-netpay-shillinq (design.md D8): hands off every payable
  * (approved/posted) PayrollRun's payslips as a draft SEPA PaymentRun into
  * shillinq's PaymentRun register (optionally filtered to one wage period),
  * printing one outcome line per run plus a summary. No automatic lifecycle
  * hook exists yet — PayrollRun transitions are plain data edits today, so
  * this command is run on operator demand until
- * `hrmq-rule-compliance-enforcement` wires guards/events.
+ * `humaniq-rule-compliance-enforcement` wires guards/events.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,9 +29,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\PayrollNetPayService;
+use OCA\Humaniq\Service\PayrollNetPayService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -57,7 +57,7 @@ class NetPayRunCommand extends Command {
 	 * @return void
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:netpay:run')
+		$this->setName('humaniq:netpay:run')
 			->setDescription('Hand off each payable PayrollRun\'s payslips as a draft SEPA PaymentRun into shillinq (MVP trigger; run on operator demand).')
 			->addOption('period', null, InputOption::VALUE_REQUIRED, 'Only process runs for this wage period (YYYY-MM).');
 
@@ -77,7 +77,7 @@ class NetPayRunCommand extends Command {
 
 		$results = $this->service->processPayableRuns($period);
 
-		$output->writeln('<info>Hrmq payroll net pay</info>');
+		$output->writeln('<info>Humaniq payroll net pay</info>');
 
 		if ($results === []) {
 			$output->writeln('  geen betaalbare loonruns geselecteerd' . ($period !== null ? ' voor periode ' . $period : '') . '.');

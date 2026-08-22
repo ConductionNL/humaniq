@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Hrmq TimeEntryEventService.
+ * Humaniq TimeEntryEventService.
  *
  * Emits the `nl.conduction.hrmq.timeentry.approved` CloudEvent when a Timesheet
- * (hrmq's per-employee, per-period time-entry record) transitions into the
+ * (humaniq's per-employee, per-period time-entry record) transitions into the
  * `approved` state. The event carries the approved hours, project / cost centre
  * and billable flag a downstream finance app (shillinq) needs to feed
  * invoice-from-time and the WBSO urenregistratie export — closing the dangling
@@ -18,7 +18,7 @@
  * silent (idempotent).
  *
  * On the SAME edge, this service ALSO dispatches a typed
- * {@see \OCA\Hrmq\Event\TimesheetApprovedEvent} through Nextcloud's
+ * {@see \OCA\Humaniq\Event\TimesheetApprovedEvent} through Nextcloud's
  * `IEventDispatcher` — the ADR-041 cross-app command recipe. The webhook is an
  * admin-configured outbound HTTP delivery with no in-process consumer surface;
  * the typed event is what lets a sibling Conduction app (shillinq) react to
@@ -29,7 +29,7 @@
  * other): a typed-dispatch failure never blocks the webhook, and vice versa.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -41,23 +41,23 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md
- * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+ * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Hrmq\Event\TimesheetApprovedEvent;
+use OCA\Humaniq\Event\TimesheetApprovedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Builds and dispatches the hrmq approved-time-entry CloudEvent.
+ * Builds and dispatches the humaniq approved-time-entry CloudEvent.
  *
  * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md
  */
@@ -66,16 +66,23 @@ class TimeEntryEventService {
 	/**
 	 * CloudEvents `type` for an approved time entry (Timesheet).
 	 *
+	 * FROZEN at the `hrmq` spelling across the Humaniq rename: this is a
+	 * cross-app wire contract that shillinq subscribes to by exact string, and
+	 * the spec states the envelope SHALL remain stable. Renaming it would
+	 * silently stop every existing subscriber from matching. The sibling
+	 * EVENT_SOURCE below is a locator, not a contract, so it DOES follow the
+	 * route to its new `/apps/humaniq/` location.
+	 *
 	 * @var string
 	 */
 	public const EVENT_TYPE = 'nl.conduction.hrmq.timeentry.approved';
 
 	/**
-	 * CloudEvents `source` for hrmq time-entry events.
+	 * CloudEvents `source` for humaniq time-entry events.
 	 *
 	 * @var string
 	 */
-	public const EVENT_SOURCE = '/apps/hrmq/timesheets';
+	public const EVENT_SOURCE = '/apps/humaniq/timesheets';
 
 	/**
 	 * Slug of the schema whose approval emits the event (lower-cased for a
@@ -126,7 +133,7 @@ class TimeEntryEventService {
 	 *              the fire-and-forget contract of the webhook dispatch itself.
 	 *
 	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function maybeDispatchApproved(string $schemaSlug, ?array $oldData, array $newData): bool {
 		if (strtolower($schemaSlug) !== self::TIMESHEET_SLUG) {
@@ -218,7 +225,7 @@ class TimeEntryEventService {
 	 *
 	 * Carries the same approval-provenance data as {@see buildApprovedEvent()}'s
 	 * CloudEvent `data` object, plus an explicit `periodGrain` marker
-	 * classifying the RAW `period` string — hrmq's Timesheet.period is
+	 * classifying the RAW `period` string — humaniq's Timesheet.period is
 	 * polymorphic-grain (`YYYY-MM` | `YYYY-Www` | `YYYY-Wnn-D`) and this event
 	 * never flattens it to a single day; a consumer that needs one date decides
 	 * that projection itself using the grain marker.
@@ -231,7 +238,7 @@ class TimeEntryEventService {
 	 *  is a pure, side-effect-free classifier — the same "pure value-object
 	 *  factory method" precedent already used unguarded in PayrollReproduceService.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function buildTypedEvent(array $timeEntry): TimesheetApprovedEvent {
 		$uuid = (string)($timeEntry['id'] ?? $timeEntry['uuid'] ?? '');
@@ -272,14 +279,14 @@ class TimeEntryEventService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	private function dispatchTypedEvent(array $timeEntry): void {
 		try {
 			$this->eventDispatcher->dispatchTyped($this->buildTypedEvent($timeEntry));
 		} catch (\Throwable $e) {
 			$this->logger->warning(
-				'hrmq: TimesheetApprovedEvent typed dispatch failed (webhook dispatch still attempted)',
+				'humaniq: TimesheetApprovedEvent typed dispatch failed (webhook dispatch still attempted)',
 				['exception' => $e->getMessage()]
 			);
 		}//end try
@@ -308,7 +315,7 @@ class TimeEntryEventService {
 			return true;
 		} catch (\Throwable $e) {
 			$this->logger->warning(
-				'hrmq: approved-time-entry CloudEvent not dispatched (no consumer or OpenRegister unavailable)',
+				'humaniq: approved-time-entry CloudEvent not dispatched (no consumer or OpenRegister unavailable)',
 				['exception' => $e->getMessage(), 'eventName' => self::EVENT_TYPE]
 			);
 			return false;

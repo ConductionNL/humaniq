@@ -38,7 +38,7 @@
  * `mandatory` predicates above.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -55,10 +55,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
 use DateTimeImmutable;
-use OCA\Hrmq\Service\OrgResolutionService;
+use OCA\Humaniq\Service\OrgResolutionService;
 
 /**
  * Organisational-structure integrity executable checks (assignment
@@ -270,7 +270,7 @@ final class NlOrgChecks implements CheckProvider {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
 	private static function managerConsistent(array $o, array $c): bool {
 		$managerUserId = trim((string)($o['managerUserId'] ?? ''));

@@ -14,7 +14,7 @@
  * the `LoonbeslagControllerTest`/`DocumentController` precedent.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Controller
+ * @package  OCA\Humaniq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -30,11 +30,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Controller;
+namespace OCA\Humaniq\Tests\Unit\Controller;
 
-use OCA\Hrmq\Controller\OfferController;
-use OCA\Hrmq\Service\OfferEsignService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Controller\OfferController;
+use OCA\Humaniq\Service\OfferEsignService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
 use OCP\IRequest;

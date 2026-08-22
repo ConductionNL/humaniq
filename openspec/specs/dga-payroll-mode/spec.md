@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-14-dga-payroll-mode
 # dga-payroll-mode Specification
 
 **Status**: done
-**Scope**: hrmq (consumes the merged `payroll-core-engine`, `depends_on: []`)
+**Scope**: humaniq (consumes the merged `payroll-core-engine`, `depends_on: []`)
 **OpenSpec changes**:
 - [dga-payroll-mode](../../changes/archive/2026-07-14-dga-payroll-mode/) _(archived 2026-07-14)_ —
   DGA (directeur-grootaandeelhouder) payroll mode: an `Employee.isDga` mode-switch (ADR-001 Rule 4)

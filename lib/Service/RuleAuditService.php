@@ -9,12 +9,12 @@
  * corpus rules are actually enforceable today), how many objects were checked,
  * how many are compliant, and the violations grouped by severity and by rule.
  *
- * This is the "does hrmq comply?" answer: it does not change data, it reports
+ * This is the "does humaniq comply?" answer: it does not change data, it reports
  * the live compliance posture so gaps are visible and traceable back to the
  * standard/law each rule cites.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -30,12 +30,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
-use OCA\Hrmq\AppInfo\Application;
-use OCA\Hrmq\Standards\CaoRegistry;
-use OCA\Hrmq\Standards\RuleCatalogue;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Standards\CaoRegistry;
+use OCA\Humaniq\Standards\RuleCatalogue;
+use OCA\Humaniq\Standards\RuleEngine;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -68,7 +68,7 @@ class RuleAuditService {
 
 	/**
 	 * Mandatory-severity `RuleEngine::evaluate()` violation ids for ONE
-	 * already-loaded object — hrmq-dashboard-steering-indicators REQ-DSI-009's
+	 * already-loaded object — humaniq-dashboard-steering-indicators REQ-DSI-009's
 	 * best-effort Obligations-row badge. Deliberately NOT `audit()`: no
 	 * full-corpus walk, no cross-object context built, just the same static
 	 * `RuleEngine::evaluate()` call every other method on this service
@@ -84,7 +84,7 @@ class RuleAuditService {
 	 *
 	 * @return array<int, string> Rule ids of any mandatory violation.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-009
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-009
 	 */
 	public function mandatoryViolationIds(string $type, array $object): array {
 		$ruleIds = [];
@@ -132,7 +132,7 @@ class RuleAuditService {
 		// instead of re-querying siblings.
 		$context['netpay'] = $this->buildNetPayContext();
 
-		// hrmq-docudesk-documents: a per-contract index of contracts with an
+		// humaniq-docudesk-documents: a per-contract index of contracts with an
 		// active generated arbeidsovereenkomst GeneratedDocument, so
 		// NlDocumentChecks::checks()['EmploymentContract']
 		// ['nl-contract-schriftelijk'] can resolve document evidence for a
@@ -208,7 +208,7 @@ class RuleAuditService {
 		// ['nl-asset-voertuig-fiscale-velden-compleet'] read
 		// `context['related']['AssetAssignment']['byId']` /
 		// `context['related']['Asset']['byId']` (built above by
-		// buildRelatedContext()) directly -- hrmq-asset-fleet-merge
+		// buildRelatedContext()) directly -- humaniq-asset-fleet-merge
 		// (design.md D4) retired the dedicated `context['fleet']` index
 		// (`buildFleetContext()`/`vehiclesById`/`carAssignmentsById`) as
 		// redundant with the general Asset/AssetAssignment indexes.
@@ -335,8 +335,8 @@ class RuleAuditService {
 	 * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-007
 	 * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-003
 	 * @spec openspec/changes/wnt-disclosure/specs/wnt-disclosure/spec.md#REQ-WNT-003
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-005
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-005
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
 	 */
 	private function buildRelatedContext(): array {
 		$byId = [];
@@ -531,7 +531,7 @@ class RuleAuditService {
 		// asset-management-mvp: an Asset index (id, status, active), keyed by
 		// id, so NlAssetChecks::checks()['AssetAssignment']
 		// ['nl-asset-assignment-consistency'] can resolve an open assignment's
-		// asset status without re-querying the register. hrmq-asset-fleet-merge
+		// asset status without re-querying the register. humaniq-asset-fleet-merge
 		// (design.md D4) extends it with category/listPrice/fuelType/
 		// companyCarTaxCategory -- the fields NlFleetChecks::checks()['Payslip']
 		// ['nl-bijtelling-auto-privegebruik'] and ['Asset']
@@ -556,7 +556,7 @@ class RuleAuditService {
 			];
 		}
 
-		// hrmq-asset-fleet-merge (design.md D4): an AssetAssignment index
+		// humaniq-asset-fleet-merge (design.md D4): an AssetAssignment index
 		// (id, assetId, employeeId, issuedOn, returnedOn, employeeContribution),
 		// keyed by id -- the counterpart to `$assetsById` above, consumed by
 		// NlFleetChecks::checks()['Payslip']['nl-bijtelling-auto-privegebruik']
@@ -687,7 +687,7 @@ class RuleAuditService {
 
 	/**
 	 * Run the RuleEngine over EXACTLY one period's PayrollRun(s) + their
-	 * payslips — the run-scoped corpus audit behind `occ hrmq:payroll:verify`
+	 * payslips — the run-scoped corpus audit behind `occ humaniq:payroll:verify`
 	 * (payroll-core-engine design.md D7): the same corpus that audits
 	 * hand-entered data audits a computed run, so the engine has no private
 	 * truth. The full cross-object context is built exactly as in `audit()`
@@ -1170,7 +1170,7 @@ class RuleAuditService {
 	 * from every `RosterAssignment` whose `Roster` is `gepubliceerd` — the
 	 * `buildAttendanceContext()` precedent, mirrored onto planned instead of
 	 * realised clock data. A `concept` roster's assignments are deliberately
-	 * excluded so the standing `occ hrmq:rules:audit` never raises a
+	 * excluded so the standing `occ humaniq:rules:audit` never raises a
 	 * mandatory violation for a work-in-progress plan (design D4's scope
 	 * discipline; on-demand checking of a concept roster is
 	 * `RosterCheckService`'s job). Degrades gracefully to an empty index
@@ -1269,7 +1269,7 @@ class RuleAuditService {
 	/**
 	 * Build the per-contract and per-payslip document-evidence indexes
 	 * consumed by NlDocumentChecks' `nl-contract-schriftelijk` and
-	 * `nl-loonstrook-verplicht` predicates (hrmq-docudesk-documents design.md
+	 * `nl-loonstrook-verplicht` predicates (humaniq-docudesk-documents design.md
 	 * D-corpus, extended by payslip-pdf-docudesk design.md D7):
 	 * `generatedArbeidsovereenkomstByContract` maps `contractId => true` for
 	 * every `GeneratedDocument` of type `arbeidsovereenkomst` in status
@@ -1408,7 +1408,7 @@ class RuleAuditService {
 		// same question the container would otherwise have answered fatally.
 		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -1417,6 +1417,11 @@ class RuleAuditService {
 
 	/**
 	 * @return string The configured register slug.
+	 *
+	 * The 'hrmq' fallback is FROZEN across the Humaniq rename: OpenRegister's
+	 * ImportHandler resolves the register BY SLUG. Renaming it would create a
+	 * second, empty register and orphan every employee, contract, payslip and
+	 * payroll run already stored under the 'hrmq' slug.
 	 */
 	private function register(): string {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');

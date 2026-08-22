@@ -7,13 +7,13 @@ built_by: openspec/changes/archive/2026-07-14-payroll-core-engine
 # payroll-core-engine Specification
 
 **Status**: done
-**Scope**: hrmq (chain spec 2 of 2 — ADR-032; `depends_on: [payroll-core-schema]`)
+**Scope**: humaniq (chain spec 2 of 2 — ADR-032; `depends_on: [payroll-core-schema]`)
 **OpenSpec changes**:
 - [payroll-core-engine](../../changes/archive/2026-07-14-payroll-core-engine/) _(archived
   2026-07-14)_ — pure table-driven `PayrollCalculator` (Rekenvoorschriften 2026 chain, integer
   cents, AOW-age + groen variants) + `PayrollRunService` (idempotent draft runs per
   period/administration, draft-only recalculation, ObjectService payslip generation), occ
-  `hrmq:payroll:run`/`hrmq:payroll:verify`, one guarded calculate endpoint + run-pages
+  `humaniq:payroll:run`/`humaniq:payroll:verify`, one guarded calculate endpoint + run-pages
   actions/child list, `NlEngineChecks` enforcement of the spec-1 contract, golden fixtures +
   balancing invariant, non-certification README disclaimer (kind: code)
 
@@ -23,7 +23,7 @@ The strategic centerpiece: the only open-source Dutch payroll calculation engine
 2026-07-12/13 — Spectr `hrmq-canon-payroll-engine` 7/9 coverage,
 `hrmq-insight-odoo-nl-enterprise-only`). Produces the approved-run inputs the already-shipped
 glpost/netpay/filing pipeline consumes, audited by the same rule corpus that audits hand-entered
-data (`hrmq:payroll:verify` = the corpus as the engine's self-check). Rekenvoorschriften-based and
+data (`humaniq:payroll:verify` = the corpus as the engine's self-check). Rekenvoorschriften-based and
 explicitly NOT certified — outputs carry `engineVersion`, and the disclaimer is a requirement.
 
 ## Requirements
@@ -92,7 +92,7 @@ the outcome, never computed wrong and never silently dropped.
 
 #### Scenario: Second run for the same period is an idempotent no-op
 - **GIVEN** a draft run already generated for (2026-02, ADM-001)
-- **WHEN** `hrmq:payroll:run --period 2026-02` runs again without `--recalculate`
+- **WHEN** `humaniq:payroll:run --period 2026-02` runs again without `--recalculate`
 - **THEN** no second PayrollRun and no duplicate Payslips exist, and the outcome reports the
   existing run
 
@@ -109,7 +109,7 @@ consumed by glpost/netpay — recomputing them would rewrite booked truth). `--r
 endpoint) re-runs generation for a draft run in place. The service SHALL never write any `status`
 value other than creating `draft`; the `draft → approved` edit remains a human action on the
 existing enum, and write-time guard wiring remains owned by the active
-`hrmq-rule-compliance-enforcement` change.
+`humaniq-rule-compliance-enforcement` change.
 
 #### Scenario: An approved run refuses recalculation
 - **GIVEN** a run in status `approved`
@@ -134,21 +134,21 @@ remains the only create path. Generated payslips carry `payrollRunId`, the emplo
 
 ### Requirement: occ commands SHALL run and verify payroll; the corpus is the engine's self-check (REQ-PCE-006)
 
-`occ hrmq:payroll:run --period YYYY-MM [--administration ADM] [--recalculate]` SHALL
+`occ humaniq:payroll:run --period YYYY-MM [--administration ADM] [--recalculate]` SHALL
 create/recalculate draft runs and print the per-employee outcome (computed/skipped+reason). `occ
-hrmq:payroll:verify --period YYYY-MM [--administration ADM]` SHALL run the RuleEngine over exactly
+humaniq:payroll:verify --period YYYY-MM [--administration ADM]` SHALL run the RuleEngine over exactly
 the run(s) + their payslips (the run-scoped corpus audit), print violations, and exit non-zero on
-any mandatory violation, `0` otherwise (the `hrmq:rules:audit` exit-code convention). Both are
+any mandatory violation, `0` otherwise (the `humaniq:rules:audit` exit-code convention). Both are
 registered in `appinfo/info.xml`.
 
 #### Scenario: A freshly generated run verifies clean
-- **GIVEN** `occ hrmq:payroll:run --period 2026-02` generated a run from the seeded employee
-- **WHEN** `occ hrmq:payroll:verify --period 2026-02` runs
+- **GIVEN** `occ humaniq:payroll:run --period 2026-02` generated a run from the seeded employee
+- **WHEN** `occ humaniq:payroll:verify --period 2026-02` runs
 - **THEN** it reports zero violations for the run and its payslips and exits `0`
 
 #### Scenario: A tampered payslip fails the run-scoped verify
 - **GIVEN** a generated payslip whose `nettoPay` was edited to break the consistency equation
-- **WHEN** `occ hrmq:payroll:verify --period 2026-02` runs
+- **WHEN** `occ humaniq:payroll:verify --period 2026-02` runs
 - **THEN** an `nl-engine-output-consistency` violation is reported and the exit code is non-zero
 
 ### Requirement: NlEngineChecks SHALL enforce the spec-1 contract rules (REQ-PCE-007)
@@ -164,7 +164,7 @@ After this change both rules count as enforced in the audit coverage.
 
 #### Scenario: A run stamped with a non-existent table version violates
 - **GIVEN** a PayrollRun with `engineVersion: "nl-2031"`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** an `nl-engine-table-version` violation is reported for that run
 
 #### Scenario: Hand-entered records stay out of scope
@@ -192,7 +192,7 @@ MUST pass.
 - **THEN** the response is 404 and no calculation or write occurs
 
 #### Scenario: Detail page recalculates a draft run
-@e2e exclude declarative action wiring is covered by the shared CnPageRenderer library tests; the app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative action wiring is covered by the shared CnPageRenderer library tests; the app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** a draft run opened on PayrollRunDetail
 - **WHEN** the user executes "(Her)berekenen" and confirms
 - **THEN** the endpoint recalculates the run and the refreshed page shows the updated totals and

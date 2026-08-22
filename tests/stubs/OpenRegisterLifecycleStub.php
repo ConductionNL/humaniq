@@ -4,7 +4,7 @@
  * OpenRegister lifecycle interface/value-object test stub
  *
  * TEST-ONLY shape of `OCA\OpenRegister\Lifecycle\LifecycleGuardInterface` and
- * `OCA\OpenRegister\Lifecycle\GuardResult` — the two OpenRegister classes hrmq's
+ * `OCA\OpenRegister\Lifecycle\GuardResult` — the two OpenRegister classes humaniq's
  * lifecycle guards (`NoSelfApprovalGuard`, `PayrollRunApprovedGuard`) implement
  * and return. In a real Nextcloud instance the OpenRegister app ships the real
  * classes and this file is never loaded (tests/bootstrap.php only requires it
@@ -19,7 +19,7 @@
  * only, never in a path that is autoloaded in production).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests
+ * @package  OCA\Humaniq\Tests
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.

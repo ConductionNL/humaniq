@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-12-leave-verzuim-mvp
 # leave-management Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [leave-verzuim-mvp](../../changes/archive/2026-07-12-leave-verzuim-mvp/) _(archived 2026-07-12)_ — Verlof & verzuim menu group (ADR-001 menu 5) with LeaveRequests/LeaveApproval/LeaveRequestDetail pages driving the existing LeaveRequest lifecycle, new `LeaveBalance` schema with calculated `remainingHours` + BW 7:640a expiry, 3 new machine-checkable NL leave rules in a new labour corpus (kind: config)
 
@@ -23,7 +23,7 @@ hours lapse 1 July of the following year per BW art. 7:640a), and three
 versioned machine-checkable leave rules enforced by `NlLeaveChecks`.
 Grounded in the 2026-07-12 market deep-research (Spectr insights
 `hrmq-insight-nc-ecosystem-gap`, `hrmq-insight-ranked-buildlist`): leave is a
-core module in every competitor, and hrmq's schema had zero UI and no
+core module in every competitor, and humaniq's schema had zero UI and no
 balances. Automatic accrual and CAO bovenwettelijk rules are explicitly out
 of scope.
 
@@ -38,7 +38,7 @@ of scope.
 - **THEN** it exits 0
 
 #### Scenario: Approval queue shows only submitted requests
-@e2e exclude declarative index filtering is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative index filtering is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** LeaveRequest objects in statuses `draft`, `submitted`, and `approved`
 - **WHEN** the `LeaveApproval` page loads
 - **THEN** only the `submitted` request is listed, oldest submission first
@@ -48,7 +48,7 @@ of scope.
 `LeaveRequestDetail` (detail over `LeaveRequest`, route `/leave-requests/:id`) carries: a "Request" data widget (excluding `employeeId` — the Related panel resolves the requesting Employee by name), an "Approval" data widget (`status`, `submittedAt`, `approvedBy`, `approvedAt`, `rejectionReason`), a related widget, a files widget ("Supporting documents"), an audit-history sidebar tab, and `lifecycleActions` exposing **exactly** the transitions already declared in `hr-leave.json`: `submit` (from `draft`|`rejected`), `approve` (from `submitted`), `reject` (from `submitted`) — guarded server-side by the existing `NoSelfApprovalGuard`. The `LeaveRequest` schema, its lifecycle, and the guard are NOT modified by this change.
 
 #### Scenario: Detail page walks the existing workflow
-@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** a LeaveRequest in status `draft` opened on `LeaveRequestDetail`
 - **WHEN** the user executes Submit
 - **THEN** the page reflects status `submitted` and offers Approve and Reject
@@ -75,7 +75,7 @@ of scope.
 A new corpus file `lib/Standards/rules/labour.json` (`{"domain": "labour", "version": "2026-07", "rules": [...]}` — payroll.json's domains are tax/reporting/ledger-integrity; leave is labour law, and SCHEMA.md prescribes one file per sub-domain) gains `nl-verlof-wettelijk-minimum` (BW art. 7:634 — entitled ≥ 4× contractual weekly hours), `nl-verlof-saldo-niet-negatief` (BW art. 7:634 jo. 7:638 — `usedHours ≤ entitledHours + bovenwettelijkHours`), and `nl-verlof-vervaltermijn` (BW art. 7:640a — statutory hours carry `expiryDate` = 1 July of the following year). All three: `domain: labour`, `jurisdiction: NL`, `framework: bw7-10`, `severity: mandatory`, `machineCheckable: true`, `sourceUrl: https://wetten.overheid.nl/BWBR0005290`. `RuleCatalogue::VERSION` bumps to `2026-07`.
 
 #### Scenario: Corpus stays loadable and versioned
-- **WHEN** `occ hrmq:rules:audit` runs after the corpus edit
+- **WHEN** `occ humaniq:rules:audit` runs after the corpus edit
 - **THEN** the RuleCatalogue loads payroll.json AND labour.json without error and reports the three new rules as enforced (each has a CheckProvider predicate)
 
 ### REQ-LVM-005: `NlLeaveChecks` SHALL enforce the three leave rules as single-object predicates
@@ -89,7 +89,7 @@ Each predicate is side-effect free and keyed by its corpus rule id.
 
 #### Scenario: Under-granted balance flagged
 - **GIVEN** the seeded balance for employee-bakker (`contractHoursPerWeek: 36`, `entitledHours: 120`)
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** a `nl-verlof-wettelijk-minimum` violation is reported for that object (120 < 144)
 
 #### Scenario: Negative balance flagged

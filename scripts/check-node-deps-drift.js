@@ -44,7 +44,7 @@ const REPO_ROOT = path.resolve(__dirname, '..')
  * something, and say so in the comment.
  */
 const WATCHED = [
-	// Compiled into the shipped bundle. hrmq is manifest-driven, so nearly all
+	// Compiled into the shipped bundle. humaniq is manifest-driven, so nearly all
 	// of its rendering behaviour comes from this package — a wrong version
 	// here is a wrong application, not a wrong dependency.
 	'@conduction/nextcloud-vue',

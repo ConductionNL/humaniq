@@ -2,7 +2,7 @@
 	"pageTemplates": [
 		{
 			"id": "indexScaffold",
-			"_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the one shape every hrmq index page shares — a schema-bound CnIndexPage with columns/sort and no widgets. All 58 index pages instantiate this template; the only variance is the presence of the optional keys below, which expandPageTemplates() drops from the expanded page when the instantiation omits them (exact-match placeholder + absent optional param). `filters` is optional because the nine Mijn* self-service pages and VerzuimOverzicht pin their result set with `filter` alone and offer no user-facing filter bar. `actions` (page-level create buttons, e.g. PayrollRuns' 'Loonrun aanmaken') and `note` (the page's own maintainer prose, landing as config._note) ride along as ordinary parameters so an instantiation stays the single complete description of its page.",
+			"_note": "humaniq-manifest-fragment-pipeline (2026-08-21): the one shape every humaniq index page shares — a schema-bound CnIndexPage with columns/sort and no widgets. All 58 index pages instantiate this template; the only variance is the presence of the optional keys below, which expandPageTemplates() drops from the expanded page when the instantiation omits them (exact-match placeholder + absent optional param). `filters` is optional because the nine Mijn* self-service pages and VerzuimOverzicht pin their result set with `filter` alone and offer no user-facing filter bar. `actions` (page-level create buttons, e.g. PayrollRuns' 'Loonrun aanmaken') and `note` (the page's own maintainer prose, landing as config._note) ride along as ordinary parameters so an instantiation stays the single complete description of its page.",
 			"params": [
 				{ "name": "id", "required": true },
 				{ "name": "route", "required": true },
@@ -43,7 +43,7 @@
 		},
 		{
 			"id": "simpleDetailScaffold",
-			"_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the two-panel leaf detail — one `data` panel 8-wide beside one `related` panel 4-wide, equal heights, metadata sidebar, no child collections. 17 detail pages share this exact grid (verified coordinate-identical, only gridHeight varies with field count). Workflow affordances are parameters, not structure: a page whose schema declares x-openregister-lifecycle passes `lifecycleActions` (its own transitions list) and one with server-side document/API actions passes `headerActions`; both keys are dropped from the expanded page when absent. Each instantiation's `note` param carries that page's full original maintainer prose verbatim (relocated intact per the fragment-pipeline change; the shared two-panel rationale lives here so the per-page notes no longer need to restate it).",
+			"_note": "humaniq-manifest-fragment-pipeline (2026-08-21): the two-panel leaf detail — one `data` panel 8-wide beside one `related` panel 4-wide, equal heights, metadata sidebar, no child collections. 17 detail pages share this exact grid (verified coordinate-identical, only gridHeight varies with field count). Workflow affordances are parameters, not structure: a page whose schema declares x-openregister-lifecycle passes `lifecycleActions` (its own transitions list) and one with server-side document/API actions passes `headerActions`; both keys are dropped from the expanded page when absent. Each instantiation's `note` param carries that page's full original maintainer prose verbatim (relocated intact per the fragment-pipeline change; the shared two-panel rationale lives here so the per-page notes no longer need to restate it).",
 			"params": [
 				{ "name": "id", "required": true },
 				{ "name": "route", "required": true },
@@ -123,7 +123,7 @@
 		},
 		{
 			"id": "dualDataScaffold",
-			"_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the outcome-record detail — a 4-column `data` status strip (include + read-only overrides) over a 2-column `data` body panel (exclude), with `related` filling the right rail at the two panels' combined height. 5 filing/ledger-style pages share this exact grid (status strip fixed at height 3; body and rail heights are the two height parameters). Pages whose transitions are user-driven pass `lifecycleActions`; GeneratedDocumentDetail alone passes `hiddenTabs` to keep the sidebar's Files tab (its stored PDF) while hiding Notes/Tags/Tasks — see its own note param for why. Each instantiation's `note` param carries that page's full original maintainer prose verbatim.",
+			"_note": "humaniq-manifest-fragment-pipeline (2026-08-21): the outcome-record detail — a 4-column `data` status strip (include + read-only overrides) over a 2-column `data` body panel (exclude), with `related` filling the right rail at the two panels' combined height. 5 filing/ledger-style pages share this exact grid (status strip fixed at height 3; body and rail heights are the two height parameters). Pages whose transitions are user-driven pass `lifecycleActions`; GeneratedDocumentDetail alone passes `hiddenTabs` to keep the sidebar's Files tab (its stored PDF) while hiding Notes/Tags/Tasks — see its own note param for why. Each instantiation's `note` param carries that page's full original maintainer prose verbatim.",
 			"params": [
 				{ "name": "id", "required": true },
 				{ "name": "route", "required": true },
@@ -223,7 +223,7 @@
 		},
 		{
 			"id": "singleDataScaffold",
-			"_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the reference-data detail — one full-width (12-wide) 2-column `data` panel, metadata sidebar, no related rail and no child collections, for records that are pure lookup rows (norm functions, salary bands, integration accounts). The page title doubles as the widget and content title (true for all 3 instances). `allowCreate` and `include` ride along as optional parameters. Each instantiation's `note` param carries that page's full original maintainer prose verbatim.",
+			"_note": "humaniq-manifest-fragment-pipeline (2026-08-21): the reference-data detail — one full-width (12-wide) 2-column `data` panel, metadata sidebar, no related rail and no child collections, for records that are pure lookup rows (norm functions, salary bands, integration accounts). The page title doubles as the widget and content title (true for all 3 instances). `allowCreate` and `include` ride along as optional parameters. Each instantiation's `note` param carries that page's full original maintainer prose verbatim.",
 			"params": [
 				{ "name": "id", "required": true },
 				{ "name": "route", "required": true },

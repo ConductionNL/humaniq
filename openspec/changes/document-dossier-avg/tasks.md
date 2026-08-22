@@ -1,6 +1,6 @@
 # Tasks — document-dossier-avg
 
-> Verify against HEAD, not this brief — `hrmq-docudesk-documents`, `avg-dsr`, `dga-payroll-mode`, and
+> Verify against HEAD, not this brief — `humaniq-docudesk-documents`, `avg-dsr`, `dga-payroll-mode`, and
 > `nl-id-bewaarplicht-5jaar` are already merged at HEAD; this change composes/extends them, it does not depend on
 > any pending change.
 >

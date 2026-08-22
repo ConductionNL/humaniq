@@ -42,7 +42,7 @@ what shortcut it took.
 ## Running a simulation
 
 ```bash
-occ hrmq:payroll:proforma --gross 3800 --table wit --period 2026-02
+occ humaniq:payroll:proforma --gross 3800 --table wit --period 2026-02
 ```
 
 This is the support-facing surface: reproduce a net figure with no

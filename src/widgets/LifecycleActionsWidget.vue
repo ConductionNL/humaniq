@@ -4,7 +4,7 @@
 <!--
  LifecycleActionsWidget — bridges CnPageRenderer's v2 widget-grid detail
  context onto `@conduction/nextcloud-vue`'s CnLifecycleActions prop contract
- (2026-07-16 defect: every approve/reject/submit/reopen button in hrmq was
+ (2026-07-16 defect: every approve/reject/submit/reopen button in humaniq was
  dead — see the `lifecycle-actions` registry entry docblock for the full
  defect writeup).
 
@@ -18,7 +18,7 @@
  under the keys `objectData` / `objectId` / `objectType` / `register` /
  `schema` / `store` (see `CnWidgetGrid.detailContextProps`) — there is no
  `object` key, so CnLifecycleActions would receive `objectId` correctly but
- `object` would stay `null`, and every hrmq page here declares an explicit
+ `object` would stay `null`, and every humaniq page here declares an explicit
  `config.transitions` array (so `useServer` is false and the `object[field]`
  read is load-bearing), which is exactly the silent-dead failure mode this
  fix closes.

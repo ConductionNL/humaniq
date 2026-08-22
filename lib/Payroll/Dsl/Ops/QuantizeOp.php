@@ -15,7 +15,7 @@
  * value through a float division that could lose precision on large wages.
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll\Dsl\Ops
+ * @package  OCA\Humaniq\Payroll\Dsl\Ops
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,11 +31,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll\Dsl\Ops;
+namespace OCA\Humaniq\Payroll\Dsl\Ops;
 
-use OCA\Hrmq\Payroll\Dsl\DslException;
-use OCA\Hrmq\Payroll\Dsl\Rounder;
-use OCA\Hrmq\Payroll\Dsl\StepContext;
+use OCA\Humaniq\Payroll\Dsl\DslException;
+use OCA\Humaniq\Payroll\Dsl\Rounder;
+use OCA\Humaniq\Payroll\Dsl\StepContext;
 
 /**
  * Round a value to a multiple of a declared step.

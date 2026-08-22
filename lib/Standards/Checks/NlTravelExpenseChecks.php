@@ -17,14 +17,14 @@
  * vacuously satisfied, never a false violation, mirroring the
  * nl-cao-minimumloon-schaal precedent (NlCaoChecks).
  *
- * This is an audit-time compliance signal only (occ hrmq:rules:audit /
+ * This is an audit-time compliance signal only (occ humaniq:rules:audit /
  * RuleAuditService); it does not guard any Expense lifecycle transition
  * (mileage-rules REQ-MILE-004) and does not compute or gross up the
  * loonheffing on the bovenmatige (excess) vergoeding -- named as a follow-up
  * in design.md.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -40,9 +40,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
-use OCA\Hrmq\Standards\RuleCatalogue;
+use OCA\Humaniq\Standards\RuleCatalogue;
 
 /**
  * Dutch onbelaste-kilometervergoeding executable check for Expense.

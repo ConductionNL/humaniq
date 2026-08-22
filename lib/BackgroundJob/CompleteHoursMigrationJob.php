@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq Complete Hours Migration Background Job.
+ * Humaniq Complete Hours Migration Background Job.
  *
  * Completion vehicle for the hours-process migration when the repair step
  * could not finish during `occ upgrade`: upgrade runs in maintenance mode,
@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category BackgroundJob
- * @package  OCA\Hrmq\BackgroundJob
+ * @package  OCA\Humaniq\BackgroundJob
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -26,14 +26,14 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\BackgroundJob;
+namespace OCA\Humaniq\BackgroundJob;
 
-use OCA\Hrmq\Repair\MigrateHoursProcess;
+use OCA\Humaniq\Repair\MigrateHoursProcess;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use Psr\Container\ContainerInterface;
@@ -42,7 +42,7 @@ use Psr\Log\LoggerInterface;
 /**
  * One-shot completion of the hours-process migration outside maintenance mode.
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
  */
 class CompleteHoursMigrationJob extends QueuedJob {
 
@@ -70,7 +70,7 @@ class CompleteHoursMigrationJob extends QueuedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) -- $argument is mandated by the QueuedJob::run() signature; this one-shot job takes no argument.
 	 */
@@ -80,7 +80,7 @@ class CompleteHoursMigrationJob extends QueuedJob {
 			$summary = $step->runDeferred();
 			$this->logger->info(
 				sprintf(
-					'hrmq: hours-process migration completed by background job: %d timesheets processed, %d entries created, %d rows with unresolvable user link',
+					'humaniq: hours-process migration completed by background job: %d timesheets processed, %d entries created, %d rows with unresolvable user link',
 					$summary['processed'],
 					$summary['entriesCreated'],
 					$summary['unresolvableUserLinks']
@@ -91,7 +91,7 @@ class CompleteHoursMigrationJob extends QueuedJob {
 			// silently — the migration stays idempotent, so the next app
 			// upgrade re-attempts (and re-enqueues on maintenance-mode failure).
 			$this->logger->warning(
-				'hrmq: hours-process migration background completion failed',
+				'humaniq: hours-process migration background completion failed',
 				['exception' => $e->getMessage()]
 			);
 		}

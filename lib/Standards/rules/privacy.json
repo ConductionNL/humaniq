@@ -35,7 +35,7 @@
       "domain": "gdpr-payroll",
       "jurisdiction": "NL",
       "framework": "gdpr",
-      "source": "AVG art. 5 lid 1 sub e (opslagbeperking) -- read against OpenRegister's own computed retention.archiefactiedatum (RetentionService), never a bespoke hrmq field (hrmq#99).",
+      "source": "AVG art. 5 lid 1 sub e (opslagbeperking) -- read against OpenRegister's own computed retention.archiefactiedatum (RetentionService), never a bespoke humaniq field (hrmq#99).",
       "statement": "A payroll/loonadministratie record (Payslip, PayrollRun, LoonaangifteFiling, PayrollMutationReport, WkrDeclaration, WkrAssessment, PensionFiling) or a GeneratedDocument whose OpenRegister retention.archiefactiedatum lies in the past shall not still exist un-destroyed (archiefstatus other than vernietigd) at audit time; a recommended-severity flag only -- no automated destruction runs from this check.",
       "severity": "recommended",
       "machineCheckable": true,

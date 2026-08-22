@@ -4,7 +4,7 @@
  *
  * Manifest-driven page smoke test (gate-19 spec coverage).
  *
- * hrmq is the fleet's manifest-purity flagship: 113 pages come straight
+ * humaniq is the fleet's manifest-purity flagship: 113 pages come straight
  * out of `src/manifest.json` (60 index, 49 detail, 2 dashboard, 2
  * custom), rendered by @conduction/nextcloud-vue's CnAppRoot with
  * HISTORY-mode routing (`createWebHistory`, src/main.js). This spec is
@@ -13,7 +13,7 @@
  * route list to drift.
  *
  * For every NON-parameterised page route it navigates to the PATH-form
- * URL (`/apps/hrmq<route>`) — see the long comment on the navigation
+ * URL (`/apps/humaniq<route>`) — see the long comment on the navigation
  * itself for why the hash form silently greenwashes every case — and
  * asserts:
  *   - the SPA shell mounts (`#app-content` is visible)
@@ -133,25 +133,25 @@ const PARAM_PAGES = MANIFEST.pages.filter((p) => p.route.includes(':'))
  * --------------------------------------------------------------------- */
 
 // In Nextcloud installs with `htaccess.RewriteBase => '/'` (the default for
-// the apache-served dev container) `generateUrl` returns `/apps/hrmq`; with the
-// front controller active it returns `/index.php/apps/hrmq`. `src/main.js`
-// builds the router with `createWebHistory(generateUrl('/apps/hrmq'))`, so THAT
+// the apache-served dev container) `generateUrl` returns `/apps/humaniq`; with the
+// front controller active it returns `/index.php/apps/humaniq`. `src/main.js`
+// builds the router with `createWebHistory(generateUrl('/apps/humaniq'))`, so THAT
 // value — and only that value — is the base every in-app route hangs off.
 //
 // ⚠️ The previous implementation probed the two candidate prefixes and took the
 // first one that SERVED THE SHELL. That is a different question, and on CI the
-// two answers disagree: `php -S` routes BOTH `/apps/hrmq/...` and
-// `/index.php/apps/hrmq/...` into `index.php` (confirmed in nextcloud.log:
-// `"url":"/apps/hrmq/dsr-requests","scriptName":"/index.php"`), so the probe
-// always matched `/apps/hrmq` first — while `generateUrl` returned the
+// two answers disagree: `php -S` routes BOTH `/apps/humaniq/...` and
+// `/index.php/apps/humaniq/...` into `index.php` (confirmed in nextcloud.log:
+// `"url":"/apps/humaniq/dsr-requests","scriptName":"/index.php"`), so the probe
+// always matched `/apps/humaniq` first — while `generateUrl` returned the
 // `/index.php` form. Every deep link therefore landed OUTSIDE the router base,
 // matched nothing, hit `main.js`'s `/:pathMatch(.*)*` catch-all and redirected
 // to its default page. Measured on run 30919961510 (job 92028085860): 67 of 70
-// tests failed with `Received string: "/index.php/apps/hrmq/timesheets"`, and
+// tests failed with `Received string: "/index.php/apps/humaniq/timesheets"`, and
 // the only page that "passed" was the redirect target itself — the failure mode
 // and the success signal were the same URL.
 //
-// So ask the app, not the server: read `OC.generateUrl('/apps/hrmq')` out of the
+// So ask the app, not the server: read `OC.generateUrl('/apps/humaniq')` out of the
 // live page. It is literally the call `main.js` passes to `createWebHistory`,
 // so the base cannot drift from the router's. Serving the shell is still
 // verified — via the navigation below — but it is no longer what SELECTS the
@@ -159,16 +159,16 @@ const PARAM_PAGES = MANIFEST.pages.filter((p) => p.route.includes(':'))
 let _root: string | null = null
 async function rootUrl(page: Page): Promise<string> {
 	if (_root) return _root
-	// `/index.php/apps/hrmq/` is reachable on every install shape (the front
+	// `/index.php/apps/humaniq/` is reachable on every install shape (the front
 	// controller is always addressable explicitly), so it is a safe place to
 	// stand while asking the page which base the router actually uses.
-	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
+	await page.goto('/index.php/apps/humaniq/', { waitUntil: 'domcontentloaded' })
 	const resolved = await page.evaluate(
-		() => (window as unknown as { OC?: { generateUrl?: (_p: string) => string } }).OC?.generateUrl?.('/apps/hrmq'),
+		() => (window as unknown as { OC?: { generateUrl?: (_p: string) => string } }).OC?.generateUrl?.('/apps/humaniq'),
 	)
 	if (!resolved) {
 		throw new Error(
-			'OC.generateUrl is not available on the hrmq page, so the router base cannot be '
+			'OC.generateUrl is not available on the humaniq page, so the router base cannot be '
 			+ 'resolved. The Nextcloud core bundle did not load — every route assertion below '
 			+ 'would be measuring the wrong URL.',
 		)
@@ -183,7 +183,7 @@ async function rootUrl(page: Page): Promise<string> {
 
 /**
  * Errors we ignore — these come from Nextcloud's own bootstrap or the
- * shared dev instance's known platform quirks, not from hrmq.
+ * shared dev instance's known platform quirks, not from humaniq.
  */
 const IGNORED_CONSOLE_PATTERNS: RegExp[] = [
 	/Deprecation/i,
@@ -191,7 +191,7 @@ const IGNORED_CONSOLE_PATTERNS: RegExp[] = [
 	/favicon/i,
 	/the resource at .* was preloaded using link preload but not used/i,
 	// The user_status app 500s on dev instances with a PostgreSQL collation
-	// version mismatch — pre-existing platform noise unrelated to hrmq.
+	// version mismatch — pre-existing platform noise unrelated to humaniq.
 	/Failed to load user status/i,
 	/user_status/i,
 	/the server responded with a status of 500/i,
@@ -456,8 +456,8 @@ test.describe('manifest pages — schema-driven render', () => {
 			const root = await rootUrl(page)
 			// The in-app router runs in HISTORY mode (`mode: 'history'`,
 			// src/main.js:83) — unlike openconnector's hash router. The route
-			// must therefore be PATH-form (`/apps/hrmq/timesheets`); a
-			// hash-form deep-link (`/apps/hrmq/#/timesheets`) is ignored by
+			// must therefore be PATH-form (`/apps/humaniq/timesheets`); a
+			// hash-form deep-link (`/apps/humaniq/#/timesheets`) is ignored by
 			// the router and silently lands on the default page, so every
 			// page would be smoke-tested against the same fallback component
 			// (observed live 2026-07-26: all hash routes rendered the

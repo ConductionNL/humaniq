@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq TimesheetApprovalListener.
+ * Humaniq TimesheetApprovalListener.
  *
  * Thin OpenRegister adapter: on every ObjectUpdatedEvent it resolves the changed
  * object's schema slug and, for a Timesheet crossing into `approved`, delegates
@@ -12,7 +12,7 @@
  * throws into the save path.
  *
  * @category Listener
- * @package  OCA\Hrmq\Listener
+ * @package  OCA\Humaniq\Listener
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -28,9 +28,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Listener;
+namespace OCA\Humaniq\Listener;
 
-use OCA\Hrmq\Service\TimeEntryEventService;
+use OCA\Humaniq\Service\TimeEntryEventService;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -98,7 +98,7 @@ class TimesheetApprovalListener implements IEventListener {
 			// Never break the save path — a failure to resolve or emit is logged
 			// and swallowed (fire-and-forget per REQ-TEC-002).
 			$this->logger->warning(
-				'hrmq: TimesheetApprovalListener could not process an ObjectUpdatedEvent',
+				'humaniq: TimesheetApprovalListener could not process an ObjectUpdatedEvent',
 				['exception' => $e->getMessage()]
 			);
 		}//end try

@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-seed",
+    "x-humaniq-fragment": "hr-seed",
     "x-notes": "Seed objects reference each other with the `@ref:<slug>` token (`@ref:<Schema>:<slug>` when a slug is not unique), NEVER with a bare slug. OpenRegister's ImportHandler::resolveSeedReferenceTokens() runs before the import loop: it mints or reuses a stable UUID for every referenced target, writes it into that target's `@self.id`, and replaces the tokens with that UUID -- so the relation properties (`$ref` + `format: uuid`) see a real UUID by the time saveObject() validates. A bare slug fails that validation and the whole seed object is DROPPED with only a log line, which is how 103 of 107 references in this seed set were silently eaten until 2026-08-21. Only `components.objects` is scanned, so seed never moves to a top-level `objects` key. Enforced by `npm run check:seed-refs` (tests/validate-seed-refs.js).",
     "components": {
         "objects": [
@@ -155,7 +155,7 @@
                 "userId": "admin",
                 "administrationId": "ADM-001",
                 "origin": "manual",
-                "_note": "hrmq-hours-process-redesign (tasks.md 5.1): TimeEntry seeds linked to the seeded timesheets by real timesheetId slug links. The register seed import runs through the ordinary ObjectCreatingEvent pipeline, so the stamping listeners DO fire on it: TimesheetProcessStampListener forces every created Timesheet to status draft with nulled process fields (measured on CI run 32504408914 — the seeded statuses below do NOT survive import). tests/e2e/ci-seed.sh therefore walks the three 2026-05 timesheets through their real lifecycle edges after import; the status/submittedAt/approvedBy/approvedAt/rejectionReason literals below document the TARGET states and feed that walk (the rejectionReason text is read from here). Every listener-owned value (hours, userId, costCenter, administrationId, the per-entry allocation copies) is carried as a literal CONSISTENT with what the listeners derive: hours = (endedAt - startedAt - breakMinutes)/60, the entries of one timesheet sum exactly to its seeded hours, share its projectId/costCenter/billable (the homogeneous-aggregate contract, REQ-TEC-003/004), and userId mirrors the linked Employee's nextcloudUserId (absent where the employee link does not resolve — devries/bakker, the fail-closed K=2 rows)."
+                "_note": "humaniq-hours-process-redesign (tasks.md 5.1): TimeEntry seeds linked to the seeded timesheets by real timesheetId slug links. The register seed import runs through the ordinary ObjectCreatingEvent pipeline, so the stamping listeners DO fire on it: TimesheetProcessStampListener forces every created Timesheet to status draft with nulled process fields (measured on CI run 32504408914 — the seeded statuses below do NOT survive import). tests/e2e/ci-seed.sh therefore walks the three 2026-05 timesheets through their real lifecycle edges after import; the status/submittedAt/approvedBy/approvedAt/rejectionReason literals below document the TARGET states and feed that walk (the rejectionReason text is read from here). Every listener-owned value (hours, userId, costCenter, administrationId, the per-entry allocation copies) is carried as a literal CONSISTENT with what the listeners derive: hours = (endedAt - startedAt - breakMinutes)/60, the entries of one timesheet sum exactly to its seeded hours, share its projectId/costCenter/billable (the homogeneous-aggregate contract, REQ-TEC-003/004), and userId mirrors the linked Employee's nextcloudUserId (absent where the employee link does not resolve — devries/bakker, the fail-closed K=2 rows)."
             },
             {
                 "@self": {
@@ -610,7 +610,7 @@
                 "expiryDate": "2027-07-01",
                 "userId": "admin",
                 "administrationId": "ADM-001",
-                "_note": "hrmq-personal-dashboard (tasks.md 3.1): userId stamped ONLY here. The devries/bakker balances below deliberately stay unstamped so the @me exclusion stays demonstrable on a seeded instance — the REQ-MHS-006 pattern, and the fixture REQ-MHS-002's fail-closed scenario reads. In production this value is LeaveAccrualJob's to write (REQ-ACCR-006); the seed only saves dev/CI the wait for the next accrual run."
+                "_note": "humaniq-personal-dashboard (tasks.md 3.1): userId stamped ONLY here. The devries/bakker balances below deliberately stay unstamped so the @me exclusion stays demonstrable on a seeded instance — the REQ-MHS-006 pattern, and the fixture REQ-MHS-002's fail-closed scenario reads. In production this value is LeaveAccrualJob's to write (REQ-ACCR-006); the seed only saves dev/CI the wait for the next accrual run."
             },
             {
                 "@self": {
@@ -1680,7 +1680,7 @@
                 "loonheffingennummer": "000000000L04",
                 "active": true,
                 "mode": "dga_single_person",
-                "_note": "single-person-modes (design.md Seed Data, reconciled to HEAD -- the design's ADM-003 slot was already taken by abp-aansluiting, so the DGA fixture lands on ADM-004): a single-person BV in dga_single_person mode. Its one seeded DGA Employee (employee-devries-dga: isDga true, grossMonthlySalary 3500 -- below the EUR 4.833,33/maand implied by the EUR 58.000 annual norm, no gebruikelijkloonJustification) proves GET /api/payroll/dga-status returns met:false and the MijnGebruikelijkLoon banner renders the warning variant, while occ hrmq:rules:audit still reports the same nl-gebruikelijkloon-norm violation it already did. nl-single-person-mode-employee-count is SATISFIED (exactly one active DGA). A user whose active administratie is ADM-004 sees Salarissen/Medewerkers but NOT org-chart/planning/team-approval menus (REQ-SPM-003)."
+                "_note": "single-person-modes (design.md Seed Data, reconciled to HEAD -- the design's ADM-003 slot was already taken by abp-aansluiting, so the DGA fixture lands on ADM-004): a single-person BV in dga_single_person mode. Its one seeded DGA Employee (employee-devries-dga: isDga true, grossMonthlySalary 3500 -- below the EUR 4.833,33/maand implied by the EUR 58.000 annual norm, no gebruikelijkloonJustification) proves GET /api/payroll/dga-status returns met:false and the MijnGebruikelijkLoon banner renders the warning variant, while occ humaniq:rules:audit still reports the same nl-gebruikelijkloon-norm violation it already did. nl-single-person-mode-employee-count is SATISFIED (exactly one active DGA). A user whose active administratie is ADM-004 sees Salarissen/Medewerkers but NOT org-chart/planning/team-approval menus (REQ-SPM-003)."
             },
             {
                 "@self": {
@@ -2065,7 +2065,7 @@
                 "reviewedBy": "admin",
                 "reviewedAt": "2026-06-15T09:00:00Z",
                 "createdAt": "2026-01-10T08:00:00Z",
-                "_note": "hris-api-public: a fictitious payroll-partner integration demonstrating the IntegrationAccount catalog shape. grantedSchemas stays within hrmq-mcp-adoption's six-schema recommended default (Vacancy, OrgUnit), so purpose needs no special justification. This record grants NOTHING on its own -- the real access is an OpenRegister RBAC grant + a Nextcloud app password on the integration-payrollpartner account, configured outside hrmq (design.md D2)."
+                "_note": "hris-api-public: a fictitious payroll-partner integration demonstrating the IntegrationAccount catalog shape. grantedSchemas stays within humaniq-mcp-adoption's six-schema recommended default (Vacancy, OrgUnit), so purpose needs no special justification. This record grants NOTHING on its own -- the real access is an OpenRegister RBAC grant + a Nextcloud app password on the integration-payrollpartner account, configured outside humaniq (design.md D2)."
             }
         ]
     }

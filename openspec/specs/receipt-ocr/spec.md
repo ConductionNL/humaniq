@@ -7,19 +7,19 @@ built_by: openspec/changes/archive/2026-07-15-receipt-ocr
 # receipt-ocr Specification
 
 **Status**: done
-**Scope**: hrmq (docudesk financial-extraction consumption leaf — receipt OCR prefill for Expense claims)
+**Scope**: humaniq (docudesk financial-extraction consumption leaf — receipt OCR prefill for Expense claims)
 **OpenSpec changes**:
-- [receipt-ocr](../../changes/archive/2026-07-15-receipt-ocr/) _(archived 2026-07-15)_ — `Expense` v0.6.0 (`vendor`/`vatAmount` additive fields) + new `ReceiptExtraction` v0.1.0 attempt log; `ReceiptExtractionService`/`ReceiptExtractionRepository` calling docudesk's `FinancialExtractionService::extractFinancial()` (duck-typed, same-instance, `skipped-no-docudesk` degradation) and prefilling only empty Expense fields, never overwriting a human-entered value and never touching `Expense.status`; occ trigger `hrmq:expense:extract-receipt` + one guarded api-call endpoint (`ExpenseController::extractReceipt()`); `ExpenseDetail` manifest action (kind: code)
+- [receipt-ocr](../../changes/archive/2026-07-15-receipt-ocr/) _(archived 2026-07-15)_ — `Expense` v0.6.0 (`vendor`/`vatAmount` additive fields) + new `ReceiptExtraction` v0.1.0 attempt log; `ReceiptExtractionService`/`ReceiptExtractionRepository` calling docudesk's `FinancialExtractionService::extractFinancial()` (duck-typed, same-instance, `skipped-no-docudesk` degradation) and prefilling only empty Expense fields, never overwriting a human-entered value and never touching `Expense.status`; occ trigger `humaniq:expense:extract-receipt` + one guarded api-call endpoint (`ExpenseController::extractReceipt()`); `ExpenseDetail` manifest action (kind: code)
 
 ## Purpose
 
-Give every `Expense` with an attached `receiptFile` an automatic prefill of its still-empty `amount`/`expenseDate`/`vendor`/`vatAmount` fields, extracted by docudesk's `FinancialExtractionService` from the receipt, with confidence and provenance recorded so a reviewer can tell a value was machine-suggested rather than hand-entered — hrmq assembles the request and applies the result, docudesk owns all OCR/extraction logic, and extraction never touches the Expense's approval lifecycle. hermiq is not a provider for this leaf (it exposes only an NC `core:text2text` TaskProcessing provider, no receipt/document field extraction).
+Give every `Expense` with an attached `receiptFile` an automatic prefill of its still-empty `amount`/`expenseDate`/`vendor`/`vatAmount` fields, extracted by docudesk's `FinancialExtractionService` from the receipt, with confidence and provenance recorded so a reviewer can tell a value was machine-suggested rather than hand-entered — humaniq assembles the request and applies the result, docudesk owns all OCR/extraction logic, and extraction never touches the Expense's approval lifecycle. hermiq is not a provider for this leaf (it exposes only an NC `core:text2text` TaskProcessing provider, no receipt/document field extraction).
 
 **Implementation-verified correction to the docudesk contract** (design.md D4 explicitly flagged its `fields` key-name assumption as unverified; confirmed against `docudesk/lib/Service/FinancialExtractionService.php` at the installed HEAD during implementation): `extractFinancial(array $data, string $requestedBy): array` does **not** return `fields` keyed `amount`/`date`/`vendor`/`vatAmount`. Its real shaped-field set (`FIELD_DEFAULTS`) is `supplierName`/`supplierIban`/`supplierKvk`/`supplierVatId`/`invoiceNumber`/`issueDate`/`dueDate`/`currency`/`totalExcl`/`totalVat`/`totalIncl`/`vatBreakdown`/`lines`. `ReceiptExtractionService::FIELD_SOURCE_KEYS` maps the four prefillable Expense fields onto the REAL keys: `amount` ← `totalIncl` (VAT-inclusive total — the amount actually claimed), `expenseDate` ← `issueDate`, `vendor` ← `supplierName`, `vatAmount` ← `totalVat`. `$data` takes `fileId` (int) or `documentUri` (string) plus `docType` (`receipt`|`supplier-invoice`); `Expense.receiptFile` is passed as `fileId` when purely numeric, else as `documentUri`. The prefill-not-overwrite RULE itself (below) is unchanged by this correction, per design.md D4's own instruction to adjust the constant map, not the rule.
 
 ## ADDED Requirements
 
-@e2e exclude backend service/controller/command change plus a declarative manifest action; hrmq has no app-level e2e suite yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude backend service/controller/command change plus a declarative manifest action; humaniq has no app-level e2e suite yet (tracked by active change humaniq-test-coverage-baseline)
 
 ### Requirement: The `Expense` schema SHALL gain additive vendor/VAT fields and a `ReceiptExtraction` attempt log SHALL exist (REQ-RCPT-001)
 
@@ -109,18 +109,18 @@ For an `Expense` with a non-empty `receiptFile`, `ReceiptExtractionService` SHAL
 
 ### Requirement: An occ command SHALL trigger extraction, on demand or as a backlog (REQ-RCPT-006)
 
-`occ hrmq:expense:extract-receipt [--expense <id>]` SHALL, with no options, process the backlog of every `Expense` with a non-empty `receiptFile` and no active (`pending`/`extracted`) `ReceiptExtraction`; `--expense <id>` SHALL narrow processing to that one Expense, returning a single `failed` outcome with a diagnostic when that Expense has no `receiptFile`.
+`occ humaniq:expense:extract-receipt [--expense <id>]` SHALL, with no options, process the backlog of every `Expense` with a non-empty `receiptFile` and no active (`pending`/`extracted`) `ReceiptExtraction`; `--expense <id>` SHALL narrow processing to that one Expense, returning a single `failed` outcome with a diagnostic when that Expense has no `receiptFile`.
 
 #### Scenario: Default backlog run
 
 - **GIVEN** three Expenses with receipts and no active extraction, and one Expense already `extracted`
-- **WHEN** `occ hrmq:expense:extract-receipt` runs with no options
+- **WHEN** `occ humaniq:expense:extract-receipt` runs with no options
 - **THEN** the three eligible Expenses are processed and the already-`extracted` one is skipped (its idempotency pre-check makes it a no-op)
 
 #### Scenario: Single-Expense run without a receipt
 
 - **GIVEN** an Expense with no `receiptFile`
-- **WHEN** `occ hrmq:expense:extract-receipt --expense <that-id>` runs
+- **WHEN** `occ humaniq:expense:extract-receipt --expense <that-id>` runs
 - **THEN** the command reports a single `failed` outcome and exits non-zero
 
 ### Requirement: A guarded endpoint and manifest action SHALL let admin/HR or the owning employee trigger extraction from the Expense detail page (REQ-RCPT-007)

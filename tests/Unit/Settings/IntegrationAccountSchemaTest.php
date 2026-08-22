@@ -13,7 +13,7 @@
  * description states plainly it does NOT enforce access (design.md D2).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Settings
+ * @package  OCA\Humaniq\Tests\Unit\Settings
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,7 +29,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Settings;
+namespace OCA\Humaniq\Tests\Unit\Settings;
 
 use PHPUnit\Framework\TestCase;
 

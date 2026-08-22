@@ -3,7 +3,7 @@
 /**
  * AVG DSR Rectify Command
  *
- * `occ hrmq:avg:rectify --employee <id> --as-user <admin-uid> --changes
+ * `occ humaniq:avg:rectify --employee <id> --as-user <admin-uid> --changes
  * <json> --dsr-request-id <id>` -- the CLI mirror of Art 16 rectificatie
  * (avg-dsr design.md D6): `--as-user` establishes the privileged session
  * BEFORE any call (design.md D3), the employee is RBAC-resolved (existence +
@@ -15,7 +15,7 @@
  * exit, never silently dropped.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,10 +31,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\AvgDsrService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Service\AvgDsrService;
+use OCA\Humaniq\Service\SettingsService;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
@@ -69,7 +69,7 @@ class AvgDsrRectifyCommand extends Command {
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:avg:rectify')
+		$this->setName('humaniq:avg:rectify')
 			->setDescription('Apply an AVG rectificatie (Art 16) directly to one employee\'s object -- no retention guard.')
 			->addOption('employee', null, InputOption::VALUE_REQUIRED, 'The Employee id to correct.')
 			->addOption('as-user', null, InputOption::VALUE_REQUIRED, 'The Nextcloud administrator uid establishing the privileged DSAR session.')
@@ -136,7 +136,7 @@ class AvgDsrRectifyCommand extends Command {
 			return 1;
 		}
 
-		$output->writeln('<info>Hrmq AVG-rectificatie toegepast</info>');
+		$output->writeln('<info>Humaniq AVG-rectificatie toegepast</info>');
 		$output->writeln('  veld(en): ' . implode(', ', array_keys($changes)));
 
 		return 0;
@@ -182,7 +182,7 @@ class AvgDsrRectifyCommand extends Command {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 

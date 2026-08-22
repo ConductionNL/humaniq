@@ -6,11 +6,11 @@ description: The wage-tax filing (loonaangifte) lifecycle, tijdvakcodes, and sta
 # Loonaangifte filing
 
 `LoonaangifteFiling` turns the Dutch wage-tax filing obligation into a real
-workflow inside HRMQ: a declarative lifecycle, first-class tijdvakcode
+workflow inside Humaniq: a declarative lifecycle, first-class tijdvakcode
 data per Belastingdienst LH 210, statutory deadline derivation, and
 deadline alerting — all as versioned machine-checkable corpus rules.
 Digipoort wire transport (actually submitting the filing to the
-Belastingdienst) is explicitly out of scope; HRMQ manages the filing
+Belastingdienst) is explicitly out of scope; Humaniq manages the filing
 record and its lifecycle, not the transmission channel.
 
 ## The filing lifecycle
@@ -71,7 +71,7 @@ LH 210 2026 / AWR art. 19) are enforced by `NlWageTaxFilingChecks`:
 Run the audit with:
 
 ```bash
-occ hrmq:rules:audit --jurisdiction=NL
+occ humaniq:rules:audit --jurisdiction=NL
 ```
 
 ## Filing pages
@@ -81,4 +81,4 @@ The `LoonaangifteFilings` index lists `period`, `tijdvakcode`, `status`,
 ascending. `LoonaangifteFilingDetail` surfaces Status and Deadline in a
 prominent widget and exposes the lifecycle actions — Klaarzetten,
 Bevestigen, Verzenden, Heropenen, Corrigeren — the same pattern used
-throughout HRMQ's approval-driven objects.
+throughout Humaniq's approval-driven objects.

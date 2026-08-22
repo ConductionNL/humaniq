@@ -1,5 +1,5 @@
 /**
- * HRMQ landing page.
+ * Humaniq landing page.
  *
  * Composes the brand <DetailHero> + <WidgetShelf> from
  * @conduction/docusaurus-preset/components, mirroring the pattern used
@@ -20,9 +20,9 @@ import {
   WidgetShelf,
 } from '@conduction/docusaurus-preset/components';
 
-/* HRMQ glyph — the app's Material Design Icons "account-tie" mark
+/* Humaniq glyph — the app's Material Design Icons "account-tie" mark
    (same path as img/app.svg / img/app-store.svg at the app root). */
-const HRMQ_ICON = (
+const HUMANIQ_ICON = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0" xmlns="http://www.w3.org/2000/svg">
     <path fill="currentColor" d="M12 3C14.21 3 16 4.79 16 7S14.21 11 12 11 8 9.21 8 7 9.79 3 12 3M16 13.54C16 14.6 15.72 17.07 13.81 19.83L13 15L13.94 13.12C13.32 13.05 12.67 13 12 13S10.68 13.05 10.06 13.12L11 15L10.19 19.83C8.28 17.07 8 14.6 8 13.54C5.61 14.24 4 15.5 4 17V21H20V17C20 15.5 18.4 14.24 16 13.54Z" />
   </svg>
@@ -30,7 +30,7 @@ const HRMQ_ICON = (
 
 const TAGLINE = (
   <>
-    HRMQ is open-source HR and payroll administration for Dutch and EU
+    Humaniq is open-source HR and payroll administration for Dutch and EU
     employers, built on the OpenRegister data layer. Timesheets, expense
     claims, leave and verzuim (Poortwachter), onboarding through
     offboarding, and the only open-source Dutch payroll calculation
@@ -40,7 +40,7 @@ const TAGLINE = (
 );
 
 /* --- Generic mock widget panels --------------------------------------
-   Token-only abstractions of HRMQ's real surfaces. */
+   Token-only abstractions of Humaniq's real surfaces. */
 
 function PayrollPanel() {
   const rows = [
@@ -139,7 +139,7 @@ function ComplianceRulePanel() {
 const WIDGETS = [
   {
     title: 'Gross-to-net, table-driven',
-    desc: 'A pure, stateless PayrollCalculator computes the NL Rekenvoorschriften 2026 chain in integer cents over a versioned nl-2026.json tax-year parameter file. occ hrmq:payroll:run creates draft runs and payslips; occ hrmq:payroll:verify audits them against the same rule corpus that audits hand-entered data.',
+    desc: 'A pure, stateless PayrollCalculator computes the NL Rekenvoorschriften 2026 chain in integer cents over a versioned nl-2026.json tax-year parameter file. occ humaniq:payroll:run creates draft runs and payslips; occ humaniq:payroll:verify audits them against the same rule corpus that audits hand-entered data.',
     panel: <PayrollPanel />,
   },
   {
@@ -149,7 +149,7 @@ const WIDGETS = [
   },
   {
     title: 'A versioned, machine-checkable rule corpus',
-    desc: 'occ hrmq:rules:audit reports enforced ÷ machine-checkable coverage across payroll, labour and privacy rule domains — Dutch labour law, EU directives, GDPR for employee data — sourced and cited, never invented.',
+    desc: 'occ humaniq:rules:audit reports enforced ÷ machine-checkable coverage across payroll, labour and privacy rule domains — Dutch labour law, EU directives, GDPR for employee data — sourced and cited, never invented.',
     panel: <ComplianceRulePanel />,
   },
 ];
@@ -157,24 +157,24 @@ const WIDGETS = [
 export default function Home() {
   return (
     <Layout
-      title="HRMQ — open-source Dutch HR & payroll for Nextcloud"
-      description="HRMQ is open-source HR and payroll administration for Dutch and EU employers, built on the OpenRegister data layer."
+      title="Humaniq — open-source Dutch HR & payroll for Nextcloud"
+      description="Humaniq is open-source HR and payroll administration for Dutch and EU employers, built on the OpenRegister data layer."
     >
       <main className="marketing-page">
         <DetailHero
           background="cobalt"
           status={{ label: 'Beta', color: 'var(--c-orange-knvb)' }}
           locales="NL · EN"
-          title="HRMQ"
+          title="Humaniq"
           tagline={TAGLINE}
           primaryCta={{
-            label: 'View on Codeberg',
-            href: 'https://codeberg.org/Conduction/hrmq',
+            label: 'View on GitHub',
+            href: 'https://github.com/ConductionNL/humaniq',
             tone: 'orange',
           }}
           secondaryCta={{ label: 'Read the docs', href: '/docs/intro' }}
           iconColor="var(--c-orange-knvb)"
-          icon={HRMQ_ICON}
+          icon={HUMANIQ_ICON}
         />
 
         <WidgetShelf

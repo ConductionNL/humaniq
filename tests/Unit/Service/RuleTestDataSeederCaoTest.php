@@ -11,7 +11,7 @@
  * corpus is authoritative; the `Cao` objects are a derived projection.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -27,12 +27,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Service\RuleTestDataEmployeeIndex;
-use OCA\Hrmq\Service\RuleTestDataSeeder;
-use OCA\Hrmq\Standards\CaoRegistry;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\Service\RuleTestDataEmployeeIndex;
+use OCA\Humaniq\Service\RuleTestDataSeeder;
+use OCA\Humaniq\Standards\CaoRegistry;
+use OCA\Humaniq\Standards\RuleEngine;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUserManager;

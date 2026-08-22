@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-leave",
+    "x-humaniq-fragment": "hr-leave",
     "components": {
         "schemas": {
             "LeaveRequest": {
@@ -7,7 +7,7 @@
                 "icon": "CalendarClock",
                 "version": "0.4.0",
                 "title": "Leave request",
-                "description": "An employee request for leave (verlofaanvraag): a period of holiday, sick, unpaid, special, care or parental leave submitted for manager approval. The request lifecycle (draft → submitted → approved/rejected, with the shared no-self-approval separation-of-duties guard) is fully declarative per ADR-031, mirroring the Timesheet and Expense workflows. Leave is the HR/labour surface the portaliq fleet review flagged as missing in hrmq; external employees create and track these requests through the shared external portal (ADR-046), while approval stays a back-office manager action.",
+                "description": "An employee request for leave (verlofaanvraag): a period of holiday, sick, unpaid, special, care or parental leave submitted for manager approval. The request lifecycle (draft → submitted → approved/rejected, with the shared no-self-approval separation-of-duties guard) is fully declarative per ADR-031, mirroring the Timesheet and Expense workflows. Leave is the HR/labour surface the portaliq fleet review flagged as missing in humaniq; external employees create and track these requests through the shared external portal (ADR-046), while approval stays a back-office manager action.",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [
@@ -36,7 +36,7 @@
                                     "submitted"
                                 ],
                                 "to": "approved",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
                                 "description": "A manager approves the submitted leave request. The NoSelfApprovalGuard rejects self-approval (the approver may not be the requesting employee)."
                             },
                             "reject": {
@@ -44,7 +44,7 @@
                                     "submitted"
                                 ],
                                 "to": "rejected",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
                                 "description": "A manager rejects the submitted leave request (with a rejectionReason). The NoSelfApprovalGuard rejects self-rejection. The employee may correct the request and re-submit."
                             }
                         }
@@ -263,7 +263,7 @@
                         "nullable": true,
                         "title": "User",
                         "description": "The account this leave balance belongs to. Kept up to date automatically.",
-                        "x-notes": "Denormalized Nextcloud user id of the employee (mijn-hr-self-service REQ-MHS-002, extended to LeaveBalance by hrmq-personal-dashboard) — a plain NC-user-id string mirroring the approvedBy convention, never a $ref. A copy of the linked Employee's nextcloudUserId, carried because the manifest filter grammar cannot join across schemas; the MijnHr dashboard's 'Mijn verlofsaldo' widget filters on it with the @me token. Never a form field on any surface. Population custody is LeaveAccrualJob — the schema's sole systematic writer — which stamps it on BOTH its create and its monthly update path (REQ-ACCR-006), so a balance created before this property existed self-heals on the next accrual run and no dedicated repair step is needed. A balance whose employee has no linked account keeps null and never appears on a Mijn surface (fail-closed, REQ-MHS-002). The buy/sell settlement path mutates usedHours on existing rows and never creates balances, so it neither needs nor gets stamping logic."
+                        "x-notes": "Denormalized Nextcloud user id of the employee (mijn-hr-self-service REQ-MHS-002, extended to LeaveBalance by humaniq-personal-dashboard) — a plain NC-user-id string mirroring the approvedBy convention, never a $ref. A copy of the linked Employee's nextcloudUserId, carried because the manifest filter grammar cannot join across schemas; the MijnHr dashboard's 'Mijn verlofsaldo' widget filters on it with the @me token. Never a form field on any surface. Population custody is LeaveAccrualJob — the schema's sole systematic writer — which stamps it on BOTH its create and its monthly update path (REQ-ACCR-006), so a balance created before this property existed self-heals on the next accrual run and no dedicated repair step is needed. A balance whose employee has no linked account keeps null and never appears on a Mijn surface (fail-closed, REQ-MHS-002). The buy/sell settlement path mutates usedHours on existing rows and never creates balances, so it neither needs nor gets stamping logic."
                     }
                 }
             },
@@ -305,7 +305,7 @@
                                     "submitted"
                                 ],
                                 "to": "approved",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\LeaveBuySellApprovalGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\LeaveBuySellApprovalGuard",
                                 "description": "A manager approves the submitted transaction. LeaveBuySellApprovalGuard delegates to NoSelfApprovalGuard first, then for a sell denies unless the referenced LeaveBalance has sufficient bovenwettelijkHours."
                             },
                             "reject": {
@@ -313,7 +313,7 @@
                                     "submitted"
                                 ],
                                 "to": "rejected",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
                                 "description": "A manager rejects the submitted transaction (with a rejectionReason). Only the separation-of-duties check applies -- the statutory check is irrelevant to a rejection."
                             },
                             "settle": {
@@ -321,7 +321,7 @@
                                     "approved"
                                 ],
                                 "to": "settled",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\LeaveSettlementPeriodGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\LeaveSettlementPeriodGuard",
                                 "description": "Settlement adjusts LeaveBalance.bovenwettelijkHours and stamps settledAmount. Fail-closed unless settlementPeriod is present and YYYY-MM-shaped; the actual balance write happens in LeaveBuySellSettlementService, never as a bare declarative transition (the CompAdjustmentDetail orphaned-capability precedent)."
                             }
                         }

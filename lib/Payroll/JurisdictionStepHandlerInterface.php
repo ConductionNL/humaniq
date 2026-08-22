@@ -8,7 +8,7 @@
  *
  * A pack step may declare `{"op": "phpStep", "handler": "some-name"}`. The
  * handler NAME is resolved against a compile-time allow-list of classes
- * implementing this interface that already ship inside hrmq. **A pack supplies
+ * implementing this interface that already ship inside humaniq. **A pack supplies
  * a name and parameters; it can never supply code, a class path, a callable,
  * or a file.**
  *
@@ -19,7 +19,7 @@
  * This is the orphaned-capability defect class, and payroll is the worst
  * possible place to meet it.
  *
- * **hrmq ships ZERO implementations of this interface.** No NL step needs one
+ * **humaniq ships ZERO implementations of this interface.** No NL step needs one
  * — all of NL is expressible in the declarative vocabulary. The registry
  * exists so the wall is built before the first country hits it; the honest
  * expectation (ADR-101) is that NL itself will be the first customer, at VCR.
@@ -28,7 +28,7 @@
  * that is a finding to escalate, not to route around.
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll
+ * @package  OCA\Humaniq\Payroll
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -44,9 +44,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll;
+namespace OCA\Humaniq\Payroll;
 
-use OCA\Hrmq\Payroll\Dsl\StepContext;
+use OCA\Humaniq\Payroll\Dsl\StepContext;
 
 /**
  * One allow-listed national-exotica handler.

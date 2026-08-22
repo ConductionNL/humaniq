@@ -8,7 +8,7 @@ revised_by: hrmq#99 (consume-not-rebuild correction, 2026-07-18)
 # avg-dsr Specification
 
 **Status**: done
-**Scope**: hrmq (`depends_on: []`)
+**Scope**: humaniq (`depends_on: []`)
 **OpenSpec changes**:
 - [avg-dsr](../../changes/archive/2026-07-15-avg-dsr/) _(archived 2026-07-15)_
   — AVG (GDPR) data-subject-rights orchestration: a `DsrRequest` lifecycle record, the
@@ -31,12 +31,12 @@ revised_by: hrmq#99 (consume-not-rebuild correction, 2026-07-18)
 ## Purpose
 
 OpenRegister ships two data-subject-request surfaces. `OCA\OpenRegister\Service\DsarService` is
-privileged/admin-only and UNGUARDED — it has no per-object retention exclusion, so hrmq must never
+privileged/admin-only and UNGUARDED — it has no per-object retention exclusion, so humaniq must never
 call it directly for erasure (that was the original design's mistake). `OCA\OpenRegister\Service
 \Gdpr\DataSubjectRequestService` is the RBAC/tenant-scoped, GUARDED counterpart: its `erase()`
 refuses (reports as `held`, never silently skips) any object under an active legal hold
 (`RetentionService::hasActiveLegalHold()`) or an immutable archival status
-(`RetentionService::validateNotImmutable()`) on its own. hrmq owns no database tables and no
+(`RetentionService::validateNotImmutable()`) on its own. humaniq owns no database tables and no
 PII-detection/entity-matching/retention-guarding logic of its own (ADR-022); this capability is a
 thin orchestration layer over the guarded service's `findSubjectData()`/`erase()`/`rectify()` — never
 a reimplementation of anonymisation, entity matching, soft-delete, or retention exclusion.
@@ -44,7 +44,7 @@ a reimplementation of anonymisation, entity matching, soft-delete, or retention 
 The guarded service's own retention check does **not** gate on a populated
 `retention.archiefactiedatum` — only on an active legal hold or an immutable archival status
 (openregister#475). The second load-bearing correctness requirement therefore is:
-hrmq's payroll/loonadministratie data carries a statutory 7-year fiscal retention duty (AWR art. 52
+humaniq's payroll/loonadministratie data carries a statutory 7-year fiscal retention duty (AWR art. 52
 lid 4), and for that duty to actually block an erase, a real OpenRegister legal hold must be placed
 — a date field alone is not protective. `PayrollRetentionGuardService` (consumed by
 `HrDocumentService` and, going forward, wherever a payroll object is created/updated) reads an
@@ -87,32 +87,32 @@ a record still present past its own `retention.archiefactiedatum` (hrmq#99 hole 
 
 #### Scenario: Inzage renders a human-readable overview
 - **GIVEN** an employee with objects matched by `findSubjectData()`
-- **WHEN** `occ hrmq:avg:export --employee <employeeNumber> --as-user admin --right inzage` runs
+- **WHEN** `occ humaniq:avg:export --employee <employeeNumber> --as-user admin --right inzage` runs
 - **THEN** the output groups matched objects with their `gdprEntities` annotations, and `DsrRequest.right` is `inzage`
 
 #### Scenario: Portabiliteit renders the same objects as a structured export
 - **GIVEN** the same employee and matched objects
-- **WHEN** `occ hrmq:avg:export --employee <employeeNumber> --as-user admin --right portabiliteit` runs
+- **WHEN** `occ humaniq:avg:export --employee <employeeNumber> --as-user admin --right portabiliteit` runs
 - **THEN** the output is a single flattened structured document containing every object `findSubjectData()` returned, and `Gdpr\DataSubjectRequestService::findSubjectData()` is invoked exactly once for this request
 
 ### Requirement: An authenticated session SHALL back every guarded-service call; an unprivileged caller SHALL receive a controlled error, never a silent skip or an uncaught throw (REQ-DSR-004)
 
-_(Revised hrmq#99: the previous title/body described `DsarService::assertPrivileged()`'s admin-only requirement. `Gdpr\DataSubjectRequestService` is RBAC/tenant-scoped, not privileged-admin-only — it does not itself require `IGroupManager::isAdmin()` or throw a privilege `RuntimeException`. The mechanism below is retained as hrmq's own POLICY (AVG data-subject-rights handling for an employee stays administrator-only in this app) and because CLI invocation has no ambient session by default, not because the consumed OpenRegister service demands it.)_
+_(Revised hrmq#99: the previous title/body described `DsarService::assertPrivileged()`'s admin-only requirement. `Gdpr\DataSubjectRequestService` is RBAC/tenant-scoped, not privileged-admin-only — it does not itself require `IGroupManager::isAdmin()` or throw a privilege `RuntimeException`. The mechanism below is retained as humaniq's own POLICY (AVG data-subject-rights handling for an employee stays administrator-only in this app) and because CLI invocation has no ambient session by default, not because the consumed OpenRegister service demands it.)_
 
-Every `occ hrmq:avg:*` command SHALL require a `--as-user <uid>` option, resolve and validate that user as an actual Nextcloud administrator (`IUserManager::get()` + `IGroupManager::isAdmin()`) before calling `IUserSession::setUser()` — establishing the session the guarded service's ambient RBAC/tenant scoping and audit attribution need — and SHALL catch any `RuntimeException` as a defensive measure, translating it into a one-line stderr message with a non-zero exit code. `AvgDsrController` SHALL gate every method with `#[NoAdminRequired]` plus a manual admin-only 403 check before any resolve (hrmq policy, REQ-DSR-004), and SHALL catch the same `RuntimeException` defensively, translating it into a 403 JSON response.
+Every `occ humaniq:avg:*` command SHALL require a `--as-user <uid>` option, resolve and validate that user as an actual Nextcloud administrator (`IUserManager::get()` + `IGroupManager::isAdmin()`) before calling `IUserSession::setUser()` — establishing the session the guarded service's ambient RBAC/tenant scoping and audit attribution need — and SHALL catch any `RuntimeException` as a defensive measure, translating it into a one-line stderr message with a non-zero exit code. `AvgDsrController` SHALL gate every method with `#[NoAdminRequired]` plus a manual admin-only 403 check before any resolve (humaniq policy, REQ-DSR-004), and SHALL catch the same `RuntimeException` defensively, translating it into a 403 JSON response.
 
 #### Scenario: An unresolvable --as-user is refused before any guarded-service call
-- **GIVEN** `occ hrmq:avg:export --employee E1 --as-user nonexistent-uid`
+- **GIVEN** `occ humaniq:avg:export --employee E1 --as-user nonexistent-uid`
 - **WHEN** the command runs
 - **THEN** it prints a one-line error naming the unknown user, exits with code 1, and `Gdpr\DataSubjectRequestService` is never invoked
 
 #### Scenario: A non-admin --as-user is refused before any guarded-service call
-- **GIVEN** `occ hrmq:avg:erase --employee E1 --as-user regular-user` where `regular-user` is a valid but non-admin Nextcloud account
+- **GIVEN** `occ humaniq:avg:erase --employee E1 --as-user regular-user` where `regular-user` is a valid but non-admin Nextcloud account
 - **WHEN** the command runs
 - **THEN** it prints a one-line error stating administrator privileges are required, exits with code 1, and `Gdpr\DataSubjectRequestService` is never invoked
 
 #### Scenario: A valid admin --as-user establishes the session the guarded service uses for RBAC/tenant scoping
-- **GIVEN** `occ hrmq:avg:export --employee E1 --as-user admin` where `admin` is a real Nextcloud administrator
+- **GIVEN** `occ humaniq:avg:export --employee E1 --as-user admin` where `admin` is a real Nextcloud administrator
 - **WHEN** the command runs
 - **THEN** `IUserSession::setUser()` is called with the resolved admin before `AvgDsrService` runs, and the command completes successfully
 
@@ -134,7 +134,7 @@ _(Revised hrmq#99, consume-not-rebuild correction: the original design computed 
 
 #### Scenario: A legal-hold-protected Payslip is refused and reported, not erased
 - **GIVEN** an employee with a `Payslip` under an active OpenRegister legal hold (placed by `PayrollRetentionGuardService` for its still-open 7-year AWR window, or manually)
-- **WHEN** `occ hrmq:avg:erase --employee <employeeNumber> --as-user admin --confirm --dsr-request-id <id>` runs against a request whose preview already ran
+- **WHEN** `occ humaniq:avg:erase --employee <employeeNumber> --as-user admin --confirm --dsr-request-id <id>` runs against a request whose preview already ran
 - **THEN** that Payslip's data is unchanged, the guarded service's `erase()` reports it in `held` (never in `erased`), and it appears in the outcome's `retained` list with its hold reason
 
 #### Scenario: A generated PDF of a legal-hold-protected Payslip is also refused (hrmq#99 hole #1)
@@ -154,16 +154,16 @@ _(Revised hrmq#99, consume-not-rebuild correction: the original design computed 
 
 ### Requirement: Erasure SHALL always preview before any write, and execution SHALL require an explicit confirmation tied to that preview (REQ-DSR-006)
 
-`AvgDsrService::previewErasure()` SHALL perform zero writes by calling the guarded service's own `erase(..., dryRun: true)` and SHALL return the same `held`/`erased`/`failed` buckets `eraseSubject()` would produce, relabelled `retained`/`wouldErase`/`failed`. `occ hrmq:avg:erase` SHALL default to preview-only and SHALL require both `--confirm` and a `--dsr-request-id` referencing a `DsrRequest` with `status: in_behandeling` and a previously recorded preview before performing any write; `AvgDsrController::eraseConfirm()` SHALL enforce the identical precondition.
+`AvgDsrService::previewErasure()` SHALL perform zero writes by calling the guarded service's own `erase(..., dryRun: true)` and SHALL return the same `held`/`erased`/`failed` buckets `eraseSubject()` would produce, relabelled `retained`/`wouldErase`/`failed`. `occ humaniq:avg:erase` SHALL default to preview-only and SHALL require both `--confirm` and a `--dsr-request-id` referencing a `DsrRequest` with `status: in_behandeling` and a previously recorded preview before performing any write; `AvgDsrController::eraseConfirm()` SHALL enforce the identical precondition.
 
 #### Scenario: A bare erase command previews without writing
-- **GIVEN** `occ hrmq:avg:erase --employee E1 --as-user admin` with no `--confirm`
+- **GIVEN** `occ humaniq:avg:erase --employee E1 --as-user admin` with no `--confirm`
 - **WHEN** the command runs
 - **THEN** it prints the `wouldErase`/`retained`/`failed` preview lists and no object's data changes (a dry run performs no object writes)
 
 #### Scenario: Confirm without a prior preview is refused
 - **GIVEN** no `DsrRequest` exists yet for the employee, or the referenced request's preview was never recorded
-- **WHEN** `occ hrmq:avg:erase --employee E1 --as-user admin --confirm --dsr-request-id <id>` runs
+- **WHEN** `occ humaniq:avg:erase --employee E1 --as-user admin --confirm --dsr-request-id <id>` runs
 - **THEN** the command is refused with a controlled error and no write occurs
 
 #### Scenario: Confirm after a recorded preview executes the guarded erase
@@ -173,13 +173,13 @@ _(Revised hrmq#99, consume-not-rebuild correction: the original design computed 
 
 ### Requirement: Rectification SHALL apply changes directly via the guarded service's rectify(), blocked only by an immutable archival status (REQ-DSR-007)
 
-_(Revised hrmq#99: `Gdpr\DataSubjectRequestService::rectify(string $objectIdentifier, array $changes)` takes the object's id/uuid directly, replacing `DsarService::rectifyObjectForSubject(int $objectId, ...)` — no internal-int-id resolution workaround is needed in hrmq anymore.)_
+_(Revised hrmq#99: `Gdpr\DataSubjectRequestService::rectify(string $objectIdentifier, array $changes)` takes the object's id/uuid directly, replacing `DsarService::rectifyObjectForSubject(int $objectId, ...)` — no internal-int-id resolution workaround is needed in humaniq anymore.)_
 
 `AvgDsrService::rectifySubjectObject()` SHALL call `Gdpr\DataSubjectRequestService::rectify()` directly for the named object identifier and change set, SHALL NOT apply the legal-hold guard of REQ-DSR-005 (a correction does not remove data; only an immutable archival status blocks it, per the guarded service's own `rectify()`), and SHALL record only the changed field names, never before/after PII values, on `DsrRequest.outcomeSummary`.
 
 #### Scenario: A rectification updates the object and records only field names
 - **GIVEN** an `Employee` with a misspelled `lastName`
-- **WHEN** `occ hrmq:avg:rectify --employee E1 --as-user admin --changes '{"lastName":"Corrected"}'` runs
+- **WHEN** `occ humaniq:avg:rectify --employee E1 --as-user admin --changes '{"lastName":"Corrected"}'` runs
 - **THEN** the `Employee` object's `lastName` is updated, `DsrRequest.status` becomes `voldaan`, and `outcomeSummary` names `lastName` as changed without recording the old or new value
 
 #### Scenario: A failed rectification is reported, not silently dropped
@@ -187,14 +187,14 @@ _(Revised hrmq#99: `Gdpr\DataSubjectRequestService::rectify(string $objectIdenti
 - **WHEN** the rectify command runs
 - **THEN** `DsrRequest.status` becomes `afgewezen` with a `rejectionReason`, and the command exits with a non-zero code
 
-### Requirement: AVG data-subject-rights operations SHALL be invocable via occ hrmq:avg:* commands and a guarded admin-only endpoint/manifest surface, never a bare unguarded call (REQ-DSR-008)
+### Requirement: AVG data-subject-rights operations SHALL be invocable via occ humaniq:avg:* commands and a guarded admin-only endpoint/manifest surface, never a bare unguarded call (REQ-DSR-008)
 
-hrmq SHALL expose `occ hrmq:avg:export`, `occ hrmq:avg:erase`, and `occ hrmq:avg:rectify` (each per REQ-DSR-004's privileged-session mechanism) and SHALL expose `AvgDsrController`'s `export()`/`erasePreview()`/`eraseConfirm()`/`rectify()` endpoints, registered in `appinfo/routes.php` before the SPA catch-all. `src/manifest.json` SHALL expose a `DsrRequests` index and `DsrRequestDetail` page as an admin-only surface with page actions wired to these endpoints as `api-call` actions, never as a `lifecycleActions` widget.
+humaniq SHALL expose `occ humaniq:avg:export`, `occ humaniq:avg:erase`, and `occ humaniq:avg:rectify` (each per REQ-DSR-004's privileged-session mechanism) and SHALL expose `AvgDsrController`'s `export()`/`erasePreview()`/`eraseConfirm()`/`rectify()` endpoints, registered in `appinfo/routes.php` before the SPA catch-all. `src/manifest.json` SHALL expose a `DsrRequests` index and `DsrRequestDetail` page as an admin-only surface with page actions wired to these endpoints as `api-call` actions, never as a `lifecycleActions` widget.
 
 #### Scenario: All three occ commands are registered and require --as-user
 - **GIVEN** the app is installed
-- **WHEN** `occ list hrmq:avg` runs
-- **THEN** `hrmq:avg:export`, `hrmq:avg:erase`, and `hrmq:avg:rectify` are listed, and each requires `--as-user`
+- **WHEN** `occ list humaniq:avg` runs
+- **THEN** `humaniq:avg:export`, `humaniq:avg:erase`, and `humaniq:avg:rectify` are listed, and each requires `--as-user`
 
 #### Scenario: The manifest surface wires guarded actions, not a lifecycle widget
 - **GIVEN** `src/manifest.json`'s `DsrRequestDetail` page

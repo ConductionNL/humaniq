@@ -7,14 +7,14 @@ built_by: openspec/changes/archive/2026-07-14-retro-adjustments
 # retro-adjustments Specification
 
 **Status**: done
-**Scope**: hrmq (consumes the merged `payroll-core-engine` and `payroll-core-schema`, no `depends_on`)
+**Scope**: humaniq (consumes the merged `payroll-core-engine` and `payroll-core-schema`, no `depends_on`)
 **OpenSpec changes**:
 - [retro-adjustments](../../changes/archive/2026-07-14-retro-adjustments/) _(archived 2026-07-15)_ —
   terugwerkende kracht (TWK) corrections for a sealed prior-period payslip modeled as a DELTA
   (`PayrollAdjustment`), a `RetroAdjustmentService` that recomputes the original period against ITS
   OWN tax year and diffs a cents-exact delta idempotently by `correctionRef`, the surfacing of that
   delta as a current-run payslip component (`Payslip.retroAdjustment`, never a history mutation), the
-  occ `hrmq:payroll:adjust` + `hrmq:payroll:year-transition` commands, the guarded
+  occ `humaniq:payroll:adjust` + `humaniq:payroll:year-transition` commands, the guarded
   `POST /api/payroll/adjust` endpoint + run/adjustment manifest pages, and the
   `nl-retro-adjustment-consistency` corpus self-check with its golden tests (kind: code+config)
 
@@ -53,14 +53,14 @@ SHALL, when `engineVersion` is present, assert the recorded delta equals recompu
 
 #### Scenario: The delta is stored on a new object; the sealed payslip is byte-untouched
 - **GIVEN** an approved PayrollRun for 2026-02 with a sealed Payslip for the seeded employee
-- **WHEN** `hrmq:payroll:adjust` computes a correction for that employee/period
+- **WHEN** `humaniq:payroll:adjust` computes a correction for that employee/period
 - **THEN** a `PayrollAdjustment` is created carrying the cents-exact `delta*` fields, and the original
   Payslip and its PayrollRun are unchanged (no write occurred against them)
 
 #### Scenario: A tampered delta fails the corpus self-check
 - **GIVEN** a computed PayrollAdjustment whose `deltaNet` was hand-edited to disagree with the
   recorded corrected input
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** an `nl-retro-adjustment-consistency` violation is reported for that adjustment
 
 ### Requirement: The recompute SHALL use the ORIGINAL period's tax year (same-tax-year MVP) (REQ-RETRO-002)
@@ -95,7 +95,7 @@ double-counts the delta.
 
 #### Scenario: Re-running the same correction is an idempotent no-op
 - **GIVEN** an adjustment already computed for (2026-02, seeded employee, correctionRef `t1`)
-- **WHEN** `hrmq:payroll:adjust --original-period 2026-02 --employee EID --correction-ref t1 --gross 4000`
+- **WHEN** `humaniq:payroll:adjust --original-period 2026-02 --employee EID --correction-ref t1 --gross 4000`
   runs again
 - **THEN** no second PayrollAdjustment exists and the recorded delta is unchanged
 
@@ -122,14 +122,14 @@ adjustment is computed-but-unsettled and affects no run); applying an adjustment
 ### Requirement: Sealed originals only; a draft original SHALL recompute directly, not via an adjustment (REQ-RETRO-005)
 
 The service SHALL refuse to create an adjustment when the original PayrollRun's `status` is `draft`
-(`refused-original-draft` — the run can be recomputed directly via `hrmq:payroll:run --recalculate`,
+(`refused-original-draft` — the run can be recomputed directly via `humaniq:payroll:run --recalculate`,
 the existing engine path). Adjustments SHALL apply only to originals in `approved`/`posted`/`paid`,
 whose payslips the engine itself refuses to recompute — so the sealed truth is corrected through a
 separate delta object, never by reopening a booked run.
 
 #### Scenario: A draft original run refuses adjustment
 - **GIVEN** a PayrollRun for 2026-05 still in status `draft`
-- **WHEN** `hrmq:payroll:adjust --original-period 2026-05 ...` runs (occ or endpoint)
+- **WHEN** `humaniq:payroll:adjust --original-period 2026-05 ...` runs (occ or endpoint)
 - **THEN** the service refuses with `refused-original-draft` (endpoint: HTTP 400) and no
   PayrollAdjustment is written
 
@@ -137,7 +137,7 @@ separate delta object, never by reopening a booked run.
 
 The engine SHALL keep deriving a run's tax-year table from its own period (no mutable "active tax
 year" global), and a generated run's `engineVersion`/`calculatedAt` stamp together with the
-non-`draft` recompute refusal SHALL make that stamp immutable. `occ hrmq:payroll:year-transition
+non-`draft` recompute refusal SHALL make that stamp immutable. `occ humaniq:payroll:year-transition
 --year YYYY` SHALL be the preflight for the annual roll: it SHALL assert `lib/Standards/tables/nl-YYYY.json`
 exists (failing loudly otherwise), report that the roll is data-only (ship the table; runs pick it up
 by period), and confirm the immutable-stamp guard — changing no engine state. Registered in
@@ -145,7 +145,7 @@ by period), and confirm the immutable-stamp guard — changing no engine state. 
 
 #### Scenario: Year-transition preflight passes only when the new table exists
 - **GIVEN** `nl-2027.json` has not been shipped
-- **WHEN** `occ hrmq:payroll:year-transition --year 2027` runs
+- **WHEN** `occ humaniq:payroll:year-transition --year 2027` runs
 - **THEN** it fails loudly naming the missing `nl-2027.json`, and changes no run or stamp
 
 #### Scenario: A stamped prior-year run keeps its engineVersion after the roll
@@ -156,7 +156,7 @@ by period), and confirm the immutable-stamp guard — changing no engine state. 
 
 ### Requirement: occ + a guarded endpoint + a PayrollRunDetail action SHALL drive adjustments (REQ-RETRO-007)
 
-An occ command SHALL compute and settle adjustments: `hrmq:payroll:adjust --original-period YYYY-MM
+An occ command SHALL compute and settle adjustments: `humaniq:payroll:adjust --original-period YYYY-MM
 --employee EID --correction-ref REF [--gross AMOUNT] [--settlement-period YYYY-MM] [--apply]`
 computes (and with `--apply` settles) an adjustment and prints the delta + idempotency outcome. `appinfo/routes.php` SHALL add
 `POST /api/payroll/adjust` → `PayrollController::adjust` (`#[NoAdminRequired]`) which resolves the
@@ -174,7 +174,7 @@ check:manifest` MUST pass.
 - **THEN** the response is 404 and no recompute or write occurs
 
 #### Scenario: The PayrollRunDetail action books a correction against the sealed run
-@e2e exclude declarative action wiring is covered by the shared CnPageRenderer library tests; the app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative action wiring is covered by the shared CnPageRenderer library tests; the app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** an approved run open on PayrollRunDetail
 - **WHEN** the user executes "Correctie boeken (TWK)" and submits the corrected input
 - **THEN** a draft PayrollAdjustment is created with `originalPayrollRunId` set to the run and the user

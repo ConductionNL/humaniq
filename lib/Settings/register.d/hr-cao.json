@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-cao",
+    "x-humaniq-fragment": "hr-cao",
     "components": {
         "schemas": {
             "Cao": {

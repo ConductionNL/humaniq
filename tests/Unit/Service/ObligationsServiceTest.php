@@ -18,7 +18,7 @@
  * standing in for it.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,18 +29,18 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-008
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-009
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-008
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-009
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
 use DateTimeImmutable;
-use OCA\Hrmq\Service\ObligationsService;
-use OCA\Hrmq\Service\RuleAuditService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Service\ObligationsService;
+use OCA\Humaniq\Service\RuleAuditService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -49,7 +49,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for ObligationsService.
  *
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
  */
 class ObligationsServiceTest extends TestCase {
 

@@ -11,7 +11,7 @@
  * D3/D5).
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -27,7 +27,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
@@ -63,7 +63,7 @@ class InterviewIcsRenderer {
 		$lines = [
 			'BEGIN:VCALENDAR',
 			'VERSION:2.0',
-			'PRODID:-//Conduction//hrmq interview-scheduling//EN',
+			'PRODID:-//Conduction//humaniq interview-scheduling//EN',
 			'CALSCALE:GREGORIAN',
 			'BEGIN:VEVENT',
 			'UID:' . $uid,

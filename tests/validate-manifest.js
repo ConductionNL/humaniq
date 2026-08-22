@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
-// validate-manifest.js — schema-validates hrmq's EFFECTIVE manifest against
+// validate-manifest.js — schema-validates humaniq's EFFECTIVE manifest against
 // the @conduction/nextcloud-vue v2 app-manifest schema using Ajv.
 //
-// Since hrmq-manifest-fragment-pipeline, src/manifest.json is only the shell
+// Since humaniq-manifest-fragment-pipeline, src/manifest.json is only the shell
 // (~3 pages); the page surface lives in src/manifest.d/*.json fragments and
 // pageTemplates/pageInstances. This script therefore builds the effective
 // manifest first — base + fragments + the library's real buildManifest()

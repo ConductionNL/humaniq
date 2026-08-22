@@ -2,9 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Playwright config for hrmq.
+ * Playwright config for humaniq.
  *
- * hrmq is the fleet's manifest-purity flagship: 113 manifest-driven pages
+ * humaniq is the fleet's manifest-purity flagship: 113 manifest-driven pages
  * (src/manifest.json), only 2 custom views, history-mode routing under
  * @conduction/nextcloud-vue's CnAppRoot. The e2e suite therefore leans on a
  * parametrized manifest smoke spec plus a small set of deep core-journey specs.
@@ -27,7 +27,7 @@ import { resolveBaseURL } from './tests/e2e/base-url'
 export default defineConfig({
 	testDir: './tests/e2e',
 	globalSetup: path.resolve(__dirname, 'tests/e2e/global-setup.ts'),
-	// hrmq ships a multi-MB bundle that Playwright loads with a cold cache on
+	// humaniq ships a multi-MB bundle that Playwright loads with a cold cache on
 	// every run. Generous by design; a real hang still fails, just later.
 	// Override with PW_TEST_TIMEOUT.
 	timeout: Number(process.env.PW_TEST_TIMEOUT || 120_000),

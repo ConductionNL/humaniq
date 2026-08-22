@@ -5,7 +5,7 @@
  *
  * Backs the `EmploymentContractDetail` manifest page action "Genereer
  * arbeidsovereenkomst" AND, since payslip-pdf-docudesk, the `PayslipDetail`
- * page action "Genereer PDF" (hrmq-docudesk-documents design.md D7,
+ * page action "Genereer PDF" (humaniq-docudesk-documents design.md D7,
  * payslip-pdf-docudesk design.md D6): a single POST endpoint that resolves
  * the posted subject (contract OR payslip) through OpenRegister's
  * ObjectService under the caller's RBAC BEFORE any docudesk call (no-admin-idor
@@ -17,7 +17,7 @@
  * (design.md D6).
  *
  * @category Controller
- * @package  OCA\Hrmq\Controller
+ * @package  OCA\Humaniq\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -28,17 +28,17 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
+ * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
  * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Controller;
+namespace OCA\Humaniq\Controller;
 
-use OCA\Hrmq\AppInfo\Application;
-use OCA\Hrmq\Service\HrDocumentService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\HrDocumentService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -78,7 +78,7 @@ class DocumentController extends Controller {
 	 * `POST /api/documents/generate` -- dispatches on `documentType`. The
 	 * four letter types resolve the posted `contractId` under the caller's
 	 * RBAC (unknown/unauthorized -> 404, no docudesk call) then trigger a
-	 * single generation attempt for it (hrmq-docudesk-documents design.md
+	 * single generation attempt for it (humaniq-docudesk-documents design.md
 	 * D8). `loonstrook` resolves the posted `payslipId` the identical way via
 	 * `authorizePayslip()` (payslip-pdf-docudesk design.md D6) -- the
 	 * employeeId is taken from the resolved payslip, `contractId` stays
@@ -91,7 +91,7 @@ class DocumentController extends Controller {
 	 *
 	 * @return JSONResponse The generation outcome, 400 on a missing subject param, or 404 when the subject does not resolve.
 	 *
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
 	 * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
 	 */
 	#[NoAdminRequired]
@@ -101,7 +101,7 @@ class DocumentController extends Controller {
 
 		if ($documentType === 'jaaropgaaf') {
 			return new JSONResponse(
-				['error' => 'Jaaropgaaf genereren is niet beschikbaar via dit endpoint (alleen via occ hrmq:documents:generate).'],
+				['error' => 'Jaaropgaaf genereren is niet beschikbaar via dit endpoint (alleen via occ humaniq:documents:generate).'],
 				Http::STATUS_BAD_REQUEST
 			);
 		}
@@ -159,7 +159,7 @@ class DocumentController extends Controller {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
 	 */
 	private function authorizeContract(string $contractId): ?array {
 		try {
@@ -224,7 +224,7 @@ class DocumentController extends Controller {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 

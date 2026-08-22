@@ -24,7 +24,7 @@
  * The daily-rest predicate reads `$context['rostering']['plannedClockByEmployeeDate']`,
  * the per-employee date-indexed sibling index `RuleAuditService::buildRosterContext()`
  * builds from every `gepubliceerd`-roster `RosterAssignment` (the
- * `buildAttendanceContext()` precedent), so `occ hrmq:rules:audit` never
+ * `buildAttendanceContext()` precedent), so `occ humaniq:rules:audit` never
  * raises a mandatory violation for a work-in-progress concept roster (design
  * D4's scope discipline) — those are checked on demand via
  * `RosterCheckService` instead.
@@ -36,7 +36,7 @@
  * `nl-atw-dagelijkse-rust`.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -52,9 +52,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
-use OCA\Hrmq\Standards\RuleCatalogue;
+use OCA\Humaniq\Standards\RuleCatalogue;
 
 /**
  * Dutch Arbeidstijdenwet (working time) executable checks over RosterAssignment,

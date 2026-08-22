@@ -3,8 +3,8 @@
 /**
  * Documents Generate Command
  *
- * `occ hrmq:documents:generate [--type <t>] [--employee <id>] [--period
- * <YYYY-MM>] [--year <YYYY>]` -- the MVP trigger for hrmq-docudesk-documents
+ * `occ humaniq:documents:generate [--type <t>] [--employee <id>] [--period
+ * <YYYY-MM>] [--year <YYYY>]` -- the MVP trigger for humaniq-docudesk-documents
  * (design.md D7), widened by payslip-pdf-docudesk (design.md D5): with no
  * options, processes the `nl-contract-schriftelijk` backlog (every permanent,
  * written EmploymentContract without an active arbeidsovereenkomst
@@ -18,7 +18,7 @@
  * page action, for a single subject) until a lifecycle hook lands.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,15 +29,15 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-007
+ * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-007
  * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-003
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\HrDocumentService;
+use OCA\Humaniq\Service\HrDocumentService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -83,7 +83,7 @@ class DocumentsGenerateCommand extends Command {
 	 * @return void
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:documents:generate')
+		$this->setName('humaniq:documents:generate')
 			->setDescription('Generate standard HR documents via docudesk (default: backlog of permanent written contracts missing an arbeidsovereenkomst).')
 			->addOption('type', null, InputOption::VALUE_REQUIRED, 'Document type (arbeidsovereenkomst|aanbiedingsbrief|werkgeversverklaring|getuigschrift|loonstrook|jaaropgaaf).')
 			->addOption('employee', null, InputOption::VALUE_REQUIRED, 'Restrict to one Employee id (required for employee-level letter types).')
@@ -98,7 +98,7 @@ class DocumentsGenerateCommand extends Command {
 	 *
 	 * @return int 0 when every attempt ends generated/already-generated/skipped-no-docudesk, 1 when any ends failed/usage-error.
 	 *
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-007
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-007
 	 * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-003
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
@@ -121,7 +121,7 @@ class DocumentsGenerateCommand extends Command {
 
 		$results = $this->service->generateBacklog($type, $employeeId, $period, $year);
 
-		$output->writeln('<info>Hrmq documentgeneratie</info>');
+		$output->writeln('<info>Humaniq documentgeneratie</info>');
 
 		if ($results === []) {
 			$output->writeln('  geen contracten geselecteerd voor de backlog.');

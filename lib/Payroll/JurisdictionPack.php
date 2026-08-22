@@ -18,7 +18,7 @@
  * `PackInterpreter` executes it.
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll
+ * @package  OCA\Humaniq\Payroll
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -34,7 +34,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll;
+namespace OCA\Humaniq\Payroll;
 
 /**
  * A jurisdiction's declared calculation chain.
@@ -42,7 +42,7 @@ namespace OCA\Hrmq\Payroll;
 final class JurisdictionPack {
 
 	/**
-	 * A pack that ships inside hrmq, under `lib/Standards/packs/`.
+	 * A pack that ships inside humaniq, under `lib/Standards/packs/`.
 	 *
 	 * @var string
 	 */
@@ -193,7 +193,7 @@ final class JurisdictionPack {
 	}//end origin()
 
 	/**
-	 * Whether this pack ships inside hrmq (and therefore may not be shadowed
+	 * Whether this pack ships inside humaniq (and therefore may not be shadowed
 	 * by an upload without an explicit recorded override — design.md D7).
 	 *
 	 * @return bool

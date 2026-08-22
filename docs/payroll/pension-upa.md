@@ -5,12 +5,12 @@ description: The Uniforme Pensioenaangifte (UPA) sector-pension filing lifecycle
 
 # Pension filing (UPA)
 
-`PensionFiling` gives HRMQ its sector-pension filing surface — the
+`PensionFiling` gives Humaniq its sector-pension filing surface — the
 Uniforme Pensioenaangifte (UPA) — one filing per period × fund, for the
 APG-administered funds: ABP, SPW, bpfBOUW, Schoonmaak, PFAB, and PWRI.
 
 UPA XML generation, APG wire delivery, and scheduled auto-dispatch are
-explicitly out of scope; HRMQ manages the filing record and its
+explicitly out of scope; Humaniq manages the filing record and its
 review/confirm/send lifecycle, gated on the payroll it derives from.
 
 ## The filing lifecycle
@@ -55,7 +55,7 @@ enforced by `NlPensionFilingChecks`:
    date.
 
 ```bash
-occ hrmq:rules:audit --jurisdiction=NL
+occ humaniq:rules:audit --jurisdiction=NL
 ```
 
 ## Filing pages

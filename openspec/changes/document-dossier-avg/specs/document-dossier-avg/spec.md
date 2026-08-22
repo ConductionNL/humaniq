@@ -42,18 +42,18 @@ satisfied while `endDate` is unset — still employed, the retention clock has n
 #### Scenario: A compliant retained loonbelastingverklaring passes
 - **GIVEN** an `Employee` with `loonheffingenVerklaringOnFile: true`, `endDate: "2026-06-30"`, and
   `loonheffingenVerklaringRetainedUntil: "2031-12-31"` (5 full calendar years after 2026)
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** no `nl-loonbelastingverklaring-bewaarplicht-5jaar` violation is reported for that employee
 
 #### Scenario: An on-file statement with no retention date is flagged
 - **GIVEN** an `Employee` with `loonheffingenVerklaringOnFile: true`, `endDate: "2026-06-30"`, and
   `loonheffingenVerklaringRetainedUntil` unpopulated
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** an `nl-loonbelastingverklaring-bewaarplicht-5jaar` violation is reported for that employee
 
 #### Scenario: An employee with no statement on file is out of scope
 - **GIVEN** an `Employee` with `loonheffingenVerklaringOnFile: false` (or absent)
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** no `nl-loonbelastingverklaring-bewaarplicht-5jaar` violation is reported for that employee (vacuous)
 
 > **REQ-DOSS-003 REMOVED 2026-07-18 (hrmq#99 consume-not-rebuild correction).** The original requirement here
@@ -77,22 +77,22 @@ only the `Employee`-scoped entry this change adds to that SAME, already-shipped 
 
 #### Scenario: A past identity-document retention date is flagged
 - **GIVEN** an `Employee` with `identityDocumentRetainedUntil` dated in the past
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** an `nl-bewaartermijn-verstreken` violation is reported for that employee
 
 #### Scenario: A future retention date is not flagged
 - **GIVEN** an `Employee` with `loonheffingenVerklaringRetainedUntil` dated in the future
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** no `nl-bewaartermijn-verstreken` violation is reported for it
 
 #### Scenario: An unpopulated retention field is vacuous, not flagged
 - **GIVEN** an `Employee` with `identityDocumentRetainedUntil` and `loonheffingenVerklaringRetainedUntil` both
   unpopulated
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** no `nl-bewaartermijn-verstreken` violation is reported for that employee
 
 #### Scenario: The check never deletes, anonymises, or destroys anything
 - **GIVEN** any `Employee` flagged by `nl-bewaartermijn-verstreken`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** the flagged record's data is unchanged — the check reports only; no destruction job exists in this
   change

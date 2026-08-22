@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq HoursRegisterGateway
+ * Humaniq HoursRegisterGateway
  *
  * The hours-process listeners' one door to OpenRegister: object reads,
  * filtered queries, schema-slug resolution and the org-chain index building
@@ -21,7 +21,7 @@
  * identically for the stamp and the audit.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -32,12 +32,12 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -45,7 +45,7 @@ use RuntimeException;
 /**
  * Shared OpenRegister plumbing for the hours-process listeners.
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
  */
 class HoursRegisterGateway {
 
@@ -61,7 +61,7 @@ class HoursRegisterGateway {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OpenRegister lookups).
-	 * @param SettingsService $settingsService The hrmq settings (register slug).
+	 * @param SettingsService $settingsService The humaniq settings (register slug).
 	 * @param OrgResolutionService $orgResolution The shared org-chain resolver (the audit's code path).
 	 */
 	public function __construct(
@@ -81,7 +81,7 @@ class HoursRegisterGateway {
 	 *
 	 * @return array<string, mixed>|null The payload, or null.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
 	 */
 	public function findObjectData(string $uuid, string $schema): ?array {
 		try {
@@ -121,7 +121,7 @@ class HoursRegisterGateway {
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
 	public function loadAll(string $schema): array {
 		return $this->query($schema, []);
@@ -136,7 +136,7 @@ class HoursRegisterGateway {
 	 *
 	 * @return array<int, array<string, mixed>> The matching rows.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-hrmq-captures-time-entries-under-a-submit→approve-lifecycle-(REQ-TEC-001)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-humaniq-captures-time-entries-under-a-submit→approve-lifecycle-(REQ-TEC-001)
 	 */
 	public function findFiltered(string $schema, array $filters): array {
 		$matches = [];
@@ -158,7 +158,7 @@ class HoursRegisterGateway {
 	 *
 	 * @return object The saved ObjectEntity.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-hrmq-captures-time-entries-under-a-submit→approve-lifecycle-(REQ-TEC-001)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-humaniq-captures-time-entries-under-a-submit→approve-lifecycle-(REQ-TEC-001)
 	 */
 	public function save(array $payload, string $schema, ?string $uuid = null): object {
 		return $this->objects()->saveObject(
@@ -182,7 +182,7 @@ class HoursRegisterGateway {
 	 *
 	 * @return string|null The manager's Nextcloud user id, or null.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
 	public function uniqueManagerUserIdFor(string $employeeId, string $onDate): ?string {
 		return $this->orgResolution->uniqueOrNull(
@@ -205,7 +205,7 @@ class HoursRegisterGateway {
 	 *
 	 * @return string|null The cost centre, or null.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/employer-hourly-cost-rate/spec.md#Requirement:-Cost-allocation-references-live-on-the-time-entry-and-are-never-employee-typed
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/employer-hourly-cost-rate/spec.md#Requirement:-Cost-allocation-references-live-on-the-time-entry-and-are-never-employee-typed
 	 */
 	public function uniqueCostCenterFor(string $employeeId, string $onDate): ?string {
 		return $this->orgResolution->uniqueOrNull(
@@ -245,7 +245,7 @@ class HoursRegisterGateway {
 	 *
 	 * @return array<string, mixed>|null The Employee payload, or null.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
 	 */
 	public function findEmployeeByUserId(string $uid): ?array {
 		if (trim($uid) === '') {
@@ -363,7 +363,7 @@ class HoursRegisterGateway {
 		// answered fatally (the AssetDialectMigrationService precedent).
 		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 

@@ -21,7 +21,7 @@
         <UndefinedDocblockClass errorLevel="suppress"/>
         <UndefinedClass>
             <errorLevel type="suppress">
-                <!-- Nextcloud OCP classes hrmq depends on (resolved at runtime by the
+                <!-- Nextcloud OCP classes humaniq depends on (resolved at runtime by the
                      Nextcloud server; nextcloud/ocp ships them unautoloaded on purpose) -->
                 <referencedClass name="OCP\AppFramework\App"/>
                 <referencedClass name="OCP\AppFramework\Bootstrap\IBootstrap"/>
@@ -50,7 +50,7 @@
                 <!-- Nextcloud server internals (not shipped in nextcloud/ocp stubs) -->
                 <referencedClass name="OCA\DAV\CalDAV\CalDavBackend"/>
                 <!-- Cross-app classes: OpenRegister and DocuDesk are only available
-                     at runtime once those apps are installed alongside hrmq -->
+                     at runtime once those apps are installed alongside humaniq -->
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatingEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>

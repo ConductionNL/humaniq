@@ -7,13 +7,13 @@ built_by: openspec/changes/archive/2026-07-14-time-entry-capture
 # time-entry-capture Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
-- [time-entry-capture](../../changes/archive/2026-07-14-time-entry-capture/) _(archived 2026-07-14)_ — verify-first: hrmq already owned time-entry capture + the submit→approve lifecycle (the `Timesheet` schema, its `x-openregister-lifecycle`, and `NoSelfApprovalGuard`); this change added the missing hand-off — a `nl.conduction.hrmq.timeentry.approved` CloudEvent emitted on the approval edge via OpenRegister's `WebhookService` so a finance app (shillinq) can consume approved hours for invoice-from-time / WBSO.
+- [time-entry-capture](../../changes/archive/2026-07-14-time-entry-capture/) _(archived 2026-07-14)_ — verify-first: humaniq already owned time-entry capture + the submit→approve lifecycle (the `Timesheet` schema, its `x-openregister-lifecycle`, and `NoSelfApprovalGuard`); this change added the missing hand-off — a `nl.conduction.hrmq.timeentry.approved` CloudEvent emitted on the approval edge via OpenRegister's `WebhookService` so a finance app (shillinq) can consume approved hours for invoice-from-time / WBSO.
 
 ## Purpose
 
-Home the fleet's timesheet / hours-capture surface in hrmq (HR's domain) and emit
+Home the fleet's timesheet / hours-capture surface in humaniq (HR's domain) and emit
 an approved-time-entry event a finance app consumes — so shillinq's hours-consumers
 (WBSO export, urencriterium, invoice-from-time) have a real source, closing the
 dangling `bookkeeping-time-tracking` dependency declared by `zzp-urencriterium-tracker`.
@@ -24,9 +24,9 @@ follow-up and is not part of this capability.
 
 ## Requirements
 
-### Requirement: hrmq captures time entries under a submit→approve lifecycle (REQ-TEC-001)
+### Requirement: humaniq captures time entries under a submit→approve lifecycle (REQ-TEC-001)
 
-hrmq SHALL own the timesheet / hours-capture surface for the fleet: a worker
+humaniq SHALL own the timesheet / hours-capture surface for the fleet: a worker
 records a time entry against a period with `hours`, an optional `projectId` /
 `costCenter`, a `billable` flag and a `description`, and the entry moves through a
 declarative `draft → submitted → approved` lifecycle (with `rejected` and
@@ -52,7 +52,7 @@ growing a parallel timesheet in the accounting app.
 ### Requirement: Approving a timesheet emits the approved-time-entry CloudEvent (REQ-TEC-002)
 
 When a `Timesheet` transitions **into** `approved` (old status not `approved`, new
-status `approved`), hrmq SHALL emit exactly one `nl.conduction.hrmq.timeentry.approved`
+status `approved`), humaniq SHALL emit exactly one `nl.conduction.hrmq.timeentry.approved`
 CloudEvent through OpenRegister's `WebhookService`, dispatched fire-and-forget so a
 missing consumer or an unavailable OpenRegister never fails the approval write. A
 change that is not the approval edge — a non-approval transition, or a re-save of an
@@ -86,7 +86,7 @@ schema other than `Timesheet` SHALL NOT emit this event.
 ### Requirement: The event carries what a finance consumer needs (REQ-TEC-003)
 
 The `nl.conduction.hrmq.timeentry.approved` event SHALL be a CloudEvents 1.0
-envelope (`specversion: "1.0"`, `type`, `source: /apps/hrmq/timesheets`, `id` =
+envelope (`specversion: "1.0"`, `type`, `source: /apps/humaniq/timesheets`, `id` =
 the timesheet uuid, `time`, `datacontenttype: application/json`) whose `data`
 carries at least the approved `hours` (number), the `billable` flag (boolean), the
 `projectId` and `costCenter` the hours are booked against, the `employeeId`, the

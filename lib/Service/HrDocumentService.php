@@ -7,9 +7,9 @@
  * aanbiedingsbrief, werkgeversverklaring, getuigschrift) plus, since
  * payslip-pdf-docudesk, the loonstrook (per-Payslip) and jaaropgaaf
  * (per-employee-year aggregate) PDFs, by invoking docudesk's template/rendering
- * engine same-instance and duck-typed (hrmq-docudesk-documents design.md D1).
- * hrmq holds no Twig, mPDF, template, or versioning machinery of its own: the
- * only artefact this service writes on the hrmq side is a `GeneratedDocument`
+ * engine same-instance and duck-typed (humaniq-docudesk-documents design.md D1).
+ * humaniq holds no Twig, mPDF, template, or versioning machinery of its own: the
+ * only artefact this service writes on the humaniq side is a `GeneratedDocument`
  * record logging the handoff -- which template, for whom, the outcome, and
  * where the file landed -- and, for jaaropgaaf, a `Jaaropgaaf` aggregate record
  * upserted from the employee's Payslips before rendering (payslip-pdf-docudesk
@@ -19,15 +19,15 @@
  * import, no composer/info.xml dependency on docudesk.
  *
  * Availability is duck-typed (ADR-046 philosophy, mirroring
- * `OCA\Hrmq\Service\PayrollGLPostService`): when docudesk is not installed, or
+ * `OCA\Humaniq\Service\PayrollGLPostService`): when docudesk is not installed, or
  * its services cannot be resolved, the attempt is recorded
- * `skipped-no-docudesk` and is retryable by a later `occ hrmq:documents:generate`
+ * `skipped-no-docudesk` and is retryable by a later `occ humaniq:documents:generate`
  * or the EmploymentContractDetail/PayslipDetail page action (design.md D5).
- * hrmq carries zero composer/info.xml dependency on docudesk.
+ * humaniq carries zero composer/info.xml dependency on docudesk.
  *
  * Template selection is config-first, discovery-second, and fails closed
  * (design.md D3): a configured docudesk template UUID always wins; otherwise
- * exactly one `namespace: "hrmq"` template whose `category` matches the
+ * exactly one `namespace: "humaniq"` template whose `category` matches the
  * documentType is used -- zero or multiple matches record the attempt `failed`
  * with a diagnostic, and nothing renders (never guess between templates that
  * produce legal paper).
@@ -42,7 +42,7 @@
  * attempt starts. `failed`/`skipped-no-docudesk` never block a retry.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -66,14 +66,14 @@
  * `GeneratedDocument` (that was the original, since-revised
  * `document-dossier-avg` proposal's shape).
  *
- * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md
+ * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md
  * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md
  * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -115,12 +115,15 @@ class HrDocumentService {
 	private const OBJECT_FILE_SERVICE_FQCN = 'OCA\OpenRegister\Service\FileService';
 
 	/**
-	 * The docudesk template namespace hrmq's own templates live under
+	 * The docudesk template namespace humaniq's own templates live under
 	 * (design.md Context: TemplateService validates it as a lowercase NC app
 	 * id; "multiple apps maintain their own template collections").
 	 *
 	 * @var string
 	 */
+	// FROZEN at the old app id: docudesk stores this app's templates under this
+	// namespace. Renaming it would make every existing HR-document template
+	// unreachable and generation would silently produce nothing.
 	private const TEMPLATE_NAMESPACE = 'hrmq';
 
 	/**
@@ -230,7 +233,7 @@ class HrDocumentService {
 	 *
 	 * @return array<int, array<string, mixed>> One outcome array per attempt.
 	 *
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-007
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-007
 	 * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-003
 	 */
 	public function generateBacklog(
@@ -380,11 +383,11 @@ class HrDocumentService {
 	 *
 	 * @return array<string, mixed> Outcome: {employeeId, contractId, documentType, status, message, generatedDocumentId}.
 	 *
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-003
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-004
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-005
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-006
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-003
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-004
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-005
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-006
 	 */
 	public function generate(string $employeeId, ?string $contractId, string $documentType, ?string $userId = null): array {
 		return $this->generateInternal($employeeId, $contractId, null, null, $documentType, $userId);
@@ -488,11 +491,11 @@ class HrDocumentService {
 	 *
 	 * @return array<string, mixed> Outcome: {employeeId, contractId, documentType, status, message, generatedDocumentId}.
 	 *
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-003
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-004
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-005
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-006
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-003
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-004
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-005
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-006
 	 * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
 	 * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-003
 	 */
@@ -1072,7 +1075,7 @@ class HrDocumentService {
 
 	/**
 	 * The `dataRefs` payload for the docudesk render call (design.md D2,
-	 * payslip-pdf-docudesk design.md D3): exactly the hrmq Employee plus one
+	 * payslip-pdf-docudesk design.md D3): exactly the humaniq Employee plus one
 	 * subject ref -- EmploymentContract for the four letter types, Payslip
 	 * for loonstrook, Jaaropgaaf for jaaropgaaf (at most one of the three is
 	 * ever set) -- docudesk re-resolves the objects itself via OpenRegister,
@@ -1355,7 +1358,7 @@ class HrDocumentService {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -1384,7 +1387,7 @@ class HrDocumentService {
 	}//end templateService()
 
 	/**
-	 * @return string The configured hrmq register slug.
+	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();

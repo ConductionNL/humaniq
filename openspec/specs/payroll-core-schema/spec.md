@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-14-payroll-core-schema
 # payroll-core-schema Specification
 
 **Status**: done
-**Scope**: hrmq (chain head, spec 1 of 2 — ADR-032; consumed by `payroll-core-engine`)
+**Scope**: humaniq (chain head, spec 1 of 2 — ADR-032; consumed by `payroll-core-engine`)
 **OpenSpec changes**:
 - [payroll-core-schema](../../changes/archive/2026-07-14-payroll-core-schema/) _(archived 2026-07-14)_ — versioned
   `lib/Standards/tables/nl-2026.json` NL tax-year parameter corpus (Rekenvoorschriften 2026
@@ -91,7 +91,7 @@ and remain valid.
 
 #### Scenario: A hand-entered run is untouched by the engine contract
 - **GIVEN** the existing seeded PayrollRun objects
-- **WHEN** the register re-imports and `occ hrmq:rules:audit` runs
+- **WHEN** the register re-imports and `occ humaniq:rules:audit` runs
 - **THEN** the seeds validate with null `calculatedAt`/`engineVersion` and no new violations appear
 
 ### Requirement: Payslip SHALL gain exactly the arbeidskorting record and the run association (REQ-PCS-005)
@@ -129,7 +129,7 @@ them is explicitly deferred to `payroll-core-engine` (chain split, ADR-032): aft
 audit reports both rules as machine-checkable but not yet enforced.
 
 #### Scenario: Corpus stays loadable and versioned
-- **WHEN** `occ hrmq:rules:audit` runs after the corpus edit
+- **WHEN** `occ humaniq:rules:audit` runs after the corpus edit
 - **THEN** the RuleCatalogue loads without error, reports two more machine-checkable rules, and no
   existing rule regresses
 

@@ -11,7 +11,7 @@
  * refuses with 401 before any resolve.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Controller
+ * @package  OCA\Humaniq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -22,17 +22,17 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Controller;
+namespace OCA\Humaniq\Tests\Unit\Controller;
 
-use OCA\Hrmq\Controller\AnalyticsController;
-use OCA\Hrmq\Service\AdministrationService;
-use OCA\Hrmq\Service\AnalyticsService;
-use OCA\Hrmq\Service\ObligationsService;
+use OCA\Humaniq\Controller\AnalyticsController;
+use OCA\Humaniq\Service\AdministrationService;
+use OCA\Humaniq\Service\AnalyticsService;
+use OCA\Humaniq\Service\ObligationsService;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
 use OCP\IUser;
@@ -43,7 +43,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for AnalyticsController.
  *
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
  */
 class AnalyticsControllerTest extends TestCase {
 

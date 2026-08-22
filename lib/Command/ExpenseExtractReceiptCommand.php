@@ -3,7 +3,7 @@
 /**
  * Expense Extract Receipt Command
  *
- * `occ hrmq:expense:extract-receipt --as-user <admin-uid> [--expense <id>]`
+ * `occ humaniq:expense:extract-receipt --as-user <admin-uid> [--expense <id>]`
  * -- the MVP trigger for receipt-ocr (design.md D7): with no `--expense`,
  * processes the backlog of every Expense with a non-empty `receiptFile` and
  * no active (`pending`/`extracted`) `ReceiptExtraction`; `--expense <id>`
@@ -17,13 +17,13 @@
  * OpenRegister's `saveObject()` RBAC then rejects the resulting `Anonymous`
  * actor, so the command could never work regardless of `receiptFile`
  * content. `--as-user` establishes the SAME privileged-session mechanism
- * the three `hrmq:avg:*` commands already use (`PrivilegedSessionResolver`,
+ * the three `humaniq:avg:*` commands already use (`PrivilegedSessionResolver`,
  * avg-dsr design.md D3) BEFORE any docudesk/OR call: an unknown or
  * non-admin uid is refused with a one-line controlled message and
  * `ReceiptExtractionService::backlog()` is never invoked.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -39,9 +39,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\ReceiptExtractionService;
+use OCA\Humaniq\Service\ReceiptExtractionService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -62,7 +62,7 @@ class ExpenseExtractReceiptCommand extends Command {
 
 	/**
 	 * @param ReceiptExtractionService $service The receipt-extraction service.
-	 * @param PrivilegedSessionResolver $sessionResolver The shared --as-user session establishment mechanism (the hrmq:avg:* precedent).
+	 * @param PrivilegedSessionResolver $sessionResolver The shared --as-user session establishment mechanism (the humaniq:avg:* precedent).
 	 */
 	public function __construct(
 		private readonly ReceiptExtractionService $service,
@@ -76,7 +76,7 @@ class ExpenseExtractReceiptCommand extends Command {
 	 * @return void
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:expense:extract-receipt')
+		$this->setName('humaniq:expense:extract-receipt')
 			->setDescription(
 				'Extract receipt fields via docudesk and prefill empty Expense fields '
 				. '(default: backlog of Expenses with a receipt and no active extraction).'
@@ -96,7 +96,7 @@ class ExpenseExtractReceiptCommand extends Command {
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		// Privileged-session establishment BEFORE any ReceiptExtractionService/
-		// docudesk/OpenRegister call (the hrmq:avg:* precedent, avg-dsr
+		// docudesk/OpenRegister call (the humaniq:avg:* precedent, avg-dsr
 		// design.md D3-D4): an unknown/non-admin --as-user is refused here,
 		// with the service never invoked.
 		$asUser = trim((string)$input->getOption('as-user'));
@@ -111,7 +111,7 @@ class ExpenseExtractReceiptCommand extends Command {
 
 		$results = $this->service->backlog($expenseId, $asUser);
 
-		$output->writeln('<info>Hrmq receipt-extractie</info>');
+		$output->writeln('<info>Humaniq receipt-extractie</info>');
 
 		if ($results === []) {
 			$output->writeln('  geen declaraties geselecteerd voor de backlog.');

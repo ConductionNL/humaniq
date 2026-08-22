@@ -36,7 +36,7 @@
  * needs instead.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -48,15 +48,15 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-001
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-001
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\TaxTables;
 
 /**
  * Fleet bijtelling arithmetic-consistency + vehicle-fiscal-completeness
@@ -70,7 +70,7 @@ final class NlFleetChecks implements CheckProvider {
 	 * @return array<string, array<string, callable>>
 	 *
 	 * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-001
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-001
 	 */
 	public static function checks(): array {
 		return [
@@ -104,7 +104,7 @@ final class NlFleetChecks implements CheckProvider {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
 	 */
 	private static function bijtellingMatchesFormula(array $o, array $context): bool {
 		$assetAssignmentId = trim((string)($o['assetAssignmentId'] ?? ''));
@@ -154,7 +154,7 @@ final class NlFleetChecks implements CheckProvider {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-001
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-001
 	 */
 	private static function vehicleFiscalFieldsComplete(array $o): bool {
 		if ((string)($o['category'] ?? '') !== 'vehicle') {
@@ -207,7 +207,7 @@ final class NlFleetChecks implements CheckProvider {
 	 *
 	 * @return int The expected monthly bijtelling, in cents.
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
 	private static function monthlyBijtellingCents(array $asset, array $assetAssignment, TaxTables $tables): int {
 		$listPrice = ($asset['listPrice'] ?? null);

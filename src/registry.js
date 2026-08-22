@@ -1,7 +1,7 @@
 /**
- * HRMQ v2 component registry (ADR-036).
+ * Humaniq v2 component registry (ADR-036).
  *
- * Kind-tagged map passed as the `registry` prop to CnAppRoot. HRMQ ships
+ * Kind-tagged map passed as the `registry` prop to CnAppRoot. Humaniq ships
  * almost exclusively declarative `type: "index"` / `type: "detail"` pages,
  * which the library renders generically from each page's register+schema
  * config. The exceptions are the pro-forma payslip simulator
@@ -18,8 +18,8 @@
  * `object-list` and `map` as dead widgets before those two were pinned with an
  * explicit inline `registerDashboardWidget()` call. `stat` never got that
  * treatment, so webpack's production tree-shaking drops the self-registration
- * from HRMQ's own bundle (confirmed: `registerDashboardWidget(` does not
- * appear anywhere in the built `js/hrmq-main.js`, only in its source map) and
+ * from Humaniq's own bundle (confirmed: `registerDashboardWidget(` does not
+ * appear anywhere in the built `js/humaniq-main.js`, only in its source map) and
  * every one of the 31 `widgetKey: "stat"` placements across the manifest
  * (Dashboard KPIs + detail-page stat tiles) resolves to nothing and renders
  * `CnUnknownWidget` ("Widget unavailable"). Registering the library's own
@@ -56,7 +56,7 @@
  * a `slot:"body"` widget, so `CnPageRenderer` renders `CnWidgetGrid` directly
  * and NEVER instantiates `CnDetailPage`, so `config.lifecycleActions` never
  * reaches anywhere. This meant every approve/reject/submit/reopen button in
- * the app — hrmq's core submit-approve-reject workflow — was unclickable.
+ * the app — humaniq's core submit-approve-reject workflow — was unclickable.
  *
  * UNLIKE `actions`, this isn't a drop-in registration: `CnLifecycleActions`
  * takes plain props (`object-id`, `object`, `config`) and does NOT inject
@@ -75,7 +75,7 @@
  * detail context's own `or-object-{id}` live-update subscription is the
  * primary refresh path; see that file's docblock).
  *
- * `chart` (kind: "widget") — hrmq-dashboard-steering-indicators: the SAME
+ * `chart` (kind: "widget") — humaniq-dashboard-steering-indicators: the SAME
  * `effectiveRegistry`-wins-over-catalog override mechanism as `stat`, but
  * for a DIFFERENT reason. `CnChartWidget` IS reachable via the dashboard
  * catalog (`registerDashboardWidget('chart', …)` is called directly inside
@@ -86,7 +86,7 @@
  * `CnDashboardPage`'s own per-widget template, which supplies `title`/the
  * shared Actions menu from the SURROUNDING markup — it declares no `title`
  * prop and does not self-wrap in `CnWidgetWrapper` the way `CnStatWidget` /
- * `CnWidgetObjectTable` do. `CnWidgetGrid` (the only renderer hrmq's pages
+ * `CnWidgetObjectTable` do. `CnWidgetGrid` (the only renderer humaniq's pages
  * take, since every page has a `slot:"body"` widget) mounts it bare, so an
  * un-bridged `widgetKey:"chart"` would render as an unlabelled canvas.
  * `./widgets/TrendChartWidget.vue` bridges it — a title bar identical to

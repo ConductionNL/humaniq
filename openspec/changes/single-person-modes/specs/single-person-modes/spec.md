@@ -101,7 +101,7 @@ receives one monthly `loon` payment through the existing payroll engine.
 `Administration`. The predicate SHALL be vacuous unless `mode` is `dga_single_person`; else it SHALL count active
 `Employee` records whose `administrationId` equals the `Administration`'s own `administrationId`, and SHALL be
 satisfied only when that count is exactly 1 and the matching `Employee` has `isDga: true`. This check SHALL NOT
-block any write — it SHALL surface only through the existing `occ hrmq:rules:audit` report.
+block any write — it SHALL surface only through the existing `occ humaniq:rules:audit` report.
 
 #### Scenario: Exactly one DGA employee passes
 - **GIVEN** an `Administration` with `mode: dga_single_person` and exactly one active `Employee` with matching
@@ -112,7 +112,7 @@ block any write — it SHALL surface only through the existing `occ hrmq:rules:a
 #### Scenario: A second employee is flagged, not blocked
 - **GIVEN** the same administratie now has a second active `Employee` with matching `administrationId`
 - **WHEN** an admin saves that second `Employee` record
-- **THEN** the save succeeds (no write-time block), and the next `occ hrmq:rules:audit` run reports an
+- **THEN** the save succeeds (no write-time block), and the next `occ humaniq:rules:audit` run reports an
   `nl-single-person-mode-employee-count` violation for the administratie
 
 #### Scenario: A standard-mode administratie is never evaluated
@@ -128,7 +128,7 @@ has `isDga` not `true`, and otherwise SHALL evaluate the existing `NlDgaChecks` 
 predicate against that one record — computed fresh on every call, persisting nothing — and return
 `{isDga: true, grossAnnualSalaryCents, jaarnormCents, met: bool, justification: string|null}`. `src/manifest.json`
 SHALL expose a `MijnGebruikelijkLoon` self-service page under `MijnHrGroup`, `visibleIf`-gated on
-`administrationMode: dga_single_person`, rendering the verdict without requiring `occ hrmq:rules:audit`.
+`administrationMode: dga_single_person`, rendering the verdict without requiring `occ humaniq:rules:audit`.
 
 #### Scenario: A below-norm DGA sees a warning without running occ
 - **GIVEN** a caller whose own `Employee` record has `isDga: true`, `grossMonthlySalary: 3500.00` (annualised

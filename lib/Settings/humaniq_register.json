@@ -1,0 +1,82 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Humaniq Register",
+        "description": "Register containing all schemas for the Humaniq application.",
+        "version": "0.17.0"
+    },
+    "x-openregister": {
+        "type": "application",
+        "app": "hrmq",
+        "openregister": "^v0.2.10",
+        "description": "Humaniq — open-source HR & payroll administration for Dutch SMBs."
+    },
+    "paths": {},
+    "components": {
+        "registers": {
+            "hrmq": {
+                "slug": "hrmq",
+                "title": "Humaniq Register",
+                "description": "Humaniq — open-source HR & payroll administration for Dutch SMBs. Holds every HR, verzuim, verlof, roostering, ATS, performance and payroll object the app reads and writes.",
+                "version": "0.17.0",
+                "schemas": [
+                    "Administration",
+                    "AdministrationAccess",
+                    "Application",
+                    "Asset",
+                    "AssetAssignment",
+                    "AttendanceRecord",
+                    "BhvCertificering",
+                    "Cao",
+                    "CompAdjustment",
+                    "CompReviewCycle",
+                    "CostAdditionPolicy",
+                    "DsrRequest",
+                    "Employee",
+                    "EmploymentContract",
+                    "Expense",
+                    "GeneratedDocument",
+                    "IntegrationAccount",
+                    "Interview",
+                    "Jaaropgaaf",
+                    "JurisdictionPack",
+                    "KeyResult",
+                    "LeaveBalance",
+                    "LeaveRequest",
+                    "LeaveTransaction",
+                    "LoonaangifteFiling",
+                    "Loonbeslag",
+                    "Normfunctie",
+                    "Objective",
+                    "Offboarding",
+                    "Onboarding",
+                    "OrgAssignment",
+                    "OrgUnit",
+                    "PayrollAdjustment",
+                    "PayrollGLPost",
+                    "PayrollMutationReport",
+                    "PayrollPaymentBatch",
+                    "PayrollRun",
+                    "Payslip",
+                    "PensionFiling",
+                    "PerformanceReview",
+                    "ReceiptExtraction",
+                    "ReviewCycle",
+                    "Roster",
+                    "RosterAssignment",
+                    "SalaryBand",
+                    "Shift",
+                    "SickLeaveCase",
+                    "Stagiair",
+                    "TimeEntry",
+                    "Timesheet",
+                    "Vacancy",
+                    "WkrAssessment",
+                    "WkrDeclaration",
+                    "WntDisclosure"
+                ]
+            }
+        },
+        "schemas": {}
+    }
+}

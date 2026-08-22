@@ -11,7 +11,7 @@
  * is insufficient, and allowed otherwise.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Lifecycle
+ * @package  OCA\Humaniq\Tests\Unit\Lifecycle
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -28,9 +28,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Lifecycle;
+namespace OCA\Humaniq\Tests\Unit\Lifecycle;
 
-use OCA\Hrmq\Lifecycle\LeaveBuySellApprovalGuard;
+use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;

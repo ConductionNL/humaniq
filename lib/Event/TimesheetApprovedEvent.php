@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Hrmq TimesheetApprovedEvent.
+ * Humaniq TimesheetApprovedEvent.
  *
  * Typed `IEventDispatcher` cross-app command event (ADR-041) emitted by
- * {@see \OCA\Hrmq\Service\TimeEntryEventService::maybeDispatchApproved()} on the
+ * {@see \OCA\Humaniq\Service\TimeEntryEventService::maybeDispatchApproved()} on the
  * SAME approval edge that already dispatches the `nl.conduction.hrmq.timeentry.approved`
  * CloudEvent through OpenRegister's `WebhookService` — this typed event is
  * ADDITIVE, dispatched alongside that webhook, never in place of it, because the
@@ -12,15 +12,15 @@
  *
  * The webhook is an admin-configured outbound HTTP delivery — it has no
  * in-process consumer surface. Per ADR-041, a sibling Conduction app (shillinq)
- * that wants to react to hrmq's approval in the SAME request, without standing
+ * that wants to react to humaniq's approval in the SAME request, without standing
  * up an HTTP receiving endpoint, consumes this typed event instead: it
  * registers an `IEventListener`, `class_exists()`-guards this FQCN (fail closed
- * when hrmq is absent), and reads the getters below. Mirrors pipelinq's
+ * when humaniq is absent), and reads the getters below. Mirrors pipelinq's
  * `PosStockMovedEvent` / `PosTransactionService::emitStockMovedEvent()` shape
  * (typed dispatch + webhook fire-and-forget, both best-effort, neither gating
  * the other).
  *
- * Payload note (period grain): `period` is hrmq's Timesheet.period field,
+ * Payload note (period grain): `period` is humaniq's Timesheet.period field,
  * which is polymorphic-grain — `YYYY-MM` (month), `YYYY-Www` (ISO week), or
  * `YYYY-Wnn-D` (a single ISO week-day) — see
  * `lib/Settings/register.d/hr-timesheet.json`. This event carries the RAW
@@ -28,11 +28,11 @@
  * (`month`|`week`|`day`|`unknown`) rather than silently flattening it to a
  * single day. A consumer that needs a single calendar date (e.g. shillinq's
  * `UrenRegistratie.date`) MUST branch on `periodGrain` and decide its own
- * projection — hrmq does not resolve a month- or week-grain period down to one
+ * projection — humaniq does not resolve a month- or week-grain period down to one
  * day, since that decision belongs to the consuming domain, not the producer.
  *
  * @category Event
- * @package  OCA\Hrmq\Event
+ * @package  OCA\Humaniq\Event
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -43,20 +43,20 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+ * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Event;
+namespace OCA\Humaniq\Event;
 
 use OCP\EventDispatcher\Event;
 
 /**
  * Fired alongside the webhook on the SAME Timesheet draft/submitted → approved
- * edge {@see \OCA\Hrmq\Service\TimeEntryEventService} already governs.
+ * edge {@see \OCA\Humaniq\Service\TimeEntryEventService} already governs.
  *
- * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+ * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
  */
 class TimesheetApprovedEvent extends Event {
 
@@ -137,7 +137,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return string The event id.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function getEventId(): string {
 		return $this->eventId;
@@ -150,7 +150,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return string The timesheet id.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function getTimesheetId(): string {
 		return $this->timesheetId;
@@ -162,7 +162,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return string The employee reference.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function getEmployeeId(): string {
 		return $this->employeeId;
@@ -174,7 +174,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return string The period string.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
 	 */
 	public function getPeriod(): string {
 		return $this->period;
@@ -186,7 +186,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return string The period grain marker.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
 	 */
 	public function getPeriodGrain(): string {
 		return $this->periodGrain;
@@ -198,7 +198,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return float The hours.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function getHours(): float {
 		return $this->hours;
@@ -210,7 +210,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return string The project reference.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function getProjectId(): string {
 		return $this->projectId;
@@ -222,7 +222,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return string The cost centre reference.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function getCostCenter(): string {
 		return $this->costCenter;
@@ -234,7 +234,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return bool True when billable.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function isBillable(): bool {
 		return $this->billable;
@@ -246,7 +246,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return string The client reference.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function getClientRef(): string {
 		return $this->clientRef;
@@ -258,7 +258,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return string The administration id.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function getAdministrationId(): string {
 		return $this->administrationId;
@@ -270,7 +270,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return string The approver's user id.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function getApprovedBy(): string {
 		return $this->approvedBy;
@@ -282,7 +282,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return string The approval timestamp.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function getApprovedAt(): string {
 		return $this->approvedAt;
@@ -299,7 +299,7 @@ class TimesheetApprovedEvent extends Event {
 	 *
 	 * @return string One of the `GRAIN_*` constants.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
 	 */
 	public static function classifyPeriodGrain(string $period): string {
 		if (preg_match('/^\d{4}-\d{2}$/', $period) === 1) {

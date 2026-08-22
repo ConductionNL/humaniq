@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
-// verify-manifest-parity.js — proves the hrmq-manifest-fragment-pipeline
+// verify-manifest-parity.js — proves the humaniq-manifest-fragment-pipeline
 // no-functionality-loss invariant: the effective manifest computed from the
 // fragment pipeline (base + src/manifest.d/*.json + the REAL shared
 // buildManifest() from @conduction/nextcloud-vue, including pageTemplates/
 // pageInstances expansion) is observably identical to the pre-split monolith
 // captured in tests/fixtures/manifest-baseline/.
 //
-// Checks (spec: openspec/changes/hrmq-manifest-fragment-pipeline):
+// Checks (spec: openspec/changes/humaniq-manifest-fragment-pipeline):
 //   1. (id, route) pair SET equality against the baseline pages dump.
 //   2. Menu tree STRUCTURAL equality (same groups, same children, same order)
 //      against the baseline menu dump.

@@ -7,9 +7,9 @@ built_by: openspec/changes/archive/2026-07-12-payroll-glpost-shillinq
 # payroll-glpost-shillinq Specification
 
 **Status**: done
-**Scope**: hrmq (cross-app leaf; consumes the shillinq `JournalEntry` register via OpenRegister)
+**Scope**: humaniq (cross-app leaf; consumes the shillinq `JournalEntry` register via OpenRegister)
 **OpenSpec changes**:
-- [payroll-glpost-shillinq](../../changes/archive/2026-07-12-payroll-glpost-shillinq/) _(archived 2026-07-12)_ — `PayrollGLPost` record + `PayrollGLPostService` posting one balanced loonjournaalpost per approved `PayrollRun` into shillinq's `JournalEntry` register (duck-typed, same-instance ObjectService, `skipped-no-shillinq` degradation), occ trigger `hrmq:glpost:run`, idempotency rule `nl-glpost-idempotent-per-run`, GL-post pages (kind: code)
+- [payroll-glpost-shillinq](../../changes/archive/2026-07-12-payroll-glpost-shillinq/) _(archived 2026-07-12)_ — `PayrollGLPost` record + `PayrollGLPostService` posting one balanced loonjournaalpost per approved `PayrollRun` into shillinq's `JournalEntry` register (duck-typed, same-instance ObjectService, `skipped-no-shillinq` degradation), occ trigger `humaniq:glpost:run`, idempotency rule `nl-glpost-idempotent-per-run`, GL-post pages (kind: code)
 
 ## Purpose
 
@@ -18,14 +18,14 @@ open-source (2026-07-12 deep research, Spectr insight
 `hrmq-insight-buildround-2026-07-12`): one balanced 4-line journal (bruto
 loonkosten, werkgeverslasten, loonheffing-schuld, netto-loonschuld) per
 approved payroll run, delivered as a draft `JournalEntry` into the shillinq
-bookkeeping app on the same instance. hrmq stays a leaf — no duplicate
+bookkeeping app on the same instance. humaniq stays a leaf — no duplicate
 bookkeeping machinery; the existing `xc-payroll-gl-reconciliation` corpus rule
 turns green on posted runs. SEPA net-pay batches, per-employee splits, and
 vakantiegeld accruals are explicitly out of scope.
 
 ## Requirements
 
-@e2e exclude backend occ/service change plus declarative manifest pages; hrmq has no app-level e2e suite yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude backend occ/service change plus declarative manifest pages; humaniq has no app-level e2e suite yet (tracked by active change humaniq-test-coverage-baseline)
 
 ### REQ-PGP-001: A `PayrollGLPost` schema SHALL record every posting attempt in a new register fragment
 
@@ -56,7 +56,7 @@ vakantiegeld accruals are explicitly out of scope.
 
 ### REQ-PGP-003: The service SHALL create the journal as a shillinq `JournalEntry` via OpenRegister's ObjectService
 
-The write targets register `shillinq`, schema `JournalEntry` (contract verified in `shillinq/lib/Settings/register.d/add-shillinq-bookkeeping-foundation.json` and `shillinq/openspec/specs/bookkeeping-journal-entries/spec.md` REQ-JE-002): required fields `journalNumber` (deterministic `HRMQ-LOON-{period}-{administrationId}`), `entryDate` (last day of the wage period), `description` ("Loonjournaalpost {period} — hrmq loonrun {payrollRunId}"), `lines` (per REQ-PGP-002; each `{accountNumber, side, amount}` with `side` ∈ `debit|credit`, non-negative amounts), `journalType: manual`, `approvalState: not-required`, `administrationId` (passed through verbatim from the run), `state: draft`. hrmq SHALL NOT drive shillinq's post transition — GLTransaction materialisation stays behind shillinq's own lifecycle and approval policy (design.md D3). On success the `PayrollGLPost` records `journalEntryId`, `journalNumber`, `postedAt`, the `lines` snapshot, and `status: posted`.
+The write targets register `shillinq`, schema `JournalEntry` (contract verified in `shillinq/lib/Settings/register.d/add-shillinq-bookkeeping-foundation.json` and `shillinq/openspec/specs/bookkeeping-journal-entries/spec.md` REQ-JE-002): required fields `journalNumber` (deterministic `HRMQ-LOON-{period}-{administrationId}`), `entryDate` (last day of the wage period), `description` ("Loonjournaalpost {period} — humaniq loonrun {payrollRunId}"), `lines` (per REQ-PGP-002; each `{accountNumber, side, amount}` with `side` ∈ `debit|credit`, non-negative amounts), `journalType: manual`, `approvalState: not-required`, `administrationId` (passed through verbatim from the run), `state: draft`. humaniq SHALL NOT drive shillinq's post transition — GLTransaction materialisation stays behind shillinq's own lifecycle and approval policy (design.md D3). On success the `PayrollGLPost` records `journalEntryId`, `journalNumber`, `postedAt`, the `lines` snapshot, and `status: posted`.
 
 #### Scenario: JournalEntry lands in shillinq as a draft
 - **GIVEN** shillinq installed with its register imported, and an approved run `2026-05` / `ADM-001`
@@ -70,16 +70,16 @@ The write targets register `shillinq`, schema `JournalEntry` (contract verified 
 
 ### REQ-PGP-004: Absent shillinq SHALL degrade to `skipped-no-shillinq`, never an exception
 
-Availability is duck-typed (ADR-046 philosophy, as `PortalContributionProvider` does): `IAppManager::isInstalled('shillinq')` plus a try/catch-guarded ObjectService resolve of register `shillinq` / schema `JournalEntry`. Any miss records a `PayrollGLPost` with `status: skipped-no-shillinq` and an explanatory `errorMessage`; the run keeps `status: approved` so a later invocation retries once shillinq is present. hrmq gains no info.xml or composer dependency on shillinq.
+Availability is duck-typed (ADR-046 philosophy, as `PortalContributionProvider` does): `IAppManager::isInstalled('shillinq')` plus a try/catch-guarded ObjectService resolve of register `shillinq` / schema `JournalEntry`. Any miss records a `PayrollGLPost` with `status: skipped-no-shillinq` and an explanatory `errorMessage`; the run keeps `status: approved` so a later invocation retries once shillinq is present. humaniq gains no info.xml or composer dependency on shillinq.
 
 #### Scenario: Instance without shillinq
 - **GIVEN** a Nextcloud instance where shillinq is not installed
-- **WHEN** `occ hrmq:glpost:run` processes an approved run
+- **WHEN** `occ humaniq:glpost:run` processes an approved run
 - **THEN** the command exits 0, the run's `PayrollGLPost` is `skipped-no-shillinq`, no exception is thrown, and the `PayrollRun` still has `status: approved`
 
 #### Scenario: Shillinq installed later
 - **GIVEN** a run whose latest `PayrollGLPost` is `skipped-no-shillinq`
-- **WHEN** shillinq is installed and `occ hrmq:glpost:run` runs again
+- **WHEN** shillinq is installed and `occ humaniq:glpost:run` runs again
 - **THEN** a new attempt posts the run and ends `posted` (the skip is superseded, not permanent)
 
 ### REQ-PGP-005: A successful post SHALL update the run so the existing GL-reconciliation rule passes
@@ -88,16 +88,16 @@ On success the service writes to the `PayrollRun`: `glExpensePosted = totalGross
 
 #### Scenario: Reconciliation rule goes green
 - **GIVEN** an approved run with the REQ-PGP-002 totals and no GL fields set (audit shows an `xc-payroll-gl-reconciliation` violation)
-- **WHEN** the run is posted successfully and `occ hrmq:rules:audit` runs
+- **WHEN** the run is posted successfully and `occ humaniq:rules:audit` runs
 - **THEN** the run carries `glExpensePosted: 4449.80`, `glLiabilityPosted: 1751.80`, `status: posted`, and no `xc-payroll-gl-reconciliation` violation is reported for it
 
 ### REQ-PGP-006: An occ command SHALL be the MVP trigger
 
-`lib/Command/GlPostRunCommand.php` (NEW) registers `hrmq:glpost:run` with optional `--period YYYY-MM`, declared in `appinfo/info.xml` `<commands>` (the existing command registration point, next to `hrmq:rules:audit`). It selects `PayrollRun` objects with `status: approved` (period-filtered when given), invokes the service per run, prints one outcome line per run plus a summary, and exits `0` when every selected run ends `posted` or `skipped-no-shillinq`, `1` when any ends `failed`. No automatic lifecycle hook ships in this change: PayrollRun transitions are plain data edits today, and event-driven posting is deferred to the guard/event wiring owned by the active `hrmq-rule-compliance-enforcement` change (design.md D5).
+`lib/Command/GlPostRunCommand.php` (NEW) registers `humaniq:glpost:run` with optional `--period YYYY-MM`, declared in `appinfo/info.xml` `<commands>` (the existing command registration point, next to `humaniq:rules:audit`). It selects `PayrollRun` objects with `status: approved` (period-filtered when given), invokes the service per run, prints one outcome line per run plus a summary, and exits `0` when every selected run ends `posted` or `skipped-no-shillinq`, `1` when any ends `failed`. No automatic lifecycle hook ships in this change: PayrollRun transitions are plain data edits today, and event-driven posting is deferred to the guard/event wiring owned by the active `humaniq-rule-compliance-enforcement` change (design.md D5).
 
 #### Scenario: Period-filtered posting
 - **GIVEN** approved runs for `2026-04` and `2026-05`
-- **WHEN** `occ hrmq:glpost:run --period 2026-05` executes
+- **WHEN** `occ humaniq:glpost:run --period 2026-05` executes
 - **THEN** only the `2026-05` run is posted; the `2026-04` run is untouched and still selectable
 
 #### Scenario: Failure surfaces in the exit code
@@ -111,12 +111,12 @@ Invariant: at most one `PayrollGLPost` in `{pending, posted}` per `payrollRunId`
 
 #### Scenario: Double invocation posts once
 - **GIVEN** an approved run
-- **WHEN** `occ hrmq:glpost:run` executes twice in a row
+- **WHEN** `occ humaniq:glpost:run` executes twice in a row
 - **THEN** exactly one `posted` `PayrollGLPost` and exactly one shillinq `JournalEntry` exist for that run (the second invocation selects no approved runs)
 
 #### Scenario: Audit flags a duplicated active post
 - **GIVEN** two `PayrollGLPost` objects in `posted` status referencing the same `payrollRunId` (data tampered outside the service)
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** `nl-glpost-idempotent-per-run` violations are reported for those objects
 
 ### REQ-PGP-008: Manifest pages SHALL expose the GL-post records under Loonadministratie

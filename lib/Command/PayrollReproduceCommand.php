@@ -3,7 +3,7 @@
 /**
  * Payroll Reproduce Command
  *
- * `occ hrmq:payroll:reproduce --payslip <uuid>` (audit-trail-payroll,
+ * `occ humaniq:payroll:reproduce --payslip <uuid>` (audit-trail-payroll,
  * fixing hrmq#98) — the reproducibility verifier: recomputes a sealed
  * Payslip from its own stored `engineInputSnapshot` (never the live
  * Employee/EmploymentContract state) and reports byte-identical match or
@@ -12,7 +12,7 @@
  * silent pass.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -28,9 +28,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\PayrollReproduceService;
+use OCA\Humaniq\Service\PayrollReproduceService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -58,7 +58,7 @@ class PayrollReproduceCommand extends Command {
 	 * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-002
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:payroll:reproduce')
+		$this->setName('humaniq:payroll:reproduce')
 			->setDescription('Recompute a sealed Payslip from its stored engineInputSnapshot and compare cents-exact against the archived figures.')
 			->addOption('payslip', null, InputOption::VALUE_REQUIRED, 'The Payslip id (uuid) to reproduce.');
 
@@ -82,7 +82,7 @@ class PayrollReproduceCommand extends Command {
 
 		$result = $this->service->reproduce($payslipId);
 
-		$output->writeln('<info>Hrmq payroll reproduce</info>');
+		$output->writeln('<info>Humaniq payroll reproduce</info>');
 		$output->writeln(sprintf('  loonstrook: %s', $result['payslipId']));
 		$output->writeln(sprintf('  status    : %s', $result['status']));
 		$output->writeln(sprintf('  bericht   : %s', $result['message']));

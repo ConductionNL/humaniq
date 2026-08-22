@@ -9,7 +9,7 @@
  * and deadline alerting (nl-upa-deadline-alert, on PensionFiling).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
+ * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -25,9 +25,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
+namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlPensionFilingChecks;
+use OCA\Humaniq\Standards\Checks\NlPensionFilingChecks;
 use PHPUnit\Framework\TestCase;
 
 /**

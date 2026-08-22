@@ -6,7 +6,7 @@
 
 ## Context
 
-hrmq is the Dutch HRM/payroll suite covering ~48 specs across employee-master, contract, payroll-engine + CAOs, payslip/UPA, leave/sick/WVP, self-service, ATS, pension, multi-administratie, ZZP/DGA modes, and public-sector add-ons (AOR, WNT, IRMA/DigiD). Without a top-down information-architecture (IA) discipline a register of this size naturally drifts into:
+humaniq is the Dutch HRM/payroll suite covering ~48 specs across employee-master, contract, payroll-engine + CAOs, payslip/UPA, leave/sick/WVP, self-service, ATS, pension, multi-administratie, ZZP/DGA modes, and public-sector add-ons (AOR, WNT, IRMA/DigiD). Without a top-down information-architecture (IA) discipline a register of this size naturally drifts into:
 
 - a top-level menu per CAO-sector (gemeenten, Rijk, PO, VO, ziekenhuizen, VVT) — 6+ menu items that are really configuration rulesets;
 - duplicate "Manager portaal" / "Medewerker portaal" sibling apps that re-implement the same screens with different role filters;
@@ -15,11 +15,11 @@ hrmq is the Dutch HRM/payroll suite covering ~48 specs across employee-master, c
 - compliance output (UPA, pensioen, WNT, AVG-DSR, audit) scattered across Salarissen/Medewerkers/Compliance instead of one external-reporting hub;
 - performance-management and comp-cyclus as a 10th top-level "Performance" menu instead of detail-tabs on the personnel record.
 
-A cross-app IA design exercise (covering both procest and hrmq) was completed and recorded in `/tmp/ia-procest-hrmq.md`. The hrmq section of that document fixes 8 top-level menu items + 1 Configuratie drawer (9 total), assigns every one of the 48 specs to a single placement (TOP_MENU / SUB_PAGE / DETAIL_TAB / WIDGET / ACTION / SETTING), and codifies six design rules. This ADR lifts those rules into the per-app architecture record so they bind future spec proposals.
+A cross-app IA design exercise (covering both procest and humaniq) was completed and recorded in `/tmp/ia-procest-humaniq.md`. The humaniq section of that document fixes 8 top-level menu items + 1 Configuratie drawer (9 total), assigns every one of the 48 specs to a single placement (TOP_MENU / SUB_PAGE / DETAIL_TAB / WIDGET / ACTION / SETTING), and codifies six design rules. This ADR lifts those rules into the per-app architecture record so they bind future spec proposals.
 
 ## Decision
 
-**hrmq adheres to the top-level navigation (8 menus + Configuratie drawer) and the six IA design rules below.** New specs MUST map their UI surface onto an existing placement under this IA. Adding a new top-level menu requires an ADR amendment.
+**humaniq adheres to the top-level navigation (8 menus + Configuratie drawer) and the six IA design rules below.** New specs MUST map their UI surface onto an existing placement under this IA. Adding a new top-level menu requires an ADR amendment.
 
 ### Top-level navigation (frozen)
 
@@ -107,7 +107,7 @@ UPA-loonaangifte, pensioen-aanleveringen, WNT-publicatie, AVG-DSR-rights-engine 
 
 ## Related
 
-- Source IA design doc: `/tmp/ia-procest-hrmq.md` (procest + hrmq, hrmq section).
-- Spec mapping table (all 48 hrmq specs → IA placement): see the source doc, section 2.D.
+- Source IA design doc: `/tmp/ia-procest-humaniq.md` (procest + humaniq, humaniq section).
+- Spec mapping table (all 48 humaniq specs → IA placement): see the source doc, section 2.D.
 - Implementation phasing (Q3 2026 payroll-MVP → Q4 sector-CAO + compliance → Q1 2027 advanced HR + planning): source doc section 2.E.
 - procest sibling ADR for the cross-app IA pattern.

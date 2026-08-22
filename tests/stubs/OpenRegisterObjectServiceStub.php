@@ -29,7 +29,7 @@
  * real class in production, which is the hazard flagged for the OCP dev-stubs.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests
+ * @package  OCA\Humaniq\Tests
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.

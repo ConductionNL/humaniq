@@ -3,7 +3,7 @@
 /**
  * WKR Assess Command
  *
- * `occ hrmq:wkr:assess --administration ADM --year YYYY [--all]` — the WKR
+ * `occ humaniq:wkr:assess --administration ADM --year YYYY [--all]` — the WKR
  * administration-level roll-up trigger (wkr-administration design.md D6):
  * computes/persists the idempotent WkrAssessment for one (administration,
  * year) pair and prints the outcome (fiscale loonsom, vrije ruimte, used,
@@ -11,7 +11,7 @@
  * (administrationId, year) pair found across the payslips instead.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -27,9 +27,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\WkrService;
+use OCA\Humaniq\Service\WkrService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -56,7 +56,7 @@ class WkrAssessCommand extends Command {
 	 * @spec openspec/changes/wkr-administration/specs/wkr-administration/spec.md#REQ-WKR-005
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:wkr:assess')
+		$this->setName('humaniq:wkr:assess')
 			->setDescription('Compute and persist the werkkostenregeling (WKR) vrije-ruimte assessment for one administration/year, or every distinct pair found across the payslips with --all.')
 			->addOption('administration', null, InputOption::VALUE_REQUIRED, 'The administration to assess.')
 			->addOption('year', null, InputOption::VALUE_REQUIRED, 'The fiscal year to assess.')
@@ -125,7 +125,7 @@ class WkrAssessCommand extends Command {
 
 		$assessment = (array)$outcome['assessment'];
 
-		$output->writeln('<info>Hrmq WKR-beoordeling</info>');
+		$output->writeln('<info>Humaniq WKR-beoordeling</info>');
 		$output->writeln(sprintf('  administratie      : %s', (string)$assessment['administrationId']));
 		$output->writeln(sprintf('  jaar               : %d', (int)$assessment['year']));
 		$output->writeln(sprintf('  fiscale loonsom    : %.2f', (float)$assessment['fiscaleLoonsom']));

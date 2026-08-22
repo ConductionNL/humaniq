@@ -1,4 +1,10 @@
 {
+  // FROZEN AT THE OLD NAME, deliberately, and it moves together with the
+  // docs subdomain. `hrmq.conduction.nl` is bound to the EXISTING
+  // `hrmq-docs` Worker. Renaming this creates a SECOND Worker and the
+  // custom domain keeps routing to the old one, so every docs deploy would
+  // go green while reaching nobody. Rename this and the DNS record in the
+  // same change, not in the app-id rename.
   "name": "hrmq-docs",
   "compatibility_date": "2025-06-01",
   "assets": { "directory": "./build", "not_found_handling": "404-page" }

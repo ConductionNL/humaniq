@@ -8,7 +8,7 @@
  * an empty, malformed, or future-dated effectiveDate all deny.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Lifecycle
+ * @package  OCA\Humaniq\Tests\Unit\Lifecycle
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -24,9 +24,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Lifecycle;
+namespace OCA\Humaniq\Tests\Unit\Lifecycle;
 
-use OCA\Hrmq\Lifecycle\CompEffectiveDateGuard;
+use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
 use PHPUnit\Framework\TestCase;
 
 /**

@@ -6,14 +6,14 @@
  * Pins the emit contract of the time-entry-capture approval event: a Timesheet
  * crossing into `approved` emits exactly one `nl.conduction.hrmq.timeentry.approved`
  * CloudEvent carrying the approved hours / project / billable a finance consumer
- * needs, AND dispatches the typed {@see \OCA\Hrmq\Event\TimesheetApprovedEvent}
+ * needs, AND dispatches the typed {@see \OCA\Humaniq\Event\TimesheetApprovedEvent}
  * (ADR-041) with the same provenance plus an explicit period-grain marker; an
  * unapproved change, a non-approval transition, a re-save of an
  * already-approved timesheet, and a non-Timesheet schema all stay silent on
  * BOTH dispatch paths.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -25,15 +25,15 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md
- * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+ * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Event\TimesheetApprovedEvent;
-use OCA\Hrmq\Service\TimeEntryEventService;
+use OCA\Humaniq\Event\TimesheetApprovedEvent;
+use OCA\Humaniq\Service\TimeEntryEventService;
 use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -187,7 +187,7 @@ class TimeEntryEventServiceTest extends TestCase {
 	 * @return void
 	 *
 	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function testSubmittedToApprovedEmitsEvent(): void {
 		$service = $this->serviceWithSpy();
@@ -204,7 +204,7 @@ class TimeEntryEventServiceTest extends TestCase {
 		$call = $this->spy->calls[0];
 		$this->assertSame('nl.conduction.hrmq.timeentry.approved', $call['eventName']);
 		$this->assertSame('1.0', $call['payload']['specversion']);
-		$this->assertSame('/apps/hrmq/timesheets', $call['payload']['source']);
+		$this->assertSame('/apps/humaniq/timesheets', $call['payload']['source']);
 		$this->assertSame('ts-0001', $call['payload']['id']);
 
 		$data = $call['payload']['data'];
@@ -243,7 +243,7 @@ class TimeEntryEventServiceTest extends TestCase {
 	 * @return void
 	 *
 	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function testUnapprovedTransitionDoesNotEmit(): void {
 		$service = $this->serviceWithSpy();
@@ -267,7 +267,7 @@ class TimeEntryEventServiceTest extends TestCase {
 	 * @return void
 	 *
 	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function testAlreadyApprovedDoesNotReEmit(): void {
 		$service = $this->serviceWithSpy();
@@ -355,7 +355,7 @@ class TimeEntryEventServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function testTypedDispatchFailureDoesNotBlockWebhook(): void {
 		$this->typedDispatchThrows = true;
@@ -378,7 +378,7 @@ class TimeEntryEventServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
 	 */
 	public function testBuildTypedEventClassifiesMonthGrain(): void {
 		$service = $this->serviceWithSpy();
@@ -395,7 +395,7 @@ class TimeEntryEventServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
 	 */
 	public function testBuildTypedEventClassifiesWeekGrain(): void {
 		$service = $this->serviceWithSpy();
@@ -412,7 +412,7 @@ class TimeEntryEventServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
 	 */
 	public function testBuildTypedEventClassifiesDayGrain(): void {
 		$service = $this->serviceWithSpy();
@@ -431,7 +431,7 @@ class TimeEntryEventServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
 	 */
 	public function testBuildTypedEventClassifiesUnknownGrain(): void {
 		$service = $this->serviceWithSpy();
@@ -449,7 +449,7 @@ class TimeEntryEventServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function testBuildTypedEventCarriesAdministrationId(): void {
 		$service = $this->serviceWithSpy();
@@ -471,7 +471,7 @@ class TimeEntryEventServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-The-event-carries-what-a-finance-consumer-needs-(REQ-TEC-003)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-The-event-carries-what-a-finance-consumer-needs-(REQ-TEC-003)
 	 */
 	public function testAggregationWriteOnApprovedTimesheetEmitsNothing(): void {
 		$service = $this->serviceWithSpy();
@@ -501,7 +501,7 @@ class TimeEntryEventServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-The-event-carries-what-a-finance-consumer-needs-(REQ-TEC-003)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-The-event-carries-what-a-finance-consumer-needs-(REQ-TEC-003)
 	 */
 	public function testStampedApprovalWriteEmitsPopulatedProvenance(): void {
 		$service = $this->serviceWithSpy();

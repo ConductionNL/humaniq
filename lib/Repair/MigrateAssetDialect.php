@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq Migrate Asset Dialect Repair Step
+ * Humaniq Migrate Asset Dialect Repair Step
  *
  * hrmq-asset-fleet-merge (tasks.md section 13, blocking defect): the
  * Asset/AssetAssignment schema rename shipped without a data migration.
@@ -22,11 +22,11 @@
  * needing an app-version bump, on top of it firing automatically on a real
  * upgrade. `AssetDialectMigrationService::migrate()` is idempotent, so
  * running it on every `occ maintenance:repair` is safe -- see the
- * `occ hrmq:assets:migrate-dialect` command for a narrower, hrmq-only
+ * `occ humaniq:assets:migrate-dialect` command for a narrower, humaniq-only
  * re-run that does not also run every other app's post-migration steps.
  *
  * @category Repair
- * @package  OCA\Hrmq\Repair
+ * @package  OCA\Humaniq\Repair
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -37,15 +37,15 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Repair;
+namespace OCA\Humaniq\Repair;
 
-use OCA\Hrmq\Service\AssetDialectMigrationService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Service\AssetDialectMigrationService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -62,7 +62,7 @@ class MigrateAssetDialect implements IRepairStep {
 	 * @param SettingsService $settingsService Availability check.
 	 * @param LoggerInterface $logger The logger.
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function __construct(
 		private readonly AssetDialectMigrationService $migrationService,
@@ -77,10 +77,10 @@ class MigrateAssetDialect implements IRepairStep {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function getName(): string {
-		return 'Rewrite pre-existing hrmq Asset/AssetAssignment objects to the renamed English dialect';
+		return 'Rewrite pre-existing humaniq Asset/AssetAssignment objects to the renamed English dialect';
 	}//end getName()
 
 	/**
@@ -90,7 +90,7 @@ class MigrateAssetDialect implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function run(IOutput $output): void {
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
@@ -102,7 +102,7 @@ class MigrateAssetDialect implements IRepairStep {
 			$report = $this->migrationService->migrate();
 		} catch (\Throwable $e) {
 			$output->warning('Could not migrate Asset/AssetAssignment dialect: ' . $e->getMessage());
-			$this->logger->error('Hrmq: Asset dialect migration failed', ['exception' => $e->getMessage()]);
+			$this->logger->error('Humaniq: Asset dialect migration failed', ['exception' => $e->getMessage()]);
 			return;
 		}
 

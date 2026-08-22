@@ -7,19 +7,19 @@ built_by: openspec/changes/archive/2026-07-14-payslip-pdf-docudesk
 # payslip-pdf-docudesk Specification
 
 **Status**: done
-**Scope**: hrmq (loonstrook + jaaropgaaf documents through the existing docudesk consumption leaf)
+**Scope**: humaniq (loonstrook + jaaropgaaf documents through the existing docudesk consumption leaf)
 **Kind**: code (service aggregation/generation paths + command options + controller guard + check provider dominate; schema fields, one rule row, and manifest pages ride along — see the archived change's design.md "Mixed-spec rationale")
 
 **OpenSpec changes**
-- [payslip-pdf-docudesk](../../changes/archive/2026-07-14-payslip-pdf-docudesk/) _(archived 2026-07-14)_ — `Jaaropgaaf` aggregate schema + loonstrook/jaaropgaaf rendering through `HrDocumentService` (dataRefs `[Employee, Payslip]` / aggregate-then-render `[Employee, Jaaropgaaf]`, per-payslip and per-jaaropgaaf idempotency), occ `--type loonstrook|jaaropgaaf` with `--period`/`--year`, payslip variant of the guarded endpoint, evidence rule `nl-loonstrook-verplicht` (BW 7:626), Jaaropgaven pages + PayslipDetail action (kind: code; extends `hrmq-docudesk-documents`)
+- [payslip-pdf-docudesk](../../changes/archive/2026-07-14-payslip-pdf-docudesk/) _(archived 2026-07-14)_ — `Jaaropgaaf` aggregate schema + loonstrook/jaaropgaaf rendering through `HrDocumentService` (dataRefs `[Employee, Payslip]` / aggregate-then-render `[Employee, Jaaropgaaf]`, per-payslip and per-jaaropgaaf idempotency), occ `--type loonstrook|jaaropgaaf` with `--period`/`--year`, payslip variant of the guarded endpoint, evidence rule `nl-loonstrook-verplicht` (BW 7:626), Jaaropgaven pages + PayslipDetail action (kind: code; extends `humaniq-docudesk-documents`)
 
 ## Purpose
 
-Give every `Payslip` a downloadable loonstrook PDF and every employee-year a jaaropgaaf PDF — rendered by docudesk from `namespace: hrmq` templates through the already-shipped `HrDocumentService` pipe (hrmq assembles data, docudesk renders — no Dompdf/Twig in hrmq, superseding the `spec/payslip-generation` draft's in-app engine), with an honest `Jaaropgaaf` aggregate derived only from real Payslip fields, and machine-checked BW 7:626 evidence via `nl-loonstrook-verplicht`.
+Give every `Payslip` a downloadable loonstrook PDF and every employee-year a jaaropgaaf PDF — rendered by docudesk from `namespace: hrmq` templates through the already-shipped `HrDocumentService` pipe (humaniq assembles data, docudesk renders — no Dompdf/Twig in humaniq, superseding the `spec/payslip-generation` draft's in-app engine), with an honest `Jaaropgaaf` aggregate derived only from real Payslip fields, and machine-checked BW 7:626 evidence via `nl-loonstrook-verplicht`.
 
 ## ADDED Requirements
 
-@e2e exclude backend occ/service/controller change plus declarative manifest pages; hrmq has no app-level e2e suite yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude backend occ/service/controller change plus declarative manifest pages; humaniq has no app-level e2e suite yet (tracked by active change humaniq-test-coverage-baseline)
 
 ### Requirement: A `Jaaropgaaf` schema SHALL aggregate only what Payslip actually carries (REQ-PPD-001)
 
@@ -72,7 +72,7 @@ For `documentType: jaaropgaaf`, `HrDocumentService` SHALL first upsert the emplo
 
 #### Scenario: Undocumented payslip flagged
 - **GIVEN** a Payslip with no `generated` loonstrook `GeneratedDocument`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** an `nl-loonstrook-verplicht` violation (severity `recommended`) is reported for that payslip
 
 #### Scenario: Documented payslip passes

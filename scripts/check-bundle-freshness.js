@@ -39,7 +39,7 @@ const fs = require('fs')
 const path = require('path')
 
 const REPO_ROOT = path.resolve(__dirname, '..')
-const BUNDLE = path.join(REPO_ROOT, 'js', 'hrmq-main.js')
+const BUNDLE = path.join(REPO_ROOT, 'js', 'humaniq-main.js')
 
 /**
  * A stamp written by `postbuild` on EVERY successful build.
@@ -75,7 +75,7 @@ function lastCommitTime(rel) {
 }
 
 if (!fs.existsSync(BUNDLE)) {
-	console.error('[check-bundle-freshness] FAIL — js/hrmq-main.js does not exist. Run `npm run build`.')
+	console.error('[check-bundle-freshness] FAIL — js/humaniq-main.js does not exist. Run `npm run build`.')
 	process.exit(1)
 }
 

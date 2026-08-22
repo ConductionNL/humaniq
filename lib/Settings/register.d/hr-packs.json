@@ -1,5 +1,5 @@
 {
-  "x-hrmq-fragment": "hr-packs",
+  "x-humaniq-fragment": "hr-packs",
   "components": {
     "schemas": {
       "JurisdictionPack": {
@@ -43,7 +43,7 @@
             "type": "boolean",
             "title": "Active",
             "default": false,
-            "description": "Whether this pack resolves for its (jurisdiction, taxYear). Set by hrmq only after every validation gate passed — including an in-process dry-run of the pack's own golden vectors."
+            "description": "Whether this pack resolves for its (jurisdiction, taxYear). Set by humaniq only after every validation gate passed — including an in-process dry-run of the pack's own golden vectors."
           },
           "overridesBundled": {
             "type": "boolean",

@@ -46,7 +46,7 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 // CJS module; its default export carries buildEffectiveManifest (base +
 // src/manifest.d/*.json fragments + page-template expansion). Since
-// hrmq-manifest-fragment-pipeline the base manifest.json holds only 3 shell
+// humaniq-manifest-fragment-pipeline the base manifest.json holds only 3 shell
 // pages — scanning it alone would silently narrow this check from 40+
 // @workspace.*? clauses to ~0 and report an empty PASS.
 import parityHarness from '../tests/verify-manifest-parity.js'

@@ -1,11 +1,11 @@
 ---
 sidebar_position: 1
-description: The versioned, machine-checkable HR/labour rule corpus and the RuleEngine that audits HRMQ's data against it.
+description: The versioned, machine-checkable HR/labour rule corpus and the RuleEngine that audits Humaniq's data against it.
 ---
 
 # The compliance rule engine
 
-Alongside the register data layer, HRMQ ships a **versioned, static
+Alongside the register data layer, Humaniq ships a **versioned, static
 corpus** of operative HR/labour and payroll rules — derived from EU
 labour directives, ILO core conventions, GDPR for employee data,
 occupational health & safety, national labour law (NL first), and
@@ -91,13 +91,13 @@ engine only enforces what an organisation is actually subject to.
 ## Running the audit
 
 ```bash
-occ hrmq:rules:audit --jurisdiction=NL
+occ humaniq:rules:audit --jurisdiction=NL
 ```
 
 The report includes:
 
 ```
-Hrmq rule-compliance audit
+Humaniq rule-compliance audit
   catalogue version : 2026-07.13
   corpus rules      : <N> (machine-checkable: <N>)
   enforceable today : <N> (<NN.N>% of machine-checkable)
@@ -113,14 +113,14 @@ Hrmq rule-compliance audit
     <rule-id>                          <N>
 ```
 
-Exit code is non-zero for `occ hrmq:payroll:verify` (the run-scoped
-payroll audit) on any mandatory violation; the general `hrmq:rules:audit`
+Exit code is non-zero for `occ humaniq:payroll:verify` (the run-scoped
+payroll audit) on any mandatory violation; the general `humaniq:rules:audit`
 command is a read-only reporting tool.
 
 ## Seeding test data
 
 ```bash
-occ hrmq:rules:seed-testdata
+occ humaniq:rules:seed-testdata
 ```
 
 Idempotently backfills local test data so the enforced rules have

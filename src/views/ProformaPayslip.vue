@@ -12,57 +12,57 @@
 -->
 <template>
 	<div class="proforma-payslip">
-		<h2>{{ t('hrmq', 'Simulate payslip') }}</h2>
+		<h2>{{ t('humaniq', 'Simulate payslip') }}</h2>
 		<p class="proforma-payslip__intro">
-			{{ t('hrmq', 'Enter a hypothetical gross salary to see the full net breakdown. Nothing is saved — no employee, contract, payroll run or payslip is created.') }}
+			{{ t('humaniq', 'Enter a hypothetical gross salary to see the full net breakdown. Nothing is saved — no employee, contract, payroll run or payslip is created.') }}
 		</p>
 
 		<form class="proforma-payslip__form" @submit.prevent="simulate">
 			<NcTextField v-model="form.gross"
-				:label="t('hrmq', 'Gross monthly salary (EUR)')"
+				:label="t('humaniq', 'Gross monthly salary (EUR)')"
 				type="number"
 				step="0.01"
 				min="0"
 				required />
 
 			<div class="proforma-payslip__radio-group">
-				<span class="proforma-payslip__radio-label">{{ t('hrmq', 'Tax table') }}</span>
+				<span class="proforma-payslip__radio-label">{{ t('humaniq', 'Tax table') }}</span>
 				<NcCheckboxRadioSwitch v-model="form.table"
 					value="wit"
 					name="table"
 					type="radio">
-					{{ t('hrmq', 'White table (wit)') }}
+					{{ t('humaniq', 'White table (wit)') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch v-model="form.table"
 					value="groen"
 					name="table"
 					type="radio">
-					{{ t('hrmq', 'Green table (groen)') }}
+					{{ t('humaniq', 'Green table (groen)') }}
 				</NcCheckboxRadioSwitch>
 			</div>
 
 			<NcCheckboxRadioSwitch v-model="form.loonheffingskorting" type="switch">
-				{{ t('hrmq', 'Loonheffingskorting applied') }}
+				{{ t('humaniq', 'Loonheffingskorting applied') }}
 			</NcCheckboxRadioSwitch>
 
 			<NcTextField v-model="form.dateOfBirth"
-				:label="t('hrmq', 'Date of birth (optional — unknown is treated as below AOW age)')"
+				:label="t('humaniq', 'Date of birth (optional — unknown is treated as below AOW age)')"
 				type="date" />
 
 			<NcTextField v-model="form.parttime"
-				:label="t('hrmq', 'Part-time factor')"
+				:label="t('humaniq', 'Part-time factor')"
 				type="number"
 				step="0.01"
 				min="0.01" />
 
 			<NcTextField v-model="form.bijzonder"
-				:label="t('hrmq', 'One-off special payment (EUR, optional)')"
+				:label="t('humaniq', 'One-off special payment (EUR, optional)')"
 				type="number"
 				step="0.01"
 				min="0" />
 
 			<NcTextField v-model="form.period"
-				:label="t('hrmq', 'Wage period (YYYY-MM, defaults to the current month)')"
+				:label="t('humaniq', 'Wage period (YYYY-MM, defaults to the current month)')"
 				type="text"
 				placeholder="2026-02" />
 
@@ -77,7 +77,7 @@
 					<NcLoadingIcon v-if="loading" />
 					<Calculator v-else :size="20" />
 				</template>
-				{{ t('hrmq', 'Calculate') }}
+				{{ t('humaniq', 'Calculate') }}
 			</NcButton>
 		</form>
 
@@ -86,27 +86,27 @@
 		</NcNoteCard>
 
 		<div v-if="breakdown" class="proforma-payslip__result">
-			<h3>{{ t('hrmq', 'Breakdown') }}</h3>
+			<h3>{{ t('humaniq', 'Breakdown') }}</h3>
 
 			<dl class="proforma-payslip__breakdown">
-				<dt>{{ t('hrmq', 'Gross pay') }}</dt>
+				<dt>{{ t('humaniq', 'Gross pay') }}</dt>
 				<dd>{{ euro(breakdown.grossPay) }}</dd>
-				<dt>{{ t('hrmq', 'Loonheffing') }}</dt>
+				<dt>{{ t('humaniq', 'Loonheffing') }}</dt>
 				<dd>{{ euro(breakdown.loonheffing) }}</dd>
-				<dt>{{ t('hrmq', 'Arbeidskorting') }}</dt>
+				<dt>{{ t('humaniq', 'Arbeidskorting') }}</dt>
 				<dd>{{ euro(breakdown.arbeidskorting) }}</dd>
-				<dt>{{ t('hrmq', 'Volksverzekeringen') }}</dt>
+				<dt>{{ t('humaniq', 'Volksverzekeringen') }}</dt>
 				<dd>{{ euro(breakdown.volksverzekeringen) }}</dd>
-				<dt>{{ t('hrmq', 'Zvw') }}</dt>
+				<dt>{{ t('humaniq', 'Zvw') }}</dt>
 				<dd>{{ euro(breakdown.zvw) }}</dd>
-				<dt>{{ t('hrmq', 'Werknemersverzekeringen') }}</dt>
+				<dt>{{ t('humaniq', 'Werknemersverzekeringen') }}</dt>
 				<dd>{{ euro(breakdown.werknemersverzekeringen) }}</dd>
-				<dt>{{ t('hrmq', 'Employer charges') }}</dt>
+				<dt>{{ t('humaniq', 'Employer charges') }}</dt>
 				<dd>{{ euro(breakdown.employerCharges) }}</dd>
-				<dt>{{ t('hrmq', 'Vakantiegeld reserved') }}</dt>
+				<dt>{{ t('humaniq', 'Vakantiegeld reserved') }}</dt>
 				<dd>{{ euro(breakdown.vakantiegeldReserved) }}</dd>
 				<dt class="proforma-payslip__net-label">
-					{{ t('hrmq', 'Net pay') }}
+					{{ t('humaniq', 'Net pay') }}
 				</dt>
 				<dd class="proforma-payslip__net-value">
 					{{ euro(breakdown.nettoPay) }}
@@ -114,7 +114,7 @@
 			</dl>
 
 			<NcNoteCard type="info" class="proforma-payslip__note">
-				{{ t('hrmq', 'This is a pro-forma simulation. Nothing was saved: no employee, contract, payroll run or payslip was created.') }}
+				{{ t('humaniq', 'This is a pro-forma simulation. Nothing was saved: no employee, contract, payroll run or payslip was created.') }}
 			</NcNoteCard>
 
 			<NcNoteCard v-if="form.bijzonder && Number(form.bijzonder) > 0" type="warning" class="proforma-payslip__note">
@@ -175,7 +175,7 @@ export default {
 			this.breakdown = null
 
 			try {
-				const response = await axios.post(generateUrl('/apps/hrmq/api/payroll/proforma'), {
+				const response = await axios.post(generateUrl('/apps/humaniq/api/payroll/proforma'), {
 					gross: this.form.gross,
 					table: this.form.table,
 					loonheffingskorting: this.form.loonheffingskorting,
@@ -187,7 +187,7 @@ export default {
 				this.breakdown = response.data
 			} catch (error) {
 				this.errorMessage = error?.response?.data?.error
-					|| this.t('hrmq', 'The simulation failed. Check the entered values and try again.')
+					|| this.t('humaniq', 'The simulation failed. Check the entered values and try again.')
 			} finally {
 				this.loading = false
 			}

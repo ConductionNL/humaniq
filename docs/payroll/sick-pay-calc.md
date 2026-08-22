@@ -5,7 +5,7 @@ description: Loondoorbetaling bij ziekte — 70% continuation, the year-1 minimu
 
 # Sick pay (loondoorbetaling)
 
-HRMQ already modelled the *administrative* side of sickness
+Humaniq already modelled the *administrative* side of sickness
 ([`SickLeaveCase`](/docs/hr/leave-and-verzuim) and the Poortwachter
 clock) and already has the gross-to-net engine, but the two are
 connected: a sick employee's payslip does **not** simply feed the engine
@@ -62,13 +62,13 @@ from a Payslip's own recorded fields and flags any doorbetaald loon
 below it — a mandatory violation:
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 Sick pay is generated automatically as part of the normal run:
 
 ```bash
-occ hrmq:payroll:run --period 2026-06
+occ humaniq:payroll:run --period 2026-06
 ```
 
 There is no separate command — `SickLeaveCase` lookups happen inside

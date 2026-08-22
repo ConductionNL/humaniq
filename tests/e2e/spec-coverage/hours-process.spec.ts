@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Hours-process journeys (gate-19 spec coverage) for the OpenSpec change
- * `hrmq-hours-process-redesign` — TimeEntry booking, Timesheet aggregation,
+ * `humaniq-hours-process-redesign` — TimeEntry booking, Timesheet aggregation,
  * submit → approve/reject lifecycle with server-side stamping.
  *
  * Every NON-excluded scenario of the change's spec deltas is referenced here
  * by its verbatim name (the excluded ones carry a reason-bearing
  * `@e2e exclude` in the spec files themselves):
  *
- * openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md
+ * openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md
  *   Scenario: A worker logs and submits hours for approval
  *   Scenario: A manager may not approve their own hours
  *   Scenario: An impossible time span is refused
@@ -18,22 +18,22 @@
  *   Scenario: An empty timesheet cannot be submitted
  *   Scenario: A booking cannot be edited after submission
  *
- * openspec/changes/hrmq-hours-process-redesign/specs/hrmq-timesheet-approval/spec.md
+ * openspec/changes/humaniq-hours-process-redesign/specs/humaniq-timesheet-approval/spec.md
  *   Scenario: Employee submits a draft timesheet
  *   Scenario: A rejected timesheet can be corrected and re-submitted
  *   Scenario: An invalid transition is refused
  *   Scenario: The approval queue lists pending timesheets
- *   Scenario: HRMQ is reachable from the app menu
+ *   Scenario: Humaniq is reachable from the app menu
  *   Scenario: The booking form is an allowlist
  *   Scenario: Approving stamps provenance on the carrying write
  *
- * openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md
+ * openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md
  *   Scenario: Records without userId never leak onto a Mijn page
  *   Scenario: Employee sees only their own records
  *   Scenario: Booking hours needs no identity fields
  *   Scenario: Payslip page offers no authoring
  *
- * openspec/changes/hrmq-hours-process-redesign/specs/employer-hourly-cost-rate/spec.md
+ * openspec/changes/humaniq-hours-process-redesign/specs/employer-hourly-cost-rate/spec.md
  *   Scenario: The booking form offers no ledger fields
  *
  * PRECONDITIONS (provisioned by tests/e2e/ci-seed.sh):
@@ -57,18 +57,18 @@ import { appDialog } from '@conduction/nextcloud-vue/testing/playwright'
 import { expect, request, test } from '@playwright/test'
 import { ADMIN_CREDENTIALS, resolveBaseURL } from '../base-url.ts'
 
-// PATH-form base — the hrmq router runs in HISTORY mode; resolve the base
+// PATH-form base — the humaniq router runs in HISTORY mode; resolve the base
 // from the running app via OC.generateUrl (see core-journeys.spec.ts for the
 // measured failure mode of hardcoding it).
 let _appBase: string | null = null
 async function appBase(page: Page): Promise<string> {
 	if (_appBase) return _appBase
-	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
+	await page.goto('/index.php/apps/humaniq/', { waitUntil: 'domcontentloaded' })
 	const resolved = await page.evaluate(
-		() => (window as unknown as { OC?: { generateUrl?: (_p: string) => string } }).OC?.generateUrl?.('/apps/hrmq'),
+		() => (window as unknown as { OC?: { generateUrl?: (_p: string) => string } }).OC?.generateUrl?.('/apps/humaniq'),
 	)
 	if (!resolved) {
-		throw new Error('OC.generateUrl unavailable — cannot resolve the hrmq router base.')
+		throw new Error('OC.generateUrl unavailable — cannot resolve the humaniq router base.')
 	}
 	_appBase = resolved.replace(/\/+$/, '')
 	return _appBase
@@ -210,20 +210,20 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 		await api?.dispose()
 	})
 
-	// Scenario: HRMQ is reachable from the app menu
-	// (hrmq-timesheet-approval — the app menu entry opens the SPA shell at
+	// Scenario: Humaniq is reachable from the app menu
+	// (humaniq-timesheet-approval — the app menu entry opens the SPA shell at
 	// the timesheets list; the new hours pages are reachable from the left
 	// nav, not merely routable.)
 	test('app shell opens at the timesheets list and the new hours pages are in the nav', async ({ page }) => {
-		await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
+		await page.goto('/index.php/apps/humaniq/', { waitUntil: 'domcontentloaded' })
 		await expect(page.locator('#app-content, .app-content').first()).toBeVisible({ timeout: 20_000 })
-		await expect(page).toHaveURL(/\/apps\/hrmq\/timesheets$/, { timeout: 15_000 })
+		await expect(page).toHaveURL(/\/apps\/humaniq\/timesheets$/, { timeout: 15_000 })
 		// New menu leaves: MijnUrenstaten directly under Mijn uren, TimeEntries
 		// (Urenboekingen) before Urenstaten. Click-through proves reachable.
 		// A fresh session starts with the nav GROUPS COLLAPSED (children exist
 		// but are hidden), so do what a user does: expand the group first.
 		// Expand via the group's CHEVRON, never its title: Mijn HR is a routed
-		// group (hrmq-personal-dashboard), so clicking its title navigates to
+		// group (humaniq-personal-dashboard), so clicking its title navigates to
 		// /mijn instead of toggling. The chevron is the only affordance that
 		// toggles for both routed and route-less groups, and targeting it by
 		// the group's data-testid keeps this independent of the label language.
@@ -244,7 +244,7 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 
 	// Scenario: The booking form is an allowlist
 	// Scenario: The booking form offers no ledger fields
-	// (hrmq-timesheet-approval + employer-hourly-cost-rate — the MijnUren
+	// (humaniq-timesheet-approval + employer-hourly-cost-rate — the MijnUren
 	// create dialog shows EXACTLY the six self-service fields; identity,
 	// process and ledger fields are asserted ABSENT, not merely unexpected.)
 	test('MijnUren create dialog shows exactly the six booking fields', async ({ page }) => {
@@ -376,7 +376,7 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 
 	// Scenario: Employee submits a draft timesheet
 	// Scenario: A worker logs and submits hours for approval   (submit half)
-	// (hrmq-timesheet-approval + time-entry-capture — submit from
+	// (humaniq-timesheet-approval + time-entry-capture — submit from
 	// TimesheetDetail; submittedAt renders non-empty in the read-only
 	// Goedkeuring panel, stamped by the carrying write.)
 	test('submitting the draft timesheet stamps submittedAt', async ({ page }) => {
@@ -394,7 +394,7 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 	})
 
 	// Scenario: The approval queue lists pending timesheets
-	// (hrmq-timesheet-approval — the queue defaults to status == submitted
+	// (humaniq-timesheet-approval — the queue defaults to status == submitted
 	// and lists both the seeded jansen row and the just-submitted rows.)
 	test('the approval queue lists the submitted timesheets', async ({ page }) => {
 		await gotoRoute(page, '/timesheets/approval')
@@ -419,7 +419,7 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 	})
 
 	// Scenario: Approving stamps provenance on the carrying write
-	// (hrmq-timesheet-approval — approving the OTHER employee's submitted
+	// (humaniq-timesheet-approval — approving the OTHER employee's submitted
 	// timesheet from the queue stamps approvedBy = the acting uid and
 	// approvedAt in the same write; asserted via the UI Goedkeuring panel.)
 	test('approving another employee\'s timesheet stamps approvedBy/approvedAt', async ({ page }) => {
@@ -441,7 +441,7 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 
 	// Scenario: An empty timesheet cannot be submitted
 	// Scenario: An invalid transition is refused
-	// (time-entry-capture + hrmq-timesheet-approval — TimesheetNotEmptyGuard
+	// (time-entry-capture + humaniq-timesheet-approval — TimesheetNotEmptyGuard
 	// refuses the submit with the Dutch message; and a draft timesheet
 	// offers NO approve action — the invalid transition is not offered, and
 	// the server-side lifecycle would refuse it regardless.)
@@ -499,7 +499,7 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 	})
 
 	// Scenario: A rejected timesheet can be corrected and re-submitted
-	// (hrmq-timesheet-approval — the seeded bakker rejected timesheet renders
+	// (humaniq-timesheet-approval — the seeded bakker rejected timesheet renders
 	// its rejectionReason read-only; re-submitting moves it to submitted and
 	// the stamping clears approvedBy/approvedAt/rejectionReason.)
 	test('a rejected timesheet re-submits and the stamping clears the approval fields', async ({ page }) => {

@@ -8,12 +8,12 @@ built_by: openspec/changes/archive/2026-07-17-audit-trail-payroll
 
 **Status**: done (REQ-AUDP-001/002/003/005/006 fully implemented + live-verified on 8080;
 REQ-AUDP-004 deferred — see note below the requirement)
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [audit-trail-payroll](../../changes/archive/2026-07-17-audit-trail-payroll/) _(archived
   2026-07-17)_ — fixes hrmq#98 (payroll reproducibility): persists the exact resolved
   `CalculationInput` behind every engine-produced Payslip (`engineInputSnapshot`), a
-  `hrmq:payroll:reproduce` verifier that recomputes a sealed payslip from ITS OWN snapshot (never
+  `humaniq:payroll:reproduce` verifier that recomputes a sealed payslip from ITS OWN snapshot (never
   live Employee/EmploymentContract state), chain-of-custody orchestration over OpenRegister's
   existing global hash chain (zero new hashing/chaining code), and a `nl-engine-provenance-complete`
   corpus rule flagging payslips that lost their provenance. Retention/immutability add no new
@@ -46,7 +46,7 @@ as an already-decoded PHP array, never the raw string. `fromDecoded()` (array in
 `fromCanonicalJson()` (string input) both exist to handle either shape.
 
 #### Scenario: A generated payslip carries its exact input snapshot
-- **GIVEN** `occ hrmq:payroll:run --period 2026-02` generates a payslip for an employee with `grossMonthlySalary: 3800`, `taxTableColor: wit`, `loonheffingskortingToegepast: true`
+- **GIVEN** `occ humaniq:payroll:run --period 2026-02` generates a payslip for an employee with `grossMonthlySalary: 3800`, `taxTableColor: wit`, `loonheffingskortingToegepast: true`
 - **WHEN** the payslip is read
 - **THEN** `engineInputSnapshot` decodes as valid JSON naming `grossMonthlySalaryCents: 380000`, `taxTableColor: "wit"`, `loonheffingskortingToegepast: true`, and the run's `period`
 
@@ -62,30 +62,30 @@ as an already-decoded PHP array, never the raw string. `fromDecoded()` (array in
 
 ### Requirement: A verifier SHALL be able to recompute a payslip from its stored snapshot and compare byte-for-byte (REQ-AUDP-002)
 
-`occ hrmq:payroll:reproduce --payslip <uuid>` SHALL load the named Payslip, refuse (non-zero exit, clear message) when `engineInputSnapshot` or `payrollRunId` is null (nothing to reproduce), otherwise resolve the referenced `PayrollRun`'s `engineVersion` to the engine artefact that produced it (the `NlEngineChecks::namesAKnownEngineArtefact()`/`PackRepository` resolution precedent), decode `engineInputSnapshot` back into a `CalculationInput`, recompute through that same artefact, and compare every D2 output component against the payslip's stored values cents-exact. A full match SHALL print a clear "reproduced" confirmation and exit `0`. Any mismatch SHALL name the first mismatching component with both the stored and recomputed values, and exit non-zero — never a silent pass. An unresolvable engine artefact (e.g. a deleted jurisdiction pack) SHALL be reported as a reproduction failure, not skipped.
+`occ humaniq:payroll:reproduce --payslip <uuid>` SHALL load the named Payslip, refuse (non-zero exit, clear message) when `engineInputSnapshot` or `payrollRunId` is null (nothing to reproduce), otherwise resolve the referenced `PayrollRun`'s `engineVersion` to the engine artefact that produced it (the `NlEngineChecks::namesAKnownEngineArtefact()`/`PackRepository` resolution precedent), decode `engineInputSnapshot` back into a `CalculationInput`, recompute through that same artefact, and compare every D2 output component against the payslip's stored values cents-exact. A full match SHALL print a clear "reproduced" confirmation and exit `0`. Any mismatch SHALL name the first mismatching component with both the stored and recomputed values, and exit non-zero — never a silent pass. An unresolvable engine artefact (e.g. a deleted jurisdiction pack) SHALL be reported as a reproduction failure, not skipped.
 
 **Live-verified end-to-end on 8080** (the actual point of hrmq#98): seeded employee Sanne de
-Vries, ran `occ hrmq:payroll:run --period 2026-03`, approved (sealed) the run, then edited her
+Vries, ran `occ humaniq:payroll:run --period 2026-03`, approved (sealed) the run, then edited her
 Employee record via the OR API (`taxTableColor: wit→groen`, `grossMonthlySalary: 3800→5000`,
-`loonheffingskortingToegepast: true→false`) — a fresh `occ hrmq:payroll:run --period 2026-04`
+`loonheffingskortingToegepast: true→false`) — a fresh `occ humaniq:payroll:run --period 2026-04`
 confirmed the edit genuinely changes live computation (grossPay 5000, snapshot `taxTableColor:
-groen`). `occ hrmq:payroll:reproduce --payslip <the sealed 2026-03 payslip>` still reported
+groen`). `occ humaniq:payroll:reproduce --payslip <the sealed 2026-03 payslip>` still reported
 `status: reproduced` — re-deriving the ORIGINAL sealed figures from the untouched snapshot, not
 the edited live Employee data. Employee record restored afterward.
 
 #### Scenario: A clean payslip reproduces exactly
-- **GIVEN** a payslip generated by `occ hrmq:payroll:run --period 2026-02` with an intact `engineInputSnapshot`
-- **WHEN** `occ hrmq:payroll:reproduce --payslip <uuid>` runs
+- **GIVEN** a payslip generated by `occ humaniq:payroll:run --period 2026-02` with an intact `engineInputSnapshot`
+- **WHEN** `occ humaniq:payroll:reproduce --payslip <uuid>` runs
 - **THEN** it reports every component matches and exits `0`
 
 #### Scenario: A tampered nettoPay is caught by reproduction
 - **GIVEN** the same payslip with `nettoPay` edited directly in the register after generation
-- **WHEN** `occ hrmq:payroll:reproduce --payslip <uuid>` runs
+- **WHEN** `occ humaniq:payroll:reproduce --payslip <uuid>` runs
 - **THEN** it reports `nettoPay` as the mismatching component with both the stored and recomputed cents values, and exits non-zero
 
 #### Scenario: A payslip with no snapshot cannot be reproduced
 - **GIVEN** the pre-existing hand-entered seeded Payslip
-- **WHEN** `occ hrmq:payroll:reproduce --payslip <uuid>` runs against it
+- **WHEN** `occ humaniq:payroll:reproduce --payslip <uuid>` runs against it
 - **THEN** the command refuses with a message naming the missing `engineInputSnapshot`, and exits non-zero
 
 ### Requirement: Chain-of-custody verification for a PayrollRun SHALL reuse OpenRegister's existing hash chain, never a new one (REQ-AUDP-003)
@@ -99,7 +99,7 @@ NOT `AuditQueryService::query()` as originally drafted. Recon against HEAD (and 
 an audit schema by naming convention (the procest `aiAuditEntry` precedent it was built for) — it
 does not, and cannot, query the `openregister_audit_trails` table `PayrollRun`/`Payslip` rows
 actually live in. `AuditHandler::getLogs($uuid)` is OpenRegister's correct, already-existing
-per-object read path for exactly this (already wired into hrmq's 43 audit-trail manifest widgets).
+per-object read path for exactly this (already wired into humaniq's 43 audit-trail manifest widgets).
 Zero new hashing/chaining code either way, confirmed by a unit test scanning the file for `hash(`/
 `sha256` literals. `RuleAuditService.php` (flagged by recon as a possible bespoke re-chainer) was
 checked and carries no hash/chain code — nothing to drop.
@@ -130,7 +130,7 @@ should resolve the `employeeId` question (nullable field vs. a representative em
 separate schema) before building this requirement. The original requirement text is preserved
 below for that follow-up.
 
-`lib/Settings/register.d/hr-documents.json` SHALL extend `GeneratedDocument` (v0.2.0 → v0.3.0): `documentType` enum gains `payroll-audit-report` (append-only, non-breaking); a new nullable `$ref` `payrollRunId` (the `payslipId`/`jaaropgaafId` precedent, ADR-062 rule 7) names the run a report covers. `HrDocumentService` SHALL gain a `payroll-audit-report` generation path passing `dataRefs = [{register: hrmq, schema: PayrollRun, id: runId}]` and `adHocData.auditReport` carrying: each Payslip's `engineVersion` (via its run), `calculatedAt`, and `engineInputSnapshot`; the REQ-AUDP-003 `verifyRun()` result; and the raw audit-trail entries for the run's scope. Rendering SHALL follow the existing docudesk contract exactly (config-first/discovery-second template selection, FileService storage on the `GeneratedDocument`, `skipped-no-docudesk` degradation) — no PDF/ZIP library and no verification-script generator SHALL be added to hrmq.
+`lib/Settings/register.d/hr-documents.json` SHALL extend `GeneratedDocument` (v0.2.0 → v0.3.0): `documentType` enum gains `payroll-audit-report` (append-only, non-breaking); a new nullable `$ref` `payrollRunId` (the `payslipId`/`jaaropgaafId` precedent, ADR-062 rule 7) names the run a report covers. `HrDocumentService` SHALL gain a `payroll-audit-report` generation path passing `dataRefs = [{register: hrmq, schema: PayrollRun, id: runId}]` and `adHocData.auditReport` carrying: each Payslip's `engineVersion` (via its run), `calculatedAt`, and `engineInputSnapshot`; the REQ-AUDP-003 `verifyRun()` result; and the raw audit-trail entries for the run's scope. Rendering SHALL follow the existing docudesk contract exactly (config-first/discovery-second template selection, FileService storage on the `GeneratedDocument`, `skipped-no-docudesk` degradation) — no PDF/ZIP library and no verification-script generator SHALL be added to humaniq.
 
 #### Scenario: A report assembles the full provenance picture
 - **GIVEN** a calculated `PayrollRun` with three engine-produced Payslips
@@ -142,8 +142,8 @@ below for that follow-up.
 - **WHEN** a `payroll-audit-report` is requested for a run
 - **THEN** the `GeneratedDocument` ends `status: skipped-no-docudesk` with no exception
 
-#### Scenario: hrmq ships no PDF or ZIP machinery
-- **GIVEN** the hrmq `composer.json` and `lib/` tree after this change
+#### Scenario: humaniq ships no PDF or ZIP machinery
+- **GIVEN** the humaniq `composer.json` and `lib/` tree after this change
 - **WHEN** scanned for a PDF library or a ZIP-export/verifier-script generator
 - **THEN** none exists — rendering happens exclusively through the docudesk `DocumentService`/`TemplateService` FQCN resolve
 
@@ -157,12 +157,12 @@ helper.
 
 #### Scenario: A freshly generated run's payslips pass
 - **GIVEN** a run generated after this change (every payslip carries `engineInputSnapshot`)
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** no `nl-engine-provenance-complete` violation is reported for that run's payslips
 
 #### Scenario: A payslip stripped of its snapshot violates
 - **GIVEN** an engine-produced payslip whose `engineInputSnapshot` was cleared to null directly
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** an `nl-engine-provenance-complete` violation is reported for that payslip
 
 #### Scenario: Hand-entered payslips stay vacuous
@@ -184,7 +184,7 @@ premise.
 
 #### Scenario: A payslip with an input snapshot is still retention-locked correctly
 - **GIVEN** an employee with an engine-produced Payslip whose `period` is within the last 7 years, `retainedUntil` null, and `engineInputSnapshot` populated
-- **WHEN** `occ hrmq:avg:erase --employee <employeeNumber> --as-user admin --confirm --dsr-request-id <id>` runs
+- **WHEN** `occ humaniq:avg:erase --employee <employeeNumber> --as-user admin --confirm --dsr-request-id <id>` runs
 - **THEN** the Payslip (including its `engineInputSnapshot`) is unchanged and reported `"retained (wettelijke bewaarplicht)"`, identical to REQ-DSR-005's existing scenario
 
 #### Scenario: No new retention field exists

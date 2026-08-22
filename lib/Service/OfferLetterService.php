@@ -15,7 +15,7 @@
  * decision.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,7 +31,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use Psr\Container\ContainerInterface;
 
@@ -64,10 +64,13 @@ class OfferLetterService {
 	private const OBJECT_FILE_SERVICE_FQCN = 'OCA\OpenRegister\Service\FileService';
 
 	/**
-	 * The docudesk template namespace hrmq's own templates live under.
+	 * The docudesk template namespace humaniq's own templates live under.
 	 *
 	 * @var string
 	 */
+	// FROZEN at the old app id: docudesk stores this app's templates under this
+	// namespace. Renaming it would make them unreachable and offer-letter
+	// generation would quietly find no template rather than fail loudly.
 	private const TEMPLATE_NAMESPACE = 'hrmq';
 
 	/**
@@ -359,7 +362,7 @@ class OfferLetterService {
 	}//end templateService()
 
 	/**
-	 * @return string The configured hrmq register slug.
+	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();

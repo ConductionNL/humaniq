@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-retro",
+    "x-humaniq-fragment": "hr-retro",
     "components": {
         "schemas": {
             "PayrollAdjustment": {

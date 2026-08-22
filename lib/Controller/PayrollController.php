@@ -23,7 +23,7 @@
  * `PayrollMutationService::diff()` + `persist()`.
  *
  * Also backs the "Simuleer loonstrook" pro-forma surface (proforma-payslip
- * design.md D4): `proforma()` resolves the caller's access to the hrmq
+ * design.md D4): `proforma()` resolves the caller's access to the humaniq
  * payroll register/schema (a capability probe, not a row) through the same
  * ObjectService + ambient-RBAC idiom BEFORE delegating to the stateless
  * `ProformaPayslipService::simulate()` — unauthorized/unavailable collapse
@@ -59,7 +59,7 @@
  * every call.
  *
  * @category Controller
- * @package  OCA\Hrmq\Controller
+ * @package  OCA\Humaniq\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -81,17 +81,17 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Controller;
+namespace OCA\Humaniq\Controller;
 
-use OCA\Hrmq\AppInfo\Application;
-use OCA\Hrmq\Payroll\TaxTables;
-use OCA\Hrmq\Service\PayrollMutationService;
-use OCA\Hrmq\Service\PayrollRunService;
-use OCA\Hrmq\Service\ProformaPayslipService;
-use OCA\Hrmq\Service\RetroAdjustmentService;
-use OCA\Hrmq\Service\SettingsService;
-use OCA\Hrmq\Service\WkrService;
-use OCA\Hrmq\Standards\Checks\NlDgaChecks;
+use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Service\PayrollMutationService;
+use OCA\Humaniq\Service\PayrollRunService;
+use OCA\Humaniq\Service\ProformaPayslipService;
+use OCA\Humaniq\Service\RetroAdjustmentService;
+use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\WkrService;
+use OCA\Humaniq\Standards\Checks\NlDgaChecks;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -272,7 +272,7 @@ class PayrollController extends Controller {
 	/**
 	 * `POST /api/payroll/proforma` — the persist-nothing "Simuleer
 	 * loonstrook" pro-forma simulation (proforma-payslip design.md D4). The
-	 * caller's access to the hrmq payroll register/schema is resolved
+	 * caller's access to the humaniq payroll register/schema is resolved
 	 * through ObjectService under ambient RBAC BEFORE any computation (a
 	 * capability probe, not a row lookup — there is no `runId`); a caller who
 	 * could not see a real Payslip gets a 404, so unauthorized/unavailable
@@ -337,7 +337,7 @@ class PayrollController extends Controller {
 
 	/**
 	 * Resolve-first capability probe (design.md D4): whether the caller's
-	 * ambient RBAC can reach the hrmq payroll register/schema at all — the
+	 * ambient RBAC can reach the humaniq payroll register/schema at all — the
 	 * same "anyone who can see a real Payslip" boundary as `authorizeRun()`,
 	 * applied to a capability instead of an id. Reads `limit=1` and never
 	 * inspects the returned row's content — this is a probe, not a data
@@ -670,7 +670,7 @@ class PayrollController extends Controller {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 

@@ -3,7 +3,7 @@
 /**
  * Offer Request Signature Command
  *
- * `occ hrmq:offer:request-signature --application <id>` -- the occ write
+ * `occ humaniq:offer:request-signature --application <id>` -- the occ write
  * trigger for offer-esign (design.md D8), scriptability parity with the
  * sibling docudesk leaves. `--application` is REQUIRED -- unlike the letter
  * backlog, "which candidates are due an offer" is an HR judgement call, not a
@@ -21,7 +21,7 @@
  * executed in an authenticated browser session.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -37,9 +37,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\OfferEsignService;
+use OCA\Humaniq\Service\OfferEsignService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -71,7 +71,7 @@ class OfferRequestSignatureCommand extends Command {
 	 * @return void
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:offer:request-signature')
+		$this->setName('humaniq:offer:request-signature')
 			->setDescription(
 				'Generate the aanbiedingsbrief and raise a docudesk e-signature request for one Application in status "aanbod". '
 				. 'KNOWN LIMITATION: docudesk\'s SigningService::createRequest() throws "No authenticated user" when run from a '

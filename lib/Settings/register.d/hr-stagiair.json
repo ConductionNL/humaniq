@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-stagiair",
+    "x-humaniq-fragment": "hr-stagiair",
     "components": {
         "schemas": {
             "Stagiair": {
@@ -7,7 +7,7 @@
                 "icon": "SchoolOutline",
                 "version": "0.1.0",
                 "title": "Stagiair",
-                "description": "A person on a stageovereenkomst (HBO/WO/MBO-BOL, zonder dienstverband), tracked by hrmq but explicitly NOT an Employee, NOT payroll-engine input, and NOT CAO-scoped (stagiair-bbl-admin design.md D1). A stagiair has no arbeidsovereenkomst and, in the ordinary case, no loonheffing on the stagevergoeding, so it is modelled structurally separate from Employee/EmploymentContract: no payroll schema (PayrollRun, Payslip, PayrollMutationReport) references Stagiair and PayrollCalculator never reads it, so a stagiair can never reach the loon path by accident. A BBL-leerling is NOT a Stagiair -- it has a real leerarbeidsovereenkomst and is an EmploymentContract with type: bbl (design.md D1). Governed by a plain three-transition declarative x-openregister-lifecycle (aangemeld -> lopend -> afgerond/gestopt), no guard needed.",
+                "description": "A person on a stageovereenkomst (HBO/WO/MBO-BOL, zonder dienstverband), tracked by humaniq but explicitly NOT an Employee, NOT payroll-engine input, and NOT CAO-scoped (stagiair-bbl-admin design.md D1). A stagiair has no arbeidsovereenkomst and, in the ordinary case, no loonheffing on the stagevergoeding, so it is modelled structurally separate from Employee/EmploymentContract: no payroll schema (PayrollRun, Payslip, PayrollMutationReport) references Stagiair and PayrollCalculator never reads it, so a stagiair can never reach the loon path by accident. A BBL-leerling is NOT a Stagiair -- it has a real leerarbeidsovereenkomst and is an EmploymentContract with type: bbl (design.md D1). Governed by a plain three-transition declarative x-openregister-lifecycle (aangemeld -> lopend -> afgerond/gestopt), no guard needed.",
                 "type": "object",
                 "x-schema-org": "schema:Person",
                 "required": [
@@ -107,7 +107,7 @@
                         "type": "number",
                         "nullable": true,
                         "title": "Stagevergoeding per maand",
-                        "description": "Optional monthly stagevergoeding paid to the stagiair, stored as a plain informational figure only. The fiscal treatment of a stagevergoeding is governed by the Belastingdienst Handboek Loonheffingen (hoofdstuk 17, 'Stagiairs', https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/personeel_en_loon/personeel_in_dienst/stagiairs): a stagiair zonder dienstbetrekking is, in the ordinary case the handbook describes, not automatically loonheffingplichtig the way an employee's loon is, but the actual test turns on concrete facts (who pays, whether it is capped to daadwerkelijke onkosten, the studenten- en scholierenregeling). No specific untaxed euro ceiling is asserted by hrmq and NO machine-checkable rule enforces one, because no confirmed threshold is cited (design.md D2); a future rule would need the exact Belastingdienst figure with a {value, source, verified} leaf (verified:false + checkAgainst URL) before asserting a limit."
+                        "description": "Optional monthly stagevergoeding paid to the stagiair, stored as a plain informational figure only. The fiscal treatment of a stagevergoeding is governed by the Belastingdienst Handboek Loonheffingen (hoofdstuk 17, 'Stagiairs', https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/personeel_en_loon/personeel_in_dienst/stagiairs): a stagiair zonder dienstbetrekking is, in the ordinary case the handbook describes, not automatically loonheffingplichtig the way an employee's loon is, but the actual test turns on concrete facts (who pays, whether it is capped to daadwerkelijke onkosten, the studenten- en scholierenregeling). No specific untaxed euro ceiling is asserted by humaniq and NO machine-checkable rule enforces one, because no confirmed threshold is cited (design.md D2); a future rule would need the exact Belastingdienst figure with a {value, source, verified} leaf (verified:false + checkAgainst URL) before asserting a limit."
                     },
                     "bpvOvereenkomstOndertekend": {
                         "type": "boolean",

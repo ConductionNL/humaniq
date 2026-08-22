@@ -10,7 +10,7 @@
  * surfaced with full traceability back to the standard/law.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards
+ * @package  OCA\Humaniq\Standards
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -26,7 +26,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards;
+namespace OCA\Humaniq\Standards;
 
 use JsonSerializable;
 

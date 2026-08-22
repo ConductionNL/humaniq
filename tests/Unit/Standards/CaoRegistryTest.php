@@ -12,7 +12,7 @@
  * leaf-shape discipline of every corpus file (cao/SCHEMA.md).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards
+ * @package  OCA\Humaniq\Tests\Unit\Standards
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,9 +29,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards;
+namespace OCA\Humaniq\Tests\Unit\Standards;
 
-use OCA\Hrmq\Standards\CaoRegistry;
+use OCA\Humaniq\Standards\CaoRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**

@@ -5,7 +5,7 @@
  *
  * Backs the Dashboard's three `endpointSource` trend widgets' metrics
  * (`absence-rate` / `payroll-cost` / `approval-lead-time`,
- * hrmq-dashboard-steering-indicators): every method here is called ONLY
+ * humaniq-dashboard-steering-indicators): every method here is called ONLY
  * after `AnalyticsController` has resolved and authorized the caller's
  * active administration (REQ-DSI-005) — this class trusts the
  * `$administrationId` it is given and never resolves one of its own. The
@@ -31,7 +31,7 @@
  *    path, which this `endpointSource`-bound metric does not use.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -42,12 +42,12 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
@@ -124,7 +124,7 @@ class AnalyticsService {
 	 * @param LoggerInterface $logger Logger.
 	 * @param EmployeeTimeline $timeline Places employees on a timeline and counts them per period (the AbsenceProgression split precedent — see that class for why).
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -149,9 +149,9 @@ class AnalyticsService {
 	 *
 	 * @throws InvalidArgumentException When metric or period is not recognised.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-004
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-006
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-004
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-006
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
 	 */
 	public function getTrends(string $metric, string $period, string $administrationId): array {
 		if (in_array($metric, self::ALLOWED_TREND_METRICS, true) === false) {
@@ -185,7 +185,7 @@ class AnalyticsService {
 	 *
 	 * @return array<int, array{date: string, value: float|null}>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function absenceRateSeries(array $periodKeys, string $administrationId): array {
 		$cases = $this->loadFiltered('SickLeaveCase', $administrationId);
@@ -214,7 +214,7 @@ class AnalyticsService {
 	 *
 	 * @return array<int, array{date: string, value: float|null}>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function payrollCostSeries(array $periodKeys, string $administrationId): array {
 		$sums = array_fill_keys($periodKeys, null);
@@ -251,7 +251,7 @@ class AnalyticsService {
 	 * across every register on the instance. Measured live: the sibling
 	 * Headcount widget's `Employee` root field resolved to schema 5050 in
 	 * an unrelated register (the GraphQL type is literally named
-	 * `Employee5050Connection`), not hrmq's Employee (1080), so
+	 * `Employee5050Connection`), not humaniq's Employee (1080), so
 	 * `startDate` came back "not a declared property" while
 	 * `employeeNumber` returned three rows from a register this app does
 	 * not own. A query that answers 200 with somebody else's data is worse
@@ -269,7 +269,7 @@ class AnalyticsService {
 	 *
 	 * @return array<int, array{date: string, value: float|null}>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-002
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-002
 	 */
 	private function billableRatioSeries(array $periodKeys, string $administrationId): array {
 		$billable = array_fill_keys($periodKeys, 0.0);
@@ -320,7 +320,7 @@ class AnalyticsService {
 	 *
 	 * @return array<int, array{date: string, headcount: int, starters: int, leavers: int}>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
 	 */
 	private function headcountSeries(array $periodKeys, string $administrationId): array {
 		$timeline = $this->timeline->place($this->loadFiltered('Employee', $administrationId));
@@ -353,7 +353,7 @@ class AnalyticsService {
 	 *
 	 * @return array<int, array{date: string, median: float|null, p90: float|null}>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function approvalLeadTimeSeries(array $periodKeys, string $administrationId): array {
 		$durationsByPeriod = array_fill_keys($periodKeys, []);
@@ -390,7 +390,7 @@ class AnalyticsService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function collectApprovalDuration(array $record, array &$durationsByPeriod): void {
 		$approvedAt = $this->parseDate($record['approvedAt'] ?? null);
@@ -415,7 +415,7 @@ class AnalyticsService {
 	 *
 	 * @return array<int, string>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function trailingPeriodKeys(int $months): array {
 		$keys = [];
@@ -437,7 +437,7 @@ class AnalyticsService {
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function periodBounds(string $period): array {
 		$start = new DateTimeImmutable($period . '-01');
@@ -451,7 +451,7 @@ class AnalyticsService {
 	 *
 	 * @return DateTimeImmutable|null Null when absent, blank, or unparseable.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function parseDate(mixed $value): ?DateTimeImmutable {
 		if (is_string($value) === false || trim($value) === '') {
@@ -476,7 +476,7 @@ class AnalyticsService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function loadFiltered(string $schema, string $administrationId): array {
 		$rows = [];
@@ -497,7 +497,7 @@ class AnalyticsService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function loadAll(string $schema): array {
 		try {
@@ -520,7 +520,7 @@ class AnalyticsService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function normaliseRows(mixed $rows): array {
 		$out = [];
@@ -546,12 +546,12 @@ class AnalyticsService {
 	 *
 	 * @throws \RuntimeException When OpenRegister is not installed.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function objectService(): mixed {
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance. '
+				'humaniq requires the OpenRegister app, which is not installed on this instance. '
 				. 'Install and enable it, then reload.'
 			);
 		}

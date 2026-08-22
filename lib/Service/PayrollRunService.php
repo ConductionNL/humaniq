@@ -17,7 +17,7 @@
  * and are refused. The service never writes any `status` value other than
  * creating the initial `draft` — approval remains a human act on the
  * existing enum, and write-time guard wiring stays owned by the active
- * `hrmq-rule-compliance-enforcement` change. GL/clearing fields
+ * `humaniq-rule-compliance-enforcement` change. GL/clearing fields
  * (glExpensePosted/glLiabilityPosted/withholdings*) are never touched.
  *
  * Employees the engine cannot compute honestly are SKIPPED with a per-employee
@@ -123,12 +123,12 @@
  * it, so a later edit to the underlying `Employee`/`EmploymentContract`
  * could make a sealed payslip unreproducible. `$input->toCanonicalJson()` is
  * now stamped onto `Payslip.engineInputSnapshot` in the SAME write as the
- * rest of the payload (REQ-AUDP-001) -- `occ hrmq:payroll:reproduce` reloads
+ * rest of the payload (REQ-AUDP-001) -- `occ humaniq:payroll:reproduce` reloads
  * this snapshot (never live Employee/Contract state) to recompute and
  * compare a sealed payslip byte-for-byte (REQ-AUDP-002).
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -149,24 +149,24 @@
  * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-004
  * @spec openspec/changes/loonbeslag/specs/loonbeslag/spec.md#REQ-BESLAG-005
  * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
  * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
  * @spec openspec/changes/audit-trail-payroll/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
-use OCA\Hrmq\Payroll\CalculationInput;
-use OCA\Hrmq\Payroll\CalculationResult;
-use OCA\Hrmq\Payroll\PackRepository;
-use OCA\Hrmq\Payroll\PayrollCalculator;
-use OCA\Hrmq\Payroll\SickPayCalculator;
-use OCA\Hrmq\Payroll\SickPayInput;
-use OCA\Hrmq\Payroll\SickPayResult;
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationResult;
+use OCA\Humaniq\Payroll\PackRepository;
+use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Payroll\SickPayInput;
+use OCA\Humaniq\Payroll\SickPayResult;
+use OCA\Humaniq\Payroll\TaxTables;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -233,7 +233,7 @@ class PayrollRunService {
 
 	/**
 	 * Create or recalculate the draft PayrollRun for (period,
-	 * administrationId) — the occ `hrmq:payroll:run` entry point
+	 * administrationId) — the occ `humaniq:payroll:run` entry point
 	 * (design.md D4).
 	 *
 	 * @param string $period Wage period, `YYYY-MM`.
@@ -1047,7 +1047,7 @@ class PayrollRunService {
 	 *
 	 * @return array<string, array<int, array<string, mixed>>>
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
 	private function openAssetAssignmentsByEmployeeKey(): array {
 		$out = [];
@@ -1077,7 +1077,7 @@ class PayrollRunService {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
 	private function openVehicleAssignmentFor(array $employee, array $assetAssignmentsByEmployeeKey, array $vehicleAssetsById, string $period): ?array {
 		$keys = array_filter(
@@ -1113,7 +1113,7 @@ class PayrollRunService {
 	 *
 	 * @return array<string, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
 	private function vehicleAssetsById(): array {
 		$out = [];
@@ -1153,7 +1153,7 @@ class PayrollRunService {
 	 *
 	 * @return int The monthly bijtelling, in cents (0 when there is no Asset, no numeric listPrice, or no headroom above employeeContribution).
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
 	private function bijtellingCentsFor(?array $asset, array $assignment, TaxTables $tables): int {
 		if ($asset === null) {
@@ -1199,7 +1199,7 @@ class PayrollRunService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-003
 	 */
 	private function bijtellingFields(?array $assetAssignment, int $bijtellingCents): array {
 		if ($assetAssignment === null) {
@@ -1742,7 +1742,7 @@ class PayrollRunService {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -1750,7 +1750,7 @@ class PayrollRunService {
 	}//end objectService()
 
 	/**
-	 * @return string The configured hrmq register slug.
+	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();

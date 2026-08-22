@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-14-mileage-rules
 # mileage-rules Specification
 
 **Status**: done
-**Scope**: hrmq (`kind: code+config`) — Dutch mileage/commute reimbursement (reiskosten) as a
+**Scope**: humaniq (`kind: code+config`) — Dutch mileage/commute reimbursement (reiskosten) as a
 machine-checkable corpus rule on the existing `Expense` schema: the 2026 onbelaste
 kilometervergoeding (EUR 0,23/km) as versioned rule-corpus data, a check flagging over-onbelast
 per-km reimbursement, and two additive `Expense` fields the check needs. Reuses the existing
@@ -27,7 +27,7 @@ the same machine-checkable rule corpus that already covers `nl-vakantiebijslag-8
 `nl-zvw-werkgeversheffing`: a numeric threshold, versioned as data, checked by a small vacuous-scope
 predicate over `Expense`. Reimbursing more per km than the rate without additional withholding
 makes the excess (bovenmatige vergoeding) taxable wage; this change surfaces that as an audit-time
-compliance signal (`occ hrmq:rules:audit`), never a write-time guard.
+compliance signal (`occ humaniq:rules:audit`), never a write-time guard.
 
 ## Requirements
 
@@ -35,7 +35,7 @@ compliance signal (`occ hrmq:rules:audit`), never a write-time guard.
   nullable properties outside `required`: `travelType` (enum `business`/`commute`) and `distanceKm`
   (number, minimum 0). No `category` change, no `required` change, no lifecycle change; every
   previously stored Expense stays valid without migration. **Delivered** (`Expense.version` 0.4.0 to
-  0.5.0; `lib/Settings/hrmq_register.json` `info.version` 0.9.0 to 0.10.0 — both bumped fresh from
+  0.5.0; `lib/Settings/humaniq_register.json` `info.version` 0.9.0 to 0.10.0 — both bumped fresh from
   their actual HEAD values, one increment past the versions the proposal was originally scoped
   against, since an intervening change had already consumed the 0.3.0/0.8.0 to 0.4.0/0.9.0 step).
 - **REQ-MILE-002** — `lib/Standards/rules/payroll.json` carries `nl-reiskosten-onbelast-tarief`

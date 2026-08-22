@@ -3,7 +3,7 @@
 
 <!--
  TrendChartWidget — bridges CnPageRenderer's v2 widget-grid `body` slot onto
- `@conduction/nextcloud-vue`'s CnChartWidget (hrmq-dashboard-steering-indicators),
+ `@conduction/nextcloud-vue`'s CnChartWidget (humaniq-dashboard-steering-indicators),
  and fixes a confirmed null-coercion defect in the library's OWN endpointSource
  mapping along the way.
 
@@ -17,7 +17,7 @@
  which wraps it in `CnWidgetWrapper` itself and supplies `title`/the shared
  overflow Actions menu from the SURROUNDING template — CnChartWidget declares
  no `title` prop of its own and does not self-wrap. `CnWidgetGrid` (the
- renderer every hrmq page actually uses — every page here has a
+ renderer every humaniq page actually uses — every page here has a
  `slot:"body"` widget, so `CnPageRenderer` always takes the CnWidgetGrid
  branch, never `CnDashboardPage`) mounts the resolved component directly with
  no such surrounding chrome. Left unbridged, the trend charts would render as
@@ -164,7 +164,7 @@ export default {
 	 *
 	 * @return {object} The render context.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
 	 */
 	setup(props) {
 		const ep = useEndpointSource(() => props.endpointSource)

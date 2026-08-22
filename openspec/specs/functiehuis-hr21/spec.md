@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-17-functiehuis-hr21
 # functiehuis-hr21 Specification
 
 **Status**: done
-**Scope**: hrmq (`kind: config+code` — a new register-backed `Normfunctie` reference schema, one new
+**Scope**: humaniq (`kind: config+code` — a new register-backed `Normfunctie` reference schema, one new
 field on `EmploymentContract`, one new corpus rule + executable check, and two read-only manifest
 pages; reuses `cao-gemeenten`'s existing schaal key space and `comp-cycles`'/`cao-library`'s existing
 salary/CAO machinery without modification)
@@ -27,7 +27,7 @@ HR21 is the VNG-owned functiewaarderingssysteem for the Dutch municipal sector (
 SGO name it as the applicable job-evaluation system unless an employer has chosen another
 union-recognized one; roughly 80% of Dutch municipalities hold an HR21 license). It organizes municipal
 work into a library of standard job functions ("normfuncties"), each of which maps to a salary scale
-("schaal") under Cao Gemeenten. hrmq already ships everything HR21's compensation side needs —
+("schaal") under Cao Gemeenten. humaniq already ships everything HR21's compensation side needs —
 `cao-library`/`cao-sector-datasets` carry `cao-gemeenten`'s schaal key space, `comp-cycles` owns the
 employer's own internal `SalaryBand`/`CompAdjustment` lifecycle, and `EmploymentContract` already
 carries `cao`/`caoSchaal` — so this change adds only the one thing none of those provide: a library
@@ -36,7 +36,7 @@ for consistency against the function the employee actually performs. It does not
 salary-band mechanism, does not build the functietoekenning approval workflow, maatwerkfunctie
 governance, Awb bezwaarrecht procedure, decision-letter generation, OR instemmingsrecht notification,
 loopbaanpaden, or automatic salary-consequence calculation on reclassification — all named fast-follows
-blocked on case-management/multi-step-approval/cross-app objection-procedure capabilities hrmq does not
+blocked on case-management/multi-step-approval/cross-app objection-procedure capabilities humaniq does not
 have. HR21's exact ~150-normfunctie count could not be independently verified from a primary VNG source
 in this pass, so this change ships only a small illustrative seed subset, explicitly not a
 claimed-complete library, with every seeded mapping `caoSchaalVerified: false` except one documented
@@ -46,7 +46,7 @@ proof-case exception used solely to demonstrate the consistency check.
 
 ### Requirement: A new Normfunctie reference schema SHALL map standard municipal job functions to a Cao Gemeenten schaal (REQ-HR21-001)
 
-A new fragment `lib/Settings/register.d/hr-hr21.json` (`x-hrmq-fragment: hr-hr21`) SHALL declare
+A new fragment `lib/Settings/register.d/hr-hr21.json` (`x-humaniq-fragment: hr-hr21`) SHALL declare
 `Normfunctie` (`allowCreate: false`, `x-schema-org: schema:Occupation`) with `functiecode`, `naam`,
 `functiegroep` (the HR21 hoofdproces), `caoSchaal` (string, in the same key space
 `cao-gemeenten.payScales` uses), `caoSchaalVerified` (boolean, default `false`), and
@@ -101,7 +101,7 @@ Otherwise it SHALL violate when the contract's own `caoSchaal` does not equal th
 
 - **GIVEN** an `EmploymentContract` with `caoSchaal: "6"`, `normfunctieId` resolving to a
   `Normfunctie` with `caoSchaal: "8"` and `caoSchaalVerified: true`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** an `nl-hr21-schaal-consistentie` violation is reported for that contract
 
 #### Scenario: A matching schaal passes
@@ -162,7 +162,7 @@ against a `caoSchaalVerified: true` normfunctie (the violation branch). Every pr
 #### Scenario: The seed reproduces exactly one violation
 
 - **GIVEN** the seeded normfuncties and the two seeded contracts
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** exactly one `nl-hr21-schaal-consistentie` violation is reported
 
 #### Scenario: The pre-existing contract population stays silent

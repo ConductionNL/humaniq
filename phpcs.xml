@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="hrmq" xsi:noNamespaceSchemaLocation="phpcs.xsd">
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="humaniq" xsi:noNamespaceSchemaLocation="phpcs.xsd">
     <description>
-        hrmq — SEMANTICS ONLY. Formatting belongs to php-cs-fixer via
+        humaniq — SEMANTICS ONLY. Formatting belongs to php-cs-fixer via
         conduction/coding-standard; see .php-cs-fixer.dist.php.
 
         This file used to be a ~300-line standalone PEAR/Squiz ruleset carrying
@@ -29,14 +29,14 @@
 
     <rule ref="vendor/conduction/hydra-gates/quality-config/phpcs.xml">
         <!-- 1,418 findings. The fleet mandates named parameters on internal
-             calls; hrmq predates the sniff and was never written to it. This is
+             calls; humaniq predates the sniff and was never written to it. This is
              a real, wanted rule and a genuinely large mechanical refactor —
              1,418 call sites across NL payroll/tax services. Tracked as debt so
              the OTHER ten sniffs in this ruleset start failing the build today
              instead of waiting for that refactor to land. -->
         <exclude name="CustomSniffs.Functions.NamedParameters.RequireNamedParameters"/>
 
-        <!-- 304 findings. DisallowInlineIf bans ternaries outright; hrmq's
+        <!-- 304 findings. DisallowInlineIf bans ternaries outright; humaniq's
              payroll and tax calculation code uses short ternaries pervasively
              and safely. Carried forward from the previous ruleset with the same
              rationale — this is a style disagreement, not a defect signal. -->

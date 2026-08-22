@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-12-leave-verzuim-mvp
 # verzuim-wvp Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [leave-verzuim-mvp](../../changes/archive/2026-07-12-leave-verzuim-mvp/) _(archived 2026-07-12)_ — new `SickLeaveCase` schema (fragment hr-verzuim.json) with gemeld⇄hersteld lifecycle, stored-but-rule-checked WVP milestone dates (weeks 6/8/42/52), 70% loondoorbetaling tracking, 3 new machine-checkable NL verzuim rules, verzuim pages, and the no-medical-data privacy requirement (kind: config)
 
@@ -32,7 +32,7 @@ flows are explicitly out of scope.
 
 ### REQ-VWP-001: A new `SickLeaveCase` schema SHALL model the administrative sickness case with a gemeld⇄hersteld lifecycle
 
-A new fragment `lib/Settings/register.d/hr-verzuim.json` (`x-hrmq-fragment: hr-verzuim`) declares `SickLeaveCase` (version 0.1.0): `employeeId` (string, format uuid, `$ref` Employee, required), `firstSickDay` (date, required), `recoveredDate` (date, nullable), `status` (enum `gemeld`/`hersteld`, default `gemeld`, required), `wachtdag` (boolean, default false — description documents that the first sick day may be an unpaid waiting day where CAO/contract provides), `loondoorbetalingPercentage` (number, default 70 — description documents the BW art. 7:629 statutory minimum of 70% for max 104 weeks and the first-year floor at minimum wage), and the milestone pairs `probleemanalyseDue`/`probleemanalyseDone` (week 6, Regeling procesgang art. 2), `planVanAanpakDue`/`planVanAanpakDone` (week 8), `uwv42WeekMeldingDue`/`uwv42WeekMeldingDone` (week 42, ZW art. 38), `eerstejaarsevaluatieDue`/`eerstejaarsevaluatieDone` (week 52) — all date, nullable. The Due dates are derived from `firstSickDay` but **stored** (loonaangifte-deadline precedent: audit trail + editability when UWV grants deferral; correctness enforced by REQ-VWP-003, not recomputed away). `configuration` declares `x-openregister-lifecycle`: `field: status`, `initial: gemeld`, transitions `herstellen` (gemeld→hersteld; description documents that `recoveredDate` is stamped on the carrying write) and `heropenen` (hersteld→gemeld; description documents relapse within 4 weeks as samengesteld ziektegeval per BW 7:629 lid 10, continuing the same 104-week clock, with `recoveredDate` cleared on the carrying write). Every property carries title + description (gate-28).
+A new fragment `lib/Settings/register.d/hr-verzuim.json` (`x-humaniq-fragment: hr-verzuim`) declares `SickLeaveCase` (version 0.1.0): `employeeId` (string, format uuid, `$ref` Employee, required), `firstSickDay` (date, required), `recoveredDate` (date, nullable), `status` (enum `gemeld`/`hersteld`, default `gemeld`, required), `wachtdag` (boolean, default false — description documents that the first sick day may be an unpaid waiting day where CAO/contract provides), `loondoorbetalingPercentage` (number, default 70 — description documents the BW art. 7:629 statutory minimum of 70% for max 104 weeks and the first-year floor at minimum wage), and the milestone pairs `probleemanalyseDue`/`probleemanalyseDone` (week 6, Regeling procesgang art. 2), `planVanAanpakDue`/`planVanAanpakDone` (week 8), `uwv42WeekMeldingDue`/`uwv42WeekMeldingDone` (week 42, ZW art. 38), `eerstejaarsevaluatieDue`/`eerstejaarsevaluatieDone` (week 52) — all date, nullable. The Due dates are derived from `firstSickDay` but **stored** (loonaangifte-deadline precedent: audit trail + editability when UWV grants deferral; correctness enforced by REQ-VWP-003, not recomputed away). `configuration` declares `x-openregister-lifecycle`: `field: status`, `initial: gemeld`, transitions `herstellen` (gemeld→hersteld; description documents that `recoveredDate` is stamped on the carrying write) and `heropenen` (hersteld→gemeld; description documents relapse within 4 weeks as samengesteld ziektegeval per BW 7:629 lid 10, continuing the same 104-week clock, with `recoveredDate` cleared on the carrying write). Every property carries title + description (gate-28).
 
 #### Scenario: Case walks recovery and relapse
 - **GIVEN** a SickLeaveCase created with `firstSickDay: 2026-05-04` (status defaults to `gemeld`)
@@ -57,7 +57,7 @@ Per the AVG and the Autoriteit Persoonsgegevens beleidsregels "De zieke werkneme
 `lib/Standards/rules/labour.json` gains `nl-wvp-milestone-derivation` (Due fields equal `firstSickDay` + 6/8/42/52 weeks; on an open case none may be null; carries `parameters.milestoneWeeks` so the offsets are rule data, not PHP constants), `nl-wvp-milestone-overdue` (an open case with a Due in the past and no matching Done is a mandatory violation; a Due within 14 days is advisory), and `nl-loondoorbetaling-minimum` (`loondoorbetalingPercentage ≥ 70` on open cases). All three: `domain: labour`, `jurisdiction: NL`, `machineCheckable: true`, `severity: mandatory`; the milestone rules use `framework: nl-poortwachter`, `source` citing Regeling procesgang eerste en tweede ziektejaar art. 2/4 and ZW art. 38 (42-wekenmelding, `https://wetten.overheid.nl/BWBR0002598`), `sourceUrl: https://wetten.overheid.nl/BWBR0013540`; the loondoorbetaling rule uses `framework: bw7-10`, `source: BW art. 7:629 lid 1`, `sourceUrl: https://wetten.overheid.nl/BWBR0005290`.
 
 #### Scenario: Corpus stays loadable and versioned
-- **WHEN** `occ hrmq:rules:audit` runs after the corpus edit
+- **WHEN** `occ humaniq:rules:audit` runs after the corpus edit
 - **THEN** the RuleCatalogue loads without error and reports the three verzuim rules as enforced
 
 ### REQ-VWP-004: `NlVerzuimChecks` SHALL enforce derivation, overdue signalling, and the loondoorbetaling floor
@@ -71,7 +71,7 @@ Each predicate is side-effect free and keyed by its corpus rule id.
 
 #### Scenario: Overdue probleemanalyse raises mandatory violation
 - **GIVEN** the seed case `sickcase-devries-week7` (`firstSickDay: 2026-05-25`, `probleemanalyseDue: 2026-07-06`, no Done, status `gemeld`)
-- **WHEN** `occ hrmq:rules:audit` runs on any date after 2026-07-06
+- **WHEN** `occ humaniq:rules:audit` runs on any date after 2026-07-06
 - **THEN** a `nl-wvp-milestone-overdue` violation with mandatory severity is reported for that object
 
 #### Scenario: Approaching 42-week melding raises advisory
@@ -98,7 +98,7 @@ Each predicate is side-effect free and keyed by its corpus rule id.
 - **THEN** it exits 0
 
 #### Scenario: Detail page drives recovery
-@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** an open case on `SickLeaveCaseDetail`
 - **WHEN** the user executes Herstellen
 - **THEN** the page reflects status `hersteld` and offers Heropenen
@@ -113,7 +113,7 @@ Each predicate is side-effect free and keyed by its corpus rule id.
 
 #### Scenario: Seeded audit shows exactly the intended verzuim violations
 - **GIVEN** a fresh import of the seed data
-- **WHEN** `occ hrmq:rules:audit` runs on 2026-07-12
+- **WHEN** `occ humaniq:rules:audit` runs on 2026-07-12
 - **THEN** the verzuim violations are exactly: one mandatory + one advisory `nl-wvp-milestone-overdue` for `sickcase-devries-week7`, one advisory `nl-wvp-milestone-overdue` for `sickcase-bakker-longterm`, and no `nl-wvp-milestone-derivation` or `nl-loondoorbetaling-minimum` violations
 
 ## Implementation Notes (2026-07-12)

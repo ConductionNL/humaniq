@@ -1,4 +1,4 @@
-# hrmq — Conduction PHPStan config.
+# humaniq — Conduction PHPStan config.
 #
 # The shared base is the single source of truth. Everything here is either this
 # app's own tracked debt or an ignore naming a symbol that exists in no other
@@ -8,7 +8,7 @@
 # What moved OUT of this file and into the base, verbatim and unchanged:
 # level, paths, bootstrapFiles, scanDirectories, reportUnmatchedIgnoredErrors,
 # and every \OC / OC\ / OCA\DAV\ / OCA\OpenRegister\ ignore. They were not
-# hrmq-specific; all 18 apps had re-typed copies of the same blocks.
+# humaniq-specific; all 18 apps had re-typed copies of the same blocks.
 includes:
     - vendor/conduction/hydra-gates/quality-config/phpstan-base.neon
     # Tracked lint debt in the current tree. Not regenerated wholesale; entries
@@ -22,7 +22,7 @@ parameters:
     excludePaths:
         # These guards implement OCA\OpenRegister\Lifecycle\LifecycleGuardInterface,
         # which only exists at runtime once OpenRegister is installed alongside
-        # hrmq. PHPStan cannot baseline "implements unknown interface" errors —
+        # humaniq. PHPStan cannot baseline "implements unknown interface" errors —
         # exclusion is required, not preferred.
         - lib/Lifecycle/CompEffectiveDateGuard.php
         - lib/Lifecycle/LeaveBuySellApprovalGuard.php
@@ -33,7 +33,7 @@ parameters:
 
     ignoreErrors:
         # AuthorizedAdminSetting's constructor is typed
-        # `class-string<IDelegatedSettings>`, but hrmq registers no settings
+        # `class-string<IDelegatedSettings>`, but humaniq registers no settings
         # class, and adding one purely to satisfy a type would put a settings
         # PANEL in front of users as a side effect of an annotation.
         #
@@ -50,7 +50,7 @@ parameters:
             message: '#Parameter \#1 \$settings of attribute class OCP\\AppFramework\\Http\\Attribute\\AuthorizedAdminSetting constructor expects class-string<OCP\\Settings\\IDelegatedSettings>, string given#'
             path: lib/Controller/JurisdictionPackController.php
 
-        # DocuDesk is an optional runtime companion app — hrmq's document
+        # DocuDesk is an optional runtime companion app — humaniq's document
         # generation and receipt-OCR commands duck-type against it and no-op
         # when it is absent. No other fleet app analyses against DocuDesk, so
         # these stay local rather than going into the base.

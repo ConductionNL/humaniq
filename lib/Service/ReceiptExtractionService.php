@@ -4,11 +4,11 @@
  * Receipt Extraction Service
  *
  * The second, opposite-direction docudesk consumption (receipt-ocr design.md
- * D1): where `HrDocumentService` hands hrmq data TO docudesk to render a
+ * D1): where `HrDocumentService` hands humaniq data TO docudesk to render a
  * PDF, this service reads an already-attached `Expense.receiptFile` and asks
  * docudesk to EXTRACT structured financial fields FROM it, then prefills
  * only the Expense fields the employee left empty -- `amount`, `expenseDate`,
- * `vendor`, `vatAmount`. hrmq holds no OCR/text-extraction/confidence-scoring
+ * `vendor`, `vatAmount`. humaniq holds no OCR/text-extraction/confidence-scoring
  * logic of its own: `OCA\DocuDesk\Service\FinancialExtractionService::
  * extractFinancial()`, resolved exclusively by string FQCN through the DI
  * container (no compile-time import, no composer/info.xml dependency on
@@ -68,7 +68,7 @@
  * SaveObject.php` at HEAD.)
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -84,7 +84,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;

@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-bhv",
+    "x-humaniq-fragment": "hr-bhv",
     "components": {
         "schemas": {
             "BhvCertificering": {
@@ -21,7 +21,7 @@
                     "certificaatBehaaldOp": {"type": "string", "format": "date", "nullable": true, "title": "Certificate obtained on", "description": "Date the certification was obtained (ISO 8601)."},
                     "certificaatGeldigTot": {"type": "string", "format": "date", "title": "Certificate valid until", "description": "Date the certification expires (ISO 8601) -- the expiry-alert anchor read by nl-bhv-certificaat-verloopt (lib/Standards/Checks/NlSignalChecks.php, framework hr-signals, parameters.windowDays=90)."},
                     "opleider": {"type": "string", "nullable": true, "title": "Training provider", "description": "Name of the training provider (opleidingsinstituut) that issued the certification, when known."},
-                    "orgUnitId": {"type": "string", "format": "uuid", "$ref": "OrgUnit", "nullable": true, "title": "Organisational unit", "description": "UUID reference to the OrgUnit this certification's coverage is grouped/visible under (the coverage-visibility scoping concept, bhv-organisatie design.md D3 -- deliberately NOT a physical Location, which hrmq's register does not model). Null when the certification is not scoped to a specific unit."},
+                    "orgUnitId": {"type": "string", "format": "uuid", "$ref": "OrgUnit", "nullable": true, "title": "Organisational unit", "description": "UUID reference to the OrgUnit this certification's coverage is grouped/visible under (the coverage-visibility scoping concept, bhv-organisatie design.md D3 -- deliberately NOT a physical Location, which humaniq's register does not model). Null when the certification is not scoped to a specific unit."},
                     "administrationId": {"type": "string", "nullable": true, "title": "Administration", "description": "Denormalized administratie key this BhvCertificering is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); maintained by HR/back-office when the record is created."}
                 }
             }

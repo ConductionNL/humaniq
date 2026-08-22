@@ -3,18 +3,18 @@
 # SPDX-FileCopyrightText: 2026 Conduction B.V.
 # SPDX-License-Identifier: EUPL-1.2
 #
-# Provision hrmq's OpenRegister register + schemas on a freshly installed
+# Provision humaniq's OpenRegister register + schemas on a freshly installed
 # Nextcloud, for the shared `E2E Tests (Playwright)` CI job.
 #
 # Wired up as the workflow's `playwright-seed-command`. That step runs AFTER
 # `php -S` is up and with cwd set to the Nextcloud server root, so this is
 # invoked as:
 #
-#     playwright-seed-command: 'bash apps/hrmq/tests/e2e/ci-seed.sh'
+#     playwright-seed-command: 'bash apps/humaniq/tests/e2e/ci-seed.sh'
 #
 # WHY THIS IS NEEDED
 # ------------------
-# hrmq is a THIN CLIENT: Employee, Timesheet, Expense, PayrollRun, Payslip and
+# humaniq is a THIN CLIENT: Employee, Timesheet, Expense, PayrollRun, Payslip and
 # 49 other entities are OpenRegister objects, and 176 of src/manifest.json's
 # page configs name `register: "hrmq"`. With that register absent, nothing
 # errors — the SPA boots, every route resolves to nothing, and the router falls
@@ -29,10 +29,10 @@
 #      `<post-migration>` ONLY. Nextcloud's Installer::installAppLastSteps()
 #      guards both the pre- and post-migration blocks with
 #      `if ($previousVersion !== '')`, so on a FRESH install neither runs — only
-#      `repair-steps/install` is unconditional. `occ app:enable hrmq` printed
-#      "hrmq 0.2.0 enabled" and not one line of the step's own output.
+#      `repair-steps/install` is unconditional. `occ app:enable humaniq` printed
+#      "humaniq 0.2.0 enabled" and not one line of the step's own output.
 #      Fixed by adding an `<install>` block.
-#   2. `lib/Settings/hrmq_register.json` carried no `components.registers`
+#   2. `lib/Settings/humaniq_register.json` carried no `components.registers`
 #      section at all. OpenRegister's ImportHandler creates registers from that
 #      key and nowhere else, so even a repair step that DID run would have
 #      created 54 schemas and zero registers — and then skipped every seed
@@ -43,7 +43,7 @@
 # So why does this script still exist? Because a repair step is not a gate:
 #
 #   * `InitializeRegister::run()` catches \Throwable and downgrades every
-#     failure to a warning, so `occ app:enable hrmq` exits 0 either way.
+#     failure to a warning, so `occ app:enable humaniq` exits 0 either way.
 #   * It runs with NO user session. OpenRegister's `main` — which this
 #     workflow pins via `additional-apps` — calls `importFromApp()` WITHOUT the
 #     `SystemOperationContext::run()` wrapper that exists on newer branches, so
@@ -68,7 +68,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # tests/e2e/ci-seed.sh -> up TWO levels to the app root.
 APP_DIR="$(cd -- "${SCRIPT_DIR}/../.." && pwd)"
 if [ ! -f "${APP_DIR}/appinfo/info.xml" ]; then
-	echo "::error::Resolved app dir ${APP_DIR} does not look like the hrmq app root (no appinfo/info.xml)." >&2
+	echo "::error::Resolved app dir ${APP_DIR} does not look like the humaniq app root (no appinfo/info.xml)." >&2
 	exit 1
 fi
 
@@ -142,17 +142,17 @@ PRE_CODE="$(http_get_code "$PRE_BODY" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-API
 NEEDS_IMPORT=1
 if [ "$PRE_CODE" = "200" ] && [ -f "$PRE_BODY" ] && grep -q '"slug":[[:space:]]*"hrmq"' "$PRE_BODY"; then
 	NEEDS_IMPORT=0
-	echo "[ci-seed] BEFORE import: the hrmq register is ALREADY present — 'occ app:enable hrmq' provisioned it."
+	echo "[ci-seed] BEFORE import: the hrmq register is ALREADY present — 'occ app:enable humaniq' provisioned it."
 	echo "[ci-seed] Skipping the HTTP import; the verification below still runs in full."
 else
 	echo "[ci-seed] BEFORE import: the hrmq register is NOT present (registers endpoint HTTP ${PRE_CODE})."
 	echo "[ci-seed] The app's own install path did not provision it — see appinfo/info.xml"
-	echo "[ci-seed] <repair-steps><install> and lib/Settings/hrmq_register.json components.registers."
+	echo "[ci-seed] <repair-steps><install> and lib/Settings/humaniq_register.json components.registers."
 	echo "[ci-seed] Falling back to an explicit admin HTTP import."
 fi
 
 # ── 1. Build the merged configuration ────────────────────────────────────────
-# hrmq's base register file is deliberately almost empty: ADR-037 puts every
+# humaniq's base register file is deliberately almost empty: ADR-037 puts every
 # schema in its own `lib/Settings/register.d/*.json` fragment so concurrent
 # changes touch disjoint files. `SettingsService::loadRegisterConfigData()`
 # deep-merges them at runtime; OpenRegister's generic importer cannot, so the
@@ -168,7 +168,7 @@ fi
 # A malformed fragment is a hard failure here rather than the runtime's
 # skip-with-a-warning: in CI a silently dropped fragment is a missing schema,
 # and a missing schema is a page that falls back to the default route.
-MERGED="${WORK}/hrmq-merged.json"
+MERGED="${WORK}/humaniq-merged.json"
 python3 - "$APP_DIR" "$MERGED" <<'PY'
 import glob
 import json
@@ -176,10 +176,10 @@ import os
 import sys
 
 app_dir, out_path = sys.argv[1], sys.argv[2]
-base_path = os.path.join(app_dir, 'lib', 'Settings', 'hrmq_register.json')
+base_path = os.path.join(app_dir, 'lib', 'Settings', 'humaniq_register.json')
 
 if not os.path.isfile(base_path):
-    print(f'::error::hrmq_register.json not found at {base_path}.')
+    print(f'::error::humaniq_register.json not found at {base_path}.')
     sys.exit(1)
 
 with open(base_path, encoding='utf-8') as fh:
@@ -201,7 +201,7 @@ def deep_merge(base, overlay):
 
 fragments = sorted(glob.glob(os.path.join(app_dir, 'lib', 'Settings', 'register.d', '*.json')))
 if not fragments:
-    print('::error::No register.d fragments found — every hrmq schema lives in one.')
+    print('::error::No register.d fragments found — every humaniq schema lives in one.')
     sys.exit(1)
 
 for fragment in fragments:
@@ -304,8 +304,8 @@ import sys
 
 path, kind, code, app_dir, limit = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], int(sys.argv[5])
 
-with open(f'{app_dir}/lib/Settings/hrmq_register.json', encoding='utf-8') as fh:
-    declaration = json.load(fh)['components']['registers']['hrmq']
+with open(f'{app_dir}/lib/Settings/humaniq_register.json', encoding='utf-8') as fh:
+    declaration = json.load(fh)['components']['registers']['humaniq']
 
 required = {
     'registers': [declaration['slug']],
@@ -579,15 +579,15 @@ PY
 # Warm-up failures are ignored — but the bundle check at the end is a GATE, and
 # it reads the SERVED response rather than the file on disk. Do NOT hardcode the
 # bundle URL: Nextcloud serves an app's assets from whichever apps directory it
-# was installed into (`/apps/hrmq/js/…` on the runner, `/custom_apps/hrmq/js/…`
+# was installed into (`/apps/humaniq/js/…` on the runner, `/custom_apps/humaniq/js/…`
 # in the docker dev images), and asking for the wrong one does not 404 — it
 # returns HTTP 200 with `text/html`, the NC error page served through index.php.
 # A status-code check therefore reports success while fetching an HTML page
 # instead of the bundle, so the warm-up silently warms nothing and the SPA never
 # mounts.
 for path in \
-	"/index.php/apps/hrmq/" \
-	"/index.php/apps/hrmq/api/manifest" \
+	"/index.php/apps/humaniq/" \
+	"/index.php/apps/humaniq/api/manifest" \
 	"/index.php/apps/openregister/api/registers?_limit=1"
 do
 	code="$(http_get_code /dev/null -u "${USER_NAME}:${USER_PASS}" \
@@ -600,9 +600,9 @@ done
 #
 # WHY THIS EXISTS
 # ---------------
-# The Dashboard's analytics widgets call `/apps/hrmq/api/analytics/*`, and that
+# The Dashboard's analytics widgets call `/apps/humaniq/api/analytics/*`, and that
 # controller requires the caller to hold an `AdministrationAccess` row with role
-# `hr` or `accountant` — the first surface in hrmq that actually enforces that
+# `hr` or `accountant` — the first surface in humaniq that actually enforces that
 # field. Without one the endpoints correctly answer 403, four of the six
 # dashboard widgets fail to load, and `manifest-pages.spec.ts` fails the
 # Dashboard on "emitted console errors".
@@ -616,7 +616,7 @@ done
 # job.
 # ---------------------------------------------------------------------------
 ADM_ID="E2E-ADM-001"
-# hrmq-hours-process-redesign: the hours-process e2e journeys
+# humaniq-hours-process-redesign: the hours-process e2e journeys
 # (spec-coverage/hours-process.spec.ts) book time entries as the admin user.
 # The stamping listener resolves admin's own Employee (the register-seeded
 # employee-jansen, nextcloudUserId "admin") and stamps its administrationId —
@@ -658,9 +658,9 @@ done
 #
 # The pointer is nothing but a per-user config value —
 # `AdministrationService::getActiveAdministrationId()` reads
-# `getUserValue($userId, 'hrmq', 'active_administration_id')`. Setting it over
+# `getUserValue($userId, 'humaniq', 'active_administration_id')`. Setting it over
 # HTTP made the seed depend on route-prefix form, session auth and CSRF, none of
-# which this fixture needs: `/index.php/apps/hrmq/api/administration/active`
+# which this fixture needs: `/index.php/apps/humaniq/api/administration/active`
 # answers 200 on the docker dev instance and 404 on the CI runner. `occ` writes
 # the same value directly, with no routing involved.
 #
@@ -685,8 +685,8 @@ if [ -n "$OCC" ]; then
 	# instance: writes, reads back byte-identical, and reports
 	# 'The setting does not exist for user "..."' once deleted — so the
 	# comparison below can genuinely fail.
-	php "$OCC" user:setting "${USER_NAME}" hrmq "${ACT_KEY}" "${ACTIVE_ADM_ID}" >/dev/null 2>&1 || true
-	READBACK="$(php "$OCC" user:setting "${USER_NAME}" hrmq "${ACT_KEY}" 2>/dev/null | tr -d '\r\n' || true)"
+	php "$OCC" user:setting "${USER_NAME}" humaniq "${ACT_KEY}" "${ACTIVE_ADM_ID}" >/dev/null 2>&1 || true
+	READBACK="$(php "$OCC" user:setting "${USER_NAME}" humaniq "${ACT_KEY}" 2>/dev/null | tr -d '\r\n' || true)"
 	echo "[ci-seed] active administration read back as: '${READBACK}' (want '${ACTIVE_ADM_ID}')"
 	if [ "$READBACK" = "$ACTIVE_ADM_ID" ]; then ACT_OK=1; fi
 else
@@ -696,7 +696,7 @@ fi
 # HTTP fallback, only if occ could not do it. Both prefix forms, both codes
 # reported — never one silent attempt.
 if [ "$ACT_OK" != "1" ]; then
-	for form in "/index.php/apps/hrmq/api/administration/active" "/apps/hrmq/api/administration/active"; do
+	for form in "/index.php/apps/humaniq/api/administration/active" "/apps/humaniq/api/administration/active"; do
 		code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
 			-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 			-H 'Content-Type: application/json' -d "{\"administrationId\":\"${ACTIVE_ADM_ID}\"}" \
@@ -740,7 +740,7 @@ fi
 # ---------------------------------------------------------------------------
 GUARD_BODY="${WORK}/guard.json"
 GUARD_CODE="$(http_get_code "$GUARD_BODY" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/hrmq/api/analytics/trends?metric=absence-rate")"
+	"${BASE}/index.php/apps/humaniq/api/analytics/trends?metric=absence-rate")"
 echo "[ci-seed] guard probe: GET /api/analytics/trends -> ${GUARD_CODE}"
 if [ "$GUARD_CODE" != "200" ]; then
 	echo "[ci-seed] WARNING: the analytics guard did NOT open for '${USER_NAME}' (HTTP ${GUARD_CODE})."
@@ -761,8 +761,8 @@ if [ "$GUARD_CODE" != "200" ]; then
 	if [ -n "$OCC" ]; then
 		NC_LOG="$(dirname "$OCC")/data/nextcloud.log"
 		if [ -f "$NC_LOG" ]; then
-			echo "[ci-seed]   - last hrmq/AdministrationService lines in nextcloud.log:"
-			grep -aiE "administrationservice|analyticsservice|hrmq" "$NC_LOG" 2>/dev/null \
+			echo "[ci-seed]   - last humaniq/AdministrationService lines in nextcloud.log:"
+			grep -aiE "administrationservice|analyticsservice|humaniq" "$NC_LOG" 2>/dev/null \
 				| tail -8 | cut -c1-400 | sed 's/^/[ci-seed]     /' || true
 		else
 			echo "[ci-seed]   - nextcloud.log not found at ${NC_LOG}"
@@ -790,13 +790,13 @@ fi
 
 APP_HTML="${WORK}/app.html"
 curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/hrmq/" -o "$APP_HTML" || true
+	"${BASE}/index.php/apps/humaniq/" -o "$APP_HTML" || true
 
 # `|| true` is load-bearing: grep exits 1 when it matches nothing, and under
 # `set -euo pipefail` that would abort right here — so the case the gate below
 # exists to explain (no bundle) would die with a bare non-zero exit and none of
 # the diagnosis. Let it fall through to the gate instead.
-BUNDLE_SRC="$(grep -oE 'src="[^"]*hrmq-main[^"]*"' "$APP_HTML" | head -1 | sed 's/^src="//; s/"$//' || true)"
+BUNDLE_SRC="$(grep -oE 'src="[^"]*humaniq-main[^"]*"' "$APP_HTML" | head -1 | sed 's/^src="//; s/"$//' || true)"
 
 if [ -n "$BUNDLE_SRC" ]; then
 	BUNDLE_INFO="$(curl -sS -o /dev/null \
@@ -814,7 +814,7 @@ if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
 			echo "[ci-seed] bundle verified as JavaScript."
 			;;
 		*)
-			echo "::error::The hrmq frontend bundle did not serve as JavaScript (got: ${BUNDLE_INFO:-<not found>})."
+			echo "::error::The humaniq frontend bundle did not serve as JavaScript (got: ${BUNDLE_INFO:-<not found>})."
 			echo "::error::The SPA cannot mount, so every UI spec would fail on a selector timeout with a misleading cause."
 			echo "::error::A missing bundle returns HTTP 200 text/html, not 404."
 			exit 1

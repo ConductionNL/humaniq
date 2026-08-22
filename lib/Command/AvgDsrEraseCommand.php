@@ -3,10 +3,10 @@
 /**
  * AVG DSR Erase Command
  *
- * `occ hrmq:avg:erase --employee <id> --as-user <admin-uid> [--dsr-request-id
+ * `occ humaniq:avg:erase --employee <id> --as-user <admin-uid> [--dsr-request-id
  * <id>] [--confirm]` -- the CLI mirror of Art 17 vergetelheid, retention-
  * guarded by OpenRegister's own `Gdpr\DataSubjectRequestService::erase()`
- * (hrmq#99 -- consumed directly, never a bespoke hrmq classification): a bare
+ * (hrmq#99 -- consumed directly, never a bespoke humaniq classification): a bare
  * invocation (no `--confirm`) ALWAYS previews (zero writes, `erase(...,
  * dryRun: true)`) -- when `--dsr-request-id` is given the preview is
  * recorded onto that `DsrRequest`, the evidence `--confirm`'s precondition
@@ -17,7 +17,7 @@
  * default).
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -34,9 +34,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\AvgDsrService;
+use OCA\Humaniq\Service\AvgDsrService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -65,7 +65,7 @@ class AvgDsrEraseCommand extends Command {
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-006
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:avg:erase')
+		$this->setName('humaniq:avg:erase')
 			->setDescription('Retention-guarded AVG vergetelheid erasure for one employee -- previews by default; --confirm with a --dsr-request-id whose preview already ran executes.')
 			->addOption('employee', null, InputOption::VALUE_REQUIRED, 'The Employee id to erase.')
 			->addOption('as-user', null, InputOption::VALUE_REQUIRED, 'The Nextcloud administrator uid establishing the privileged DSAR session.')
@@ -139,7 +139,7 @@ class AvgDsrEraseCommand extends Command {
 	private function runPreview(OutputInterface $output, string $employeeId, ?string $dsrRequestId): int {
 		$preview = $this->service->previewErasure($employeeId, $dsrRequestId);
 
-		$output->writeln('<info>Hrmq AVG-verwijdering — voorbeeld (geen schrijfacties)</info>');
+		$output->writeln('<info>Humaniq AVG-verwijdering — voorbeeld (geen schrijfacties)</info>');
 		$output->writeln('  zou verwijderd worden: ' . count($preview['wouldErase']));
 		foreach ($preview['retained'] as $ref) {
 			$output->writeln(
@@ -177,7 +177,7 @@ class AvgDsrEraseCommand extends Command {
 			return 1;
 		}
 
-		$output->writeln('<info>Hrmq AVG-verwijdering — uitgevoerd</info>');
+		$output->writeln('<info>Humaniq AVG-verwijdering — uitgevoerd</info>');
 		$output->writeln('  verwijderd: ' . count((array)$outcome['erased']));
 		$output->writeln('  retained (OpenRegister legal-hold / immutable archival status): ' . count((array)$outcome['retained']));
 		$output->writeln('  mislukt: ' . count((array)$outcome['failed']));

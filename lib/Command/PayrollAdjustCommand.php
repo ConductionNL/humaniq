@@ -3,7 +3,7 @@
 /**
  * Payroll Adjust Command
  *
- * `occ hrmq:payroll:adjust --original-period YYYY-MM --employee EID
+ * `occ humaniq:payroll:adjust --original-period YYYY-MM --employee EID
  * --correction-ref REF [--gross AMOUNT] [--correction-type TYPE]
  * [--settlement-period YYYY-MM] [--apply]` -- the retro-adjustments MVP
  * trigger (design.md D3/D4/D5): computes (and, with `--apply`, settles) a
@@ -12,7 +12,7 @@
  * sealed original Payslip/PayrollRun -- only reads them to diff against.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -28,9 +28,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\RetroAdjustmentService;
+use OCA\Humaniq\Service\RetroAdjustmentService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -57,7 +57,7 @@ class PayrollAdjustCommand extends Command {
 	 * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-007
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:payroll:adjust')
+		$this->setName('humaniq:payroll:adjust')
 			->setDescription('Compute (and, with --apply, settle) a terugwerkende kracht (TWK) correction for a sealed prior-period payslip.')
 			->addOption('original-period', null, InputOption::VALUE_REQUIRED, 'The sealed wage period being corrected (YYYY-MM).')
 			->addOption('employee', null, InputOption::VALUE_REQUIRED, 'The Employee id.')
@@ -107,7 +107,7 @@ class PayrollAdjustCommand extends Command {
 
 		$result = $this->service->adjustFor($originalPeriod, $employeeId, $correctionRef, $gross, $correctionType, $settlementPeriod, (bool)$input->getOption('apply'));
 
-		$output->writeln('<info>Hrmq TWK-correctie</info>');
+		$output->writeln('<info>Humaniq TWK-correctie</info>');
 		$output->writeln(sprintf('  originele periode : %s', (string)$result['originalPeriod']));
 		$output->writeln(sprintf('  medewerker        : %s', (string)$result['employeeId']));
 		$output->writeln(sprintf('  correctionRef     : %s', (string)$result['correctionRef']));

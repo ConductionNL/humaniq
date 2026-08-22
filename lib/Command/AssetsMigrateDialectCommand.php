@@ -3,7 +3,7 @@
 /**
  * Assets Migrate Dialect Command
  *
- * `occ hrmq:assets:migrate-dialect` -- on-demand, hrmq-only re-run of the
+ * `occ humaniq:assets:migrate-dialect` -- on-demand, humaniq-only re-run of the
  * Asset/AssetAssignment dialect rewrite (hrmq-asset-fleet-merge, tasks.md
  * section 13). The same rewrite also runs unconditionally as the
  * `MigrateAssetDialect` post-migration repair step on every app upgrade and
@@ -14,7 +14,7 @@
  * reason for every skipped row.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -25,14 +25,14 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\AssetDialectMigrationService;
+use OCA\Humaniq\Service\AssetDialectMigrationService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -45,7 +45,7 @@ class AssetsMigrateDialectCommand extends Command {
 	/**
 	 * @param AssetDialectMigrationService $migrationService The migration.
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function __construct(
 		private readonly AssetDialectMigrationService $migrationService,
@@ -57,10 +57,10 @@ class AssetsMigrateDialectCommand extends Command {
 	/**
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:assets:migrate-dialect')
+		$this->setName('humaniq:assets:migrate-dialect')
 			->setDescription('Rewrite pre-existing Asset/AssetAssignment objects from the old Dutch dialect to the renamed one (idempotent).');
 
 	}//end configure()
@@ -77,12 +77,12 @@ class AssetsMigrateDialectCommand extends Command {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$report = $this->migrationService->migrate();
 
-		$output->writeln('<info>Hrmq Asset/AssetAssignment dialect migration</info>');
+		$output->writeln('<info>Humaniq Asset/AssetAssignment dialect migration</info>');
 
 		foreach ($report as $schema => $stat) {
 			$output->writeln(sprintf(

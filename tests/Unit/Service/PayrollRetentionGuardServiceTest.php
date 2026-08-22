@@ -23,7 +23,7 @@
  * this standalone suite.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -39,9 +39,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Service\PayrollRetentionGuardService;
+use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -100,7 +100,7 @@ class PayrollRetentionGuardServiceTest extends TestCase {
 
 	/**
 	 * OpenRegister's own computed `retention.archiefactiedatum` in the
-	 * FUTURE -- a legal hold is placed. hrmq derives NOTHING here; the date
+	 * FUTURE -- a legal hold is placed. humaniq derives NOTHING here; the date
 	 * is read as-is from OpenRegister's own field.
 	 *
 	 * @return void

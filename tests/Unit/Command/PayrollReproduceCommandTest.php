@@ -14,7 +14,7 @@
  * top of the three outcomes that service already produces.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Command
+ * @package  OCA\Humaniq\Tests\Unit\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -30,12 +30,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Command;
+namespace OCA\Humaniq\Tests\Unit\Command;
 
-use OCA\Hrmq\Command\PayrollReproduceCommand;
-use OCA\Hrmq\Payroll\PayrollCalculator;
-use OCA\Hrmq\Service\PayrollReproduceService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Command\PayrollReproduceCommand;
+use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Service\PayrollReproduceService;
+use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;

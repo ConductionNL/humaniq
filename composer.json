@@ -1,5 +1,5 @@
 {
-    "name": "conductionnl/hrmq",
+    "name": "conductionnl/humaniq",
     "description": "Open-source HR and payroll administration with built-in labour-law and wage-tax compliance.",
     "license": "EUPL-1.2",
     "authors": [
@@ -11,12 +11,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "OCA\\Hrmq\\": "lib/"
+            "OCA\\Humaniq\\": "lib/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "OCA\\Hrmq\\Tests\\": "tests/"
+            "OCA\\Humaniq\\Tests\\": "tests/"
         }
     },
     "require": {

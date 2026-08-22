@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
-// validate-seed-refs.js — asserts that every object reference in hrmq's SEED
+// validate-seed-refs.js — asserts that every object reference in humaniq's SEED
 // data is written in a form OpenRegister can actually import.
 //
 // Why this exists (the defect it closes):
@@ -57,7 +57,7 @@
 //        exists) fails too, so the list cannot rot.
 //
 //   The merge is the same one SettingsService::loadConfiguration() performs —
-//   base hrmq_register.json plus every register.d fragment in sorted order,
+//   base humaniq_register.json plus every register.d fragment in sorted order,
 //   deep-merged, lists concatenated — because that is the document
 //   ImportHandler actually receives. Checking a single fragment in isolation
 //   would mis-resolve schemas that several fragments contribute to
@@ -76,7 +76,7 @@ const fs = require('fs')
 const path = require('path')
 
 const REPO_ROOT = path.resolve(__dirname, '..')
-const BASE_REGISTER = path.join(REPO_ROOT, 'lib', 'Settings', 'hrmq_register.json')
+const BASE_REGISTER = path.join(REPO_ROOT, 'lib', 'Settings', 'humaniq_register.json')
 const FRAGMENT_DIR = path.join(REPO_ROOT, 'lib', 'Settings', 'register.d')
 
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/

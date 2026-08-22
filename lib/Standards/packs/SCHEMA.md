@@ -158,12 +158,12 @@ unambiguously subtraction there.
 A pack supplies a **name** and data-only params. It can never supply code, a class
 path, a callable or a file — any step carrying such a key is rejected outright.
 The name is resolved against a **compile-time allow-list** of handlers that
-already ship inside hrmq, **at validation time**. A pack naming a handler that
+already ship inside humaniq, **at validation time**. A pack naming a handler that
 does not exist is **rejected at upload with the name in the error**; it never
 reaches a run to be silently skipped, because a skipped step quietly under-taxes
 someone.
 
-**hrmq ships zero handlers, and the NL pack uses zero.** The registry exists so
+**humaniq ships zero handlers, and the NL pack uses zero.** The registry exists so
 the wall is built before the first country hits it.
 
 ## `selfTest` is required
@@ -181,7 +181,7 @@ Portable (and the only form an **uploaded** pack may use):
 Expected values are in **cents**, keyed by `@net`, `@employerCharges`, `@gross`,
 `@step.*` or `@binding.*`.
 
-The bundled NL pack instead uses the `$fixture` form, which references hrmq's own
+The bundled NL pack instead uses the `$fixture` form, which references humaniq's own
 golden fixtures in *`CalculationInput` vocabulary* (euros, `awfTariff: low|high`)
 and maps components via `selfTest.fixtureMap`:
 

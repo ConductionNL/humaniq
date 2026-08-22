@@ -29,7 +29,7 @@
  * lib/Settings/register.d/hr-seed.json (ADR-001), the NlOrgChecks precedent.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -41,12 +41,12 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/asset-management-mvp/specs/asset-management/spec.md#REQ-AST-005
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-005
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-005
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
 use DateTimeImmutable;
 

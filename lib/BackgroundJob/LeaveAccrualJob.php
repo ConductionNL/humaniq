@@ -28,7 +28,7 @@
  * (SettingsService) is an operator off-switch checked first (design.md D6).
  *
  * @category BackgroundJob
- * @package  OCA\Hrmq\BackgroundJob
+ * @package  OCA\Humaniq\BackgroundJob
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -48,10 +48,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\BackgroundJob;
+namespace OCA\Humaniq\BackgroundJob;
 
 use DateTimeImmutable;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
@@ -145,7 +145,7 @@ class LeaveAccrualJob extends TimedJob {
 	 *
 	 * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-001
 	 * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-005
-	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 * @spec openspec/changes/humaniq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
 	public function runAccrual(): array {
 		if ($this->settingsService->isLeaveAccrualEnabled() === false) {
@@ -193,7 +193,7 @@ class LeaveAccrualJob extends TimedJob {
 
 			$hoursPerWeek = (float)$hoursPerWeek;
 			$existing = ($balancesByEmployeeId[$employeeId] ?? null);
-			// hrmq-personal-dashboard REQ-ACCR-006: the denormalized account
+			// humaniq-personal-dashboard REQ-ACCR-006: the denormalized account
 			// link, resolved from the SAME Employee row this iteration already
 			// selected. Null for an employee with no linked account — never
 			// guessed, never another account (fail-closed for @me surfaces).
@@ -250,7 +250,7 @@ class LeaveAccrualJob extends TimedJob {
 	 * @return array<string, mixed> The saved LeaveBalance.
 	 *
 	 * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-002
-	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 * @spec openspec/changes/humaniq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
 	private function provision(string $employeeId, int $year, string $period, float $hoursPerWeek, float $deltaBovenwettelijk, ?string $userId = null): array {
 		$payload = [
@@ -300,7 +300,7 @@ class LeaveAccrualJob extends TimedJob {
 	 *
 	 * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-003
 	 * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-004
-	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 * @spec openspec/changes/humaniq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
 	private function accrueExisting(array $existing, string $period, float $hoursPerWeek, float $deltaBovenwettelijk, ?string $userId = null): array {
 		$currentEntitled = (float)($existing['entitledHours'] ?? 0);
@@ -580,7 +580,7 @@ class LeaveAccrualJob extends TimedJob {
 	 *
 	 * @return string|null The trimmed value, or null when empty.
 	 *
-	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 * @spec openspec/changes/humaniq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
 	private function nullableTrim(mixed $value): ?string {
 		$trimmed = trim((string)($value ?? ''));
@@ -599,7 +599,7 @@ class LeaveAccrualJob extends TimedJob {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -607,7 +607,7 @@ class LeaveAccrualJob extends TimedJob {
 	}//end objectService()
 
 	/**
-	 * @return string The configured hrmq register slug.
+	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();

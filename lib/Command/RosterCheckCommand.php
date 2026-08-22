@@ -3,17 +3,17 @@
 /**
  * Roster Check Command
  *
- * `occ hrmq:roster:check --roster ID | --period YYYY-Www [--administration ADM]`
+ * `occ humaniq:roster:check --roster ID | --period YYYY-Www [--administration ADM]`
  * — the on-demand corpus audit over one roster's RosterAssignments (rostering
  * MVP design D5): resolves the roster(s) + their assignments through
  * `RosterCheckService` and runs the RuleEngine over exactly that set —
  * regardless of publish status, so a `concept` roster can be validated
  * BEFORE publishing — printing every violation and exiting non-zero on any
- * MANDATORY violation, 0 otherwise (the `hrmq:rules:audit` exit-code
+ * MANDATORY violation, 0 otherwise (the `humaniq:rules:audit` exit-code
  * convention).
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,9 +29,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\RosterCheckService;
+use OCA\Humaniq\Service\RosterCheckService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -58,7 +58,7 @@ class RosterCheckCommand extends Command {
 	 * @spec openspec/changes/rostering/specs/rostering/spec.md#REQ-ROST-005
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:roster:check')
+		$this->setName('humaniq:roster:check')
 			->setDescription('Audit one Roster (by id or period) and its RosterAssignments against the Arbeidstijdenwet corpus checks, regardless of publish status.')
 			->addOption('roster', null, InputOption::VALUE_REQUIRED, 'Roster id.')
 			->addOption('period', null, InputOption::VALUE_REQUIRED, 'Planning period (YYYY-Www or YYYY-MM).')
@@ -91,7 +91,7 @@ class RosterCheckCommand extends Command {
 
 		$report = $this->runCheck($input, $rosterId, $period, $jurisdiction);
 
-		$output->writeln('<info>Hrmq roster check</info>');
+		$output->writeln('<info>Humaniq roster check</info>');
 		$output->writeln(sprintf('  rosters gecontroleerd    : %d', $report['rostersChecked']));
 		$output->writeln(sprintf('  assignments gecontroleerd: %d', $report['assignmentsChecked']));
 

@@ -24,7 +24,7 @@
  * from composer.json's autoload map.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests
+ * @package  OCA\Humaniq\Tests
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -347,7 +347,7 @@ namespace OCA\OpenRegister\Exception {
 		/**
 		 * Standalone double of OpenRegister's folder-access denial, so the
 		 * HoursMigrationRunner deferral classification is testable without a
-		 * live server. Mirrors only the surface hrmq consumes (the type).
+		 * live server. Mirrors only the surface humaniq consumes (the type).
 		 */
 		class FolderAccessDeniedException extends \Exception {
 		}//end class

@@ -54,9 +54,9 @@ correctly flagged `eindheffing-verschuldigd` with the matching `excess`/
 while actually over budget is a violation.
 
 ```bash
-occ hrmq:rules:audit
-occ hrmq:wkr:assess --administration ADM-001 --year 2026
-occ hrmq:wkr:assess --all
+occ humaniq:rules:audit
+occ humaniq:wkr:assess --administration ADM-001 --year 2026
+occ humaniq:wkr:assess --all
 ```
 
 ## Pages

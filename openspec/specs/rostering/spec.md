@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-14-rostering
 # rostering Specification
 
 **Status**: done
-**Scope**: hrmq (`kind: code` — reuses the three existing Arbeidstijdenwet corpus rules AS-IS, adds ZERO new working-time law)
+**Scope**: humaniq (`kind: code` — reuses the three existing Arbeidstijdenwet corpus rules AS-IS, adds ZERO new working-time law)
 **OpenSpec changes**:
 - [rostering](../../changes/archive/2026-07-14-rostering/) _(archived 2026-07-14)_ —
   forward-looking shift planning: three OpenRegister schemas (`Shift` reusable definition, `Roster`
@@ -17,19 +17,19 @@ built_by: openspec/changes/archive/2026-07-14-rostering
   (`nl-atw-dagelijkse-rust`, `nl-atw-max-werkdag`, `nl-atw-pauze`) over the planned assignments —
   reusing `NlAttendanceChecks::MIN_REST_HOURS`/`::MAX_SHIFT_HOURS` and the corpus `nl-atw-pauze`
   `breakTiers`, `RuleAuditService::buildRosterContext()` (published-roster planned-clock sibling
-  index), a never-throw `RosterCheckService`, one occ command `hrmq:roster:check`, one RBAC-gated
+  index), a never-throw `RosterCheckService`, one occ command `humaniq:roster:check`, one RBAC-gated
   `POST /api/roster/check` (`RosterController::check`, resolve-first → 404), and the Shifts /
   Rosters / RosterAssignments manifest pages. No new rule and no `RuleCatalogue::VERSION` bump.
 
 ## Purpose
 
-hrmq administers who is employed, what they clocked and what they claim, but had no forward-looking
+humaniq administers who is employed, what they clocked and what they claim, but had no forward-looking
 plan. Rostering fills that MVP gap: define reusable shifts, assign employees per period, publish the
 resulting roster, and — the differentiator — check the *planned* roster against the same
 Arbeidstijdenwet rules the app already enforces on realised clock data, before publication, when a
 violation is still cheap to fix. Deeper workforce management (auto-optimisation, demand forecasting,
 a drag-and-drop planbord, shift-swap) is an explicit non-goal — a future openconnector integration
-with a dedicated WFM tool; hrmq owns the plan of record and the ATW compliance view, not the
+with a dedicated WFM tool; humaniq owns the plan of record and the ATW compliance view, not the
 optimiser.
 
 ## ADDED Requirements
@@ -113,7 +113,7 @@ working-time rule SHALL be added to `lib/Standards/rules/labour.json`. The same 
 discipline SHALL apply (null `plannedEnd`, or an absent/open previous-day sibling, passes).
 `RuleAuditService::buildRosterContext()` SHALL supply the daily-rest sibling index
 `rostering.plannedClockByEmployeeDate`, built from assignments of `gepubliceerd` rosters only so that
-the standing `occ hrmq:rules:audit` does not raise mandatory violations for work-in-progress concept
+the standing `occ humaniq:rules:audit` does not raise mandatory violations for work-in-progress concept
 rosters.
 
 #### Scenario: Insufficient rest between planned shifts is a mandatory ATW violation
@@ -131,7 +131,7 @@ rosters.
 
 #### Scenario: Concept-roster assignments stay out of the standing audit
 - **GIVEN** a `concept` roster whose assignments would violate `nl-atw-max-werkdag`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** no mandatory violation is raised for those assignments (concept plans are checked only on
   demand)
 
@@ -141,9 +141,9 @@ rosters.
 OpenRegister's `ObjectService` (container resolve, register `hrmq`) and run the `RuleEngine` over
 exactly that assignment set — regardless of publish status, so a `concept` roster can be validated
 before publishing — returning per-assignment violations and a mandatory/advisory count.
-`occ hrmq:roster:check --roster ID | --period YYYY-Www [--administration ADM]` SHALL print the
+`occ humaniq:roster:check --roster ID | --period YYYY-Www [--administration ADM]` SHALL print the
 per-assignment ATW outcome and exit non-zero on any `mandatory` violation, `0` otherwise (the
-`hrmq:rules:audit` exit-code convention), registered in `appinfo/info.xml`. `appinfo/routes.php` SHALL
+`humaniq:rules:audit` exit-code convention), registered in `appinfo/info.xml`. `appinfo/routes.php` SHALL
 add `POST /api/roster/check` → `RosterController::check` (`#[NoAdminRequired]`), which resolves the
 posted `rosterId` through `ObjectService` under the caller's ambient RBAC before any computation
 (unknown/unauthorised collapse to 404 — the `DocumentController` no-admin-idor pattern) and delegates
@@ -151,7 +151,7 @@ to the service. It SHALL be ONE endpoint with no CRUD (ADR-022).
 
 #### Scenario: A concept roster is validated before publishing
 - **GIVEN** a `concept` roster with an assignment breaching `nl-atw-max-werkdag`
-- **WHEN** `occ hrmq:roster:check --roster ROSTER-2026-W28` runs
+- **WHEN** `occ humaniq:roster:check --roster ROSTER-2026-W28` runs
 - **THEN** the violation is printed for that assignment and the command exits non-zero
 
 #### Scenario: An unauthorized roster id never reaches the check
@@ -188,7 +188,7 @@ employees per period, publish a roster, and check it against the Arbeidstijdenwe
 explicit Non-Goals: auto-optimisation, demand forecasting and rule-based auto-scheduling are deferred
 to a dedicated workforce-management tool integrated via **openconnector**, and a drag-and-drop
 planbord, availability/preferences, skills-matching, open-shift bidding/shift-swap and coverage
-alerts are named fast-follows. The section SHALL make clear hrmq owns the plan of record and the ATW
+alerts are named fast-follows. The section SHALL make clear humaniq owns the plan of record and the ATW
 compliance view, not the WFM optimiser.
 
 #### Scenario: The scope boundary is present and complete

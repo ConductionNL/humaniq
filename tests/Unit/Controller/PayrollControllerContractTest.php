@@ -4,7 +4,7 @@
  * Contract tests for PayrollController's mutation / retro / WKR endpoints.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Controller
+ * @package  OCA\Humaniq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -22,15 +22,15 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Controller;
+namespace OCA\Humaniq\Tests\Unit\Controller;
 
-use OCA\Hrmq\Controller\PayrollController;
-use OCA\Hrmq\Service\PayrollMutationService;
-use OCA\Hrmq\Service\PayrollRunService;
-use OCA\Hrmq\Service\ProformaPayslipService;
-use OCA\Hrmq\Service\RetroAdjustmentService;
-use OCA\Hrmq\Service\SettingsService;
-use OCA\Hrmq\Service\WkrService;
+use OCA\Humaniq\Controller\PayrollController;
+use OCA\Humaniq\Service\PayrollMutationService;
+use OCA\Humaniq\Service\PayrollRunService;
+use OCA\Humaniq\Service\ProformaPayslipService;
+use OCA\Humaniq\Service\RetroAdjustmentService;
+use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\WkrService;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
 use OCP\IRequest;

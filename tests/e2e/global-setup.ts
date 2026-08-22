@@ -31,14 +31,14 @@ import { ADMIN_CREDENTIALS, resolveBaseURL } from './base-url'
 const AUTH_DIR = path.resolve(__dirname, '.auth')
 const STORAGE_STATE = path.join(AUTH_DIR, 'admin.json')
 const APP_ROOT = path.resolve(__dirname, '..', '..')
-const BUNDLE_PATH = path.join(APP_ROOT, 'js', 'hrmq-main.js')
+const BUNDLE_PATH = path.join(APP_ROOT, 'js', 'humaniq-main.js')
 
 /**
- * Ensure the webpack bundle exists before specs hit `/apps/hrmq/`.
+ * Ensure the webpack bundle exists before specs hit `/apps/humaniq/`.
  *
  * The shared quality pipeline runs `npm ci` + `npx playwright install`
  * before the spec run, but never `npm run build`. On a fresh CI VM the
- * `js/hrmq-main.js` artefact doesn't exist, so the rendered page loads a
+ * `js/humaniq-main.js` artefact doesn't exist, so the rendered page loads a
  * 404 script tag and the Vue app never mounts — every selector wait then
  * times out. Locally this is a no-op when the bundle is present.
  */
@@ -119,7 +119,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 	// serialise, so it would persist nothing at all — the app id must be
 	// explicit, and as of 2.1.0-vue3.12 the helper throws rather than silently
 	// seeding nothing.
-	await seedFirstVisitOverlaysSeen(context, 'hrmq')
+	await seedFirstVisitOverlaysSeen(context, 'humaniq')
 
 	const page = await context.newPage()
 

@@ -221,7 +221,7 @@ export default [
 	eslintConfigPrettier,
 
 	{
-		name: 'conduction/hrmq-rules',
+		name: 'conduction/humaniq-rules',
 		rules: {
 			// Fleet convention (scholiq, procest, pipelinq, decidesk, shillinq).
 			'no-console': 'off',

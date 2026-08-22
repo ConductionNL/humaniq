@@ -4,17 +4,17 @@
  * Payroll GL Post Service
  *
  * Posts one balanced loonjournaalpost per approved PayrollRun into shillinq's
- * JournalEntry register (payroll-glpost-shillinq). hrmq holds no bookkeeping
+ * JournalEntry register (payroll-glpost-shillinq). humaniq holds no bookkeeping
  * machinery of its own (design.md D1): the only artefact this service writes
- * on the hrmq side is a `PayrollGLPost` record logging the handoff; the
+ * on the humaniq side is a `PayrollGLPost` record logging the handoff; the
  * journal itself is created as a shillinq `JournalEntry` through
  * OpenRegister's ObjectService, same instance, never HTTP.
  *
  * Availability is duck-typed (ADR-046 philosophy, mirroring
- * `OCA\Hrmq\Portal\PortalContributionProvider`): when shillinq is not
+ * `OCA\Humaniq\Portal\PortalContributionProvider`): when shillinq is not
  * installed, or its register/schema cannot be resolved, the attempt is
  * recorded `skipped-no-shillinq` and the referenced PayrollRun stays
- * `approved` so a later `occ hrmq:glpost:run` retries (design.md D7). hrmq
+ * `approved` so a later `occ humaniq:glpost:run` retries (design.md D7). humaniq
  * carries zero composer/info.xml dependency on shillinq.
  *
  * Idempotency is enforced in two layers (design.md D6): at most one
@@ -24,7 +24,7 @@
  * update adopts the existing entry instead of double-posting.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -40,7 +40,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use OCP\App\IAppManager;
@@ -367,7 +367,7 @@ class PayrollGLPostService {
 	 * @param string $journalNumber Deterministic idempotency key.
 	 * @param string $period Wage period (YYYY-MM).
 	 * @param string $administrationId Administration/employer id, passed through verbatim.
-	 * @param string $payrollRunId The hrmq PayrollRun id (for the description).
+	 * @param string $payrollRunId The humaniq PayrollRun id (for the description).
 	 * @param array<int, mixed> $lines The balanced journal lines.
 	 *
 	 * @return string The shillinq JournalEntry id (adopted or newly created).
@@ -383,7 +383,7 @@ class PayrollGLPostService {
 		$payload = [
 			'journalNumber' => $journalNumber,
 			'entryDate' => $this->periodEndDate($period),
-			'description' => sprintf('Loonjournaalpost %s — hrmq loonrun %s', $period, $payrollRunId),
+			'description' => sprintf('Loonjournaalpost %s — humaniq loonrun %s', $period, $payrollRunId),
 			'lines' => $lines,
 			'journalType' => 'manual',
 			'approvalState' => 'not-required',
@@ -701,7 +701,7 @@ class PayrollGLPostService {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -709,7 +709,7 @@ class PayrollGLPostService {
 	}//end objectService()
 
 	/**
-	 * @return string The configured hrmq register slug.
+	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();

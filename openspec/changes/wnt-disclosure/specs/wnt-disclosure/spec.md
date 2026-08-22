@@ -26,7 +26,7 @@ other field.
 
 ### Requirement: A new WntDisclosure schema SHALL record the annual WNT-verantwoording per topfunctionaris (REQ-WNT-002)
 
-A new fragment `lib/Settings/register.d/hr-wnt.json` (`x-hrmq-fragment: hr-wnt`) SHALL declare
+A new fragment `lib/Settings/register.d/hr-wnt.json` (`x-humaniq-fragment: hr-wnt`) SHALL declare
 `WntDisclosure` (`x-schema-org: schema:Report`) with `employeeId` (`$ref: Employee`), `year` (string,
 YYYY), `totalCompensation` (number), and `status` (enum `concept` \| `gepubliceerd`, default
 `concept`), required `[employeeId, year, totalCompensation, status]`. Its
@@ -66,7 +66,7 @@ map SHALL gain `wntUitzonderingReden`. `RuleCatalogue::VERSION` SHALL be bumped.
 
 - **GIVEN** a topfunctionaris `Employee` with `wntUitzonderingReden: null` and a `WntDisclosure`
   whose `totalCompensation` exceeds the WNT norm's annual figure
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** an `nl-wnt-norm-overschrijding` violation is reported for that disclosure
 
 #### Scenario: A valid transitional exemption clears the flag
@@ -133,7 +133,7 @@ branch). Every pre-existing seeded `Employee` SHALL keep `wntTopfunctionaris: fa
 #### Scenario: The seed reproduces exactly one violation
 
 - **GIVEN** the three seeded topfunctionarissen and their disclosures
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** exactly one `nl-wnt-norm-overschrijding` violation is reported
 
 #### Scenario: The pre-existing seed population stays silent

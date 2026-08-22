@@ -7,20 +7,20 @@ built_by: openspec/changes/archive/2026-07-14-leave-calendar-nc
 # leave-calendar-nc Specification
 
 **Status**: done
-**Scope**: hrmq (NC-platform leaf; writes into the host Nextcloud instance's own CalDAV store — no other app dependency)
+**Scope**: humaniq (NC-platform leaf; writes into the host Nextcloud instance's own CalDAV store — no other app dependency)
 **OpenSpec changes**:
-- [leave-calendar-nc](../../changes/archive/2026-07-14-leave-calendar-nc/) _(archived 2026-07-14)_ — `LeaveCalendarService` upserting one all-day VEVENT per approved `LeaveRequest`/`SickLeaveCase` into a configured shared Nextcloud calendar via a duck-typed, container-resolved `OCA\DAV\CalDAV\CalDavBackend`, the AVG summary boundary, `skipped-no-calendar` degradation, and the occ trigger `hrmq:calendar:sync` (kind: code)
+- [leave-calendar-nc](../../changes/archive/2026-07-14-leave-calendar-nc/) _(archived 2026-07-14)_ — `LeaveCalendarService` upserting one all-day VEVENT per approved `LeaveRequest`/`SickLeaveCase` into a configured shared Nextcloud calendar via a duck-typed, container-resolved `OCA\DAV\CalDAV\CalDavBackend`, the AVG summary boundary, `skipped-no-calendar` degradation, and the occ trigger `humaniq:calendar:sync` (kind: code)
 
 ## Purpose
 
 Make approved absence visible on a plain, shareable Nextcloud calendar —
 table stakes in every NL SMB HR suite (wie is er wanneer weg?), and a
-feature hrmq is uniquely positioned to deliver with zero external
+feature humaniq is uniquely positioned to deliver with zero external
 integration because the host platform already ships a full CalDAV stack.
 The public OCP calendar surface can discover calendars and create events but
 has no update or delete and rejects a duplicate UID, so an idempotent
 upsert/remove sync writes through the DAV app's `CalDavBackend` instead —
-duck-typed and container-resolved exactly like hrmq resolves OpenRegister's
+duck-typed and container-resolved exactly like humaniq resolves OpenRegister's
 ObjectService, with a recorded `skipped-no-calendar` degradation when the
 configured calendar cannot be resolved. AVG boundary: sickness events read
 only "Afwezig — {naam}" and leave events only "Verlof — {naam}" — no reason,
@@ -28,7 +28,7 @@ diagnosis, or leave type ever reaches the calendar.
 
 ## Requirements
 
-@e2e exclude backend occ/service integration with the Nextcloud CalDAV store; no UI surface is added and hrmq has no app-level e2e suite yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude backend occ/service integration with the Nextcloud CalDAV store; no UI surface is added and humaniq has no app-level e2e suite yet (tracked by active change humaniq-test-coverage-baseline)
 
 ### REQ-LC-001: A configured shared calendar SHALL be the sync target
 
@@ -36,7 +36,7 @@ diagnosis, or leave type ever reaches the calendar.
 
 #### Scenario: Unconfigured instance skips cleanly
 - **GIVEN** a fresh install where `leave_calendar_principal` and `leave_calendar_uri` are unset
-- **WHEN** `occ hrmq:calendar:sync` runs
+- **WHEN** `occ humaniq:calendar:sync` runs
 - **THEN** the command exits `0`, reports `skipped-no-calendar`, and no calendar object is created, updated, or deleted
 
 ### REQ-LC-002: Approved leave SHALL upsert one deterministic all-day event
@@ -83,7 +83,7 @@ Events derived from a `SickLeaveCase` render SUMMARY exactly `Afwezig — {first
 
 ### REQ-LC-005: Out-of-scope sources SHALL be removed idempotently
 
-The sync deletes the calendar object of any `LeaveRequest` that is no longer `approved` (the status enum is `draft|submitted|approved|rejected` — there is no `cancelled` state; any non-approved status leaves the sync scope). For sources hard-deleted from the register, the sync reconciles orphans by listing the configured calendar's objects and deleting every `hrmq-leave-*.ics` / `hrmq-sick-*.ics` URI whose embedded uuid is not among the complete live source-id sets; objects without the `hrmq-` URI prefix are never touched. Reconciliation always compares against the full live-id sets even when `--from` bounds the upsert set, so a bounded sync can never mis-classify an old event as orphaned. The whole sync is idempotent: running it twice in a row produces zero changes on the second run.
+The sync deletes the calendar object of any `LeaveRequest` that is no longer `approved` (the status enum is `draft|submitted|approved|rejected` — there is no `cancelled` state; any non-approved status leaves the sync scope). For sources hard-deleted from the register, the sync reconciles orphans by listing the configured calendar's objects and deleting every `hrmq-leave-*.ics` / `hrmq-sick-*.ics` URI whose embedded uuid is not among the complete live source-id sets; objects without the `humaniq-` URI prefix are never touched. Reconciliation always compares against the full live-id sets even when `--from` bounds the upsert set, so a bounded sync can never mis-classify an old event as orphaned. The whole sync is idempotent: running it twice in a row produces zero changes on the second run.
 
 #### Scenario: Rejection clears the calendar
 - **GIVEN** an approved LeaveRequest whose event exists, whose status then changes to `rejected`
@@ -97,11 +97,11 @@ The sync deletes the calendar object of any `LeaveRequest` that is no longer `ap
 
 ### REQ-LC-006: Absent calendar stack SHALL degrade to a recorded skip
 
-Availability is duck-typed per run: `OCA\DAV\CalDAV\CalDavBackend` resolvable from the container AND `getCalendarByUri(principal, uri)` returning a calendar for the configured values. Any miss (backend unresolvable, config unset per REQ-LC-001, calendar deleted or URI wrong) ends the run `skipped-no-calendar` with an explanatory message — never an exception, nothing above INFO in the log. hrmq gains no info.xml or composer dependency on the calendar or dav apps.
+Availability is duck-typed per run: `OCA\DAV\CalDAV\CalDavBackend` resolvable from the container AND `getCalendarByUri(principal, uri)` returning a calendar for the configured values. Any miss (backend unresolvable, config unset per REQ-LC-001, calendar deleted or URI wrong) ends the run `skipped-no-calendar` with an explanatory message — never an exception, nothing above INFO in the log. humaniq gains no info.xml or composer dependency on the calendar or dav apps.
 
 #### Scenario: Misconfigured calendar URI
 - **GIVEN** `leave_calendar_uri` pointing at a calendar that does not exist on the configured principal
-- **WHEN** `occ hrmq:calendar:sync` runs
+- **WHEN** `occ humaniq:calendar:sync` runs
 - **THEN** the command exits `0`, reports `skipped-no-calendar` with the unresolved principal/URI, and throws no exception
 
 #### Scenario: Calendar configured later supersedes the skip
@@ -111,11 +111,11 @@ Availability is duck-typed per run: `OCA\DAV\CalDAV\CalDavBackend` resolvable fr
 
 ### REQ-LC-007: An occ command SHALL be the MVP trigger
 
-`lib/Command/CalendarSyncCommand.php` registers `hrmq:calendar:sync` with optional `--from DATE` in `appinfo/info.xml` `<commands>` (next to `hrmq:glpost:run`). `--from` bounds the upsert set to sources whose absence period ends on or after DATE; omitted means all sources (capped by the ObjectService load limit). The command prints one outcome line per touched source (`created|updated|removed|unchanged|failed|skipped`) plus a summary, and exits `0` when no source ended `failed` (a fully skipped run is a healthy `0`) and `1` otherwise. No event listener or background job ships in this change — event-driven sync is deferred to the lifecycle wiring owned by `hrmq-rule-compliance-enforcement`.
+`lib/Command/CalendarSyncCommand.php` registers `humaniq:calendar:sync` with optional `--from DATE` in `appinfo/info.xml` `<commands>` (next to `humaniq:glpost:run`). `--from` bounds the upsert set to sources whose absence period ends on or after DATE; omitted means all sources (capped by the ObjectService load limit). The command prints one outcome line per touched source (`created|updated|removed|unchanged|failed|skipped`) plus a summary, and exits `0` when no source ended `failed` (a fully skipped run is a healthy `0`) and `1` otherwise. No event listener or background job ships in this change — event-driven sync is deferred to the lifecycle wiring owned by `humaniq-rule-compliance-enforcement`.
 
 #### Scenario: Bounded sync
 - **GIVEN** approved leaves ending 2026-03-31 and 2026-08-14
-- **WHEN** `occ hrmq:calendar:sync --from 2026-06-01` runs
+- **WHEN** `occ humaniq:calendar:sync --from 2026-06-01` runs
 - **THEN** only the August leave is upserted, and the March leave's existing event (if any) is not deleted by reconciliation
 
 #### Scenario: Failure surfaces in the exit code

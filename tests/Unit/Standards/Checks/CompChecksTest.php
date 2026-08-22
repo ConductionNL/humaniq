@@ -9,7 +9,7 @@
  * i.e. NOT an orphaned capability (REQ-COMP-007).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
+ * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -25,11 +25,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
+namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\CompChecks;
-use OCA\Hrmq\Standards\RuleCatalogue;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\Checks\CompChecks;
+use OCA\Humaniq\Standards\RuleCatalogue;
+use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -63,7 +63,7 @@ class CompChecksTest extends TestCase {
 	/**
 	 * Whether the evaluated violations contain a given rule id.
 	 *
-	 * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
+	 * @param array<int, \OCA\Humaniq\Standards\Violation> $violations The violations.
 	 * @param string $ruleId The rule id to look for.
 	 *
 	 * @return bool

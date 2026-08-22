@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq TimesheetNotEmptyGuard
+ * Humaniq TimesheetNotEmptyGuard
  *
  * OpenRegister lifecycle guard on the Timesheet `submit` transition
  * (hours-process-redesign): an empty timesheet — no bookings, or bookings
@@ -17,7 +17,7 @@
  * submit on a guess.
  *
  * @category Lifecycle
- * @package  OCA\Hrmq\Lifecycle
+ * @package  OCA\Humaniq\Lifecycle
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -28,12 +28,12 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Lifecycle;
+namespace OCA\Humaniq\Lifecycle;
 
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
@@ -43,7 +43,7 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
  *
  * Fails closed: absent aggregates deny rather than allow on a guess.
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
  */
 class TimesheetNotEmptyGuard implements LifecycleGuardInterface {
 
@@ -63,7 +63,7 @@ class TimesheetNotEmptyGuard implements LifecycleGuardInterface {
 	 *  of the LifecycleGuardInterface signature; emptiness does not depend on
 	 *  who submits.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		$entryCount = $object['entryCount'] ?? null;

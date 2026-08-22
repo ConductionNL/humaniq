@@ -10,12 +10,12 @@
  * `nl-30-regeling-salarisnorm` (Employee — annualised salary at/above the
  * applicable norm). Each suite closes with a REAL `RuleEngine::evaluate()`
  * integration test proving the rule is genuinely reachable via
- * `occ hrmq:rules:audit`, not an orphaned capability (the `NlFleetChecksTest`
+ * `occ humaniq:rules:audit`, not an orphaned capability (the `NlFleetChecksTest`
  * precedent). Also verifies the seeded Employee/Payslip audit clean on all
  * five 30%-ruling checks (task 12).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
+ * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,10 +31,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
+namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlPayrollChecks;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\Checks\NlPayrollChecks;
+use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -324,7 +324,7 @@ class NlPayrollChecksTest extends TestCase {
 	/**
 	 * The three new predicates are genuinely reachable via the REAL
 	 * `RuleEngine::evaluate()` (catalogue + auto-discovered CheckProviders),
-	 * proving none is an orphaned capability (`occ hrmq:rules:audit`).
+	 * proving none is an orphaned capability (`occ humaniq:rules:audit`).
 	 *
 	 * @return void
 	 */

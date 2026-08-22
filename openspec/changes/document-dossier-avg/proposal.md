@@ -30,7 +30,7 @@ OpenRegister schemas (`dossier-document`, `document-category`, `retention-policy
 destruction job, and a faceted search surface. Re-grounded against current shipped code, most of that premise no
 longer holds:
 
-- **Document generation + storage is DONE.** `openspec/specs/hrmq-docudesk-documents/spec.md` ships
+- **Document generation + storage is DONE.** `openspec/specs/humaniq-docudesk-documents/spec.md` ships
   `GeneratedDocument` (`lib/Settings/register.d/hr-documents.json`) — one record per rendered
   arbeidsovereenkomst/aanbiedingsbrief/werkgeversverklaring/getuigschrift/loonstrook/jaaropgaaf, the PDF stored via
   OpenRegister's `FileService` on the object's own folder, idempotency keys, an audit trail (the platform's
@@ -59,7 +59,7 @@ longer holds:
 
 1. **No dossier VIEW exists.** `GeneratedDocument` has no `employeeId`-scoped list anywhere on `EmployeeDetail`
    (`grep -n GeneratedDocument src/manifest.json` shows it only as a standalone global index page) — an HR admin
-   who wants "every document hrmq generated for this one person" must leave the personnel record and hand-filter
+   who wants "every document humaniq generated for this one person" must leave the personnel record and hand-filter
    a separate list. Every sibling record type (Contracts, Payslips, Expenses, Timesheets…) already gets this
    FK-scoped treatment on `EmployeeDetail`; `GeneratedDocument` does not.
 2. **The third named example — loonbelastingverklaring — has presence tracking but no retention tracking.**
@@ -129,7 +129,7 @@ here.
 
 ### Modified Capabilities
 
-- `hrmq-docudesk-documents`: `EmployeeDetail` gains a `GeneratedDocument` FK-scoped list; no schema/service change.
+- `humaniq-docudesk-documents`: `EmployeeDetail` gains a `GeneratedDocument` FK-scoped list; no schema/service change.
 - `avg-dsr`: superseded (not by this change) by hrmq#99 — `AvgDsrRetentionClassifier` is deleted;
   `AvgDsrService` now consumes OpenRegister's guarded `Gdpr\DataSubjectRequestService` directly. Not touched by
   this change's own diff.

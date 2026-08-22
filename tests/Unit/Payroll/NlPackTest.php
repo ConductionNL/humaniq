@@ -14,7 +14,7 @@
  *   would mean NL logic stayed in PHP (REQ-JP-004).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Payroll
+ * @package  OCA\Humaniq\Tests\Unit\Payroll
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -34,14 +34,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Payroll;
+namespace OCA\Humaniq\Tests\Unit\Payroll;
 
-use OCA\Hrmq\Payroll\JurisdictionPack;
-use OCA\Hrmq\Payroll\PackRepository;
-use OCA\Hrmq\Payroll\PackValidator;
-use OCA\Hrmq\Payroll\PayrollCalculator;
-use OCA\Hrmq\Payroll\StepHandlerRegistry;
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\JurisdictionPack;
+use OCA\Humaniq\Payroll\PackRepository;
+use OCA\Humaniq\Payroll\PackValidator;
+use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Payroll\StepHandlerRegistry;
+use OCA\Humaniq\Payroll\TaxTables;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -110,7 +110,7 @@ class NlPackTest extends TestCase {
 			$this->assertNotSame('phpStep', $step['op'], 'NL step "' . $step['id'] . '" must not need the escape hatch');
 		}
 
-		$this->assertSame([], (new StepHandlerRegistry())->names(), 'hrmq ships zero escape-hatch handlers');
+		$this->assertSame([], (new StepHandlerRegistry())->names(), 'humaniq ships zero escape-hatch handlers');
 
 	}//end testTheNlPackUsesNoEscapeHatchAndTheRegistryShipsEmpty()
 
@@ -163,9 +163,9 @@ class NlPackTest extends TestCase {
 		$calculate = (new ReflectionClass(PayrollCalculator::class))->getMethod('calculate');
 
 		$this->assertTrue($calculate->isPublic());
-		$this->assertSame('OCA\Hrmq\Payroll\CalculationResult', (string)$calculate->getReturnType());
+		$this->assertSame('OCA\Humaniq\Payroll\CalculationResult', (string)$calculate->getReturnType());
 		$this->assertSame(
-			['OCA\Hrmq\Payroll\CalculationInput', 'OCA\Hrmq\Payroll\TaxTables'],
+			['OCA\Humaniq\Payroll\CalculationInput', 'OCA\Humaniq\Payroll\TaxTables'],
 			array_map(static fn ($p): string => (string)$p->getType(), $calculate->getParameters())
 		);
 

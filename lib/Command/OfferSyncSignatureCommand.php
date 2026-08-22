@@ -3,17 +3,17 @@
 /**
  * Offer Sync Signature Command
  *
- * `occ hrmq:offer:sync-signature [--application <id>]` -- the read-only poll
+ * `occ humaniq:offer:sync-signature [--application <id>]` -- the read-only poll
  * trigger for offer-esign (design.md D8). Default scope: every Application
  * whose `offerSigningRequestId` is set and `offerSigningStatus` is
- * PENDING/IN_PROGRESS. Unlike `hrmq:offer:request-signature`, this genuinely
+ * PENDING/IN_PROGRESS. Unlike `humaniq:offer:request-signature`, this genuinely
  * works from a bare `occ` CLI process -- `SigningService::getRequest()`
  * carries no session guard (design.md D5 point 3), the one piece of the
  * offer-esign lifecycle CLI can honestly own today. NEVER writes
  * `Application.status` or invokes the `aannemen` transition (REQ-OFFR-006).
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,9 +29,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\OfferEsignService;
+use OCA\Humaniq\Service\OfferEsignService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -63,7 +63,7 @@ class OfferSyncSignatureCommand extends Command {
 	 * @return void
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:offer:sync-signature')
+		$this->setName('humaniq:offer:sync-signature')
 			->setDescription(
 				'Read-only poll of docudesk signing-request status onto Application.offerSigningStatus '
 				. '(default: every Application with an active offerSigningRequestId). Never touches Application.status.'
@@ -86,7 +86,7 @@ class OfferSyncSignatureCommand extends Command {
 
 		$results = $this->service->syncSignatureStatus($applicationId);
 
-		$output->writeln('<info>Hrmq offer-signature sync</info>');
+		$output->writeln('<info>Humaniq offer-signature sync</info>');
 
 		if ($results === []) {
 			$output->writeln('  geen sollicitaties met een actieve e-handtekeningaanvraag gevonden.');

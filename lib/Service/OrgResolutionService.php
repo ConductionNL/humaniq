@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq OrgResolutionService
+ * Humaniq OrgResolutionService
  *
  * The ONE implementation of the employee → active OrgAssignment → OrgUnit
  * chain: manager resolution (unit `managerId` → manager Employee's
@@ -25,7 +25,7 @@
  * appears in no team queue / carries no cost centre).
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -36,19 +36,19 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 
 /**
  * Shared, pure resolution of the org chain (manager / cost centre).
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
  */
 class OrgResolutionService {
 
@@ -66,7 +66,7 @@ class OrgResolutionService {
 	 *
 	 * @return bool True when the placement is active on that date.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
 	public function isActiveOn(array $assignment, string $onDate): bool {
 		$reference = strtotime($onDate);
@@ -105,7 +105,7 @@ class OrgResolutionService {
 	 *
 	 * @return array<int, string> Distinct manager Nextcloud user ids (possibly empty).
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
 	public function resolveManagerUserIds(
 		string $employeeId,
@@ -148,7 +148,7 @@ class OrgResolutionService {
 	 *
 	 * @return array<int, string> Distinct non-empty cost centres (possibly empty).
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/employer-hourly-cost-rate/spec.md#Requirement:-Cost-allocation-references-live-on-the-time-entry-and-are-never-employee-typed
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/employer-hourly-cost-rate/spec.md#Requirement:-Cost-allocation-references-live-on-the-time-entry-and-are-never-employee-typed
 	 */
 	public function resolveCostCenters(
 		string $employeeId,
@@ -180,7 +180,7 @@ class OrgResolutionService {
 	 *
 	 * @return string|null The unique value, or null.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
 	public function uniqueOrNull(array $values): ?string {
 		if (count($values) !== 1) {

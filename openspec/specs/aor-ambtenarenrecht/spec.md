@@ -48,7 +48,7 @@ precedent; the ceremony's content is never validated). `RuleCatalogue::VERSION` 
 #### Scenario: A missing ambtseed is flagged
 
 - **GIVEN** an `Employee` with `publicSectorRegime: "ambtenarenwet"` and `ambtseedAfgelegdOp: null`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** an `nl-ambtenaar-eed-vereist` violation is reported for that employee
 
 #### Scenario: A recorded ambtseed passes
@@ -76,7 +76,7 @@ a presence-only attestation check; the content of what was disclosed is never va
 
 - **GIVEN** an `Employee` with `publicSectorRegime: "genormaliseerd"` and
   `nevenwerkzaamhedenGemeld: false`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** an `nl-ambtenaar-nevenwerkzaamheden-melding` violation is reported for that employee
 
 #### Scenario: An on-file disclosure passes
@@ -108,7 +108,7 @@ both satisfied, and one `ambtenarenwet` `Employee` with `ambtseedAfgelegdOp: nul
 #### Scenario: The seed reproduces exactly one violation
 
 - **GIVEN** the three new seeded employees
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** exactly one `nl-ambtenaar-eed-vereist` violation is reported (the third seed) and zero
   `nl-ambtenaar-nevenwerkzaamheden-melding` violations are reported among the three
 

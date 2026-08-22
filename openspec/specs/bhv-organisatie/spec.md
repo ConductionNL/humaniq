@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-17-bhv-organisatie
 # bhv-organisatie Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [bhv-organisatie](../../changes/archive/2026-07-17-bhv-organisatie/) _(archived 2026-07-17)_ — `BhvCertificering` schema (plain dated facts: employee, role, obtained/valid-until dates, training provider, optional `OrgUnit` scope), a third `hr-signals` predicate (`nl-bhv-certificaat-verloopt`, extending `NlSignalChecks`), the "Aflopende BHV-certificaten" dashboard widget, the `BhvCertificeringen`/`BhvCertificeringDetail` pages under the existing `Verlof & verzuim` menu group, and two seeded certificates (one clean, one intended violation).
 - [hrmq-dashboard-steering-indicators](../../changes/hrmq-dashboard-steering-indicators/) — **Status**: in-progress — modifies REQ-BHV-005: the "Aflopende BHV-certificaten" dashboard widget folds into the Dashboard's merged Obligations list; the menu placement clause, the 90-day window, and REQ-BHV-001–004 are unchanged
@@ -55,7 +55,7 @@ the superseded 2026-05-23 draft bundled into one ten-feature platform.
 
 #### Scenario: An expiring certificate within the window is flagged
 - **GIVEN** a `BhvCertificering` with `certificaatGeldigTot` 45 days from today
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** the record is reported with an `nl-bhv-certificaat-verloopt` violation at severity `recommended`
 
 #### Scenario: A certificate outside the window passes
@@ -108,7 +108,7 @@ The `BhvCertificeringen` index page SHALL support filtering and grouping by `Bhv
 related Employee/OrgUnit + audit sidebar) as `SUB_PAGE`/`DETAIL_TAB` placements under the existing
 `Verlof & verzuim` menu group (`VerlofVerzuimGroup`). No new top-level menu SHALL be added. The
 expiring-certificate signal SHALL surface as rows in the Obligations `object-table` widget on the
-Dashboard (`hrmq-dashboard-steering-indicators` REQ-DSI-008) rather than as a dedicated
+Dashboard (`humaniq-dashboard-steering-indicators` REQ-DSI-008) rather than as a dedicated
 "Aflopende BHV-certificaten" widget — the 90-day `certificaatGeldigTot` window is unchanged.
 
 #### Scenario: BHV pages are reachable under Verlof & verzuim

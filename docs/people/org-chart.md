@@ -5,7 +5,7 @@ description: A self-referencing organisation hierarchy and effective-dated emplo
 
 # Org chart
 
-HRMQ's organisational model is deliberately simple: a self-referencing
+Humaniq's organisational model is deliberately simple: a self-referencing
 `OrgUnit` hierarchy and effective-dated `OrgAssignment` placements linking
 employees to units. Neither schema carries a lifecycle — both are plain
 records, no workflow.
@@ -46,7 +46,7 @@ severity `mandatory`) audit the structure:
    a cycle.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Pages

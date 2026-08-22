@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-paybatch",
+    "x-humaniq-fragment": "hr-paybatch",
     "components": {
         "schemas": {
             "PayrollPaymentBatch": {
@@ -7,7 +7,7 @@
                 "icon": "BankTransfer",
                 "version": "0.2.0",
                 "title": "Payroll payment batch",
-                "description": "The hrmq-side record of one attempt to hand a payable PayrollRun's net-pay off to shillinq as a draft SEPA PaymentRun (payroll-sepa-netpay-shillinq). hrmq owns no SEPA/bank-file machinery: this schema is a log of the handoff -- what was sent, when, and the outcome -- never the payment batch itself, which stays a shillinq PaymentRun created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays payable so a later `occ hrmq:netpay:run` invocation can supersede them (design.md D6). At most one PayrollPaymentBatch per run may be `pending`/`created` at a time -- enforced by PayrollNetPayService. `created` means the draft PaymentRun was klaargezet in shillinq -- NOT paid: money only moves after shillinq's controller approves and exports it (design.md D4).",
+                "description": "The humaniq-side record of one attempt to hand a payable PayrollRun's net-pay off to shillinq as a draft SEPA PaymentRun (payroll-sepa-netpay-shillinq). humaniq owns no SEPA/bank-file machinery: this schema is a log of the handoff -- what was sent, when, and the outcome -- never the payment batch itself, which stays a shillinq PaymentRun created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays payable so a later `occ humaniq:netpay:run` invocation can supersede them (design.md D6). At most one PayrollPaymentBatch per run may be `pending`/`created` at a time -- enforced by PayrollNetPayService. `created` means the draft PaymentRun was klaargezet in shillinq -- NOT paid: money only moves after shillinq's controller approves and exports it (design.md D4).",
                 "type": "object",
                 "x-schema-org": "schema:PaymentService",
                 "required": [

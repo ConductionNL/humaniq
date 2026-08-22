@@ -15,7 +15,7 @@
  * a claimant whose account IS the acting user must be denied.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Lifecycle
+ * @package  OCA\Humaniq\Tests\Unit\Lifecycle
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -28,15 +28,15 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Lifecycle;
+namespace OCA\Humaniq\Tests\Unit\Lifecycle;
 
-use OCA\Hrmq\Lifecycle\NoSelfApprovalGuard;
+use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Separation of duties on approve/reject.
  *
- * @covers \OCA\Hrmq\Lifecycle\NoSelfApprovalGuard
+ * @covers \OCA\Humaniq\Lifecycle\NoSelfApprovalGuard
  */
 class NoSelfApprovalGuardTest extends TestCase {
 
@@ -112,7 +112,7 @@ class NoSelfApprovalGuardTest extends TestCase {
 
 	/**
 	 * An identified claimant with no Nextcloud account cannot BE the acting
-	 * user, so the transition is allowed — hrmq seeds several such employees.
+	 * user, so the transition is allowed — humaniq seeds several such employees.
 	 *
 	 * @return void
 	 */

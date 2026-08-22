@@ -3,7 +3,7 @@
 /**
  * Payroll Reproduce Service
  *
- * `occ hrmq:payroll:reproduce --payslip <uuid>` (audit-trail-payroll
+ * `occ humaniq:payroll:reproduce --payslip <uuid>` (audit-trail-payroll
  * design.md D1, REQ-AUDP-002, fixing hrmq#98): reloads a sealed Payslip's
  * stored `engineInputSnapshot` — NEVER the live Employee/EmploymentContract
  * state — resolves the exact jurisdiction-pack artefact that produced its
@@ -22,7 +22,7 @@
  * engine net is the correct like-for-like comparison, not a shortcut.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -38,13 +38,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
-use OCA\Hrmq\Payroll\CalculationInput;
-use OCA\Hrmq\Payroll\CalculationResult;
-use OCA\Hrmq\Payroll\PackRepository;
-use OCA\Hrmq\Payroll\PayrollCalculator;
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\CalculationResult;
+use OCA\Humaniq\Payroll\PackRepository;
+use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Payroll\TaxTables;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -470,7 +470,7 @@ final class PayrollReproduceService {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -478,7 +478,7 @@ final class PayrollReproduceService {
 	}//end objectService()
 
 	/**
-	 * @return string The configured hrmq register slug.
+	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();

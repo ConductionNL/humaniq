@@ -48,7 +48,7 @@ Also read directly at HEAD:
 - `openspec/architecture/adr-101-jurisdiction-packs.md` — *"The DSL cannot do VCR or
   netto-operations... Same for the 30%-ruling netto-operation (an inverse solve, not a forward
   chain)."* This sentence is scoped narrowly: it names the netto-operation (grossing up an agreed
-  NET salary under the ruling), not the forward exemption this change builds. hrmq issue #81
+  NET salary under the ruling), not the forward exemption this change builds. humaniq issue #81
   tracks the netto-operation as a likely first `phpStep` customer — untouched by this change.
 
 ## Goals / Non-Goals
@@ -400,7 +400,7 @@ every prior engine-touching change's anchor.
   (`jurisdiction-packs` REQ-JP-007) is deliberately not widened by this change (see D2/proposal).
 - **No auto-expiry**: a ruling past its `thirtyPercentRulingEndDate` but still `granted: true`
   keeps getting the exemption applied every payroll run — `nl-30-regeling-looptijd-5jaar` FLAGS
-  this (a detective control, `occ hrmq:rules:audit`) but does not block the run or silently
+  this (a detective control, `occ humaniq:rules:audit`) but does not block the run or silently
   auto-correct it. This matches the fleet's established trust boundary (`fleet-bijtelling` D6:
   "the same trust boundary payroll-core-engine already draws around Employee.grossMonthlySalary")
   and the task's own phrasing ("flags", not "blocks").

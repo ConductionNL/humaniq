@@ -25,17 +25,17 @@
 > `placeholder: true` leaf (employer Whk) is not referenced by the pack; it is an employer-level input
 > the service resolves. The scenario rests on a false premise about NL. See the change report.
 
-> **Numbering note.** hrmq's local ADR namespace lives in `openspec/architecture/` and today holds
+> **Numbering note.** humaniq's local ADR namespace lives in `openspec/architecture/` and today holds
 > exactly one record (`adr-001-information-architecture.md`). That number already collides with the
-> company-wide `hydra/openspec/architecture/adr-001-data-layer.md` — hrmq specs reference "ADR-001"
+> company-wide `hydra/openspec/architecture/adr-001-data-layer.md` — humaniq specs reference "ADR-001"
 > 257 times meaning the local IA record, while the same corpus references ADR-022/031/032 meaning
 > hydra's. Rather than deepen that ambiguity (ADR-002 is taken company-wide by API conventions, and
 > hydra's sequence runs to 062 and is still growing), this record opens a **local 100+ block**:
-> ADR-1xx is always hrmq-local. Renaming is a one-line change if the fleet prefers otherwise.
+> ADR-1xx is always humaniq-local. Renaming is a one-line change if the fleet prefers otherwise.
 
 ## Context
 
-hrmq owns the first open-source Dutch payroll engine. Its parameters are already data —
+humaniq owns the first open-source Dutch payroll engine. Its parameters are already data —
 `lib/Standards/tables/nl-2026.json` carries every 2026 rate, bracket and threshold as a
 `{value, source, verified}` leaf, and `SCHEMA.md` already promises that "a new tax year is a
 data-only change".
@@ -121,7 +121,7 @@ is the difference between a DSL and a remote-code-execution endpoint with extra 
 ### 3. The escape hatch names a handler; it can never define one
 
 A pack step may declare `op: phpStep, handler: "some-name"`. The interpreter resolves that name
-against a **compile-time allow-list** of handlers that already ship inside hrmq and implement a
+against a **compile-time allow-list** of handlers that already ship inside humaniq and implement a
 `JurisdictionStepHandlerInterface`. A pack supplies a *name* and parameters; it never supplies code,
 a class path, or a callable.
 
@@ -218,7 +218,7 @@ to route around.
 expressive than any DSL — arbitrary PHP always is.
 
 It fails the actual requirement. A country would arrive as a merged PR, a release, and a deploy —
-not as an upload. Third parties could not ship their own jurisdiction without commit rights to hrmq;
+not as an upload. Third parties could not ship their own jurisdiction without commit rights to humaniq;
 "exchange a pack like OpenBuild exchanges an app" becomes impossible by construction. It would also
 make every country's rounding arcana unauditable-by-diff: 40 countries means 40 hand-written chains
 with 40 opportunities to floor where they should ceil, and no shared validator that could ever notice.
@@ -238,5 +238,5 @@ The DSL's constraint is the point: a pack you cannot express is a pack you must 
 - **The DSL cannot do VCR or netto-operations.** Stated up front so nobody discovers it at
   implementation time and quietly widens `expr` to compensate. Widening `expr` into a general language
   would void decision 2 and is forbidden; those go to the hatch or to a future ADR.
-- **Trust surface grows.** hrmq gains an admin upload endpoint whose payload determines people's
+- **Trust surface grows.** humaniq gains an admin upload endpoint whose payload determines people's
   wages. Decisions 2, 3 and 4 exist entirely to make that acceptable; none of them is optional.

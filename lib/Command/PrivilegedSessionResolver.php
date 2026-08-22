@@ -4,7 +4,7 @@
  * Privileged Session Resolver
  *
  * The shared `--as-user` privileged-session establishment mechanism
- * (avg-dsr design.md D3) every `occ hrmq:avg:*` command uses BEFORE calling
+ * (avg-dsr design.md D3) every `occ humaniq:avg:*` command uses BEFORE calling
  * `AvgDsrService`/OpenRegister's `DsarService`: there is no ambient
  * Nextcloud request in a plain CLI invocation, hence no session
  * `IUserSession::getUser()` could return, and `DsarService::assertPrivileged()`
@@ -17,11 +17,11 @@
  * (REQ-DSR-004).
  *
  * `grep -rn IUserSession lib/Command/` (design.md Context) confirmed no
- * existing hrmq command established a user session -- this mechanism is
+ * existing humaniq command established a user session -- this mechanism is
  * genuinely new to this codebase, not a reused pattern.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -37,7 +37,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
 use OCP\IGroupManager;
 use OCP\IUserManager;
@@ -45,7 +45,7 @@ use OCP\IUserSession;
 
 /**
  * Resolves, validates, and establishes the `--as-user` privileged session
- * shared by every `occ hrmq:avg:*` command.
+ * shared by every `occ humaniq:avg:*` command.
  */
 final class PrivilegedSessionResolver {
 

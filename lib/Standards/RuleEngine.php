@@ -17,10 +17,10 @@
  * lib/Standards/Checks/. Only rules with a registered predicate are enforced
  * today; the rest of the corpus is catalogued and grows an executable check per
  * wave. The predicates are side-effect free and unit-tested; the lifecycle wiring
- * + object loading live in OCA\Hrmq\Lifecycle\RuleComplianceGuard.
+ * + object loading live in OCA\Humaniq\Lifecycle\RuleComplianceGuard.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards
+ * @package  OCA\Humaniq\Standards
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -36,7 +36,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards;
+namespace OCA\Humaniq\Standards;
 
 /**
  * Evaluates objects against applicable machine-checkable rules.
@@ -119,7 +119,7 @@ final class RuleEngine {
 	public static function providerSeedObjects(): array {
 		$objects = [];
 		foreach (self::providers() as $provider) {
-			if (in_array(\OCA\Hrmq\Standards\Checks\SeedsObjects::class, class_implements($provider), true) === false) {
+			if (in_array(\OCA\Humaniq\Standards\Checks\SeedsObjects::class, class_implements($provider), true) === false) {
 				continue;
 			}
 
@@ -145,7 +145,7 @@ final class RuleEngine {
 	public static function providerUpsertKeys(): array {
 		$keys = [];
 		foreach (self::providers() as $provider) {
-			if (in_array(\OCA\Hrmq\Standards\Checks\UpsertsObjects::class, class_implements($provider), true) === false) {
+			if (in_array(\OCA\Humaniq\Standards\Checks\UpsertsObjects::class, class_implements($provider), true) === false) {
 				continue;
 			}
 
@@ -160,7 +160,7 @@ final class RuleEngine {
 	/**
 	 * Discover the registered per-domain CheckProvider classes (memoised).
 	 *
-	 * @return array<int, class-string<\OCA\Hrmq\Standards\Checks\CheckProvider>>
+	 * @return array<int, class-string<\OCA\Humaniq\Standards\Checks\CheckProvider>>
 	 */
 	private static function providers(): array {
 		if (self::$providers !== null) {
@@ -169,9 +169,9 @@ final class RuleEngine {
 
 		$found = [];
 		foreach ((glob(__DIR__ . '/Checks/*.php') ?: []) as $file) {
-			$class = '\\OCA\\Hrmq\\Standards\\Checks\\' . basename($file, '.php');
+			$class = '\\OCA\\Humaniq\\Standards\\Checks\\' . basename($file, '.php');
 			if (class_exists($class) === true
-				&& in_array(\OCA\Hrmq\Standards\Checks\CheckProvider::class, class_implements($class), true) === true
+				&& in_array(\OCA\Humaniq\Standards\Checks\CheckProvider::class, class_implements($class), true) === true
 			) {
 				$found[] = $class;
 			}

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq PayrollRunApprovedGuard
+ * Humaniq PayrollRunApprovedGuard
  *
  * OpenRegister lifecycle guard for the PensionFiling `controleren` transition
  * (pension-filing-upa-mvp). It enforces the one precondition the declarative
@@ -25,7 +25,7 @@
  * `x-openregister-lifecycle.transitions.controleren.requires`.
  *
  * @category Lifecycle
- * @package  OCA\Hrmq\Lifecycle
+ * @package  OCA\Humaniq\Lifecycle
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -41,9 +41,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Lifecycle;
+namespace OCA\Humaniq\Lifecycle;
 
-use OCA\Hrmq\AppInfo\Application;
+use OCA\Humaniq\AppInfo\Application;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 use OCP\IAppConfig;
@@ -160,7 +160,7 @@ final class PayrollRunApprovedGuard implements LifecycleGuardInterface {
 		// have answered fatally.
 		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -169,6 +169,11 @@ final class PayrollRunApprovedGuard implements LifecycleGuardInterface {
 
 	/**
 	 * @return string The configured register slug.
+	 *
+	 * The 'hrmq' fallback is FROZEN across the Humaniq rename: OpenRegister's
+	 * ImportHandler resolves the register BY SLUG. Renaming it would create a
+	 * second, empty register and orphan every employee, contract, payslip and
+	 * payroll run already stored under the 'hrmq' slug.
 	 */
 	private function register(): string {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');

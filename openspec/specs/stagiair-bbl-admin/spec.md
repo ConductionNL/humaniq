@@ -67,7 +67,7 @@ TBD - created by archiving change stagiair-bbl-admin. Update Purpose after archi
 
 #### Scenario: An unsigned BPV past the start date is flagged
 - **GIVEN** a `Stagiair` with `startDate` in the past and `bpvOvereenkomstOndertekend: false`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** the record is reported with an `nl-bpv-overeenkomst-vereist` violation at severity `mandatory`
 
 #### Scenario: A signed BPV passes

@@ -3,7 +3,7 @@
 /**
  * Payroll Run Command
  *
- * `occ hrmq:payroll:run --period YYYY-MM [--administration ADM]
+ * `occ humaniq:payroll:run --period YYYY-MM [--administration ADM]
  * [--recalculate]` — the payroll-core-engine MVP trigger (design.md D4):
  * creates (or, with --recalculate, regenerates) the draft PayrollRun for the
  * period, generates one engine Payslip per active NL employee whose contract
@@ -13,7 +13,7 @@
  * but the initial `draft`.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,9 +29,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\PayrollRunService;
+use OCA\Humaniq\Service\PayrollRunService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -58,7 +58,7 @@ class PayrollRunCommand extends Command {
 	 * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-006
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:payroll:run')
+		$this->setName('humaniq:payroll:run')
 			->setDescription('Create (or with --recalculate regenerate) the draft PayrollRun + engine Payslips for a wage period.')
 			->addOption('period', null, InputOption::VALUE_REQUIRED, 'Wage period (YYYY-MM).')
 			->addOption('administration', null, InputOption::VALUE_REQUIRED, 'Administration id (defaults to the seed convention ADM-001).')
@@ -87,7 +87,7 @@ class PayrollRunCommand extends Command {
 
 		$result = $this->service->runFor($period, $administration, (bool)$input->getOption('recalculate'));
 
-		$output->writeln('<info>Hrmq payroll run</info>');
+		$output->writeln('<info>Humaniq payroll run</info>');
 		$output->writeln(sprintf('  periode        : %s', (string)$result['period']));
 		$output->writeln(sprintf('  administratie  : %s', (string)$result['administrationId']));
 		$output->writeln(sprintf('  run            : %s', (string)($result['runId'] ?? 'geen')));

@@ -56,7 +56,7 @@
  * surface; a zero or a fabricated default would book a case as free.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -70,7 +70,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;

@@ -1,8 +1,8 @@
 # Delta — uitzend-flexpool
 
 Modernises the 2026-05 `spec/uitzend-flexpool-integration` draft against current HEAD, reversing
-its central design choice: hrmq serves the **uitzendbureau** (the uitzendkracht's actual employer
-under WAADI), not the inlener, because hrmq's shipped product is a payroll engine and an inlener
+its central design choice: humaniq serves the **uitzendbureau** (the uitzendkracht's actual employer
+under WAADI), not the inlener, because humaniq's shipped product is a payroll engine and an inlener
 has no payroll relationship to a temp worker at all. The existing `EmploymentContract.type: agency`
 enum value — present in the schema but almost entirely unimplemented — gains the three fields and
 two rules needed to make ABU/NBBU fasensysteem, uitzendbeding and inlenersbeloning tracking real,
@@ -11,13 +11,13 @@ delivered rostering/time-attendance overlap.
 
 ## ADDED Requirements
 
-### Requirement: hrmq SHALL model the uitzendkracht as the agency's own Employee, never a separate inlener-side entity (REQ-UITZ-001)
+### Requirement: humaniq SHALL model the uitzendkracht as the agency's own Employee, never a separate inlener-side entity (REQ-UITZ-001)
 
-An uitzendkracht placed via an uitzendbureau SHALL be represented as an `Employee` with an `EmploymentContract` of `type: agency`, scoped to the administratie of the uitzendbureau running this hrmq instance. This change SHALL NOT introduce a `Bureau`, `InhuurOpdracht`, or any other schema representing a third-party vendor relationship or an inlener's booking of external labour.
+An uitzendkracht placed via an uitzendbureau SHALL be represented as an `Employee` with an `EmploymentContract` of `type: agency`, scoped to the administratie of the uitzendbureau running this humaniq instance. This change SHALL NOT introduce a `Bureau`, `InhuurOpdracht`, or any other schema representing a third-party vendor relationship or an inlener's booking of external labour.
 
 #### Scenario: An agency-type contract is an ordinary Employee/EmploymentContract pair
 - **GIVEN** an uitzendkracht placed at a client site
-- **WHEN** their record is created in hrmq
+- **WHEN** their record is created in humaniq
 - **THEN** it is one `Employee` object plus one `EmploymentContract` object with `type: agency` — no `Bureau`/`InhuurOpdracht` object is created, because neither schema exists
 
 #### Scenario: No inlener-side schema exists in the register
@@ -31,7 +31,7 @@ An uitzendkracht placed via an uitzendbureau SHALL be represented as an `Employe
 
 #### Scenario: Beding true in fase A passes
 - **GIVEN** an `agency`-type `EmploymentContract` with `uitzendFase: A` and `uitzendbedingVanToepassing: true`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** no `nl-uitzendbeding-alleen-fase-a` violation is reported
 
 #### Scenario: Beding true past fase A is flagged

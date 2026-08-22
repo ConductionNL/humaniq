@@ -11,10 +11,10 @@
  * The escape-hatch handler allow-list is injected rather than built here, so a
  * caller can construct an interpreter with a different (still compile-time)
  * allow-list — for tests. It defaults to the shipped registry, which is EMPTY
- * (design.md D9: hrmq registers zero handlers; NL needs none).
+ * (design.md D9: humaniq registers zero handlers; NL needs none).
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll\Dsl
+ * @package  OCA\Humaniq\Payroll\Dsl
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -30,20 +30,20 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll\Dsl;
+namespace OCA\Humaniq\Payroll\Dsl;
 
-use OCA\Hrmq\Payroll\Dsl\Ops\BracketOp;
-use OCA\Hrmq\Payroll\Dsl\Ops\CappedRateOp;
-use OCA\Hrmq\Payroll\Dsl\Ops\ClampOp;
-use OCA\Hrmq\Payroll\Dsl\Ops\ExprOp;
-use OCA\Hrmq\Payroll\Dsl\Ops\MatchOp;
-use OCA\Hrmq\Payroll\Dsl\Ops\OpRegistry;
-use OCA\Hrmq\Payroll\Dsl\Ops\PhpStepOp;
-use OCA\Hrmq\Payroll\Dsl\Ops\PiecewiseAccrueOp;
-use OCA\Hrmq\Payroll\Dsl\Ops\QuantizeOp;
-use OCA\Hrmq\Payroll\Dsl\Ops\RateOp;
-use OCA\Hrmq\Payroll\Dsl\Ops\TaperOp;
-use OCA\Hrmq\Payroll\StepHandlerRegistry;
+use OCA\Humaniq\Payroll\Dsl\Ops\BracketOp;
+use OCA\Humaniq\Payroll\Dsl\Ops\CappedRateOp;
+use OCA\Humaniq\Payroll\Dsl\Ops\ClampOp;
+use OCA\Humaniq\Payroll\Dsl\Ops\ExprOp;
+use OCA\Humaniq\Payroll\Dsl\Ops\MatchOp;
+use OCA\Humaniq\Payroll\Dsl\Ops\OpRegistry;
+use OCA\Humaniq\Payroll\Dsl\Ops\PhpStepOp;
+use OCA\Humaniq\Payroll\Dsl\Ops\PiecewiseAccrueOp;
+use OCA\Humaniq\Payroll\Dsl\Ops\QuantizeOp;
+use OCA\Humaniq\Payroll\Dsl\Ops\RateOp;
+use OCA\Humaniq\Payroll\Dsl\Ops\TaperOp;
+use OCA\Humaniq\Payroll\StepHandlerRegistry;
 
 /**
  * Builds and holds the closed DSL vocabulary.

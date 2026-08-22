@@ -6,6 +6,6 @@
   "link": {
     "type": "generated-index",
     "title": "Getting started",
-    "description": "Install HRMQ and import the OpenRegister register that backs every HR and payroll object."
+    "description": "Install Humaniq and import the OpenRegister register that backs every HR and payroll object."
   }
 }

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for the hrmq PortalContributionProvider.
+ * Unit tests for the humaniq PortalContributionProvider.
  *
  * Pins the ADR-046 contract-v2 contribution: the dual v2/v1 audience
  * declaration (external-employee + client), the fail-closed null for unknown
@@ -13,7 +13,7 @@
  * container are involved.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Portal
+ * @package  OCA\Humaniq\Tests\Unit\Portal
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,9 +29,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Portal;
+namespace OCA\Humaniq\Tests\Unit\Portal;
 
-use OCA\Hrmq\Portal\PortalContributionProvider;
+use OCA\Humaniq\Portal\PortalContributionProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -60,7 +60,7 @@ class PortalContributionProviderTest extends TestCase {
 		'organisation' => '00000000-0000-0000-0000-000000000000',
 		'trust' => 'low',
 		'claims' => [
-			'hrmq' => ['employeeId' => '00000000-0000-0000-0000-000000000000'],
+			'humaniq' => ['employeeId' => '00000000-0000-0000-0000-000000000000'],
 		],
 	];
 
@@ -75,7 +75,7 @@ class PortalContributionProviderTest extends TestCase {
 		'organisation' => '00000000-0000-0000-0000-000000000000',
 		'trust' => 'low',
 		'claims' => [
-			'hrmq' => ['clientId' => '00000000-0000-0000-0000-000000000000'],
+			'humaniq' => ['clientId' => '00000000-0000-0000-0000-000000000000'],
 		],
 	];
 
@@ -128,7 +128,7 @@ class PortalContributionProviderTest extends TestCase {
 		$this->assertNotContains('billable', $collection['fields']);
 		$this->assertNotContains('costCenter', $collection['fields']);
 		// Read-only: no rowActions and no actions — approve/reject is blocked by
-		// hrmq's Timesheet lifecycle hook (needs A6 / a portal-aware hook).
+		// humaniq's Timesheet lifecycle hook (needs A6 / a portal-aware hook).
 		$this->assertArrayNotHasKey('rowActions', $collection);
 		$this->assertSame([], $manifest['actions']);
 
@@ -178,7 +178,7 @@ class PortalContributionProviderTest extends TestCase {
 		$manifest = $this->provider->getContribution(self::EMPLOYEE_SUBJECT);
 
 		$this->assertIsArray($manifest);
-		$this->assertSame('HRMQ', $manifest['label']);
+		$this->assertSame('Humaniq', $manifest['label']);
 		$this->assertSame([], $manifest['notifications']);
 
 		$expected = [
@@ -296,7 +296,7 @@ class PortalContributionProviderTest extends TestCase {
 		$manifest = $this->provider->getContribution(self::CLIENT_SUBJECT);
 
 		$this->assertIsArray($manifest);
-		$this->assertSame('HRMQ', $manifest['label']);
+		$this->assertSame('Humaniq', $manifest['label']);
 		$this->assertSame([], $manifest['actions']);
 		$this->assertSame([], $manifest['notifications']);
 		$this->assertCount(1, $manifest['collections']);

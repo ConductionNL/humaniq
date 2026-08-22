@@ -7,13 +7,13 @@ built_by: openspec/changes/archive/2026-07-14-proforma-payslip
 # proforma-payslip Specification
 
 **Status**: done
-**Scope**: hrmq (`depends_on: [payroll-core-engine]` — reuses the pure calculator AS-IS, adds ZERO tax logic)
+**Scope**: humaniq (`depends_on: [payroll-core-engine]` — reuses the pure calculator AS-IS, adds ZERO tax logic)
 **OpenSpec changes**:
 - [proforma-payslip](../../changes/archive/2026-07-14-proforma-payslip/) _(archived 2026-07-14)_ —
   a persist-nothing front door to the existing `payroll-core-engine` calculator: a stateless
   `ProformaPayslipService`, one RBAC-gated `POST /api/payroll/proforma` endpoint
   (`PayrollController::proforma`, resolve-first capability probe → 404), one occ command
-  `hrmq:payroll:proforma`, and a manifest "Simuleer loonstrook" `type: custom` page + host-app SFC.
+  `humaniq:payroll:proforma`, and a manifest "Simuleer loonstrook" `type: custom` page + host-app SFC.
   The `PayrollCalculator`, `CalculationInput`, `CalculationResult` and `TaxTables` are consumed
   unchanged (kind: code)
 
@@ -81,7 +81,7 @@ or written.
 
 ### Requirement: An occ command SHALL compute the same breakdown from CLI flags (REQ-PRO-003)
 
-The `hrmq:payroll:proforma` occ command SHALL accept the flags gross, table (wit/groen),
+The `humaniq:payroll:proforma` occ command SHALL accept the flags gross, table (wit/groen),
 date-of-birth, parttime, bijzonder, period, aof and whk, and SHALL call the same
 `ProformaPayslipService::simulate()` and print the full breakdown (bruto, loonheffing,
 arbeidskorting, volksverzekeringen, Zvw, werknemersverzekeringen, werkgeverslasten,
@@ -90,14 +90,14 @@ vakantiegeldreservering, netto, applied rate). It SHALL persist nothing and SHAL
 browser and no DB access.
 
 #### Scenario: The command prints the anchor breakdown
-- **GIVEN** `occ hrmq:payroll:proforma --gross 3800 --table wit --period 2026-02`
+- **GIVEN** `occ humaniq:payroll:proforma --gross 3800 --table wit --period 2026-02`
 - **WHEN** the command runs
 - **THEN** it prints netto €3.081,17 (the engine anchor) and exits 0, and the register object count is
   unchanged
 
 ### Requirement: The proforma surface SHALL be RBAC-gated and collapse to 404 for non-HR callers (REQ-PRO-004)
 
-`PayrollController::proforma` SHALL resolve the caller's access to the hrmq payroll register/schema
+`PayrollController::proforma` SHALL resolve the caller's access to the humaniq payroll register/schema
 through the container-provided ObjectService under the caller's **ambient RBAC** BEFORE any
 computation (the `PayrollController::authorizeRun` resolve-first pattern applied to a capability rather
 than a row). A caller whose RBAC cannot see the payroll register — i.e. anyone who could not see a real
@@ -106,7 +106,7 @@ the simulator surface is never leaked. The probe SHALL be read-only (it reads no
 and SHALL write nothing.
 
 #### Scenario: A non-HR caller cannot reach the engine
-- **GIVEN** an authenticated user whose RBAC cannot resolve the hrmq payroll register
+- **GIVEN** an authenticated user whose RBAC cannot resolve the humaniq payroll register
 - **WHEN** they POST `/api/payroll/proforma`
 - **THEN** the response is HTTP 404 and no calculation or write occurs
 
@@ -133,7 +133,7 @@ write. `npm run check:manifest` MUST pass.
   passes
 
 #### Scenario: The menu entry opens the simulator without touching the register
-@e2e exclude the custom-page SFC + endpoint wiring is covered by the service/controller unit tests; the app-level e2e suite does not yet exist (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude the custom-page SFC + endpoint wiring is covered by the service/controller unit tests; the app-level e2e suite does not yet exist (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** an HR user opens "Simuleer loonstrook" from the menu
 - **WHEN** they enter €3.800 wit and submit
 - **THEN** the breakdown (incl. netto €3.081,17) is shown and no PayrollRun/Payslip/Employee is created

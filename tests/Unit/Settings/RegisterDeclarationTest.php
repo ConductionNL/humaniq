@@ -1,22 +1,22 @@
 <?php
 
 /**
- * Register-declaration tests for lib/Settings/hrmq_register.json.
+ * Register-declaration tests for lib/Settings/humaniq_register.json.
  *
  * WHY THIS FILE EXISTS
  * --------------------
- * hrmq_register.json used to carry NO `components.registers` section at all —
+ * humaniq_register.json used to carry NO `components.registers` section at all —
  * only `info`, `x-openregister` and an empty `components.schemas`, with all 54
  * schemas arriving from the `register.d/*.json` fragments (ADR-037).
  *
  * OpenRegister's ImportHandler creates registers from EXACTLY ONE place:
  * `$data['components']['registers']`. With that section absent, an import of
- * hrmq's configuration created 54 schemas and ZERO registers — and then
+ * humaniq's configuration created 54 schemas and ZERO registers — and then
  * silently skipped every seed object, because object import resolves
  * `@self.register` through the register map the registers section populates
  * ("Skipping object import - register or schema not found in maps").
  *
- * The visible symptom was not an error. `occ app:enable hrmq` exited 0, the
+ * The visible symptom was not an error. `occ app:enable humaniq` exited 0, the
  * SPA booted, and every one of the 176 manifest page configs that names
  * `register: "hrmq"` resolved to nothing, so the router fell back to its
  * default route. In CI that read as 68 failed / 2 passed — and BOTH "passes"
@@ -31,7 +31,7 @@
  *      different changes that never touch this file.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Settings
+ * @package  OCA\Humaniq\Tests\Unit\Settings
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -47,7 +47,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Settings;
+namespace OCA\Humaniq\Tests\Unit\Settings;
 
 use PHPUnit\Framework\TestCase;
 
@@ -73,17 +73,17 @@ class RegisterDeclarationTest extends TestCase {
 	private string $settingsDir;
 
 	/**
-	 * Load and decode hrmq_register.json.
+	 * Load and decode humaniq_register.json.
 	 *
 	 * @return void
 	 */
 	protected function setUp(): void {
 		$this->settingsDir = dirname(__DIR__, 3) . '/lib/Settings';
-		$path = $this->settingsDir . '/hrmq_register.json';
-		$this->assertFileExists($path, 'lib/Settings/hrmq_register.json must exist.');
+		$path = $this->settingsDir . '/humaniq_register.json';
+		$this->assertFileExists($path, 'lib/Settings/humaniq_register.json must exist.');
 
 		$decoded = json_decode(file_get_contents($path), true);
-		$this->assertIsArray($decoded, 'hrmq_register.json must be valid JSON.');
+		$this->assertIsArray($decoded, 'humaniq_register.json must be valid JSON.');
 
 		$this->config = $decoded;
 
@@ -100,7 +100,7 @@ class RegisterDeclarationTest extends TestCase {
 
 		$this->assertIsArray(
 			$registers,
-			'hrmq_register.json must declare components.registers — OpenRegister\'s ImportHandler '
+			'humaniq_register.json must declare components.registers — OpenRegister\'s ImportHandler '
 			. 'creates registers from that key and nowhere else, so without it an import creates '
 			. 'schemas but no register and every manifest page resolves to nothing.'
 		);

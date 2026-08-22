@@ -9,7 +9,7 @@
  * shape (`YYYY-MM` / `YYYY-Www` / `YYYY-Wnn-D`) plus the unrecognised case.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Event
+ * @package  OCA\Humaniq\Tests\Unit\Event
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -20,20 +20,20 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md
+ * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Event;
+namespace OCA\Humaniq\Tests\Unit\Event;
 
-use OCA\Hrmq\Event\TimesheetApprovedEvent;
+use OCA\Humaniq\Event\TimesheetApprovedEvent;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for TimesheetApprovedEvent.
  *
- * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md
+ * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md
  */
 class TimesheetApprovedEventTest extends TestCase {
 
@@ -42,7 +42,7 @@ class TimesheetApprovedEventTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-A-typed-cross-app-event-SHALL-accompany-the-approved-timesheet-webhook
 	 */
 	public function testGettersExposeConstructorValues(): void {
 		$event = new TimesheetApprovedEvent(
@@ -88,7 +88,7 @@ class TimesheetApprovedEventTest extends TestCase {
 	 *
 	 * @dataProvider periodGrainProvider
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approved-typed-event/specs/hrmq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
+	 * @spec openspec/changes/humaniq-timesheet-approved-typed-event/specs/humaniq-timesheet-approved-typed-event/spec.md#Requirement:-The-typed-event-SHALL-carry-the-raw-period-plus-an-explicit-grain-marker
 	 */
 	public function testClassifyPeriodGrain(string $period, string $expectedGrain): void {
 		$this->assertSame($expectedGrain, TimesheetApprovedEvent::classifyPeriodGrain($period));

@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-verzuim",
+    "x-humaniq-fragment": "hr-verzuim",
     "components": {
         "schemas": {
             "SickLeaveCase": {

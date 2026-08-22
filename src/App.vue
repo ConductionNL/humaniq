@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <!--
- HRMQ app shell. Mounts CnAppRoot with the bundled manifest. Every page is a
+ Humaniq app shell. Mounts CnAppRoot with the bundled manifest. Every page is a
  declarative `type: "index"` / `type: "detail"` page rendered generically by
  the @conduction/nextcloud-vue library from its register+schema config — there
  are no bespoke page components, so the registry is empty. CnAppRoot reads
@@ -28,7 +28,7 @@
 		:manifest="effectiveManifest"
 		:registry="registry"
 		:pageTypes="pageTypes"
-		appId="hrmq"
+		appId="humaniq"
 		:translate="translateForApp" />
 </template>
 
@@ -74,7 +74,7 @@ export default {
 	 * @return {void}
 	 */
 	setup() {
-		const initialAdministrationId = loadState('hrmq', 'activeAdministrationId', '')
+		const initialAdministrationId = loadState('humaniq', 'activeAdministrationId', '')
 		const cnWorkspaceContext = ref(
 			initialAdministrationId ? { activeAdministrationId: initialAdministrationId } : {},
 		)
@@ -87,7 +87,7 @@ export default {
 		 * merged in from the `activeAdministrationMode` initial state
 		 * `PageController::index()` stamps (single-person-modes REQ-SPM-002/D2).
 		 * This is the FIRST real consumer of nc-vue's `visibleIf` primitive in
-		 * hrmq: `CnAppNav` evaluates each menu item's `visibleIf` against
+		 * humaniq: `CnAppNav` evaluates each menu item's `visibleIf` against
 		 * `effectiveManifest.runtime` (`utils/visibleIfContext.js`), so a
 		 * `{"user.administrationMode": {...}}` predicate resolves against the
 		 * key merged here. Defaults to `standard` (the no-menu-change default)
@@ -98,7 +98,7 @@ export default {
 		 * @return {object} The bundled manifest with runtime.user.administrationMode set.
 		 */
 		effectiveManifest() {
-			const mode = loadState('hrmq', 'activeAdministrationMode', 'standard') || 'standard'
+			const mode = loadState('humaniq', 'activeAdministrationMode', 'standard') || 'standard'
 			const base = this.manifest || {}
 			const runtime = { ...(base.runtime || {}) }
 			runtime.user = { ...(runtime.user || {}), administrationMode: mode }
@@ -107,9 +107,9 @@ export default {
 	},
 
 	methods: {
-		// Translate library/manifest strings against the hrmq l10n domain.
+		// Translate library/manifest strings against the humaniq l10n domain.
 		translateForApp(key, vars) {
-			return ncT('hrmq', key, vars)
+			return ncT('humaniq', key, vars)
 		},
 	},
 }

@@ -23,7 +23,7 @@
  * the same invisible hole in a different place.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit
+ * @package  OCA\Humaniq\Tests\Unit
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -39,9 +39,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit;
+namespace OCA\Humaniq\Tests\Unit;
 
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -65,37 +65,37 @@ class OpenRegisterGuardContractTest extends TestCase {
 	 */
 	public static function guardedClasses(): array {
 		$classes = [
-			'OCA\Hrmq\BackgroundJob\LeaveAccrualJob',
-			'OCA\Hrmq\Command\AvgDsrRectifyCommand',
-			'OCA\Hrmq\Controller\AvgDsrController',
-			'OCA\Hrmq\Controller\CompController',
-			'OCA\Hrmq\Controller\DocumentController',
-			'OCA\Hrmq\Controller\EmployerCostRateController',
-			'OCA\Hrmq\Controller\LeaveController',
-			'OCA\Hrmq\Controller\LoonbeslagController',
-			'OCA\Hrmq\Controller\PayrollController',
-			'OCA\Hrmq\Controller\RosterController',
-			'OCA\Hrmq\Service\AdministrationService',
-			'OCA\Hrmq\Service\AnalyticsService',
-			'OCA\Hrmq\Service\AvgDsrRequestStore',
-			'OCA\Hrmq\Service\AvgDsrService',
-			'OCA\Hrmq\Service\CompAdjustmentService',
-			'OCA\Hrmq\Service\HrDocumentService',
-			'OCA\Hrmq\Service\InterviewRepository',
-			'OCA\Hrmq\Service\JurisdictionPackService',
-			'OCA\Hrmq\Service\LeaveBuySellSettlementService',
-			'OCA\Hrmq\Service\LeaveCalendarService',
-			'OCA\Hrmq\Service\ObligationsService',
-			'OCA\Hrmq\Service\OfferApplicationRepository',
-			'OCA\Hrmq\Service\PayrollAuditVerificationService',
-			'OCA\Hrmq\Service\PayrollGLPostService',
-			'OCA\Hrmq\Service\PayrollMutationService',
-			'OCA\Hrmq\Service\PayrollNetPayService',
-			'OCA\Hrmq\Service\PayrollReproduceService',
-			'OCA\Hrmq\Service\PayrollRunService',
-			'OCA\Hrmq\Service\ReceiptExtractionRepository',
-			'OCA\Hrmq\Service\RetroAdjustmentService',
-			'OCA\Hrmq\Service\WkrService',
+			'OCA\Humaniq\BackgroundJob\LeaveAccrualJob',
+			'OCA\Humaniq\Command\AvgDsrRectifyCommand',
+			'OCA\Humaniq\Controller\AvgDsrController',
+			'OCA\Humaniq\Controller\CompController',
+			'OCA\Humaniq\Controller\DocumentController',
+			'OCA\Humaniq\Controller\EmployerCostRateController',
+			'OCA\Humaniq\Controller\LeaveController',
+			'OCA\Humaniq\Controller\LoonbeslagController',
+			'OCA\Humaniq\Controller\PayrollController',
+			'OCA\Humaniq\Controller\RosterController',
+			'OCA\Humaniq\Service\AdministrationService',
+			'OCA\Humaniq\Service\AnalyticsService',
+			'OCA\Humaniq\Service\AvgDsrRequestStore',
+			'OCA\Humaniq\Service\AvgDsrService',
+			'OCA\Humaniq\Service\CompAdjustmentService',
+			'OCA\Humaniq\Service\HrDocumentService',
+			'OCA\Humaniq\Service\InterviewRepository',
+			'OCA\Humaniq\Service\JurisdictionPackService',
+			'OCA\Humaniq\Service\LeaveBuySellSettlementService',
+			'OCA\Humaniq\Service\LeaveCalendarService',
+			'OCA\Humaniq\Service\ObligationsService',
+			'OCA\Humaniq\Service\OfferApplicationRepository',
+			'OCA\Humaniq\Service\PayrollAuditVerificationService',
+			'OCA\Humaniq\Service\PayrollGLPostService',
+			'OCA\Humaniq\Service\PayrollMutationService',
+			'OCA\Humaniq\Service\PayrollNetPayService',
+			'OCA\Humaniq\Service\PayrollReproduceService',
+			'OCA\Humaniq\Service\PayrollRunService',
+			'OCA\Humaniq\Service\ReceiptExtractionRepository',
+			'OCA\Humaniq\Service\RetroAdjustmentService',
+			'OCA\Humaniq\Service\WkrService',
 		];
 
 		$out = [];

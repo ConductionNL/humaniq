@@ -18,7 +18,7 @@
  * That mattered the moment CI existed. `tests/bootstrap.php` requires the
  * server's `lib/base.php` whenever a full checkout is present — which is
  * always true under the shared quality workflow, where the app is mounted at
- * `server/apps/hrmq` — and base.php hardens libxml with
+ * `server/apps/humaniq` — and base.php hardens libxml with
  * `libxml_set_external_entity_loader(static fn () => null)`. Under that loader
  * `simplexml_load_file()` resolves even the PRIMARY document through the
  * resolver and so returns false with "Failed to load external entity because
@@ -26,13 +26,13 @@
  * `simplexml_load_string()` takes the bytes directly and is unaffected.
  *
  * So the test passed on every developer machine (no server checkout, no
- * hardening) and failed on all six PHPUnit legs of hrmq's first-ever CI run,
+ * hardening) and failed on all six PHPUnit legs of humaniq's first-ever CI run,
  * reporting "this makes the app uninstallable" — nine seconds after
- * `occ app:enable hrmq` had printed "hrmq 0.2.0 enabled" in the same job.
+ * `occ app:enable humaniq` had printed "humaniq 0.2.0 enabled" in the same job.
  * A false RED that named the opposite of the truth.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit
+ * @package  OCA\Humaniq\Tests\Unit
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -46,7 +46,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit;
+namespace OCA\Humaniq\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 
