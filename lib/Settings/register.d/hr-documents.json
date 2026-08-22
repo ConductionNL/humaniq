@@ -28,14 +28,14 @@
                             "jaaropgaaf"
                         ],
                         "title": "Document type",
-                        "description": "Which standard HR document this record represents. Enum append-only: renaming a value later is breaking, adding one is not. loonstrook/jaaropgaaf added by payslip-pdf-docudesk."
+                        "description": "Which standard document this is.", "x-notes": "Which standard HR document this record represents. Enum append-only: renaming a value later is breaking, adding one is not. loonstrook/jaaropgaaf added by payslip-pdf-docudesk."
                     },
                     "employeeId": {
                         "type": "string",
                         "format": "uuid",
                         "$ref": "Employee",
                         "title": "Employee",
-                        "description": "Reference to the Employee this document is for."
+                        "description": "Who this document is for.", "x-notes": "Reference to the Employee this document is for."
                     },
                     "contractId": {
                         "type": "string",
@@ -43,7 +43,7 @@
                         "$ref": "EmploymentContract",
                         "nullable": true,
                         "title": "Contract",
-                        "description": "Reference to the EmploymentContract this document evidences -- required in practice for arbeidsovereenkomst; null for employee-level document types (aanbiedingsbrief/werkgeversverklaring/getuigschrift/loonstrook/jaaropgaaf)."
+                        "description": "The contract this document evidences. Required for an employment contract; leave empty for documents about the person rather than the contract.", "x-notes": "Reference to the EmploymentContract this document evidences -- required in practice for arbeidsovereenkomst; null for employee-level document types (aanbiedingsbrief/werkgeversverklaring/getuigschrift/loonstrook/jaaropgaaf)."
                     },
                     "payslipId": {
                         "type": "string",
@@ -51,7 +51,7 @@
                         "$ref": "Payslip",
                         "nullable": true,
                         "title": "Payslip",
-                        "description": "Reference to the Payslip this loonstrook document renders (payslip-pdf-docudesk) -- set only on documentType: loonstrook; null on every other type."
+                        "description": "The payslip this document renders. Only for a payslip document.", "x-notes": "Reference to the Payslip this loonstrook document renders (payslip-pdf-docudesk) -- set only on documentType: loonstrook; null on every other type."
                     },
                     "jaaropgaafId": {
                         "type": "string",
@@ -59,13 +59,13 @@
                         "$ref": "Jaaropgaaf",
                         "nullable": true,
                         "title": "Annual statement",
-                        "description": "Reference to the Jaaropgaaf annual aggregate this document renders (payslip-pdf-docudesk) -- set only on documentType: jaaropgaaf; null on every other type."
+                        "description": "The annual statement this document renders. Only for an annual statement.", "x-notes": "Reference to the Jaaropgaaf annual aggregate this document renders (payslip-pdf-docudesk) -- set only on documentType: jaaropgaaf; null on every other type."
                     },
                     "templateRef": {
                         "type": "string",
                         "nullable": true,
                         "title": "Template",
-                        "description": "The docudesk template UUID actually used to render this document -- plain string, NOT $ref, because it targets another app's register (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."
+                        "description": "The template used to produce this document.", "x-notes": "The docudesk template UUID actually used to render this document -- plain string, NOT $ref, because it targets another app's register (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."
                     },
                     "status": {
                         "type": "string",
@@ -78,26 +78,26 @@
                         ],
                         "default": "pending",
                         "title": "Status",
-                        "description": "Outcome of this generation attempt. failed/skipped-no-docudesk are superseded by a retry; only one pending/generated record may exist per (contract|employee, documentType)."
+                        "description": "How this generation attempt ended. A failed or skipped attempt is replaced by a retry.", "x-notes": "Outcome of this generation attempt. failed/skipped-no-docudesk are superseded by a retry; only one pending/generated record may exist per (contract|employee, documentType)."
                     },
                     "filePath": {
                         "type": "string",
                         "nullable": true,
                         "title": "File path",
-                        "description": "Path of the stored PDF in this object's own OpenRegister folder (written via FileService::addFile), or null while pending/failed/skipped."
+                        "description": "Where the finished PDF is stored. Empty while it is still pending or the attempt failed.", "x-notes": "Path of the stored PDF in this object's own OpenRegister folder (written via FileService::addFile), or null while pending/failed/skipped."
                     },
                     "errorMessage": {
                         "type": "string",
                         "nullable": true,
                         "title": "Error message",
-                        "description": "Failure or skip diagnostic (e.g. docudesk unavailable, ambiguous/missing template, storage failure)."
+                        "description": "Why it failed or was skipped, for example a missing template or storage problem.", "x-notes": "Failure or skip diagnostic (e.g. docudesk unavailable, ambiguous/missing template, storage failure)."
                     },
                     "generatedAt": {
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
                         "title": "Generated at",
-                        "description": "When the PDF was produced by docudesk and stored on this object's folder."
+                        "description": "When the PDF was produced and filed.", "x-notes": "When the PDF was produced by docudesk and stored on this object's folder."
                     }
                 }
             },
@@ -121,7 +121,7 @@
                         "format": "uuid",
                         "$ref": "Employee",
                         "title": "Employee",
-                        "description": "Reference to the Employee this annual statement is for."
+                        "description": "Who this annual statement is for.", "x-notes": "Reference to the Employee this annual statement is for."
                     },
                     "year": {
                         "type": "integer",
@@ -131,32 +131,32 @@
                     "totalGrossPay": {
                         "type": "number",
                         "title": "Total gross pay",
-                        "description": "Sum of Payslip.grossPay across the year's payslips (the jaaropgaaf 'loon' column)."
+                        "description": "Total gross pay over the year — the 'loon' line on the annual statement.", "x-notes": "Sum of Payslip.grossPay across the year's payslips (the jaaropgaaf 'loon' column)."
                     },
                     "totalLoonheffing": {
                         "type": "number",
                         "title": "Total loonheffing",
-                        "description": "Sum of Payslip.loonheffing across the year's payslips."
+                        "description": "Total payroll tax withheld over the year.", "x-notes": "Sum of Payslip.loonheffing across the year's payslips."
                     },
                     "totalNettoPay": {
                         "type": "number",
                         "title": "Total net pay",
-                        "description": "Sum of Payslip.nettoPay across the year's payslips."
+                        "description": "Total net pay over the year.", "x-notes": "Sum of Payslip.nettoPay across the year's payslips."
                     },
                     "totalZvwWithheld": {
                         "type": "number",
                         "title": "Total Zvw withheld",
-                        "description": "Sum of Payslip.zvw ONLY where zvwMode == 'inhouding' -- the employer levy (werkgeversheffing) is never a werknemersaandeel and is excluded from this sum."
+                        "description": "Total health insurance contribution withheld from the employee over the year. The employer levy is not part of this.", "x-notes": "Sum of Payslip.zvw ONLY where zvwMode == 'inhouding' -- the employer levy (werkgeversheffing) is never a werknemersaandeel and is excluded from this sum."
                     },
                     "totalPensionContribution": {
                         "type": "number",
                         "title": "Total pension contribution",
-                        "description": "Sum of Payslip.pensionContribution across the year's payslips."
+                        "description": "Total pension contribution over the year.", "x-notes": "Sum of Payslip.pensionContribution across the year's payslips."
                     },
                     "totalVakantiegeldReserved": {
                         "type": "number",
                         "title": "Total vakantiegeld reserved",
-                        "description": "Sum of Payslip.vakantiegeldReserved across the year's payslips -- the reservation, not the payout."
+                        "description": "Total holiday allowance set aside over the year — what was reserved, not what was paid out.", "x-notes": "Sum of Payslip.vakantiegeldReserved across the year's payslips -- the reservation, not the payout."
                     },
                     "payPeriodCount": {
                         "type": "integer",
@@ -167,13 +167,13 @@
                         "type": "number",
                         "nullable": true,
                         "title": "Employment tax credit applied",
-                        "description": "Statutory jaaropgaaf line for the applied arbeidskorting -- stays null because no Payslip field carries arbeidskorting today (a payroll-core follow-up); never a fabricated 0.00 presented as fact."
+                        "description": "The employment tax credit applied over the year. Stays empty until payroll records it — better empty than a made-up zero.", "x-notes": "Statutory jaaropgaaf line for the applied arbeidskorting -- stays null because no Payslip field carries arbeidskorting today (a payroll-core follow-up); never a fabricated 0.00 presented as fact."
                     },
                     "loonheffingennummer": {
                         "type": "string",
                         "nullable": true,
                         "title": "Payroll tax number",
-                        "description": "Employer loonheffingennummer, snapshotted from configuration at aggregation time."
+                        "description": "The employer's payroll tax number, taken from the settings when this statement was produced.", "x-notes": "Employer loonheffingennummer, snapshotted from configuration at aggregation time."
                     },
                     "aggregatedAt": {
                         "type": "string",

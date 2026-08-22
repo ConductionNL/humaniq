@@ -49,7 +49,7 @@
                     "ownerType": {
                         "type": "string",
                         "title": "Owner type",
-                        "description": "Which owner relation is authoritative for this objective. Enum append-only.",
+                        "description": "Whether this objective belongs to a person or to a team.", "x-notes": "Which owner relation is authoritative for this objective. Enum append-only.",
                         "x-enum-labels": {"employee": "Employee", "team": "Team"},
                         "enum": [
                             "employee",
@@ -62,7 +62,7 @@
                         "$ref": "Employee",
                         "nullable": true,
                         "title": "Employee",
-                        "description": "The owning Employee when ownerType is employee. Drives the EmployeeDetail \"Doelen & OKR's\" row. Nullable: null when ownerType is team."
+                        "description": "The employee who owns this objective. Fill this in when the owner is a person.", "x-notes": "The owning Employee when ownerType is employee. Drives the EmployeeDetail \"Doelen & OKR's\" row. Nullable: null when ownerType is team."
                     },
                     "orgUnitId": {
                         "type": "string",
@@ -70,7 +70,7 @@
                         "$ref": "OrgUnit",
                         "nullable": true,
                         "title": "Org unit",
-                        "description": "The owning OrgUnit (team) when ownerType is team. Nullable: null when ownerType is employee."
+                        "description": "The team that owns this objective. Fill this in when the owner is a team.", "x-notes": "The owning OrgUnit (team) when ownerType is team. Nullable: null when ownerType is employee."
                     },
                     "cycleId": {
                         "type": "string",
@@ -78,18 +78,18 @@
                         "$ref": "ReviewCycle",
                         "nullable": true,
                         "title": "Review cycle",
-                        "description": "Optional reference to the ReviewCycle (beoordelingscyclus) this OKR set is tied to. Nullable: an objective can also run under a plain period label with no formal review cycle."
+                        "description": "The review cycle this objective belongs to. Leave empty to run it against a plain period instead.", "x-notes": "Optional reference to the ReviewCycle (beoordelingscyclus) this OKR set is tied to. Nullable: an objective can also run under a plain period label with no formal review cycle."
                     },
                     "period": {
                         "type": "string",
                         "nullable": true,
                         "title": "Period",
-                        "description": "Free-text period label (e.g. \"2026-Q1\") for an objective that is not tied to a formal ReviewCycle. Nullable and meaningful only when cycleId is null."
+                        "description": "A period label such as '2026-Q1', for an objective not tied to a review cycle.", "x-notes": "Free-text period label (e.g. \"2026-Q1\") for an objective that is not tied to a formal ReviewCycle. Nullable and meaningful only when cycleId is null."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Objective workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "description": "Where this objective has got to: draft, active or closed.", "x-notes": "Objective workflow status. Governed by the x-openregister-lifecycle state machine.",
                         "x-enum-labels": {"concept": "Draft", "actief": "Active", "afgesloten": "Closed"},
                         "enum": [
                             "concept",
@@ -102,7 +102,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Outcome",
-                        "description": "The scored outcome, stamped on the carrying write of the afsluiten transition. Kept SEPARATE from the lifecycle status, exactly as PerformanceReview.rating is kept separate from its status, so \"how it ended\" and \"where it is in the flow\" never collide. Nullable: a concept/actief objective legitimately has no outcome yet.",
+                        "description": "How it ended: achieved, partly achieved or not achieved. Recorded when the objective is closed, separately from its status.", "x-notes": "The scored outcome, stamped on the carrying write of the afsluiten transition. Kept SEPARATE from the lifecycle status, exactly as PerformanceReview.rating is kept separate from its status, so \"how it ended\" and \"where it is in the flow\" never collide. Nullable: a concept/actief objective legitimately has no outcome yet.",
                         "x-enum-labels": {"behaald": "Achieved", "deels-behaald": "Partly achieved", "niet-behaald": "Not achieved"},
                         "enum": [
                             "behaald",
@@ -114,13 +114,13 @@
                         "type": "number",
                         "nullable": true,
                         "title": "Progress",
-                        "description": "Stored, writer/UI-maintained percentage (0-100): the rollup average of this objective's KeyResults' progress. NOT a declarative x-openregister-calculations field -- that operator vocabulary is prop/+/- over numeric properties of the same object only (the hr-leave.json LeaveBalance.remainingHours precedent; the hr-attendance.json workedHours note) and cannot express a cross-row average over child KeyResults. Presentation/aggregation convenience only: the measurable truth lives on each KeyResult's startValue/targetValue/currentValue, so a stale progress can always be recomputed and never fabricates the underlying numbers. An imperative recompute service is a named fast-follow, not part of this change."
+                        "description": "Progress from 0 to 100, the average across this objective's key results.", "x-notes": "Stored, writer/UI-maintained percentage (0-100): the rollup average of this objective's KeyResults' progress. NOT a declarative x-openregister-calculations field -- that operator vocabulary is prop/+/- over numeric properties of the same object only (the hr-leave.json LeaveBalance.remainingHours precedent; the hr-attendance.json workedHours note) and cannot express a cross-row average over child KeyResults. Presentation/aggregation convenience only: the measurable truth lives on each KeyResult's startValue/targetValue/currentValue, so a stale progress can always be recomputed and never fabricates the underlying numbers. An imperative recompute service is a named fast-follow, not part of this change."
                     },
                     "userId": {
                         "type": "string",
                         "nullable": true,
                         "title": "User",
-                        "description": "Denormalized Nextcloud user id of the owning employee (mijn-hr-self-service) -- a plain NC-user-id string, mirroring the Timesheet.userId / PerformanceReview.userId convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnDoelen self-service page filters on it with the @me token. Null for a team objective (ownerType team)."
+                        "description": "The Nextcloud account this objective belongs to, so it appears under the employee's own goals.", "x-notes": "Denormalized Nextcloud user id of the owning employee (mijn-hr-self-service) -- a plain NC-user-id string, mirroring the Timesheet.userId / PerformanceReview.userId convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnDoelen self-service page filters on it with the @me token. Null for a team objective (ownerType team)."
                     }
                 }
             },
@@ -143,18 +143,18 @@
                         "format": "uuid",
                         "$ref": "Objective",
                         "title": "Objective",
-                        "description": "Reference to the parent Objective this Key Result belongs to. Required: a KeyResult without an objectiveId is meaningless and is rejected by validation."
+                        "description": "The objective this key result belongs to. Required — a key result on its own has no meaning.", "x-notes": "Reference to the parent Objective this Key Result belongs to. Required: a KeyResult without an objectiveId is meaningless and is rejected by validation."
                     },
                     "title": {
                         "type": "string",
                         "title": "Title",
-                        "description": "Short description of the key result, e.g. \"NPS-score naar 40\"."
+                        "description": "A short description of the key result, for example \"NPS score up to 40\".", "x-notes": "Short description of the key result, e.g. \"NPS-score naar 40\"."
                     },
                     "unit": {
                         "type": "string",
                         "nullable": true,
                         "title": "Unit",
-                        "description": "The measurement unit of startValue/targetValue/currentValue. Enum append-only.",
+                        "description": "What the start, target and current values are measured in.", "x-notes": "The measurement unit of startValue/targetValue/currentValue. Enum append-only.",
                         "x-enum-labels": {"percentage": "Percentage", "aantal": "Count", "euro": "Euro", "boolean": "Yes / no"},
                         "enum": [
                             "percentage",
@@ -184,13 +184,13 @@
                         "type": "number",
                         "nullable": true,
                         "title": "Progress",
-                        "description": "Stored, writer/UI-maintained percentage (0-100), conceptually (currentValue - startValue) / (targetValue - startValue) x 100. NOT a declarative x-openregister-calculations field -- that operator vocabulary is prop/+/- over numeric properties only (the hr-leave.json LeaveBalance.remainingHours precedent; the hr-attendance.json workedHours note) and cannot express a division. Presentation/aggregation convenience only: startValue/targetValue/currentValue are always stored so progress can be recomputed at any time and never fabricates the measurable truth. An imperative recompute service is a named fast-follow, not part of this change."
+                        "description": "Progress from 0 to 100, roughly how far the current value has moved from the start value towards the target.", "x-notes": "Stored, writer/UI-maintained percentage (0-100), conceptually (currentValue - startValue) / (targetValue - startValue) x 100. NOT a declarative x-openregister-calculations field -- that operator vocabulary is prop/+/- over numeric properties only (the hr-leave.json LeaveBalance.remainingHours precedent; the hr-attendance.json workedHours note) and cannot express a division. Presentation/aggregation convenience only: startValue/targetValue/currentValue are always stored so progress can be recomputed at any time and never fabricates the measurable truth. An imperative recompute service is a named fast-follow, not part of this change."
                     },
                     "status": {
                         "type": "string",
                         "nullable": true,
                         "title": "Status",
-                        "description": "The key result's own plain status, independent of the parent Objective's lifecycle. No guarded state machine -- mirrors the embedded goal-status enum of PerformanceReview.goals (the reviews MVP precedent): trivial state, no guarded transitions.",
+                        "description": "This key result's own status, independent of the objective it belongs to.", "x-notes": "The key result's own plain status, independent of the parent Objective's lifecycle. No guarded state machine -- mirrors the embedded goal-status enum of PerformanceReview.goals (the reviews MVP precedent): trivial state, no guarded transitions.",
                         "x-enum-labels": {"open": "Open", "behaald": "Achieved", "vervallen": "Dropped"},
                         "enum": [
                             "open",
@@ -203,7 +203,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "User",
-                        "description": "Denormalized Nextcloud user id of the owning employee, copied from the parent Objective.userId (mijn-hr-self-service convention) -- a plain NC-user-id string, never a $ref relation."
+                        "description": "The Nextcloud account this key result belongs to, copied from its objective.", "x-notes": "Denormalized Nextcloud user id of the owning employee, copied from the parent Objective.userId (mijn-hr-self-service convention) -- a plain NC-user-id string, never a $ref relation."
                     }
                 }
             }

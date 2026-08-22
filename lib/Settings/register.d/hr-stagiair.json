@@ -64,7 +64,7 @@
                     "niveau": {
                         "type": "string",
                         "title": "Education level",
-                        "description": "Education level of the stagiair. 'hbo' (hoger beroepsonderwijs) / 'wo' (wetenschappelijk onderwijs) / 'mbo-bol' (middelbaar beroepsonderwijs, beroepsopleidende leerweg). All three are stageovereenkomst-based (zonder dienstverband); a BBL (beroepsbegeleidende leerweg) leerling is NOT modelled here -- it has a leerarbeidsovereenkomst and is an EmploymentContract with type: bbl (design.md D1).",
+                        "description": "The intern's education level. All three are placements without an employment contract; an apprentice on a work-study contract is an employee instead.", "x-notes": "Education level of the stagiair. 'hbo' (hoger beroepsonderwijs) / 'wo' (wetenschappelijk onderwijs) / 'mbo-bol' (middelbaar beroepsonderwijs, beroepsopleidende leerweg). All three are stageovereenkomst-based (zonder dienstverband); a BBL (beroepsbegeleidende leerweg) leerling is NOT modelled here -- it has a leerarbeidsovereenkomst and is an EmploymentContract with type: bbl (design.md D1).",
                         "x-enum-labels": {"hbo": "HBO (university of applied sciences)", "wo": "WO (research university)", "mbo-bol": "MBO-BOL (vocational, school-based)"},
                         "enum": [
                             "hbo",
@@ -75,7 +75,7 @@
                     "stagetype": {
                         "type": "string",
                         "title": "Placement type",
-                        "description": "Kind of stage. 'snuffelstage' (orientation), 'meeloopstage' (work-shadowing), or 'afstudeerstage' (graduation placement). Informational; carries no payroll or compliance meaning.",
+                        "description": "The kind of placement. For information only — it has no effect on pay or compliance.", "x-notes": "Kind of stage. 'snuffelstage' (orientation), 'meeloopstage' (work-shadowing), or 'afstudeerstage' (graduation placement). Informational; carries no payroll or compliance meaning.",
                         "x-enum-labels": {"snuffelstage": "Orientation placement", "meeloopstage": "Work-shadowing placement", "afstudeerstage": "Graduation placement"},
                         "enum": [
                             "snuffelstage",
@@ -88,14 +88,14 @@
                         "type": "string",
                         "format": "date",
                         "title": "Start date",
-                        "description": "First day of the stage placement (ISO 8601). Anchor date for nl-bpv-overeenkomst-vereist: once startDate has passed, a signed BPV-overeenkomst (bpvOvereenkomstOndertekend true) must be on file."
+                        "description": "First day of the placement. Once it has passed, a signed placement agreement must be on file.", "x-notes": "First day of the stage placement (ISO 8601). Anchor date for nl-bpv-overeenkomst-vereist: once startDate has passed, a signed BPV-overeenkomst (bpvOvereenkomstOndertekend true) must be on file."
                     },
                     "endDate": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
                         "title": "End date",
-                        "description": "Planned last day of the stage placement (ISO 8601), or null when open-ended."
+                        "description": "Planned last day of the placement. Leave empty when it is open-ended.", "x-notes": "Planned last day of the stage placement (ISO 8601), or null when open-ended."
                     },
                     "begeleiderId": {
                         "type": "string",
@@ -103,30 +103,30 @@
                         "$ref": "Employee",
                         "nullable": true,
                         "title": "Supervisor",
-                        "description": "UUID reference to the Employee acting as the internal stagebegeleider (supervisor) for this stagiair. Nullable when no supervisor is assigned yet. This is the ONLY relation on Stagiair; it points from Stagiair to Employee, never the reverse, and no payroll schema ever references Stagiair (design.md D1)."
+                        "description": "The colleague supervising this intern. Leave empty until one is assigned.", "x-notes": "UUID reference to the Employee acting as the internal stagebegeleider (supervisor) for this stagiair. Nullable when no supervisor is assigned yet. This is the ONLY relation on Stagiair; it points from Stagiair to Employee, never the reverse, and no payroll schema ever references Stagiair (design.md D1)."
                     },
                     "stagevergoedingPerMaand": {
                         "type": "number",
                         "nullable": true,
                         "title": "Placement allowance per month",
-                        "description": "Optional monthly stagevergoeding paid to the stagiair, stored as a plain informational figure only. The fiscal treatment of a stagevergoeding is governed by the Belastingdienst Handboek Loonheffingen (hoofdstuk 17, 'Stagiairs', https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/personeel_en_loon/personeel_in_dienst/stagiairs): a stagiair zonder dienstbetrekking is, in the ordinary case the handbook describes, not automatically loonheffingplichtig the way an employee's loon is, but the actual test turns on concrete facts (who pays, whether it is capped to daadwerkelijke onkosten, the studenten- en scholierenregeling). No specific untaxed euro ceiling is asserted by humaniq and NO machine-checkable rule enforces one, because no confirmed threshold is cited (design.md D2); a future rule would need the exact Belastingdienst figure with a {value, source, verified} leaf (verified:false + checkAgainst URL) before asserting a limit."
+                        "description": "Any monthly allowance paid to the intern. Recorded for information; it is not put through payroll here.", "x-notes": "Optional monthly stagevergoeding paid to the stagiair, stored as a plain informational figure only. The fiscal treatment of a stagevergoeding is governed by the Belastingdienst Handboek Loonheffingen (hoofdstuk 17, 'Stagiairs', https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/personeel_en_loon/personeel_in_dienst/stagiairs): a stagiair zonder dienstbetrekking is, in the ordinary case the handbook describes, not automatically loonheffingplichtig the way an employee's loon is, but the actual test turns on concrete facts (who pays, whether it is capped to daadwerkelijke onkosten, the studenten- en scholierenregeling). No specific untaxed euro ceiling is asserted by humaniq and NO machine-checkable rule enforces one, because no confirmed threshold is cited (design.md D2); a future rule would need the exact Belastingdienst figure with a {value, source, verified} leaf (verified:false + checkAgainst URL) before asserting a limit."
                     },
                     "bpvOvereenkomstOndertekend": {
                         "type": "boolean",
                         "default": false,
                         "title": "Placement agreement signed",
-                        "description": "Whether the (three-party) stage-/BPV-overeenkomst is signed, marked manually by HR after the paper or externally-handled signing is complete -- mirroring EmploymentContract.writtenContract exactly. NOT an automated e-signature flow: two of the three signers (onderwijsinstelling contactpersoon, deelnemer) are not ordinarily Nextcloud users of this instance, and the shipped docudesk signing leaf cannot complete for a non-NC-user signer (offer-esign design.md point 4, design.md D3). Gates nl-bpv-overeenkomst-vereist: must be true once startDate has passed."
+                        "description": "The three-party placement agreement has been signed. Tick this by hand once signing is done.", "x-notes": "Whether the (three-party) stage-/BPV-overeenkomst is signed, marked manually by HR after the paper or externally-handled signing is complete -- mirroring EmploymentContract.writtenContract exactly. NOT an automated e-signature flow: two of the three signers (onderwijsinstelling contactpersoon, deelnemer) are not ordinarily Nextcloud users of this instance, and the shipped docudesk signing leaf cannot complete for a non-NC-user signer (offer-esign design.md point 4, design.md D3). Gates nl-bpv-overeenkomst-vereist: must be true once startDate has passed."
                     },
                     "verzekeringGeverifieerd": {
                         "type": "boolean",
                         "default": false,
                         "title": "Insurance verified",
-                        "description": "Whether the stagiair's insurance cover (aansprakelijkheid/ongevallen) has been verified by HR. Informational HR-entered attestation; carries no machine-checkable rule in this change."
+                        "description": "HR has checked that the intern's liability and accident cover is in place.", "x-notes": "Whether the stagiair's insurance cover (aansprakelijkheid/ongevallen) has been verified by HR. Informational HR-entered attestation; carries no machine-checkable rule in this change."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Placement lifecycle status. Governed by the x-openregister-lifecycle state machine (aangemeld -> lopend -> afgerond, with gestopt as an early-termination terminal from aangemeld/lopend). Defaults to aangemeld.",
+                        "description": "Where this placement has got to: registered, ongoing, completed, or terminated early.", "x-notes": "Placement lifecycle status. Governed by the x-openregister-lifecycle state machine (aangemeld -> lopend -> afgerond, with gestopt as an early-termination terminal from aangemeld/lopend). Defaults to aangemeld.",
                         "x-enum-labels": {"aangemeld": "Registered", "lopend": "Ongoing", "afgerond": "Completed", "gestopt": "Terminated"},
                         "enum": [
                             "aangemeld",
@@ -140,7 +140,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this Stagiair is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun convention); maintained by HR/back-office when the record is created and used for the implicit page scoping (REQ-MULTI-004)."
+                        "description": "Which administration this placement belongs to.", "x-notes": "Denormalized administratie key this Stagiair is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun convention); maintained by HR/back-office when the record is created and used for the implicit page scoping (REQ-MULTI-004)."
                     }
                 }
             }

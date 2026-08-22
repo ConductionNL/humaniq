@@ -41,7 +41,9 @@
 //      (WNT, WKR, TWK, Cao Gemeenten, UPA) legitimately survive translation,
 //      Dutch SENTENCES do not.
 //   8. Every SCHEMA-derived display string in lib/Settings/register.d/*.json
-//      is a key in BOTH catalogues, and carries no Dutch literal.
+//      is a key in BOTH catalogues, and carries no Dutch literal. That is the
+//      schema `title`, each property `title` and `description`, and the VALUES
+//      of `x-enum-labels`.
 //
 //      This half was previously exempted on the theory that schema strings
 //      "are rendered by OpenRegister, not by hrmq's manifest renderer". That
@@ -50,22 +52,23 @@
 //      schema title is a key in THIS catalogue, and an absent key renders the
 //      English source in a Dutch session. The strings checked are the schema
 //      `title` (dialog heading + Add button noun), each property `title`
-//      (field label + column header), and the VALUES of `x-enum-labels`
-//      (dropdown options + status badges).
+//      (field label + column header), each property `description` (the helper
+//      text under the field), and the VALUES of `x-enum-labels` (dropdown
+//      options + status badges).
 //
 //      The enum VALUES themselves are not checked: they are stored contract
 //      values, several Dutch by design (`ingediend`), and are never rendered
 //      once the property declares `x-enum-labels`.
 //
+//      Nor is `x-notes`. That key holds the ENGINEERING rationale a property's
+//      description used to carry — the ADR references, check ids and design
+//      decisions a schema reader wants and a person filling in a form does
+//      not. It is never rendered, so it is never translated; splitting the two
+//      is what let the descriptions become user copy without losing the
+//      reasoning behind them.
+//
 // WHAT IT DELIBERATELY DOES NOT CHECK
 //
-//   - Schema property `description` — the helper text under a field. Those
-//     strings are still written for a developer reading the schema rather
-//     than for the person filling in the form, and rewriting them is the
-//     forms-as-process copy pass, not a translation one. Translating ~730
-//     descriptions that are already slated to be rewritten would be work
-//     thrown away, so they are out of scope until that pass lands. Tracked
-//     as the descriptions phase of the forms-as-process programme.
 //   - Route paths, page/menu/widget ids, and lifecycle transition `action`
 //     ids. Those are backend contract, not display text, and several are
 //     Dutch by design (`"action": "indienen"`).
@@ -269,6 +272,7 @@ function collectSchemaStrings(node, file, sink) {
 		for (const [key, prop] of Object.entries(node.properties)) {
 			if (prop === null || typeof prop !== 'object') continue
 			remember(prop.title, `${key}.title`)
+			remember(prop.description, `${key}.description`)
 			for (const source of [prop, prop.items]) {
 				if (source === null || typeof source !== 'object') continue
 				const labels = source['x-enum-labels']

@@ -43,13 +43,13 @@
                     "title": {
                         "type": "string",
                         "title": "Title",
-                        "description": "Job title (schema:title)."
+                        "description": "The job title as it appears in the advert.", "x-notes": "Job title (schema:title)."
                     },
                     "description": {
                         "type": "string",
                         "nullable": true,
                         "title": "Description",
-                        "description": "Free-text vacancy text (schema:description)."
+                        "description": "The advert text.", "x-notes": "Free-text vacancy text (schema:description)."
                     },
                     "department": {
                         "type": "string",
@@ -60,7 +60,7 @@
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Publish workflow status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd -> gesloten).",
+                        "description": "Where this vacancy has got to: draft, published or closed.", "x-notes": "Publish workflow status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd -> gesloten).",
                         "x-enum-labels": {"concept": "Draft", "gepubliceerd": "Published", "gesloten": "Closed"},
                         "enum": [
                             "concept",
@@ -74,20 +74,20 @@
                         "format": "date",
                         "nullable": true,
                         "title": "Published date",
-                        "description": "Date the vacancy was published, stamped on the publiceren carrying write."
+                        "description": "When the vacancy was published.", "x-notes": "Date the vacancy was published, stamped on the publiceren carrying write."
                     },
                     "closingDate": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
                         "title": "Closing date",
-                        "description": "Application deadline. Informational only in the MVP — it does not drive the sluiten transition."
+                        "description": "The application deadline. For information only — it does not close the vacancy by itself.", "x-notes": "Application deadline. Informational only in the MVP — it does not drive the sluiten transition."
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this Vacancy is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); a vacancy has no employee to derive it from, so nl-administratie-scope-consistency does not evaluate this schema."
+                        "description": "Which administration this vacancy belongs to.", "x-notes": "Denormalized administratie key this Vacancy is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); a vacancy has no employee to derive it from, so nl-administratie-scope-consistency does not evaluate this schema."
                     }
                 }
             },
@@ -161,12 +161,12 @@
                         "format": "uuid",
                         "$ref": "Vacancy",
                         "title": "Vacancy",
-                        "description": "UUID reference to the Vacancy this application is for."
+                        "description": "The vacancy this application is for.", "x-notes": "UUID reference to the Vacancy this application is for."
                     },
                     "candidateName": {
                         "type": "string",
                         "title": "Candidate name",
-                        "description": "Full name of the candidate. Candidate PII lives on this object only (design D2) — deleting the Application deletes this data."
+                        "description": "The candidate's full name. Their personal data lives only on this record — deleting it deletes the data.", "x-notes": "Full name of the candidate. Candidate PII lives on this object only (design D2) — deleting the Application deletes this data."
                     },
                     "email": {
                         "type": "string",
@@ -184,18 +184,18 @@
                         "type": "string",
                         "nullable": true,
                         "title": "CV file",
-                        "description": "Reference (Nextcloud Files path or OpenRegister file id) to the uploaded CV, the Expense.receiptFile pattern."
+                        "description": "The uploaded CV.", "x-notes": "Reference (Nextcloud Files path or OpenRegister file id) to the uploaded CV, the Expense.receiptFile pattern."
                     },
                     "motivation": {
                         "type": "string",
                         "nullable": true,
                         "title": "Motivation",
-                        "description": "Free-text motivation letter / cover note."
+                        "description": "The candidate's motivation or cover letter.", "x-notes": "Free-text motivation letter / cover note."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Pipeline status. Governed by the x-openregister-lifecycle state machine (nieuw -> screening -> gesprek -> aanbod -> aangenomen, afwijzen reachable from every active stage).",
+                        "description": "Where this application has got to: new, screening, interview, offer or hired. It can be rejected at any active stage.", "x-notes": "Pipeline status. Governed by the x-openregister-lifecycle state machine (nieuw -> screening -> gesprek -> aanbod -> aangenomen, afwijzen reachable from every active stage).",
                         "x-enum-labels": {"nieuw": "New", "screening": "Screening", "gesprek": "Interview", "aanbod": "Offer", "aangenomen": "Hired", "afgewezen": "Rejected"},
                         "enum": [
                             "nieuw",
@@ -212,44 +212,44 @@
                         "format": "date",
                         "nullable": true,
                         "title": "Rejected date",
-                        "description": "Date the application was rejected, stamped on the afwijzen carrying write. Null on every non-afgewezen status."
+                        "description": "When the application was rejected. Empty unless it was.", "x-notes": "Date the application was rejected, stamped on the afwijzen carrying write. Null on every non-afgewezen status."
                     },
                     "talentPoolOptIn": {
                         "type": "boolean",
                         "default": false,
                         "title": "Talent pool opt-in",
-                        "description": "Explicit candidate consent to extended talent-pool retention. Extends the retentionExpiryDate derivation from 4 weeks to the Autoriteit Persoonsgegevens maximum of 1 year."
+                        "description": "The candidate agreed to be kept on file longer. This extends retention from four weeks to one year.", "x-notes": "Explicit candidate consent to extended talent-pool retention. Extends the retentionExpiryDate derivation from 4 weeks to the Autoriteit Persoonsgegevens maximum of 1 year."
                     },
                     "retentionExpiryDate": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
                         "title": "Retention expiry date",
-                        "description": "Stored-but-rule-checked AVG retention deadline (design D4): rejectedDate + 4 weeks without talentPoolOptIn, or + 1 year with it (Autoriteit Persoonsgegevens sollicitatie-richtlijn, AVG art. 5 lid 1 sub e). Checked by nl-ats-retentie-derivatie / nl-ats-retentie-verlopen. Null on every non-afgewezen status."
+                        "description": "When this application must be deleted: four weeks after rejection, or a year with the candidate's consent.", "x-notes": "Stored-but-rule-checked AVG retention deadline (design D4): rejectedDate + 4 weeks without talentPoolOptIn, or + 1 year with it (Autoriteit Persoonsgegevens sollicitatie-richtlijn, AVG art. 5 lid 1 sub e). Checked by nl-ats-retentie-derivatie / nl-ats-retentie-verlopen. Null on every non-afgewezen status."
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this Application is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); an Application has no employee (the candidate is not yet hired), so this is set from the vacancy's administratie when known, and nl-administratie-scope-consistency does not evaluate this schema."
+                        "description": "Which administration this application belongs to. Normally taken from the vacancy.", "x-notes": "Denormalized administratie key this Application is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); an Application has no employee (the candidate is not yet hired), so this is set from the vacancy's administratie when known, and nl-administratie-scope-consistency does not evaluate this schema."
                     },
                     "offerLetterFileId": {
                         "type": "integer",
                         "nullable": true,
                         "title": "Offer letter file id",
-                        "description": "offer-esign (0.3.0): the Nextcloud file id (File::getId()) of the generated aanbiedingsbrief PDF, stored via OpenRegister's FileService::addFile(). Null until OfferEsignService::requestSignature() successfully stores one."
+                        "description": "The generated offer letter. Filled in once the letter has been created.", "x-notes": "offer-esign (0.3.0): the Nextcloud file id (File::getId()) of the generated aanbiedingsbrief PDF, stored via OpenRegister's FileService::addFile(). Null until OfferEsignService::requestSignature() successfully stores one."
                     },
                     "offerSigningRequestId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Offer signing request id",
-                        "description": "offer-esign (0.3.0): the docudesk signing-request id returned by SigningService::createRequest(). A plain string, NOT a $ref -- docudesk owns a different register/app than the in-register $ref targets ADR-062 rule 7 governs (the GeneratedDocument.templateRef precedent). Null until a signing request has been created."
+                        "description": "The signing request for the offer letter. Filled in once signing has been started.", "x-notes": "offer-esign (0.3.0): the docudesk signing-request id returned by SigningService::createRequest(). A plain string, NOT a $ref -- docudesk owns a different register/app than the in-register $ref targets ADR-062 rule 7 governs (the GeneratedDocument.templateRef precedent). Null until a signing request has been created."
                     },
                     "offerSigningStatus": {
                         "type": "string",
                         "nullable": true,
                         "title": "Offer signing status",
-                        "description": "offer-esign (0.3.0): the offer letter's e-signature lifecycle state. The first six values are verbatim docudesk SigningService::STATUS_TRANSITIONS states (PENDING/IN_PROGRESS/COMPLETED/DECLINED/CANCELLED/EXPIRED); skipped-no-docudesk and failed are this leaf's own duck-typed/failure outcomes. Null means no offer-esign attempt has been made yet. Orthogonal to Application.status -- observing COMPLETED here never advances the pipeline status (REQ-OFFR-006).",
+                        "description": "Where signing the offer letter has got to. Separate from the application status — a signed offer does not move the pipeline on its own.", "x-notes": "offer-esign (0.3.0): the offer letter's e-signature lifecycle state. The first six values are verbatim docudesk SigningService::STATUS_TRANSITIONS states (PENDING/IN_PROGRESS/COMPLETED/DECLINED/CANCELLED/EXPIRED); skipped-no-docudesk and failed are this leaf's own duck-typed/failure outcomes. Null means no offer-esign attempt has been made yet. Orthogonal to Application.status -- observing COMPLETED here never advances the pipeline status (REQ-OFFR-006).",
                         "x-enum-labels": {"PENDING": "Pending", "IN_PROGRESS": "In progress", "COMPLETED": "Completed", "DECLINED": "Declined", "CANCELLED": "Cancelled", "EXPIRED": "Expired", "skipped-no-docudesk": "Skipped (no document app)", "failed": "Failed"},
                         "enum": [
                             "PENDING",
@@ -310,25 +310,25 @@
                         "format": "uuid",
                         "$ref": "Application",
                         "title": "Application",
-                        "description": "UUID reference to the Application this interview round belongs to."
+                        "description": "The application this interview belongs to.", "x-notes": "UUID reference to the Application this interview round belongs to."
                     },
                     "scheduledStart": {
                         "type": "string",
                         "format": "date-time",
                         "title": "Scheduled start",
-                        "description": "Start of the interview slot. Rendered as the VEVENT DTSTART by InterviewCalendarService."
+                        "description": "When the interview starts. This is what goes in the calendar.", "x-notes": "Start of the interview slot. Rendered as the VEVENT DTSTART by InterviewCalendarService."
                     },
                     "scheduledEnd": {
                         "type": "string",
                         "format": "date-time",
                         "title": "Scheduled end",
-                        "description": "End of the interview slot. Rendered as the VEVENT DTEND by InterviewCalendarService."
+                        "description": "When the interview ends. This is what goes in the calendar.", "x-notes": "End of the interview slot. Rendered as the VEVENT DTEND by InterviewCalendarService."
                     },
                     "interviewers": {
                         "type": "string",
                         "nullable": true,
                         "title": "Interviewers",
-                        "description": "Free-text interviewer name(s). Rendered as plain DESCRIPTION text only — never as an ATTENDEE/ORGANIZER property, so no iMIP scheduling mail is ever triggered (design.md D5)."
+                        "description": "Who will conduct the interview. Shown as plain text in the calendar item; no invitations are sent.", "x-notes": "Free-text interviewer name(s). Rendered as plain DESCRIPTION text only — never as an ATTENDEE/ORGANIZER property, so no iMIP scheduling mail is ever triggered (design.md D5)."
                     },
                     "mode": {
                         "type": "string",
@@ -346,12 +346,12 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Location",
-                        "description": "Physical location/room, or a video-call URL when mode is 'video'. Rendered as the VEVENT LOCATION property."
+                        "description": "The room, or the video-call link when the interview is online.", "x-notes": "Physical location/room, or a video-call URL when mode is 'video'. Rendered as the VEVENT LOCATION property."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Interview lifecycle status. Governed by the x-openregister-lifecycle state machine (scheduled -> completed/cancelled). Rescheduling is a plain field update to scheduledStart/scheduledEnd, not a status transition.",
+                        "description": "Where this interview has got to: scheduled, completed or cancelled. Rescheduling just changes the times.", "x-notes": "Interview lifecycle status. Governed by the x-openregister-lifecycle state machine (scheduled -> completed/cancelled). Rescheduling is a plain field update to scheduledStart/scheduledEnd, not a status transition.",
                         "x-enum-labels": {"scheduled": "Scheduled", "completed": "Completed", "cancelled": "Cancelled"},
                         "enum": [
                             "scheduled",
@@ -364,7 +364,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Calendar event UID",
-                        "description": "System-managed, never user-editable. Set by InterviewCalendarService on first successful sync (deterministic value hrmq-interview-{uuid}) and used on every later sync to look up and diff the existing calendar event, so a no-op resync writes nothing (design.md D3). Null means this Interview has never reached the calendar."
+                        "description": "Links this interview to its calendar item. Managed automatically — do not edit.", "x-notes": "System-managed, never user-editable. Set by InterviewCalendarService on first successful sync (deterministic value hrmq-interview-{uuid}) and used on every later sync to look up and diff the existing calendar event, so a no-op resync writes nothing (design.md D3). Null means this Interview has never reached the calendar."
                     }
                 }
             }

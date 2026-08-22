@@ -9,14 +9,14 @@
                         "nullable": true,
                         "minimum": 0,
                         "title": "Hourly cost rate override (cents)",
-                        "description": "Employer cost per hour in cents, set by hand to replace the payroll-derived loaded cost. Leave empty — the normal case — to use the derived value.",
+                        "description": "Employer cost per hour in cents, set by hand instead of the figure derived from payroll. Leave empty — the normal case — to use the derived value.",
                         "x-notes": "ADR-081 decision 4. This is an EMPLOYER COST, not a wage: it is not comparable to EmploymentContract.hourlyWage, which is the employee's gross hourly wage and is never used as a cost rate. Integer cents, never a float, so a rate multiplied by logged hours cannot drift (the ActivityCostAllocationSplitter convention)."
                     },
                     "hourlyCostRateOverrideReason": {
                         "type": "string",
                         "nullable": true,
                         "title": "Hourly cost rate override reason",
-                        "description": "Why the derived loaded cost was replaced. Required whenever an override amount is set — an override with no reason is indistinguishable from a typo six months later.",
+                        "description": "Why the derived cost was replaced. Required whenever you set an override — an override with no reason is indistinguishable from a typo six months later.",
                         "x-notes": "ADR-081 decision 4. This number reaches a statutory IV3 submission through Shillinq. Free text: the derivation cannot be told 'this employee is seconded and billed at the partner rate', so the reason is the only place that survives."
                     },
                     "hourlyCostRateOverrideBy": {
@@ -31,14 +31,14 @@
                         "format": "date-time",
                         "nullable": true,
                         "title": "Hourly cost rate override set at",
-                        "description": "When the override was last changed. An override set before the last salary change is a review signal, not an error.",
+                        "description": "When the override was last changed. An override set before the last salary change is worth reviewing, not an error.",
                         "x-notes": "ADR-081 decision 4. ISO 8601 UTC. Read together with the payroll side to tell a stale override from a current one."
                     },
                     "hourlyCostAdditions": {
                         "type": "array",
                         "nullable": true,
                         "title": "Hourly cost additions",
-                        "description": "Per-hour employer costs beyond the wage — overhead, equipment, workplace, tooling. Each entry is named and sourced so a cost figure can be explained line by line. An administrator may fill these in by hand; the bookkeeping system calculates the overhead and equipment ones.",
+                        "description": "Employer costs per hour on top of the wage — overhead, equipment, workplace, tooling. Each entry is named and sourced, so a cost figure can be explained line by line.",
                         "x-notes": "ADR-081 decision 4. The hourly cost is `wageCost + sum(additions)`; there is exactly ONE rate, never a normal one and an overtime one. Line-by-line explicability is what an audit asks for, and a new cost factor is data rather than a schema migration. Shillinq is expected to calculate the overhead and equipment additions, because it holds the ledger those pools live in.",
                         "items": {
                             "type": "object",
@@ -46,30 +46,30 @@
                                 "key": {
                                     "type": "string",
                                     "title": "Addition key",
-                                    "description": "Short stable identifier for the cost factor — e.g. `overhead`, `equipment`, `workplace`, `overtime`.",
+                                    "description": "A short name for the cost factor, for example 'overhead', 'equipment', 'workplace' or 'overtime'.", "x-notes": "Short stable identifier for the cost factor — e.g. `overhead`, `equipment`, `workplace`, `overtime`.",
                                     "x-notes": "Not an enum: the set is deliberately open (ADR-081), because a jurisdiction, a sector or an audit will want a fourth."
                                 },
                                 "centsPerHour": {
                                     "type": "integer",
                                     "nullable": true,
                                     "title": "Fixed amount per hour (cents)",
-                                    "description": "A FIXED amount added per hour, in CENTS — the right shape for a cost that does not scale with the wage: rent, a workplace, a laptop, management fees. Integer so that rate x hours cannot accumulate IEEE-754 drift across a quarter of allocations. Set this OR percentageOfWage, never both."
+                                    "description": "A fixed amount added per hour, in cents — the right shape for a cost that does not scale with pay: rent, a workplace, a laptop, management fees. Use this or a percentage of the wage, never both.", "x-notes": "A FIXED amount added per hour, in CENTS — the right shape for a cost that does not scale with the wage: rent, a workplace, a laptop, management fees. Integer so that rate x hours cannot accumulate IEEE-754 drift across a quarter of allocations. Set this OR percentageOfWage, never both."
                                 },
                                 "percentageOfWage": {
                                     "type": "number",
                                     "nullable": true,
                                     "title": "Percentage of the wage base",
-                                    "description": "A RELATIVE amount, as a percentage of the wage base — the right shape for a cost that genuinely scales with pay, such as an overtime surcharge. Applied to the WAGE BASE ONLY, never to the running total: compounding one addition onto another would make the result depend on the order they happen to be listed in. Set this OR centsPerHour, never both."
+                                    "description": "An amount per hour as a percentage of the wage — the right shape for a cost that does scale with pay, such as an overtime surcharge. It is worked out over the wage only, never over the running total. Use this or a fixed amount, never both.", "x-notes": "A RELATIVE amount, as a percentage of the wage base — the right shape for a cost that genuinely scales with pay, such as an overtime surcharge. Applied to the WAGE BASE ONLY, never to the running total: compounding one addition onto another would make the result depend on the order they happen to be listed in. Set this OR centsPerHour, never both."
                                 },
                                 "source": {
                                     "type": "string",
                                     "title": "Source",
-                                    "description": "Where the amount came from: `manual` (an administrator typed it) or an app id such as `shillinq` (calculated from the ledger). Distinguishes a figure someone owns from one a system derives — they age differently and are reviewed differently."
+                                    "description": "Where the amount came from: entered by an administrator, or calculated from the ledger by another app. A figure someone owns ages differently from one a system derives.", "x-notes": "Where the amount came from: `manual` (an administrator typed it) or an app id such as `shillinq` (calculated from the ledger). Distinguishes a figure someone owns from one a system derives — they age differently and are reviewed differently."
                                 },
                                 "basis": {
                                     "type": "string",
                                     "title": "Basis",
-                                    "description": "Why this amount, in words. For a manual addition this is the justification; for a calculated one, what it was computed from (e.g. which overhead pool over which hours). An unexplained cost component in a statutory submission is unauditable."
+                                    "description": "Why this amount, in words. For an amount you entered, the justification; for a calculated one, what it was worked out from. An unexplained cost cannot be defended in a statutory submission.", "x-notes": "Why this amount, in words. For a manual addition this is the justification; for a calculated one, what it was computed from (e.g. which overhead pool over which hours). An unexplained cost component in a statutory submission is unauditable."
                                 }
                             }
                         }
@@ -89,63 +89,63 @@
                     "key": {
                         "type": "string",
                         "title": "Cost factor",
-                        "description": "Short stable identifier for the cost factor — e.g. `overhead`, `equipment`, `workplace`. Not an enum: the set is deliberately open, so a new cost factor is data rather than a schema migration."
+                        "description": "A short name for the cost factor, for example 'overhead', 'equipment', 'workplace' or 'overtime'.", "x-notes": "Short stable identifier for the cost factor — e.g. `overhead`, `equipment`, `workplace`. Not an enum: the set is deliberately open, so a new cost factor is data rather than a schema migration."
                     },
                     "scope": {
                         "type": "string",
                         "enum": ["organisation", "cla", "contract"],
                         "x-enum-labels": {"organisation": "Organisation", "cla": "Collective agreement", "contract": "Contract"},
                         "title": "Scope",
-                        "description": "Which population this policy applies to. `organisation` — everyone; `cla` — everyone whose contract names claId; `contract` — one contract only. The most specific scope carrying a given key wins, so a contract-level figure overrides the CLA-wide one for that key without disturbing the others."
+                        "description": "Who this applies to: everyone in the organisation, everyone under a collective agreement, or one contract only. The most specific one wins.", "x-notes": "Which population this policy applies to. `organisation` — everyone; `cla` — everyone whose contract names claId; `contract` — one contract only. The most specific scope carrying a given key wins, so a contract-level figure overrides the CLA-wide one for that key without disturbing the others."
                     },
                     "claId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Collective labour agreement",
-                        "description": "The CLA (Dutch: CAO) whose population this policy covers. REQUIRED when scope is `cla`, ignored otherwise. Matches EmploymentContract.cao."
+                        "description": "Which collective agreement's population this covers. Required when the scope is a collective agreement; ignored otherwise.", "x-notes": "The CLA (Dutch: CAO) whose population this policy covers. REQUIRED when scope is `cla`, ignored otherwise. Matches EmploymentContract.cao."
                     },
                     "contractId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Employment contract",
-                        "description": "UUID of the single EmploymentContract this policy covers. REQUIRED when scope is `contract`, ignored otherwise."
+                        "description": "Which single contract this covers. Required when the scope is one contract; ignored otherwise.", "x-notes": "UUID of the single EmploymentContract this policy covers. REQUIRED when scope is `contract`, ignored otherwise."
                     },
                     "centsPerHour": {
                         "type": "integer",
                         "nullable": true,
                         "title": "Fixed amount per hour (cents)",
-                        "description": "A FIXED per-hour amount in CENTS. The shape most employer overheads actually have — rent and management fees do not scale with an individual's salary. Set this OR percentageOfWage, never both."
+                        "description": "A fixed amount added per hour, in cents — the right shape for a cost that does not scale with pay: rent, a workplace, a laptop, management fees. Use this or a percentage of the wage, never both.", "x-notes": "A FIXED per-hour amount in CENTS. The shape most employer overheads actually have — rent and management fees do not scale with an individual's salary. Set this OR percentageOfWage, never both."
                     },
                     "percentageOfWage": {
                         "type": "number",
                         "nullable": true,
                         "title": "Percentage of the wage base",
-                        "description": "A RELATIVE per-hour amount, as a percentage of the wage base. Applied to the wage base only, never compounded onto other additions. Set this OR centsPerHour, never both."
+                        "description": "An amount per hour as a percentage of the wage — the right shape for a cost that does scale with pay, such as an overtime surcharge. Use this or a fixed amount, never both.", "x-notes": "A RELATIVE per-hour amount, as a percentage of the wage base. Applied to the wage base only, never compounded onto other additions. Set this OR centsPerHour, never both."
                     },
                     "basis": {
                         "type": "string",
                         "title": "Basis",
-                        "description": "Why this amount, in words — what it covers and how it was arrived at. REQUIRED. An unexplained cost component reaches a statutory submission via Shillinq and cannot be defended there; 'EUR 25/h overhead' is a number, 'rent and management fees, FY2026 budget over billable hours' is an answer."
+                        "description": "Why this amount, in words. For an amount you entered, the justification; for a calculated one, what it was worked out from. An unexplained cost cannot be defended in a statutory submission.", "x-notes": "Why this amount, in words — what it covers and how it was arrived at. REQUIRED. An unexplained cost component reaches a statutory submission via Shillinq and cannot be defended there; 'EUR 25/h overhead' is a number, 'rent and management fees, FY2026 budget over billable hours' is an answer."
                     },
                     "source": {
                         "type": "string",
                         "nullable": true,
                         "title": "Source",
-                        "description": "Where the amount came from: `manual` when an administrator set it, or an app id such as `shillinq` when it was calculated from the ledger. Distinguishes a figure someone owns from one a system derives — they age differently and are reviewed differently."
+                        "description": "Where the amount came from: entered by an administrator, or calculated from the ledger by another app. A figure someone owns ages differently from one a system derives.", "x-notes": "Where the amount came from: `manual` when an administrator set it, or an app id such as `shillinq` when it was calculated from the ledger. Distinguishes a figure someone owns from one a system derives — they age differently and are reviewed differently."
                     },
                     "effectiveFrom": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
                         "title": "Effective from",
-                        "description": "First date this policy applies. Null means it has always applied. Overheads are re-budgeted; costing last year's hours at this year's overhead would silently restate history."
+                        "description": "First date this applies. Leave empty if it has always applied — costing last year's hours at this year's overhead would quietly restate history.", "x-notes": "First date this policy applies. Null means it has always applied. Overheads are re-budgeted; costing last year's hours at this year's overhead would silently restate history."
                     },
                     "effectiveTo": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
                         "title": "Effective until",
-                        "description": "Last date this policy applies. Null means currently in force. A superseded policy is closed by setting this rather than deleted, so a historical allocation stays explicable."
+                        "description": "Last date this applies. Leave empty while it is still in force. Close an old policy here rather than deleting it, so past allocations stay explicable.", "x-notes": "Last date this policy applies. Null means currently in force. A superseded policy is closed by setting this rather than deleted, so a historical allocation stays explicable."
                     },
                     "administrationId": {
                         "type": "string",
@@ -161,7 +161,7 @@
                         "type": "object",
                         "nullable": true,
                         "title": "Overtime surcharge percentages (contract override)",
-                        "description": "Per-category overwerktoeslag for THIS contract, overriding whatever the CAO says. Null — the normal case — means the CAO's own overtime article applies, resolved through CaoRegistry. Terms are company-wide by default and individual only by exception, so the absence of a value here is the meaningful state, not an unfinished one. Percentages are the SURCHARGE, not the total: 50 means 150% of the normal hourly wage is paid for that hour. When set, the override wins IN FULL rather than merging per category — a partial merge would silently combine two documents' terms and produce a set of rules that exists in neither.",
+                        "description": "Overtime surcharges for this contract, instead of what the collective agreement says. Leave empty — the normal case — to follow the agreement. These are the surcharge, not the total: 50 means 150% of the normal hourly wage. Setting this replaces the agreement's overtime terms in full.", "x-notes": "Per-category overwerktoeslag for THIS contract, overriding whatever the CAO says. Null — the normal case — means the CAO's own overtime article applies, resolved through CaoRegistry. Terms are company-wide by default and individual only by exception, so the absence of a value here is the meaningful state, not an unfinished one. Percentages are the SURCHARGE, not the total: 50 means 150% of the normal hourly wage is paid for that hour. When set, the override wins IN FULL rather than merging per category — a partial merge would silently combine two documents' terms and produce a set of rules that exists in neither.",
                         "properties": {
                             "doordeweeks": {"type": "number", "nullable": true, "title": "Weekday", "description": "Surcharge percentage for overtime on an ordinary weekday."},
                             "zaterdag": {"type": "number", "nullable": true, "title": "Saturday", "description": "Surcharge percentage for overtime on a Saturday."},
@@ -173,13 +173,13 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Overtime terms override reason",
-                        "description": "Why this contract departs from the CAO's overtime article. REQUIRED whenever overtimeToeslagPercentages is set. Departing from a collective agreement is an individual arrangement someone negotiated and someone must be able to justify — an unexplained override is indistinguishable from a data-entry error, and it feeds a cost figure that reaches a statutory submission."
+                        "description": "Why this contract departs from the collective agreement's overtime terms. Required whenever you set an override: departing from a collective agreement is an individual arrangement someone has to be able to justify, and it feeds a cost figure that reaches a statutory submission.", "x-notes": "Why this contract departs from the CAO's overtime article. REQUIRED whenever overtimeToeslagPercentages is set. Departing from a collective agreement is an individual arrangement someone negotiated and someone must be able to justify — an unexplained override is indistinguishable from a data-entry error, and it feeds a cost figure that reaches a statutory submission."
                     },
                     "leaveEntitlementOverrideDays": {
                         "type": "object",
                         "nullable": true,
                         "title": "Leave entitlement (contract override)",
-                        "description": "Full-time vakantiedagen for THIS contract, overriding the CAO's leaveEntitlement. Null means the CAO applies. Statutory minimums still bind: nl-verlof-wettelijk-minimum is evaluated against the resulting entitlement, so an override below the wettelijk minimum is a violation rather than a permitted exception.",
+                        "description": "Full-time holiday days for this contract, instead of what the collective agreement says. Leave empty to follow the agreement. Statutory minimums still apply: an override below them is a violation, not an exception.", "x-notes": "Full-time vakantiedagen for THIS contract, overriding the CAO's leaveEntitlement. Null means the CAO applies. Statutory minimums still bind: nl-verlof-wettelijk-minimum is evaluated against the resulting entitlement, so an override below the wettelijk minimum is a violation rather than a permitted exception.",
                         "properties": {
                             "vakantiedagenWettelijk": {"type": "number", "nullable": true, "title": "Statutory leave days", "description": "Full-time statutory (wettelijk) vacation days."},
                             "vakantiedagenBovenwettelijk": {"type": "number", "nullable": true, "title": "Additional leave days", "description": "Full-time above-statutory (bovenwettelijk) vacation days."}
@@ -189,7 +189,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Leave terms override reason",
-                        "description": "Why this contract departs from the CAO's leave entitlement. REQUIRED whenever leaveEntitlementOverrideDays is set, for the same reason the overtime override needs one."
+                        "description": "Why this contract departs from the collective agreement's leave entitlement. Required whenever you set an override.", "x-notes": "Why this contract departs from the CAO's leave entitlement. REQUIRED whenever leaveEntitlementOverrideDays is set, for the same reason the overtime override needs one."
                     }
                 }
             },
@@ -207,7 +207,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Domain object type",
-                        "description": "Which application and record type the domain object reference points at.",
+                        "description": "Which app and record type the reference points at.",
                         "x-notes": "Format `<app>:<schema>` — e.g. `procest:case` (ADR-081 decision 5). Without it a bare UUID is unresolvable: humaniq cannot ask 'which app owns this?' and neither can the receiving bookkeeping app. Set together with domainObjectRef or not at all."
                     },
                     "allocationKey": {

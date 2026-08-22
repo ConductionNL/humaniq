@@ -17,7 +17,7 @@
           "jurisdiction": {
             "type": "string",
             "title": "Jurisdiction",
-            "description": "The pack's DECLARED ISO 3166-1 alpha-2 jurisdiction — never parsed from the pack id. Half of the resolver key."
+            "description": "Which country this pack is for. Always stated here — never read from the pack's name.", "x-notes": "The pack's DECLARED ISO 3166-1 alpha-2 jurisdiction — never parsed from the pack id. Half of the resolver key."
           },
           "taxYear": {
             "type": "integer",
@@ -27,7 +27,7 @@
           "packVersion": {
             "type": "string",
             "title": "Pack version",
-            "description": "Semver. Stamped onto every run this pack computes as engineVersion = {packId}@{packVersion}."
+            "description": "The pack's version. Every run calculated with it records this, so you can tell later which rules were used.", "x-notes": "Semver. Stamped onto every run this pack computes as engineVersion = {packId}@{packVersion}."
           },
           "dslVersion": {
             "type": "string",
@@ -43,24 +43,24 @@
             "type": "boolean",
             "title": "Active",
             "default": false,
-            "description": "Whether this pack resolves for its (jurisdiction, taxYear). Set by humaniq only after every validation gate passed — including an in-process dry-run of the pack's own golden vectors."
+            "description": "This pack is in use for its country and tax year. Only set once every validation has passed.", "x-notes": "Whether this pack resolves for its (jurisdiction, taxYear). Set by humaniq only after every validation gate passed — including an in-process dry-run of the pack's own golden vectors."
           },
           "overridesBundled": {
             "type": "boolean",
             "title": "Overrides a bundled pack",
             "default": false,
-            "description": "Whether an admin explicitly activated this pack over a bundled pack owning the same key. Overriding the bundled NL pack replaces the engine's regression contract, so it is a deliberate, recorded act — never an accident of upload order."
+            "description": "An administrator deliberately activated this pack over the built-in one for the same country and year.", "x-notes": "Whether an admin explicitly activated this pack over a bundled pack owning the same key. Overriding the bundled NL pack replaces the engine's regression contract, so it is a deliberate, recorded act — never an accident of upload order."
           },
           "provenance": {
             "type": "string",
             "title": "Provenance",
             "nullable": true,
-            "description": "Any verified:false / placeholder:true corpus leaf this pack resolves. Such leaves do NOT block activation, but are stamped so downstream consumers see a stand-in rather than assuming engine truth."
+            "description": "Any figures in this pack that are placeholders rather than confirmed, so readers know what is a stand-in.", "x-notes": "Any verified:false / placeholder:true corpus leaf this pack resolves. Such leaves do NOT block activation, but are stamped so downstream consumers see a stand-in rather than assuming engine truth."
           },
           "document": {
             "type": "string",
             "title": "Pack document",
-            "description": "The pack's full JSON document, as uploaded. Data only: the DSL has no loops, no recursion and no IO, and a pack can never carry code, a class path or a callable — it names an allow-listed handler or it is rejected."
+            "description": "The pack's full contents as uploaded. Data only — a pack can never contain code.", "x-notes": "The pack's full JSON document, as uploaded. Data only: the DSL has no loops, no recursion and no IO, and a pack can never carry code, a class path or a callable — it names an allow-listed handler or it is rejected."
           }
         }
       }

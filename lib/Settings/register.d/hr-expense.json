@@ -63,28 +63,28 @@
                         "type": "string",
                         "format": "uuid",
                         "$ref": "Employee",
-                        "description": "Reference to the Employee who submitted the claim (the claimant). Drives the self-approval guard — the approver may not equal this employee."
+                        "description": "Who is claiming. This person cannot approve their own claim.", "x-notes": "Reference to the Employee who submitted the claim (the claimant). Drives the self-approval guard — the approver may not equal this employee."
                     },
                     "title": {
                         "type": "string",
                         "title": "Title",
-                        "description": "Short title for the expense (schema:name).",
+                        "description": "A short title for the claim.", "x-notes": "Short title for the expense (schema:name).",
                         "maxLength": 255,
                         "minLength": 1
                     },
                     "description": {"title": "Description", 
                         "type": "string",
-                        "description": "Free-text description of the expense.",
+                        "description": "What the expense was for.", "x-notes": "Free-text description of the expense.",
                         "maxLength": 2000
                     },
                     "amount": {"title": "Amount", 
                         "type": "number",
-                        "description": "Claimed amount in the configured currency. Reused by OpenRegister aggregations for per-employee and per-status totals.",
+                        "description": "The amount claimed, in the currency below.", "x-notes": "Claimed amount in the configured currency. Reused by OpenRegister aggregations for per-employee and per-status totals.",
                         "minimum": 0
                     },
                     "currency": {"title": "Currency", 
                         "type": "string",
-                        "description": "ISO 4217 currency code.",
+                        "description": "The currency of the claim, for example EUR.", "x-notes": "ISO 4217 currency code.",
                         "default": "EUR",
                         "maxLength": 3,
                         "minLength": 3
@@ -106,27 +106,27 @@
                     "expenseDate": {"title": "Expense date", 
                         "type": "string",
                         "format": "date",
-                        "description": "The date the expense was incurred (ISO 8601)."
+                        "description": "When the expense was incurred.", "x-notes": "The date the expense was incurred (ISO 8601)."
                     },
                     "receiptFile": {"title": "Receipt file", 
                         "type": "string",
                         "nullable": true,
-                        "description": "Reference (Nextcloud Files path or OpenRegister file id) to the attached receipt / bon."
+                        "description": "The attached receipt.", "x-notes": "Reference (Nextcloud Files path or OpenRegister file id) to the attached receipt / bon."
                     },
                     "vendor": {"title": "Vendor", 
                         "type": "string",
                         "nullable": true,
-                        "description": "Vendor / leverancier name, either typed by the employee or prefilled by receipt-OCR extraction (receipt-ocr, REQ-RCPT-001)."
+                        "description": "Who the purchase was from. Filled in by you, or read off the receipt automatically.", "x-notes": "Vendor / leverancier name, either typed by the employee or prefilled by receipt-OCR extraction (receipt-ocr, REQ-RCPT-001)."
                     },
                     "vatAmount": {"title": "VAT amount", 
                         "type": "number",
                         "nullable": true,
                         "minimum": 0,
-                        "description": "VAT / BTW amount on the receipt, either typed by the employee or prefilled by receipt-OCR extraction (receipt-ocr, REQ-RCPT-001)."
+                        "description": "The VAT on the receipt. Filled in by you, or read off the receipt automatically.", "x-notes": "VAT / BTW amount on the receipt, either typed by the employee or prefilled by receipt-OCR extraction (receipt-ocr, REQ-RCPT-001)."
                     },
                     "status": {"title": "Status", 
                         "type": "string",
-                        "description": "Reimbursement workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "description": "Where this claim has got to: draft, submitted, approved or rejected, then reimbursed.", "x-notes": "Reimbursement workflow status. Governed by the x-openregister-lifecycle state machine.",
                         "x-enum-labels": {"draft": "Draft", "submitted": "Submitted", "approved": "Approved", "rejected": "Rejected", "reimbursed": "Reimbursed"},
                         "enum": [
                             "draft",
@@ -141,18 +141,18 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
-                        "description": "ISO 8601 UTC timestamp the employee submitted the claim."
+                        "description": "When the employee submitted the claim.", "x-notes": "ISO 8601 UTC timestamp the employee submitted the claim."
                     },
                     "approvedBy": {"title": "Approved by", 
                         "type": "string",
                         "nullable": true,
-                        "description": "Nextcloud user ID of the manager who approved (or rejected) the claim — an NC user id, not an object FK, so it stays plain per ADR-046. Must differ from the claiming employee (no self-approval)."
+                        "description": "The manager who approved or rejected the claim. It cannot be the person who claimed.", "x-notes": "Nextcloud user ID of the manager who approved (or rejected) the claim — an NC user id, not an object FK, so it stays plain per ADR-046. Must differ from the claiming employee (no self-approval)."
                     },
                     "approvedAt": {"title": "Approved at", 
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
-                        "description": "ISO 8601 UTC timestamp of approval or rejection."
+                        "description": "When the claim was approved or rejected.", "x-notes": "ISO 8601 UTC timestamp of approval or rejection."
                     },
                     "rejectionReason": {"title": "Rejection reason", 
                         "type": "string",
@@ -164,30 +164,30 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
-                        "description": "ISO 8601 UTC timestamp the approved claim was paid out to the employee."
+                        "description": "When the approved claim was paid out.", "x-notes": "ISO 8601 UTC timestamp the approved claim was paid out to the employee."
                     },
                     "userId": {"title": "User ID", 
                         "type": "string",
                         "nullable": true,
-                        "description": "Denormalized Nextcloud user id of the employee this expense claim belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the approvedBy convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnDeclaraties self-service page filters on it with the @me token."
+                        "description": "The Nextcloud account this claim belongs to, so it appears under the employee's own expenses.", "x-notes": "Denormalized Nextcloud user id of the employee this expense claim belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the approvedBy convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnDeclaraties self-service page filters on it with the @me token."
                     },
                     "managerUserId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Manager user id",
-                        "description": "Denormalized Nextcloud user id of the employee's manager (mss-team-scope) — a plain NC-user-id string, never a $ref relation. A copy of the nextcloudUserId of the manager (OrgUnit.managerId) of the record's employee's active OrgAssignment unit, populated by HR/back-office alongside userId because the manifest filter grammar cannot join across schemas. The TeamDeclaratiegoedkeuring team page filters on it with the @me token; audited by nl-mss-manager-consistency."
+                        "description": "The Nextcloud account of the employee's manager, so the claim reaches their approval queue.", "x-notes": "Denormalized Nextcloud user id of the employee's manager (mss-team-scope) — a plain NC-user-id string, never a $ref relation. A copy of the nextcloudUserId of the manager (OrgUnit.managerId) of the record's employee's active OrgAssignment unit, populated by HR/back-office alongside userId because the manifest filter grammar cannot join across schemas. The TeamDeclaratiegoedkeuring team page filters on it with the @me token; audited by nl-mss-manager-consistency."
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this Expense is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun/managerUserId convention), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+                        "description": "Which administration this claim belongs to. Normally the same as the employee's.", "x-notes": "Denormalized administratie key this Expense is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun/managerUserId convention), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     },
                     "travelType": {
                         "type": "string",
                         "nullable": true,
                         "title": "Travel type",
-                        "description": "Distinguishes zakelijke kilometers (business) from woon-werkverkeer (commute) for a category travel claim -- both are eligible for the onbelaste kilometervergoeding (mileage-rules, REQ-MILE-001). Meaningful only alongside distanceKm; absent on non-mileage expenses.",
+                        "description": "Whether these were business kilometres or commuting. Only fill this in for a travel claim with a distance.", "x-notes": "Distinguishes zakelijke kilometers (business) from woon-werkverkeer (commute) for a category travel claim -- both are eligible for the onbelaste kilometervergoeding (mileage-rules, REQ-MILE-001). Meaningful only alongside distanceKm; absent on non-mileage expenses.",
                         "x-enum-labels": {"business": "Business trip", "commute": "Commute"},
                         "enum": [
                             "business",
@@ -199,7 +199,7 @@
                         "nullable": true,
                         "minimum": 0,
                         "title": "Distance (km)",
-                        "description": "Kilometers driven for this claim, used together with amount and travelType to compute the per-km reimbursement checked against the onbelaste kilometervergoeding by nl-reiskosten-onbelast-tarief (mileage-rules, REQ-MILE-001)."
+                        "description": "Kilometres driven for this claim. Used with the amount to check the tax-free rate per kilometre.", "x-notes": "Kilometers driven for this claim, used together with amount and travelType to compute the per-km reimbursement checked against the onbelaste kilometervergoeding by nl-reiskosten-onbelast-tarief (mileage-rules, REQ-MILE-001)."
                     }
                 }
             },
@@ -220,7 +220,7 @@
                         "type": "string",
                         "format": "uuid",
                         "$ref": "Expense",
-                        "description": "Reference to the Expense this extraction attempt is for."
+                        "description": "The claim this reading attempt belongs to.", "x-notes": "Reference to the Expense this extraction attempt is for."
                     },
                     "status": {"title": "Status", 
                         "type": "string",
@@ -238,49 +238,49 @@
                         "nullable": true,
                         "minimum": 0,
                         "maximum": 1,
-                        "description": "docudesk's overall confidence score for this extraction; null until an attempt completes."
+                        "description": "How confident the reader was overall. Empty until an attempt finishes.", "x-notes": "docudesk's overall confidence score for this extraction; null until an attempt completes."
                     },
                     "extractedAmount": {"title": "Extracted amount", 
                         "type": "number",
                         "nullable": true,
-                        "description": "The raw amount docudesk extracted (VAT-inclusive total), recorded even when NOT applied because Expense.amount was already set."
+                        "description": "The total amount read off the receipt, including VAT. Recorded even when it was not used because the field was already filled.", "x-notes": "The raw amount docudesk extracted (VAT-inclusive total), recorded even when NOT applied because Expense.amount was already set."
                     },
                     "extractedDate": {"title": "Extracted date", 
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "description": "The raw receipt/invoice date docudesk extracted, recorded even when NOT applied."
+                        "description": "The date read off the receipt. Recorded even when it was not used.", "x-notes": "The raw receipt/invoice date docudesk extracted, recorded even when NOT applied."
                     },
                     "extractedVendor": {"title": "Extracted vendor", 
                         "type": "string",
                         "nullable": true,
-                        "description": "The raw vendor/leverancier name docudesk extracted, recorded even when NOT applied."
+                        "description": "The supplier read off the receipt. Recorded even when it was not used.", "x-notes": "The raw vendor/leverancier name docudesk extracted, recorded even when NOT applied."
                     },
                     "extractedVatAmount": {"title": "Extracted VAT amount", 
                         "type": "number",
                         "nullable": true,
-                        "description": "The raw VAT amount docudesk extracted, recorded even when NOT applied."
+                        "description": "The VAT read off the receipt. Recorded even when it was not used.", "x-notes": "The raw VAT amount docudesk extracted, recorded even when NOT applied."
                     },
                     "appliedFields": {"title": "Applied fields", 
                         "type": "string",
                         "nullable": true,
-                        "description": "Comma-separated Expense field names this attempt actually wrote (a field extracted-but-skipped-because-already-filled does not appear here, even though its raw value is still recorded)."
+                        "description": "Which fields on the claim this attempt actually filled in. A value that was read but skipped because the field was already filled does not appear here.", "x-notes": "Comma-separated Expense field names this attempt actually wrote (a field extracted-but-skipped-because-already-filled does not appear here, even though its raw value is still recorded)."
                     },
                     "requestedBy": {"title": "Requested by", 
                         "type": "string",
                         "nullable": true,
-                        "description": "Nextcloud user ID that requested this extraction, plain string per ADR-046 (mirrors Expense.approvedBy), or null for 'system' (occ context)."
+                        "description": "Who asked for this extraction. Empty when it ran automatically.", "x-notes": "Nextcloud user ID that requested this extraction, plain string per ADR-046 (mirrors Expense.approvedBy), or null for 'system' (occ context)."
                     },
                     "errorMessage": {"title": "Error message", 
                         "type": "string",
                         "nullable": true,
-                        "description": "Set on failed/skipped-no-docudesk; the diagnostic shown to the requester."
+                        "description": "Why the reading failed or was skipped.", "x-notes": "Set on failed/skipped-no-docudesk; the diagnostic shown to the requester."
                     },
                     "extractedAt": {"title": "Extracted at", 
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
-                        "description": "ISO 8601 UTC timestamp the extraction attempt completed."
+                        "description": "When this reading attempt finished.", "x-notes": "ISO 8601 UTC timestamp the extraction attempt completed."
                     }
                 }
             }

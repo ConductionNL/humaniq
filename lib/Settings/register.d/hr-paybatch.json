@@ -21,7 +21,7 @@
                         "format": "uuid",
                         "$ref": "PayrollRun",
                         "title": "Payroll run",
-                        "description": "Reference to the PayrollRun this net-pay attempt belongs to."
+                        "description": "The payroll run this payment attempt belongs to.", "x-notes": "Reference to the PayrollRun this net-pay attempt belongs to."
                     },
                     "period": {
                         "type": "string",
@@ -39,25 +39,25 @@
                         ],
                         "default": "pending",
                         "title": "Status",
-                        "description": "Outcome of this net-pay attempt. `created` = draft PaymentRun delivered to shillinq (klaargezet, NOT paid). `failed`/`skipped-no-shillinq` are superseded by a retry; the run stays payable."
+                        "description": "How this attempt ended. 'Created' means a draft payment run was delivered — not that anyone has been paid yet.", "x-notes": "Outcome of this net-pay attempt. `created` = draft PaymentRun delivered to shillinq (klaargezet, NOT paid). `failed`/`skipped-no-shillinq` are superseded by a retry; the run stays payable."
                     },
                     "shillinqPaymentRunRef": {
                         "type": "string",
                         "nullable": true,
                         "title": "Shillinq payment run id",
-                        "description": "The shillinq PaymentRun object id this attempt produced -- plain string, NOT $ref, because it targets another app's register (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."
+                        "description": "The payment run this attempt created in the bookkeeping system.", "x-notes": "The shillinq PaymentRun object id this attempt produced -- plain string, NOT $ref, because it targets another app's register (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."
                     },
                     "runNumber": {
                         "type": "string",
                         "nullable": true,
                         "title": "Run number",
-                        "description": "The deterministic idempotency key sent to shillinq: HRMQ-NETPAY-{period}-{administrationId}. Doubles as the crash-recovery probe key (design.md D6)."
+                        "description": "The unique reference sent to the bookkeeping system, so the same period is never paid twice.", "x-notes": "The deterministic idempotency key sent to shillinq: HRMQ-NETPAY-{period}-{administrationId}. Doubles as the crash-recovery probe key (design.md D6)."
                     },
                     "totalAmount": {
                         "type": "number",
                         "nullable": true,
                         "title": "Total amount",
-                        "description": "Sum of the payment line amounts (cents-rounded)."
+                        "description": "The total of all payment lines.", "x-notes": "Sum of the payment line amounts (cents-rounded)."
                     },
                     "lineCount": {
                         "type": "integer",
@@ -69,20 +69,20 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Error message",
-                        "description": "Failure/skip diagnostic; on `failed` carries every line's per-payslip error concatenated (e.g. missing IBAN, shillinq unavailable, stale attempt superseded)."
+                        "description": "Why the batch failed or was skipped — for a failure, every payslip's own error, such as a missing bank account.", "x-notes": "Failure/skip diagnostic; on `failed` carries every line's per-payslip error concatenated (e.g. missing IBAN, shillinq unavailable, stale attempt superseded)."
                     },
                     "createdAt": {
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
                         "title": "Created at",
-                        "description": "When the PaymentRun was created (or adopted) in shillinq."
+                        "description": "When the payment run was created in the bookkeeping system.", "x-notes": "When the PaymentRun was created (or adopted) in shillinq."
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this net-pay batch belongs to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7). The design.md premise that this payroll aggregate already carried administrationId was inaccurate at HEAD (the runNumber key HRMQ-NETPAY-{period}-{administrationId} referenced it, but the schema field was absent); added here so the Loonadministratie pages scope coherently and nl-administratie-scope-consistency could audit it against the run in a follow-up. Copied from the referenced PayrollRun.administrationId when the batch is created."
+                        "description": "Which administration this batch belongs to.", "x-notes": "Denormalized administratie key this net-pay batch belongs to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7). The design.md premise that this payroll aggregate already carried administrationId was inaccurate at HEAD (the runNumber key HRMQ-NETPAY-{period}-{administrationId} referenced it, but the schema field was absent); added here so the Loonadministratie pages scope coherently and nl-administratie-scope-consistency could audit it against the run in a follow-up. Copied from the referenced PayrollRun.administrationId when the batch is created."
                     }
                 }
             }

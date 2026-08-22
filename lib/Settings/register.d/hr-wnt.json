@@ -38,22 +38,22 @@
                         "format": "uuid",
                         "$ref": "Employee",
                         "title": "Employee",
-                        "description": "Reference to the topfunctionaris Employee this annual disclosure reports on. The referenced Employee's wntTopfunctionaris and wntUitzonderingReden gate the nl-wnt-norm-overschrijding check."
+                        "description": "The senior official this yearly disclosure is about.", "x-notes": "Reference to the topfunctionaris Employee this annual disclosure reports on. The referenced Employee's wntTopfunctionaris and wntUitzonderingReden gate the nl-wnt-norm-overschrijding check."
                     },
                     "year": {
                         "type": "string",
                         "title": "Year",
-                        "description": "The calendar year this disclosure covers, in YYYY. The year's full WNT-verantwoording is every WntDisclosure row carrying this year (design.md D2)."
+                        "description": "The calendar year this disclosure covers.", "x-notes": "The calendar year this disclosure covers, in YYYY. The year's full WNT-verantwoording is every WntDisclosure row carrying this year (design.md D2)."
                     },
                     "totalCompensation": {
                         "type": "number",
                         "title": "Total compensation",
-                        "description": "The total WNT-bezoldiging for this topfunctionaris for the year, in whole euro (salary + vacation allowance + year-end bonus + taxable expense reimbursements + pension contribution, per the WNT's own compensation definition). Hand-entered by finance -- this app computes and aggregates nothing across payroll runs (design.md D3). Compared against the WNT-norm's annual figure (EUR 262.000 in 2026) by nl-wnt-norm-overschrijding."
+                        "description": "Total remuneration for the year in whole euros: salary, holiday allowance, year-end bonus, taxable expense reimbursements and pension contribution.", "x-notes": "The total WNT-bezoldiging for this topfunctionaris for the year, in whole euro (salary + vacation allowance + year-end bonus + taxable expense reimbursements + pension contribution, per the WNT's own compensation definition). Hand-entered by finance -- this app computes and aggregates nothing across payroll runs (design.md D3). Compared against the WNT-norm's annual figure (EUR 262.000 in 2026) by nl-wnt-norm-overschrijding."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Publication lifecycle status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd).",
+                        "description": "Whether this disclosure is still a draft or has been published.", "x-notes": "Publication lifecycle status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd).",
                         "x-enum-labels": {"concept": "Draft", "gepubliceerd": "Published"},
                         "enum": [
                             "concept",
@@ -65,7 +65,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this WntDisclosure is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PensionFiling convention)."
+                        "description": "Which administration this disclosure belongs to.", "x-notes": "Denormalized administratie key this WntDisclosure is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PensionFiling convention)."
                     }
                 }
             }
