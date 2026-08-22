@@ -17,7 +17,7 @@
                 ],
                 "properties": {
                     "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "title": "Employee", "description": "UUID reference to the Employee holding this BHV-related certification."},
-                    "rol": {"type": "string", "enum": ["bhv_basis", "hoofd_bhv", "ehbo", "ontruimingsleider"], "title": "Role", "description": "The BHV-related role this certification covers. Enum append-only: renaming a value later is breaking, adding one is not."},
+                    "rol": {"type": "string", "enum": ["bhv_basis", "hoofd_bhv", "ehbo", "ontruimingsleider"], "x-enum-labels": {"bhv_basis": "Emergency responder (basic)", "hoofd_bhv": "Head of emergency response", "ehbo": "First aid", "ontruimingsleider": "Evacuation leader"}, "title": "Role", "description": "The BHV-related role this certification covers. Enum append-only: renaming a value later is breaking, adding one is not."},
                     "certificaatBehaaldOp": {"type": "string", "format": "date", "nullable": true, "title": "Certificate obtained on", "description": "Date the certification was obtained (ISO 8601)."},
                     "certificaatGeldigTot": {"type": "string", "format": "date", "title": "Certificate valid until", "description": "Date the certification expires (ISO 8601) -- the expiry-alert anchor read by nl-bhv-certificaat-verloopt (lib/Standards/Checks/NlSignalChecks.php, framework hr-signals, parameters.windowDays=90)."},
                     "opleider": {"type": "string", "nullable": true, "title": "Training provider", "description": "Name of the training provider (opleidingsinstituut) that issued the certification, when known."},

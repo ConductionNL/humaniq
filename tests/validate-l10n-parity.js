@@ -40,12 +40,32 @@
 //      check is deliberately function-word based: Dutch statutory proper nouns
 //      (WNT, WKR, TWK, Cao Gemeenten, UPA) legitimately survive translation,
 //      Dutch SENTENCES do not.
+//   8. Every SCHEMA-derived display string in lib/Settings/register.d/*.json
+//      is a key in BOTH catalogues, and carries no Dutch literal.
+//
+//      This half was previously exempted on the theory that schema strings
+//      "are rendered by OpenRegister, not by hrmq's manifest renderer". That
+//      was wrong. `fieldsFromSchema()` runs every property `title` through the
+//      injected `cnTranslate`, which CnAppRoot binds to this app's id — so a
+//      schema title is a key in THIS catalogue, and an absent key renders the
+//      English source in a Dutch session. The strings checked are the schema
+//      `title` (dialog heading + Add button noun), each property `title`
+//      (field label + column header), and the VALUES of `x-enum-labels`
+//      (dropdown options + status badges).
+//
+//      The enum VALUES themselves are not checked: they are stored contract
+//      values, several Dutch by design (`ingediend`), and are never rendered
+//      once the property declares `x-enum-labels`.
 //
 // WHAT IT DELIBERATELY DOES NOT CHECK
 //
-//   - Schema `title`/`description` in lib/Settings/register.d/*.json. Those
-//     are already English and are the canonical source for form field labels;
-//     they are rendered by OpenRegister, not by hrmq's manifest renderer.
+//   - Schema property `description` — the helper text under a field. Those
+//     strings are still written for a developer reading the schema rather
+//     than for the person filling in the form, and rewriting them is the
+//     forms-as-process copy pass, not a translation one. Translating ~730
+//     descriptions that are already slated to be rewritten would be work
+//     thrown away, so they are out of scope until that pass lands. Tracked
+//     as the descriptions phase of the forms-as-process programme.
 //   - Route paths, page/menu/widget ids, and lifecycle transition `action`
 //     ids. Those are backend contract, not display text, and several are
 //     Dutch by design (`"action": "indienen"`).
@@ -91,6 +111,7 @@ const L10N_DIR = path.join(REPO_ROOT, 'l10n')
 const BASE_MANIFEST = path.join(REPO_ROOT, 'src', 'manifest.json')
 const FRAGMENT_DIR = path.join(REPO_ROOT, 'src', 'manifest.d')
 const SRC_DIR = path.join(REPO_ROOT, 'src')
+const SCHEMA_DIR = path.join(REPO_ROOT, 'lib', 'Settings', 'register.d')
 
 // The manifest properties that carry text a user reads. Everything else in a
 // manifest node is an id, a route, a field name or a schema slug.
@@ -192,6 +213,74 @@ function collectTranslateKeys(dir, sink) {
 	}
 }
 
+/**
+ * Every schema fragment under lib/Settings/register.d/. These carry the other
+ * half of the app's display text: the form field labels and the option labels
+ * of every dropdown.
+ *
+ * @return {string[]} absolute paths, sorted
+ */
+function schemaFiles() {
+	return fs
+		.readdirSync(SCHEMA_DIR)
+		.filter((f) => f.endsWith('.json'))
+		.sort()
+		.map((f) => path.join(SCHEMA_DIR, f))
+}
+
+/**
+ * Collect the display strings a schema puts on screen, remembering where each
+ * came from so a failure names the file.
+ *
+ * Three kinds, and only these three:
+ *
+ *   - a SCHEMA `title` — the heading of the create/edit dialog, and the noun
+ *     in the index page's Add button.
+ *   - a PROPERTY `title` — the field's label, and its column header.
+ *   - the VALUES of a property's `x-enum-labels` — the option labels of a
+ *     dropdown and the text of a status badge. The enum values themselves are
+ *     deliberately NOT collected: they are stored contract values, several of
+ *     them Dutch by design (`ingediend`), and are never rendered once the
+ *     property declares its labels.
+ *
+ * Property `description` is deliberately NOT collected — see the header.
+ *
+ * @param {object|Array} node - current schema node
+ * @param {string} file - the schema file being walked, for reporting
+ * @param {Map<string, string[]>} sink - value -> ["<file>:<what>", …]
+ */
+function collectSchemaStrings(node, file, sink) {
+	if (Array.isArray(node)) {
+		for (const item of node) collectSchemaStrings(item, file, sink)
+		return
+	}
+	if (node === null || typeof node !== 'object') return
+
+	const where = path.relative(REPO_ROOT, file)
+	const remember = (value, what) => {
+		if (typeof value !== 'string' || value.trim() === '') return
+		if (sink.has(value) === false) sink.set(value, [])
+		const label = `${where}:${what}`
+		if (sink.get(value).includes(label) === false) sink.get(value).push(label)
+	}
+
+	if (node.properties !== null && typeof node.properties === 'object' && Array.isArray(node.properties) === false) {
+		remember(node.title, 'schema title')
+		for (const [key, prop] of Object.entries(node.properties)) {
+			if (prop === null || typeof prop !== 'object') continue
+			remember(prop.title, `${key}.title`)
+			for (const source of [prop, prop.items]) {
+				if (source === null || typeof source !== 'object') continue
+				const labels = source['x-enum-labels']
+				if (labels === null || typeof labels !== 'object') continue
+				for (const label of Object.values(labels)) remember(label, `${key}.x-enum-labels`)
+			}
+		}
+	}
+
+	for (const value of Object.values(node)) collectSchemaStrings(value, file, sink)
+}
+
 function main() {
 	const failures = []
 
@@ -285,7 +374,25 @@ function main() {
 		}
 	}
 
-	report(failures, enKeys.length, manifestStrings.size, translateKeys.size)
+	// --- 8. every schema-derived display string is a key -------------------
+	const schemaStrings = new Map()
+	for (const file of schemaFiles()) {
+		collectSchemaStrings(loadJson(file), file, schemaStrings)
+	}
+	for (const [value, where] of schemaStrings) {
+		if (Object.hasOwn(en, value) === false) {
+			failures.push(`schema string has no en.json key: ${JSON.stringify(value)} (${where.join(', ')})`)
+		}
+		if (Object.hasOwn(nl, value) === false) {
+			failures.push(`schema string has no nl.json key: ${JSON.stringify(value)} (${where.join(', ')})`)
+		}
+		if (DUTCH_RE.test(value)) {
+			failures.push(`Dutch literal still used as a source key: ${JSON.stringify(value)} (${where.join(', ')})`
+				+ ' — a schema title IS the translation key; write it in English and put the Dutch in l10n/nl.json.')
+		}
+	}
+
+	report(failures, enKeys.length, manifestStrings.size + schemaStrings.size, translateKeys.size)
 }
 
 /**
@@ -356,7 +463,7 @@ function checkJsCatalogue(locale, translations, failures) {
  */
 function report(failures, keyCount, manifestCount, translateCount) {
 	console.log(`[validate-l10n-parity] ${keyCount} keys per catalogue (en/nl),`
-		+ ` ${manifestCount} distinct manifest strings, ${translateCount} t('${APP_ID}', …) keys.`)
+		+ ` ${manifestCount} distinct manifest + schema strings, ${translateCount} t('${APP_ID}', …) keys.`)
 
 	if (failures.length > 0) {
 		console.error('')

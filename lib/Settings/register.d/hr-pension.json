@@ -80,6 +80,7 @@
                         "type": "string",
                         "title": "Fund",
                         "description": "The sector pension fund this delivery is addressed to. APG-administered funds first (nl-pensioenaangifte); other administrators extend this enum in data later.",
+                        "x-enum-labels": {"abp": "ABP", "spw": "SPW", "bpf-bouw": "BPF Bouw", "schoonmaak": "Schoonmaak", "pfab": "PFAB", "pwri": "PWRI"},
                         "enum": [
                             "abp",
                             "spw",
@@ -92,7 +93,7 @@
                     "aanleverkenmerk": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Aanleverkenmerk",
+                        "title": "Submission reference",
                         "description": "The UPA delivery reference agreed or returned for this delivery."
                     },
                     "deadline": {
@@ -105,6 +106,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "UPA delivery lifecycle status. Governed by the x-openregister-lifecycle state machine (concept -> gecontroleerd -> bevestigd -> verzonden).",
+                        "x-enum-labels": {"concept": "Draft", "gecontroleerd": "Checked", "bevestigd": "Confirmed", "verzonden": "Sent"},
                         "enum": [
                             "concept",
                             "gecontroleerd",
@@ -117,6 +119,7 @@
                         "type": "string",
                         "title": "Response status",
                         "description": "Outcome of the fund/APG response to a sent delivery. A rejected (afgekeurd) delivery is corrected via the corrigeren transition; no automated polling/ingestion happens in this app.",
+                        "x-enum-labels": {"geen": "None", "ontvangen-ok": "Accepted", "afgekeurd": "Rejected"},
                         "enum": [
                             "geen",
                             "ontvangen-ok",
@@ -140,7 +143,7 @@
                     "verzondenDoor": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Verzonden door",
+                        "title": "Sent by",
                         "description": "Display name of the person who sent the delivery, stamped on the verzenden carrying write (the Timesheet approvedBy pattern)."
                     },
                     "administrationId": {

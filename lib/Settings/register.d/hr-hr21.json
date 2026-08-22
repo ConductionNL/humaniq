@@ -6,7 +6,7 @@
                 "slug": "Normfunctie",
                 "icon": "BriefcaseOutline",
                 "version": "0.1.0",
-                "title": "Normfunctie",
+                "title": "Reference job",
                 "description": "A read-only reference row from the HR21 (VNG-owned municipal functiewaarderingssysteem) normfunctie library, mapping one standard job function to a Cao Gemeenten schaal. Seeded illustrative subset only (allowCreate:false) -- NOT a claimed-complete ~150-function library; the exact HR21 normfunctie catalog was not independently verified from a primary VNG source (proposal.md 'Honesty about verification'). caoSchaal lives in the same key space cao-gemeenten.payScales uses, but this schema does not itself invent or store any schaal figures -- it only records which schaal a normfunctie maps to. An EmploymentContract links to a Normfunctie via normfunctieId, HR-set, never derived.",
                 "type": "object",
                 "x-schema-org": "schema:Occupation",
@@ -17,12 +17,12 @@
                     "caoSchaal"
                 ],
                 "properties": {
-                    "functiecode": {"type": "string", "title": "Functiecode", "description": "The stable HR21 normfunctie code (e.g. 'HR21-001'). The natural key a maintainer identifies this normfunctie by."},
-                    "naam": {"type": "string", "title": "Naam", "description": "Human-readable HR21 normfunctie name (e.g. 'Senior Beleidsmedewerker')."},
-                    "functiegroep": {"type": "string", "title": "Functiegroep", "description": "The HR21 hoofdproces this normfunctie belongs to (e.g. 'Beleid', 'Beheer', 'Management')."},
-                    "caoSchaal": {"type": "string", "title": "CAO schaal", "description": "The Cao Gemeenten schaal (numeric key '1'-'19', the same key space cao-gemeenten.payScales uses) this normfunctie maps to. Read against EmploymentContract.caoSchaal by nl-hr21-schaal-consistentie only when caoSchaalVerified is true."},
-                    "caoSchaalVerified": {"type": "boolean", "default": false, "title": "CAO schaal verified", "description": "Whether this normfunctie's caoSchaal mapping is confirmed against a primary HR21/VNG source. When false the mapping is advisory (placeholder) and nl-hr21-schaal-consistentie stays vacuous for any contract assigned to it -- the cao-library payScalesVerified precedent, applied to a classification mapping instead of a rate."},
-                    "caoSchaalSource": {"type": "string", "nullable": true, "title": "CAO schaal source", "description": "Human-readable note naming the authority to confirm this mapping against (e.g. 'HR21/VNG functieboek -- not yet independently confirmed'), or explaining why a specific row was flipped to verified for illustrative/demonstration purposes only."}
+                    "functiecode": {"type": "string", "title": "Job code", "description": "The stable HR21 normfunctie code (e.g. 'HR21-001'). The natural key a maintainer identifies this normfunctie by."},
+                    "naam": {"type": "string", "title": "Name", "description": "Human-readable HR21 normfunctie name (e.g. 'Senior Beleidsmedewerker')."},
+                    "functiegroep": {"type": "string", "title": "Job family", "description": "The HR21 hoofdproces this normfunctie belongs to (e.g. 'Beleid', 'Beheer', 'Management')."},
+                    "caoSchaal": {"type": "string", "title": "Collective agreement scale", "description": "The Cao Gemeenten schaal (numeric key '1'-'19', the same key space cao-gemeenten.payScales uses) this normfunctie maps to. Read against EmploymentContract.caoSchaal by nl-hr21-schaal-consistentie only when caoSchaalVerified is true."},
+                    "caoSchaalVerified": {"type": "boolean", "default": false, "title": "Collective agreement scale verified", "description": "Whether this normfunctie's caoSchaal mapping is confirmed against a primary HR21/VNG source. When false the mapping is advisory (placeholder) and nl-hr21-schaal-consistentie stays vacuous for any contract assigned to it -- the cao-library payScalesVerified precedent, applied to a classification mapping instead of a rate."},
+                    "caoSchaalSource": {"type": "string", "nullable": true, "title": "Collective agreement scale source", "description": "Human-readable note naming the authority to confirm this mapping against (e.g. 'HR21/VNG functieboek -- not yet independently confirmed'), or explaining why a specific row was flipped to verified for illustrative/demonstration purposes only."}
                 }
             }
         }

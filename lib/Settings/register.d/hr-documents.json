@@ -18,6 +18,7 @@
                 "properties": {
                     "documentType": {
                         "type": "string",
+                        "x-enum-labels": {"arbeidsovereenkomst": "Employment contract", "aanbiedingsbrief": "Offer letter", "werkgeversverklaring": "Employer's statement", "getuigschrift": "Reference letter", "loonstrook": "Payslip", "jaaropgaaf": "Annual statement"},
                         "enum": [
                             "arbeidsovereenkomst",
                             "aanbiedingsbrief",
@@ -57,7 +58,7 @@
                         "format": "uuid",
                         "$ref": "Jaaropgaaf",
                         "nullable": true,
-                        "title": "Jaaropgaaf",
+                        "title": "Annual statement",
                         "description": "Reference to the Jaaropgaaf annual aggregate this document renders (payslip-pdf-docudesk) -- set only on documentType: jaaropgaaf; null on every other type."
                     },
                     "templateRef": {
@@ -68,6 +69,7 @@
                     },
                     "status": {
                         "type": "string",
+                        "x-enum-labels": {"pending": "Pending", "generated": "Generated", "failed": "Failed", "skipped-no-docudesk": "Skipped (no document app)"},
                         "enum": [
                             "pending",
                             "generated",
@@ -103,7 +105,7 @@
                 "slug": "Jaaropgaaf",
                 "icon": "FileCertificateOutline",
                 "version": "0.1.0",
-                "title": "Jaaropgaaf",
+                "title": "Annual statement",
                 "description": "The per-employee-per-year annual-statement aggregate (payslip-pdf-docudesk design.md D2): totals derived exclusively from the employee's Payslips for the given year -- never fabricated, never containing figures no Payslip field carries. Created and updated exclusively by HrDocumentService's aggregation step, upserted per (employeeId, year): re-aggregating refreshes an existing object's totals and `aggregatedAt` rather than creating a duplicate. Carries no status/lifecycle -- render state lives on the GeneratedDocument that renders it (D1).",
                 "type": "object",
                 "x-schema-org": "schema:Report",
@@ -164,13 +166,13 @@
                     "verrekendeArbeidskorting": {
                         "type": "number",
                         "nullable": true,
-                        "title": "Verrekende arbeidskorting",
+                        "title": "Employment tax credit applied",
                         "description": "Statutory jaaropgaaf line for the applied arbeidskorting -- stays null because no Payslip field carries arbeidskorting today (a payroll-core follow-up); never a fabricated 0.00 presented as fact."
                     },
                     "loonheffingennummer": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Loonheffingennummer",
+                        "title": "Payroll tax number",
                         "description": "Employer loonheffingennummer, snapshotted from configuration at aggregation time."
                     },
                     "aggregatedAt": {

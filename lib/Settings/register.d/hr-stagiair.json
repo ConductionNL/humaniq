@@ -6,7 +6,7 @@
                 "slug": "Stagiair",
                 "icon": "SchoolOutline",
                 "version": "0.1.0",
-                "title": "Stagiair",
+                "title": "Intern",
                 "description": "A person on a stageovereenkomst (HBO/WO/MBO-BOL, zonder dienstverband), tracked by humaniq but explicitly NOT an Employee, NOT payroll-engine input, and NOT CAO-scoped (stagiair-bbl-admin design.md D1). A stagiair has no arbeidsovereenkomst and, in the ordinary case, no loonheffing on the stagevergoeding, so it is modelled structurally separate from Employee/EmploymentContract: no payroll schema (PayrollRun, Payslip, PayrollMutationReport) references Stagiair and PayrollCalculator never reads it, so a stagiair can never reach the loon path by accident. A BBL-leerling is NOT a Stagiair -- it has a real leerarbeidsovereenkomst and is an EmploymentContract with type: bbl (design.md D1). Governed by a plain three-transition declarative x-openregister-lifecycle (aangemeld -> lopend -> afgerond/gestopt), no guard needed.",
                 "type": "object",
                 "x-schema-org": "schema:Person",
@@ -53,18 +53,19 @@
                 "properties": {
                     "onderwijsinstelling": {
                         "type": "string",
-                        "title": "Onderwijsinstelling",
+                        "title": "Educational institution",
                         "description": "Name of the educational institution (hogeschool/universiteit/ROC) the stagiair is enrolled at and that placed them on this stage."
                     },
                     "opleiding": {
                         "type": "string",
-                        "title": "Opleiding",
+                        "title": "Study programme",
                         "description": "The programme (opleiding) the stagiair is following at the onderwijsinstelling, e.g. 'HBO Bedrijfskunde' or 'WO Rechtsgeleerdheid'."
                     },
                     "niveau": {
                         "type": "string",
-                        "title": "Niveau",
+                        "title": "Education level",
                         "description": "Education level of the stagiair. 'hbo' (hoger beroepsonderwijs) / 'wo' (wetenschappelijk onderwijs) / 'mbo-bol' (middelbaar beroepsonderwijs, beroepsopleidende leerweg). All three are stageovereenkomst-based (zonder dienstverband); a BBL (beroepsbegeleidende leerweg) leerling is NOT modelled here -- it has a leerarbeidsovereenkomst and is an EmploymentContract with type: bbl (design.md D1).",
+                        "x-enum-labels": {"hbo": "HBO (university of applied sciences)", "wo": "WO (research university)", "mbo-bol": "MBO-BOL (vocational, school-based)"},
                         "enum": [
                             "hbo",
                             "wo",
@@ -73,8 +74,9 @@
                     },
                     "stagetype": {
                         "type": "string",
-                        "title": "Stagetype",
+                        "title": "Placement type",
                         "description": "Kind of stage. 'snuffelstage' (orientation), 'meeloopstage' (work-shadowing), or 'afstudeerstage' (graduation placement). Informational; carries no payroll or compliance meaning.",
+                        "x-enum-labels": {"snuffelstage": "Orientation placement", "meeloopstage": "Work-shadowing placement", "afstudeerstage": "Graduation placement"},
                         "enum": [
                             "snuffelstage",
                             "meeloopstage",
@@ -100,31 +102,32 @@
                         "format": "uuid",
                         "$ref": "Employee",
                         "nullable": true,
-                        "title": "Begeleider",
+                        "title": "Supervisor",
                         "description": "UUID reference to the Employee acting as the internal stagebegeleider (supervisor) for this stagiair. Nullable when no supervisor is assigned yet. This is the ONLY relation on Stagiair; it points from Stagiair to Employee, never the reverse, and no payroll schema ever references Stagiair (design.md D1)."
                     },
                     "stagevergoedingPerMaand": {
                         "type": "number",
                         "nullable": true,
-                        "title": "Stagevergoeding per maand",
+                        "title": "Placement allowance per month",
                         "description": "Optional monthly stagevergoeding paid to the stagiair, stored as a plain informational figure only. The fiscal treatment of a stagevergoeding is governed by the Belastingdienst Handboek Loonheffingen (hoofdstuk 17, 'Stagiairs', https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/personeel_en_loon/personeel_in_dienst/stagiairs): a stagiair zonder dienstbetrekking is, in the ordinary case the handbook describes, not automatically loonheffingplichtig the way an employee's loon is, but the actual test turns on concrete facts (who pays, whether it is capped to daadwerkelijke onkosten, the studenten- en scholierenregeling). No specific untaxed euro ceiling is asserted by humaniq and NO machine-checkable rule enforces one, because no confirmed threshold is cited (design.md D2); a future rule would need the exact Belastingdienst figure with a {value, source, verified} leaf (verified:false + checkAgainst URL) before asserting a limit."
                     },
                     "bpvOvereenkomstOndertekend": {
                         "type": "boolean",
                         "default": false,
-                        "title": "BPV-overeenkomst ondertekend",
+                        "title": "Placement agreement signed",
                         "description": "Whether the (three-party) stage-/BPV-overeenkomst is signed, marked manually by HR after the paper or externally-handled signing is complete -- mirroring EmploymentContract.writtenContract exactly. NOT an automated e-signature flow: two of the three signers (onderwijsinstelling contactpersoon, deelnemer) are not ordinarily Nextcloud users of this instance, and the shipped docudesk signing leaf cannot complete for a non-NC-user signer (offer-esign design.md point 4, design.md D3). Gates nl-bpv-overeenkomst-vereist: must be true once startDate has passed."
                     },
                     "verzekeringGeverifieerd": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Verzekering geverifieerd",
+                        "title": "Insurance verified",
                         "description": "Whether the stagiair's insurance cover (aansprakelijkheid/ongevallen) has been verified by HR. Informational HR-entered attestation; carries no machine-checkable rule in this change."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
                         "description": "Placement lifecycle status. Governed by the x-openregister-lifecycle state machine (aangemeld -> lopend -> afgerond, with gestopt as an early-termination terminal from aangemeld/lopend). Defaults to aangemeld.",
+                        "x-enum-labels": {"aangemeld": "Registered", "lopend": "Ongoing", "afgerond": "Completed", "gestopt": "Terminated"},
                         "enum": [
                             "aangemeld",
                             "lopend",

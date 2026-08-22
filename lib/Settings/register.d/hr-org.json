@@ -16,7 +16,7 @@
                 ],
                 "properties": {
                     "name": {"type": "string", "title": "Name", "description": "Unit name (e.g. \"Directie\", \"Consultancy\")."},
-                    "type": {"type": "string", "enum": ["afdeling", "team", "kostenplaats"], "title": "Type", "description": "Kind of organisational unit. Enum append-only: renaming a value later is breaking, adding one is not."},
+                    "type": {"type": "string", "enum": ["afdeling", "team", "kostenplaats"], "x-enum-labels": {"afdeling": "Department", "team": "Team", "kostenplaats": "Cost centre"}, "title": "Type", "description": "Kind of organisational unit. Enum append-only: renaming a value later is breaking, adding one is not."},
                     "parentUnitId": {"type": "string", "format": "uuid", "$ref": "OrgUnit", "nullable": true, "title": "Parent unit", "description": "Self-referencing UUID reference to the parent OrgUnit; null for a root unit. The parentUnitId chain must be acyclic (nl-org-unit-cycle, lib/Standards/rules/labour.json)."},
                     "costCenter": {"type": "string", "nullable": true, "title": "Cost center", "description": "Cost-center code (e.g. \"CC-100\"), matching the vocabulary Timesheet.costCenter seeds already use. The key shillinq-side consumers resolve owners through."},
                     "managerId": {"type": "string", "format": "uuid", "$ref": "Employee", "nullable": true, "title": "Manager", "description": "UUID reference to the Employee who manages this unit / owns its cost center."},

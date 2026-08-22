@@ -91,13 +91,14 @@
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Proeftijd end date",
+                        "title": "Probation end date",
                         "description": "End of the probationary period, if agreed. BW 7:652-capped (max 1 month for fixed-term contracts under 2 years, max 2 months for permanent/2+ year contracts) but a contractual input, not derived — checked by nl-onboarding-proeftijd-bewaking. Null when no proeftijd was agreed."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
                         "description": "Case lifecycle status. Governed by the x-openregister-lifecycle state machine (aangenomen -> contract_getekend -> gegevens_gevalideerd -> gereed_eerste_werkdag -> proeftijd_lopend -> afgerond, cancellable pre-afgerond).",
+                        "x-enum-labels": {"aangenomen": "Hired", "contract_getekend": "Contract signed", "gegevens_gevalideerd": "Details verified", "gereed_eerste_werkdag": "Ready for first day", "proeftijd_lopend": "In probation", "afgerond": "Completed", "geannuleerd": "Cancelled"},
                         "enum": [
                             "aangenomen",
                             "contract_getekend",
@@ -118,14 +119,14 @@
                     "widCheckDone": {
                         "type": "boolean",
                         "default": false,
-                        "title": "WID check done",
+                        "title": "Identity check done",
                         "description": "Whether the WID identity check was performed (original document seen, copy retained per Wet LB 1964 art. 28 lid 1 onder f). Must be true on or before startDate; checked by nl-onboarding-wid-check."
                     },
                     "widCheckDate": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "WID check date",
+                        "title": "Identity check date",
                         "description": "Date the WID identity check was performed."
                     },
                     "bsnValidated": {
@@ -149,7 +150,7 @@
                     "pensioenAangemeld": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Pensioen aangemeld",
+                        "title": "Registered with the pension fund",
                         "description": "Whether the hire has been registered with the pension fund/administrator."
                     },
                     "notes": {
@@ -240,6 +241,7 @@
                         "type": "string",
                         "title": "Reason",
                         "description": "The departure reason. Drives transitievergoeding applicability (BW 7:673) — opzegging-werkgever and einde-contract (non-renewal) are dismissal-initiated; opzegging-werknemer, pensioen and overlijden are statutorily exempt; vso severance is negotiated, not statutory.",
+                        "x-enum-labels": {"opzegging-werknemer": "Resignation", "opzegging-werkgever": "Dismissal", "einde-contract": "Contract ended", "pensioen": "Retirement", "overlijden": "Death", "vso": "Settlement agreement"},
                         "enum": [
                             "opzegging-werknemer",
                             "opzegging-werkgever",
@@ -253,6 +255,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Case lifecycle status. Governed by the x-openregister-lifecycle state machine (aangekondigd -> afronding_gepland -> eindafrekening_gereed -> afgerond, cancellable pre-afgerond).",
+                        "x-enum-labels": {"aangekondigd": "Announced", "afronding_gepland": "Wrap-up planned", "eindafrekening_gereed": "Final settlement ready", "afgerond": "Completed", "geannuleerd": "Cancelled"},
                         "enum": [
                             "aangekondigd",
                             "afronding_gepland",
@@ -266,43 +269,43 @@
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Exit gesprek done",
+                        "title": "Exit interview done",
                         "description": "Date the exit interview was held; null while pending. Gates the afronden transition."
                     },
                     "assetsIngeleverd": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Assets ingeleverd",
+                        "title": "Assets returned",
                         "description": "Whether company property was returned. Records the outcome only — per-item tracking is the parallel asset-management-mvp's domain (design.md D6)."
                     },
                     "toegangIngetrokken": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Toegang ingetrokken",
+                        "title": "Access revoked",
                         "description": "Whether Nextcloud/IT access has been revoked. Records the outcome only — OCS automation is a non-goal."
                     },
                     "verlofsaldoUitbetaald": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Verlofsaldo uitbetaald",
+                        "title": "Leave balance paid out",
                         "description": "Whether the open leave balance was paid out (BW art. 7:641). Checked cross-object by nl-offboarding-verlofsaldo-uitbetaling against the employee's LeaveBalance rows."
                     },
                     "vakantiegeldAfgerekend": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Vakantiegeld afgerekend",
+                        "title": "Holiday allowance settled",
                         "description": "Whether accrued vakantiegeld was settled in the eindafrekening."
                     },
                     "transitievergoedingBedrag": {
                         "type": "number",
                         "nullable": true,
-                        "title": "Transitievergoeding bedrag",
+                        "title": "Transition payment amount",
                         "description": "Gross statutory transition payment in EUR (BW art. 7:673); required data for dismissal-initiated reasons, null when not applicable. Recorded input, not derived — the formula constants live as parameters on the nl-offboarding-transitievergoeding rule."
                     },
                     "getuigschriftVerstrekt": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Getuigschrift verstrekt",
+                        "title": "Reference letter issued",
                         "description": "Whether the getuigschrift was provided to the leaver (BW art. 7:656; generated via the existing docudesk getuigschrift document type)."
                     },
                     "notes": {

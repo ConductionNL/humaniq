@@ -62,6 +62,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Case lifecycle status. Governed by the x-openregister-lifecycle state machine (gemeld <-> hersteld).",
+                        "x-enum-labels": {"gemeld": "Reported", "hersteld": "Recovered"},
                         "enum": [
                             "gemeld",
                             "hersteld"
@@ -71,75 +72,75 @@
                     "wachtdag": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Wachtdag",
+                        "title": "Waiting day",
                         "description": "Whether the first sick day is treated as an unpaid waiting day, where the CAO/contract provides for one."
                     },
                     "loondoorbetalingPercentage": {
                         "type": "number",
                         "default": 70,
-                        "title": "Loondoorbetaling percentage",
+                        "title": "Continued-pay percentage",
                         "description": "Percentage of wages continued during sickness. Statutory minimum is 70% for the first 104 weeks (BW art. 7:629 lid 1), with a first-year floor at the statutory minimum wage. Checked on open cases by nl-loondoorbetaling-minimum."
                     },
                     "aangepastLoon": {
                         "type": "number",
                         "nullable": true,
-                        "title": "Aangepast loon",
+                        "title": "Adjusted wage",
                         "description": "The wage still earned from partial work during this sickness period (samengesteld/aangepast loon) — composed with the continuation on the remainder by the sick-pay calculator (BW art. 7:629 lid 1). Null/absent means fully sick (treated as 0)."
                     },
                     "probleemanalyseDue": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Probleemanalyse due",
+                        "title": "Problem analysis due",
                         "description": "Statutory deadline for the probleemanalyse: firstSickDay + 6 weeks (Regeling procesgang eerste en tweede ziektejaar art. 2). Derived but stored (audit trail + UWV-deferral editability); checked by nl-wvp-milestone-derivation / nl-wvp-milestone-overdue."
                     },
                     "probleemanalyseDone": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Probleemanalyse done",
+                        "title": "Problem analysis done",
                         "description": "Date the probleemanalyse was actually completed."
                     },
                     "planVanAanpakDue": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Plan van aanpak due",
+                        "title": "Action plan due",
                         "description": "Statutory deadline for the plan van aanpak: firstSickDay + 8 weeks (Regeling procesgang art. 2)."
                     },
                     "planVanAanpakDone": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Plan van aanpak done",
+                        "title": "Action plan done",
                         "description": "Date the plan van aanpak was actually completed."
                     },
                     "uwv42WeekMeldingDue": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "UWV 42-week melding due",
+                        "title": "UWV 42-week notification due",
                         "description": "Statutory deadline for the UWV 42-wekenmelding: firstSickDay + 42 weeks (ZW art. 38)."
                     },
                     "uwv42WeekMeldingDone": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "UWV 42-week melding done",
+                        "title": "UWV 42-week notification done",
                         "description": "Date the 42-wekenmelding was actually filed with UWV. Recorded here only — this app does not transmit it (no UWV wire integration)."
                     },
                     "eerstejaarsevaluatieDue": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Eerstejaarsevaluatie due",
+                        "title": "First-year evaluation due",
                         "description": "Statutory deadline for the eerstejaarsevaluatie: firstSickDay + 52 weeks (Regeling procesgang art. 4)."
                     },
                     "eerstejaarsevaluatieDone": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Eerstejaarsevaluatie done",
+                        "title": "First-year evaluation done",
                         "description": "Date the eerstejaarsevaluatie was actually completed."
                     },
                     "absenceProgression": {

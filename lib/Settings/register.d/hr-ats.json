@@ -61,6 +61,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Publish workflow status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd -> gesloten).",
+                        "x-enum-labels": {"concept": "Draft", "gepubliceerd": "Published", "gesloten": "Closed"},
                         "enum": [
                             "concept",
                             "gepubliceerd",
@@ -195,6 +196,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Pipeline status. Governed by the x-openregister-lifecycle state machine (nieuw -> screening -> gesprek -> aanbod -> aangenomen, afwijzen reachable from every active stage).",
+                        "x-enum-labels": {"nieuw": "New", "screening": "Screening", "gesprek": "Interview", "aanbod": "Offer", "aangenomen": "Hired", "afgewezen": "Rejected"},
                         "enum": [
                             "nieuw",
                             "screening",
@@ -248,6 +250,7 @@
                         "nullable": true,
                         "title": "Offer signing status",
                         "description": "offer-esign (0.3.0): the offer letter's e-signature lifecycle state. The first six values are verbatim docudesk SigningService::STATUS_TRANSITIONS states (PENDING/IN_PROGRESS/COMPLETED/DECLINED/CANCELLED/EXPIRED); skipped-no-docudesk and failed are this leaf's own duck-typed/failure outcomes. Null means no offer-esign attempt has been made yet. Orthogonal to Application.status -- observing COMPLETED here never advances the pipeline status (REQ-OFFR-006).",
+                        "x-enum-labels": {"PENDING": "Pending", "IN_PROGRESS": "In progress", "COMPLETED": "Completed", "DECLINED": "Declined", "CANCELLED": "Cancelled", "EXPIRED": "Expired", "skipped-no-docudesk": "Skipped (no document app)", "failed": "Failed"},
                         "enum": [
                             "PENDING",
                             "IN_PROGRESS",
@@ -331,6 +334,7 @@
                         "type": "string",
                         "title": "Mode",
                         "description": "How the interview is conducted. Drives how 'location' is interpreted (a room for onsite, a phone number for phone, a call URL for video).",
+                        "x-enum-labels": {"onsite": "On site", "phone": "Phone", "video": "Video"},
                         "enum": [
                             "onsite",
                             "phone",
@@ -348,6 +352,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Interview lifecycle status. Governed by the x-openregister-lifecycle state machine (scheduled -> completed/cancelled). Rescheduling is a plain field update to scheduledStart/scheduledEnd, not a status transition.",
+                        "x-enum-labels": {"scheduled": "Scheduled", "completed": "Completed", "cancelled": "Cancelled"},
                         "enum": [
                             "scheduled",
                             "completed",

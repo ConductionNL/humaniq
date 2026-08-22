@@ -114,6 +114,7 @@
                     "origin": {
                         "type": "string",
                         "order": 130,
+                        "x-enum-labels": {"manual": "Entered by hand", "migration": "Migrated", "import": "Imported"},
                         "enum": [
                             "manual",
                             "migration",
@@ -265,6 +266,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Where this timesheet is in the approval process.",
+                        "x-enum-labels": {"draft": "Draft", "submitted": "Submitted", "approved": "Approved", "rejected": "Rejected"},
                         "enum": [
                             "draft",
                             "submitted",

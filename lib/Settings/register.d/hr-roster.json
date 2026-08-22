@@ -57,7 +57,7 @@
                     "period": {"type": "string", "title": "Period", "description": "The planning period this roster covers: an ISO week (YYYY-Www) or an ISO month (YYYY-MM)."},
                     "orgUnitId": {"type": "string", "format": "uuid", "$ref": "OrgUnit", "nullable": true, "title": "Org unit", "description": "UUID reference to the OrgUnit this roster is scoped to; null for an org-wide roster."},
                     "administrationId": {"type": "string", "nullable": true, "title": "Administration", "description": "Optional administration/entity code this roster belongs to, matching the PayrollRun.administrationId vocabulary."},
-                    "status": {"type": "string", "enum": ["concept", "gepubliceerd"], "default": "concept", "title": "Status", "description": "Roster lifecycle status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd via publiceren, gepubliceerd -> concept via intrekken)."}
+                    "status": {"type": "string", "enum": ["concept", "gepubliceerd"], "x-enum-labels": {"concept": "Draft", "gepubliceerd": "Published"}, "default": "concept", "title": "Status", "description": "Roster lifecycle status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd via publiceren, gepubliceerd -> concept via intrekken)."}
                 }
             },
             "RosterAssignment": {

@@ -30,6 +30,7 @@
                     },
                     "status": {
                         "type": "string",
+                        "x-enum-labels": {"pending": "Pending", "created": "Created", "skipped-no-shillinq": "Skipped (no ledger app)", "failed": "Failed"},
                         "enum": [
                             "pending",
                             "created",

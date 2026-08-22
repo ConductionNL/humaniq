@@ -62,6 +62,7 @@
                         "type": "string",
                         "title": "Leave type",
                         "description": "The kind of leave requested, aligned with Dutch HR practice (Wet arbeid en zorg / BW 7): holiday (vakantie), sick (ziekteverlof), unpaid (onbetaald verlof), special (bijzonder verlof), care (zorgverlof), parental (ouderschapsverlof).",
+                        "x-enum-labels": {"holiday": "Holiday", "sick": "Sick leave", "unpaid": "Unpaid leave", "special": "Special leave", "care": "Care leave", "parental": "Parental leave"},
                         "enum": [
                             "holiday",
                             "sick",
@@ -101,6 +102,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Approval workflow status. Governed by the x-openregister-lifecycle state machine (draft → submitted → approved/rejected).",
+                        "x-enum-labels": {"draft": "Draft", "submitted": "Submitted", "approved": "Approved", "rejected": "Rejected"},
                         "enum": [
                             "draft",
                             "submitted",
@@ -207,6 +209,7 @@
                         "type": "string",
                         "title": "Leave type",
                         "description": "The kind of leave this balance tracks, identical to the LeaveRequest.leaveType value set: holiday (vakantie), sick (ziekteverlof), unpaid (onbetaald verlof), special (bijzonder verlof), care (zorgverlof), parental (ouderschapsverlof).",
+                        "x-enum-labels": {"holiday": "Holiday", "sick": "Sick leave", "unpaid": "Unpaid leave", "special": "Special leave", "care": "Care leave", "parental": "Parental leave"},
                         "enum": [
                             "holiday",
                             "sick",
@@ -339,6 +342,7 @@
                         "type": "string",
                         "title": "Transaction type",
                         "description": "Whether the employee is buying (adding, a payroll deduction) or selling (drawing down, a payroll payment) leave hours.",
+                        "x-enum-labels": {"buy": "Buy", "sell": "Sell"},
                         "enum": [
                             "buy",
                             "sell"
@@ -353,6 +357,7 @@
                         "type": "string",
                         "title": "Leave type",
                         "description": "The kind of leave this transaction concerns, identical to the LeaveBalance.leaveType value set — identifies the target LeaveBalance.leaveType. In practice only holiday balances carry meaningful bovenwettelijkHours.",
+                        "x-enum-labels": {"holiday": "Holiday", "sick": "Sick leave", "unpaid": "Unpaid leave", "special": "Special leave", "care": "Care leave", "parental": "Parental leave"},
                         "enum": [
                             "holiday",
                             "sick",
@@ -397,6 +402,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Lifecycle status. Governed by the x-openregister-lifecycle state machine (draft -> submitted -> approved/rejected -> settled, terminal: settled).",
+                        "x-enum-labels": {"draft": "Draft", "submitted": "Submitted", "approved": "Approved", "rejected": "Rejected", "settled": "Settled"},
                         "enum": [
                             "draft",
                             "submitted",

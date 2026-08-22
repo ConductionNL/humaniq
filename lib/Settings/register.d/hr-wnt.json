@@ -54,6 +54,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Publication lifecycle status. Governed by the x-openregister-lifecycle state machine (concept -> gepubliceerd).",
+                        "x-enum-labels": {"concept": "Draft", "gepubliceerd": "Published"},
                         "enum": [
                             "concept",
                             "gepubliceerd"

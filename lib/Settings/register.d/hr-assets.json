@@ -63,6 +63,7 @@
                     },
                     "category": {
                         "type": "string",
+                        "x-enum-labels": {"laptop": "Laptop", "phone": "Phone", "vehicle": "Vehicle", "tool": "Tool", "accessPass": "Access pass", "clothing": "Clothing", "other": "Other"},
                         "enum": [
                             "laptop",
                             "phone",
@@ -102,6 +103,7 @@
                     },
                     "status": {
                         "type": "string",
+                        "x-enum-labels": {"available": "Available", "issued": "Issued", "checkedIn": "Checked in", "writtenOff": "Written off"},
                         "enum": [
                             "available",
                             "issued",
@@ -132,6 +134,7 @@
                     },
                     "fuelType": {
                         "type": "string",
+                        "x-enum-labels": {"gasoline": "Petrol", "diesel": "Diesel", "hybrid": "Hybrid", "fullyElectric": "Fully electric", "hydrogen": "Hydrogen", "other": "Other"},
                         "enum": [
                             "gasoline",
                             "diesel",
@@ -146,6 +149,7 @@
                     },
                     "companyCarTaxCategory": {
                         "type": "string",
+                        "x-enum-labels": {"standard": "Standard rate", "evReducedCapped": "Reduced EV rate (capped)"},
                         "enum": [
                             "standard",
                             "evReducedCapped"

@@ -59,13 +59,13 @@
                     "cao": {
                         "type": "string",
                         "nullable": true,
-                        "title": "CAO",
+                        "title": "Collective labour agreement",
                         "description": "Optional corpus caoId this band is anchored against (e.g. \"cao-generiek\") — a plain string link into the CAO corpus, mirroring EmploymentContract.cao, not a $ref relation."
                     },
                     "caoSchaal": {
                         "type": "string",
                         "nullable": true,
-                        "title": "CAO schaal",
+                        "title": "Collective agreement scale",
                         "description": "Optional CAO pay-scale key (Cao.payScales) this band corresponds to. Meaningful only alongside cao."
                     },
                     "effectiveFrom": {
@@ -136,6 +136,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Governed by the x-openregister-lifecycle state machine (open → closed). Independent of any adjustment's own status.",
+                        "x-enum-labels": {"open": "Open", "closed": "Closed"},
                         "enum": [
                             "open",
                             "closed"
@@ -260,6 +261,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Governed by the x-openregister-lifecycle state machine (draft → proposed → approved → effective).",
+                        "x-enum-labels": {"draft": "Draft", "proposed": "Proposed", "approved": "Approved", "effective": "In effect"},
                         "enum": [
                             "draft",
                             "proposed",

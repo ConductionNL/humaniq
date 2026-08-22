@@ -94,6 +94,7 @@
                     "scope": {
                         "type": "string",
                         "enum": ["organisation", "cla", "contract"],
+                        "x-enum-labels": {"organisation": "Organisation", "cla": "Collective agreement", "contract": "Contract"},
                         "title": "Scope",
                         "description": "Which population this policy applies to. `organisation` — everyone; `cla` — everyone whose contract names claId; `contract` — one contract only. The most specific scope carrying a given key wins, so a contract-level figure overrides the CLA-wide one for that key without disturbing the others."
                     },

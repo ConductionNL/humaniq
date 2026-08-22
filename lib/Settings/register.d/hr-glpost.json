@@ -30,6 +30,7 @@
                     },
                     "status": {
                         "type": "string",
+                        "x-enum-labels": {"pending": "Pending", "posted": "Posted", "failed": "Failed", "skipped-no-shillinq": "Skipped (no ledger app)"},
                         "enum": [
                             "pending",
                             "posted",
@@ -86,6 +87,7 @@
                                     "type": "string",
                                     "title": "Side",
                                     "description": "Which side of the journal this line posts to: debit or credit. The two sides of a posted run must balance to the cent.",
+                                    "x-enum-labels": {"debit": "Debit", "credit": "Credit"},
                                     "enum": [
                                         "debit",
                                         "credit"

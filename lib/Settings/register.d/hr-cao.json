@@ -6,7 +6,7 @@
                 "slug": "Cao",
                 "icon": "FileDocumentMultipleOutline",
                 "version": "0.1.0",
-                "title": "CAO",
+                "title": "Collective labour agreement",
                 "description": "A read-only reference projection of one collective labour agreement (collectieve arbeidsovereenkomst) from the maintained CAO corpus (lib/Standards/cao/{caoId}.json), seeded idempotently from CaoRegistry by NlCaoChecks::seedObjects() (cao-library). The corpus is the single authoring source; these objects are a derived display surface for the read-only Caos reference page and MUST NOT be hand-edited (allowCreate:false on the manifest pages). An EmploymentContract references a CAO by its caoId, not by this object's UUID.",
                 "type": "object",
                 "x-schema-org": "schema:Legislation",

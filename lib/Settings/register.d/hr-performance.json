@@ -56,6 +56,7 @@
                         "type": "string",
                         "title": "Type",
                         "description": "The kind of review round this cycle covers. Enum is append-only.",
+                        "x-enum-labels": {"jaargesprek": "Annual review", "beoordeling": "Appraisal", "tussentijds": "Interim review"},
                         "enum": [
                             "jaargesprek",
                             "beoordeling",
@@ -66,6 +67,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Cycle workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "x-enum-labels": {"concept": "Draft", "open": "Open", "gesloten": "Closed"},
                         "enum": [
                             "concept",
                             "open",
@@ -173,6 +175,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Review workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "x-enum-labels": {"concept": "Draft", "ingediend": "Submitted", "besproken": "Discussed", "vastgesteld": "Finalised"},
                         "enum": [
                             "concept",
                             "ingediend",
@@ -186,6 +189,7 @@
                         "nullable": true,
                         "title": "Rating",
                         "description": "Overall beoordeling rating. Nullable by design: a concept/ingediend review legitimately has no rating yet. A vastgesteld review without a rating is flagged by the nl-performance-dossiervorming audit rule, not blocked by the schema.",
+                        "x-enum-labels": {"onvoldoende": "Unsatisfactory", "matig": "Below expectations", "voldoende": "Meets expectations", "goed": "Good", "uitstekend": "Excellent"},
                         "enum": [
                             "onvoldoende",
                             "matig",
@@ -197,21 +201,21 @@
                     "sterktes": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Sterktes",
+                        "title": "Strengths",
                         "description": "Free-text description of the employee's strengths discussed in the gesprek.",
                         "maxLength": 4000
                     },
                     "ontwikkelpunten": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Ontwikkelpunten",
+                        "title": "Development areas",
                         "description": "Free-text description of development points discussed in the gesprek.",
                         "maxLength": 4000
                     },
                     "afspraken": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Afspraken",
+                        "title": "Agreed actions",
                         "description": "Concrete afspraken/verbetertraject agreed in the gesprek -- the BW 7:669 lid 3 sub d dossiervorming evidence. A vastgesteld review with empty afspraken is flagged by the nl-performance-dossiervorming audit rule.",
                         "maxLength": 4000
                     },
@@ -228,13 +232,14 @@
                             "properties": {
                                 "titel": {
                                     "type": "string",
-                                    "title": "Titel",
+                                    "title": "Title",
                                     "description": "Short description of the goal."
                                 },
                                 "status": {
                                     "type": "string",
                                     "title": "Status",
                                     "description": "The goal's own status, independent of the review's lifecycle.",
+                                    "x-enum-labels": {"open": "Open", "behaald": "Achieved", "vervallen": "Dropped"},
                                     "enum": [
                                         "open",
                                         "behaald",
@@ -245,7 +250,7 @@
                                 "toelichting": {
                                     "type": "string",
                                     "nullable": true,
-                                    "title": "Toelichting",
+                                    "title": "Explanation",
                                     "description": "Optional free-text explanation of the goal or its progress."
                                 }
                             }
@@ -255,13 +260,13 @@
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Besproken op",
+                        "title": "Discussed on",
                         "description": "Date the beoordelingsgesprek took place. Stamped on the carrying write of the bespreken transition."
                     },
                     "vastgesteldDoor": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Vastgesteld door",
+                        "title": "Finalised by",
                         "description": "Nextcloud user id of the manager who vaststelde the beoordeling -- an NC user id, not an object FK (the approvedBy convention), never a $ref. Stamped on the carrying write of the vaststellen transition. Must differ from the reviewed employee (no self-approval)."
                     },
                     "userId": {

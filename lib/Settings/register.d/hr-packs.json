@@ -4,7 +4,7 @@
     "schemas": {
       "JurisdictionPack": {
         "slug": "JurisdictionPack",
-        "title": "JurisdictionPack",
+        "title": "Jurisdiction pack",
         "description": "An UPLOADED jurisdiction pack (jurisdiction-packs design.md D7). Bundled packs — including NL — live in code under lib/Standards/packs/ and are NEVER imported as objects; this schema is the second home, for packs an admin uploads. Both homes are resolved by the same (jurisdiction, taxYear) key, and bundled wins by default: a pack stored here may only claim a key a bundled pack already owns when an admin explicitly activated it as a recorded override. Activation is recorded on THIS object, never read from the author-supplied document.",
         "type": "object",
         "required": ["packId", "jurisdiction", "taxYear", "packVersion", "dslVersion", "tables", "document"],

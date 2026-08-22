@@ -92,6 +92,7 @@
                     "category": {"title": "Category", 
                         "type": "string",
                         "description": "Expense category.",
+                        "x-enum-labels": {"travel": "Travel", "accommodation": "Accommodation", "meals": "Meals", "supplies": "Supplies", "software": "Software", "training": "Training", "other": "Other"},
                         "enum": [
                             "travel",
                             "accommodation",
@@ -126,6 +127,7 @@
                     "status": {"title": "Status", 
                         "type": "string",
                         "description": "Reimbursement workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "x-enum-labels": {"draft": "Draft", "submitted": "Submitted", "approved": "Approved", "rejected": "Rejected", "reimbursed": "Reimbursed"},
                         "enum": [
                             "draft",
                             "submitted",
@@ -184,8 +186,9 @@
                     "travelType": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Type reis",
+                        "title": "Travel type",
                         "description": "Distinguishes zakelijke kilometers (business) from woon-werkverkeer (commute) for a category travel claim -- both are eligible for the onbelaste kilometervergoeding (mileage-rules, REQ-MILE-001). Meaningful only alongside distanceKm; absent on non-mileage expenses.",
+                        "x-enum-labels": {"business": "Business trip", "commute": "Commute"},
                         "enum": [
                             "business",
                             "commute"
@@ -195,7 +198,7 @@
                         "type": "number",
                         "nullable": true,
                         "minimum": 0,
-                        "title": "Afstand (km)",
+                        "title": "Distance (km)",
                         "description": "Kilometers driven for this claim, used together with amount and travelType to compute the per-km reimbursement checked against the onbelaste kilometervergoeding by nl-reiskosten-onbelast-tarief (mileage-rules, REQ-MILE-001)."
                     }
                 }
@@ -204,7 +207,7 @@
                 "slug": "ReceiptExtraction",
                 "icon": "TextRecognition",
                 "version": "0.1.0",
-                "title": "ReceiptExtraction",
+                "title": "Receipt extraction",
                 "description": "The humaniq-side record of one receipt-OCR extraction attempt against an Expense (receipt-ocr, REQ-RCPT-001): the raw extracted values and confidence docudesk's FinancialExtractionService returned, and which Expense fields this attempt actually wrote (appliedFields) -- the provenance trail a reviewer reads to see a value was machine-suggested rather than hand-entered. humaniq performs no OCR/extraction of its own; docudesk owns that surface entirely.",
                 "type": "object",
                 "x-schema-org": "schema:Action",
@@ -222,6 +225,7 @@
                     "status": {"title": "Status", 
                         "type": "string",
                         "description": "The outcome of this extraction attempt.",
+                        "x-enum-labels": {"pending": "Pending", "extracted": "Extracted", "failed": "Failed", "skipped-no-docudesk": "Skipped (no document app)"},
                         "enum": [
                             "pending",
                             "extracted",

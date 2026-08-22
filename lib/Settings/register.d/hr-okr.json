@@ -50,6 +50,7 @@
                         "type": "string",
                         "title": "Owner type",
                         "description": "Which owner relation is authoritative for this objective. Enum append-only.",
+                        "x-enum-labels": {"employee": "Employee", "team": "Team"},
                         "enum": [
                             "employee",
                             "team"
@@ -89,6 +90,7 @@
                         "type": "string",
                         "title": "Status",
                         "description": "Objective workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "x-enum-labels": {"concept": "Draft", "actief": "Active", "afgesloten": "Closed"},
                         "enum": [
                             "concept",
                             "actief",
@@ -99,8 +101,9 @@
                     "uitkomst": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Uitkomst",
+                        "title": "Outcome",
                         "description": "The scored outcome, stamped on the carrying write of the afsluiten transition. Kept SEPARATE from the lifecycle status, exactly as PerformanceReview.rating is kept separate from its status, so \"how it ended\" and \"where it is in the flow\" never collide. Nullable: a concept/actief objective legitimately has no outcome yet.",
+                        "x-enum-labels": {"behaald": "Achieved", "deels-behaald": "Partly achieved", "niet-behaald": "Not achieved"},
                         "enum": [
                             "behaald",
                             "deels-behaald",
@@ -152,6 +155,7 @@
                         "nullable": true,
                         "title": "Unit",
                         "description": "The measurement unit of startValue/targetValue/currentValue. Enum append-only.",
+                        "x-enum-labels": {"percentage": "Percentage", "aantal": "Count", "euro": "Euro", "boolean": "Yes / no"},
                         "enum": [
                             "percentage",
                             "aantal",
@@ -187,6 +191,7 @@
                         "nullable": true,
                         "title": "Status",
                         "description": "The key result's own plain status, independent of the parent Objective's lifecycle. No guarded state machine -- mirrors the embedded goal-status enum of PerformanceReview.goals (the reviews MVP precedent): trivial state, no guarded transitions.",
+                        "x-enum-labels": {"open": "Open", "behaald": "Achieved", "vervallen": "Dropped"},
                         "enum": [
                             "open",
                             "behaald",
