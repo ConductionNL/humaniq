@@ -7,7 +7,7 @@
     },
     "x-openregister": {
         "type": "application",
-        "app": "hrmq",
+        "app": "humaniq",
         "openregister": "^v0.2.10",
         "description": "Humaniq — open-source HR & payroll administration for Dutch SMBs."
     },
