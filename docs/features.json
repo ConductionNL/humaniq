@@ -105,13 +105,6 @@
     "docsUrl": "openspec/specs/hrm-rule-engine/spec.md"
   },
   {
-    "slug": "humaniq-docudesk-documents",
-    "title": "Humaniq Docudesk Documents",
-    "summary": "Generate the standard Dutch HR documents (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift) from templates hosted in docudesk (namespace: hrmq), by calling docudesk's DocumentService::generateDocument() on the same instance (never HTTP), storing the returned PDF on a new GeneratedDocument record via OpenRegister's FileService, degrading gracefully to skipped-no-docudesk when docudesk is absent, and giving EmploymentContract.writtenContract machine-checked document evidence (nl-contract-schriftelijk).",
-    "status": "stable",
-    "docsUrl": "openspec/specs/humaniq-docudesk-documents/spec.md"
-  },
-  {
     "slug": "hrmq-i18n-locale-completeness",
     "title": "Hrmq I18n Locale Completeness",
     "summary": "Bring hrmq onto hydra ADR-007: English sentence-case strings are the app's i18n source keys, and l10n/en.json + l10n/nl.json both exist with an identical key set.",
@@ -124,6 +117,13 @@
     "summary": "Give hrmq's \"Mijn HR\" entry a personal landing surface: a type: \"dashboard\" page at /mijn whose every widget binds only the caller's own records, so an employee opening \"Mijn HR\" sees their own situation instead of a fold-out of nine links.",
     "status": "stable",
     "docsUrl": "openspec/specs/hrmq-personal-dashboard/spec.md"
+  },
+  {
+    "slug": "humaniq-docudesk-documents",
+    "title": "Humaniq Docudesk Documents",
+    "summary": "Generate the standard Dutch HR documents (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift) from templates hosted in docudesk (namespace: hrmq), by calling docudesk's DocumentService::generateDocument() on the same instance (never HTTP), storing the returned PDF on a new GeneratedDocument record via OpenRegister's FileService, degrading gracefully to skipped-no-docudesk when docudesk is absent, and giving EmploymentContract.writtenContract machine-checked document evidence (nl-contract-schriftelijk).",
+    "status": "stable",
+    "docsUrl": "openspec/specs/humaniq-docudesk-documents/spec.md"
   },
   {
     "slug": "interview-scheduling",
