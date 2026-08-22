@@ -522,7 +522,7 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 	// the stamping clears approvedBy/approvedAt/rejectionReason.)
 	test('a rejected timesheet re-submits and the stamping clears the approval fields', async ({ page }) => {
 		await gotoRoute(page, `/timesheets/${bakkerTimesheetId}`)
-		await expect(dataCell(page, 'Status')).toContainText('rejected', { timeout: 20_000 })
+		await expect(dataCell(page, 'Status')).toContainText(/Rejected|Afgekeurd/, { timeout: 20_000 })
 		await expect(dataCell(page, 'Rejection reason'), 'the seeded reason must render read-only')
 			.toContainText('komt niet overeen', { timeout: 15_000 })
 
