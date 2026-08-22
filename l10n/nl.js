@@ -1721,7 +1721,7 @@ OC.L10N.register(
         "Which emergency-response role this certification covers.": "Welke BHV-rol dit certificaat betreft.",
         "Which fields on the claim this attempt actually filled in. A value that was read but skipped because the field was already filled does not appear here.": "Welke velden van de declaratie deze poging daadwerkelijk heeft ingevuld. Een waarde die wel is gelezen maar is overgeslagen omdat het veld al gevuld was, staat hier niet bij.",
         "Which payroll-tax table applies: the white table for current employment, the green table for a pension or benefit.": "Welke loonheffingstabel geldt: de witte tabel bij een lopend dienstverband, de groene bij pensioen of uitkering.",
-        "Which record types this integration is meant to reach. A record of intent only: it does not itself grant access.": "Welke soorten gegevens deze koppeling geacht wordt te benaderen. Alleen een vastlegging van de bedoeling: het geeft zelf geen toegang.",
+        "Which record types this integration is meant to reach. A record of intent only: it does not grant or enforce access — the real permissions live in OpenRegister's RBAC settings.": "Welke soorten gegevens deze koppeling geacht wordt te benaderen. Alleen een vastlegging van de bedoeling: het verleent of handhaaft zelf geen toegang — de echte rechten staan in de RBAC-instellingen van OpenRegister.",
         "Which revision of the agreement these figures come from, for example '2025-2026'.": "Uit welke versie van de CAO deze gegevens komen, bijvoorbeeld '2025-2026'.",
         "Which sector pension fund this filing goes to.": "Naar welk bedrijfstakpensioenfonds deze levering gaat.",
         "Which shift they are assigned to.": "Op welke dienst diegene is ingeroosterd.",

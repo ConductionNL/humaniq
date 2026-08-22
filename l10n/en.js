@@ -1721,7 +1721,7 @@ OC.L10N.register(
         "Which emergency-response role this certification covers.": "Which emergency-response role this certification covers.",
         "Which fields on the claim this attempt actually filled in. A value that was read but skipped because the field was already filled does not appear here.": "Which fields on the claim this attempt actually filled in. A value that was read but skipped because the field was already filled does not appear here.",
         "Which payroll-tax table applies: the white table for current employment, the green table for a pension or benefit.": "Which payroll-tax table applies: the white table for current employment, the green table for a pension or benefit.",
-        "Which record types this integration is meant to reach. A record of intent only: it does not itself grant access.": "Which record types this integration is meant to reach. A record of intent only: it does not itself grant access.",
+        "Which record types this integration is meant to reach. A record of intent only: it does not grant or enforce access — the real permissions live in OpenRegister's RBAC settings.": "Which record types this integration is meant to reach. A record of intent only: it does not grant or enforce access — the real permissions live in OpenRegister's RBAC settings.",
         "Which revision of the agreement these figures come from, for example '2025-2026'.": "Which revision of the agreement these figures come from, for example '2025-2026'.",
         "Which sector pension fund this filing goes to.": "Which sector pension fund this filing goes to.",
         "Which shift they are assigned to.": "Which shift they are assigned to.",
