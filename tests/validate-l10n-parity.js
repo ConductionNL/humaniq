@@ -66,6 +66,27 @@ const path = require('path')
 const vm = require('vm')
 
 const REPO_ROOT = path.resolve(__dirname, '..')
+
+/*
+ * The app id, read from appinfo/info.xml rather than hardcoded.
+ *
+ * It used to be the literal 'hrmq' in three places here: the OC.L10N.register
+ * assertion and the regex that harvests `t('<app>', …)` keys out of src/. The
+ * hrmq -> humaniq rename moved the id everywhere EXCEPT this file, and the
+ * regex was the dangerous half: it would have gone on searching for
+ * `t('hrmq', …)`, matched nothing, and reported check 6 as passing over an
+ * empty set — a check that validates nothing looks exactly like one that
+ * passes. Deriving the id means the next rename cannot reintroduce that.
+ */
+const APP_ID = (() => {
+	const info = fs.readFileSync(path.join(REPO_ROOT, 'appinfo', 'info.xml'), 'utf8')
+	const m = info.match(/<id>([^<]+)<\/id>/)
+	if (!m) {
+		throw new Error('validate-l10n-parity: could not read <id> from appinfo/info.xml')
+	}
+	return m[1].trim()
+})()
+
 const L10N_DIR = path.join(REPO_ROOT, 'l10n')
 const BASE_MANIFEST = path.join(REPO_ROOT, 'src', 'manifest.json')
 const FRAGMENT_DIR = path.join(REPO_ROOT, 'src', 'manifest.d')
@@ -160,7 +181,7 @@ function collectTranslateKeys(dir, sink) {
 		}
 		if (/\.(vue|js|ts)$/.test(entry.name) === false) continue
 		const source = fs.readFileSync(full, 'utf8')
-		const re = /\bt\(\s*'hrmq'\s*,\s*'((?:[^'\\]|\\.)*)'/g
+		const re = new RegExp(`\\bt\\(\\s*'${APP_ID}'\\s*,\\s*'((?:[^'\\\\]|\\\\.)*)'`, 'g')
 		let match
 		while ((match = re.exec(source)) !== null) {
 			const key = match[1].replace(/\\'/g, "'").replace(/\\\\/g, '\\')
@@ -249,10 +270,10 @@ function main() {
 	collectTranslateKeys(SRC_DIR, translateKeys)
 	for (const [key, where] of translateKeys) {
 		if (Object.hasOwn(en, key) === false) {
-			failures.push(`t('hrmq', …) key has no en.json entry: ${JSON.stringify(key)} (${where.join(', ')})`)
+			failures.push(`t('${APP_ID}', …) key has no en.json entry: ${JSON.stringify(key)} (${where.join(', ')})`)
 		}
 		if (Object.hasOwn(nl, key) === false) {
-			failures.push(`t('hrmq', …) key has no nl.json entry: ${JSON.stringify(key)} (${where.join(', ')})`)
+			failures.push(`t('${APP_ID}', …) key has no nl.json entry: ${JSON.stringify(key)} (${where.join(', ')})`)
 		}
 	}
 
@@ -303,8 +324,8 @@ function checkJsCatalogue(locale, translations, failures) {
 		return
 	}
 
-	if (registered.app !== 'hrmq') {
-		failures.push(`l10n/${locale}.js registers app "${registered.app}", expected "hrmq".`)
+	if (registered.app !== APP_ID) {
+		failures.push(`l10n/${locale}.js registers app "${registered.app}", expected "${APP_ID}".`)
 	}
 
 	const jsKeys = Object.keys(registered.pairs).sort()
@@ -335,7 +356,7 @@ function checkJsCatalogue(locale, translations, failures) {
  */
 function report(failures, keyCount, manifestCount, translateCount) {
 	console.log(`[validate-l10n-parity] ${keyCount} keys per catalogue (en/nl),`
-		+ ` ${manifestCount} distinct manifest strings, ${translateCount} t('hrmq', …) keys.`)
+		+ ` ${manifestCount} distinct manifest strings, ${translateCount} t('${APP_ID}', …) keys.`)
 
 	if (failures.length > 0) {
 		console.error('')
