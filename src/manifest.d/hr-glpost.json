@@ -7,7 +7,7 @@
 			"params": {
 				"id": "PayrollGLPosts",
 				"route": "/gl-posts",
-				"title": "Loonjournaalposten",
+				"title": "Payroll GL posts",
 				"columns": [
 					"period",
 					"status",
@@ -24,7 +24,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Payroll-to-GL posting attempts: one balanced loonjournaalpost handed off to shillinq per approved loonrun."
+				"description": "Payroll-to-GL posting attempts: one balanced payroll GL post handed off to shillinq per approved payroll run."
 			}
 		},
 		{
@@ -34,7 +34,7 @@
 			"params": {
 				"id": "PayrollGLPostDetail",
 				"route": "/gl-posts/:id",
-				"title": "Loonjournaalpost",
+				"title": "Payroll GL post",
 				"statusTitle": "Status",
 				"statusIcon": "CheckCircleOutline",
 				"statusInclude": [

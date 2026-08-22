@@ -7,7 +7,7 @@
 			"params": {
 				"id": "Stagiairs",
 				"route": "/stagiairs",
-				"title": "Stagiairs",
+				"title": "Interns",
 				"columns": [
 					"onderwijsinstelling",
 					"opleiding",
@@ -27,7 +27,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Stagiairs (HBO/WO/MBO-BOL, zonder dienstverband) op een stageovereenkomst -- expliciet geen werknemers en geen payroll-input (stagiair-bbl-admin). BBL-leerlingen staan niet hier: die hebben een leerarbeidsovereenkomst en zijn contracten met type 'bbl' op de Contracten-pagina."
+				"description": "Interns (HBO/WO/MBO-BOL, without employment) on an internship agreement -- explicitly not employees and no payroll input (stagiair-bbl-admin). BBL students are not listed here: they hold a work-study employment contract and appear as contracts of type 'bbl' on the Contracts page."
 			}
 		},
 		{
@@ -37,10 +37,10 @@
 			"params": {
 				"id": "StagiairDetail",
 				"route": "/stagiairs/:id",
-				"title": "Stagiair",
-				"dataTitle": "Stage",
+				"title": "Intern",
+				"dataTitle": "Internship",
 				"dataIcon": "SchoolOutline",
-				"relatedTitle": "Begeleider",
+				"relatedTitle": "Supervisor",
 				"gridHeight": 8,
 				"note": "stagiair-bbl-admin (2026-07-18): the 'Stage' widget excludes begeleiderId (Related resolves the begeleider Employee), leaving onderwijsinstelling/opleiding/niveau/stagetype/startDate/endDate/stagevergoedingPerMaand/bpvOvereenkomstOndertekend/verzekeringGeverifieerd/status -- the OnboardingDetail data-widget pattern. lifecycleActions expose exactly the three REQ-STAG-001 edges (starten/afronden/stoppen) -- no invented edges, no guard (design.md D-declarative). The BPV-overeenkomst signing fact is an HR-entered boolean, not an e-signature flow (design.md D3); nl-bpv-overeenkomst-vereist is audit-enforced (lib/Standards/Checks/NlStagiairChecks.php), NOT a write-time guard. Audit history is a sidebar tab. BBL-leerlingen have no page here -- they are EmploymentContract records with type: bbl on the existing contract pages (design.md D1).",
 				"exclude": [
@@ -55,7 +55,7 @@
 								"aangemeld"
 							],
 							"to": "lopend",
-							"label": "Starten"
+							"label": "Start"
 						},
 						{
 							"action": "afronden",
@@ -63,7 +63,7 @@
 								"lopend"
 							],
 							"to": "afgerond",
-							"label": "Afronden"
+							"label": "Complete"
 						},
 						{
 							"action": "stoppen",
@@ -72,7 +72,7 @@
 								"lopend"
 							],
 							"to": "gestopt",
-							"label": "Stoppen"
+							"label": "Stop"
 						}
 					]
 				}

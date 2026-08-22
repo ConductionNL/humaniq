@@ -4,7 +4,7 @@
 			"id": "CompReviewCycleDetail",
 			"route": "/comp-review-cycles/:id",
 			"type": "detail",
-			"title": "Beloningscyclus",
+			"title": "Compensation cycle",
 			"config": {
 				"register": "hrmq",
 				"schema": "CompReviewCycle",
@@ -17,17 +17,17 @@
 					{
 						"id": "data",
 						"type": "data",
-						"title": "Cyclus",
+						"title": "Cycle",
 						"icon": "CalendarRange",
 						"content": {
 							"columns": 2,
-							"title": "Cyclus"
+							"title": "Cycle"
 						}
 					},
 					{
 						"id": "object-list",
 						"type": "object-list",
-						"title": "Voorstellen in deze cyclus",
+						"title": "Adjustments in this cycle",
 						"icon": "CashPlus",
 						"content": {
 							"register": "hrmq",
@@ -86,20 +86,20 @@
 								"open"
 							],
 							"to": "closed",
-							"label": "Sluiten"
+							"label": "Close"
 						}
 					]
 				},
 				"headerActions": [
 					{
 						"id": "propose-comp-adjustment",
-						"label": "Aanpassing voorstellen",
+						"label": "Propose adjustment",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
 						"register": "hrmq",
 						"schema": "CompAdjustment",
 						"onSuccessRoute": "CompAdjustmentDetail",
-						"successMessage": "Beloningsvoorstel aangemaakt."
+						"successMessage": "Compensation adjustment created."
 					}
 				]
 			}
@@ -113,7 +113,7 @@
 			"params": {
 				"id": "SalaryBands",
 				"route": "/salary-bands",
-				"title": "Salarisschalen",
+				"title": "Salary bands",
 				"columns": [
 					"bandId",
 					"title",
@@ -131,7 +131,7 @@
 					"active",
 					"grade"
 				],
-				"description": "Interne salarisschalen (min/richt/max brutomaandsalaris in centen) waartegen beloningsvoorstellen worden getoetst. Alleen-lezen referentiedata.",
+				"description": "Internal salary bands (min/target/max gross monthly salary in cents) against which compensation adjustments are checked. Read-only reference data.",
 				"allowCreate": false,
 				"actionToggles": {
 					"showAdd": false,
@@ -153,7 +153,7 @@
 			"params": {
 				"id": "SalaryBandDetail",
 				"route": "/salary-bands/:id",
-				"title": "Salarisschaal",
+				"title": "Salary band",
 				"dataIcon": "CurrencyEur",
 				"gridHeight": 7,
 				"note": "comp-cycles (2026-07-15): read-only internal salary-band reference detail (the CaoDetail allowCreate:false shape). The 'Salarisschaal' data widget carries every field (bandId/title/grade/minSalary/referenceSalary/maxSalary/currency/cao/caoSchaal/effectiveFrom/active) — no Related widget, since cao/caoSchaal are plain string links into the CAO corpus (mirroring EmploymentContract.cao), not $ref relations. No lifecycleActions (SalaryBand has no x-openregister-lifecycle). No create/edit affordances — bands are authored reference data. Audit history is a sidebar tab.",
@@ -167,7 +167,7 @@
 			"params": {
 				"id": "CompReviewCycles",
 				"route": "/comp-review-cycles",
-				"title": "Beloningscycli",
+				"title": "Compensation cycles",
 				"columns": [
 					"name",
 					"period",
@@ -181,17 +181,17 @@
 				"filters": [
 					"status"
 				],
-				"description": "Periodieke beloningsronden waaronder per-medewerker beloningsvoorstellen (CompAdjustment) worden verzameld.",
+				"description": "Periodic compensation rounds under which per-employee compensation adjustments (CompAdjustment) are collected.",
 				"actions": [
 					{
 						"id": "create-comp-cycle",
-						"label": "Beloningscyclus aanmaken",
+						"label": "Create compensation cycle",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
 						"register": "hrmq",
 						"schema": "CompReviewCycle",
 						"onSuccessRoute": "CompReviewCycleDetail",
-						"successMessage": "Beloningscyclus aangemaakt."
+						"successMessage": "Compensation cycle created."
 					}
 				]
 			}
@@ -203,8 +203,8 @@
 			"params": {
 				"id": "CompAdjustmentDetail",
 				"route": "/comp-adjustments/:id",
-				"title": "Beloningsvoorstel",
-				"dataTitle": "Aanpassing",
+				"title": "Compensation adjustment",
+				"dataTitle": "Adjustment",
 				"dataIcon": "CashPlus",
 				"relatedTitle": "Related",
 				"gridHeight": 9,
@@ -218,7 +218,7 @@
 				"headerActions": [
 					{
 						"id": "effectueren",
-						"label": "Effectueren",
+						"label": "Effectuate",
 						"type": "api-call",
 						"icon": "CashCheck",
 						"url": "/api/comp/effectuate",
@@ -227,8 +227,8 @@
 							"adjustmentId": "@objectId"
 						},
 						"confirm": true,
-						"successMessage": "Beloningsvoorstel geëffectueerd; het brutomaandsalaris is bijgewerkt.",
-						"errorMessage": "Effectueren van het beloningsvoorstel is mislukt."
+						"successMessage": "Compensation adjustment effectuated; the gross monthly salary has been updated.",
+						"errorMessage": "Effectuating the compensation adjustment failed."
 					}
 				],
 				"lifecycleActions": {
@@ -240,7 +240,7 @@
 								"draft"
 							],
 							"to": "proposed",
-							"label": "Voorstellen"
+							"label": "Propose"
 						},
 						{
 							"action": "approve",
@@ -248,7 +248,7 @@
 								"proposed"
 							],
 							"to": "approved",
-							"label": "Goedkeuren"
+							"label": "Approve"
 						},
 						{
 							"action": "reject",
@@ -256,7 +256,7 @@
 								"proposed"
 							],
 							"to": "draft",
-							"label": "Afwijzen"
+							"label": "Reject"
 						}
 					]
 				}

@@ -4,7 +4,7 @@
 			"id": "CaoDetail",
 			"route": "/caos/:id",
 			"type": "detail",
-			"title": "CAO",
+			"title": "Collective agreement",
 			"config": {
 				"register": "hrmq",
 				"schema": "Cao",
@@ -18,7 +18,7 @@
 					{
 						"id": "data",
 						"type": "data",
-						"title": "CAO",
+						"title": "Collective agreement",
 						"icon": "FileDocumentMultipleOutline",
 						"content": {
 							"columns": 2,
@@ -32,13 +32,13 @@
 								"leaveEntitlementVerified",
 								"source"
 							],
-							"title": "CAO"
+							"title": "Collective agreement"
 						}
 					},
 					{
 						"id": "data-2",
 						"type": "data",
-						"title": "Loonschalen & verlof",
+						"title": "Salary scales & leave",
 						"icon": "ScaleBalance",
 						"content": {
 							"columns": 2,
@@ -48,7 +48,7 @@
 								"leaveEntitlement",
 								"workingTime"
 							],
-							"title": "Loonschalen & verlof"
+							"title": "Salary scales & leave"
 						}
 					}
 				],
@@ -81,7 +81,7 @@
 			"params": {
 				"id": "Caos",
 				"route": "/caos",
-				"title": "CAO's",
+				"title": "Collective agreements",
 				"columns": [
 					"caoId",
 					"name",
@@ -97,7 +97,7 @@
 				"filters": [
 					"sector"
 				],
-				"description": "Beschikbare CAO's uit de onderhouden CAO-bibliotheek (referentie, alleen-lezen).",
+				"description": "Available collective agreements from the maintained collective agreement library (reference, read-only).",
 				"allowCreate": false,
 				"actionToggles": {
 					"showAdd": false,

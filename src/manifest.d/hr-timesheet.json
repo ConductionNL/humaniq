@@ -4,7 +4,7 @@
 			"id": "TimesheetDetail",
 			"route": "/timesheets/:id",
 			"type": "detail",
-			"title": "Urenstaat",
+			"title": "Timesheet",
 			"config": {
 				"register": "hrmq",
 				"schema": "Timesheet",
@@ -42,7 +42,7 @@
 					{
 						"id": "data",
 						"type": "data",
-						"title": "Urenstaat",
+						"title": "Timesheet",
 						"icon": "ClipboardList",
 						"content": {
 							"columns": 2,
@@ -53,7 +53,7 @@
 								"description",
 								"billable"
 							],
-							"title": "Urenstaat",
+							"title": "Timesheet",
 							"overrides": {
 								"period": {
 									"editable": false
@@ -73,7 +73,7 @@
 					{
 						"id": "data-2",
 						"type": "data",
-						"title": "Goedkeuring",
+						"title": "Approval",
 						"icon": "CheckCircleOutline",
 						"content": {
 							"columns": 2,
@@ -84,7 +84,7 @@
 								"approvedAt",
 								"rejectionReason"
 							],
-							"title": "Goedkeuring",
+							"title": "Approval",
 							"overrides": {
 								"status": {
 									"editable": false
@@ -116,7 +116,7 @@
 					{
 						"id": "object-list",
 						"type": "object-list",
-						"title": "Urenboekingen",
+						"title": "Time entries",
 						"icon": "ClockOutline",
 						"content": {
 							"register": "hrmq",
@@ -135,15 +135,15 @@
 								},
 								{
 									"key": "endedAt",
-									"label": "Einde"
+									"label": "End"
 								},
 								{
 									"key": "hours",
-									"label": "Uren"
+									"label": "Hours"
 								},
 								{
 									"key": "description",
-									"label": "Omschrijving"
+									"label": "Description"
 								},
 								{
 									"key": "projectId",
@@ -157,7 +157,7 @@
 							"viewAllQuery": {
 								"timesheetId": "@objectId"
 							},
-							"emptyText": "Nog geen urenboekingen"
+							"emptyText": "No time entries yet"
 						}
 					},
 					{
@@ -261,12 +261,12 @@
 			"id": "MijnUren",
 			"route": "/mijn/uren",
 			"type": "index",
-			"title": "Mijn uren",
+			"title": "My hours",
 			"config": {
 				"register": "hrmq",
 				"schema": "TimeEntry",
 				"_note": "hrmq-hours-process-redesign (design.md Decision 8): MijnUren is the self-service BOOKING surface and now lists TimeEntry (the individual booking), not Timesheet (the period aggregate). Converted from an indexScaffold pageInstance to a concrete page because the create-form allowlist keys (includeFields/fieldOverrides) are not indexScaffold params, and widening the shared template for one page is worse than an explicit page (the template file's own 80%-fit rule). Add is enabled via actionToggles.showAdd — NEVER the dead allowCreate key (not a CnIndexPage prop; fleet anti-pattern 11). includeFields is the exact self-service allowlist: the employee's own Employee record, userId, administrationId and costCenter are resolved/stamped server-side by TimeEntryStampListener, and hours is derived from start/end/break — none of them may appear on the form (spec: 'The booking form is an allowlist'). fieldOverrides orders billable last (times → break → what → project → billable).",
-				"description": "Boek je uren en zie je eigen urenregistraties.",
+				"description": "Log your hours and see your own time entries.",
 				"filter": {
 					"userId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
@@ -306,7 +306,7 @@
 			"params": {
 				"id": "Timesheets",
 				"route": "/timesheets",
-				"title": "Urenstaten",
+				"title": "Timesheets",
 				"columns": [
 					"employeeId",
 					"period",
@@ -340,7 +340,7 @@
 			"params": {
 				"id": "TimesheetApproval",
 				"route": "/timesheets/approval",
-				"title": "Urengoedkeuring",
+				"title": "Timesheet approval",
 				"columns": [
 					"employeeId",
 					"period",
@@ -359,7 +359,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Ingediende urenstaten die wachten op goedkeuring of afkeuring — open een urenstaat om goed of af te keuren.",
+				"description": "Submitted timesheets awaiting approval or rejection — open a timesheet to approve or reject it.",
 				"defaultFilters": {
 					"status": "submitted"
 				},
@@ -378,7 +378,7 @@
 			"params": {
 				"id": "TeamUrengoedkeuring",
 				"route": "/timesheets/team-approval",
-				"title": "Team-urengoedkeuring",
+				"title": "Team timesheet approval",
 				"columns": [
 					"employeeId",
 					"period",
@@ -398,7 +398,7 @@
 					"managerUserId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Ingediende urenstaten van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door de organisatiestructuur bepaalde managerUserId-koppeling.",
+				"description": "Submitted timesheets from your team awaiting approval or rejection (mss-team-scope) — based on the managerUserId link derived from the organisational structure.",
 				"defaultFilters": {
 					"status": "submitted"
 				},

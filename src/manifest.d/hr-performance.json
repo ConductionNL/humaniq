@@ -4,7 +4,7 @@
 			"id": "ReviewCycleDetail",
 			"route": "/review-cycles/:id",
 			"type": "detail",
-			"title": "Beoordelingscyclus",
+			"title": "Review cycle",
 			"config": {
 				"register": "hrmq",
 				"schema": "ReviewCycle",
@@ -27,7 +27,7 @@
 					{
 						"id": "object-list",
 						"type": "object-list",
-						"title": "Beoordelingen in deze cyclus",
+						"title": "Reviews in this cycle",
 						"icon": "ClipboardAccountOutline",
 						"content": {
 							"register": "hrmq",
@@ -61,7 +61,7 @@
 					{
 						"id": "object-list-2",
 						"type": "object-list",
-						"title": "OKR's in deze cyclus",
+						"title": "OKRs in this cycle",
 						"icon": "BullseyeArrow",
 						"content": {
 							"register": "hrmq",
@@ -132,7 +132,7 @@
 								"concept"
 							],
 							"to": "open",
-							"label": "Openen"
+							"label": "Open"
 						},
 						{
 							"action": "sluiten",
@@ -140,7 +140,7 @@
 								"open"
 							],
 							"to": "gesloten",
-							"label": "Sluiten"
+							"label": "Close"
 						}
 					]
 				}
@@ -155,7 +155,7 @@
 			"params": {
 				"id": "ReviewCycles",
 				"route": "/review-cycles",
-				"title": "Beoordelingscycli",
+				"title": "Review cycles",
 				"columns": [
 					"name",
 					"year",
@@ -175,7 +175,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Beoordelingscycli (jaargesprekken, beoordelingen, tussentijdse gesprekken) waaronder PerformanceReview-dossiers per medewerker worden verzameld."
+				"description": "Review cycles (annual reviews, appraisals, interim conversations) under which PerformanceReview records per employee are collected."
 			}
 		},
 		{
@@ -185,8 +185,8 @@
 			"params": {
 				"id": "PerformanceReviewDetail",
 				"route": "/reviews/:id",
-				"title": "Beoordeling",
-				"dataTitle": "Beoordeling",
+				"title": "Review",
+				"dataTitle": "Review",
 				"dataIcon": "ClipboardAccountOutline",
 				"relatedTitle": "Related",
 				"gridHeight": 9,
@@ -206,7 +206,7 @@
 								"concept"
 							],
 							"to": "ingediend",
-							"label": "Indienen"
+							"label": "Submit"
 						},
 						{
 							"action": "bespreken",
@@ -214,7 +214,7 @@
 								"ingediend"
 							],
 							"to": "besproken",
-							"label": "Bespreken"
+							"label": "Discuss"
 						},
 						{
 							"action": "vaststellen",
@@ -222,7 +222,7 @@
 								"besproken"
 							],
 							"to": "vastgesteld",
-							"label": "Vaststellen"
+							"label": "Finalise"
 						},
 						{
 							"action": "heropenen",
@@ -230,7 +230,7 @@
 								"vastgesteld"
 							],
 							"to": "besproken",
-							"label": "Heropenen"
+							"label": "Reopen"
 						}
 					]
 				}
@@ -243,7 +243,7 @@
 			"params": {
 				"id": "MijnBeoordelingen",
 				"route": "/mijn/beoordelingen",
-				"title": "Mijn beoordelingen",
+				"title": "My reviews",
 				"columns": [
 					"cycleId",
 					"status",
@@ -258,7 +258,7 @@
 					"userId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Jouw eigen beoordelingen."
+				"description": "Your own reviews."
 			}
 		}
 	]

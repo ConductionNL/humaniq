@@ -101,7 +101,16 @@ jobs:
       # largely empty register; it surfaced only as an unrelated-looking e2e
       # failure (the seeded 2026-05 payslip never rendering on
       # /mijn/loonstroken). Pure node, no deps, no container.
-      frontend-checks: '["check:manifest", "check:widget-keys", "check:seed-refs"]'
+      # `check:l10n` (tests/validate-l10n-parity.js) is the third for a defect
+      # that is invisible by construction: the manifest string IS the
+      # translation key that `CnAppNav` hands to `translate('hrmq', …)`, and a
+      # missing key does not throw — `@nextcloud/l10n` returns the key. A Dutch
+      # literal therefore renders as a perfectly convincing Dutch label in an
+      # English session, which is exactly how hrmq shipped with no l10n/
+      # directory at all. The check asserts en/nl key-set parity, en identity
+      # mapping, full coverage of the manifest + `t('hrmq', …)` surface, and
+      # that no Dutch literal survives as a source key (ADR-007).
+      frontend-checks: '["check:manifest", "check:widget-keys", "check:seed-refs", "check:l10n"]'
 
       # ── E2E browser tests ────────────────────────────────────────────────
       # tests/e2e has existed and been maintained for a while — a parametrised

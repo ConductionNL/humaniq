@@ -4,7 +4,7 @@
 			"id": "LeaveRequestDetail",
 			"route": "/leave-requests/:id",
 			"type": "detail",
-			"title": "Verlofaanvraag",
+			"title": "Leave request",
 			"config": {
 				"register": "hrmq",
 				"schema": "LeaveRequest",
@@ -149,7 +149,7 @@
 			"params": {
 				"id": "MijnVerlof",
 				"route": "/mijn/verlof",
-				"title": "Mijn verlof",
+				"title": "My leave",
 				"columns": [
 					"leaveType",
 					"startDate",
@@ -164,7 +164,7 @@
 					"userId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Jouw eigen verlofaanvragen."
+				"description": "Your own leave requests."
 			}
 		},
 		{
@@ -174,7 +174,7 @@
 			"params": {
 				"id": "LeaveRequests",
 				"route": "/leave-requests",
-				"title": "Verlofaanvragen",
+				"title": "Leave requests",
 				"columns": [
 					"employeeId",
 					"leaveType",
@@ -203,7 +203,7 @@
 			"params": {
 				"id": "LeaveApproval",
 				"route": "/leave-requests/approval",
-				"title": "Verlofgoedkeuring",
+				"title": "Leave approval",
 				"columns": [
 					"employeeId",
 					"leaveType",
@@ -223,7 +223,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Ingediende verlofaanvragen die wachten op goedkeuring of afkeuring.",
+				"description": "Submitted leave requests awaiting approval or rejection.",
 				"defaultFilters": {
 					"status": "submitted"
 				}
@@ -236,7 +236,7 @@
 			"params": {
 				"id": "TeamVerlofgoedkeuring",
 				"route": "/leave-requests/team-approval",
-				"title": "Team-verlofgoedkeuring",
+				"title": "Team leave approval",
 				"columns": [
 					"employeeId",
 					"leaveType",
@@ -257,7 +257,7 @@
 					"managerUserId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Ingediende verlofaanvragen van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door HR/back-office bijgehouden managerUserId-koppeling.",
+				"description": "Submitted leave requests from your team awaiting approval or rejection (mss-team-scope) — based on the managerUserId link maintained by HR/back office.",
 				"defaultFilters": {
 					"status": "submitted"
 				}
@@ -270,7 +270,7 @@
 			"params": {
 				"id": "LeaveBalances",
 				"route": "/leave-balances",
-				"title": "Verlofsaldi",
+				"title": "Leave balances",
 				"columns": [
 					"employeeId",
 					"year",
@@ -292,7 +292,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Verlofsaldi per medewerker, jaar en type: toegekende, bovenwettelijke en gebruikte uren, plus het berekende resterende saldo."
+				"description": "Leave balances per employee, year and type: granted, above-statutory and used hours, plus the calculated remaining balance."
 			}
 		},
 		{
@@ -302,8 +302,8 @@
 			"params": {
 				"id": "LeaveTransactionDetail",
 				"route": "/leave-transactions/:id",
-				"title": "Verlof kopen/verkopen",
-				"dataTitle": "Transactie",
+				"title": "Buy/sell leave",
+				"dataTitle": "Transaction",
 				"dataIcon": "SwapHorizontal",
 				"relatedTitle": "Related",
 				"gridHeight": 9,
@@ -315,7 +315,7 @@
 				"headerActions": [
 					{
 						"id": "verrekenen",
-						"label": "Verrekenen",
+						"label": "Settle",
 						"type": "api-call",
 						"icon": "CashCheck",
 						"url": "/api/leave/settle",
@@ -324,8 +324,8 @@
 							"transactionId": "@objectId"
 						},
 						"confirm": true,
-						"successMessage": "Transactie verrekend; het verlofsaldo is bijgewerkt.",
-						"errorMessage": "Verrekenen van de transactie is mislukt."
+						"successMessage": "Transaction settled; the leave balance has been updated.",
+						"errorMessage": "Settling the transaction failed."
 					}
 				],
 				"lifecycleActions": {
@@ -338,7 +338,7 @@
 								"rejected"
 							],
 							"to": "submitted",
-							"label": "Indienen"
+							"label": "Submit"
 						},
 						{
 							"action": "approve",
@@ -346,7 +346,7 @@
 								"submitted"
 							],
 							"to": "approved",
-							"label": "Goedkeuren"
+							"label": "Approve"
 						},
 						{
 							"action": "reject",
@@ -354,7 +354,7 @@
 								"submitted"
 							],
 							"to": "rejected",
-							"label": "Afwijzen"
+							"label": "Reject"
 						}
 					]
 				}
@@ -367,7 +367,7 @@
 			"params": {
 				"id": "MijnVerlofKopenVerkopen",
 				"route": "/mijn/verlof-kopen-verkopen",
-				"title": "Verlof kopen/verkopen",
+				"title": "Buy/sell leave",
 				"columns": [
 					"transactionType",
 					"hours",
@@ -381,7 +381,7 @@
 				"filter": {
 					"userId": "@me"
 				},
-				"description": "Jouw eigen verlof kopen/verkopen-transacties (leave-buy-sell, IKB-style)."
+				"description": "Your own leave buy/sell transactions (leave-buy-sell, IKB-style)."
 			}
 		}
 	]

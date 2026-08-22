@@ -4,7 +4,7 @@
 			"id": "OrgUnitDetail",
 			"route": "/org-units/:id",
 			"type": "detail",
-			"title": "Organisatie-eenheid",
+			"title": "Organisational unit",
 			"config": {
 				"register": "hrmq",
 				"schema": "OrgUnit",
@@ -17,7 +17,7 @@
 					{
 						"id": "data",
 						"type": "data",
-						"title": "Organisatie-eenheid",
+						"title": "Organisational unit",
 						"icon": "SitemapOutline",
 						"content": {
 							"columns": 2,
@@ -25,7 +25,7 @@
 								"parentUnitId",
 								"managerId"
 							],
-							"title": "Organisatie-eenheid"
+							"title": "Organisational unit"
 						}
 					},
 					{
@@ -167,7 +167,7 @@
 			"params": {
 				"id": "OrgUnits",
 				"route": "/org-units",
-				"title": "Organisatie-eenheden",
+				"title": "Organisational units",
 				"columns": [
 					"name",
 					"type",
@@ -186,7 +186,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Organisatiehiërarchie: afdelingen, teams en kostenplaatsen, elk optioneel onder een bovenliggende eenheid."
+				"description": "Organisational hierarchy: departments, teams and cost centres, each optionally under a parent unit."
 			}
 		},
 		{
@@ -196,7 +196,7 @@
 			"params": {
 				"id": "OrgAssignments",
 				"route": "/org-assignments",
-				"title": "Plaatsingen",
+				"title": "Placements",
 				"columns": [
 					"employeeId",
 					"orgUnitId",
@@ -214,7 +214,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Effectief-gedateerde plaatsingen van medewerkers in organisatie-eenheden."
+				"description": "Effective-dated placements of employees in organisational units."
 			}
 		},
 		{
@@ -224,8 +224,8 @@
 			"params": {
 				"id": "OrgAssignmentDetail",
 				"route": "/org-assignments/:id",
-				"title": "Plaatsing",
-				"dataTitle": "Plaatsing",
+				"title": "Placement",
+				"dataTitle": "Placement",
 				"dataIcon": "AccountArrowRightOutline",
 				"relatedTitle": "Related",
 				"gridHeight": 5,

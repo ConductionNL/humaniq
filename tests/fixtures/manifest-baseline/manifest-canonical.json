@@ -240,61 +240,61 @@
         {
           "icon": "ClockCheckOutline",
           "id": "MijnUren",
-          "label": "Mijn uren",
+          "label": "My hours",
           "route": "MijnUren"
         },
         {
           "icon": "CalendarClockOutline",
           "id": "MijnUrenstaten",
-          "label": "Mijn urenstaten",
+          "label": "My timesheets",
           "route": "MijnUrenstaten"
         },
         {
           "icon": "ReceiptOutline",
           "id": "MijnDeclaraties",
-          "label": "Mijn declaraties",
+          "label": "My expenses",
           "route": "MijnDeclaraties"
         },
         {
           "icon": "CalendarWeekendOutline",
           "id": "MijnVerlof",
-          "label": "Mijn verlof",
+          "label": "My leave",
           "route": "MijnVerlof"
         },
         {
           "icon": "ReceiptTextOutline",
           "id": "MijnLoonstroken",
-          "label": "Mijn loonstroken",
+          "label": "My payslips",
           "route": "MijnLoonstroken"
         },
         {
           "icon": "ClockOutline",
           "id": "MijnAanwezigheid",
-          "label": "Mijn aanwezigheid",
+          "label": "My attendance",
           "route": "MijnAanwezigheid"
         },
         {
           "icon": "StarCheckOutline",
           "id": "MijnBeoordelingen",
-          "label": "Mijn beoordelingen",
+          "label": "My reviews",
           "route": "MijnBeoordelingen"
         },
         {
           "icon": "BullseyeArrow",
           "id": "MijnDoelen",
-          "label": "Mijn doelen",
+          "label": "My goals",
           "route": "MijnDoelen"
         },
         {
           "icon": "CalendarWeekendOutline",
           "id": "MijnVerlofKopenVerkopen",
-          "label": "Verlof kopen/verkopen",
+          "label": "Buy/sell leave",
           "route": "MijnVerlofKopenVerkopen"
         },
         {
           "icon": "ScaleBalance",
           "id": "MijnGebruikelijkLoon",
-          "label": "Mijn gebruikelijk loon",
+          "label": "My customary wage",
           "route": "MijnGebruikelijkLoon",
           "visibleIf": {
             "user.administrationMode": {
@@ -305,7 +305,7 @@
       ],
       "icon": "Account",
       "id": "MijnHrGroup",
-      "label": "Mijn HR",
+      "label": "My HR",
       "order": 20,
       "route": "MijnHr"
     },
@@ -314,49 +314,49 @@
         {
           "icon": "AccountTieOutline",
           "id": "Employees",
-          "label": "Werknemers",
+          "label": "Employees",
           "route": "Employees"
         },
         {
           "icon": "FileSign",
           "id": "EmploymentContracts",
-          "label": "Contracten",
+          "label": "Contracts",
           "route": "EmploymentContracts"
         },
         {
           "icon": "SchoolOutline",
           "id": "Stagiairs",
-          "label": "Stagiairs",
+          "label": "Interns",
           "route": "Stagiairs"
         },
         {
           "icon": "FileDocumentMultipleOutline",
           "id": "Caos",
-          "label": "CAO's",
+          "label": "Collective agreements",
           "route": "Caos"
         },
         {
           "icon": "BriefcaseOutline",
           "id": "Normfuncties",
-          "label": "Functiehuis",
+          "label": "Job framework",
           "route": "Normfuncties"
         },
         {
           "icon": "CurrencyEur",
           "id": "SalaryBands",
-          "label": "Salarisschalen",
+          "label": "Salary bands",
           "route": "SalaryBands"
         },
         {
           "icon": "CalendarRange",
           "id": "CompReviewCycles",
-          "label": "Beloningscycli",
+          "label": "Compensation cycles",
           "route": "CompReviewCycles"
         },
         {
           "icon": "OfficeBuildingOutline",
           "id": "OrgUnits",
-          "label": "Organisatie-eenheden",
+          "label": "Organisational units",
           "route": "OrgUnits",
           "visibleIf": {
             "user.administrationMode": {
@@ -367,7 +367,7 @@
         {
           "icon": "AccountArrowRightOutline",
           "id": "OrgAssignments",
-          "label": "Plaatsingen",
+          "label": "Placements",
           "route": "OrgAssignments",
           "visibleIf": {
             "user.administrationMode": {
@@ -378,13 +378,13 @@
         {
           "icon": "FileDocumentMultipleOutline",
           "id": "GeneratedDocuments",
-          "label": "Documenten",
+          "label": "Generated documents",
           "route": "GeneratedDocuments"
         },
         {
           "icon": "CalendarSyncOutline",
           "id": "ReviewCycles",
-          "label": "Beoordelingscycli",
+          "label": "Review cycles",
           "route": "ReviewCycles"
         },
         {
@@ -396,19 +396,19 @@
         {
           "icon": "AccountBoxOutline",
           "id": "Vacancies",
-          "label": "Vacatures",
+          "label": "Vacancies",
           "route": "Vacancies"
         },
         {
           "icon": "FileAccountOutline",
           "id": "Applications",
-          "label": "Sollicitaties",
+          "label": "Applications",
           "route": "Applications"
         },
         {
           "icon": "CalendarAccountOutline",
           "id": "Interviews",
-          "label": "Gesprekken",
+          "label": "Interviews",
           "route": "Interviews"
         },
         {
@@ -420,7 +420,7 @@
       ],
       "icon": "AccountMultipleOutline",
       "id": "EmployeesGroup",
-      "label": "Personeel",
+      "label": "People",
       "order": 90
     },
     {
@@ -428,19 +428,19 @@
         {
           "icon": "ClockPlusOutline",
           "id": "TimeEntries",
-          "label": "Urenboekingen",
+          "label": "Time entries",
           "route": "TimeEntries"
         },
         {
           "icon": "ClockCheckOutline",
           "id": "Timesheets",
-          "label": "Urenstaten",
+          "label": "Timesheets",
           "route": "Timesheets"
         },
         {
           "icon": "CheckDecagramOutline",
           "id": "TimesheetApproval",
-          "label": "Urengoedkeuring",
+          "label": "Timesheet approval",
           "route": "TimesheetApproval",
           "visibleIf": {
             "user.administrationMode": {
@@ -451,7 +451,7 @@
         {
           "icon": "CheckDecagramOutline",
           "id": "TeamUrengoedkeuring",
-          "label": "Team-urengoedkeuring",
+          "label": "Team timesheet approval",
           "route": "TeamUrengoedkeuring",
           "visibleIf": {
             "user.administrationMode": {
@@ -462,13 +462,13 @@
         {
           "icon": "CalendarWeekendOutline",
           "id": "LeaveRequests",
-          "label": "Verlofaanvragen",
+          "label": "Leave requests",
           "route": "LeaveRequests"
         },
         {
           "icon": "CheckDecagramOutline",
           "id": "LeaveApproval",
-          "label": "Verlofgoedkeuring",
+          "label": "Leave approval",
           "route": "LeaveApproval",
           "visibleIf": {
             "user.administrationMode": {
@@ -479,7 +479,7 @@
         {
           "icon": "CheckDecagramOutline",
           "id": "TeamVerlofgoedkeuring",
-          "label": "Team-verlofgoedkeuring",
+          "label": "Team leave approval",
           "route": "TeamVerlofgoedkeuring",
           "visibleIf": {
             "user.administrationMode": {
@@ -490,37 +490,37 @@
         {
           "icon": "CalendarWeekendOutline",
           "id": "LeaveBalances",
-          "label": "Verlofsaldi",
+          "label": "Leave balances",
           "route": "LeaveBalances"
         },
         {
           "icon": "EmoticonSickOutline",
           "id": "SickLeaveCases",
-          "label": "Ziekmeldingen",
+          "label": "Sick leave cases",
           "route": "SickLeaveCases"
         },
         {
           "icon": "ClipboardPulseOutline",
           "id": "VerzuimOverzicht",
-          "label": "Verzuimoverzicht",
+          "label": "Absence overview",
           "route": "VerzuimOverzicht"
         },
         {
           "icon": "ClockOutline",
           "id": "AttendanceRecords",
-          "label": "Aanwezigheid",
+          "label": "Attendance",
           "route": "AttendanceRecords"
         },
         {
           "icon": "ShieldCheckOutline",
           "id": "BhvCertificeringen",
-          "label": "BHV-certificeringen",
+          "label": "Emergency response certifications",
           "route": "BhvCertificeringen"
         }
       ],
       "icon": "CalendarWeekendOutline",
       "id": "VerlofVerzuimGroup",
-      "label": "Verlof & verzuim",
+      "label": "Leave & absence",
       "order": 105
     },
     {
@@ -528,13 +528,13 @@
         {
           "icon": "ReceiptOutline",
           "id": "Expenses",
-          "label": "Declaraties",
+          "label": "Expenses",
           "route": "Expenses"
         },
         {
           "icon": "CheckDecagramOutline",
           "id": "ExpenseApproval",
-          "label": "Declaratiegoedkeuring",
+          "label": "Expense approval",
           "route": "ExpenseApproval",
           "visibleIf": {
             "user.administrationMode": {
@@ -545,7 +545,7 @@
         {
           "icon": "CheckDecagramOutline",
           "id": "TeamDeclaratiegoedkeuring",
-          "label": "Team-declaratiegoedkeuring",
+          "label": "Team expense approval",
           "route": "TeamDeclaratiegoedkeuring",
           "visibleIf": {
             "user.administrationMode": {
@@ -562,13 +562,13 @@
         {
           "icon": "HandshakeOutline",
           "id": "AssetAssignments",
-          "label": "Uitgiftes",
+          "label": "Asset assignments",
           "route": "AssetAssignments"
         }
       ],
       "icon": "ReceiptOutline",
       "id": "ExpensesGroup",
-      "label": "Declaraties & assets",
+      "label": "Expenses & assets",
       "order": 110
     },
     {
@@ -576,91 +576,91 @@
         {
           "icon": "ReceiptTextOutline",
           "id": "Payslips",
-          "label": "Loonstroken",
+          "label": "Payslips",
           "route": "Payslips"
         },
         {
           "icon": "FileCertificateOutline",
           "id": "Jaaropgaven",
-          "label": "Jaaropgaven",
+          "label": "Annual statements",
           "route": "Jaaropgaven"
         },
         {
           "icon": "CogPlayOutline",
           "id": "PayrollRuns",
-          "label": "Loonruns",
+          "label": "Payroll runs",
           "route": "PayrollRuns"
         },
         {
           "icon": "FileSendOutline",
           "id": "LoonaangifteFilings",
-          "label": "Aangiftes",
+          "label": "Wage tax filings",
           "route": "LoonaangifteFilings"
         },
         {
           "icon": "PiggyBankOutline",
           "id": "PensionFilings",
-          "label": "Pensioenaangiftes",
+          "label": "Pension filings",
           "route": "PensionFilings"
         },
         {
           "icon": "ScaleBalance",
           "id": "WntDisclosures",
-          "label": "WNT-verantwoording",
+          "label": "WNT disclosures",
           "route": "WntDisclosures"
         },
         {
           "icon": "SwapHorizontal",
           "id": "PayrollMutations",
-          "label": "Mutatieoverzichten",
+          "label": "Mutation reports",
           "route": "PayrollMutations"
         },
         {
           "icon": "CashSync",
           "id": "PayrollAdjustments",
-          "label": "Correcties (TWK)",
+          "label": "Retro corrections",
           "route": "PayrollAdjustments"
         },
         {
           "icon": "BookEditOutline",
           "id": "PayrollGLPosts",
-          "label": "Loonjournaalposten",
+          "label": "Payroll GL posts",
           "route": "PayrollGLPosts"
         },
         {
           "icon": "CreditCardOutline",
           "id": "PayrollPaymentBatches",
-          "label": "Betaalbatches",
+          "label": "Payment batches",
           "route": "PayrollPaymentBatches"
         },
         {
           "icon": "GiftOutline",
           "id": "WkrDeclarations",
-          "label": "WKR-verstrekkingen",
+          "label": "WKR declarations",
           "route": "WkrDeclarations"
         },
         {
           "icon": "CalculatorVariantOutline",
           "id": "WkrAssessments",
-          "label": "WKR-beoordelingen",
+          "label": "WKR assessments",
           "route": "WkrAssessments"
         },
         {
           "icon": "Gavel",
           "id": "Loonbeslagen",
-          "label": "Loonbeslagen",
+          "label": "Wage garnishments",
           "route": "Loonbeslagen"
         },
         {
           "icon": "Magnify",
           "id": "DsrRequests",
-          "label": "AVG-verzoeken",
+          "label": "Data subject requests",
           "route": "DsrRequests"
         },
         {
           "icon": "Calculator",
           "id": "ProformaPayslipMenu",
-          "label": "Simuleer loonstrook",
+          "label": "Simulate payslip",
           "route": "ProformaPayslip",
           "visibleIf": {
             "user.administrationMode": {
@@ -673,7 +673,7 @@
       ],
       "icon": "CashSync",
       "id": "PayrollGroup",
-      "label": "Loonadministratie",
+      "label": "Payroll",
       "order": 120,
       "visibleIf": {
         "user.administrationMode": {
@@ -688,25 +688,25 @@
         {
           "icon": "TableClock",
           "id": "Rosters",
-          "label": "Roosters",
+          "label": "Rosters",
           "route": "Rosters"
         },
         {
           "icon": "TableClock",
           "id": "RosterAssignments",
-          "label": "Roosterindelingen",
+          "label": "Roster assignments",
           "route": "RosterAssignments"
         },
         {
           "icon": "TimelineClockOutline",
           "id": "Shifts",
-          "label": "Diensten",
+          "label": "Shifts",
           "route": "Shifts"
         }
       ],
       "icon": "CalendarMonthOutline",
       "id": "PlanningGroup",
-      "label": "Roostering",
+      "label": "Scheduling",
       "order": 107,
       "visibleIf": {
         "user.administrationMode": {
@@ -719,19 +719,19 @@
         {
           "icon": "OfficeBuildingOutline",
           "id": "Administraties",
-          "label": "Administraties",
+          "label": "Administrations",
           "route": "Administraties"
         },
         {
           "icon": "PowerPlugOutline",
           "id": "Integraties",
-          "label": "Integraties",
+          "label": "Integrations",
           "route": "IntegrationAccounts"
         }
       ],
       "icon": "CogOutline",
       "id": "ConfiguratieGroup",
-      "label": "Configuratie",
+      "label": "Configuration",
       "order": 200,
       "section": "settings"
     }
@@ -1423,13 +1423,13 @@
       "component": "ProformaPayslip",
       "id": "ProformaPayslip",
       "route": "/payroll/proforma",
-      "title": "Simuleer loonstrook",
+      "title": "Simulate payslip",
       "type": "custom"
     },
     {
       "config": {
         "_note": "single-person-modes (REQ-SPM-006/D5): a self-service surface for the EXISTING nl-gebruikelijkloon-norm verdict for the caller's own DGA Employee. The whole menu entry is visibleIf-gated on administrationMode: dga_single_person (D2/D3). The warning banner is bound to the read-only, stateless GET /apps/hrmq/api/payroll/dga-status endpoint (PayrollController::dgaStatus, which REUSES NlDgaChecks' predicate -- zero new tax logic, zero new persistence): visibleWhen {endpoint, field: met, op: eq, value: false} renders it only when the caller's own annualised loon is below norm AND unjustified. The endpoint takes no per-object parameter (it always means 'my own record', D5.1), so the visibleWhen.endpoint non-templated same-origin path applies cleanly -- no object id to interpolate, the documented fallback (a custom widget) is not needed. Fail-safe: the banner stays hidden on a 404 (no Employee, or Employee not a DGA -- both collapse to the same status, D5.1) or any fetch failure, so a non-DGA caller who somehow reaches this route sees no alert. The info banner is always visible and explains the page. Both widgets are built-in `banner` (CnBannerWidget) -- no custom component, no single-widget-dashboard anti-pattern.",
-        "description": "Zie of je loon als DGA voldoet aan de gebruikelijkloonnorm -- zonder accountant of occ-tool.",
+        "description": "See whether your salary as a DGA meets the customary wage standard -- without an accountant or occ tool.",
         "layout": [
           {
             "gridHeight": 2,
@@ -1451,7 +1451,7 @@
         "widgets": [
           {
             "content": {
-              "text": "Als directeur-grootaandeelhouder (DGA) moet je jezelf minimaal het gebruikelijk loon uitbetalen. Ligt je loon eronder zonder vastgelegde onderbouwing, dan zie je hieronder een waarschuwing.",
+              "text": "As a director-major shareholder (DGA) you must pay yourself at least the customary wage. If your salary is below it without a recorded justification, you will see a warning below.",
               "variant": "info"
             },
             "id": "banner",
@@ -1459,7 +1459,7 @@
           },
           {
             "content": {
-              "text": "Je loon ligt onder de gebruikelijkloonnorm en er is geen onderbouwing vastgelegd. Verhoog je maandloon of leg een onderbouwing vast op je werknemersrecord.",
+              "text": "Your salary is below the customary wage standard and no justification has been recorded. Raise your monthly salary or record a justification on your employee record.",
               "variant": "warning",
               "visibleWhen": {
                 "endpoint": "/apps/hrmq/api/payroll/dga-status",
@@ -1475,7 +1475,7 @@
       },
       "id": "MijnGebruikelijkLoon",
       "route": "/mijn/gebruikelijk-loon",
-      "title": "Mijn gebruikelijk loon",
+      "title": "My customary wage",
       "type": "dashboard"
     },
     {
@@ -1492,7 +1492,7 @@
           "projectId",
           "billable"
         ],
-        "description": "Alle urenboekingen binnen de administratie — HR kan hier ook uren boeken namens een medewerker.",
+        "description": "All time entries within the administration — HR can also log hours on behalf of an employee here.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -1518,7 +1518,7 @@
       },
       "id": "TimeEntries",
       "route": "/time-entries",
-      "title": "Urenboekingen",
+      "title": "Time entries",
       "type": "index"
     },
     {
@@ -1574,11 +1574,11 @@
                   "editable": false
                 }
               },
-              "title": "Urenboeking"
+              "title": "Time entry"
             },
             "icon": "ClockOutline",
             "id": "data",
-            "title": "Urenboeking",
+            "title": "Time entry",
             "type": "data"
           },
           {
@@ -1594,7 +1594,7 @@
       },
       "id": "TimeEntryDetail",
       "route": "/time-entries/:id",
-      "title": "Urenboeking",
+      "title": "Time entry",
       "type": "detail"
     },
     {
@@ -1602,7 +1602,7 @@
       "component": "AdministrationSwitcher",
       "id": "Administraties",
       "route": "/configuratie/administraties",
-      "title": "Administraties",
+      "title": "Administrations",
       "type": "custom"
     },
     {
@@ -1650,7 +1650,7 @@
               "from": [
                 "available"
               ],
-              "label": "Uitgeven",
+              "label": "Issue",
               "to": "issued"
             },
             {
@@ -1658,7 +1658,7 @@
               "from": [
                 "issued"
               ],
-              "label": "Innemen",
+              "label": "Check in",
               "to": "checkedIn"
             },
             {
@@ -1666,7 +1666,7 @@
               "from": [
                 "checkedIn"
               ],
-              "label": "Vrijgeven",
+              "label": "Release",
               "to": "available"
             },
             {
@@ -1675,7 +1675,7 @@
                 "available",
                 "checkedIn"
               ],
-              "label": "Afschrijven",
+              "label": "Write off",
               "to": "writtenOff"
             }
           ]
@@ -1734,18 +1734,18 @@
                 },
                 {
                   "key": "issuedOn",
-                  "label": "Uitgifte"
+                  "label": "Issued"
                 },
                 {
                   "key": "returnedOn",
-                  "label": "Inname"
+                  "label": "Returned"
                 },
                 {
                   "key": "issueReceiptSigned",
-                  "label": "Bon getekend"
+                  "label": "Receipt signed"
                 }
               ],
-              "emptyText": "No uitgiftes yet",
+              "emptyText": "No asset assignments yet",
               "filter": {
                 "assetId": "@objectId"
               },
@@ -1764,13 +1764,13 @@
             },
             "icon": "HandshakeOutline",
             "id": "object-list",
-            "title": "Uitgiftes",
+            "title": "Asset assignments",
             "type": "object-list"
           },
           {
             "icon": "FolderOutline",
             "id": "files",
-            "title": "Uitgiftebonnen",
+            "title": "Handover receipts",
             "type": "files"
           }
         ]
@@ -1786,15 +1786,15 @@
         "headerActions": [
           {
             "confirm": true,
-            "errorMessage": "Aanvragen van de aanbiedingsbrief/e-handtekening is mislukt.",
+            "errorMessage": "Requesting the offer letter/e-signature failed.",
             "icon": "FileDocumentPlusOutline",
             "id": "request-offer-signature",
-            "label": "Aanbiedingsbrief + e-handtekening aanvragen",
+            "label": "Request offer letter + e-signature",
             "method": "POST",
             "params": {
               "applicationId": "@objectId"
             },
-            "successMessage": "Aanbiedingsbrief wordt gegenereerd en e-handtekening aangevraagd.",
+            "successMessage": "The offer letter is being generated and an e-signature requested.",
             "type": "api-call",
             "url": "/api/offer/request-signature"
           }
@@ -1849,7 +1849,7 @@
               "from": [
                 "nieuw"
               ],
-              "label": "Screenen",
+              "label": "Screen",
               "to": "screening"
             },
             {
@@ -1857,7 +1857,7 @@
               "from": [
                 "screening"
               ],
-              "label": "Uitnodigen",
+              "label": "Invite",
               "to": "gesprek"
             },
             {
@@ -1865,7 +1865,7 @@
               "from": [
                 "gesprek"
               ],
-              "label": "Aanbieden",
+              "label": "Make offer",
               "to": "aanbod"
             },
             {
@@ -1873,7 +1873,7 @@
               "from": [
                 "aanbod"
               ],
-              "label": "Aannemen",
+              "label": "Hire",
               "to": "aangenomen"
             },
             {
@@ -1884,7 +1884,7 @@
                 "gesprek",
                 "aanbod"
               ],
-              "label": "Afwijzen",
+              "label": "Reject",
               "to": "afgewezen"
             }
           ]
@@ -1941,7 +1941,7 @@
           {
             "icon": "FolderOutline",
             "id": "files",
-            "title": "CV & motivatiebrief",
+            "title": "CV & cover letter",
             "type": "files"
           },
           {
@@ -1964,7 +1964,7 @@
                   "label": "Status"
                 }
               ],
-              "emptyText": "Nog geen gesprekken gepland",
+              "emptyText": "No interviews scheduled yet",
               "filter": {
                 "applicationId": "@objectId"
               },
@@ -1983,14 +1983,14 @@
             },
             "icon": "CalendarAccountOutline",
             "id": "object-list",
-            "title": "Gesprekken",
+            "title": "Interviews",
             "type": "object-list"
           }
         ]
       },
       "id": "ApplicationDetail",
       "route": "/applications/:id",
-      "title": "Sollicitatie",
+      "title": "Application",
       "type": "detail"
     },
     {
@@ -2035,11 +2035,11 @@
                 "leaveEntitlementVerified",
                 "source"
               ],
-              "title": "CAO"
+              "title": "Collective agreement"
             },
             "icon": "FileDocumentMultipleOutline",
             "id": "data",
-            "title": "CAO",
+            "title": "Collective agreement",
             "type": "data"
           },
           {
@@ -2051,18 +2051,18 @@
                 "leaveEntitlement",
                 "workingTime"
               ],
-              "title": "Loonschalen & verlof"
+              "title": "Salary scales & leave"
             },
             "icon": "ScaleBalance",
             "id": "data-2",
-            "title": "Loonschalen & verlof",
+            "title": "Salary scales & leave",
             "type": "data"
           }
         ]
       },
       "id": "CaoDetail",
       "route": "/caos/:id",
-      "title": "CAO",
+      "title": "Collective agreement",
       "type": "detail"
     },
     {
@@ -2072,11 +2072,11 @@
           {
             "icon": "PlusCircleOutline",
             "id": "propose-comp-adjustment",
-            "label": "Aanpassing voorstellen",
+            "label": "Propose adjustment",
             "onSuccessRoute": "CompAdjustmentDetail",
             "register": "hrmq",
             "schema": "CompAdjustment",
-            "successMessage": "Beloningsvoorstel aangemaakt.",
+            "successMessage": "Compensation adjustment created.",
             "type": "open-form"
           }
         ],
@@ -2106,7 +2106,7 @@
               "from": [
                 "open"
               ],
-              "label": "Sluiten",
+              "label": "Close",
               "to": "closed"
             }
           ]
@@ -2121,11 +2121,11 @@
           {
             "content": {
               "columns": 2,
-              "title": "Cyclus"
+              "title": "Cycle"
             },
             "icon": "CalendarRange",
             "id": "data",
-            "title": "Cyclus",
+            "title": "Cycle",
             "type": "data"
           },
           {
@@ -2159,14 +2159,14 @@
             },
             "icon": "CashPlus",
             "id": "object-list",
-            "title": "Voorstellen in deze cyclus",
+            "title": "Adjustments in this cycle",
             "type": "object-list"
           }
         ]
       },
       "id": "CompReviewCycleDetail",
       "route": "/comp-review-cycles/:id",
-      "title": "Beloningscyclus",
+      "title": "Compensation cycle",
       "type": "detail"
     },
     {
@@ -2304,7 +2304,7 @@
           {
             "icon": "FolderOutline",
             "id": "files",
-            "title": "Receipt / bon",
+            "title": "Receipt",
             "type": "files"
           },
           {
@@ -2376,7 +2376,7 @@
       },
       "id": "ExpenseDetail",
       "route": "/expenses/:id",
-      "title": "Declaratie",
+      "title": "Expense",
       "type": "detail"
     },
     {
@@ -2516,7 +2516,7 @@
       },
       "id": "LeaveRequestDetail",
       "route": "/leave-requests/:id",
-      "title": "Verlofaanvraag",
+      "title": "Leave request",
       "type": "detail"
     },
     {
@@ -2525,44 +2525,44 @@
         "headerActions": [
           {
             "confirm": true,
-            "errorMessage": "Activeren van het loonbeslag is mislukt.",
+            "errorMessage": "Activating the wage garnishment failed.",
             "icon": "CheckCircleOutline",
             "id": "loonbeslag-activate",
-            "label": "Verifiëren en activeren",
+            "label": "Verify and activate",
             "method": "POST",
             "params": {
               "loonbeslagId": "@objectId"
             },
-            "successMessage": "Loonbeslag geverifieerd en geactiveerd.",
+            "successMessage": "Wage garnishment verified and activated.",
             "type": "api-call",
             "url": "/api/loonbeslag/activate"
           },
           {
             "confirm": true,
-            "errorMessage": "Markeren als voldaan is mislukt.",
+            "errorMessage": "Marking as settled failed.",
             "icon": "CashCheck",
             "id": "loonbeslag-settle",
-            "label": "Markeer voldaan",
+            "label": "Mark settled",
             "method": "POST",
             "params": {
               "loonbeslagId": "@objectId"
             },
-            "successMessage": "Loonbeslag gemarkeerd als voldaan.",
+            "successMessage": "Wage garnishment marked as settled.",
             "type": "api-call",
             "url": "/api/loonbeslag/settle"
           },
           {
             "confirm": true,
-            "errorMessage": "Intrekken van het loonbeslag is mislukt.",
+            "errorMessage": "Withdrawing the wage garnishment failed.",
             "icon": "CloseCircleOutline",
             "id": "loonbeslag-withdraw",
-            "label": "Intrekken",
+            "label": "Withdraw",
             "method": "POST",
             "params": {
               "loonbeslagId": "@objectId",
               "reason": "Ingetrokken door beheerder/HR via het beheerpaneel."
             },
-            "successMessage": "Loonbeslag ingetrokken.",
+            "successMessage": "Wage garnishment withdrawn.",
             "type": "api-call",
             "url": "/api/loonbeslag/withdraw"
           }
@@ -2618,7 +2618,7 @@
         "widgets": [
           {
             "content": {
-              "caption": "per periode",
+              "caption": "per period",
               "format": {
                 "decimals": 2,
                 "style": "number"
@@ -2643,13 +2643,13 @@
           },
           {
             "content": {
-              "caption": "beschermd minimum",
+              "caption": "protected minimum",
               "format": {
                 "decimals": 2,
                 "style": "number"
               },
               "icon": "ShieldCheckOutline",
-              "label": "Beslagvrije voet",
+              "label": "Protected earnings floor",
               "source": {
                 "field": "beslagvrijeVoet",
                 "filter": {
@@ -2663,18 +2663,18 @@
             },
             "icon": "ShieldCheckOutline",
             "id": "stat-2",
-            "title": "Beslagvrije voet",
+            "title": "Protected earnings floor",
             "type": "stat"
           },
           {
             "content": {
-              "caption": "totaal beslag",
+              "caption": "total garnishment",
               "format": {
                 "decimals": 2,
                 "style": "number"
               },
               "icon": "CashMultiple",
-              "label": "Totale vordering",
+              "label": "Total claim",
               "source": {
                 "field": "totalClaim",
                 "filter": {
@@ -2688,7 +2688,7 @@
             },
             "icon": "CashMultiple",
             "id": "stat-3",
-            "title": "Totale vordering",
+            "title": "Total claim",
             "type": "stat"
           },
           {
@@ -2697,11 +2697,11 @@
               "exclude": [
                 "employeeId"
               ],
-              "title": "Loonbeslag"
+              "title": "Wage garnishment"
             },
             "icon": "Gavel",
             "id": "data",
-            "title": "Loonbeslag",
+            "title": "Wage garnishment",
             "type": "data"
           },
           {
@@ -2717,7 +2717,7 @@
       },
       "id": "LoonbeslagDetail",
       "route": "/loonbeslagen/:id",
-      "title": "Loonbeslag",
+      "title": "Wage garnishment",
       "type": "detail"
     },
     {
@@ -3209,7 +3209,7 @@
                 },
                 {
                   "key": "besprokenOp",
-                  "label": "Besproken op"
+                  "label": "Discussed on"
                 }
               ],
               "emptyText": "No reviews yet",
@@ -3227,7 +3227,7 @@
             },
             "icon": "ClipboardAccountOutline",
             "id": "object-list-6",
-            "title": "Beoordelingen",
+            "title": "Reviews",
             "type": "object-list"
           },
           {
@@ -3265,7 +3265,7 @@
             },
             "icon": "BullseyeArrow",
             "id": "object-list-7",
-            "title": "Doelen & OKR's",
+            "title": "Goals & OKRs",
             "type": "object-list"
           },
           {
@@ -3304,7 +3304,7 @@
             },
             "icon": "CashPlus",
             "id": "object-list-8",
-            "title": "Beloningsvoorstellen",
+            "title": "Compensation adjustments",
             "type": "object-list"
           },
           {
@@ -3342,7 +3342,7 @@
             },
             "icon": "SwapHorizontal",
             "id": "object-list-9",
-            "title": "Verlof kopen/verkopen",
+            "title": "Buy/sell leave",
             "type": "object-list"
           },
           {
@@ -3355,7 +3355,7 @@
       },
       "id": "EmployeeDetail",
       "route": "/employees/:id",
-      "title": "Werknemer",
+      "title": "Employee",
       "type": "detail"
     },
     {
@@ -3364,16 +3364,16 @@
         "headerActions": [
           {
             "confirm": true,
-            "errorMessage": "Genereren van de loonstrook-PDF is mislukt.",
+            "errorMessage": "Generating the payslip PDF failed.",
             "icon": "FileDocumentPlusOutline",
             "id": "generate-loonstrook",
-            "label": "Genereer PDF",
+            "label": "Generate PDF",
             "method": "POST",
             "params": {
               "documentType": "loonstrook",
               "payslipId": "@objectId"
             },
-            "successMessage": "Loonstrook-PDF wordt gegenereerd.",
+            "successMessage": "The payslip PDF is being generated.",
             "type": "api-call",
             "url": "/api/documents/generate"
           }
@@ -3496,7 +3496,7 @@
       },
       "id": "PayslipDetail",
       "route": "/payslips/:id",
-      "title": "Loonstrook",
+      "title": "Payslip",
       "type": "detail"
     },
     {
@@ -3505,41 +3505,41 @@
         "headerActions": [
           {
             "confirm": true,
-            "errorMessage": "(Her)berekenen van de loonrun is mislukt.",
+            "errorMessage": "(Re)calculating the payroll run failed.",
             "icon": "Calculator",
             "id": "recalculate",
-            "label": "(Her)berekenen",
+            "label": "(Re)calculate",
             "method": "POST",
             "params": {
               "runId": "@objectId"
             },
-            "successMessage": "Loonrun (her)berekend — loonstroken en totalen zijn bijgewerkt.",
+            "successMessage": "Payroll run (re)calculated — payslips and totals have been updated.",
             "type": "api-call",
             "url": "/api/payroll/calculate"
           },
           {
             "confirm": true,
-            "errorMessage": "Genereren van het mutatierapport is mislukt.",
+            "errorMessage": "Generating the mutation report failed.",
             "icon": "SwapHorizontal",
             "id": "mutations",
-            "label": "Mutatieoverzicht",
+            "label": "Mutation report",
             "method": "POST",
             "onSuccessRoute": "PayrollMutationReportDetail",
             "params": {
               "toRunId": "@objectId"
             },
-            "successMessage": "Mutatierapport gegenereerd — vergeleken met de vorige periode.",
+            "successMessage": "Mutation report generated — compared with the previous period.",
             "type": "api-call",
             "url": "/api/payroll/mutations"
           },
           {
             "icon": "CashSync",
             "id": "book-correction",
-            "label": "Correctie boeken (TWK)",
+            "label": "Book retro correction",
             "onSuccessRoute": "PayrollAdjustmentDetail",
             "register": "hrmq",
             "schema": "PayrollAdjustment",
-            "successMessage": "Concept-correctie aangemaakt — gebruik Herrekenen om de delta te berekenen.",
+            "successMessage": "Draft correction created — use Recompute to calculate the delta.",
             "type": "open-form"
           }
         ],
@@ -3691,14 +3691,14 @@
                 },
                 {
                   "key": "loonheffing",
-                  "label": "Loonheffing"
+                  "label": "Payroll tax"
                 },
                 {
                   "key": "nettoPay",
                   "label": "Net"
                 }
               ],
-              "emptyText": "Nog geen loonstroken — voer (Her)berekenen uit",
+              "emptyText": "No payslips yet — run (Re)calculate",
               "filter": {
                 "payrollRunId": "@objectId"
               },
@@ -3717,14 +3717,14 @@
             },
             "icon": "ReceiptTextOutline",
             "id": "object-list",
-            "title": "Loonstroken",
+            "title": "Payslips",
             "type": "object-list"
           }
         ]
       },
       "id": "PayrollRunDetail",
       "route": "/payroll-runs/:id",
-      "title": "Loonrun",
+      "title": "Payroll run",
       "type": "detail"
     },
     {
@@ -3764,7 +3764,7 @@
               "from": [
                 "concept"
               ],
-              "label": "Klaarzetten",
+              "label": "Prepare",
               "to": "klaargezet"
             },
             {
@@ -3772,7 +3772,7 @@
               "from": [
                 "klaargezet"
               ],
-              "label": "Bevestigen",
+              "label": "Confirm",
               "to": "bevestigd"
             },
             {
@@ -3780,7 +3780,7 @@
               "from": [
                 "bevestigd"
               ],
-              "label": "Verzenden",
+              "label": "Send",
               "to": "verzonden"
             },
             {
@@ -3789,7 +3789,7 @@
                 "klaargezet",
                 "bevestigd"
               ],
-              "label": "Heropenen",
+              "label": "Reopen",
               "to": "concept"
             },
             {
@@ -3797,7 +3797,7 @@
               "from": [
                 "verzonden"
               ],
-              "label": "Corrigeren",
+              "label": "Correct",
               "to": "concept"
             }
           ]
@@ -3852,7 +3852,7 @@
       },
       "id": "LoonaangifteFilingDetail",
       "route": "/filings/:id",
-      "title": "Aangifte",
+      "title": "Wage tax filing",
       "type": "detail"
     },
     {
@@ -4018,11 +4018,11 @@
           {
             "content": {
               "columns": 2,
-              "title": "Mutatieoverzicht"
+              "title": "Mutation report"
             },
             "icon": "TableColumn",
             "id": "data",
-            "title": "Mutatieoverzicht",
+            "title": "Mutation report",
             "type": "data"
           },
           {
@@ -4038,7 +4038,7 @@
       },
       "id": "PayrollMutationReportDetail",
       "route": "/payroll-mutations/:id",
-      "title": "Mutatieoverzicht",
+      "title": "Mutation report",
       "type": "detail"
     },
     {
@@ -4047,15 +4047,15 @@
         "headerActions": [
           {
             "confirm": true,
-            "errorMessage": "Herberekenen van de WKR-beoordeling is mislukt.",
+            "errorMessage": "Recalculating the WKR assessment failed.",
             "icon": "Calculator",
             "id": "wkr-assess",
-            "label": "Beoordelen",
+            "label": "Assess",
             "method": "POST",
             "params": {
               "assessmentId": "@objectId"
             },
-            "successMessage": "WKR-beoordeling herberekend.",
+            "successMessage": "WKR assessment recalculated.",
             "type": "api-call",
             "url": "/api/payroll/wkr-assess"
           }
@@ -4119,13 +4119,13 @@
         "widgets": [
           {
             "content": {
-              "caption": "dit jaar",
+              "caption": "this year",
               "format": {
                 "decimals": 2,
                 "style": "number"
               },
               "icon": "CashMultiple",
-              "label": "Fiscale loonsom",
+              "label": "Taxable wage bill",
               "source": {
                 "field": "fiscaleLoonsom",
                 "filter": {
@@ -4139,18 +4139,18 @@
             },
             "icon": "CashMultiple",
             "id": "stat",
-            "title": "Fiscale loonsom",
+            "title": "Taxable wage bill",
             "type": "stat"
           },
           {
             "content": {
-              "caption": "beschikbaar",
+              "caption": "available",
               "format": {
                 "decimals": 2,
                 "style": "number"
               },
               "icon": "GiftOutline",
-              "label": "Vrije ruimte",
+              "label": "Free margin",
               "source": {
                 "field": "vrijeRuimte",
                 "filter": {
@@ -4164,18 +4164,18 @@
             },
             "icon": "GiftOutline",
             "id": "stat-2",
-            "title": "Vrije ruimte",
+            "title": "Free margin",
             "type": "stat"
           },
           {
             "content": {
-              "caption": "toegewezen",
+              "caption": "allocated",
               "format": {
                 "decimals": 2,
                 "style": "number"
               },
               "icon": "CashRemove",
-              "label": "Vrije ruimte gebruikt",
+              "label": "Free margin used",
               "source": {
                 "field": "vrijeRuimteUsed",
                 "filter": {
@@ -4189,18 +4189,18 @@
             },
             "icon": "CashRemove",
             "id": "stat-3",
-            "title": "Vrije ruimte gebruikt",
+            "title": "Free margin used",
             "type": "stat"
           },
           {
             "content": {
-              "caption": "80% over overschrijding",
+              "caption": "80% over the excess",
               "format": {
                 "decimals": 2,
                 "style": "number"
               },
               "icon": "AlertOutline",
-              "label": "Eindheffing verschuldigd",
+              "label": "Final levy due",
               "source": {
                 "field": "eindheffingDue",
                 "filter": {
@@ -4214,17 +4214,17 @@
             },
             "icon": "AlertOutline",
             "id": "stat-4",
-            "title": "Eindheffing verschuldigd",
+            "title": "Final levy due",
             "type": "stat"
           },
           {
             "content": {
               "columns": 2,
-              "title": "WKR-beoordeling"
+              "title": "WKR assessment"
             },
             "icon": "TableColumn",
             "id": "data",
-            "title": "WKR-beoordeling",
+            "title": "WKR assessment",
             "type": "data"
           },
           {
@@ -4240,7 +4240,7 @@
       },
       "id": "WkrAssessmentDetail",
       "route": "/wkr-assessments/:id",
-      "title": "WKR-beoordeling",
+      "title": "WKR assessment",
       "type": "detail"
     },
     {
@@ -4280,7 +4280,7 @@
               "from": [
                 "concept"
               ],
-              "label": "Activeren",
+              "label": "Activate",
               "to": "actief"
             },
             {
@@ -4288,7 +4288,7 @@
               "from": [
                 "actief"
               ],
-              "label": "Afsluiten",
+              "label": "Close",
               "to": "afgesloten"
             }
           ]
@@ -4423,7 +4423,7 @@
               "from": [
                 "aangenomen"
               ],
-              "label": "Contract bevestigen",
+              "label": "Confirm contract",
               "to": "contract_getekend"
             },
             {
@@ -4431,7 +4431,7 @@
               "from": [
                 "contract_getekend"
               ],
-              "label": "Gegevens valideren",
+              "label": "Validate data",
               "to": "gegevens_gevalideerd"
             },
             {
@@ -4439,7 +4439,7 @@
               "from": [
                 "gegevens_gevalideerd"
               ],
-              "label": "Gereed melden",
+              "label": "Mark ready",
               "to": "gereed_eerste_werkdag"
             },
             {
@@ -4447,7 +4447,7 @@
               "from": [
                 "gereed_eerste_werkdag"
               ],
-              "label": "Starten",
+              "label": "Start",
               "to": "proeftijd_lopend"
             },
             {
@@ -4455,7 +4455,7 @@
               "from": [
                 "proeftijd_lopend"
               ],
-              "label": "Afronden",
+              "label": "Complete",
               "to": "afgerond"
             },
             {
@@ -4467,7 +4467,7 @@
                 "gereed_eerste_werkdag",
                 "proeftijd_lopend"
               ],
-              "label": "Annuleren",
+              "label": "Cancel",
               "to": "geannuleerd"
             }
           ]
@@ -4532,7 +4532,7 @@
           {
             "icon": "FolderOutline",
             "id": "files",
-            "title": "Contract & WID-documenten",
+            "title": "Contract & ID documents",
             "type": "files"
           }
         ]
@@ -4595,7 +4595,7 @@
               "from": [
                 "aangekondigd"
               ],
-              "label": "Afronding plannen",
+              "label": "Plan completion",
               "to": "afronding_gepland"
             },
             {
@@ -4603,7 +4603,7 @@
               "from": [
                 "afronding_gepland"
               ],
-              "label": "Eindafrekening gereedmelden",
+              "label": "Mark final settlement ready",
               "to": "eindafrekening_gereed"
             },
             {
@@ -4611,7 +4611,7 @@
               "from": [
                 "eindafrekening_gereed"
               ],
-              "label": "Afronden",
+              "label": "Complete",
               "to": "afgerond"
             },
             {
@@ -4621,7 +4621,7 @@
                 "afronding_gepland",
                 "eindafrekening_gereed"
               ],
-              "label": "Annuleren",
+              "label": "Cancel",
               "to": "geannuleerd"
             }
           ]
@@ -4679,11 +4679,11 @@
                 "getuigschriftVerstrekt",
                 "notes"
               ],
-              "title": "Eindafrekening"
+              "title": "Final settlement"
             },
             "icon": "ReceiptTextOutline",
             "id": "data-3",
-            "title": "Eindafrekening",
+            "title": "Final settlement",
             "type": "data"
           },
           {
@@ -4698,7 +4698,7 @@
           {
             "icon": "FolderOutline",
             "id": "files",
-            "title": "VSO & getuigschrift-documenten",
+            "title": "Settlement agreement & reference documents",
             "type": "files"
           }
         ]
@@ -4759,11 +4759,11 @@
                 "parentUnitId",
                 "managerId"
               ],
-              "title": "Organisatie-eenheid"
+              "title": "Organisational unit"
             },
             "icon": "SitemapOutline",
             "id": "data",
-            "title": "Organisatie-eenheid",
+            "title": "Organisational unit",
             "type": "data"
           },
           {
@@ -4863,7 +4863,7 @@
       },
       "id": "OrgUnitDetail",
       "route": "/org-units/:id",
-      "title": "Organisatie-eenheid",
+      "title": "Organisational unit",
       "type": "detail"
     },
     {
@@ -4903,7 +4903,7 @@
               "from": [
                 "concept"
               ],
-              "label": "Openen",
+              "label": "Open",
               "to": "open"
             },
             {
@@ -4911,7 +4911,7 @@
               "from": [
                 "open"
               ],
-              "label": "Sluiten",
+              "label": "Close",
               "to": "gesloten"
             }
           ]
@@ -4964,7 +4964,7 @@
             },
             "icon": "ClipboardAccountOutline",
             "id": "object-list",
-            "title": "Beoordelingen in deze cyclus",
+            "title": "Reviews in this cycle",
             "type": "object-list"
           },
           {
@@ -5002,14 +5002,14 @@
             },
             "icon": "BullseyeArrow",
             "id": "object-list-2",
-            "title": "OKR's in deze cyclus",
+            "title": "OKRs in this cycle",
             "type": "object-list"
           }
         ]
       },
       "id": "ReviewCycleDetail",
       "route": "/review-cycles/:id",
-      "title": "Beoordelingscyclus",
+      "title": "Review cycle",
       "type": "detail"
     },
     {
@@ -5018,15 +5018,15 @@
         "headerActions": [
           {
             "confirm": true,
-            "errorMessage": "Herrekenen van de correctie is mislukt.",
+            "errorMessage": "Recomputing the correction failed.",
             "icon": "Calculator",
             "id": "recompute",
-            "label": "Herrekenen",
+            "label": "Recompute",
             "method": "POST",
             "params": {
               "adjustmentId": "@objectId"
             },
-            "successMessage": "Correctie herrekend — de delta is bijgewerkt.",
+            "successMessage": "Correction recomputed — the delta has been updated.",
             "type": "api-call",
             "url": "/api/payroll/adjust"
           }
@@ -5066,7 +5066,7 @@
         "widgets": [
           {
             "content": {
-              "caption": "nabetaling / terugvordering",
+              "caption": "back pay / recovery",
               "format": {
                 "decimals": 2,
                 "style": "number"
@@ -5107,18 +5107,18 @@
                 "originalPayslipId",
                 "settlementPayrollRunId"
               ],
-              "title": "Correctie"
+              "title": "Correction"
             },
             "icon": "CashSync",
             "id": "data",
-            "title": "Correctie",
+            "title": "Correction",
             "type": "data"
           }
         ]
       },
       "id": "PayrollAdjustmentDetail",
       "route": "/payroll-adjustments/:id",
-      "title": "Correctie (TWK)",
+      "title": "Retro correction",
       "type": "detail"
     },
     {
@@ -5127,15 +5127,15 @@
         "headerActions": [
           {
             "confirm": true,
-            "errorMessage": "ATW-controle van het rooster is mislukt.",
+            "errorMessage": "The working hours check of the roster failed.",
             "icon": "ClipboardCheckOutline",
             "id": "atw-controle",
-            "label": "ATW-controle",
+            "label": "Working hours check",
             "method": "POST",
             "params": {
               "rosterId": "@objectId"
             },
-            "successMessage": "ATW-controle uitgevoerd — bekijk de uitkomst per roosterindeling.",
+            "successMessage": "Working hours check completed — review the outcome per roster assignment.",
             "type": "api-call",
             "url": "/api/roster/check"
           }
@@ -5174,7 +5174,7 @@
               "from": [
                 "concept"
               ],
-              "label": "Publiceren",
+              "label": "Publish",
               "to": "gepubliceerd"
             },
             {
@@ -5182,7 +5182,7 @@
               "from": [
                 "gepubliceerd"
               ],
-              "label": "Intrekken",
+              "label": "Withdraw",
               "to": "concept"
             }
           ]
@@ -5200,11 +5200,11 @@
               "exclude": [
                 "orgUnitId"
               ],
-              "title": "Rooster"
+              "title": "Roster"
             },
             "icon": "CalendarMonthOutline",
             "id": "data",
-            "title": "Rooster",
+            "title": "Roster",
             "type": "data"
           },
           {
@@ -5240,7 +5240,7 @@
                   "label": "Planned end"
                 }
               ],
-              "emptyText": "Nog geen roosterindelingen",
+              "emptyText": "No roster assignments yet",
               "filter": {
                 "rosterId": "@objectId"
               },
@@ -5259,14 +5259,14 @@
             },
             "icon": "AccountClockOutline",
             "id": "object-list",
-            "title": "Roosterindelingen",
+            "title": "Roster assignments",
             "type": "object-list"
           }
         ]
       },
       "id": "RosterDetail",
       "route": "/rosters/:id",
-      "title": "Rooster",
+      "title": "Roster",
       "type": "detail"
     },
     {
@@ -5416,11 +5416,11 @@
                   "editable": false
                 }
               },
-              "title": "Urenstaat"
+              "title": "Timesheet"
             },
             "icon": "ClipboardList",
             "id": "data",
-            "title": "Urenstaat",
+            "title": "Timesheet",
             "type": "data"
           },
           {
@@ -5450,11 +5450,11 @@
                   "editable": false
                 }
               },
-              "title": "Goedkeuring"
+              "title": "Approval"
             },
             "icon": "CheckCircleOutline",
             "id": "data-2",
-            "title": "Goedkeuring",
+            "title": "Approval",
             "type": "data"
           },
           {
@@ -5476,22 +5476,22 @@
                 },
                 {
                   "key": "endedAt",
-                  "label": "Einde"
+                  "label": "End"
                 },
                 {
                   "key": "hours",
-                  "label": "Uren"
+                  "label": "Hours"
                 },
                 {
                   "key": "description",
-                  "label": "Omschrijving"
+                  "label": "Description"
                 },
                 {
                   "key": "projectId",
                   "label": "Project"
                 }
               ],
-              "emptyText": "Nog geen urenboekingen",
+              "emptyText": "No time entries yet",
               "filter": {
                 "timesheetId": "@objectId"
               },
@@ -5510,7 +5510,7 @@
             },
             "icon": "ClockOutline",
             "id": "object-list",
-            "title": "Urenboekingen",
+            "title": "Time entries",
             "type": "object-list"
           },
           {
@@ -5523,7 +5523,7 @@
       },
       "id": "TimesheetDetail",
       "route": "/timesheets/:id",
-      "title": "Urenstaat",
+      "title": "Timesheet",
       "type": "detail"
     },
     {
@@ -5541,7 +5541,7 @@
           "projectId",
           "billable"
         ],
-        "description": "Boek je uren en zie je eigen urenregistraties.",
+        "description": "Log your hours and see your own time entries.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
@@ -5563,7 +5563,7 @@
       },
       "id": "MijnUren",
       "route": "/mijn/uren",
-      "title": "Mijn uren",
+      "title": "My hours",
       "type": "index"
     },
     {
@@ -5619,7 +5619,7 @@
               "from": [
                 "gemeld"
               ],
-              "label": "Herstellen",
+              "label": "Mark recovered",
               "to": "hersteld"
             },
             {
@@ -5627,7 +5627,7 @@
               "from": [
                 "hersteld"
               ],
-              "label": "Heropenen",
+              "label": "Reopen",
               "to": "gemeld"
             }
           ]
@@ -5708,20 +5708,20 @@
           {
             "icon": "FolderOutline",
             "id": "files",
-            "title": "Gespreksverslagen & plan van aanpak",
+            "title": "Case notes & action plan",
             "type": "files"
           }
         ]
       },
       "id": "SickLeaveCaseDetail",
       "route": "/sick-leave/:id",
-      "title": "Ziekmelding",
+      "title": "Sick leave case",
       "type": "detail"
     },
     {
       "config": {
         "_note": "hrmq-personal-dashboard (design.md D1/D3): the caller-scoped personal landing surface hydra ADR-097 Decision 3 requires — 'route to a type: \"dashboard\" page scoped to the caller … Not an index page, and not a bare parent with no route of its own'. The MijnHrGroup menu entry gains route: \"MijnHr\" through this fragment's menu block (mergeMenuItems fills the base group's undefined route key), so the group title lands here while its nine children stay under the collapse chevron — both of Decision 3's conditions, which moves hrmq's counted main-menu total from 6 to 5. Every widget carries a caller-scope filter (userId: \"@me\", or managerUserId: \"@me\" for the approver's own queue) plus the OPTIONAL administration token @workspace.activeAdministrationId? — unresolved means dropped, so a widget degrades to user-scoped-only, never to another user's rows. Only the built-in `stat` and `object-table` types are used (stat resolves through hrmq's own registry.js override, which is load-bearing: the library's self-registration is tree-shaken out of the production bundle); no custom widget, no new backend endpoint, no raw-GraphQL dataSource (the steering Dashboard's _note documents why that form resolves a schema by name across every register on the instance). Widget 6 has no conditional-visibility primitive available — the dashboard widget grammar has none for stat tiles (design.md D4) — so it always renders and shows 0 for a caller who manages nobody; its caption keeps the zero legible. The stat tiles' click-through uses content.route in the vue-router LOCATION-OBJECT form ({\"name\": \"…\"}), not the bare string design.md D3 writes: widgetLink passes a string straight to <router-link :to>, where vue-router 4 reads it as a PATH, so a bare route NAME would fall through to the catch-all. Same spelling the hr-objects nav-card entries already use. The three object-table widgets carry the FLAT content contract (register/schema/filter/sort{field,dir}/limit/columns/rowRoute/viewAllRoute/emptyText), NOT the nested `source` shape design.md D3 writes — measured live 2026-08-22, not inferred: on a type:\"dashboard\" page CnDashboardPage.registryRenderer looks up getWidgetTypeEntry(canonicalWidgetType(type)), and utils/widgetTypeAliases.js maps `object-table` -> `table`, which registerDashboardWidgets.js registers INLINE to CnObjectListWidget. The alias therefore never reaches CnWidgetObjectTable's dashboardRegistration (its `object-table` key is registered under a name the canonicaliser has already rewritten away, in a side-effect module ADR-061 tree-shaking drops anyway). With the `source` shape the widget rendered its emptyText and fired ZERO fetches, because CnObjectListWidget reads content.register/content.schema and has no `source` key at all. Consequences of the real contract, accepted: `limit` is a FETCH CAP (ADR-062), not a render promise — the visible row count fits the cell — and there is no per-row-route escape, which is fine since rowRoute is already a single static route name. All three also carry allowCreate: false — CnObjectListWidget renders a \"+ Toevoegen\" create affordance by DEFAULT (measured live), and all three collections are read-only to the employee: Timesheets are server-created by the booking flow (MijnUrenstaten already sets showAdd: false), LeaveBalance is written only by LeaveAccrualJob, and payslips are payroll-generated (REQ-MHS-004's read-only posture). Labels are Dutch literals; hrmq-i18n-locale-completeness owns their conversion and this change adds no English keys.",
-        "description": "Jouw persoonlijke overzicht: uren, verlof, declaraties en loonstroken.",
+        "description": "Your personal overview: hours, leave, expenses and payslips.",
         "layout": [
           {
             "gridHeight": 3,
@@ -5775,13 +5775,13 @@
         "widgets": [
           {
             "content": {
-              "caption": "geboekt deze maand",
+              "caption": "logged this month",
               "format": {
                 "decimals": 2,
                 "style": "number"
               },
               "icon": "ClockCheckOutline",
-              "label": "Mijn uren deze maand",
+              "label": "My hours this month",
               "route": {
                 "name": "MijnUren"
               },
@@ -5801,14 +5801,14 @@
             },
             "icon": "ClockCheckOutline",
             "id": "uren-maand",
-            "title": "Mijn uren deze maand",
+            "title": "My hours this month",
             "type": "stat"
           },
           {
             "content": {
-              "caption": "in behandeling",
+              "caption": "pending",
               "icon": "ReceiptOutline",
-              "label": "Mijn open declaraties",
+              "label": "My open expenses",
               "route": {
                 "name": "MijnDeclaraties"
               },
@@ -5825,14 +5825,14 @@
             },
             "icon": "ReceiptOutline",
             "id": "declaraties",
-            "title": "Mijn open declaraties",
+            "title": "My open expenses",
             "type": "stat"
           },
           {
             "content": {
-              "caption": "wachten op jouw goedkeuring",
+              "caption": "awaiting your approval",
               "icon": "CheckDecagramOutline",
-              "label": "Te beoordelen urenstaten",
+              "label": "Timesheets to review",
               "route": {
                 "name": "TeamUrengoedkeuring"
               },
@@ -5849,7 +5849,7 @@
             },
             "icon": "CheckDecagramOutline",
             "id": "te-beoordelen",
-            "title": "Te beoordelen urenstaten",
+            "title": "Timesheets to review",
             "type": "stat"
           },
           {
@@ -5861,7 +5861,7 @@
                 "entryCount",
                 "status"
               ],
-              "emptyText": "Nog geen urenstaten",
+              "emptyText": "No timesheets yet",
               "filter": {
                 "administrationId": "@workspace.activeAdministrationId?",
                 "userId": "@me"
@@ -5877,7 +5877,7 @@
               "viewAllRoute": "MijnUrenstaten"
             },
             "id": "urenstaten",
-            "title": "Mijn urenstaten",
+            "title": "My timesheets",
             "type": "object-table"
           },
           {
@@ -5889,7 +5889,7 @@
                 "bovenwettelijkHours",
                 "usedHours"
               ],
-              "emptyText": "Nog geen verlofsaldo",
+              "emptyText": "No leave balance yet",
               "filter": {
                 "administrationId": "@workspace.activeAdministrationId?",
                 "userId": "@me",
@@ -5903,7 +5903,7 @@
               }
             },
             "id": "verlofsaldo",
-            "title": "Mijn verlofsaldo",
+            "title": "My leave balance",
             "type": "object-table"
           },
           {
@@ -5914,7 +5914,7 @@
                 "grossPay",
                 "nettoPay"
               ],
-              "emptyText": "Nog geen loonstroken",
+              "emptyText": "No payslips yet",
               "filter": {
                 "administrationId": "@workspace.activeAdministrationId?",
                 "userId": "@me"
@@ -5930,14 +5930,14 @@
               "viewAllRoute": "MijnLoonstroken"
             },
             "id": "loonstroken",
-            "title": "Mijn recente loonstroken",
+            "title": "My recent payslips",
             "type": "object-table"
           }
         ]
       },
       "id": "MijnHr",
       "route": "/mijn",
-      "title": "Mijn HR",
+      "title": "My HR",
       "type": "dashboard"
     },
     {
@@ -5956,7 +5956,7 @@
           "status",
           "submittedAt"
         ],
-        "description": "Je eigen urenstaten per periode (alleen-lezen) — open een urenstaat om deze in te dienen.",
+        "description": "Your own timesheets per period (read-only) — open a timesheet to submit it.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
@@ -5970,7 +5970,7 @@
       },
       "id": "MijnUrenstaten",
       "route": "/mijn/urenstaten",
-      "title": "Mijn urenstaten",
+      "title": "My timesheets",
       "type": "index"
     },
     {
@@ -5981,7 +5981,7 @@
           "status",
           "serialNumber"
         ],
-        "description": "Bedrijfseigendommen uitgegeven aan werknemers: laptops, telefoons, voertuigen, gereedschap, toegangspassen en kleding, met een bewaakte innamestatus.",
+        "description": "Company property issued to employees: laptops, phones, vehicles, tools, access passes and clothing, with a guarded return status.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -6010,7 +6010,7 @@
           "returnedOn",
           "issueReceiptSigned"
         ],
-        "description": "Effectief-gedateerde uitgiftes van assets aan werknemers.",
+        "description": "Effective-dated asset assignments to employees.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -6023,7 +6023,7 @@
       },
       "id": "AssetAssignments",
       "route": "/asset-assignments",
-      "title": "Uitgiftes",
+      "title": "Asset assignments",
       "type": "index"
     },
     {
@@ -6061,11 +6061,11 @@
                 "assetId",
                 "employeeId"
               ],
-              "title": "Uitgifte"
+              "title": "Asset assignment"
             },
             "icon": "HandshakeOutline",
             "id": "data",
-            "title": "Uitgifte",
+            "title": "Asset assignment",
             "type": "data"
           },
           {
@@ -6081,7 +6081,7 @@
       },
       "id": "AssetAssignmentDetail",
       "route": "/asset-assignments/:id",
-      "title": "Uitgifte",
+      "title": "Asset assignment",
       "type": "detail"
     },
     {
@@ -6093,7 +6093,7 @@
           "publishedDate",
           "closingDate"
         ],
-        "description": "Vacatures (recruiting-ats-basic): concept -> gepubliceerd -> gesloten publish-lifecycle. Geen externe multiposting (werk.nl/LinkedIn) en geen publieke vacaturepagina in de MVP.",
+        "description": "Vacancies (recruiting-ats-basic): draft -> published -> closed publish lifecycle. No external multiposting (werk.nl/LinkedIn) and no public vacancy page in the MVP.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -6110,7 +6110,7 @@
       },
       "id": "Vacancies",
       "route": "/vacancies",
-      "title": "Vacatures",
+      "title": "Vacancies",
       "type": "index"
     },
     {
@@ -6142,7 +6142,7 @@
               "from": [
                 "concept"
               ],
-              "label": "Publiceren",
+              "label": "Publish",
               "to": "gepubliceerd"
             },
             {
@@ -6150,7 +6150,7 @@
               "from": [
                 "gepubliceerd"
               ],
-              "label": "Sluiten",
+              "label": "Close",
               "to": "gesloten"
             }
           ]
@@ -6187,18 +6187,18 @@
           },
           {
             "content": {
-              "title": "Sollicitaties"
+              "title": "Applications"
             },
             "icon": "LinkVariant",
             "id": "related",
-            "title": "Sollicitaties",
+            "title": "Applications",
             "type": "related"
           }
         ]
       },
       "id": "VacancyDetail",
       "route": "/vacancies/:id",
-      "title": "Vacature",
+      "title": "Vacancy",
       "type": "detail"
     },
     {
@@ -6210,7 +6210,7 @@
           "talentPoolOptIn",
           "retentionExpiryDate"
         ],
-        "description": "Sollicitatiepipeline (recruiting-ats-basic): nieuw -> screening -> gesprek -> aanbod -> aangenomen/afgewezen. De status-filter is de MVP-pipeline-surface -- elke fase is een filterwaarde; een kanban-board is een nc-vue widget follow-up (design D7).",
+        "description": "Application pipeline (recruiting-ats-basic): new -> screening -> interview -> offer -> hired/rejected. The status filter is the MVP pipeline surface -- every stage is a filter value; a kanban board is an nc-vue widget follow-up (design D7).",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -6226,7 +6226,7 @@
       },
       "id": "Applications",
       "route": "/applications",
-      "title": "Sollicitaties",
+      "title": "Applications",
       "type": "index"
     },
     {
@@ -6238,7 +6238,7 @@
           "mode",
           "status"
         ],
-        "description": "interview-scheduling: geplande, voltooide en geannuleerde sollicitatiegesprekken. Een gesprek wordt via de InterviewDetail-pagina of 'occ hrmq:interview:sync' naar de gedeelde agenda gesynchroniseerd (design D1/D6).",
+        "description": "interview-scheduling: scheduled, completed and cancelled job interviews. An interview is synced to the shared calendar through the InterviewDetail page or 'occ hrmq:interview:sync' (design D1/D6).",
         "filters": [
           "status",
           "mode"
@@ -6252,7 +6252,7 @@
       },
       "id": "Interviews",
       "route": "/interviews",
-      "title": "Gesprekken",
+      "title": "Interviews",
       "type": "index"
     },
     {
@@ -6261,15 +6261,15 @@
         "headerActions": [
           {
             "confirm": true,
-            "errorMessage": "Synchroniseren naar de agenda is mislukt.",
+            "errorMessage": "Syncing to the calendar failed.",
             "icon": "CalendarSyncOutline",
             "id": "sync-to-calendar",
-            "label": "Sync naar agenda",
+            "label": "Sync to calendar",
             "method": "POST",
             "params": {
               "interviewId": "@objectId"
             },
-            "successMessage": "Gesprek gesynchroniseerd naar de gedeelde agenda.",
+            "successMessage": "Interview synced to the shared calendar.",
             "type": "api-call",
             "url": "/api/interviews/sync"
           }
@@ -6300,7 +6300,7 @@
               "from": [
                 "scheduled"
               ],
-              "label": "Voltooien",
+              "label": "Complete",
               "to": "completed"
             },
             {
@@ -6308,7 +6308,7 @@
               "from": [
                 "scheduled"
               ],
-              "label": "Annuleren",
+              "label": "Cancel",
               "to": "cancelled"
             }
           ]
@@ -6358,7 +6358,7 @@
           "workedHours",
           "status"
         ],
-        "description": "Jouw eigen aanwezigheid.",
+        "description": "Your own attendance.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
@@ -6372,7 +6372,7 @@
       },
       "id": "MijnAanwezigheid",
       "route": "/mijn/aanwezigheid",
-      "title": "Mijn aanwezigheid",
+      "title": "My attendance",
       "type": "index"
     },
     {
@@ -6385,7 +6385,7 @@
           "workedHours",
           "status"
         ],
-        "description": "Klokregistraties per medewerker per werkdag, met de Arbeidstijdenwet-nalevingscontroles op rusttijd, maximale diensttijd en pauze.",
+        "description": "Clock records per employee per working day, with the Working Hours Act compliance checks on rest time, maximum shift length and breaks.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -6402,7 +6402,7 @@
       },
       "id": "AttendanceRecords",
       "route": "/attendance",
-      "title": "Aanwezigheid",
+      "title": "Attendance",
       "type": "index"
     },
     {
@@ -6434,7 +6434,7 @@
               "from": [
                 "open"
               ],
-              "label": "Sluiten",
+              "label": "Close",
               "to": "gesloten"
             },
             {
@@ -6442,7 +6442,7 @@
               "from": [
                 "gesloten"
               ],
-              "label": "Heropenen",
+              "label": "Reopen",
               "to": "open"
             }
           ]
@@ -6480,7 +6480,7 @@
       },
       "id": "AttendanceRecordDetail",
       "route": "/attendance/:id",
-      "title": "Aanwezigheid",
+      "title": "Attendance",
       "type": "detail"
     },
     {
@@ -6492,7 +6492,7 @@
           "certificaatGeldigTot",
           "orgUnitId"
         ],
-        "description": "BHV-gerelateerde certificeringen per medewerker: rol, geldigheid en organisatie-eenheid. Geen numerieke dekkingsnorm -- de Arbowet (art. 15) vraagt een RI&E-gebaseerde, kwalitatieve beoordeling.",
+        "description": "Emergency response certifications per employee: role, validity and organisational unit. No numeric coverage standard -- the Working Conditions Act (art. 15) requires an RI&E-based, qualitative assessment.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -6509,7 +6509,7 @@
       },
       "id": "BhvCertificeringen",
       "route": "/bhv-certificeringen",
-      "title": "BHV-certificeringen",
+      "title": "Emergency response certifications",
       "type": "index"
     },
     {
@@ -6547,11 +6547,11 @@
                 "employeeId",
                 "orgUnitId"
               ],
-              "title": "Certificering"
+              "title": "Certification"
             },
             "icon": "ShieldCheckOutline",
             "id": "data",
-            "title": "Certificering",
+            "title": "Certification",
             "type": "data"
           },
           {
@@ -6567,7 +6567,7 @@
       },
       "id": "BhvCertificeringDetail",
       "route": "/bhv-certificeringen/:id",
-      "title": "BHV-certificering",
+      "title": "Emergency response certification",
       "type": "detail"
     },
     {
@@ -6592,7 +6592,7 @@
           "effectiveDate",
           "payScalesVerified"
         ],
-        "description": "Beschikbare CAO's uit de onderhouden CAO-bibliotheek (referentie, alleen-lezen).",
+        "description": "Available collective agreements from the maintained collective agreement library (reference, read-only).",
         "filters": [
           "sector"
         ],
@@ -6605,7 +6605,7 @@
       },
       "id": "Caos",
       "route": "/caos",
-      "title": "CAO's",
+      "title": "Collective agreements",
       "type": "index"
     },
     {
@@ -6631,7 +6631,7 @@
           "currency",
           "active"
         ],
-        "description": "Interne salarisschalen (min/richt/max brutomaandsalaris in centen) waartegen beloningsvoorstellen worden getoetst. Alleen-lezen referentiedata.",
+        "description": "Internal salary bands (min/target/max gross monthly salary in cents) against which compensation adjustments are checked. Read-only reference data.",
         "filters": [
           "active",
           "grade"
@@ -6645,7 +6645,7 @@
       },
       "id": "SalaryBands",
       "route": "/salary-bands",
-      "title": "Salarisschalen",
+      "title": "Salary bands",
       "type": "index"
     },
     {
@@ -6672,18 +6672,18 @@
           {
             "content": {
               "columns": 2,
-              "title": "Salarisschaal"
+              "title": "Salary band"
             },
             "icon": "CurrencyEur",
             "id": "data",
-            "title": "Salarisschaal",
+            "title": "Salary band",
             "type": "data"
           }
         ]
       },
       "id": "SalaryBandDetail",
       "route": "/salary-bands/:id",
-      "title": "Salarisschaal",
+      "title": "Salary band",
       "type": "detail"
     },
     {
@@ -6691,11 +6691,11 @@
         {
           "icon": "PlusCircleOutline",
           "id": "create-comp-cycle",
-          "label": "Beloningscyclus aanmaken",
+          "label": "Create compensation cycle",
           "onSuccessRoute": "CompReviewCycleDetail",
           "register": "hrmq",
           "schema": "CompReviewCycle",
-          "successMessage": "Beloningscyclus aangemaakt.",
+          "successMessage": "Compensation cycle created.",
           "type": "open-form"
         }
       ],
@@ -6706,7 +6706,7 @@
           "effectiveDate",
           "status"
         ],
-        "description": "Periodieke beloningsronden waaronder per-medewerker beloningsvoorstellen (CompAdjustment) worden verzameld.",
+        "description": "Periodic compensation rounds under which per-employee compensation adjustments (CompAdjustment) are collected.",
         "filters": [
           "status"
         ],
@@ -6719,7 +6719,7 @@
       },
       "id": "CompReviewCycles",
       "route": "/comp-review-cycles",
-      "title": "Beloningscycli",
+      "title": "Compensation cycles",
       "type": "index"
     },
     {
@@ -6728,15 +6728,15 @@
         "headerActions": [
           {
             "confirm": true,
-            "errorMessage": "Effectueren van het beloningsvoorstel is mislukt.",
+            "errorMessage": "Effectuating the compensation adjustment failed.",
             "icon": "CashCheck",
             "id": "effectueren",
-            "label": "Effectueren",
+            "label": "Effectuate",
             "method": "POST",
             "params": {
               "adjustmentId": "@objectId"
             },
-            "successMessage": "Beloningsvoorstel geëffectueerd; het brutomaandsalaris is bijgewerkt.",
+            "successMessage": "Compensation adjustment effectuated; the gross monthly salary has been updated.",
             "type": "api-call",
             "url": "/api/comp/effectuate"
           }
@@ -6767,7 +6767,7 @@
               "from": [
                 "draft"
               ],
-              "label": "Voorstellen",
+              "label": "Propose",
               "to": "proposed"
             },
             {
@@ -6775,7 +6775,7 @@
               "from": [
                 "proposed"
               ],
-              "label": "Goedkeuren",
+              "label": "Approve",
               "to": "approved"
             },
             {
@@ -6783,7 +6783,7 @@
               "from": [
                 "proposed"
               ],
-              "label": "Afwijzen",
+              "label": "Reject",
               "to": "draft"
             }
           ]
@@ -6804,11 +6804,11 @@
                 "contractId",
                 "targetBandId"
               ],
-              "title": "Aanpassing"
+              "title": "Adjustment"
             },
             "icon": "CashPlus",
             "id": "data",
-            "title": "Aanpassing",
+            "title": "Adjustment",
             "type": "data"
           },
           {
@@ -6824,7 +6824,7 @@
       },
       "id": "CompAdjustmentDetail",
       "route": "/comp-adjustments/:id",
-      "title": "Beloningsvoorstel",
+      "title": "Compensation adjustment",
       "type": "detail"
     },
     {
@@ -6835,7 +6835,7 @@
           "employeeId",
           "generatedAt"
         ],
-        "description": "Gegenereerde HR-documenten (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift) via docudesk.",
+        "description": "Generated HR documents (employment contract, offer letter, employer statement, reference letter) via docudesk.",
         "filters": [
           "documentType",
           "status"
@@ -6849,7 +6849,7 @@
       },
       "id": "GeneratedDocuments",
       "route": "/documents",
-      "title": "Documenten",
+      "title": "Generated documents",
       "type": "index"
     },
     {
@@ -6957,7 +6957,7 @@
           "totalLoonheffing",
           "payPeriodCount"
         ],
-        "description": "Jaarlijkse loonopgaven per medewerker, geaggregeerd uit de loonstroken van dat jaar (payslip-pdf-docudesk).",
+        "description": "Annual wage statements per employee, aggregated from that year's payslips (payslip-pdf-docudesk).",
         "filters": [
           "year"
         ],
@@ -6970,7 +6970,7 @@
       },
       "id": "Jaaropgaven",
       "route": "/jaaropgaven",
-      "title": "Jaaropgaven",
+      "title": "Annual statements",
       "type": "index"
     },
     {
@@ -7007,11 +7007,11 @@
               "exclude": [
                 "employeeId"
               ],
-              "title": "Jaaropgaaf"
+              "title": "Annual statement"
             },
             "icon": "FileCertificateOutline",
             "id": "data",
-            "title": "Jaaropgaaf",
+            "title": "Annual statement",
             "type": "data"
           },
           {
@@ -7027,7 +7027,7 @@
       },
       "id": "JaaropgaafDetail",
       "route": "/jaaropgaven/:id",
-      "title": "Jaaropgaaf",
+      "title": "Annual statement",
       "type": "detail"
     },
     {
@@ -7039,7 +7039,7 @@
           "receivedDate",
           "deadlineDate"
         ],
-        "description": "AVG (GDPR) data-subject-rights verzoeken: inzage/portabiliteit, verwijdering (retention-guarded via de statutaire bewaarplicht) en rectificatie, uitgevoerd via OpenRegister's DsarService onder een expliciet vastgestelde beheerderssessie (avg-dsr). Alleen-beheerder surface.",
+        "description": "AVG (GDPR) data-subject-rights requests: access/portability, erasure (retention-guarded via the statutory retention obligation) and rectification, executed through OpenRegister's DsarService under an explicitly established administrator session (avg-dsr). Administrator-only surface.",
         "filters": [
           "status",
           "right"
@@ -7053,7 +7053,7 @@
       },
       "id": "DsrRequests",
       "route": "/dsr-requests",
-      "title": "AVG-verzoeken",
+      "title": "Data subject requests",
       "type": "index"
     },
     {
@@ -7062,62 +7062,62 @@
         "headerActions": [
           {
             "confirm": false,
-            "errorMessage": "Exporteren is mislukt.",
+            "errorMessage": "The export failed.",
             "icon": "DownloadOutline",
             "id": "dsr-export",
-            "label": "Exporteer",
+            "label": "Export",
             "method": "POST",
             "params": {
               "dsrRequestId": "@objectId",
               "employeeId": "@object.employeeId",
               "right": "@object.right"
             },
-            "successMessage": "AVG-export uitgevoerd.",
+            "successMessage": "Data export completed.",
             "type": "api-call",
             "url": "/api/dsr/export"
           },
           {
             "confirm": false,
-            "errorMessage": "Voorbeeld verwijdering kon niet worden opgehaald.",
+            "errorMessage": "The erasure preview could not be retrieved.",
             "icon": "EyeOutline",
             "id": "dsr-erase-preview",
-            "label": "Voorbeeld verwijdering",
+            "label": "Preview erasure",
             "method": "POST",
             "params": {
               "dsrRequestId": "@objectId",
               "employeeId": "@object.employeeId"
             },
-            "successMessage": "Voorbeeld verwijdering opgehaald (geen schrijfacties).",
+            "successMessage": "Erasure preview retrieved (no write actions).",
             "type": "api-call",
             "url": "/api/dsr/erase-preview"
           },
           {
             "confirm": true,
-            "errorMessage": "Verwijdering is mislukt of geweigerd — voer eerst Voorbeeld verwijdering uit.",
+            "errorMessage": "The erasure failed or was refused — run Preview erasure first.",
             "icon": "DeleteAlertOutline",
             "id": "dsr-erase-confirm",
-            "label": "Bevestig verwijdering",
+            "label": "Confirm erasure",
             "method": "POST",
             "params": {
               "dsrRequestId": "@objectId",
               "employeeId": "@object.employeeId"
             },
-            "successMessage": "Verwijdering uitgevoerd (retained objecten uitgesloten, wettelijke bewaarplicht).",
+            "successMessage": "Erasure completed (retained objects excluded, statutory retention obligation).",
             "type": "api-call",
             "url": "/api/dsr/erase-confirm"
           },
           {
             "confirm": true,
-            "errorMessage": "Rectificatie is mislukt.",
+            "errorMessage": "The rectification failed.",
             "icon": "PencilOutline",
             "id": "dsr-rectify",
-            "label": "Rectificeer",
+            "label": "Rectify",
             "method": "POST",
             "params": {
               "dsrRequestId": "@objectId",
               "employeeId": "@object.employeeId"
             },
-            "successMessage": "Rectificatie toegepast.",
+            "successMessage": "Rectification applied.",
             "type": "api-call",
             "url": "/api/dsr/rectify"
           }
@@ -7153,11 +7153,11 @@
               "exclude": [
                 "employeeId"
               ],
-              "title": "AVG-verzoek"
+              "title": "Data subject request"
             },
             "icon": "ShieldAccountOutline",
             "id": "data",
-            "title": "AVG-verzoek",
+            "title": "Data subject request",
             "type": "data"
           },
           {
@@ -7173,7 +7173,7 @@
       },
       "id": "DsrRequestDetail",
       "route": "/dsr-requests/:id",
-      "title": "AVG-verzoek",
+      "title": "Data subject request",
       "type": "detail"
     },
     {
@@ -7185,7 +7185,7 @@
           "expenseDate",
           "status"
         ],
-        "description": "Jouw eigen declaraties.",
+        "description": "Your own expense claims.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
@@ -7199,7 +7199,7 @@
       },
       "id": "MijnDeclaraties",
       "route": "/mijn/declaraties",
-      "title": "Mijn declaraties",
+      "title": "My expenses",
       "type": "index"
     },
     {
@@ -7228,7 +7228,7 @@
       },
       "id": "Expenses",
       "route": "/expenses",
-      "title": "Declaraties",
+      "title": "Expenses",
       "type": "index"
     },
     {
@@ -7244,7 +7244,7 @@
         "defaultFilters": {
           "status": "submitted"
         },
-        "description": "Ingediende declaraties die wachten op goedkeuring of afkeuring.",
+        "description": "Submitted expense claims awaiting approval or rejection.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -7261,7 +7261,7 @@
       },
       "id": "ExpenseApproval",
       "route": "/expenses/approval",
-      "title": "Declaratiegoedkeuring",
+      "title": "Expense approval",
       "type": "index"
     },
     {
@@ -7277,7 +7277,7 @@
         "defaultFilters": {
           "status": "submitted"
         },
-        "description": "Ingediende declaraties van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door HR/back-office bijgehouden managerUserId-koppeling.",
+        "description": "Submitted expense claims from your team awaiting approval or rejection (mss-team-scope) — based on the managerUserId link maintained by HR/back office.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?",
           "managerUserId": "@me"
@@ -7295,7 +7295,7 @@
       },
       "id": "TeamDeclaratiegoedkeuring",
       "route": "/expenses/team-approval",
-      "title": "Team-declaratiegoedkeuring",
+      "title": "Team expense approval",
       "type": "index"
     },
     {
@@ -7306,7 +7306,7 @@
           "journalEntryId",
           "postedAt"
         ],
-        "description": "Payroll-to-GL posting attempts: one balanced loonjournaalpost handed off to shillinq per approved loonrun.",
+        "description": "Payroll-to-GL posting attempts: one balanced payroll GL post handed off to shillinq per approved payroll run.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -7322,7 +7322,7 @@
       },
       "id": "PayrollGLPosts",
       "route": "/gl-posts",
-      "title": "Loonjournaalposten",
+      "title": "Payroll GL posts",
       "type": "index"
     },
     {
@@ -7410,7 +7410,7 @@
       },
       "id": "PayrollGLPostDetail",
       "route": "/gl-posts/:id",
-      "title": "Loonjournaalpost",
+      "title": "Payroll GL post",
       "type": "detail"
     },
     {
@@ -7434,7 +7434,7 @@
           "caoSchaal",
           "caoSchaalVerified"
         ],
-        "description": "HR21-normfuncties en hun gekoppelde Cao Gemeenten-schaal (illustratieve subset, geen volledige bibliotheek). Alleen-lezen referentiedata.",
+        "description": "HR21 job profiles and their linked Cao Gemeenten scale (illustrative subset, not a complete library). Read-only reference data.",
         "filters": [
           "functiegroep"
         ],
@@ -7447,7 +7447,7 @@
       },
       "id": "Normfuncties",
       "route": "/normfuncties",
-      "title": "Functiehuis",
+      "title": "Job framework",
       "type": "index"
     },
     {
@@ -7482,18 +7482,18 @@
                 "caoSchaalVerified",
                 "caoSchaalSource"
               ],
-              "title": "Normfunctie"
+              "title": "Job profile"
             },
             "icon": "BriefcaseOutline",
             "id": "data",
-            "title": "Normfunctie",
+            "title": "Job profile",
             "type": "data"
           }
         ]
       },
       "id": "NormfunctieDetail",
       "route": "/normfuncties/:id",
-      "title": "Normfunctie",
+      "title": "Job profile",
       "type": "detail"
     },
     {
@@ -7501,11 +7501,11 @@
         {
           "icon": "PlusCircleOutline",
           "id": "create-integration-account",
-          "label": "Integratie registreren",
+          "label": "Register integration",
           "onSuccessRoute": "IntegrationAccountDetail",
           "register": "hrmq",
           "schema": "IntegrationAccount",
-          "successMessage": "Integratie geregistreerd. Configureer de daadwerkelijke RBAC-toegang en het app-wachtwoord in OpenRegister / Nextcloud.",
+          "successMessage": "Integration registered. Configure the actual RBAC access and the app password in OpenRegister / Nextcloud.",
           "type": "open-form"
         }
       ],
@@ -7516,7 +7516,7 @@
           "status",
           "reviewedAt"
         ],
-        "description": "Governance-/auditcatalogus van externe systemen die toegang hebben gekregen tot hrmq via OpenRegister's publieke REST-API (/api/objects/{register}/{schema}, geauthenticeerd met een Nextcloud app-wachtwoord). Dit overzicht legt VAST welk extern systeem toegang heeft, waarvoor, en wanneer die toegang voor het laatst is beoordeeld — het verleent of handhaaft die toegang NIET (de echte RBAC-grant staat in OpenRegister, buiten hrmq; hris-api-public design.md D2). Alleen-beheerder surface.",
+        "description": "Governance/audit catalogue of external systems that have been granted access to hrmq through OpenRegister's public REST API (/api/objects/{register}/{schema}, authenticated with a Nextcloud app password). This overview RECORDS which external system has access, for what, and when that access was last reviewed — it does NOT grant or enforce that access (the real RBAC grant lives in OpenRegister, outside hrmq; hris-api-public design.md D2). Administrator-only surface.",
         "filters": [
           "status"
         ],
@@ -7529,7 +7529,7 @@
       },
       "id": "IntegrationAccounts",
       "route": "/configuratie/integraties",
-      "title": "Integraties",
+      "title": "Integrations",
       "type": "index"
     },
     {
@@ -7555,18 +7555,18 @@
           {
             "content": {
               "columns": 2,
-              "title": "Integratie"
+              "title": "Integration"
             },
             "icon": "PowerPlugOutline",
             "id": "data",
-            "title": "Integratie",
+            "title": "Integration",
             "type": "data"
           }
         ]
       },
       "id": "IntegrationAccountDetail",
       "route": "/configuratie/integraties/:id",
-      "title": "Integratie",
+      "title": "Integration",
       "type": "detail"
     },
     {
@@ -7577,7 +7577,7 @@
           "endDate",
           "status"
         ],
-        "description": "Jouw eigen verlofaanvragen.",
+        "description": "Your own leave requests.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
@@ -7591,7 +7591,7 @@
       },
       "id": "MijnVerlof",
       "route": "/mijn/verlof",
-      "title": "Mijn verlof",
+      "title": "My leave",
       "type": "index"
     },
     {
@@ -7620,7 +7620,7 @@
       },
       "id": "LeaveRequests",
       "route": "/leave-requests",
-      "title": "Verlofaanvragen",
+      "title": "Leave requests",
       "type": "index"
     },
     {
@@ -7636,7 +7636,7 @@
         "defaultFilters": {
           "status": "submitted"
         },
-        "description": "Ingediende verlofaanvragen die wachten op goedkeuring of afkeuring.",
+        "description": "Submitted leave requests awaiting approval or rejection.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -7653,7 +7653,7 @@
       },
       "id": "LeaveApproval",
       "route": "/leave-requests/approval",
-      "title": "Verlofgoedkeuring",
+      "title": "Leave approval",
       "type": "index"
     },
     {
@@ -7669,7 +7669,7 @@
         "defaultFilters": {
           "status": "submitted"
         },
-        "description": "Ingediende verlofaanvragen van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door HR/back-office bijgehouden managerUserId-koppeling.",
+        "description": "Submitted leave requests from your team awaiting approval or rejection (mss-team-scope) — based on the managerUserId link maintained by HR/back office.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?",
           "managerUserId": "@me"
@@ -7687,7 +7687,7 @@
       },
       "id": "TeamVerlofgoedkeuring",
       "route": "/leave-requests/team-approval",
-      "title": "Team-verlofgoedkeuring",
+      "title": "Team leave approval",
       "type": "index"
     },
     {
@@ -7702,7 +7702,7 @@
           "remainingHours",
           "expiryDate"
         ],
-        "description": "Verlofsaldi per medewerker, jaar en type: toegekende, bovenwettelijke en gebruikte uren, plus het berekende resterende saldo.",
+        "description": "Leave balances per employee, year and type: granted, above-statutory and used hours, plus the calculated remaining balance.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -7719,7 +7719,7 @@
       },
       "id": "LeaveBalances",
       "route": "/leave-balances",
-      "title": "Verlofsaldi",
+      "title": "Leave balances",
       "type": "index"
     },
     {
@@ -7728,15 +7728,15 @@
         "headerActions": [
           {
             "confirm": true,
-            "errorMessage": "Verrekenen van de transactie is mislukt.",
+            "errorMessage": "Settling the transaction failed.",
             "icon": "CashCheck",
             "id": "verrekenen",
-            "label": "Verrekenen",
+            "label": "Settle",
             "method": "POST",
             "params": {
               "transactionId": "@objectId"
             },
-            "successMessage": "Transactie verrekend; het verlofsaldo is bijgewerkt.",
+            "successMessage": "Transaction settled; the leave balance has been updated.",
             "type": "api-call",
             "url": "/api/leave/settle"
           }
@@ -7768,7 +7768,7 @@
                 "draft",
                 "rejected"
               ],
-              "label": "Indienen",
+              "label": "Submit",
               "to": "submitted"
             },
             {
@@ -7776,7 +7776,7 @@
               "from": [
                 "submitted"
               ],
-              "label": "Goedkeuren",
+              "label": "Approve",
               "to": "approved"
             },
             {
@@ -7784,7 +7784,7 @@
               "from": [
                 "submitted"
               ],
-              "label": "Afwijzen",
+              "label": "Reject",
               "to": "rejected"
             }
           ]
@@ -7803,11 +7803,11 @@
                 "employeeId",
                 "settlementPayrollRunId"
               ],
-              "title": "Transactie"
+              "title": "Transaction"
             },
             "icon": "SwapHorizontal",
             "id": "data",
-            "title": "Transactie",
+            "title": "Transaction",
             "type": "data"
           },
           {
@@ -7823,7 +7823,7 @@
       },
       "id": "LeaveTransactionDetail",
       "route": "/leave-transactions/:id",
-      "title": "Verlof kopen/verkopen",
+      "title": "Buy/sell leave",
       "type": "detail"
     },
     {
@@ -7834,7 +7834,7 @@
           "settlementPeriod",
           "status"
         ],
-        "description": "Jouw eigen verlof kopen/verkopen-transacties (leave-buy-sell, IKB-style).",
+        "description": "Your own leave buy/sell transactions (leave-buy-sell, IKB-style).",
         "filter": {
           "userId": "@me"
         },
@@ -7847,7 +7847,7 @@
       },
       "id": "MijnVerlofKopenVerkopen",
       "route": "/mijn/verlof-kopen-verkopen",
-      "title": "Verlof kopen/verkopen",
+      "title": "Buy/sell leave",
       "type": "index"
     },
     {
@@ -7855,11 +7855,11 @@
         {
           "icon": "PlusCircleOutline",
           "id": "create-loonbeslag",
-          "label": "Loonbeslag registreren",
+          "label": "Register wage garnishment",
           "onSuccessRoute": "LoonbeslagDetail",
           "register": "hrmq",
           "schema": "Loonbeslag",
-          "successMessage": "Loonbeslag geregistreerd (status concept -- gebruik Verifiëren en activeren om deducties te starten).",
+          "successMessage": "Wage garnishment registered (status draft -- use Verify and activate to start deductions).",
           "type": "open-form"
         }
       ],
@@ -7873,7 +7873,7 @@
           "status",
           "effectiveFrom"
         ],
-        "description": "Court/deurwaarder-ordered wage garnishments (loonbeslag): de floor-clamped periodieke deductie op nettoPay -- nooit onder de beslagvrije voet -- gevouwen in de lopende loonrun na verrekening en verlofkoop-verkoop. Admin/HR-only; activeren/voldaan-markeren/intrekken via de gegroeide acties, nooit een kaal lifecycle-transitieknop.",
+        "description": "Court/bailiff-ordered wage garnishments: the floor-clamped periodic deduction on net pay -- never below the protected earnings floor -- folded into the running payroll run after settlement and leave buy/sell. Admin/HR-only; activate, mark settled and withdraw through the grown actions, never a bare lifecycle transition button.",
         "filters": [
           "status"
         ],
@@ -7886,7 +7886,7 @@
       },
       "id": "Loonbeslagen",
       "route": "/loonbeslagen",
-      "title": "Loonbeslagen",
+      "title": "Wage garnishments",
       "type": "index"
     },
     {
@@ -7903,7 +7903,7 @@
           "grossPay",
           "nettoPay"
         ],
-        "description": "Jouw eigen loonstroken (alleen-lezen).",
+        "description": "Your own payslips (read-only).",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
@@ -7917,7 +7917,7 @@
       },
       "id": "MijnLoonstroken",
       "route": "/mijn/loonstroken",
-      "title": "Mijn loonstroken",
+      "title": "My payslips",
       "type": "index"
     },
     {
@@ -7945,7 +7945,7 @@
       },
       "id": "Employees",
       "route": "/employees",
-      "title": "Werknemers",
+      "title": "Employees",
       "type": "index"
     },
     {
@@ -7974,7 +7974,7 @@
       },
       "id": "EmploymentContracts",
       "route": "/contracts",
-      "title": "Contracten",
+      "title": "Contracts",
       "type": "index"
     },
     {
@@ -7983,16 +7983,16 @@
         "headerActions": [
           {
             "confirm": true,
-            "errorMessage": "Genereren van de arbeidsovereenkomst is mislukt.",
+            "errorMessage": "Generating the employment contract failed.",
             "icon": "FileDocumentPlusOutline",
             "id": "generate-arbeidsovereenkomst",
-            "label": "Genereer arbeidsovereenkomst",
+            "label": "Generate employment contract",
             "method": "POST",
             "params": {
               "contractId": "@objectId",
               "documentType": "arbeidsovereenkomst"
             },
-            "successMessage": "Arbeidsovereenkomst wordt gegenereerd.",
+            "successMessage": "The employment contract is being generated.",
             "type": "api-call",
             "url": "/api/documents/generate"
           }
@@ -8077,7 +8077,7 @@
       },
       "id": "Payslips",
       "route": "/payslips",
-      "title": "Loonstroken",
+      "title": "Payslips",
       "type": "index"
     },
     {
@@ -8085,11 +8085,11 @@
         {
           "icon": "PlusCircleOutline",
           "id": "create-run",
-          "label": "Loonrun aanmaken",
+          "label": "Create payroll run",
           "onSuccessRoute": "PayrollRunDetail",
           "register": "hrmq",
           "schema": "PayrollRun",
-          "successMessage": "Concept-loonrun aangemaakt. Gebruik (Her)berekenen om de loonstroken te genereren.",
+          "successMessage": "Draft payroll run created. Use (Re)calculate to generate the payslips.",
           "type": "open-form"
         }
       ],
@@ -8118,7 +8118,7 @@
       },
       "id": "PayrollRuns",
       "route": "/payroll-runs",
-      "title": "Loonruns",
+      "title": "Payroll runs",
       "type": "index"
     },
     {
@@ -8149,7 +8149,7 @@
       },
       "id": "LoonaangifteFilings",
       "route": "/filings",
-      "title": "Aangiftes",
+      "title": "Wage tax filings",
       "type": "index"
     },
     {
@@ -8162,7 +8162,7 @@
           "totalWageCostDelta",
           "generatedAt"
         ],
-        "description": "Run-to-run loonmutatie-rapporten: per periode wie is ingestroomd/uitgestroomd en de totale loonkostenverandering (payroll-mutation-reports). Admin/HR only -- gegenereerd via de \"Mutatieoverzicht\"-actie op een loonrun of via occ hrmq:payroll:mutations --persist.",
+        "description": "Run-to-run payroll mutation reports: per period who joined and left and the total wage-cost change (payroll-mutation-reports). Admin/HR only -- generated through the \"Mutation report\" action on a payroll run or through occ hrmq:payroll:mutations --persist.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -8178,7 +8178,7 @@
       },
       "id": "PayrollMutations",
       "route": "/payroll-mutations",
-      "title": "Mutatieoverzichten",
+      "title": "Mutation reports",
       "type": "index"
     },
     {
@@ -8186,11 +8186,11 @@
         {
           "icon": "PlusCircleOutline",
           "id": "create-wkr-declaration",
-          "label": "Verstrekking registreren",
+          "label": "Register declaration",
           "onSuccessRoute": "WkrDeclarationDetail",
           "register": "hrmq",
           "schema": "WkrDeclaration",
-          "successMessage": "WKR-verstrekking geregistreerd.",
+          "successMessage": "WKR declaration registered.",
           "type": "open-form"
         }
       ],
@@ -8204,7 +8204,7 @@
           "amount",
           "wkrCategory"
         ],
-        "description": "De ledger van vergoedingen/verstrekkingen/terbeschikkingstellingen voor de werkkostenregeling (wkr-administration). Alleen de categorie vrije-ruimte telt mee in de vrije-ruimte-berekening.",
+        "description": "The ledger of allowances, benefits in kind and provisions for the work-related costs scheme (wkr-administration). Only the free-margin category counts towards the free-margin calculation.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -8221,7 +8221,7 @@
       },
       "id": "WkrDeclarations",
       "route": "/wkr-declarations",
-      "title": "WKR-verstrekkingen",
+      "title": "WKR declarations",
       "type": "index"
     },
     {
@@ -8258,11 +8258,11 @@
               "exclude": [
                 "employeeId"
               ],
-              "title": "WKR-verstrekking"
+              "title": "WKR declaration"
             },
             "icon": "GiftOutline",
             "id": "data",
-            "title": "WKR-verstrekking",
+            "title": "WKR declaration",
             "type": "data"
           },
           {
@@ -8278,7 +8278,7 @@
       },
       "id": "WkrDeclarationDetail",
       "route": "/wkr-declarations/:id",
-      "title": "WKR-verstrekking",
+      "title": "WKR declaration",
       "type": "detail"
     },
     {
@@ -8291,7 +8291,7 @@
           "eindheffingDue",
           "status"
         ],
-        "description": "Per administratie/jaar berekende werkkostenregeling-beoordelingen: fiscale loonsom, vrije ruimte, gebruikt, en de 80%-eindheffing bij overschrijding (wkr-administration). Gegenereerd via occ hrmq:wkr:assess of de Beoordelen-actie.",
+        "description": "Work-related costs scheme assessments calculated per administration/year: taxable wage bill, free margin, used, and the 80% final levy on any excess (wkr-administration). Generated through occ hrmq:wkr:assess or the Assess action.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -8308,7 +8308,7 @@
       },
       "id": "WkrAssessments",
       "route": "/wkr-assessments",
-      "title": "WKR-beoordelingen",
+      "title": "WKR assessments",
       "type": "index"
     },
     {
@@ -8366,7 +8366,7 @@
       },
       "id": "KeyResultDetail",
       "route": "/key-results/:id",
-      "title": "Key Result",
+      "title": "Key result",
       "type": "detail"
     },
     {
@@ -8377,7 +8377,7 @@
           "progress",
           "cycleId"
         ],
-        "description": "Jouw eigen doelen en OKR's.",
+        "description": "Your own goals and OKRs.",
         "filter": {
           "userId": "@me"
         },
@@ -8390,7 +8390,7 @@
       },
       "id": "MijnDoelen",
       "route": "/mijn/doelen",
-      "title": "Mijn doelen",
+      "title": "My goals",
       "type": "index"
     },
     {
@@ -8401,7 +8401,7 @@
           "startDate",
           "proeftijdEndDate"
         ],
-        "description": "Onboardingcases per nieuwe medewerker: contract, WID-check, BSN/IBAN, IT-provisioning en pensioenaanmelding, met de proeftijd- en startdatum als klok.",
+        "description": "Onboarding cases per new employee: contract, ID verification, BSN/IBAN, IT provisioning and pension registration, with the probation and start date as the clock.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -8428,7 +8428,7 @@
           "status",
           "lastWorkingDay"
         ],
-        "description": "Offboardingcases per vertrekkende medewerker: exit-gesprek, teruggave bedrijfseigendommen, toegangsintrekking en de eindafrekening (verlofsaldo, vakantiegeld, transitievergoeding, getuigschrift), met de laatste werkdag als klok.",
+        "description": "Offboarding cases per departing employee: exit interview, return of company property, access revocation and the final settlement (leave balance, holiday allowance, transition payment, reference letter), with the last working day as the clock.",
         "filters": [
           "status",
           "reason"
@@ -8454,7 +8454,7 @@
           "managerId",
           "active"
         ],
-        "description": "Organisatiehiërarchie: afdelingen, teams en kostenplaatsen, elk optioneel onder een bovenliggende eenheid.",
+        "description": "Organisational hierarchy: departments, teams and cost centres, each optionally under a parent unit.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -8471,7 +8471,7 @@
       },
       "id": "OrgUnits",
       "route": "/org-units",
-      "title": "Organisatie-eenheden",
+      "title": "Organisational units",
       "type": "index"
     },
     {
@@ -8483,7 +8483,7 @@
           "startDate",
           "endDate"
         ],
-        "description": "Effectief-gedateerde plaatsingen van medewerkers in organisatie-eenheden.",
+        "description": "Effective-dated placements of employees in organisational units.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -8499,7 +8499,7 @@
       },
       "id": "OrgAssignments",
       "route": "/org-assignments",
-      "title": "Plaatsingen",
+      "title": "Placements",
       "type": "index"
     },
     {
@@ -8537,11 +8537,11 @@
                 "employeeId",
                 "orgUnitId"
               ],
-              "title": "Plaatsing"
+              "title": "Placement"
             },
             "icon": "AccountArrowRightOutline",
             "id": "data",
-            "title": "Plaatsing",
+            "title": "Placement",
             "type": "data"
           },
           {
@@ -8557,7 +8557,7 @@
       },
       "id": "OrgAssignmentDetail",
       "route": "/org-assignments/:id",
-      "title": "Plaatsing",
+      "title": "Placement",
       "type": "detail"
     },
     {
@@ -8569,7 +8569,7 @@
           "lineCount",
           "createdAt"
         ],
-        "description": "Netto-loon betaalbatches: per betaalbare loonrun een concept SEPA PaymentRun klaargezet in shillinq.",
+        "description": "Net pay payment batches: for every payable payroll run a draft SEPA PaymentRun prepared in shillinq.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -8585,7 +8585,7 @@
       },
       "id": "PayrollPaymentBatches",
       "route": "/payment-batches",
-      "title": "Betaalbatches",
+      "title": "Payment batches",
       "type": "index"
     },
     {
@@ -8653,11 +8653,11 @@
               "exclude": [
                 "payrollRunId"
               ],
-              "title": "Betaalbatch"
+              "title": "Payment batch"
             },
             "icon": "BankTransfer",
             "id": "data-2",
-            "title": "Betaalbatch",
+            "title": "Payment batch",
             "type": "data"
           },
           {
@@ -8673,7 +8673,7 @@
       },
       "id": "PayrollPaymentBatchDetail",
       "route": "/payment-batches/:id",
-      "title": "Betaalbatch",
+      "title": "Payment batch",
       "type": "detail"
     },
     {
@@ -8702,7 +8702,7 @@
       },
       "id": "PensionFilings",
       "route": "/pension-filings",
-      "title": "Pensioenaangiftes",
+      "title": "Pension filings",
       "type": "index"
     },
     {
@@ -8742,7 +8742,7 @@
               "from": [
                 "concept"
               ],
-              "label": "Controleren",
+              "label": "Check",
               "to": "gecontroleerd"
             },
             {
@@ -8750,7 +8750,7 @@
               "from": [
                 "gecontroleerd"
               ],
-              "label": "Bevestigen",
+              "label": "Confirm",
               "to": "bevestigd"
             },
             {
@@ -8758,7 +8758,7 @@
               "from": [
                 "bevestigd"
               ],
-              "label": "Verzenden",
+              "label": "Send",
               "to": "verzonden"
             },
             {
@@ -8767,7 +8767,7 @@
                 "gecontroleerd",
                 "bevestigd"
               ],
-              "label": "Heropenen",
+              "label": "Reopen",
               "to": "concept"
             },
             {
@@ -8775,7 +8775,7 @@
               "from": [
                 "verzonden"
               ],
-              "label": "Corrigeren",
+              "label": "Correct",
               "to": "concept"
             }
           ]
@@ -8835,7 +8835,7 @@
       },
       "id": "PensionFilingDetail",
       "route": "/pension-filings/:id",
-      "title": "Pensioenaangifte",
+      "title": "Pension filing",
       "type": "detail"
     },
     {
@@ -8848,7 +8848,7 @@
           "startDate",
           "endDate"
         ],
-        "description": "Beoordelingscycli (jaargesprekken, beoordelingen, tussentijdse gesprekken) waaronder PerformanceReview-dossiers per medewerker worden verzameld.",
+        "description": "Review cycles (annual reviews, appraisals, interim conversations) under which PerformanceReview records per employee are collected.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -8865,7 +8865,7 @@
       },
       "id": "ReviewCycles",
       "route": "/review-cycles",
-      "title": "Beoordelingscycli",
+      "title": "Review cycles",
       "type": "index"
     },
     {
@@ -8897,7 +8897,7 @@
               "from": [
                 "concept"
               ],
-              "label": "Indienen",
+              "label": "Submit",
               "to": "ingediend"
             },
             {
@@ -8905,7 +8905,7 @@
               "from": [
                 "ingediend"
               ],
-              "label": "Bespreken",
+              "label": "Discuss",
               "to": "besproken"
             },
             {
@@ -8913,7 +8913,7 @@
               "from": [
                 "besproken"
               ],
-              "label": "Vaststellen",
+              "label": "Finalise",
               "to": "vastgesteld"
             },
             {
@@ -8921,7 +8921,7 @@
               "from": [
                 "vastgesteld"
               ],
-              "label": "Heropenen",
+              "label": "Reopen",
               "to": "besproken"
             }
           ]
@@ -8942,11 +8942,11 @@
                 "reviewerId",
                 "userId"
               ],
-              "title": "Beoordeling"
+              "title": "Review"
             },
             "icon": "ClipboardAccountOutline",
             "id": "data",
-            "title": "Beoordeling",
+            "title": "Review",
             "type": "data"
           },
           {
@@ -8962,7 +8962,7 @@
       },
       "id": "PerformanceReviewDetail",
       "route": "/reviews/:id",
-      "title": "Beoordeling",
+      "title": "Review",
       "type": "detail"
     },
     {
@@ -8973,7 +8973,7 @@
           "rating",
           "besprokenOp"
         ],
-        "description": "Jouw eigen beoordelingen.",
+        "description": "Your own reviews.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
@@ -8987,7 +8987,7 @@
       },
       "id": "MijnBeoordelingen",
       "route": "/mijn/beoordelingen",
-      "title": "Mijn beoordelingen",
+      "title": "My reviews",
       "type": "index"
     },
     {
@@ -9000,7 +9000,7 @@
           "deltaNet",
           "status"
         ],
-        "description": "Terugwerkende kracht (TWK) correcties op gesealde loonstroken -- elke rij is een berekende delta, nooit een wijziging van de oorspronkelijke loonstrook (retro-adjustments).",
+        "description": "Retroactive (TWK) corrections on sealed payslips -- every row is a calculated delta, never a change to the original payslip (retro-adjustments).",
         "filters": [
           "status",
           "settlementLine"
@@ -9014,7 +9014,7 @@
       },
       "id": "PayrollAdjustments",
       "route": "/payroll-adjustments",
-      "title": "Correcties (TWK)",
+      "title": "Retro corrections",
       "type": "index"
     },
     {
@@ -9022,11 +9022,11 @@
         {
           "icon": "PlusCircleOutline",
           "id": "create-shift",
-          "label": "Dienst aanmaken",
+          "label": "Create shift",
           "onSuccessRoute": "ShiftDetail",
           "register": "hrmq",
           "schema": "Shift",
-          "successMessage": "Dienst aangemaakt.",
+          "successMessage": "Shift created.",
           "type": "open-form"
         }
       ],
@@ -9038,7 +9038,7 @@
           "breakMinutes",
           "active"
         ],
-        "description": "Herbruikbare dienstdefinities (klok-vorm): naam, begin- en eindtijd (HH:MM), pauze en optionele organisatie-eenheid. Een eindtijd niet later dan de begintijd duidt een nachtdienst over middernacht aan.",
+        "description": "Reusable shift definitions (clock shape): name, start and end time (HH:MM), break and optional organisational unit. An end time not later than the start time indicates a night shift crossing midnight.",
         "filters": [
           "active"
         ],
@@ -9051,7 +9051,7 @@
       },
       "id": "Shifts",
       "route": "/shifts",
-      "title": "Diensten",
+      "title": "Shifts",
       "type": "index"
     },
     {
@@ -9088,11 +9088,11 @@
               "exclude": [
                 "orgUnitId"
               ],
-              "title": "Dienst"
+              "title": "Shift"
             },
             "icon": "TimelineClockOutline",
             "id": "data",
-            "title": "Dienst",
+            "title": "Shift",
             "type": "data"
           },
           {
@@ -9108,7 +9108,7 @@
       },
       "id": "ShiftDetail",
       "route": "/shifts/:id",
-      "title": "Dienst",
+      "title": "Shift",
       "type": "detail"
     },
     {
@@ -9116,11 +9116,11 @@
         {
           "icon": "PlusCircleOutline",
           "id": "create-roster",
-          "label": "Rooster aanmaken",
+          "label": "Create roster",
           "onSuccessRoute": "RosterDetail",
           "register": "hrmq",
           "schema": "Roster",
-          "successMessage": "Concept-rooster aangemaakt. Voeg roosterindelingen toe en gebruik ATW-controle voordat je publiceert.",
+          "successMessage": "Draft roster created. Add roster assignments and run the working hours check before you publish.",
           "type": "open-form"
         }
       ],
@@ -9131,7 +9131,7 @@
           "administrationId",
           "status"
         ],
-        "description": "Publiceerbare roosters per planningsperiode: een concept -> gepubliceerd levenscyclus, met per rooster de Arbeidstijdenwet-controle over de geplande roosterindelingen.",
+        "description": "Publishable rosters per planning period: a draft -> published lifecycle, with the Working Hours Act check over the planned roster assignments per roster.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -9147,7 +9147,7 @@
       },
       "id": "Rosters",
       "route": "/rosters",
-      "title": "Roosters",
+      "title": "Rosters",
       "type": "index"
     },
     {
@@ -9159,7 +9159,7 @@
           "plannedStart",
           "plannedEnd"
         ],
-        "description": "Geplande roosterindelingen: een medewerker op een dienst op een datum binnen een rooster, met de geprojecteerde plannedStart/plannedEnd voor de Arbeidstijdenwet-controle. Datum-gesorteerd (de MVP-planningsweergave; een visueel planbord is een Non-Goal).",
+        "description": "Planned roster assignments: an employee on a shift on a date within a roster, with the projected plannedStart/plannedEnd for the Working Hours Act check. Date-sorted (the MVP planning view; a visual planning board is a Non-Goal).",
         "filters": [
           "rosterId",
           "employeeId"
@@ -9173,7 +9173,7 @@
       },
       "id": "RosterAssignments",
       "route": "/roster-assignments",
-      "title": "Roosterindelingen",
+      "title": "Roster assignments",
       "type": "index"
     },
     {
@@ -9213,11 +9213,11 @@
                 "shiftId",
                 "userId"
               ],
-              "title": "Roosterindeling"
+              "title": "Roster assignment"
             },
             "icon": "AccountClockOutline",
             "id": "data",
-            "title": "Roosterindeling",
+            "title": "Roster assignment",
             "type": "data"
           },
           {
@@ -9233,7 +9233,7 @@
       },
       "id": "RosterAssignmentDetail",
       "route": "/roster-assignments/:id",
-      "title": "Roosterindeling",
+      "title": "Roster assignment",
       "type": "detail"
     },
     {
@@ -9246,7 +9246,7 @@
           "startDate",
           "endDate"
         ],
-        "description": "Stagiairs (HBO/WO/MBO-BOL, zonder dienstverband) op een stageovereenkomst -- expliciet geen werknemers en geen payroll-input (stagiair-bbl-admin). BBL-leerlingen staan niet hier: die hebben een leerarbeidsovereenkomst en zijn contracten met type 'bbl' op de Contracten-pagina.",
+        "description": "Interns (HBO/WO/MBO-BOL, without employment) on an internship agreement -- explicitly not employees and no payroll input (stagiair-bbl-admin). BBL students are not listed here: they hold a work-study employment contract and appear as contracts of type 'bbl' on the Contracts page.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -9263,7 +9263,7 @@
       },
       "id": "Stagiairs",
       "route": "/stagiairs",
-      "title": "Stagiairs",
+      "title": "Interns",
       "type": "index"
     },
     {
@@ -9295,7 +9295,7 @@
               "from": [
                 "aangemeld"
               ],
-              "label": "Starten",
+              "label": "Start",
               "to": "lopend"
             },
             {
@@ -9303,7 +9303,7 @@
               "from": [
                 "lopend"
               ],
-              "label": "Afronden",
+              "label": "Complete",
               "to": "afgerond"
             },
             {
@@ -9312,7 +9312,7 @@
                 "aangemeld",
                 "lopend"
               ],
-              "label": "Stoppen",
+              "label": "Stop",
               "to": "gestopt"
             }
           ]
@@ -9330,27 +9330,27 @@
               "exclude": [
                 "begeleiderId"
               ],
-              "title": "Stage"
+              "title": "Internship"
             },
             "icon": "SchoolOutline",
             "id": "data",
-            "title": "Stage",
+            "title": "Internship",
             "type": "data"
           },
           {
             "content": {
-              "title": "Begeleider"
+              "title": "Supervisor"
             },
             "icon": "LinkVariant",
             "id": "related",
-            "title": "Begeleider",
+            "title": "Supervisor",
             "type": "related"
           }
         ]
       },
       "id": "StagiairDetail",
       "route": "/stagiairs/:id",
-      "title": "Stagiair",
+      "title": "Intern",
       "type": "detail"
     },
     {
@@ -9384,7 +9384,7 @@
       },
       "id": "Timesheets",
       "route": "/timesheets",
-      "title": "Urenstaten",
+      "title": "Timesheets",
       "type": "index"
     },
     {
@@ -9405,7 +9405,7 @@
         "defaultFilters": {
           "status": "submitted"
         },
-        "description": "Ingediende urenstaten die wachten op goedkeuring of afkeuring — open een urenstaat om goed of af te keuren.",
+        "description": "Submitted timesheets awaiting approval or rejection — open a timesheet to approve or reject it.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -9422,7 +9422,7 @@
       },
       "id": "TimesheetApproval",
       "route": "/timesheets/approval",
-      "title": "Urengoedkeuring",
+      "title": "Timesheet approval",
       "type": "index"
     },
     {
@@ -9443,7 +9443,7 @@
         "defaultFilters": {
           "status": "submitted"
         },
-        "description": "Ingediende urenstaten van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door de organisatiestructuur bepaalde managerUserId-koppeling.",
+        "description": "Submitted timesheets from your team awaiting approval or rejection (mss-team-scope) — based on the managerUserId link derived from the organisational structure.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?",
           "managerUserId": "@me"
@@ -9461,7 +9461,7 @@
       },
       "id": "TeamUrengoedkeuring",
       "route": "/timesheets/team-approval",
-      "title": "Team-urengoedkeuring",
+      "title": "Team timesheet approval",
       "type": "index"
     },
     {
@@ -9472,7 +9472,7 @@
           "recoveredDate",
           "status"
         ],
-        "description": "Ziektegevallen en de Wet-verbetering-poortwachter-mijlpalen (administratieve gegevens, geen medische gegevens).",
+        "description": "Sick leave cases and the Gatekeeper Improvement Act milestones (administrative data, no medical data).",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -9488,7 +9488,7 @@
       },
       "id": "SickLeaveCases",
       "route": "/sick-leave",
-      "title": "Ziekmeldingen",
+      "title": "Sick leave cases",
       "type": "index"
     },
     {
@@ -9502,7 +9502,7 @@
           "uwv42WeekMeldingDue",
           "eerstejaarsevaluatieDue"
         ],
-        "description": "Open ziektegevallen gesorteerd op de UWV 42-wekenmelding-deadline (administratieve gegevens, geen medische gegevens).",
+        "description": "Open sick leave cases sorted by the UWV 42-week notification deadline (administrative data, no medical data).",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?",
           "status": "gemeld"
@@ -9516,7 +9516,7 @@
       },
       "id": "VerzuimOverzicht",
       "route": "/verzuim",
-      "title": "Verzuimoverzicht",
+      "title": "Absence overview",
       "type": "index"
     },
     {
@@ -9527,7 +9527,7 @@
           "totalCompensation",
           "status"
         ],
-        "description": "Jaarlijkse WNT-verantwoording per topfunctionaris: de bezoldiging per jaar en de publicatiestatus. De verzameling regels van een jaar IS de WNT-verantwoording van dat jaar (wnt-disclosure).",
+        "description": "Annual WNT disclosure per senior official: the remuneration per year and the publication status. The set of rows for a year IS that year's WNT disclosure (wnt-disclosure).",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -9544,7 +9544,7 @@
       },
       "id": "WntDisclosures",
       "route": "/wnt-disclosures",
-      "title": "WNT-verantwoording",
+      "title": "WNT disclosures",
       "type": "index"
     },
     {
@@ -9584,7 +9584,7 @@
               "from": [
                 "concept"
               ],
-              "label": "Publiceren",
+              "label": "Publish",
               "to": "gepubliceerd"
             }
           ]
@@ -9609,11 +9609,11 @@
                   "editable": false
                 }
               },
-              "title": "Bezoldiging & status"
+              "title": "Remuneration & status"
             },
             "icon": "ScaleBalance",
             "id": "data",
-            "title": "Bezoldiging & status",
+            "title": "Remuneration & status",
             "type": "data"
           },
           {
@@ -9622,11 +9622,11 @@
               "exclude": [
                 "employeeId"
               ],
-              "title": "Verantwoording"
+              "title": "Disclosure"
             },
             "icon": "ScaleBalance",
             "id": "data-2",
-            "title": "Verantwoording",
+            "title": "Disclosure",
             "type": "data"
           },
           {
@@ -9642,7 +9642,7 @@
       },
       "id": "WntDisclosureDetail",
       "route": "/wnt-disclosures/:id",
-      "title": "WNT-verantwoording",
+      "title": "WNT disclosures",
       "type": "detail"
     }
   ],

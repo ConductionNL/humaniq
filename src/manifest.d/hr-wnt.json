@@ -7,7 +7,7 @@
 			"params": {
 				"id": "WntDisclosures",
 				"route": "/wnt-disclosures",
-				"title": "WNT-verantwoording",
+				"title": "WNT disclosures",
 				"columns": [
 					"year",
 					"employeeId",
@@ -25,7 +25,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Jaarlijkse WNT-verantwoording per topfunctionaris: de bezoldiging per jaar en de publicatiestatus. De verzameling regels van een jaar IS de WNT-verantwoording van dat jaar (wnt-disclosure)."
+				"description": "Annual WNT disclosure per senior official: the remuneration per year and the publication status. The set of rows for a year IS that year's WNT disclosure (wnt-disclosure)."
 			}
 		},
 		{
@@ -35,8 +35,8 @@
 			"params": {
 				"id": "WntDisclosureDetail",
 				"route": "/wnt-disclosures/:id",
-				"title": "WNT-verantwoording",
-				"statusTitle": "Bezoldiging & status",
+				"title": "WNT disclosures",
+				"statusTitle": "Remuneration & status",
 				"statusIcon": "ScaleBalance",
 				"statusInclude": [
 					"year",
@@ -48,7 +48,7 @@
 						"editable": false
 					}
 				},
-				"dataTitle": "Verantwoording",
+				"dataTitle": "Disclosure",
 				"dataIcon": "ScaleBalance",
 				"dataExclude": [
 					"employeeId"
@@ -65,7 +65,7 @@
 								"concept"
 							],
 							"to": "gepubliceerd",
-							"label": "Publiceren"
+							"label": "Publish"
 						}
 					]
 				}
