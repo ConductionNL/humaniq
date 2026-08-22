@@ -46,17 +46,17 @@ Vrij en open source onder de EUPL-1.2-licentie.
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Hrmq</namespace>
     <documentation>
-        <user>https://codeberg.org/Conduction/hrmq</user>
-        <admin>https://codeberg.org/Conduction/hrmq</admin>
-        <developer>https://codeberg.org/Conduction/hrmq</developer>
+        <user>https://github.com/ConductionNL/humaniq</user>
+        <admin>https://github.com/ConductionNL/humaniq</admin>
+        <developer>https://github.com/ConductionNL/humaniq</developer>
     </documentation>
     <category>organization</category>
-    <website>https://codeberg.org/Conduction/hrmq</website>
-    <discussion>https://codeberg.org/Conduction/hrmq/issues</discussion>
-    <bugs>https://codeberg.org/Conduction/hrmq/issues</bugs>
-    <repository>https://codeberg.org/Conduction/hrmq</repository>
+    <website>https://github.com/ConductionNL/humaniq</website>
+    <discussion>https://github.com/ConductionNL/humaniq/issues</discussion>
+    <bugs>https://github.com/ConductionNL/humaniq/issues</bugs>
+    <repository>https://github.com/ConductionNL/humaniq</repository>
 
-    <screenshot>https://codeberg.org/Conduction/hrmq/raw/branch/main/img/app-store.svg</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/humaniq/development/img/app-store.svg</screenshot>
 
     <dependencies>
         <!-- ORDER IS LOAD-BEARING. info.xsd declares <dependencies> as a
