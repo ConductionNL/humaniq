@@ -4,7 +4,7 @@
 			"id": "PayrollAdjustmentDetail",
 			"route": "/payroll-adjustments/:id",
 			"type": "detail",
-			"title": "Correctie (TWK)",
+			"title": "Retro correction",
 			"config": {
 				"register": "hrmq",
 				"schema": "PayrollAdjustment",
@@ -21,7 +21,7 @@
 						"icon": "CashSync",
 						"content": {
 							"label": "Delta net",
-							"caption": "nabetaling / terugvordering",
+							"caption": "back pay / recovery",
 							"icon": "CashSync",
 							"valueColor": "#0082c9",
 							"format": {
@@ -51,7 +51,7 @@
 					{
 						"id": "data",
 						"type": "data",
-						"title": "Correctie",
+						"title": "Correction",
 						"icon": "CashSync",
 						"content": {
 							"columns": 2,
@@ -61,7 +61,7 @@
 								"originalPayslipId",
 								"settlementPayrollRunId"
 							],
-							"title": "Correctie"
+							"title": "Correction"
 						}
 					}
 				],
@@ -94,7 +94,7 @@
 				"headerActions": [
 					{
 						"id": "recompute",
-						"label": "Herrekenen",
+						"label": "Recompute",
 						"type": "api-call",
 						"icon": "Calculator",
 						"url": "/api/payroll/adjust",
@@ -103,8 +103,8 @@
 							"adjustmentId": "@objectId"
 						},
 						"confirm": true,
-						"successMessage": "Correctie herrekend — de delta is bijgewerkt.",
-						"errorMessage": "Herrekenen van de correctie is mislukt."
+						"successMessage": "Correction recomputed — the delta has been updated.",
+						"errorMessage": "Recomputing the correction failed."
 					}
 				]
 			}
@@ -118,7 +118,7 @@
 			"params": {
 				"id": "PayrollAdjustments",
 				"route": "/payroll-adjustments",
-				"title": "Correcties (TWK)",
+				"title": "Retro corrections",
 				"columns": [
 					"employeeId",
 					"originalPeriod",
@@ -135,7 +135,7 @@
 					"status",
 					"settlementLine"
 				],
-				"description": "Terugwerkende kracht (TWK) correcties op gesealde loonstroken -- elke rij is een berekende delta, nooit een wijziging van de oorspronkelijke loonstrook (retro-adjustments)."
+				"description": "Retroactive (TWK) corrections on sealed payslips -- every row is a calculated delta, never a change to the original payslip (retro-adjustments)."
 			}
 		}
 	]

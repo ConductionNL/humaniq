@@ -4,7 +4,7 @@
 			"id": "ExpenseDetail",
 			"route": "/expenses/:id",
 			"type": "detail",
-			"title": "Declaratie",
+			"title": "Expense",
 			"config": {
 				"register": "hrmq",
 				"schema": "Expense",
@@ -43,7 +43,7 @@
 					{
 						"id": "files",
 						"type": "files",
-						"title": "Receipt / bon",
+						"title": "Receipt",
 						"icon": "FolderOutline"
 					},
 					{
@@ -219,7 +219,7 @@
 			"params": {
 				"id": "MijnDeclaraties",
 				"route": "/mijn/declaraties",
-				"title": "Mijn declaraties",
+				"title": "My expenses",
 				"columns": [
 					"title",
 					"amount",
@@ -235,7 +235,7 @@
 					"userId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Jouw eigen declaraties."
+				"description": "Your own expense claims."
 			}
 		},
 		{
@@ -245,7 +245,7 @@
 			"params": {
 				"id": "Expenses",
 				"route": "/expenses",
-				"title": "Declaraties",
+				"title": "Expenses",
 				"columns": [
 					"employeeId",
 					"title",
@@ -274,7 +274,7 @@
 			"params": {
 				"id": "ExpenseApproval",
 				"route": "/expenses/approval",
-				"title": "Declaratiegoedkeuring",
+				"title": "Expense approval",
 				"columns": [
 					"employeeId",
 					"title",
@@ -294,7 +294,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Ingediende declaraties die wachten op goedkeuring of afkeuring.",
+				"description": "Submitted expense claims awaiting approval or rejection.",
 				"defaultFilters": {
 					"status": "submitted"
 				}
@@ -307,7 +307,7 @@
 			"params": {
 				"id": "TeamDeclaratiegoedkeuring",
 				"route": "/expenses/team-approval",
-				"title": "Team-declaratiegoedkeuring",
+				"title": "Team expense approval",
 				"columns": [
 					"employeeId",
 					"title",
@@ -328,7 +328,7 @@
 					"managerUserId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Ingediende declaraties van jouw team die wachten op goedkeuring of afkeuring (mss-team-scope) — gebaseerd op de door HR/back-office bijgehouden managerUserId-koppeling.",
+				"description": "Submitted expense claims from your team awaiting approval or rejection (mss-team-scope) — based on the managerUserId link maintained by HR/back office.",
 				"defaultFilters": {
 					"status": "submitted"
 				}

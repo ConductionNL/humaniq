@@ -7,7 +7,7 @@
 			"params": {
 				"id": "IntegrationAccounts",
 				"route": "/configuratie/integraties",
-				"title": "Integraties",
+				"title": "Integrations",
 				"columns": [
 					"name",
 					"purpose",
@@ -21,17 +21,17 @@
 				"filters": [
 					"status"
 				],
-				"description": "Governance-/auditcatalogus van externe systemen die toegang hebben gekregen tot humaniq via OpenRegister's publieke REST-API (/api/objects/{register}/{schema}, geauthenticeerd met een Nextcloud app-wachtwoord). Dit overzicht legt VAST welk extern systeem toegang heeft, waarvoor, en wanneer die toegang voor het laatst is beoordeeld — het verleent of handhaaft die toegang NIET (de echte RBAC-grant staat in OpenRegister, buiten humaniq; hris-api-public design.md D2). Alleen-beheerder surface.",
+				"description": "Governance/audit catalogue of external systems that have been granted access to humaniq through OpenRegister's public REST API (/api/objects/{register}/{schema}, authenticated with a Nextcloud app password). This overview RECORDS which external system has access, for what, and when that access was last reviewed — it does NOT grant or enforce that access (the real RBAC grant lives in OpenRegister, outside humaniq; hris-api-public design.md D2). Administrator-only surface.",
 				"actions": [
 					{
 						"id": "create-integration-account",
-						"label": "Integratie registreren",
+						"label": "Register integration",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
 						"register": "hrmq",
 						"schema": "IntegrationAccount",
 						"onSuccessRoute": "IntegrationAccountDetail",
-						"successMessage": "Integratie geregistreerd. Configureer de daadwerkelijke RBAC-toegang en het app-wachtwoord in OpenRegister / Nextcloud."
+						"successMessage": "Integration registered. Configure the actual RBAC access and the app password in OpenRegister / Nextcloud."
 					}
 				]
 			}
@@ -43,7 +43,7 @@
 			"params": {
 				"id": "IntegrationAccountDetail",
 				"route": "/configuratie/integraties/:id",
-				"title": "Integratie",
+				"title": "Integration",
 				"dataIcon": "PowerPlugOutline",
 				"gridHeight": 6,
 				"note": "hris-api-public (2026-07-18): a governance/audit record of one external system granted access to humaniq via OpenRegister's public REST surface. The 'Integratie' data widget carries the whole record (name/purpose/nextcloudUserId/grantedSchemas/status/reviewedBy/reviewedAt/createdAt); no exclude, because IntegrationAccount carries NO $ref field (nextcloudUserId is a plain string per ADR-062 rule 7, never a $ref to an Employee), so there is no Related panel to resolve. NO lifecycleActions: status is a plain actief/ingetrokken enum with no x-openregister-lifecycle transition map (the OrgUnitDetail/ShiftDetail precedent) -- toggling it records a governance state, it does not run a guarded workflow, and it changes NOTHING about actual access (design.md D2). No stat/files/calendar/comms leaves -- a catalog record has no numeric headline aggregate, document, appointment, or correspondence thread. Audit history stays a sidebar tab so a reviewer can see who changed the catalog record and when. Alleen-beheerder surface (like DsrRequestDetail); enforcement is server-side OpenRegister RBAC, not a manifest flag."

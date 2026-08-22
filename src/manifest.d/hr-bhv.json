@@ -7,7 +7,7 @@
 			"params": {
 				"id": "BhvCertificeringen",
 				"route": "/bhv-certificeringen",
-				"title": "BHV-certificeringen",
+				"title": "Emergency response certifications",
 				"columns": [
 					"employeeId",
 					"rol",
@@ -25,7 +25,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "BHV-gerelateerde certificeringen per medewerker: rol, geldigheid en organisatie-eenheid. Geen numerieke dekkingsnorm -- de Arbowet (art. 15) vraagt een RI&E-gebaseerde, kwalitatieve beoordeling.",
+				"description": "Emergency response certifications per employee: role, validity and organisational unit. No numeric coverage standard -- the Working Conditions Act (art. 15) requires an RI&E-based, qualitative assessment.",
 				"note": "bhv-organisatie (2026-07-17): coverage VISIBILITY, not a coverage formula (REQ-BHV-003/-004, design.md D2) -- this index lists who is currently certified, filterable/groupable by orgUnitId and rol, so HR/a safety officer can judge adequacy against their own RI&E. No red/green adequacy indicator, no computed ratio anywhere on this page."
 			}
 		},
@@ -36,8 +36,8 @@
 			"params": {
 				"id": "BhvCertificeringDetail",
 				"route": "/bhv-certificeringen/:id",
-				"title": "BHV-certificering",
-				"dataTitle": "Certificering",
+				"title": "Emergency response certification",
+				"dataTitle": "Certification",
 				"dataIcon": "ShieldCheckOutline",
 				"relatedTitle": "Related",
 				"gridHeight": 6,

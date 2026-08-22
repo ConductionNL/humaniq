@@ -4,7 +4,7 @@
 			"id": "ApplicationDetail",
 			"route": "/applications/:id",
 			"type": "detail",
-			"title": "Sollicitatie",
+			"title": "Application",
 			"config": {
 				"register": "hrmq",
 				"schema": "Application",
@@ -59,13 +59,13 @@
 					{
 						"id": "files",
 						"type": "files",
-						"title": "CV & motivatiebrief",
+						"title": "CV & cover letter",
 						"icon": "FolderOutline"
 					},
 					{
 						"id": "object-list",
 						"type": "object-list",
-						"title": "Gesprekken",
+						"title": "Interviews",
 						"icon": "CalendarAccountOutline",
 						"content": {
 							"register": "hrmq",
@@ -101,7 +101,7 @@
 							"viewAllQuery": {
 								"applicationId": "@objectId"
 							},
-							"emptyText": "Nog geen gesprekken gepland"
+							"emptyText": "No interviews scheduled yet"
 						}
 					}
 				],
@@ -156,7 +156,7 @@
 								"nieuw"
 							],
 							"to": "screening",
-							"label": "Screenen"
+							"label": "Screen"
 						},
 						{
 							"action": "uitnodigen",
@@ -164,7 +164,7 @@
 								"screening"
 							],
 							"to": "gesprek",
-							"label": "Uitnodigen"
+							"label": "Invite"
 						},
 						{
 							"action": "aanbieden",
@@ -172,7 +172,7 @@
 								"gesprek"
 							],
 							"to": "aanbod",
-							"label": "Aanbieden"
+							"label": "Make offer"
 						},
 						{
 							"action": "aannemen",
@@ -180,7 +180,7 @@
 								"aanbod"
 							],
 							"to": "aangenomen",
-							"label": "Aannemen"
+							"label": "Hire"
 						},
 						{
 							"action": "afwijzen",
@@ -191,14 +191,14 @@
 								"aanbod"
 							],
 							"to": "afgewezen",
-							"label": "Afwijzen"
+							"label": "Reject"
 						}
 					]
 				},
 				"headerActions": [
 					{
 						"id": "request-offer-signature",
-						"label": "Aanbiedingsbrief + e-handtekening aanvragen",
+						"label": "Request offer letter + e-signature",
 						"type": "api-call",
 						"icon": "FileDocumentPlusOutline",
 						"url": "/api/offer/request-signature",
@@ -207,8 +207,8 @@
 							"applicationId": "@objectId"
 						},
 						"confirm": true,
-						"successMessage": "Aanbiedingsbrief wordt gegenereerd en e-handtekening aangevraagd.",
-						"errorMessage": "Aanvragen van de aanbiedingsbrief/e-handtekening is mislukt."
+						"successMessage": "The offer letter is being generated and an e-signature requested.",
+						"errorMessage": "Requesting the offer letter/e-signature failed."
 					}
 				]
 			}
@@ -222,7 +222,7 @@
 			"params": {
 				"id": "Vacancies",
 				"route": "/vacancies",
-				"title": "Vacatures",
+				"title": "Vacancies",
 				"columns": [
 					"title",
 					"department",
@@ -241,7 +241,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Vacatures (recruiting-ats-basic): concept -> gepubliceerd -> gesloten publish-lifecycle. Geen externe multiposting (werk.nl/LinkedIn) en geen publieke vacaturepagina in de MVP."
+				"description": "Vacancies (recruiting-ats-basic): draft -> published -> closed publish lifecycle. No external multiposting (werk.nl/LinkedIn) and no public vacancy page in the MVP."
 			}
 		},
 		{
@@ -251,10 +251,10 @@
 			"params": {
 				"id": "VacancyDetail",
 				"route": "/vacancies/:id",
-				"title": "Vacature",
+				"title": "Vacancy",
 				"dataTitle": "Vacancy",
 				"dataIcon": "BriefcaseSearchOutline",
-				"relatedTitle": "Sollicitaties",
+				"relatedTitle": "Applications",
 				"gridHeight": 8,
 				"note": "recruiting-ats-basic (2026-07-13): the 'Vacancy' widget carries every field (title/description/department/status/publishedDate/closingDate). The 'Sollicitaties' related widget resolves the incoming Application.vacancyId references -- the candidate list per vacancy. lifecycleActions expose exactly publiceren/sluiten (design D3) -- no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected. Audit history is a sidebar tab.",
 				"include": [
@@ -279,7 +279,7 @@
 								"concept"
 							],
 							"to": "gepubliceerd",
-							"label": "Publiceren"
+							"label": "Publish"
 						},
 						{
 							"action": "sluiten",
@@ -287,7 +287,7 @@
 								"gepubliceerd"
 							],
 							"to": "gesloten",
-							"label": "Sluiten"
+							"label": "Close"
 						}
 					]
 				}
@@ -300,7 +300,7 @@
 			"params": {
 				"id": "Applications",
 				"route": "/applications",
-				"title": "Sollicitaties",
+				"title": "Applications",
 				"columns": [
 					"candidateName",
 					"vacancyId",
@@ -318,7 +318,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Sollicitatiepipeline (recruiting-ats-basic): nieuw -> screening -> gesprek -> aanbod -> aangenomen/afgewezen. De status-filter is de MVP-pipeline-surface -- elke fase is een filterwaarde; een kanban-board is een nc-vue widget follow-up (design D7)."
+				"description": "Application pipeline (recruiting-ats-basic): new -> screening -> interview -> offer -> hired/rejected. The status filter is the MVP pipeline surface -- every stage is a filter value; a kanban board is an nc-vue widget follow-up (design D7)."
 			}
 		},
 		{
@@ -328,7 +328,7 @@
 			"params": {
 				"id": "Interviews",
 				"route": "/interviews",
-				"title": "Gesprekken",
+				"title": "Interviews",
 				"columns": [
 					"applicationId",
 					"scheduledStart",
@@ -344,7 +344,7 @@
 					"status",
 					"mode"
 				],
-				"description": "interview-scheduling: geplande, voltooide en geannuleerde sollicitatiegesprekken. Een gesprek wordt via de InterviewDetail-pagina of 'occ humaniq:interview:sync' naar de gedeelde agenda gesynchroniseerd (design D1/D6)."
+				"description": "interview-scheduling: scheduled, completed and cancelled job interviews. An interview is synced to the shared calendar through the InterviewDetail page or 'occ humaniq:interview:sync' (design D1/D6)."
 			}
 		},
 		{
@@ -366,7 +366,7 @@
 				"headerActions": [
 					{
 						"id": "sync-to-calendar",
-						"label": "Sync naar agenda",
+						"label": "Sync to calendar",
 						"type": "api-call",
 						"icon": "CalendarSyncOutline",
 						"url": "/api/interviews/sync",
@@ -375,8 +375,8 @@
 							"interviewId": "@objectId"
 						},
 						"confirm": true,
-						"successMessage": "Gesprek gesynchroniseerd naar de gedeelde agenda.",
-						"errorMessage": "Synchroniseren naar de agenda is mislukt."
+						"successMessage": "Interview synced to the shared calendar.",
+						"errorMessage": "Syncing to the calendar failed."
 					}
 				],
 				"lifecycleActions": {
@@ -388,7 +388,7 @@
 								"scheduled"
 							],
 							"to": "completed",
-							"label": "Voltooien"
+							"label": "Complete"
 						},
 						{
 							"action": "annuleren",
@@ -396,7 +396,7 @@
 								"scheduled"
 							],
 							"to": "cancelled",
-							"label": "Annuleren"
+							"label": "Cancel"
 						}
 					]
 				}

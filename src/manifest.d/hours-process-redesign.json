@@ -4,12 +4,12 @@
 			"id": "TimeEntries",
 			"route": "/time-entries",
 			"type": "index",
-			"title": "Urenboekingen",
+			"title": "Time entries",
 			"config": {
 				"register": "hrmq",
 				"schema": "TimeEntry",
-				"_note": "humaniq-hours-process-redesign (design.md Decision 8, ADR-037 per-change fragment): the HR booking index over TimeEntry. A concrete page rather than an indexScaffold instance because the create-form allowlist keys (includeFields) are not template params. Add is enabled via actionToggles.showAdd — NEVER the dead allowCreate key. The includeFields allowlist is the self-service set PLUS employeeId: HR may book on behalf of an employee, so the picker is the one extra field; userId/administrationId/costCenter/hours stay server-stamped/derived (TimeEntryStampListener) and the process fields live on the parent Timesheet, never here.",
-				"description": "Alle urenboekingen binnen de administratie — HR kan hier ook uren boeken namens een medewerker.",
+				"_note": "hrmq-hours-process-redesign (design.md Decision 8, ADR-037 per-change fragment): the HR booking index over TimeEntry. A concrete page rather than an indexScaffold instance because the create-form allowlist keys (includeFields) are not template params. Add is enabled via actionToggles.showAdd — NEVER the dead allowCreate key. The includeFields allowlist is the self-service set PLUS employeeId: HR may book on behalf of an employee, so the picker is the one extra field; userId/administrationId/costCenter/hours stay server-stamped/derived (TimeEntryStampListener) and the process fields live on the parent Timesheet, never here.",
+				"description": "All time entries within the administration — HR can also log hours on behalf of an employee here.",
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
@@ -47,11 +47,11 @@
 			"id": "TimeEntryDetail",
 			"route": "/time-entries/:id",
 			"type": "detail",
-			"title": "Urenboeking",
+			"title": "Time entry",
 			"config": {
 				"register": "hrmq",
 				"schema": "TimeEntry",
-				"_note": "humaniq-hours-process-redesign (design.md Decision 8): one individual booking — detail template B shape (two-panel data + related), authored concrete because the editable-field allowlist needs per-key overrides beyond the simpleDetailScaffold params. NO lifecycleActions: a TimeEntry has no lifecycle of its own — the process lives on the parent Timesheet, and entry mutability is enforced server-side from the parent's state (REQ-TEC-005). The data widget shows the booking fields plus the derived/stamped hours, costCenter and userId display-only (server custody — hours from start/end/break, costCenter from the org chain, userId from the employee link); the editable set is the HR booking allowlist minus employeeId/timesheetId, which the Related panel resolves as links instead (the house FK pattern — reassigning a booking to another employee or timesheet is not a designed journey). origin/administrationId/allocation extension fields stay off the page body (server-stamped bookkeeping; visible via the metadata sidebar where applicable). Audit history is a sidebar tab.",
+				"_note": "hrmq-hours-process-redesign (design.md Decision 8): one individual booking — detail template B shape (two-panel data + related), authored concrete because the editable-field allowlist needs per-key overrides beyond the simpleDetailScaffold params. NO lifecycleActions: a TimeEntry has no lifecycle of its own — the process lives on the parent Timesheet, and entry mutability is enforced server-side from the parent's state (REQ-TEC-005). The data widget shows the booking fields plus the derived/stamped hours, costCenter and userId display-only (server custody — hours from start/end/break, costCenter from the org chain, userId from the employee link); the editable set is the HR booking allowlist minus employeeId/timesheetId, which the Related panel resolves as links instead (the house FK pattern — reassigning a booking to another employee or timesheet is not a designed journey). origin/administrationId/allocation extension fields stay off the page body (server-stamped bookkeeping; visible via the metadata sidebar where applicable). Audit history is a sidebar tab.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -60,7 +60,7 @@
 					{
 						"id": "data",
 						"type": "data",
-						"title": "Urenboeking",
+						"title": "Time entry",
 						"icon": "ClockOutline",
 						"content": {
 							"columns": 2,
@@ -75,7 +75,7 @@
 								"costCenter",
 								"userId"
 							],
-							"title": "Urenboeking",
+							"title": "Time entry",
 							"overrides": {
 								"hours": {
 									"editable": false
@@ -128,7 +128,7 @@
 			"params": {
 				"id": "MijnUrenstaten",
 				"route": "/mijn/urenstaten",
-				"title": "Mijn urenstaten",
+				"title": "My timesheets",
 				"columns": [
 					"period",
 					"hours",
@@ -144,14 +144,14 @@
 					"userId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Je eigen urenstaten per periode (alleen-lezen) — open een urenstaat om deze in te dienen.",
+				"description": "Your own timesheets per period (read-only) — open a timesheet to submit it.",
 				"actionToggles": {
 					"showAdd": false,
 					"showEditAction": false,
 					"showDeleteAction": false,
 					"showCopyAction": false
 				},
-				"note": "humaniq-hours-process-redesign (design.md Decision 8): the employee's read-only list of their own period aggregates, per the MijnLoonstroken precedent (REQ-MHS-004) — timesheets are server-created by the booking flow (find-or-create on the entry's startedAt month), and submission happens through the lifecycle actions on TimesheetDetail. Fail-closed @me filter: rows whose employee has no linked account keep userId null and never appear here (REQ-MHS-002)."
+				"note": "hrmq-hours-process-redesign (design.md Decision 8): the employee's read-only list of their own period aggregates, per the MijnLoonstroken precedent (REQ-MHS-004) — timesheets are server-created by the booking flow (find-or-create on the entry's startedAt month), and submission happens through the lifecycle actions on TimesheetDetail. Fail-closed @me filter: rows whose employee has no linked account keep userId null and never appear here (REQ-MHS-002)."
 			}
 		}
 	]

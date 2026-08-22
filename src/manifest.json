@@ -243,31 +243,31 @@
 		},
 		{
 			"id": "MijnHrGroup",
-			"label": "Mijn HR",
+			"label": "My HR",
 			"icon": "Account",
 			"order": 20
 		},
 		{
 			"id": "EmployeesGroup",
-			"label": "Personeel",
+			"label": "People",
 			"icon": "AccountMultipleOutline",
 			"order": 90
 		},
 		{
 			"id": "VerlofVerzuimGroup",
-			"label": "Verlof & verzuim",
+			"label": "Leave & absence",
 			"icon": "CalendarWeekendOutline",
 			"order": 105
 		},
 		{
 			"id": "ExpensesGroup",
-			"label": "Declaraties & assets",
+			"label": "Expenses & assets",
 			"icon": "ReceiptOutline",
 			"order": 110
 		},
 		{
 			"id": "PayrollGroup",
-			"label": "Loonadministratie",
+			"label": "Payroll",
 			"icon": "CashSync",
 			"order": 120,
 			"visibleIf": {
@@ -280,7 +280,7 @@
 		},
 		{
 			"id": "PlanningGroup",
-			"label": "Roostering",
+			"label": "Scheduling",
 			"icon": "CalendarMonthOutline",
 			"order": 107,
 			"visibleIf": {
@@ -291,7 +291,7 @@
 		},
 		{
 			"id": "ConfiguratieGroup",
-			"label": "Configuratie",
+			"label": "Configuration",
 			"icon": "CogOutline",
 			"section": "settings",
 			"order": 200
@@ -534,7 +534,7 @@
 			"id": "ProformaPayslip",
 			"route": "/payroll/proforma",
 			"type": "custom",
-			"title": "Simuleer loonstrook",
+			"title": "Simulate payslip",
 			"component": "ProformaPayslip",
 			"_note": "proforma-payslip design.md D6: manifest v2 has no declarative primitive for a persist-nothing interactive compute-form. open-form is bound to a register/schema and PERSISTS the created object -- exactly what a pro-forma simulation must not do. api-call only interpolates fixed/@token params against a form-less trigger and surfaces a toast + page refresh -- it cannot gather a bespoke set of hypothetical inputs (bruto, tabel, geboortedatum, deeltijdfactor, bijzondere beloning, periode) nor render the returned JSON breakdown. So this page is a host-app SFC (ProformaPayslip.vue, registered in src/registry.js) that renders the input form and calls POST /api/payroll/proforma directly, showing the full gross-to-net breakdown. No register/schema is referenced and no object is ever created -- the stable, test-covered contract is the endpoint (PayrollController::proforma) + the humaniq:payroll:proforma occ command."
 		},
@@ -542,9 +542,9 @@
 			"id": "MijnGebruikelijkLoon",
 			"route": "/mijn/gebruikelijk-loon",
 			"type": "dashboard",
-			"title": "Mijn gebruikelijk loon",
+			"title": "My customary wage",
 			"config": {
-				"description": "Zie of je loon als DGA voldoet aan de gebruikelijkloonnorm -- zonder accountant of occ-tool.",
+				"description": "See whether your salary as a DGA meets the customary wage standard -- without an accountant or occ tool.",
 				"_note": "single-person-modes (REQ-SPM-006/D5): a self-service surface for the EXISTING nl-gebruikelijkloon-norm verdict for the caller's own DGA Employee. The whole menu entry is visibleIf-gated on administrationMode: dga_single_person (D2/D3). The warning banner is bound to the read-only, stateless GET /apps/humaniq/api/payroll/dga-status endpoint (PayrollController::dgaStatus, which REUSES NlDgaChecks' predicate -- zero new tax logic, zero new persistence): visibleWhen {endpoint, field: met, op: eq, value: false} renders it only when the caller's own annualised loon is below norm AND unjustified. The endpoint takes no per-object parameter (it always means 'my own record', D5.1), so the visibleWhen.endpoint non-templated same-origin path applies cleanly -- no object id to interpolate, the documented fallback (a custom widget) is not needed. Fail-safe: the banner stays hidden on a 404 (no Employee, or Employee not a DGA -- both collapse to the same status, D5.1) or any fetch failure, so a non-DGA caller who somehow reaches this route sees no alert. The info banner is always visible and explains the page. Both widgets are built-in `banner` (CnBannerWidget) -- no custom component, no single-widget-dashboard anti-pattern.",
 				"widgets": [
 					{
@@ -552,7 +552,7 @@
 						"type": "banner",
 						"content": {
 							"variant": "info",
-							"text": "Als directeur-grootaandeelhouder (DGA) moet je jezelf minimaal het gebruikelijk loon uitbetalen. Ligt je loon eronder zonder vastgelegde onderbouwing, dan zie je hieronder een waarschuwing."
+							"text": "As a director-major shareholder (DGA) you must pay yourself at least the customary wage. If your salary is below it without a recorded justification, you will see a warning below."
 						}
 					},
 					{
@@ -560,7 +560,7 @@
 						"type": "banner",
 						"content": {
 							"variant": "warning",
-							"text": "Je loon ligt onder de gebruikelijkloonnorm en er is geen onderbouwing vastgelegd. Verhoog je maandloon of leg een onderbouwing vast op je werknemersrecord.",
+							"text": "Your salary is below the customary wage standard and no justification has been recorded. Raise your monthly salary or record a justification on your employee record.",
 							"visibleWhen": {
 								"endpoint": "/apps/humaniq/api/payroll/dga-status",
 								"field": "met",

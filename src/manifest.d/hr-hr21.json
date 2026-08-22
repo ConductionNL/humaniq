@@ -7,7 +7,7 @@
 			"params": {
 				"id": "Normfuncties",
 				"route": "/normfuncties",
-				"title": "Functiehuis",
+				"title": "Job framework",
 				"columns": [
 					"functiecode",
 					"naam",
@@ -22,7 +22,7 @@
 				"filters": [
 					"functiegroep"
 				],
-				"description": "HR21-normfuncties en hun gekoppelde Cao Gemeenten-schaal (illustratieve subset, geen volledige bibliotheek). Alleen-lezen referentiedata.",
+				"description": "HR21 job profiles and their linked Cao Gemeenten scale (illustrative subset, not a complete library). Read-only reference data.",
 				"allowCreate": false,
 				"actionToggles": {
 					"showAdd": false,
@@ -44,7 +44,7 @@
 			"params": {
 				"id": "NormfunctieDetail",
 				"route": "/normfuncties/:id",
-				"title": "Normfunctie",
+				"title": "Job profile",
 				"dataIcon": "BriefcaseOutline",
 				"gridHeight": 7,
 				"note": "functiehuis-hr21 (2026-07-18): read-only HR21 normfunctie reference detail (the CaoDetail allowCreate:false shape). The 'Normfunctie' data widget carries every field (functiecode/naam/functiegroep/caoSchaal/caoSchaalVerified/caoSchaalSource) -- no Related widget, since no other schema in humaniq references Normfunctie's own object identity here (EmploymentContract.normfunctieId points AT a Normfunctie, not the reverse). No lifecycleActions (Normfunctie has no x-openregister-lifecycle). No create/edit affordances (seeded reference data). Audit history is a sidebar tab.",

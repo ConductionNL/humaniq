@@ -11,61 +11,61 @@
       {
         "icon": "ClockCheckOutline",
         "id": "MijnUren",
-        "label": "Mijn uren",
+        "label": "My hours",
         "route": "MijnUren"
       },
       {
         "icon": "CalendarClockOutline",
         "id": "MijnUrenstaten",
-        "label": "Mijn urenstaten",
+        "label": "My timesheets",
         "route": "MijnUrenstaten"
       },
       {
         "icon": "ReceiptOutline",
         "id": "MijnDeclaraties",
-        "label": "Mijn declaraties",
+        "label": "My expenses",
         "route": "MijnDeclaraties"
       },
       {
         "icon": "CalendarWeekendOutline",
         "id": "MijnVerlof",
-        "label": "Mijn verlof",
+        "label": "My leave",
         "route": "MijnVerlof"
       },
       {
         "icon": "ReceiptTextOutline",
         "id": "MijnLoonstroken",
-        "label": "Mijn loonstroken",
+        "label": "My payslips",
         "route": "MijnLoonstroken"
       },
       {
         "icon": "ClockOutline",
         "id": "MijnAanwezigheid",
-        "label": "Mijn aanwezigheid",
+        "label": "My attendance",
         "route": "MijnAanwezigheid"
       },
       {
         "icon": "StarCheckOutline",
         "id": "MijnBeoordelingen",
-        "label": "Mijn beoordelingen",
+        "label": "My reviews",
         "route": "MijnBeoordelingen"
       },
       {
         "icon": "BullseyeArrow",
         "id": "MijnDoelen",
-        "label": "Mijn doelen",
+        "label": "My goals",
         "route": "MijnDoelen"
       },
       {
         "icon": "CalendarWeekendOutline",
         "id": "MijnVerlofKopenVerkopen",
-        "label": "Verlof kopen/verkopen",
+        "label": "Buy/sell leave",
         "route": "MijnVerlofKopenVerkopen"
       },
       {
         "icon": "ScaleBalance",
         "id": "MijnGebruikelijkLoon",
-        "label": "Mijn gebruikelijk loon",
+        "label": "My customary wage",
         "route": "MijnGebruikelijkLoon",
         "visibleIf": {
           "user.administrationMode": {
@@ -76,7 +76,7 @@
     ],
     "icon": "Account",
     "id": "MijnHrGroup",
-    "label": "Mijn HR",
+    "label": "My HR",
     "order": 20,
     "route": "MijnHr"
   },
@@ -85,49 +85,49 @@
       {
         "icon": "AccountTieOutline",
         "id": "Employees",
-        "label": "Werknemers",
+        "label": "Employees",
         "route": "Employees"
       },
       {
         "icon": "FileSign",
         "id": "EmploymentContracts",
-        "label": "Contracten",
+        "label": "Contracts",
         "route": "EmploymentContracts"
       },
       {
         "icon": "SchoolOutline",
         "id": "Stagiairs",
-        "label": "Stagiairs",
+        "label": "Interns",
         "route": "Stagiairs"
       },
       {
         "icon": "FileDocumentMultipleOutline",
         "id": "Caos",
-        "label": "CAO's",
+        "label": "Collective agreements",
         "route": "Caos"
       },
       {
         "icon": "BriefcaseOutline",
         "id": "Normfuncties",
-        "label": "Functiehuis",
+        "label": "Job framework",
         "route": "Normfuncties"
       },
       {
         "icon": "CurrencyEur",
         "id": "SalaryBands",
-        "label": "Salarisschalen",
+        "label": "Salary bands",
         "route": "SalaryBands"
       },
       {
         "icon": "CalendarRange",
         "id": "CompReviewCycles",
-        "label": "Beloningscycli",
+        "label": "Compensation cycles",
         "route": "CompReviewCycles"
       },
       {
         "icon": "OfficeBuildingOutline",
         "id": "OrgUnits",
-        "label": "Organisatie-eenheden",
+        "label": "Organisational units",
         "route": "OrgUnits",
         "visibleIf": {
           "user.administrationMode": {
@@ -138,7 +138,7 @@
       {
         "icon": "AccountArrowRightOutline",
         "id": "OrgAssignments",
-        "label": "Plaatsingen",
+        "label": "Placements",
         "route": "OrgAssignments",
         "visibleIf": {
           "user.administrationMode": {
@@ -149,13 +149,13 @@
       {
         "icon": "FileDocumentMultipleOutline",
         "id": "GeneratedDocuments",
-        "label": "Documenten",
+        "label": "Generated documents",
         "route": "GeneratedDocuments"
       },
       {
         "icon": "CalendarSyncOutline",
         "id": "ReviewCycles",
-        "label": "Beoordelingscycli",
+        "label": "Review cycles",
         "route": "ReviewCycles"
       },
       {
@@ -167,19 +167,19 @@
       {
         "icon": "AccountBoxOutline",
         "id": "Vacancies",
-        "label": "Vacatures",
+        "label": "Vacancies",
         "route": "Vacancies"
       },
       {
         "icon": "FileAccountOutline",
         "id": "Applications",
-        "label": "Sollicitaties",
+        "label": "Applications",
         "route": "Applications"
       },
       {
         "icon": "CalendarAccountOutline",
         "id": "Interviews",
-        "label": "Gesprekken",
+        "label": "Interviews",
         "route": "Interviews"
       },
       {
@@ -191,7 +191,7 @@
     ],
     "icon": "AccountMultipleOutline",
     "id": "EmployeesGroup",
-    "label": "Personeel",
+    "label": "People",
     "order": 90
   },
   {
@@ -199,19 +199,19 @@
       {
         "icon": "ClockPlusOutline",
         "id": "TimeEntries",
-        "label": "Urenboekingen",
+        "label": "Time entries",
         "route": "TimeEntries"
       },
       {
         "icon": "ClockCheckOutline",
         "id": "Timesheets",
-        "label": "Urenstaten",
+        "label": "Timesheets",
         "route": "Timesheets"
       },
       {
         "icon": "CheckDecagramOutline",
         "id": "TimesheetApproval",
-        "label": "Urengoedkeuring",
+        "label": "Timesheet approval",
         "route": "TimesheetApproval",
         "visibleIf": {
           "user.administrationMode": {
@@ -222,7 +222,7 @@
       {
         "icon": "CheckDecagramOutline",
         "id": "TeamUrengoedkeuring",
-        "label": "Team-urengoedkeuring",
+        "label": "Team timesheet approval",
         "route": "TeamUrengoedkeuring",
         "visibleIf": {
           "user.administrationMode": {
@@ -233,13 +233,13 @@
       {
         "icon": "CalendarWeekendOutline",
         "id": "LeaveRequests",
-        "label": "Verlofaanvragen",
+        "label": "Leave requests",
         "route": "LeaveRequests"
       },
       {
         "icon": "CheckDecagramOutline",
         "id": "LeaveApproval",
-        "label": "Verlofgoedkeuring",
+        "label": "Leave approval",
         "route": "LeaveApproval",
         "visibleIf": {
           "user.administrationMode": {
@@ -250,7 +250,7 @@
       {
         "icon": "CheckDecagramOutline",
         "id": "TeamVerlofgoedkeuring",
-        "label": "Team-verlofgoedkeuring",
+        "label": "Team leave approval",
         "route": "TeamVerlofgoedkeuring",
         "visibleIf": {
           "user.administrationMode": {
@@ -261,37 +261,37 @@
       {
         "icon": "CalendarWeekendOutline",
         "id": "LeaveBalances",
-        "label": "Verlofsaldi",
+        "label": "Leave balances",
         "route": "LeaveBalances"
       },
       {
         "icon": "EmoticonSickOutline",
         "id": "SickLeaveCases",
-        "label": "Ziekmeldingen",
+        "label": "Sick leave cases",
         "route": "SickLeaveCases"
       },
       {
         "icon": "ClipboardPulseOutline",
         "id": "VerzuimOverzicht",
-        "label": "Verzuimoverzicht",
+        "label": "Absence overview",
         "route": "VerzuimOverzicht"
       },
       {
         "icon": "ClockOutline",
         "id": "AttendanceRecords",
-        "label": "Aanwezigheid",
+        "label": "Attendance",
         "route": "AttendanceRecords"
       },
       {
         "icon": "ShieldCheckOutline",
         "id": "BhvCertificeringen",
-        "label": "BHV-certificeringen",
+        "label": "Emergency response certifications",
         "route": "BhvCertificeringen"
       }
     ],
     "icon": "CalendarWeekendOutline",
     "id": "VerlofVerzuimGroup",
-    "label": "Verlof & verzuim",
+    "label": "Leave & absence",
     "order": 105
   },
   {
@@ -299,13 +299,13 @@
       {
         "icon": "ReceiptOutline",
         "id": "Expenses",
-        "label": "Declaraties",
+        "label": "Expenses",
         "route": "Expenses"
       },
       {
         "icon": "CheckDecagramOutline",
         "id": "ExpenseApproval",
-        "label": "Declaratiegoedkeuring",
+        "label": "Expense approval",
         "route": "ExpenseApproval",
         "visibleIf": {
           "user.administrationMode": {
@@ -316,7 +316,7 @@
       {
         "icon": "CheckDecagramOutline",
         "id": "TeamDeclaratiegoedkeuring",
-        "label": "Team-declaratiegoedkeuring",
+        "label": "Team expense approval",
         "route": "TeamDeclaratiegoedkeuring",
         "visibleIf": {
           "user.administrationMode": {
@@ -333,13 +333,13 @@
       {
         "icon": "HandshakeOutline",
         "id": "AssetAssignments",
-        "label": "Uitgiftes",
+        "label": "Asset assignments",
         "route": "AssetAssignments"
       }
     ],
     "icon": "ReceiptOutline",
     "id": "ExpensesGroup",
-    "label": "Declaraties & assets",
+    "label": "Expenses & assets",
     "order": 110
   },
   {
@@ -347,91 +347,91 @@
       {
         "icon": "ReceiptTextOutline",
         "id": "Payslips",
-        "label": "Loonstroken",
+        "label": "Payslips",
         "route": "Payslips"
       },
       {
         "icon": "FileCertificateOutline",
         "id": "Jaaropgaven",
-        "label": "Jaaropgaven",
+        "label": "Annual statements",
         "route": "Jaaropgaven"
       },
       {
         "icon": "CogPlayOutline",
         "id": "PayrollRuns",
-        "label": "Loonruns",
+        "label": "Payroll runs",
         "route": "PayrollRuns"
       },
       {
         "icon": "FileSendOutline",
         "id": "LoonaangifteFilings",
-        "label": "Aangiftes",
+        "label": "Wage tax filings",
         "route": "LoonaangifteFilings"
       },
       {
         "icon": "PiggyBankOutline",
         "id": "PensionFilings",
-        "label": "Pensioenaangiftes",
+        "label": "Pension filings",
         "route": "PensionFilings"
       },
       {
         "icon": "ScaleBalance",
         "id": "WntDisclosures",
-        "label": "WNT-verantwoording",
+        "label": "WNT disclosures",
         "route": "WntDisclosures"
       },
       {
         "icon": "SwapHorizontal",
         "id": "PayrollMutations",
-        "label": "Mutatieoverzichten",
+        "label": "Mutation reports",
         "route": "PayrollMutations"
       },
       {
         "icon": "CashSync",
         "id": "PayrollAdjustments",
-        "label": "Correcties (TWK)",
+        "label": "Retro corrections",
         "route": "PayrollAdjustments"
       },
       {
         "icon": "BookEditOutline",
         "id": "PayrollGLPosts",
-        "label": "Loonjournaalposten",
+        "label": "Payroll GL posts",
         "route": "PayrollGLPosts"
       },
       {
         "icon": "CreditCardOutline",
         "id": "PayrollPaymentBatches",
-        "label": "Betaalbatches",
+        "label": "Payment batches",
         "route": "PayrollPaymentBatches"
       },
       {
         "icon": "GiftOutline",
         "id": "WkrDeclarations",
-        "label": "WKR-verstrekkingen",
+        "label": "WKR declarations",
         "route": "WkrDeclarations"
       },
       {
         "icon": "CalculatorVariantOutline",
         "id": "WkrAssessments",
-        "label": "WKR-beoordelingen",
+        "label": "WKR assessments",
         "route": "WkrAssessments"
       },
       {
         "icon": "Gavel",
         "id": "Loonbeslagen",
-        "label": "Loonbeslagen",
+        "label": "Wage garnishments",
         "route": "Loonbeslagen"
       },
       {
         "icon": "Magnify",
         "id": "DsrRequests",
-        "label": "AVG-verzoeken",
+        "label": "Data subject requests",
         "route": "DsrRequests"
       },
       {
         "icon": "Calculator",
         "id": "ProformaPayslipMenu",
-        "label": "Simuleer loonstrook",
+        "label": "Simulate payslip",
         "route": "ProformaPayslip",
         "visibleIf": {
           "user.administrationMode": {
@@ -444,7 +444,7 @@
     ],
     "icon": "CashSync",
     "id": "PayrollGroup",
-    "label": "Loonadministratie",
+    "label": "Payroll",
     "order": 120,
     "visibleIf": {
       "user.administrationMode": {
@@ -459,25 +459,25 @@
       {
         "icon": "TableClock",
         "id": "Rosters",
-        "label": "Roosters",
+        "label": "Rosters",
         "route": "Rosters"
       },
       {
         "icon": "TableClock",
         "id": "RosterAssignments",
-        "label": "Roosterindelingen",
+        "label": "Roster assignments",
         "route": "RosterAssignments"
       },
       {
         "icon": "TimelineClockOutline",
         "id": "Shifts",
-        "label": "Diensten",
+        "label": "Shifts",
         "route": "Shifts"
       }
     ],
     "icon": "CalendarMonthOutline",
     "id": "PlanningGroup",
-    "label": "Roostering",
+    "label": "Scheduling",
     "order": 107,
     "visibleIf": {
       "user.administrationMode": {
@@ -490,19 +490,19 @@
       {
         "icon": "OfficeBuildingOutline",
         "id": "Administraties",
-        "label": "Administraties",
+        "label": "Administrations",
         "route": "Administraties"
       },
       {
         "icon": "PowerPlugOutline",
         "id": "Integraties",
-        "label": "Integraties",
+        "label": "Integrations",
         "route": "IntegrationAccounts"
       }
     ],
     "icon": "CogOutline",
     "id": "ConfiguratieGroup",
-    "label": "Configuratie",
+    "label": "Configuration",
     "order": 200,
     "section": "settings"
   }

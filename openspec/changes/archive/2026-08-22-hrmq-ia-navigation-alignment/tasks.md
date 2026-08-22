@@ -1,3 +1,9 @@
+> **RETIRED UNAPPLIED — archived 2026-08-22, superseded.** These tasks were never executed and
+> stay unchecked on purpose; the spec deltas were NOT synced into `openspec/specs/`. See the
+> retirement note at the top of `proposal.md` for the two reasons (the pipeline prerequisite
+> shipped as `hrmq-manifest-fragment-pipeline` / humaniq#122, and the ADR-001 menu structure the
+> relocations target has been superseded by ADR-097).
+
 ## Status — 2026-08-20: the OUTCOME shipped, by a shorter route than this plan
 
 The user-visible goal of this change — a main menu inside the ADR-097 budget —

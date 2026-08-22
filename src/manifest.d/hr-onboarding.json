@@ -67,7 +67,7 @@
 					{
 						"id": "files",
 						"type": "files",
-						"title": "Contract & WID-documenten",
+						"title": "Contract & ID documents",
 						"icon": "FolderOutline"
 					}
 				],
@@ -114,7 +114,7 @@
 								"aangenomen"
 							],
 							"to": "contract_getekend",
-							"label": "Contract bevestigen"
+							"label": "Confirm contract"
 						},
 						{
 							"action": "gegevens_valideren",
@@ -122,7 +122,7 @@
 								"contract_getekend"
 							],
 							"to": "gegevens_gevalideerd",
-							"label": "Gegevens valideren"
+							"label": "Validate data"
 						},
 						{
 							"action": "gereed_melden",
@@ -130,7 +130,7 @@
 								"gegevens_gevalideerd"
 							],
 							"to": "gereed_eerste_werkdag",
-							"label": "Gereed melden"
+							"label": "Mark ready"
 						},
 						{
 							"action": "starten",
@@ -138,7 +138,7 @@
 								"gereed_eerste_werkdag"
 							],
 							"to": "proeftijd_lopend",
-							"label": "Starten"
+							"label": "Start"
 						},
 						{
 							"action": "afronden",
@@ -146,7 +146,7 @@
 								"proeftijd_lopend"
 							],
 							"to": "afgerond",
-							"label": "Afronden"
+							"label": "Complete"
 						},
 						{
 							"action": "annuleren",
@@ -158,7 +158,7 @@
 								"proeftijd_lopend"
 							],
 							"to": "geannuleerd",
-							"label": "Annuleren"
+							"label": "Cancel"
 						}
 					]
 				}
@@ -217,7 +217,7 @@
 					{
 						"id": "data-3",
 						"type": "data",
-						"title": "Eindafrekening",
+						"title": "Final settlement",
 						"icon": "ReceiptTextOutline",
 						"content": {
 							"columns": 2,
@@ -228,7 +228,7 @@
 								"getuigschriftVerstrekt",
 								"notes"
 							],
-							"title": "Eindafrekening"
+							"title": "Final settlement"
 						}
 					},
 					{
@@ -243,7 +243,7 @@
 					{
 						"id": "files",
 						"type": "files",
-						"title": "VSO & getuigschrift-documenten",
+						"title": "Settlement agreement & reference documents",
 						"icon": "FolderOutline"
 					}
 				],
@@ -298,7 +298,7 @@
 								"aangekondigd"
 							],
 							"to": "afronding_gepland",
-							"label": "Afronding plannen"
+							"label": "Plan completion"
 						},
 						{
 							"action": "eindafrekening_gereedmelden",
@@ -306,7 +306,7 @@
 								"afronding_gepland"
 							],
 							"to": "eindafrekening_gereed",
-							"label": "Eindafrekening gereedmelden"
+							"label": "Mark final settlement ready"
 						},
 						{
 							"action": "afronden",
@@ -314,7 +314,7 @@
 								"eindafrekening_gereed"
 							],
 							"to": "afgerond",
-							"label": "Afronden"
+							"label": "Complete"
 						},
 						{
 							"action": "annuleren",
@@ -324,7 +324,7 @@
 								"eindafrekening_gereed"
 							],
 							"to": "geannuleerd",
-							"label": "Annuleren"
+							"label": "Cancel"
 						}
 					]
 				}
@@ -356,7 +356,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Onboardingcases per nieuwe medewerker: contract, WID-check, BSN/IBAN, IT-provisioning en pensioenaanmelding, met de proeftijd- en startdatum als klok."
+				"description": "Onboarding cases per new employee: contract, ID verification, BSN/IBAN, IT provisioning and pension registration, with the probation and start date as the clock."
 			}
 		},
 		{
@@ -381,7 +381,7 @@
 					"status",
 					"reason"
 				],
-				"description": "Offboardingcases per vertrekkende medewerker: exit-gesprek, teruggave bedrijfseigendommen, toegangsintrekking en de eindafrekening (verlofsaldo, vakantiegeld, transitievergoeding, getuigschrift), met de laatste werkdag als klok."
+				"description": "Offboarding cases per departing employee: exit interview, return of company property, access revocation and the final settlement (leave balance, holiday allowance, transition payment, reference letter), with the last working day as the clock."
 			}
 		}
 	]

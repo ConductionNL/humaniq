@@ -7,7 +7,7 @@
 			"params": {
 				"id": "PensionFilings",
 				"route": "/pension-filings",
-				"title": "Pensioenaangiftes",
+				"title": "Pension filings",
 				"columns": [
 					"period",
 					"fund",
@@ -36,7 +36,7 @@
 			"params": {
 				"id": "PensionFilingDetail",
 				"route": "/pension-filings/:id",
-				"title": "Pensioenaangifte",
+				"title": "Pension filing",
 				"statusTitle": "Status & deadline",
 				"statusIcon": "CalendarClock",
 				"statusInclude": [
@@ -68,7 +68,7 @@
 								"concept"
 							],
 							"to": "gecontroleerd",
-							"label": "Controleren"
+							"label": "Check"
 						},
 						{
 							"action": "bevestigen",
@@ -76,7 +76,7 @@
 								"gecontroleerd"
 							],
 							"to": "bevestigd",
-							"label": "Bevestigen"
+							"label": "Confirm"
 						},
 						{
 							"action": "verzenden",
@@ -84,7 +84,7 @@
 								"bevestigd"
 							],
 							"to": "verzonden",
-							"label": "Verzenden"
+							"label": "Send"
 						},
 						{
 							"action": "heropenen",
@@ -93,7 +93,7 @@
 								"bevestigd"
 							],
 							"to": "concept",
-							"label": "Heropenen"
+							"label": "Reopen"
 						},
 						{
 							"action": "corrigeren",
@@ -101,7 +101,7 @@
 								"verzonden"
 							],
 							"to": "concept",
-							"label": "Corrigeren"
+							"label": "Correct"
 						}
 					]
 				}

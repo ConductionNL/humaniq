@@ -18,6 +18,7 @@
     "check:manifest": "node tests/validate-manifest.js",
     "check:widget-keys": "node tests/validate-widget-keys.js",
     "check:seed-refs": "node tests/validate-seed-refs.js",
+    "check:l10n": "node tests/validate-l10n-parity.js",
     "check:deps-drift": "node scripts/check-node-deps-drift.js",
     "check:manifest-sentinels": "node scripts/check-manifest-sentinels.mjs",
     "check:bundle-freshness": "node scripts/check-bundle-freshness.js",
@@ -30,7 +31,7 @@
   "dependencies": {
     "@babel/core": "^7.29.0",
     "@babel/preset-env": "^7.29.5",
-    "@conduction/nextcloud-vue": "^2.9.1",
+    "@conduction/nextcloud-vue": "^2.13.0",
     "@nextcloud/auth": "^2.5.0",
     "@nextcloud/axios": "~2.5.2",
     "@nextcloud/capabilities": "^1.2.1",

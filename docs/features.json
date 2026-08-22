@@ -112,6 +112,20 @@
     "docsUrl": "openspec/specs/humaniq-docudesk-documents/spec.md"
   },
   {
+    "slug": "hrmq-i18n-locale-completeness",
+    "title": "Hrmq I18n Locale Completeness",
+    "summary": "Bring hrmq onto hydra ADR-007: English sentence-case strings are the app's i18n source keys, and l10n/en.json + l10n/nl.json both exist with an identical key set.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/hrmq-i18n-locale-completeness/spec.md"
+  },
+  {
+    "slug": "hrmq-personal-dashboard",
+    "title": "Hrmq Personal Dashboard",
+    "summary": "Give hrmq's \"Mijn HR\" entry a personal landing surface: a type: \"dashboard\" page at /mijn whose every widget binds only the caller's own records, so an employee opening \"Mijn HR\" sees their own situation instead of a fold-out of nine links.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/hrmq-personal-dashboard/spec.md"
+  },
+  {
     "slug": "interview-scheduling",
     "title": "Interview Scheduling",
     "summary": "Close the gap recruiting-ats-basic's uitnodigen transition docblock states plainly (\"No calendar/scheduling integration in the MVP\"): today an interview invitation is a bare status flip with no artifact, so nobody on the recruiting team can see from a calendar when and with whom a gesprek is actually happening.",

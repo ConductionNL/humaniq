@@ -75,6 +75,12 @@ grow an entries array in this change.
 - **THEN** `data.approvedBy` is the manager's uid and `data.approvedAt` is the stamped timestamp
   (neither empty)
 
+#### Scenario: The envelope is a valid CloudEvents 1.0 shape
+
+- GIVEN any approved `Timesheet`
+- WHEN the event is built
+- THEN `specversion` is `1.0`, `type` is `nl.conduction.hrmq.timeentry.approved`, `datacontenttype` is `application/json`, and `time` is non-empty (falling back to the current UTC time when `approvedAt` is unset)
+
 ## ADDED Requirements
 
 ### Requirement: A time entry's parent timesheet aggregates its entries (REQ-TEC-004)

@@ -233,18 +233,26 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 		// /mijn instead of toggling. The chevron is the only affordance that
 		// toggles for both routed and route-less groups, and targeting it by
 		// the group's data-testid keeps this independent of the label language.
+		//
+		// The LEAF, however, can only be matched by its text — and that text is
+		// now TRANSLATED (hrmq-i18n-locale-completeness): the manifest holds the
+		// English source key and `CnAppNav` renders it through
+		// `translate('hrmq', …)`, so the same leaf reads "My timesheets" on an
+		// English session and "Mijn urenstaten" on a Dutch one. Matching either
+		// language keeps this spec pinned to what it is actually about —
+		// REACHABILITY — instead of to whichever locale CI happens to boot in.
 		const nav = page.locator('#app-navigation-vue, .app-navigation').first()
-		const revealNavLeaf = async (leafLabel: string, groupId: string) => {
-			const leaf = nav.getByText(leafLabel, { exact: true })
+		const revealNavLeaf = async (leafLabel: RegExp, groupId: string) => {
+			const leaf = nav.getByText(leafLabel)
 			if (!(await leaf.isVisible())) {
 				await nav.locator(`li[data-testid="cn-nav-entry-${groupId}"] button`).first().click()
 			}
 			await expect(leaf).toBeVisible({ timeout: 15_000 })
 			return leaf
 		}
-		await (await revealNavLeaf('Mijn urenstaten', 'MijnHrGroup')).click()
+		await (await revealNavLeaf(/^(My timesheets|Mijn urenstaten)$/, 'MijnHrGroup')).click()
 		await expect(page).toHaveURL(/\/mijn\/urenstaten$/, { timeout: 15_000 })
-		await (await revealNavLeaf('Urenboekingen', 'VerlofVerzuimGroup')).click()
+		await (await revealNavLeaf(/^(Time entries|Urenboekingen)$/, 'VerlofVerzuimGroup')).click()
 		await expect(page).toHaveURL(/\/time-entries$/, { timeout: 15_000 })
 	})
 

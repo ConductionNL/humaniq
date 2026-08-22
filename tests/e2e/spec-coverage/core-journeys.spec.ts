@@ -26,8 +26,6 @@
 
 import type { APIRequestContext, Page } from '@playwright/test';
 
-import { randomUUID } from 'node:crypto'
-
 import { appDialog } from '@conduction/nextcloud-vue/testing/playwright'
 import { expect, request, test } from '@playwright/test'
 import { ADMIN_CREDENTIALS, resolveBaseURL } from '../base-url.ts'
@@ -71,7 +69,7 @@ async function appBase(page: Page): Promise<string> {
 const NC_URL = resolveBaseURL()
 const OR_BASE = `${NC_URL}/index.php/apps/openregister/api/objects`
 
-/** humaniq's OpenRegister register slug (manifest config.register). */
+/** hrmq's OpenRegister register slug (manifest config.register). */
 const REGISTER = 'hrmq'
 
 const AUTH = ADMIN_CREDENTIALS
@@ -79,11 +77,7 @@ const AUTH = ADMIN_CREDENTIALS
 const HEADERS = { 'OCS-APIRequest': 'true', 'Content-Type': 'application/json' }
 
 /** Unique run id so repeated runs never collide and cleanup is exact. */
-/* randomUUID rather than Math.random: this id namespaces every fixture this
-   run creates in a SHARED OpenRegister register, so a collision with a
-   concurrent run cross-contaminates both. Math.random also trips CodeQL's
-   js/insecure-randomness. */
-const RUN_ID = `e2e-${Date.now()}-${randomUUID().slice(0, 8)}`
+const RUN_ID = `e2e-${Date.now()}-${Math.floor(Math.random() * 1e4)}`
 
 /**
  * Resolve the Employee schema path segment on the live instance.
@@ -128,7 +122,7 @@ async function gotoRoute(page: Page, route: string): Promise<void> {
  * a different schema's page (the greenwash failure mode).
  *
  * NOTE (live finding, 2026-07-26): humaniq's CnIndexPage renders NO page
- * title heading at all — the manifest `title` ("Werknemers", …) appears
+ * title heading at all — the manifest `title` ("Employees", …) appears
  * only in the left nav, not as a role=heading in main. Page identity is
  * therefore asserted via the schema-specific create button, which IS
  * rendered ("Add Employee", "Add Timesheet", …). The missing page-title
@@ -160,7 +154,7 @@ test.describe('core journeys — primary HR surfaces', () => {
 	})
 
 	test('Timesheets index renders read-only list without an add button', async ({ page }) => {
-		// humaniq-hours-process-redesign (design.md Decision 8): timesheets are
+		// hrmq-hours-process-redesign (design.md Decision 8): timesheets are
 		// server-created period aggregates of TimeEntry bookings, so the Add
 		// button is deliberately DISABLED here (actionToggles.showAdd: false).
 		// Page identity can no longer be asserted via its create button —
@@ -180,7 +174,7 @@ test.describe('core journeys — primary HR surfaces', () => {
 
 	test('TimeEntries index renders add button and list-or-empty', async ({ page }) => {
 		// The positive create-affordance case that /timesheets used to carry:
-		// the HR booking surface (humaniq-hours-process-redesign) offers Add.
+		// the HR booking surface (hrmq-hours-process-redesign) offers Add.
 		await gotoRoute(page, '/time-entries')
 		await expectIndexRendered(page, /Add Time entry/i)
 	})

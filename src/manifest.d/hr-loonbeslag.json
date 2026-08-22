@@ -4,7 +4,7 @@
 			"id": "LoonbeslagDetail",
 			"route": "/loonbeslagen/:id",
 			"type": "detail",
-			"title": "Loonbeslag",
+			"title": "Wage garnishment",
 			"config": {
 				"register": "hrmq",
 				"schema": "Loonbeslag",
@@ -21,7 +21,7 @@
 						"icon": "CashMinus",
 						"content": {
 							"label": "Ordered amount",
-							"caption": "per periode",
+							"caption": "per period",
 							"icon": "CashMinus",
 							"valueColor": "#e9322d",
 							"format": {
@@ -42,11 +42,11 @@
 					{
 						"id": "stat-2",
 						"type": "stat",
-						"title": "Beslagvrije voet",
+						"title": "Protected earnings floor",
 						"icon": "ShieldCheckOutline",
 						"content": {
-							"label": "Beslagvrije voet",
-							"caption": "beschermd minimum",
+							"label": "Protected earnings floor",
+							"caption": "protected minimum",
 							"icon": "ShieldCheckOutline",
 							"valueColor": "#46ba61",
 							"format": {
@@ -67,11 +67,11 @@
 					{
 						"id": "stat-3",
 						"type": "stat",
-						"title": "Totale vordering",
+						"title": "Total claim",
 						"icon": "CashMultiple",
 						"content": {
-							"label": "Totale vordering",
-							"caption": "totaal beslag",
+							"label": "Total claim",
+							"caption": "total garnishment",
 							"icon": "CashMultiple",
 							"valueColor": "#0082c9",
 							"format": {
@@ -92,14 +92,14 @@
 					{
 						"id": "data",
 						"type": "data",
-						"title": "Loonbeslag",
+						"title": "Wage garnishment",
 						"icon": "Gavel",
 						"content": {
 							"columns": 2,
 							"exclude": [
 								"employeeId"
 							],
-							"title": "Loonbeslag"
+							"title": "Wage garnishment"
 						}
 					},
 					{
@@ -157,7 +157,7 @@
 				"headerActions": [
 					{
 						"id": "loonbeslag-activate",
-						"label": "Verifiëren en activeren",
+						"label": "Verify and activate",
 						"type": "api-call",
 						"icon": "CheckCircleOutline",
 						"url": "/api/loonbeslag/activate",
@@ -166,12 +166,12 @@
 							"loonbeslagId": "@objectId"
 						},
 						"confirm": true,
-						"successMessage": "Loonbeslag geverifieerd en geactiveerd.",
-						"errorMessage": "Activeren van het loonbeslag is mislukt."
+						"successMessage": "Wage garnishment verified and activated.",
+						"errorMessage": "Activating the wage garnishment failed."
 					},
 					{
 						"id": "loonbeslag-settle",
-						"label": "Markeer voldaan",
+						"label": "Mark settled",
 						"type": "api-call",
 						"icon": "CashCheck",
 						"url": "/api/loonbeslag/settle",
@@ -180,12 +180,12 @@
 							"loonbeslagId": "@objectId"
 						},
 						"confirm": true,
-						"successMessage": "Loonbeslag gemarkeerd als voldaan.",
-						"errorMessage": "Markeren als voldaan is mislukt."
+						"successMessage": "Wage garnishment marked as settled.",
+						"errorMessage": "Marking as settled failed."
 					},
 					{
 						"id": "loonbeslag-withdraw",
-						"label": "Intrekken",
+						"label": "Withdraw",
 						"type": "api-call",
 						"icon": "CloseCircleOutline",
 						"url": "/api/loonbeslag/withdraw",
@@ -195,8 +195,8 @@
 							"reason": "Ingetrokken door beheerder/HR via het beheerpaneel."
 						},
 						"confirm": true,
-						"successMessage": "Loonbeslag ingetrokken.",
-						"errorMessage": "Intrekken van het loonbeslag is mislukt."
+						"successMessage": "Wage garnishment withdrawn.",
+						"errorMessage": "Withdrawing the wage garnishment failed."
 					}
 				]
 			}
@@ -210,7 +210,7 @@
 			"params": {
 				"id": "Loonbeslagen",
 				"route": "/loonbeslagen",
-				"title": "Loonbeslagen",
+				"title": "Wage garnishments",
 				"columns": [
 					"employeeId",
 					"creditor",
@@ -227,17 +227,17 @@
 				"filters": [
 					"status"
 				],
-				"description": "Court/deurwaarder-ordered wage garnishments (loonbeslag): de floor-clamped periodieke deductie op nettoPay -- nooit onder de beslagvrije voet -- gevouwen in de lopende loonrun na verrekening en verlofkoop-verkoop. Admin/HR-only; activeren/voldaan-markeren/intrekken via de gegroeide acties, nooit een kaal lifecycle-transitieknop.",
+				"description": "Court/bailiff-ordered wage garnishments: the floor-clamped periodic deduction on net pay -- never below the protected earnings floor -- folded into the running payroll run after settlement and leave buy/sell. Admin/HR-only; activate, mark settled and withdraw through the grown actions, never a bare lifecycle transition button.",
 				"actions": [
 					{
 						"id": "create-loonbeslag",
-						"label": "Loonbeslag registreren",
+						"label": "Register wage garnishment",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
 						"register": "hrmq",
 						"schema": "Loonbeslag",
 						"onSuccessRoute": "LoonbeslagDetail",
-						"successMessage": "Loonbeslag geregistreerd (status concept -- gebruik Verifiëren en activeren om deducties te starten)."
+						"successMessage": "Wage garnishment registered (status draft -- use Verify and activate to start deductions)."
 					}
 				]
 			}

@@ -7,7 +7,7 @@
 			"params": {
 				"id": "MijnAanwezigheid",
 				"route": "/mijn/aanwezigheid",
-				"title": "Mijn aanwezigheid",
+				"title": "My attendance",
 				"columns": [
 					"date",
 					"clockIn",
@@ -23,7 +23,7 @@
 					"userId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Jouw eigen aanwezigheid."
+				"description": "Your own attendance."
 			}
 		},
 		{
@@ -33,7 +33,7 @@
 			"params": {
 				"id": "AttendanceRecords",
 				"route": "/attendance",
-				"title": "Aanwezigheid",
+				"title": "Attendance",
 				"columns": [
 					"employeeId",
 					"date",
@@ -53,7 +53,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Klokregistraties per medewerker per werkdag, met de Arbeidstijdenwet-nalevingscontroles op rusttijd, maximale diensttijd en pauze."
+				"description": "Clock records per employee per working day, with the Working Hours Act compliance checks on rest time, maximum shift length and breaks."
 			}
 		},
 		{
@@ -63,7 +63,7 @@
 			"params": {
 				"id": "AttendanceRecordDetail",
 				"route": "/attendance/:id",
-				"title": "Aanwezigheid",
+				"title": "Attendance",
 				"dataTitle": "Attendance",
 				"dataIcon": "ClockOutline",
 				"relatedTitle": "Related",
@@ -81,7 +81,7 @@
 								"open"
 							],
 							"to": "gesloten",
-							"label": "Sluiten"
+							"label": "Close"
 						},
 						{
 							"action": "heropenen",
@@ -89,7 +89,7 @@
 								"gesloten"
 							],
 							"to": "open",
-							"label": "Heropenen"
+							"label": "Reopen"
 						}
 					]
 				}

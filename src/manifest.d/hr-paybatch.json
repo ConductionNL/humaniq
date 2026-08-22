@@ -7,7 +7,7 @@
 			"params": {
 				"id": "PayrollPaymentBatches",
 				"route": "/payment-batches",
-				"title": "Betaalbatches",
+				"title": "Payment batches",
 				"columns": [
 					"period",
 					"status",
@@ -25,7 +25,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Netto-loon betaalbatches: per betaalbare loonrun een concept SEPA PaymentRun klaargezet in shillinq."
+				"description": "Net pay payment batches: for every payable payroll run a draft SEPA PaymentRun prepared in shillinq."
 			}
 		},
 		{
@@ -35,7 +35,7 @@
 			"params": {
 				"id": "PayrollPaymentBatchDetail",
 				"route": "/payment-batches/:id",
-				"title": "Betaalbatch",
+				"title": "Payment batch",
 				"statusTitle": "Status",
 				"statusIcon": "CheckCircleOutline",
 				"statusInclude": [
@@ -51,7 +51,7 @@
 						"editable": false
 					}
 				},
-				"dataTitle": "Betaalbatch",
+				"dataTitle": "Payment batch",
 				"dataIcon": "BankTransfer",
 				"dataExclude": [
 					"payrollRunId"

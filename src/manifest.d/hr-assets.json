@@ -55,7 +55,7 @@
 					{
 						"id": "object-list",
 						"type": "object-list",
-						"title": "Uitgiftes",
+						"title": "Asset assignments",
 						"icon": "HandshakeOutline",
 						"content": {
 							"register": "hrmq",
@@ -74,15 +74,15 @@
 								},
 								{
 									"key": "issuedOn",
-									"label": "Uitgifte"
+									"label": "Issued"
 								},
 								{
 									"key": "returnedOn",
-									"label": "Inname"
+									"label": "Returned"
 								},
 								{
 									"key": "issueReceiptSigned",
-									"label": "Bon getekend"
+									"label": "Receipt signed"
 								}
 							],
 							"limit": 25,
@@ -91,13 +91,13 @@
 							"viewAllQuery": {
 								"assetId": "@objectId"
 							},
-							"emptyText": "No uitgiftes yet"
+							"emptyText": "No asset assignments yet"
 						}
 					},
 					{
 						"id": "files",
 						"type": "files",
-						"title": "Uitgiftebonnen",
+						"title": "Handover receipts",
 						"icon": "FolderOutline"
 					}
 				],
@@ -144,7 +144,7 @@
 								"available"
 							],
 							"to": "issued",
-							"label": "Uitgeven"
+							"label": "Issue"
 						},
 						{
 							"action": "checkIn",
@@ -152,7 +152,7 @@
 								"issued"
 							],
 							"to": "checkedIn",
-							"label": "Innemen"
+							"label": "Check in"
 						},
 						{
 							"action": "release",
@@ -160,7 +160,7 @@
 								"checkedIn"
 							],
 							"to": "available",
-							"label": "Vrijgeven"
+							"label": "Release"
 						},
 						{
 							"action": "writeOff",
@@ -169,7 +169,7 @@
 								"checkedIn"
 							],
 							"to": "writtenOff",
-							"label": "Afschrijven"
+							"label": "Write off"
 						}
 					]
 				}
@@ -202,7 +202,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Bedrijfseigendommen uitgegeven aan werknemers: laptops, telefoons, voertuigen, gereedschap, toegangspassen en kleding, met een bewaakte innamestatus."
+				"description": "Company property issued to employees: laptops, phones, vehicles, tools, access passes and clothing, with a guarded return status."
 			}
 		},
 		{
@@ -212,7 +212,7 @@
 			"params": {
 				"id": "AssetAssignments",
 				"route": "/asset-assignments",
-				"title": "Uitgiftes",
+				"title": "Asset assignments",
 				"columns": [
 					"assetId",
 					"employeeId",
@@ -227,7 +227,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Effectief-gedateerde uitgiftes van assets aan werknemers."
+				"description": "Effective-dated asset assignments to employees."
 			}
 		},
 		{
@@ -237,8 +237,8 @@
 			"params": {
 				"id": "AssetAssignmentDetail",
 				"route": "/asset-assignments/:id",
-				"title": "Uitgifte",
-				"dataTitle": "Uitgifte",
+				"title": "Asset assignment",
+				"dataTitle": "Asset assignment",
 				"dataIcon": "HandshakeOutline",
 				"relatedTitle": "Related",
 				"gridHeight": 5,

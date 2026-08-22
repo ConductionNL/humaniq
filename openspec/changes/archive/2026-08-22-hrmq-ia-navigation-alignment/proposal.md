@@ -2,6 +2,34 @@
 kind: config
 ---
 
+## RETIRED UNAPPLIED — archived 2026-08-22, superseded
+
+**This change was archived without being applied, and its spec deltas were deliberately NOT
+synced into `openspec/specs/`.** Nothing below describes shipped behaviour; read it as a
+historical proposal only. Its tasks stay unchecked on purpose — ticking them would claim work
+this change never did.
+
+Two independent reasons, both settled after this proposal was written:
+
+1. **Its step 1 is already done, by another change.** Sections 1.1-1.5 propose adopting the
+   ADR-037/ADR-044 `manifest.d/` + `menu-layout.json` + `buildManifest()` pipeline as the
+   prerequisite for everything else here. That adoption shipped in
+   [`hrmq-manifest-fragment-pipeline`](../2026-08-22-hrmq-manifest-fragment-pipeline/) (merged as
+   humaniq#122), whose proposal names this change explicitly as the one it supersedes on that
+   point. Re-running the prerequisite would be a no-op at best.
+2. **Its relocation content targets a menu structure that no longer stands.** Every placement
+   argument below is made against `adr-001-information-architecture.md`'s frozen nine top-level
+   entries. That structure has since been superseded by hydra **ADR-097** (navigation budget:
+   six counted main-menu entries, with a conditional personal-surface exemption). hrmq's menu was
+   brought to the ADR-097 budget by humaniq#114 — 11 top-level entries down to 5 counted — and the
+   personal surface was made exemption-eligible by
+   [`hrmq-personal-dashboard`](../2026-08-22-hrmq-personal-dashboard/). Applying this change's
+   `hrmq-ia-navigation` delta now would publish a capability spec asserting the ADR-001 nine-entry
+   contract as current, which is no longer true.
+
+The three delta specs under `specs/` are kept verbatim as the record of what was proposed. The
+`hrmq-ia-navigation` capability was never published to `openspec/specs/` and does not exist.
+
 ## Why
 
 humaniq's own accepted architecture record, `openspec/architecture/adr-001-information-architecture.md`,

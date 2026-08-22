@@ -94,11 +94,12 @@ test.describe('host-app SFC pages', () => {
 		// default route, which is visible and non-empty and would satisfy a
 		// mere "something rendered" check.
 		//
-		// BOTH LANGUAGES ON PURPOSE. The manifest titles this page in Dutch
-		// ("Simuleer loonstrook") but the CI instance runs in English and
-		// renders "Simulate payslip". Asserting only the manifest's language
-		// pins the spec to whichever locale the instance happens to boot in,
-		// which is not what this test is about.
+		// BOTH LANGUAGES ON PURPOSE. Since hrmq-i18n-locale-completeness the
+		// manifest holds the English source key ("Simulate payslip") and the
+		// renderer resolves it through `translate('hrmq', …)`, so a Dutch
+		// session renders "Simuleer loonstrook" from l10n/nl.json. Asserting
+		// only one language pins the spec to whichever locale the instance
+		// happens to boot in, which is not what this test is about.
 		await expect(content).toContainText(
 			/Simuleer loonstrook|Simulate payslip|Proforma/i,
 		)

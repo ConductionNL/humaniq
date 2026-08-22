@@ -4,7 +4,7 @@
 			"id": "EmployeeDetail",
 			"route": "/employees/:id",
 			"type": "detail",
-			"title": "Werknemer",
+			"title": "Employee",
 			"config": {
 				"register": "hrmq",
 				"schema": "Employee",
@@ -349,7 +349,7 @@
 					{
 						"id": "object-list-6",
 						"type": "object-list",
-						"title": "Beoordelingen",
+						"title": "Reviews",
 						"icon": "ClipboardAccountOutline",
 						"content": {
 							"register": "hrmq",
@@ -376,7 +376,7 @@
 								},
 								{
 									"key": "besprokenOp",
-									"label": "Besproken op"
+									"label": "Discussed on"
 								}
 							],
 							"limit": 25,
@@ -387,7 +387,7 @@
 					{
 						"id": "object-list-7",
 						"type": "object-list",
-						"title": "Doelen & OKR's",
+						"title": "Goals & OKRs",
 						"icon": "BullseyeArrow",
 						"content": {
 							"register": "hrmq",
@@ -425,7 +425,7 @@
 					{
 						"id": "object-list-8",
 						"type": "object-list",
-						"title": "Beloningsvoorstellen",
+						"title": "Compensation adjustments",
 						"icon": "CashPlus",
 						"content": {
 							"register": "hrmq",
@@ -464,7 +464,7 @@
 					{
 						"id": "object-list-9",
 						"type": "object-list",
-						"title": "Verlof kopen/verkopen",
+						"title": "Buy/sell leave",
 						"icon": "SwapHorizontal",
 						"content": {
 							"register": "hrmq",
@@ -642,7 +642,7 @@
 			"id": "PayslipDetail",
 			"route": "/payslips/:id",
 			"type": "detail",
-			"title": "Loonstrook",
+			"title": "Payslip",
 			"config": {
 				"register": "hrmq",
 				"schema": "Payslip",
@@ -763,7 +763,7 @@
 				"headerActions": [
 					{
 						"id": "generate-loonstrook",
-						"label": "Genereer PDF",
+						"label": "Generate PDF",
 						"type": "api-call",
 						"icon": "FileDocumentPlusOutline",
 						"url": "/api/documents/generate",
@@ -773,8 +773,8 @@
 							"documentType": "loonstrook"
 						},
 						"confirm": true,
-						"successMessage": "Loonstrook-PDF wordt gegenereerd.",
-						"errorMessage": "Genereren van de loonstrook-PDF is mislukt."
+						"successMessage": "The payslip PDF is being generated.",
+						"errorMessage": "Generating the payslip PDF failed."
 					}
 				]
 			}
@@ -783,7 +783,7 @@
 			"id": "PayrollRunDetail",
 			"route": "/payroll-runs/:id",
 			"type": "detail",
-			"title": "Loonrun",
+			"title": "Payroll run",
 			"config": {
 				"register": "hrmq",
 				"schema": "PayrollRun",
@@ -881,7 +881,7 @@
 					{
 						"id": "object-list",
 						"type": "object-list",
-						"title": "Loonstroken",
+						"title": "Payslips",
 						"icon": "ReceiptTextOutline",
 						"content": {
 							"register": "hrmq",
@@ -904,7 +904,7 @@
 								},
 								{
 									"key": "loonheffing",
-									"label": "Loonheffing"
+									"label": "Payroll tax"
 								},
 								{
 									"key": "nettoPay",
@@ -917,7 +917,7 @@
 							"viewAllQuery": {
 								"payrollRunId": "@objectId"
 							},
-							"emptyText": "Nog geen loonstroken — voer (Her)berekenen uit",
+							"emptyText": "No payslips yet — run (Re)calculate",
 							"allowCreate": false
 						}
 					}
@@ -967,7 +967,7 @@
 				"headerActions": [
 					{
 						"id": "recalculate",
-						"label": "(Her)berekenen",
+						"label": "(Re)calculate",
 						"type": "api-call",
 						"icon": "Calculator",
 						"url": "/api/payroll/calculate",
@@ -976,12 +976,12 @@
 							"runId": "@objectId"
 						},
 						"confirm": true,
-						"successMessage": "Loonrun (her)berekend — loonstroken en totalen zijn bijgewerkt.",
-						"errorMessage": "(Her)berekenen van de loonrun is mislukt."
+						"successMessage": "Payroll run (re)calculated — payslips and totals have been updated.",
+						"errorMessage": "(Re)calculating the payroll run failed."
 					},
 					{
 						"id": "mutations",
-						"label": "Mutatieoverzicht",
+						"label": "Mutation report",
 						"type": "api-call",
 						"icon": "SwapHorizontal",
 						"url": "/api/payroll/mutations",
@@ -991,18 +991,18 @@
 						},
 						"confirm": true,
 						"onSuccessRoute": "PayrollMutationReportDetail",
-						"successMessage": "Mutatierapport gegenereerd — vergeleken met de vorige periode.",
-						"errorMessage": "Genereren van het mutatierapport is mislukt."
+						"successMessage": "Mutation report generated — compared with the previous period.",
+						"errorMessage": "Generating the mutation report failed."
 					},
 					{
 						"id": "book-correction",
-						"label": "Correctie boeken (TWK)",
+						"label": "Book retro correction",
 						"type": "open-form",
 						"icon": "CashSync",
 						"register": "hrmq",
 						"schema": "PayrollAdjustment",
 						"onSuccessRoute": "PayrollAdjustmentDetail",
-						"successMessage": "Concept-correctie aangemaakt — gebruik Herrekenen om de delta te berekenen."
+						"successMessage": "Draft correction created — use Recompute to calculate the delta."
 					}
 				]
 			}
@@ -1011,7 +1011,7 @@
 			"id": "LoonaangifteFilingDetail",
 			"route": "/filings/:id",
 			"type": "detail",
-			"title": "Aangifte",
+			"title": "Wage tax filing",
 			"config": {
 				"register": "hrmq",
 				"schema": "LoonaangifteFiling",
@@ -1096,7 +1096,7 @@
 								"concept"
 							],
 							"to": "klaargezet",
-							"label": "Klaarzetten"
+							"label": "Prepare"
 						},
 						{
 							"action": "bevestigen",
@@ -1104,7 +1104,7 @@
 								"klaargezet"
 							],
 							"to": "bevestigd",
-							"label": "Bevestigen"
+							"label": "Confirm"
 						},
 						{
 							"action": "verzenden",
@@ -1112,7 +1112,7 @@
 								"bevestigd"
 							],
 							"to": "verzonden",
-							"label": "Verzenden"
+							"label": "Send"
 						},
 						{
 							"action": "heropenen",
@@ -1121,7 +1121,7 @@
 								"bevestigd"
 							],
 							"to": "concept",
-							"label": "Heropenen"
+							"label": "Reopen"
 						},
 						{
 							"action": "corrigeren",
@@ -1129,7 +1129,7 @@
 								"verzonden"
 							],
 							"to": "concept",
-							"label": "Corrigeren"
+							"label": "Correct"
 						}
 					]
 				}
@@ -1139,7 +1139,7 @@
 			"id": "PayrollMutationReportDetail",
 			"route": "/payroll-mutations/:id",
 			"type": "detail",
-			"title": "Mutatieoverzicht",
+			"title": "Mutation report",
 			"config": {
 				"register": "hrmq",
 				"schema": "PayrollMutationReport",
@@ -1252,11 +1252,11 @@
 					{
 						"id": "data",
 						"type": "data",
-						"title": "Mutatieoverzicht",
+						"title": "Mutation report",
 						"icon": "TableColumn",
 						"content": {
 							"columns": 2,
-							"title": "Mutatieoverzicht"
+							"title": "Mutation report"
 						}
 					},
 					{
@@ -1325,7 +1325,7 @@
 			"id": "WkrAssessmentDetail",
 			"route": "/wkr-assessments/:id",
 			"type": "detail",
-			"title": "WKR-beoordeling",
+			"title": "WKR assessment",
 			"config": {
 				"register": "hrmq",
 				"schema": "WkrAssessment",
@@ -1338,11 +1338,11 @@
 					{
 						"id": "stat",
 						"type": "stat",
-						"title": "Fiscale loonsom",
+						"title": "Taxable wage bill",
 						"icon": "CashMultiple",
 						"content": {
-							"label": "Fiscale loonsom",
-							"caption": "dit jaar",
+							"label": "Taxable wage bill",
+							"caption": "this year",
 							"icon": "CashMultiple",
 							"valueColor": "#0082c9",
 							"format": {
@@ -1363,11 +1363,11 @@
 					{
 						"id": "stat-2",
 						"type": "stat",
-						"title": "Vrije ruimte",
+						"title": "Free margin",
 						"icon": "GiftOutline",
 						"content": {
-							"label": "Vrije ruimte",
-							"caption": "beschikbaar",
+							"label": "Free margin",
+							"caption": "available",
 							"icon": "GiftOutline",
 							"valueColor": "#46ba61",
 							"format": {
@@ -1388,11 +1388,11 @@
 					{
 						"id": "stat-3",
 						"type": "stat",
-						"title": "Vrije ruimte gebruikt",
+						"title": "Free margin used",
 						"icon": "CashRemove",
 						"content": {
-							"label": "Vrije ruimte gebruikt",
-							"caption": "toegewezen",
+							"label": "Free margin used",
+							"caption": "allocated",
 							"icon": "CashRemove",
 							"valueColor": "#f4a742",
 							"format": {
@@ -1413,11 +1413,11 @@
 					{
 						"id": "stat-4",
 						"type": "stat",
-						"title": "Eindheffing verschuldigd",
+						"title": "Final levy due",
 						"icon": "AlertOutline",
 						"content": {
-							"label": "Eindheffing verschuldigd",
-							"caption": "80% over overschrijding",
+							"label": "Final levy due",
+							"caption": "80% over the excess",
 							"icon": "AlertOutline",
 							"valueColor": "#e9322d",
 							"format": {
@@ -1438,11 +1438,11 @@
 					{
 						"id": "data",
 						"type": "data",
-						"title": "WKR-beoordeling",
+						"title": "WKR assessment",
 						"icon": "TableColumn",
 						"content": {
 							"columns": 2,
-							"title": "WKR-beoordeling"
+							"title": "WKR assessment"
 						}
 					},
 					{
@@ -1508,7 +1508,7 @@
 				"headerActions": [
 					{
 						"id": "wkr-assess",
-						"label": "Beoordelen",
+						"label": "Assess",
 						"type": "api-call",
 						"icon": "Calculator",
 						"url": "/api/payroll/wkr-assess",
@@ -1517,8 +1517,8 @@
 							"assessmentId": "@objectId"
 						},
 						"confirm": true,
-						"successMessage": "WKR-beoordeling herberekend.",
-						"errorMessage": "Herberekenen van de WKR-beoordeling is mislukt."
+						"successMessage": "WKR assessment recalculated.",
+						"errorMessage": "Recalculating the WKR assessment failed."
 					}
 				]
 			}
@@ -1532,7 +1532,7 @@
 			"params": {
 				"id": "MijnLoonstroken",
 				"route": "/mijn/loonstroken",
-				"title": "Mijn loonstroken",
+				"title": "My payslips",
 				"columns": [
 					"period",
 					"jurisdiction",
@@ -1547,7 +1547,7 @@
 					"userId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Jouw eigen loonstroken (alleen-lezen).",
+				"description": "Your own payslips (read-only).",
 				"actionToggles": {
 					"showAdd": false,
 					"showEditAction": false,
@@ -1563,7 +1563,7 @@
 			"params": {
 				"id": "Employees",
 				"route": "/employees",
-				"title": "Werknemers",
+				"title": "Employees",
 				"columns": [
 					"employeeNumber",
 					"firstName",
@@ -1591,7 +1591,7 @@
 			"params": {
 				"id": "EmploymentContracts",
 				"route": "/contracts",
-				"title": "Contracten",
+				"title": "Contracts",
 				"columns": [
 					"employeeId",
 					"type",
@@ -1633,7 +1633,7 @@
 				"headerActions": [
 					{
 						"id": "generate-arbeidsovereenkomst",
-						"label": "Genereer arbeidsovereenkomst",
+						"label": "Generate employment contract",
 						"type": "api-call",
 						"icon": "FileDocumentPlusOutline",
 						"url": "/api/documents/generate",
@@ -1643,8 +1643,8 @@
 							"documentType": "arbeidsovereenkomst"
 						},
 						"confirm": true,
-						"successMessage": "Arbeidsovereenkomst wordt gegenereerd.",
-						"errorMessage": "Genereren van de arbeidsovereenkomst is mislukt."
+						"successMessage": "The employment contract is being generated.",
+						"errorMessage": "Generating the employment contract failed."
 					}
 				]
 			}
@@ -1656,7 +1656,7 @@
 			"params": {
 				"id": "Payslips",
 				"route": "/payslips",
-				"title": "Loonstroken",
+				"title": "Payslips",
 				"columns": [
 					"employeeId",
 					"period",
@@ -1684,7 +1684,7 @@
 			"params": {
 				"id": "PayrollRuns",
 				"route": "/payroll-runs",
-				"title": "Loonruns",
+				"title": "Payroll runs",
 				"columns": [
 					"period",
 					"administrationId",
@@ -1707,13 +1707,13 @@
 				"actions": [
 					{
 						"id": "create-run",
-						"label": "Loonrun aanmaken",
+						"label": "Create payroll run",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
 						"register": "hrmq",
 						"schema": "PayrollRun",
 						"onSuccessRoute": "PayrollRunDetail",
-						"successMessage": "Concept-loonrun aangemaakt. Gebruik (Her)berekenen om de loonstroken te genereren."
+						"successMessage": "Draft payroll run created. Use (Re)calculate to generate the payslips."
 					}
 				]
 			}
@@ -1725,7 +1725,7 @@
 			"params": {
 				"id": "LoonaangifteFilings",
 				"route": "/filings",
-				"title": "Aangiftes",
+				"title": "Wage tax filings",
 				"columns": [
 					"period",
 					"tijdvakcode",
@@ -1756,7 +1756,7 @@
 			"params": {
 				"id": "PayrollMutations",
 				"route": "/payroll-mutations",
-				"title": "Mutatieoverzichten",
+				"title": "Mutation reports",
 				"columns": [
 					"toPeriod",
 					"fromPeriod",
@@ -1775,7 +1775,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Run-to-run loonmutatie-rapporten: per periode wie is ingestroomd/uitgestroomd en de totale loonkostenverandering (payroll-mutation-reports). Admin/HR only -- gegenereerd via de \"Mutatieoverzicht\"-actie op een loonrun of via occ humaniq:payroll:mutations --persist."
+				"description": "Run-to-run payroll mutation reports: per period who joined and left and the total wage-cost change (payroll-mutation-reports). Admin/HR only -- generated through the \"Mutation report\" action on a payroll run or through occ humaniq:payroll:mutations --persist."
 			}
 		},
 		{
@@ -1785,7 +1785,7 @@
 			"params": {
 				"id": "WkrDeclarations",
 				"route": "/wkr-declarations",
-				"title": "WKR-verstrekkingen",
+				"title": "WKR declarations",
 				"columns": [
 					"administrationId",
 					"year",
@@ -1805,18 +1805,18 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "De ledger van vergoedingen/verstrekkingen/terbeschikkingstellingen voor de werkkostenregeling (wkr-administration). Alleen de categorie vrije-ruimte telt mee in de vrije-ruimte-berekening.",
+				"description": "The ledger of allowances, benefits in kind and provisions for the work-related costs scheme (wkr-administration). Only the free-margin category counts towards the free-margin calculation.",
 				"allowCreate": true,
 				"actions": [
 					{
 						"id": "create-wkr-declaration",
-						"label": "Verstrekking registreren",
+						"label": "Register declaration",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
 						"register": "hrmq",
 						"schema": "WkrDeclaration",
 						"onSuccessRoute": "WkrDeclarationDetail",
-						"successMessage": "WKR-verstrekking geregistreerd."
+						"successMessage": "WKR declaration registered."
 					}
 				]
 			}
@@ -1828,8 +1828,8 @@
 			"params": {
 				"id": "WkrDeclarationDetail",
 				"route": "/wkr-declarations/:id",
-				"title": "WKR-verstrekking",
-				"dataTitle": "WKR-verstrekking",
+				"title": "WKR declaration",
+				"dataTitle": "WKR declaration",
 				"dataIcon": "GiftOutline",
 				"relatedTitle": "Related",
 				"gridHeight": 7,
@@ -1846,7 +1846,7 @@
 			"params": {
 				"id": "WkrAssessments",
 				"route": "/wkr-assessments",
-				"title": "WKR-beoordelingen",
+				"title": "WKR assessments",
 				"columns": [
 					"administrationId",
 					"year",
@@ -1866,7 +1866,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Per administratie/jaar berekende werkkostenregeling-beoordelingen: fiscale loonsom, vrije ruimte, gebruikt, en de 80%-eindheffing bij overschrijding (wkr-administration). Gegenereerd via occ humaniq:wkr:assess of de Beoordelen-actie."
+				"description": "Work-related costs scheme assessments calculated per administration/year: taxable wage bill, free margin, used, and the 80% final levy on any excess (wkr-administration). Generated through occ humaniq:wkr:assess or the Assess action."
 			}
 		}
 	]
