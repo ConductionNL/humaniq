@@ -10,7 +10,7 @@
  * recomputed VALUES off the store, not merely "a recompute ran".
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Listener
+ * @package  OCA\Humaniq\Tests\Unit\Listener
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -21,22 +21,22 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Listener;
+namespace OCA\Humaniq\Tests\Unit\Listener;
 
-use OCA\Hrmq\Listener\TimesheetAggregateListener;
-use OCA\Hrmq\Service\HoursRegisterGateway;
-use OCA\Hrmq\Service\InternalWriteMarker;
-use OCA\Hrmq\Service\OrgResolutionService;
-use OCA\Hrmq\Service\SettingsService;
-use OCA\Hrmq\Service\TimesheetAggregationService;
-use OCA\Hrmq\Tests\Unit\Support\FakeContainer;
-use OCA\Hrmq\Tests\Unit\Support\FakeObjectStore;
-use OCA\Hrmq\Tests\Unit\Support\FakeSchemaMapper;
+use OCA\Humaniq\Listener\TimesheetAggregateListener;
+use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\OrgResolutionService;
+use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\TimesheetAggregationService;
+use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
+use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
+use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;

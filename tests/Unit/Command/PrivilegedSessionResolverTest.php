@@ -4,13 +4,13 @@
  * Unit tests for PrivilegedSessionResolver.
  *
  * Pins the `--as-user` privileged-session establishment contract shared by
- * every `occ hrmq:avg:*` command (avg-dsr design.md D3, REQ-DSR-004): an
+ * every `occ humaniq:avg:*` command (avg-dsr design.md D3, REQ-DSR-004): an
  * unknown uid or a non-admin uid is refused with a one-line controlled
  * message (never an uncaught throw) and `IUserSession::setUser()` is never
  * called; a real administrator uid establishes the session.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Command
+ * @package  OCA\Humaniq\Tests\Unit\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -26,9 +26,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Command;
+namespace OCA\Humaniq\Tests\Unit\Command;
 
-use OCA\Hrmq\Command\PrivilegedSessionResolver;
+use OCA\Humaniq\Command\PrivilegedSessionResolver;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserManager;

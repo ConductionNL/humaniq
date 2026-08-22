@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-documents",
+    "x-humaniq-fragment": "hr-documents",
     "components": {
         "schemas": {
             "GeneratedDocument": {
@@ -7,7 +7,7 @@
                 "icon": "FileDocumentOutline",
                 "version": "0.2.0",
                 "title": "Generated document",
-                "description": "The hrmq-side record of one attempt to render a standard HR document (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift, loonstrook, jaaropgaaf) via docudesk's template/rendering engine and store the returned PDF (hrmq-docudesk-documents, extended by payslip-pdf-docudesk). hrmq owns no template or PDF machinery of its own (design.md D1): this schema is a log of the handoff -- which template, for whom, the outcome, and where the file landed -- never the rendering itself. `skipped-no-docudesk` and `failed` are retryable outcomes: a later `occ hrmq:documents:generate` invocation (or the EmploymentContractDetail/PayslipDetail page action) can supersede them (design.md D6). At most one GeneratedDocument per idempotency key may be `pending`/`generated` at a time: the four letter types key on (contractId|employeeId, documentType), loonstrook keys on (payslipId, documentType), jaaropgaaf keys on (jaaropgaafId, documentType) -- enforced by HrDocumentService and audited by the nl-contract-schriftelijk / nl-loonstrook-verplicht corpus rules.",
+                "description": "The humaniq-side record of one attempt to render a standard HR document (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift, loonstrook, jaaropgaaf) via docudesk's template/rendering engine and store the returned PDF (humaniq-docudesk-documents, extended by payslip-pdf-docudesk). humaniq owns no template or PDF machinery of its own (design.md D1): this schema is a log of the handoff -- which template, for whom, the outcome, and where the file landed -- never the rendering itself. `skipped-no-docudesk` and `failed` are retryable outcomes: a later `occ humaniq:documents:generate` invocation (or the EmploymentContractDetail/PayslipDetail page action) can supersede them (design.md D6). At most one GeneratedDocument per idempotency key may be `pending`/`generated` at a time: the four letter types key on (contractId|employeeId, documentType), loonstrook keys on (payslipId, documentType), jaaropgaaf keys on (jaaropgaafId, documentType) -- enforced by HrDocumentService and audited by the nl-contract-schriftelijk / nl-loonstrook-verplicht corpus rules.",
                 "type": "object",
                 "x-schema-org": "schema:DigitalDocument",
                 "required": [

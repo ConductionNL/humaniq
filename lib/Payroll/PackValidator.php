@@ -34,7 +34,7 @@
  * not yet declared. A pack is a finite DAG by construction, not by inspection.
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll
+ * @package  OCA\Humaniq\Payroll
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -52,13 +52,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll;
+namespace OCA\Humaniq\Payroll;
 
-use OCA\Hrmq\Payroll\Dsl\DslException;
-use OCA\Hrmq\Payroll\Dsl\PackInterpreter;
-use OCA\Hrmq\Payroll\Dsl\PackRunResult;
-use OCA\Hrmq\Payroll\Dsl\RefResolver;
-use OCA\Hrmq\Payroll\Dsl\Vocabulary;
+use OCA\Humaniq\Payroll\Dsl\DslException;
+use OCA\Humaniq\Payroll\Dsl\PackInterpreter;
+use OCA\Humaniq\Payroll\Dsl\PackRunResult;
+use OCA\Humaniq\Payroll\Dsl\RefResolver;
+use OCA\Humaniq\Payroll\Dsl\Vocabulary;
 use RuntimeException;
 
 /**
@@ -652,7 +652,7 @@ final class PackValidator {
 	}//end vector()
 
 	/**
-	 * Run a `$fixture` golden vector — a vector expressed in hrmq's OWN
+	 * Run a `$fixture` golden vector — a vector expressed in humaniq's OWN
 	 * `CalculationInput`/`CalculationResult` fixture vocabulary (euros, and
 	 * `awfTariff: low|high`).
 	 *

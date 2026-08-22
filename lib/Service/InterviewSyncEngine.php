@@ -15,7 +15,7 @@
  * `InterviewRepository`.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,7 +31,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use RuntimeException;
 use Throwable;
@@ -45,6 +45,9 @@ class InterviewSyncEngine {
 	/**
 	 * @var string
 	 */
+	// FROZEN at the old app id: already-synced CalDAV events carry this URI
+	// prefix. Renaming it would double-create every interview event and leave
+	// the existing ones permanently unreclaimable by the orphan reconciler.
 	private const URI_PREFIX = 'hrmq-interview-';
 
 	/**
@@ -304,7 +307,7 @@ class InterviewSyncEngine {
 	 * by the Interview's stored `calendarEventUid` -- a no-op (`unchanged`)
 	 * when no UID is stored yet or no event is found under it. The
 	 * Interview's own `calendarEventUid` field is left as-is (a historical
-	 * pointer; hrmq's own audit log is the record of what happened, not the
+	 * pointer; humaniq's own audit log is the record of what happened, not the
 	 * calendar).
 	 *
 	 * @param InterviewCalendarTarget $target The resolved sync target.

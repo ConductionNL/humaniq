@@ -5,9 +5,9 @@
  *
  * Projects scheduled recruiting Interviews onto one configured shared
  * Nextcloud calendar as timed VEVENTs (interview-scheduling design.md
- * D1-D6) — a fork of `LeaveCalendarService` for a second object type. hrmq
+ * D1-D6) — a fork of `LeaveCalendarService` for a second object type. humaniq
  * holds no calendar storage of its own — the sync is an operator-demand
- * upsert/remove pass (occ hrmq:interview:sync + a guarded manifest action),
+ * upsert/remove pass (occ humaniq:interview:sync + a guarded manifest action),
  * not an event listener or background job.
  *
  * This class is a thin orchestrator: it resolves the sync target (the
@@ -38,7 +38,7 @@
  * triggered).
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -54,7 +54,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -67,7 +67,7 @@ class InterviewCalendarService {
 
 	/**
 	 * The duck-typed CalDAV backend's FQCN, resolved from the container by
-	 * string (design.md D1) — never a `use` import, so hrmq carries no
+	 * string (design.md D1) — never a `use` import, so humaniq carries no
 	 * composer/info.xml dependency on the dav app.
 	 *
 	 * @var string

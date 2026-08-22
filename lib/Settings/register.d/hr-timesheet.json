@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-timesheet",
+    "x-humaniq-fragment": "hr-timesheet",
     "components": {
         "schemas": {
             "TimeEntry": {
@@ -78,7 +78,7 @@
                         "nullable": true,
                         "title": "Project",
                         "description": "The project these hours were worked on.",
-                        "x-notes": "Plain string, not a $ref relation: no Project schema is modeled in hrmq (ADR-062 rule 7 — only fields whose target exists in this register set get $ref). The one allocation-adjacent field an employee may choose on the booking form."
+                        "x-notes": "Plain string, not a $ref relation: no Project schema is modeled in humaniq (ADR-062 rule 7 — only fields whose target exists in this register set get $ref). The one allocation-adjacent field an employee may choose on the booking form."
                     },
                     "billable": {
                         "type": "boolean",
@@ -133,7 +133,7 @@
                 "version": "0.6.0",
                 "title": "Timesheet",
                 "description": "The monthly collection of an employee's hour bookings (urenstaat). Totals are kept up to date automatically while the employee books; once submitted, a manager approves or rejects the whole month.",
-                "x-notes": "hours-process-redesign Decision 2: the period aggregate half of the former all-in-one schema — the approval lifecycle stays here and only here (a TimeEntry has none). The approval lifecycle is the correctly-homed HR/labour surface pipelinq's 'Timesheet approval' deep-link previously pointed at shillinq for; shillinq's UrenRegistratie is an append-only billing time-log with no approval state. hours/entryCount/projectId/costCenter/billable are server-recomputed aggregates (TimesheetAggregateListener, REQ-TEC-004) and the process fields are stamped on lifecycle edges (TimesheetProcessStampListener) — none of them is readOnly because hrmq's own listeners must write them and OpenRegister enforces readOnly on every UPDATE with no backend bypass; forms hide them via page-level includeFields allowlists instead. Two listeners write this schema (stamp + aggregate); both are recompute-style, so a stale intermediate total from concurrent entry writes is self-healed by the next write (accepted for dev-stage volumes).",
+                "x-notes": "hours-process-redesign Decision 2: the period aggregate half of the former all-in-one schema — the approval lifecycle stays here and only here (a TimeEntry has none). The approval lifecycle is the correctly-homed HR/labour surface pipelinq's 'Timesheet approval' deep-link previously pointed at shillinq for; shillinq's UrenRegistratie is an append-only billing time-log with no approval state. hours/entryCount/projectId/costCenter/billable are server-recomputed aggregates (TimesheetAggregateListener, REQ-TEC-004) and the process fields are stamped on lifecycle edges (TimesheetProcessStampListener) — none of them is readOnly because humaniq's own listeners must write them and OpenRegister enforces readOnly on every UPDATE with no backend bypass; forms hide them via page-level includeFields allowlists instead. Two listeners write this schema (stamp + aggregate); both are recompute-style, so a stale intermediate total from concurrent entry writes is self-healed by the next write (accepted for dev-stage volumes).",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [
@@ -152,7 +152,7 @@
                                     "rejected"
                                 ],
                                 "to": "submitted",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\TimesheetNotEmptyGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\TimesheetNotEmptyGuard",
                                 "description": "The employee submits the timesheet for manager approval. A rejected timesheet may be corrected and re-submitted. An empty timesheet (no bookings, or zero hours) cannot be submitted."
                             },
                             "approve": {
@@ -160,7 +160,7 @@
                                     "submitted"
                                 ],
                                 "to": "approved",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
                                 "description": "A manager approves the submitted timesheet. The NoSelfApprovalGuard rejects self-approval (the approver may not be the claiming employee); approvedBy and approvedAt are stamped on the carrying write."
                             },
                             "reject": {
@@ -168,7 +168,7 @@
                                     "submitted"
                                 ],
                                 "to": "rejected",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
                                 "description": "A manager rejects the submitted timesheet (with a rejectionReason). The NoSelfApprovalGuard rejects self-rejection. The employee may correct it and re-submit."
                             },
                             "reopen": {
@@ -222,14 +222,14 @@
                         "nullable": true,
                         "title": "Project",
                         "description": "The project all hours this period were worked on — filled in only when every booking names the same project.",
-                        "x-notes": "Denormalized aggregate for the approved-time-entry event contract (REQ-TEC-003): the single shared value when all entries agree, else null (emitted as ''). Plain string, not a $ref — no Project schema in hrmq (ADR-062 rule 7). Server-recomputed; client input inert."
+                        "x-notes": "Denormalized aggregate for the approved-time-entry event contract (REQ-TEC-003): the single shared value when all entries agree, else null (emitted as ''). Plain string, not a $ref — no Project schema in humaniq (ADR-062 rule 7). Server-recomputed; client input inert."
                     },
                     "costCenter": {
                         "type": "string",
                         "nullable": true,
                         "title": "Cost centre",
                         "description": "The cost centre all hours this period count against — filled in only when every booking shares one.",
-                        "x-notes": "Denormalized aggregate for the event contract, same homogeneous-or-null rule as projectId. Per-booking truth lives on TimeEntry.costCenter (derived from the org structure). Plain string, not a $ref — no CostCenter schema in hrmq."
+                        "x-notes": "Denormalized aggregate for the event contract, same homogeneous-or-null rule as projectId. Per-booking truth lives on TimeEntry.costCenter (derived from the org structure). Plain string, not a $ref — no CostCenter schema in humaniq."
                     },
                     "billable": {
                         "type": "boolean",
@@ -245,7 +245,7 @@
                         "x-external-register": "pipelinq",
                         "title": "Client",
                         "description": "The client who reviews and approves the billable hours on this timesheet.",
-                        "x-notes": "A domain-object reference, never a Nextcloud user id (ADR-046 A4). Cross-app reference: the target `client` schema lives in pipelinq's register, not hrmq's, so this is a plain identifier rather than an OpenRegister relation — see x-external-register. Deliberately NOT a $ref: OpenRegister resolves $ref within one register set, so a $ref here would name a schema it can never resolve. Scopes the read-only client view in the shared external portal (portaliq scopeField)."
+                        "x-notes": "A domain-object reference, never a Nextcloud user id (ADR-046 A4). Cross-app reference: the target `client` schema lives in pipelinq's register, not humaniq's, so this is a plain identifier rather than an OpenRegister relation — see x-external-register. Deliberately NOT a $ref: OpenRegister resolves $ref within one register set, so a $ref here would name a schema it can never resolve. Scopes the read-only client view in the shared external portal (portaliq scopeField)."
                     },
                     "userId": {
                         "type": "string",

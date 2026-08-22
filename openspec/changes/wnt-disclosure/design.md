@@ -2,7 +2,7 @@
 
 ## Context
 
-**Verified against HEAD 2026-07-18.** hrmq has no WNT concept today. Three precedents this change
+**Verified against HEAD 2026-07-18.** humaniq has no WNT concept today. Three precedents this change
 reuses directly:
 
 - **`pension-filing-upa-mvp`** (archived 2026-07-12) — the shape of "a per-period disclosure/filing
@@ -66,7 +66,7 @@ versioning is named out of scope (Non-Goals) rather than silently dropped.
 
 Finance enters the year's aggregated WNT-bezoldiging (salary + vacation allowance + year-end bonus +
 taxable expense reimbursements + pension contribution, per the WNT's own compensation definition) as
-a single number. hrmq's payroll engine has no annual roll-up across these components today (it rolls
+a single number. humaniq's payroll engine has no annual roll-up across these components today (it rolls
 up per PayrollRun, not per employee-year across pension/nature-compensation), so building automated
 aggregation now would be new engine machinery disconnected from anything shipped — exactly what the
 task's honesty bar warns against padding in. The MVP surface is: record the number, check it against

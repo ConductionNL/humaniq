@@ -27,7 +27,7 @@
  * (`loadAll()` swallows and logs).
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -43,10 +43,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
-use OCA\Hrmq\AppInfo\Application;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Standards\RuleEngine;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -358,7 +358,7 @@ class RosterCheckService {
 		// with a message that names the app the admin has to install.
 		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -367,6 +367,11 @@ class RosterCheckService {
 
 	/**
 	 * @return string The configured register slug.
+	 *
+	 * The 'hrmq' fallback is FROZEN across the Humaniq rename: OpenRegister's
+	 * ImportHandler resolves the register BY SLUG. Renaming it would create a
+	 * second, empty register and orphan every employee, contract, payslip and
+	 * payroll run already stored under the 'hrmq' slug.
 	 */
 	private function register(): string {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');

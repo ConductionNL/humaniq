@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-14-leave-buy-sell
 # leave-buy-sell Specification
 
 **Status**: done
-**Scope**: hrmq (`kind: code+config` — reuses the existing `LeaveRequest`/`LeaveBalance` leave model,
+**Scope**: humaniq (`kind: code+config` — reuses the existing `LeaveRequest`/`LeaveBalance` leave model,
 the reused `NoSelfApprovalGuard`, and the `PayrollRunService` current-run fold pattern established by
 `retro-adjustments`; adds zero new payroll-engine recompute logic)
 **OpenSpec changes**:
@@ -15,20 +15,20 @@ the reused `NoSelfApprovalGuard`, and the `PayrollRunService` current-run fold p
   a declarative `LeaveTransaction` buy/sell request appended to the existing leave fragment
   (`lib/Settings/register.d/hr-leave.json`, alongside `LeaveRequest`/`LeaveBalance`), carrying a
   `draft → submitted → approved/rejected → settled` lifecycle with separation of duties on `approve`/
-  `reject` via the **reused** `OCA\Hrmq\Lifecycle\NoSelfApprovalGuard` (composed inside the new
-  `OCA\Hrmq\Lifecycle\LeaveBuySellApprovalGuard`), plus a structural guarantee that a `sell` can never
+  `reject` via the **reused** `OCA\Humaniq\Lifecycle\NoSelfApprovalGuard` (composed inside the new
+  `OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard`), plus a structural guarantee that a `sell` can never
   draw down statutory hours: the guard and the new idempotent `LeaveBuySellSettlementService` write
   **only** `LeaveBalance.bovenwettelijkHours`, never `entitledHours`/`usedHours` — since
   `nl-verlof-wettelijk-minimum` is evaluated solely against `entitledHours`, a sell settled through this
   change cannot breach the statutory floor by construction. A new fail-closed
-  `OCA\Hrmq\Lifecycle\LeaveSettlementPeriodGuard` gates the `settle` transition on a well-formed
+  `OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard` gates the `settle` transition on a well-formed
   `settlementPeriod`, and a new corpus rule (`nl-verlof-bovenwettelijk-niet-negatief`,
   `lib/Standards/rules/labour.json`, `RuleCatalogue::VERSION` bumped) plus a `NlLeaveChecks` predicate
   audit-back-stop `bovenwettelijkHours >= 0` independently. The settled euro amount surfaces as a
   **current-run payroll input** — `PayrollRunService.generate()` folds every `settled` transaction
   whose `settlementPeriod` equals the draft run's period into a new nullable `Payslip.leaveBuySell`
   field and `nettoPay`, mirroring the existing `retroAdjustment` fold exactly; `PayrollCalculator` is
-  never invoked to (re)compute it. One occ command (`hrmq:leave:settle --id`) and ONE guarded endpoint
+  never invoked to (re)compute it. One occ command (`humaniq:leave:settle --id`) and ONE guarded endpoint
   (`POST /api/leave/settle`, `LeaveController::settle`, RBAC-resolve-first → 404) are the only settle
   paths — `settle` is deliberately never a bare `lifecycleActions` button (the `CompAdjustmentDetail`
   orphaned-capability precedent). ADR-001 Rule 6 surfaces: an `EmployeeDetail` dossier row
@@ -39,7 +39,7 @@ the reused `NoSelfApprovalGuard`, and the `PayrollRunService` current-run fold p
 
 ## Purpose
 
-hrmq's leave surface (`leave-management`) gives employees a `LeaveRequest` workflow and a
+humaniq's leave surface (`leave-management`) gives employees a `LeaveRequest` workflow and a
 `LeaveBalance` ledger with a declaratively calculated `remainingHours`
 (`entitledHours + bovenwettelijkHours − usedHours`), guarded by the three mandatory NL leave rules in
 `lib/Standards/rules/labour.json` (`nl-verlof-wettelijk-minimum`, `nl-verlof-saldo-niet-negatief`,
@@ -67,9 +67,9 @@ structurally, not just by convention.
 (`draft → submitted → approved/rejected → settled`, `terminal: [settled]`) mirroring the existing
 `LeaveRequest` shape: `submit` (`from: [draft, rejected]`, `to: submitted` — a rejected request may
 be corrected and re-submitted), `approve` (`from: [submitted]`, `to: approved`,
-`requires: OCA\Hrmq\Lifecycle\LeaveBuySellApprovalGuard`), `reject` (`from: [submitted]`,
-`to: rejected`, `requires: OCA\Hrmq\Lifecycle\NoSelfApprovalGuard`), `settle` (`from: [approved]`,
-`to: settled`, `requires: OCA\Hrmq\Lifecycle\LeaveSettlementPeriodGuard`). `LeaveBuySellApprovalGuard`
+`requires: OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard`), `reject` (`from: [submitted]`,
+`to: rejected`, `requires: OCA\Humaniq\Lifecycle\NoSelfApprovalGuard`), `settle` (`from: [approved]`,
+`to: settled`, `requires: OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard`). `LeaveBuySellApprovalGuard`
 SHALL delegate to the existing `NoSelfApprovalGuard::check()` before any transaction-specific logic
 runs, so the approver/rejecter may never be the requesting employee — the identical rule already
 enforced on `LeaveRequest`/`Timesheet`/`Expense`/`PerformanceReview`, reused rather than
@@ -130,7 +130,7 @@ SHALL bump to reflect the new rule.
 
 #### Scenario: A negative bovenwettelijk balance is flagged
 - **GIVEN** a `LeaveBalance` with `bovenwettelijkHours: -4` (however it arose)
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** an `nl-verlof-bovenwettelijk-niet-negatief` violation is reported for that object
 
 #### Scenario: A non-negative balance passes clean
@@ -186,7 +186,7 @@ to before this change. `PayrollCalculator` SHALL NOT be invoked to compute or ve
 #### Scenario: A settled sell adds to nettoPay
 - **GIVEN** a `LeaveTransaction` settled with `settledAmount: 200.00`, `transactionType: sell`,
   `settlementPeriod: 2026-06` for an employee
-- **WHEN** `occ hrmq:payroll:run --period 2026-06` generates that employee's payslip
+- **WHEN** `occ humaniq:payroll:run --period 2026-06` generates that employee's payslip
 - **THEN** `leaveBuySell` is `200.00` and `nettoPay` includes it, added on top of the engine's
   computed net
 
@@ -214,7 +214,7 @@ resolves both), a related widget, `lifecycleActions` exposing **exactly** `submi
 the guarded "Verrekenen" `api-call` action for `settle`, and an audit-history sidebar tab; and a new
 self-service index page `MijnVerlofKopenVerkopen` (`filter: {userId: "@me"}`) added as a **child of
 the existing `MijnHrGroup` menu** — no new top-level menu entry and no new menu group is created
-anywhere in this change. A deepLink `LeaveTransaction` → `/apps/hrmq/leave-transactions/{uuid}` is
+anywhere in this change. A deepLink `LeaveTransaction` → `/apps/humaniq/leave-transactions/{uuid}` is
 registered and `src/icons.js` registers one new icon. The manifest MUST validate
 (`npm run check:manifest`).
 

@@ -25,7 +25,7 @@
  * path is byte-identical.
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll
+ * @package  OCA\Humaniq\Payroll
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -43,7 +43,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll;
+namespace OCA\Humaniq\Payroll;
 
 use InvalidArgumentException;
 
@@ -132,7 +132,7 @@ final class CalculationInput {
 	/**
 	 * Reconstruct a `CalculationInput` from a decoded
 	 * `Payslip.engineInputSnapshot` (the `toCanonicalJson()` inverse) — the
-	 * `occ hrmq:payroll:reproduce` entry point (REQ-AUDP-002): recomputing a
+	 * `occ humaniq:payroll:reproduce` entry point (REQ-AUDP-002): recomputing a
 	 * sealed payslip from ITS OWN stored snapshot, never from the live
 	 * Employee/EmploymentContract state.
 	 *

@@ -17,7 +17,7 @@
  * an orphaned capability.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
+ * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -33,10 +33,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
+namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlWkrChecks;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\Checks\NlWkrChecks;
+use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -235,7 +235,7 @@ class NlWkrChecksTest extends TestCase {
 	 * driven through the REAL `RuleEngine::evaluate()` (catalogue +
 	 * auto-discovered CheckProviders + the nl-2026 table), proving
 	 * `nl-wkr-eindheffing-exposure` is genuinely reachable via
-	 * `occ hrmq:rules:audit` and not an orphaned capability.
+	 * `occ humaniq:rules:audit` and not an orphaned capability.
 	 *
 	 * @return void
 	 */

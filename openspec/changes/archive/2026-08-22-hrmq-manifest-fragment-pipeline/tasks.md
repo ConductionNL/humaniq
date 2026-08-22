@@ -17,7 +17,7 @@
 - [x] 2.2 Create `src/menu-layout.json`: `_meta` (spdx-license/copyright + description matching the
       pipelinq/openconnector convention), empty `relocations: {}`, empty `removals: []`,
       `settingsSection: []` with a `_settingsSectionNote` explaining it is empty on purpose (ADR-079
-      Decision 5 names hrmq's `Configuratie` top-level entry as a violation; relocating it is a
+      Decision 5 names humaniq's `Configuratie` top-level entry as a violation; relocating it is a
       menu-structure decision this change does not make — see proposal.md Non-goals), and an empty
       `_navigationRationale` object with a one-line comment on what it is for (design.md Decision 4).
 
@@ -91,7 +91,7 @@
       `./menu-layout.json` and `buildManifest` from `@conduction/nextcloud-vue`.
 - [x] 6.3 Confirm `routesFromManifest()` and the router catch-all (`redirect: '/timesheets'`) are
       otherwise unchanged — this change does not port pipelinq's explicit static-before-dynamic route
-      sort (design.md Risks: verified unnecessary for hrmq's vue-router version/usage; adding it
+      sort (design.md Risks: verified unnecessary for humaniq's vue-router version/usage; adding it
       would be unstated scope creep).
 
 ## 7. Prove the no-functionality-loss invariant (the actual acceptance test, not an assertion)
@@ -126,7 +126,7 @@
 ## 9. Cleanup and orchestrator hand-off
 
 - [x] 9.1 Run `openspec validate --strict` (or equivalent) against this change's artifacts.
-- [x] 9.2 Flag to the orchestrator: `openspec/changes/hrmq-ia-navigation-alignment/` is superseded by
+- [x] 9.2 Flag to the orchestrator: `openspec/changes/humaniq-ia-navigation-alignment/` is superseded by
       this change's pipeline adoption and should be archived without being applied — do not apply it
       after this change lands, its prerequisite step would double-build the same pipeline and its
       relocation content targets a menu structure (ADR-001's frozen 9) that ADR-097 has since

@@ -15,7 +15,7 @@
 //   803-test unit suite because none of them touch schema legality:
 //     - widgetKey:"audit"        x43  (real key is "audit-trail")            — PR #93
 //     - widgetKey:"actions"      x14  (CnActionButtons wasn't a resolvable
-//                                      built-in key until hrmq registered it) — PR #92
+//                                      built-in key until humaniq registered it) — PR #92
 //     - widgetKey:"stat"         x31  (CnStatWidget self-registers via a
 //                                      bare side-effect import that a
 //                                      tree-shaking bundler is legally
@@ -31,7 +31,7 @@
 //
 //   (1) `effectiveRegistry` — the consumer's own `src/registry.js` (passed as
 //       the `registry` prop to CnAppRoot). A plain, statically-built object
-//       literal that hrmq owns outright. 100% reliable by construction: if a
+//       literal that humaniq owns outright. 100% reliable by construction: if a
 //       key is a property of that object, it resolves, full stop — there is
 //       no bundler decision involved. Checked here via static AST parse of
 //       the file's default-exported object (no execution needed).
@@ -51,7 +51,7 @@
 //
 //   (3) `getWidgetTypeEntry(key)` → the shared `dashboardWidgetRegistry`
 //       (@conduction/nextcloud-vue's cn-widget-library dashboard-widget
-//       catalog) — THIS is the fragile layer, and the one that bit hrmq
+//       catalog) — THIS is the fragile layer, and the one that bit humaniq
 //       ("stat"). Catalog widgets don't sit in a plain object literal; each
 //       one self-registers via `registerDashboardWidget(key, {...})` as a
 //       *side effect* of importing its own `index.js` (or
@@ -187,7 +187,7 @@ function collectManifestWidgetKeys(manifest) {
  * `export default { ... }` (pass no `varName`), or a top-level
  * `export const <varName> = { ... }` (pass `varName`).
  *
- * Used for both hrmq's own src/registry.js (default export) and nc-vue's
+ * Used for both humaniq's own src/registry.js (default export) and nc-vue's
  * builtInWidgets.js (`export const BUILT_IN_WIDGETS = {...}`). Both are
  * ordinary object literals with no spreads/computed trickery in practice;
  * this is a real AST parse (via @babel/parser + @babel/traverse), not a
@@ -286,7 +286,7 @@ function resolveNcVuePackageDir() {
 //     reaches it. Reproducing the real trigger
 //     (`import '.../CnWidgetGrid/registerDashboardWidgets.js'`, the literal
 //     statement CnDetailPage.vue carries) is what makes the probe faithful
-//     to the real app, where every hrmq type:"detail" page renders through
+//     to the real app, where every humaniq type:"detail" page renders through
 //     CnDetailPage.
 //   - The registration call itself survives minification under a
 //     bundler-renamed local identifier, so grepping the built JS for the
@@ -294,7 +294,7 @@ function resolveNcVuePackageDir() {
 //     investigation of this exact bug did) proves NOTHING either way — it
 //     is absent for every catalog widget after minification, including ones
 //     that plainly DO work. Worse: src/manifest.json itself is bundled
-//     directly into hrmq-main.js (`import bundledManifest from
+//     directly into humaniq-main.js (`import bundledManifest from
 //     './manifest.json'` in src/main.js), so grepping the built JS for a
 //     widgetKey STRING LITERAL (e.g. `"stat"`) is contaminated by the
 //     manifest's own embedded copy of that string and would "confirm" a key
@@ -304,7 +304,7 @@ function resolveNcVuePackageDir() {
 // What this CANNOT catch (documented honestly, per the task brief):
 //   - It reproduces the reachability trigger CnDetailPage.vue carries today.
 //     If a future refactor changed how/whether the catalog aggregator
-//     becomes reachable in hrmq's real bundle (e.g. hrmq stopped using
+//     becomes reachable in humaniq's real bundle (e.g. humaniq stopped using
 //     type:"detail" pages entirely), this probe could diverge from the real
 //     app's tree-shaking outcome. This is considered an acceptable,
 //     documented approximation, not a silent one.
@@ -314,7 +314,7 @@ function resolveNcVuePackageDir() {
 //     accompanying report: as of the currently installed nc-vue version,
 //     `**/Cn*Widget/index.js` is itself declared side-effect-full, so
 //     CnStatWidget's self-registration now survives production bundling
-//     independent of hrmq's src/registry.js override. Removing the
+//     independent of humaniq's src/registry.js override. Removing the
 //     registry.js override no longer reproduces a dead "stat" widget. This
 //     gate reports that finding truthfully (both layers agree the key
 //     resolves) rather than fabricate a failure to match history.
@@ -467,7 +467,7 @@ function executeProbeBundle(bundlePath) {
 	 
 	const { JSDOM } = require('jsdom')
 	const dom = new JSDOM('<!doctype html><html><body><div id="content"></div></body></html>', {
-		url: 'http://localhost/apps/hrmq/',
+		url: 'http://localhost/apps/humaniq/',
 		runScripts: 'outside-only',
 		pretendToBeVisual: true,
 	})
@@ -505,7 +505,7 @@ function executeProbeBundle(bundlePath) {
 	// reintroduces publicPath:'auto' for the probe; harmless to define anyway.
 	Object.defineProperty(window.document, 'currentScript', {
 		get() {
-			return { src: 'http://localhost/apps/hrmq/js/probe.js', tagName: 'SCRIPT' }
+			return { src: 'http://localhost/apps/humaniq/js/probe.js', tagName: 'SCRIPT' }
 		},
 		configurable: true,
 	})
@@ -531,7 +531,7 @@ async function main() {
 	}
 	// Collect widgetKeys from the EFFECTIVE manifest (base + manifest.d
 	// fragments + expanded page templates), not the base shell alone. Since
-	// hrmq-manifest-fragment-pipeline the base carries only 3 pages; reading
+	// humaniq-manifest-fragment-pipeline the base carries only 3 pages; reading
 	// it alone silently narrowed this gate from 9 distinct widget keys to 3
 	// and turned a red baseline green — the exact silent-coverage-loss defect
 	// tests/validate-manifest.js was fixed for. Same shared merge path.

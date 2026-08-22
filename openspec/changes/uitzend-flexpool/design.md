@@ -14,7 +14,7 @@
   genuinely greenfield except for the `agency` enum value itself.
 - `openspec/specs/multi-administratie/spec.md` — no "employer entity separate from the
   administratie" concept exists; an `Employee`/`EmploymentContract` belongs to exactly one
-  `administrationId` (the running instance's own administratie). This confirms hrmq's data model
+  `administrationId` (the running instance's own administratie). This confirms humaniq's data model
   already assumes "the administratie running this instance IS the employer" — consistent with
   serving the agency, not a third party the agency serves.
 - `openspec/specs/rostering/spec.md` and `openspec/specs/time-attendance/spec.md` — neither
@@ -48,7 +48,7 @@
 
 ## Goals / Non-Goals
 
-**Goals:** commit hrmq to modelling the uitzendkracht as the agency's own `Employee` on an
+**Goals:** commit humaniq to modelling the uitzendkracht as the agency's own `Employee` on an
 `agency`-type `EmploymentContract`; add the smallest set of fields and rules that make that
 commitment real (fasensysteem stage, uitzendbeding applicability, inlenersbeloning reference);
 reuse the existing CAO mechanism for ABU/NBBU wage data instead of inventing a parallel one;
@@ -61,19 +61,19 @@ multi-element inlenersbeloning test.
 
 ## Decisions
 
-### D1 — hrmq serves the uitzendbureau; the uitzendkracht is a real Employee, not a parallel entity
+### D1 — humaniq serves the uitzendbureau; the uitzendkracht is a real Employee, not a parallel entity
 
 The draft's central design choice — "Inhuur is geen Employee" (REQ-UZI-001) — is correct **for an
-inlener**, but hrmq is not built as an inlener's tool: it has no capability today that manages a
+inlener**, but humaniq is not built as an inlener's tool: it has no capability today that manages a
 relationship with an external vendor/bureau, and its entire product surface (payroll, CAO, leave,
-onboarding) assumes the person is this administratie's own employee. Re-pointing hrmq at the
-inlener side would mean building `InhuurOpdracht`/`Bureau` as hrmq's *first* capability with zero
+onboarding) assumes the person is this administratie's own employee. Re-pointing humaniq at the
+inlener side would mean building `InhuurOpdracht`/`Bureau` as humaniq's *first* capability with zero
 connection to `PayrollCalculator` — a structurally different product. Pointing it at the agency
 side means one existing enum value (`agency`) plus three additive fields complete the picture,
 because everything else (payroll, CAO resolution, rostering, time-attendance) already treats an
 `EmploymentContract` generically regardless of `type`.
 
-| Side | What it would need | Fits hrmq's shipped shape? |
+| Side | What it would need | Fits humaniq's shipped shape? |
 |---|---|---|
 | Inlener (hirer) | New `Bureau`/`InhuurOpdracht` entities, vendor-risk checks, zero payroll link | No — a parallel, disconnected capability |
 | Uitzendbureau (agency) — **chosen** | 3 fields on the existing `EmploymentContract`, 2 rules, 1 CAO data file | Yes — extends the existing engine |
@@ -144,7 +144,7 @@ Two `EmploymentContract` seeds against a new or existing agency-context employee
 2. **Intended violation**: `type: agency`, `uitzendFase: B`, `uitzendbedingVanToepassing: true` —
    violates `nl-uitzendbeding-alleen-fase-a` (the beding cannot legally apply once past fase A).
 
-Dev-container verification gate: `occ hrmq:rules:audit` reports exactly one new violation (the
+Dev-container verification gate: `occ humaniq:rules:audit` reports exactly one new violation (the
 fase-B/uitzendbeding-true seed → `nl-uitzendbeding-alleen-fase-a`) and zero regressions.
 
 ## Risks / Trade-offs

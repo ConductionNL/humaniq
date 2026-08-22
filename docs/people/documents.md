@@ -5,7 +5,7 @@ description: Generating the standard HR letters — arbeidsovereenkomst, aanbied
 
 # Documents
 
-Beyond [payslips and annual statements](/docs/payroll/payslips), HRMQ
+Beyond [payslips and annual statements](/docs/payroll/payslips), Humaniq
 generates the standard Dutch HR letters from templates hosted in
 [docudesk](https://docudesk.conduction.nl):
 
@@ -15,7 +15,7 @@ generates the standard Dutch HR letters from templates hosted in
   application)
 - `getuigschrift` — reference/testimonial letter
 
-HRMQ ships **no template engine of its own** — `HrDocumentService`
+Humaniq ships **no template engine of its own** — `HrDocumentService`
 assembles the object references and calls docudesk's
 `DocumentService::generateDocument()` same-instance, duck-typed via the
 DI container, never over HTTP. Every generation attempt is recorded as a
@@ -24,10 +24,11 @@ DI container, never over HTTP. Every generation attempt is recorded as a
 
 ## Template selection: config first, discovery second, fail closed
 
-For each document type, HRMQ first checks a configured template UUID
+For each document type, Humaniq first checks a configured template UUID
 (`SettingsService` getter `documents_template_{documentType}`); if unset,
 it falls back to discovering exactly one docudesk template tagged
-`namespace: hrmq` with a matching `category`. Zero or multiple matches
+`namespace: hrmq` (the docudesk template namespace is deliberately
+unchanged by the app rename) with a matching `category`. Zero or multiple matches
 fail the attempt closed with a diagnostic naming the ambiguity — nothing
 is ever rendered against a guess.
 
@@ -42,8 +43,8 @@ no-op; a `failed` or `skipped-no-docudesk` record never blocks a retry.
 ## Generating documents
 
 ```bash
-occ hrmq:documents:generate
-occ hrmq:documents:generate --type=werkgeversverklaring --employee=<employee-id>
+occ humaniq:documents:generate
+occ humaniq:documents:generate --type=werkgeversverklaring --employee=<employee-id>
 ```
 
 With no options, the default backlog is every permanent
@@ -63,7 +64,7 @@ contract/payslip id returns 404 with nothing rendered.
 
 When docudesk isn't installed, every attempt records
 `skipped-no-docudesk` — no exception, exit code 0. Once docudesk is
-installed, the next run supersedes the skip and renders normally. HRMQ
+installed, the next run supersedes the skip and renders normally. Humaniq
 carries no `info.xml` or composer dependency on docudesk.
 
 ## Machine-checked evidence
@@ -74,7 +75,7 @@ active, `generated` arbeidsovereenkomst document referencing it —
 temporary contracts are never flagged.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Pages

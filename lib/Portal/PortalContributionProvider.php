@@ -1,27 +1,27 @@
 <?php
 
 /**
- * Hrmq Portal Contribution Provider
+ * Humaniq Portal Contribution Provider
  *
- * Hrmq's contribution to the shared Portaliq external portal (hydra ADR-046 +
+ * Humaniq's contribution to the shared Portaliq external portal (hydra ADR-046 +
  * 2026-07-06 amendment, contribution contract v2). Portaliq — the one shared
  * external portal for people WITHOUT Nextcloud accounts — discovers this class
  * by convention FQCN (`OCA\{App}\Portal\PortalContributionProvider`) and
  * duck-types it via method_exists(), never instanceof. Therefore this class is
  * deliberately PLAIN: no portaliq imports, no `implements` clause, no info.xml
  * dependency, no constructor dependencies. Without portaliq installed it is
- * inert and hrmq behaves exactly as before (amendment A1).
+ * inert and humaniq behaves exactly as before (amendment A1).
  *
  * It declares two audiences: `external-employee` (payroll externals without an
  * NC account — payslips, contracts, own employee record, timesheets, expenses,
  * leave requests; create timesheet/expense/leave request) and `client` (the
  * client who reviews billable hours — read-only timesheets scoped by
  * clientRef). All scoping uses UUID domain-object references resolved from the
- * subject's server-managed claim map (`claims.hrmq.employeeId` /
- * `claims.hrmq.clientId`, amendment A4) — never Nextcloud user ids.
+ * subject's server-managed claim map (`claims.humaniq.employeeId` /
+ * `claims.humaniq.clientId`, amendment A4) — never Nextcloud user ids.
  *
  * @category Portal
- * @package  OCA\Hrmq\Portal
+ * @package  OCA\Humaniq\Portal
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -37,10 +37,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Portal;
+namespace OCA\Humaniq\Portal;
 
 /**
- * Declares what external employees and clients may see and do in hrmq's
+ * Declares what external employees and clients may see and do in humaniq's
  * section of the shared external portal.
  *
  * The contribution is a declarative manifest (pure data — no I/O, no
@@ -57,7 +57,7 @@ class PortalContributionProvider {
 	 * The audiences this provider contributes to (contract v2, preferred).
 	 *
 	 * The registry probes for this method first; the audience vocabulary is an
-	 * open string set (amendment A2). hrmq serves external employees (the HR
+	 * open string set (amendment A2). humaniq serves external employees (the HR
 	 * self-service story) and clients (billable-hours review).
 	 *
 	 * @return array<int, string> The audience identifiers.
@@ -93,13 +93,13 @@ class PortalContributionProvider {
 	 *
 	 * The subject array is server-derived by portaliq (subjectRef UUID,
 	 * audience, organisation, trust level low|substantial|high, claim map).
-	 * Returns null when hrmq has nothing for the subject — any audience other
+	 * Returns null when humaniq has nothing for the subject — any audience other
 	 * than external-employee or client (fail-closed; the registry already
 	 * filters by audience, but a provider must not rely on that).
 	 *
 	 * Manifest vocabulary (amendment A2–A6): `collections` are read surfaces
 	 * portaliq serves from OpenRegister, scoped by `scopeField` == the claim
-	 * selected by `scopeClaim` (bare names resolve under `claims.hrmq.*`);
+	 * selected by `scopeClaim` (bare names resolve under `claims.humaniq.*`);
 	 * `actions` of type `create` expose strict field whitelists — status and
 	 * approval-stamp fields are excluded because the declarative
 	 * x-openregister-lifecycle owns every transition, and the scoping
@@ -142,7 +142,7 @@ class PortalContributionProvider {
 	 */
 	private function externalEmployeeManifest(): array {
 		return [
-			'label' => 'HRMQ',
+			'label' => 'Humaniq',
 			'collections' => [
 				[
 					'id' => 'myEmployeeRecord',
@@ -263,7 +263,7 @@ class PortalContributionProvider {
 	 * `clientId` claim (the UUID of the client contact/organisation domain
 	 * object). The approve/reject action is deliberately absent — lifecycle
 	 * transitions by externals require the bearer-forwarded endpoint action
-	 * type (amendment A6), whose receiver-side verification hrmq does not
+	 * type (amendment A6), whose receiver-side verification humaniq does not
 	 * implement in Wave 1.
 	 *
 	 * @return array<string, mixed> The manifest.
@@ -272,7 +272,7 @@ class PortalContributionProvider {
 	 */
 	private function clientManifest(): array {
 		return [
-			'label' => 'HRMQ',
+			'label' => 'Humaniq',
 			'collections' => [
 				[
 					'id' => 'clientTimesheets',
@@ -296,19 +296,19 @@ class PortalContributionProvider {
 	 * Nextcloud account) reviews and approves/rejects the timesheets for their
 	 * cost centre, scoped by `Timesheet.costCenter` == the `costCenter` claim.
 	 *
-	 * The read is field-projected — only the review-relevant fields leave hrmq;
+	 * The read is field-projected — only the review-relevant fields leave humaniq;
 	 * `costCenter` (the scope key), `billable`, `projectId` and `submittedAt`
 	 * stay internal.
 	 *
 	 * APPROVE/REJECT is deliberately NOT wired as a portal `type: update`
 	 * transition. Portaliq's claim-scoped update DOES support this (ownership is
-	 * re-verified by the resolved costCenter claim), but hrmq's Timesheet carries
+	 * re-verified by the resolved costCenter claim), but humaniq's Timesheet carries
 	 * a declarative lifecycle hook that requires an authenticated Nextcloud user
 	 * to change `status` ("U moet ingelogd zijn om goed te keuren of af te
 	 * keuren"). Portal writes bypass OpenRegister RBAC but NOT lifecycle hooks, so
 	 * an external approver (no NC account by premise) is stopped at the hook. The
 	 * external approve/reject therefore needs either the A6 bearer-forward action
-	 * (hrmq's own endpoint runs the transition with app context) or a
+	 * (humaniq's own endpoint runs the transition with app context) or a
 	 * portal-subject-aware lifecycle hook — tracked as a follow-up. Until then
 	 * this manifest is READ-ONLY, matching the client manifest's stance.
 	 *
@@ -318,7 +318,7 @@ class PortalContributionProvider {
 	 */
 	private function managerManifest(): array {
 		return [
-			'label' => 'HRMQ',
+			'label' => 'Humaniq',
 			'collections' => [
 				[
 					'id' => 'teamTimesheets',
@@ -330,7 +330,7 @@ class PortalContributionProvider {
 					'label' => 'Team timesheets',
 					'listable' => true,
 					// Read-side projection (the DATA authority): only review
-					// fields leave hrmq. costCenter (the scope key), billable,
+					// fields leave humaniq. costCenter (the scope key), billable,
 					// projectId and submittedAt are dropped.
 					'fields' => [
 						'employeeId',

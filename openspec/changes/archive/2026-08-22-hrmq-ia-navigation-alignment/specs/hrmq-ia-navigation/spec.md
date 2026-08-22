@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: hrmq's menu structure conforms to its frozen ADR-001 top-level navigation
+### Requirement: humaniq's menu structure conforms to its frozen ADR-001 top-level navigation
 
 The system SHALL build its effective menu via the shared `@conduction/nextcloud-vue`
 `buildManifest(base, fragments, menuLayout)` pipeline (ADR-037/ADR-044), and SHALL NOT introduce a
@@ -13,7 +13,7 @@ Configuratie) without an ADR-001 amendment.
 
 #### Scenario: Time-registration pages nest under Verlof & verzuim, not a standalone top-level group
 
-- GIVEN the hrmq app menu is built from `src/manifest.d/*.json` and `src/menu-layout.json`
+- GIVEN the humaniq app menu is built from `src/manifest.d/*.json` and `src/menu-layout.json`
 - WHEN the effective menu is rendered
 - THEN the `Timesheets` and `TimesheetApproval` pages MUST appear under the "Verlof & verzuim"
   top-level group
@@ -21,7 +21,7 @@ Configuratie) without an ADR-001 amendment.
 
 #### Scenario: Expense pages nest under Declaraties & assets, not a standalone top-level group
 
-- GIVEN the hrmq app menu is built from `src/manifest.d/*.json` and `src/menu-layout.json`
+- GIVEN the humaniq app menu is built from `src/manifest.d/*.json` and `src/menu-layout.json`
 - WHEN the effective menu is rendered
 - THEN the `Expenses` and `ExpenseApproval` pages MUST appear under the "Declaraties & assets"
   top-level group

@@ -14,7 +14,7 @@
  * a sibling-app dependency not available in this standalone suite.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,10 +31,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Service\LeaveBuySellSettlementService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Service\LeaveBuySellSettlementService;
+use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -294,7 +294,7 @@ class LeaveBuySellSettlementServiceTest extends TestCase {
 	}//end testBuySettlementAddsToBalance()
 
 	/**
-	 * Custody regression guard (hrmq-personal-dashboard REQ-ACCR-006 / design
+	 * Custody regression guard (humaniq-personal-dashboard REQ-ACCR-006 / design
 	 * D5): the settlement path mutates `usedHours`/`bovenwettelijkHours` on an
 	 * EXISTING balance and never creates one, so it neither needs nor gets
 	 * userId-stamping logic — LeaveAccrualJob is the schema's sole systematic
@@ -303,7 +303,7 @@ class LeaveBuySellSettlementServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 * @spec openspec/changes/humaniq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
 	public function testSettlementNeitherInventsNorDropsTheAccountLink(): void {
 		[$service, $fake] = $this->service($this->fixture([], ['userId' => 'admin']));

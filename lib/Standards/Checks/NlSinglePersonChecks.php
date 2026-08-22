@@ -16,7 +16,7 @@
  *   active") whose `administrationId` equals this `Administration`'s own
  *   `administrationId`, and is satisfied only when that count is exactly 1 AND
  *   the one matching Employee has `isDga: true`. A drifted administratie
- *   (0, 2+, or 1-but-not-DGA) surfaces on the next `occ hrmq:rules:audit`
+ *   (0, 2+, or 1-but-not-DGA) surfaces on the next `occ humaniq:rules:audit`
  *   run -- visible, traceable, never silently wrong -- but never blocks a
  *   save (design.md D4: this codebase has no precedent for a cross-object
  *   count validation enforced at write time on a SETTING-style record).
@@ -32,7 +32,7 @@
  * administratie, so no seed backfill is needed for a green baseline.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -48,7 +48,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * DGA-single-person headcount drift check (recommended-severity lamp).

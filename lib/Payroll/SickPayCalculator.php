@@ -23,7 +23,7 @@
  * that only substitutes the gross figure fed into it (design.md D4).
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll
+ * @package  OCA\Humaniq\Payroll
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -42,7 +42,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll;
+namespace OCA\Humaniq\Payroll;
 
 /**
  * Pure NL loondoorbetaling-bij-ziekte calculator over a `TaxTables`

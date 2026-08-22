@@ -7,7 +7,7 @@ built_by: openspec/changes/hrm-rule-engine (archived; spec promoted 2026-08-18)
 # hrm-rule-engine Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 
 ## Why this file exists
 
@@ -33,7 +33,7 @@ the code and a remembered intention would disagree, the code wins.
 
 ## Purpose
 
-hrmq audits its HR, labour and payroll data against a versioned corpus of
+humaniq audits its HR, labour and payroll data against a versioned corpus of
 machine-checkable rules drawn from EU labour directives, ILO core conventions,
 GDPR for employee data, occupational health & safety, national labour law
 (NL first, then DE/FR/BE) and payroll / wage-tax & social-security compliance.
@@ -118,7 +118,7 @@ register.
 
 ### Requirement: An audit SHALL report enforced-versus-catalogued coverage (REQ-RULE-005)
 
-`lib/Service/RuleAuditService.php`, exposed as `occ hrmq:rules:audit`
+`lib/Service/RuleAuditService.php`, exposed as `occ humaniq:rules:audit`
 (`lib/Command/RulesAuditCommand.php`), SHALL load every object of each
 engine-supported type, run the engine over it, and aggregate a report of:
 
@@ -133,14 +133,14 @@ with one implemented check as fully audited.
 
 #### Scenario: Coverage names both numbers
 
-- WHEN `occ hrmq:rules:audit` runs
+- WHEN `occ humaniq:rules:audit` runs
 - THEN the report states how many rules are enforced AND how many are
   machine-checkable, not merely how many violations were found
 
 ### Requirement: Test data SHALL be seedable to a compliant state, idempotently (REQ-RULE-006)
 
 `lib/Service/RuleTestDataSeeder.php`, exposed as
-`occ hrmq:rules:seed-testdata` (`lib/Command/RulesSeedTestDataCommand.php`),
+`occ humaniq:rules:seed-testdata` (`lib/Command/RulesSeedTestDataCommand.php`),
 SHALL backfill local TEST data so it satisfies the enforced rules: creating a
 provider's sample objects when its type is empty, and backfilling
 provider-declared field defaults on rows that are missing them.
@@ -169,6 +169,6 @@ silent, because `InitializeSettings::run()` swallows the exception and
 
 #### Scenario: A fresh install has its register
 
-- GIVEN a Nextcloud instance where hrmq has never been installed
+- GIVEN a Nextcloud instance where humaniq has never been installed
 - WHEN the app is enabled
 - THEN the hrmq register exists in OpenRegister

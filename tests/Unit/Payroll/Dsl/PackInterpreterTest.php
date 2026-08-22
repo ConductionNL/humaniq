@@ -10,7 +10,7 @@
  * through the same interpreter, unmodified.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Payroll\Dsl
+ * @package  OCA\Humaniq\Tests\Unit\Payroll\Dsl
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -27,12 +27,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Payroll\Dsl;
+namespace OCA\Humaniq\Tests\Unit\Payroll\Dsl;
 
-use OCA\Hrmq\Payroll\Dsl\DslException;
-use OCA\Hrmq\Payroll\Dsl\PackInterpreter;
-use OCA\Hrmq\Payroll\JurisdictionPack;
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\Dsl\DslException;
+use OCA\Humaniq\Payroll\Dsl\PackInterpreter;
+use OCA\Humaniq\Payroll\JurisdictionPack;
+use OCA\Humaniq\Payroll\TaxTables;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -310,9 +310,9 @@ class PackInterpreterTest extends TestCase {
 	 *
 	 * @param array<int, array<string, mixed>> $steps The steps.
 	 *
-	 * @return \OCA\Hrmq\Payroll\Dsl\PackRunResult
+	 * @return \OCA\Humaniq\Payroll\Dsl\PackRunResult
 	 */
-	private function execute(array $steps): \OCA\Hrmq\Payroll\Dsl\PackRunResult {
+	private function execute(array $steps): \OCA\Humaniq\Payroll\Dsl\PackRunResult {
 		return (new PackInterpreter())->run(['gross' => 100000], $this->pack($steps), TaxTables::load('nl-2026'), '2026-02');
 	}//end execute()
 

@@ -1,5 +1,10 @@
-# mijn-hr-self-service — delta for hrmq-personal-dashboard
+# mijn-hr-self-service — delta for humaniq-personal-dashboard
 
+<<<<<<<< HEAD:openspec/changes/humaniq-personal-dashboard/specs/mijn-hr-self-service/spec.md
+> Written against the post-state of `humaniq-hours-process-redesign`'s delta to this spec (which
+> lands directly before this change): REQ-MHS-002 already reads
+> "Timesheet, TimeEntry, Expense, LeaveRequest and Payslip".
+========
 > Written against the post-state of `hrmq-hours-process-redesign`'s delta to this spec (which
 > lands directly before this change): REQ-MHS-002's body already covers
 > "Timesheet, TimeEntry, Expense, LeaveRequest and Payslip". Its HEADER still names the
@@ -11,6 +16,7 @@
 
 - FROM: `### REQ-MHS-002: Timesheet, Expense, LeaveRequest and Payslip SHALL carry an optional denormalized `userId``
 - TO: `### REQ-MHS-002: Timesheet, TimeEntry, Expense, LeaveRequest, Payslip **and LeaveBalance** SHALL carry an optional denormalized `userId``
+>>>>>>>> origin/development:openspec/changes/archive/2026-08-22-hrmq-personal-dashboard/specs/mijn-hr-self-service/spec.md
 
 ## MODIFIED Requirements
 
@@ -84,7 +90,7 @@ unchanged — with one addition: `MijnHrGroup` carries `route: "MijnHr"` (suppli
 `personal-dashboard.json` fragment through `mergeMenuItems`' fill-undefined-key semantics), so
 the group title is the entry point to the caller's personal dashboard while its children
 remain the caller's own collections. This implements hydra ADR-097 Decision 3's exemption
-conditions for the personal surface (see `hrmq-personal-dashboard` REQ-PDB-003).
+conditions for the personal surface (see `humaniq-personal-dashboard` REQ-PDB-003).
 
 #### Scenario: Menu order matches ADR-001
 

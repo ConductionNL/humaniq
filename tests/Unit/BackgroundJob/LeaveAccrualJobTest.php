@@ -17,7 +17,7 @@
  * dependency not available in this standalone suite.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\BackgroundJob
+ * @package  OCA\Humaniq\Tests\Unit\BackgroundJob
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -37,11 +37,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\BackgroundJob;
+namespace OCA\Humaniq\Tests\Unit\BackgroundJob;
 
-use OCA\Hrmq\BackgroundJob\LeaveAccrualJob;
-use OCA\Hrmq\Service\SettingsService;
-use OCA\Hrmq\Standards\Checks\NlLeaveChecks;
+use OCA\Humaniq\BackgroundJob\LeaveAccrualJob;
+use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Standards\Checks\NlLeaveChecks;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -506,7 +506,7 @@ class LeaveAccrualJobTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 * @spec openspec/changes/humaniq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
 	public function testCreatedBalanceCarriesTheEmployeeAccountLink(): void {
 		[$job, $fake] = $this->job(
@@ -532,7 +532,7 @@ class LeaveAccrualJobTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 * @spec openspec/changes/humaniq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
 	public function testPreExistingNullUserIdSelfHealsOnTheNextAccrual(): void {
 		$existingBalance = [
@@ -578,7 +578,7 @@ class LeaveAccrualJobTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 * @spec openspec/changes/humaniq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
 	public function testUnlinkedEmployeeKeepsANullAccountLink(): void {
 		[$job, $fake] = $this->job(
@@ -615,7 +615,7 @@ class LeaveAccrualJobTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 * @spec openspec/changes/humaniq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-004
 	 */
 	public function testStampingNeverTurnsANoOpIntoAWrite(): void {

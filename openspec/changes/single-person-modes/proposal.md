@@ -24,14 +24,14 @@ What was never built, and is not incidentally covered by the above, is the *mode
 multi-administratie/spec.md`'s `Administration` schema (`lib/Settings/register.d/hr-administratie.json`) — the
 one place ADR-001 Rule 4 says a mode flag belongs ("Configuratie › Administraties") — carries no mode field at
 all today (`grep -n singlePersonMode\|personnelMode lib/Settings/register.d/hr-administratie.json` returns
-nothing). Every hrmq menu item (org-chart, team approval queues, roster/shift planning, the entire Salarissen
+nothing). Every humaniq menu item (org-chart, team approval queues, roster/shift planning, the entire Salarissen
 group) renders unconditionally for every administratie, single-person or not — `grep -c visibleIf src/
 manifest.json` returns **zero**: the `visibleIf` menu-visibility primitive nc-vue's manifest v2 schema already
 defines (`$defs/visibleIfCondition`, evaluated against a backend-injected `manifest.runtime.user` block) has never
-been wired into hrmq at all. `multi-administratie`'s own spec names this exact gap as a live, unclosed item:
+been wired into humaniq at all. `multi-administratie`'s own spec names this exact gap as a live, unclosed item:
 REQ-MULTI-006 states *"the Dashboard-widget `runtime.user` visibleIf wiring remains a separate, small, named
 follow-up."* And the one thing a self-running DGA most needs to see without an accountant — whether this month's
-salary clears the gebruikelijkloon norm — is answered today only by `occ hrmq:rules:audit`
+salary clears the gebruikelijkloon norm — is answered today only by `occ humaniq:rules:audit`
 (`lib/Service/RuleAuditService.php`, `lib/Command/RulesAuditCommand.php`): a CLI-only, register-wide audit report
 with no HTTP surface and no manifest page, unreachable by exactly the persona (a DGA running their own payroll,
 no accountant, no shell access) this whole capability exists for.
@@ -47,16 +47,16 @@ so a `dga_single_person` administratie that quietly grows past one employee is f
 Rule 2) instead of only a CLI audit — reusing `NlDgaChecks`'s exact predicate, adding zero new tax logic.
 
 **What this change explicitly does NOT build**, because the two May-2026 drafts invented an entire second product
-surface hrmq has no data model for and, as a payroll/HRM suite (`openspec/config.yaml`'s own scope statement), has
+surface humaniq has no data model for and, as a payroll/HRM suite (`openspec/config.yaml`'s own scope statement), has
 no mandate to grow into: FOR-saldo tracking, lijfrente-jaarruimte calculation, box-2 aanmerkelijk-belang
 dividend/verkrijgingsprijs tracking, an IB-pakket ZIP export for an accountant, an `accountant_of_record`
 delegation role, a KilometerLog entity (`Expense` already carries a "Type reis"/"Afstand (km)" pair — this data
 already lives on the existing declaraties schema, ADR-001 Rule 5's "content types as leaves" posture), a
 TaxContext/urencriterium engine, or an IB-tax jaaroverzicht export. None of these compute a payroll figure, none
-reuse an existing hrmq engine, and every one is IB-aangifte (income-tax-return) territory — a different
-compliance domain than the wage-tax/social-security domain hrmq's rule corpus and calculator are built for. A true
+reuse an existing humaniq engine, and every one is IB-aangifte (income-tax-return) territory — a different
+compliance domain than the wage-tax/social-security domain humaniq's rule corpus and calculator are built for. A true
 zero-payroll eenmanszaak (no employees, no DGA-loon, profit taken as `winstuitkering` rather than `loon`) has, by
-definition, no payroll data for hrmq's engine to touch; for that persona this change's contribution is exactly
+definition, no payroll data for humaniq's engine to touch; for that persona this change's contribution is exactly
 "hide the payroll surfaces that don't apply to you," not a new tax-return product. Naming this explicitly so it is
 not silently rediscovered as a gap: it is a scope boundary, not an oversight.
 
@@ -69,7 +69,7 @@ not silently rediscovered as a gap: it is a scope boundary, not an oversight.
   administratie's resolved `mode` as initial state (the exact `activeAdministrationId` mechanism, REQ-MULTI-004,
   applied to a second key); `AdministrationController::context()` additionally returns each administratie's
   `mode`. This closes `multi-administratie` REQ-MULTI-006's named follow-up and is the first real use of nc-vue's
-  `visibleIf` primitive in hrmq.
+  `visibleIf` primitive in humaniq.
 - **`visibleIf` on multi-person-only menu entries**: org-chart (`OrgUnits`, `OrgAssignments`), the three
   team-approval-queue leaves (`TimesheetApproval`/`TeamUrengoedkeuring`, `LeaveApproval`/
   `TeamVerlofgoedkeuring`, `ExpenseApproval`/`TeamDeclaratiegoedkeuring`), and the whole `PlanningGroup`
@@ -91,7 +91,7 @@ not silently rediscovered as a gap: it is a scope boundary, not an oversight.
 ### Non-goals (named exclusions, not deferred follow-ups)
 
 See "Why" — FOR/lijfrente/box-2/IB-pakket/accountant-delegation/KilometerLog/urencriterium/IB-jaaroverzicht are
-explicitly out of scope: no existing hrmq data model or engine backs any of them, and building one is a different
+explicitly out of scope: no existing humaniq data model or engine backs any of them, and building one is a different
 product (IB-aangifte tooling), not a mode-switch on the existing payroll/HRM suite.
 
 ## Capabilities

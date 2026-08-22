@@ -17,7 +17,7 @@
  *
  * Adjustments apply only to originals whose PayrollRun is NOT `draft`
  * (design.md D5) -- a still-draft original is recomputed directly via the
- * existing `hrmq:payroll:run --recalculate` engine path; there is nothing for
+ * existing `humaniq:payroll:run --recalculate` engine path; there is nothing for
  * this service to correct.
  *
  * The computed delta settles into the CURRENT open period, never the
@@ -27,7 +27,7 @@
  * `PayrollRunService.generate()` fold the delta into that period's payslip.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -46,12 +46,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
-use OCA\Hrmq\Payroll\CalculationInput;
-use OCA\Hrmq\Payroll\PayrollCalculator;
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Payroll\TaxTables;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -85,7 +85,7 @@ class RetroAdjustmentService {
 
 	/**
 	 * Compute (and, with `$apply`, settle) a TWK correction -- the occ
-	 * `hrmq:payroll:adjust` entry point (design.md D3/D4/D5).
+	 * `humaniq:payroll:adjust` entry point (design.md D3/D4/D5).
 	 *
 	 * @param string $originalPeriod Wage period being corrected, `YYYY-MM`.
 	 * @param string $employeeId The Employee id.
@@ -285,7 +285,7 @@ class RetroAdjustmentService {
 
 		$status = (string)($run['status'] ?? '');
 		if ($status === 'draft') {
-			return ['status' => 'refused-original-draft', 'message' => 'De originele loonrun heeft nog status "draft" -- herbereken deze direct via hrmq:payroll:run --recalculate.'];
+			return ['status' => 'refused-original-draft', 'message' => 'De originele loonrun heeft nog status "draft" -- herbereken deze direct via humaniq:payroll:run --recalculate.'];
 		}
 
 		$tableId = 'nl-' . substr($originalPeriod, 0, 4);
@@ -733,7 +733,7 @@ class RetroAdjustmentService {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -741,7 +741,7 @@ class RetroAdjustmentService {
 	}//end objectService()
 
 	/**
-	 * @return string The configured hrmq register slug.
+	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();

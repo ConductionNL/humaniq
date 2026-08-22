@@ -19,7 +19,7 @@
  * could not demonstrate.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -36,7 +36,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * Dutch statutory-leave (verlofsaldo) executable checks.

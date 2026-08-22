@@ -50,8 +50,8 @@ never creating a duplicate.
 ## Running it
 
 ```bash
-occ hrmq:payroll:mutations --from <runId> --to <runId>
-occ hrmq:payroll:mutations --to <runId> --persist
+occ humaniq:payroll:mutations --from <runId> --to <runId>
+occ humaniq:payroll:mutations --to <runId> --persist
 ```
 
 `--to` alone auto-resolves the prior period. `--persist` saves the

@@ -9,7 +9,7 @@
  * idempotency logic itself is `AssetDialectMigrationServiceTest`'s job.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Command
+ * @package  OCA\Humaniq\Tests\Unit\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -20,15 +20,15 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Command;
+namespace OCA\Humaniq\Tests\Unit\Command;
 
-use OCA\Hrmq\Command\AssetsMigrateDialectCommand;
-use OCA\Hrmq\Service\AssetDialectMigrationService;
+use OCA\Humaniq\Command\AssetsMigrateDialectCommand;
+use OCA\Humaniq\Service\AssetDialectMigrationService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -36,7 +36,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 /**
  * Tests for AssetsMigrateDialectCommand.
  *
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
  */
 class AssetsMigrateDialectCommandTest extends TestCase {
 

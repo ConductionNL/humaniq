@@ -3,7 +3,7 @@
 /**
  * Interview Calendar Sync Command
  *
- * `occ hrmq:interview:sync [--from DATE]` — the operator trigger for
+ * `occ humaniq:interview:sync [--from DATE]` — the operator trigger for
  * interview-scheduling (design.md D6): upserts one timed VEVENT per
  * `scheduled` Interview into the configured shared Nextcloud calendar,
  * removes the event of any `cancelled` Interview, leaves `completed`
@@ -12,13 +12,13 @@
  * Interview plus a summary. Duck-typed no-op (`skipped-no-calendar`, exit 0)
  * when the calendar is not configured or cannot be resolved. No event
  * listener or background job ships in this change — the `Application`
- * `uitnodigen` transition carries no hrmq-owned lifecycle hook to hang an
+ * `uitnodigen` transition carries no humaniq-owned lifecycle hook to hang an
  * automatic sync on, so this command (and the guarded manifest action) are
- * run on operator demand until `hrmq-rule-compliance-enforcement` wires
+ * run on operator demand until `humaniq-rule-compliance-enforcement` wires
  * guards/events.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -34,9 +34,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\InterviewCalendarService;
+use OCA\Humaniq\Service\InterviewCalendarService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -59,10 +59,14 @@ class InterviewCalendarSyncCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and options; the interview calendar-sync behaviour those options drive is specified at openspec/specs/interview-scheduling/spec.md#REQ-INTV-007, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:interview:sync')
+		$this->setName('humaniq:interview:sync')
 			->setDescription('Sync scheduled recruiting interviews onto the configured shared Nextcloud calendar (operator trigger; run on demand). Calendar edits made by hand are overwritten by the next sync (one-way projection).')
 			->addOption('from', null, InputOption::VALUE_REQUIRED, 'Bound the upsert set to Interviews whose scheduledStart is on/after this date (Y-m-d). Reconciliation is always unbounded.');
 
@@ -82,7 +86,7 @@ class InterviewCalendarSyncCommand extends Command {
 
 		$results = $this->service->sync($from);
 
-		$output->writeln('<info>Hrmq interview calendar sync</info>');
+		$output->writeln('<info>Humaniq interview calendar sync</info>');
 
 		$failed = 0;
 		foreach ($results as $result) {

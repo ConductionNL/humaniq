@@ -4,7 +4,7 @@
  * Contract tests for the required-identifier guard on comp and expense writes.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Controller
+ * @package  OCA\Humaniq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -18,18 +18,18 @@
  * @link https://conduction.nl
  *
  * @spec openspec/specs/comp-cycles/spec.md
- * @spec openspec/specs/hrmq-expenses/spec.md
+ * @spec openspec/specs/humaniq-expenses/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Controller;
+namespace OCA\Humaniq\Tests\Unit\Controller;
 
-use OCA\Hrmq\Controller\CompController;
-use OCA\Hrmq\Controller\ExpenseController;
-use OCA\Hrmq\Service\CompAdjustmentService;
-use OCA\Hrmq\Service\ReceiptExtractionService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Controller\CompController;
+use OCA\Humaniq\Controller\ExpenseController;
+use OCA\Humaniq\Service\CompAdjustmentService;
+use OCA\Humaniq\Service\ReceiptExtractionService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
 use OCP\IRequest;

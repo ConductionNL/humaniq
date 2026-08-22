@@ -1,4 +1,4 @@
-# Design — hrmq hours-process redesign
+# Design — humaniq hours-process redesign
 
 ## Context (verified against this checkout, 2026-08-21)
 
@@ -7,7 +7,7 @@
   `billable`, `clientRef`), process fields (`status`, `submittedAt`, `approvedBy`, `approvedAt`,
   `rejectionReason`), denormalizations (`userId`, `managerUserId`, `administrationId`) and the
   `x-openregister-lifecycle` block (submit/approve/reject/reopen, guards
-  `OCA\Hrmq\Lifecycle\NoSelfApprovalGuard` on approve+reject). Extended by
+  `OCA\Humaniq\Lifecycle\NoSelfApprovalGuard` on approve+reject). Extended by
   `hr-cost-rate.json` (deep-merge) with `domainObjectRef`, `domainObjectType`, `allocationKey`.
 - **Guard**: `lib/Lifecycle/NoSelfApprovalGuard.php` — read-only per OpenRegister's guard
   contract; explicitly documents that "the approver/timestamp stamping happens through the
@@ -23,7 +23,7 @@
 - **Event chain**: `lib/Listener/TimesheetApprovalListener.php` (on
   `OCA\OpenRegister\Event\ObjectUpdatedEvent`) → `lib/Service/TimeEntryEventService.php` emits the
   `nl.conduction.hrmq.timeentry.approved` CloudEvent + typed
-  `OCA\Hrmq\Event\TimesheetApprovedEvent` on the `!approved → approved` edge only (idempotent).
+  `OCA\Humaniq\Event\TimesheetApprovedEvent` on the `!approved → approved` edge only (idempotent).
   Payload casts absent fields to `''` (`buildApprovedEvent()`, lines 199–211), so today's
   endpoint-path approvals emit **empty `approvedBy`** and a fallback `time`.
 - **`userId` denormalization today**: grep of `lib/` finds stamping only in
@@ -46,14 +46,14 @@
   see Decision 6.
 - **readOnly enforcement**: `openregister/lib/Service/ObjectService.php:1757`
   (`enforceReadOnlyOnUpdate`) rejects **any** UPDATE that mutates a `readOnly: true` property —
-  with `_rbac: false`, i.e. **there is no backend bypass**; hrmq's own listeners writing through
+  with `_rbac: false`, i.e. **there is no backend bypass**; humaniq's own listeners writing through
   ObjectService are equally rejected. Unchanged values pass (comparison is
   incoming-vs-existing). No enforcement on CREATE.
 - **OpenRegister events available**: `ObjectCreatingEvent` / `ObjectUpdatingEvent` (pre-save),
   `ObjectCreatedEvent` / `ObjectUpdatedEvent` / `ObjectDeletedEvent` (post-save),
   `ObjectTransitionedEvent` (carries object, action, from, to, userId, register+schema slugs) —
   `openregister/lib/Event/`.
-- **Manifest structure**: this change lands **after** `hrmq-manifest-fragment-pipeline`, so pages
+- **Manifest structure**: this change lands **after** `humaniq-manifest-fragment-pipeline`, so pages
   live in `src/manifest.d/hr-*.json` domain fragments merged by `buildManifest()`; the five
   timesheet pages (`Timesheets`, `TimesheetApproval`, `TeamUrengoedkeuring`, `MijnUren`,
   `TimesheetDetail`) live in `src/manifest.d/hr-timesheet.json` per that change's Decision 2.
@@ -77,7 +77,7 @@ English property names throughout; Dutch only via l10n labels.
 | `breakMinutes` | integer ≥0, default 0 | no | yes | "Break (minutes)" / "Unpaid break time to subtract from this booking." |
 | `hours` | number ≥0 | no | never | "Hours" / "Worked hours in this booking, calculated from start, end and break." Server-derived on every write: `(endedAt − startedAt − breakMinutes)/60`, rounded to 2 decimals. |
 | `description` | string ≤2000 | no | yes | "Description" / "What was worked on." |
-| `projectId` | string, nullable | no | yes (optional) | "Project" / "The project these hours were worked on." Plain string (no Project schema in hrmq — ADR-062 rule 7, in `x-notes`). |
+| `projectId` | string, nullable | no | yes (optional) | "Project" / "The project these hours were worked on." Plain string (no Project schema in humaniq — ADR-062 rule 7, in `x-notes`). |
 | `billable` | boolean, default false | no | yes | "Billable" / "Whether these hours are billable to a client or project." |
 | `costCenter` | string, nullable | no | never | "Cost centre" / "The cost centre these hours count against, derived from the employee's team." Derived: active `OrgAssignment` → `OrgUnit.costCenter` (Decision 5). Never hand-typed (product decision 6). |
 | `userId` | string, nullable | no | never | "User" / "The account these hours belong to." Server-stamped copy of the employee's `nextcloudUserId` (Decision 5). |
@@ -193,7 +193,7 @@ transition (unchanged) is the sanctioned route to correction.
     (this is the single allowlisted client-supplied process value, carried by the transition
     input of Decision 6).
   - `approved → draft` (reopen): clear `submittedAt`/`approvedBy`/`approvedAt`/`rejectionReason`.
-- Exception: writes performed by hrmq's own aggregation listener and repair step must not be
+- Exception: writes performed by humaniq's own aggregation listener and repair step must not be
   sanitised into no-ops — they pass a request-scoped marker (a service-level flag on the
   listener, set/reset around the internal ObjectService call; **never** a global), under which
   the listener updates aggregates/caches but still refuses process-field changes without a
@@ -271,13 +271,13 @@ change writes `OrgAssignment`/`OrgUnit`, and no form ever offers `managerUserId`
   shows the read-only Approval panel including the reason once captured.
 
 **Flagged dependency work items (each its own PR in its own repo — Vue logic belongs in nc-vue,
-transition payloads belong in OpenRegister; hrmq consumes both declaratively):**
+transition payloads belong in OpenRegister; humaniq consumes both declaratively):**
 
 - **D1 (openregister)**: `POST /api/objects/{id}/transition` accepts an optional `data` object;
   `TransitionEngine::transition()` merges **only** the keys allowlisted by the schema's
   `x-openregister-lifecycle.transitions.<action>.inputs` declaration into the carrying write
-  (unknown keys → 400). hrmq declares `inputs: [{"field": "rejectionReason", "required": true}]`
-  on `reject`. The pre-save stamping listener's reject-edge allowlist (Decision 4) is the hrmq
+  (unknown keys → 400). humaniq declares `inputs: [{"field": "rejectionReason", "required": true}]`
+  on `reject`. The pre-save stamping listener's reject-edge allowlist (Decision 4) is the humaniq
   half of the same contract.
 - **D2 (nextcloud-vue)**: `CnLifecycleActions` renders, for a transition declaring `inputs`, a
   dialog (its own component under `src/dialogs/`, per the modal-isolation rule) collecting the
@@ -288,7 +288,7 @@ transition payloads belong in OpenRegister; hrmq consumes both declaratively):**
   `type: "transition"` action. Nice-to-have; the detail-page flow is the accepted UX until it
   exists. Not a prerequisite for anything in this change.
 
-Sequencing: hrmq's rejection-reason tasks are gated on D1+D2; everything else in this change is
+Sequencing: humaniq's rejection-reason tasks are gated on D1+D2; everything else in this change is
 independent of all three.
 
 ## Decision 7 — Event-contract compatibility
@@ -359,7 +359,7 @@ finds seed rows and must behave identically). Per Timesheet row, in one pass:
 Idempotency: step 2's guard is "zero existing entries for this timesheet" — a re-run creates
 nothing; step 1 and 3 are pure recomputes (same inputs → same values → OpenRegister no-op-diff
 writes). **Warn-once semantics**: the step emits exactly one summary line per run
-(`hrmq: hours-process migration: N timesheets processed, M entries created, K rows with
+(`humaniq: hours-process migration: N timesheets processed, M entries created, K rows with
 unresolvable user link`) — never one warning per row (the three dev rows, one of which resolves
 `userId` and two of which do not, produce one line saying `K=2`). A unit test runs the step
 twice and asserts the second run reports `M=0` and produces no additional writes.

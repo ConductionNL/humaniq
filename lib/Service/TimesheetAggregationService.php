@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq TimesheetAggregationService
+ * Humaniq TimesheetAggregationService
  *
  * The ONE recompute of a Timesheet's aggregates from its TimeEntry rows
  * (hours-process-redesign Decision 3, REQ-TEC-004): `hours` (sum, 2
@@ -19,7 +19,7 @@
  * the aggregates through while still keeping process fields inert.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -30,12 +30,12 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -43,7 +43,7 @@ use RuntimeException;
 /**
  * Recomputes and persists a Timesheet's aggregates from its entries.
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
  */
 class TimesheetAggregationService {
 
@@ -59,7 +59,7 @@ class TimesheetAggregationService {
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OpenRegister lookup).
 	 * @param InternalWriteMarker $marker The request-scoped internal-writer marker.
-	 * @param SettingsService $settingsService The hrmq settings (register slug).
+	 * @param SettingsService $settingsService The humaniq settings (register slug).
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -78,7 +78,7 @@ class TimesheetAggregationService {
 	 * @return array<string, mixed>|null The recomputed aggregate values, or
 	 *                                   null when the timesheet is gone.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
 	 */
 	public function recomputeForTimesheet(string $timesheetId): ?array {
 		$timesheetId = trim($timesheetId);
@@ -133,7 +133,7 @@ class TimesheetAggregationService {
 	 *
 	 * @return array<string, mixed> hours, entryCount, projectId, costCenter, billable.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
 	 */
 	public function computeAggregates(array $entries): array {
 		$hours = 0.0;
@@ -168,7 +168,7 @@ class TimesheetAggregationService {
 	 *
 	 * @return string|null The homogeneous value, or null.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-The-event-carries-what-a-finance-consumer-needs-(REQ-TEC-003)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-The-event-carries-what-a-finance-consumer-needs-(REQ-TEC-003)
 	 */
 	private function homogeneousOrNull(array $values): ?string {
 		$distinct = array_values(array_unique($values));
@@ -260,7 +260,7 @@ class TimesheetAggregationService {
 		// answered fatally (the AssetDialectMigrationService precedent).
 		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 

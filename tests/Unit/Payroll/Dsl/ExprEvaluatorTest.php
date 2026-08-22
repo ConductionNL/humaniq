@@ -11,7 +11,7 @@
  * argue with the ADR rather than quietly ship it.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Payroll\Dsl
+ * @package  OCA\Humaniq\Tests\Unit\Payroll\Dsl
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -28,13 +28,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Payroll\Dsl;
+namespace OCA\Humaniq\Tests\Unit\Payroll\Dsl;
 
-use OCA\Hrmq\Payroll\Dsl\DslException;
-use OCA\Hrmq\Payroll\Dsl\ExprEvaluator;
-use OCA\Hrmq\Payroll\Dsl\RefResolver;
-use OCA\Hrmq\Payroll\Dsl\StepContext;
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\Dsl\DslException;
+use OCA\Humaniq\Payroll\Dsl\ExprEvaluator;
+use OCA\Humaniq\Payroll\Dsl\RefResolver;
+use OCA\Humaniq\Payroll\Dsl\StepContext;
+use OCA\Humaniq\Payroll\TaxTables;
 use PHPUnit\Framework\TestCase;
 
 /**

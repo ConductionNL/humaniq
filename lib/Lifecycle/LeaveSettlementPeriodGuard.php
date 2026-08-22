@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq LeaveSettlementPeriodGuard
+ * Humaniq LeaveSettlementPeriodGuard
  *
  * OpenRegister lifecycle guard for the LeaveTransaction `settle` transition
  * (leave-buy-sell). It enforces the one precondition the declarative
@@ -26,7 +26,7 @@
  * `x-openregister-lifecycle.transitions.settle.requires`.
  *
  * @category Lifecycle
- * @package  OCA\Hrmq\Lifecycle
+ * @package  OCA\Humaniq\Lifecycle
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -42,7 +42,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Lifecycle;
+namespace OCA\Humaniq\Lifecycle;
 
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;

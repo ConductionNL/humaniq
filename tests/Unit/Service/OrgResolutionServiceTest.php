@@ -11,7 +11,7 @@
  * stamp/audit disagreement.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -22,14 +22,14 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Service\OrgResolutionService;
+use OCA\Humaniq\Service\OrgResolutionService;
 use PHPUnit\Framework\TestCase;
 
 /**

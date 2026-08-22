@@ -3,7 +3,7 @@
 /**
  * Payroll Year Transition Command
  *
- * `occ hrmq:payroll:year-transition --year YYYY` -- the annual-roll preflight
+ * `occ humaniq:payroll:year-transition --year YYYY` -- the annual-roll preflight
  * (design.md D6): there is deliberately no mutable "active tax year" global to
  * repoint -- `PayrollRunService` derives each run's tax-year table from its
  * own period (`nl-{substr(period, 0, 4)}`), and a generated run's
@@ -15,7 +15,7 @@
  * loudly otherwise) and reports the safe, data-only procedure.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,9 +31,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\TaxTables;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -50,7 +50,7 @@ class PayrollYearTransitionCommand extends Command {
 	 * @spec openspec/changes/retro-adjustments/specs/retro-adjustments/spec.md#REQ-RETRO-006
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:payroll:year-transition')
+		$this->setName('humaniq:payroll:year-transition')
 			->setDescription('Preflight for the annual tax-year roll: asserts the new nl-YYYY.json table exists and reports the data-only, period-derived design.')
 			->addOption('year', null, InputOption::VALUE_REQUIRED, 'The tax year being rolled to (YYYY).');
 
@@ -78,7 +78,7 @@ class PayrollYearTransitionCommand extends Command {
 			return 1;
 		}
 
-		$output->writeln('<info>Hrmq jaarovergang-preflight</info>');
+		$output->writeln('<info>Humaniq jaarovergang-preflight</info>');
 		$output->writeln(sprintf('  jaar              : %s', $year));
 		$output->writeln(sprintf('  tabelbestand      : %s.json — aanwezig', $tableId));
 		$output->writeln('  ontwerp           : geen mutabele "actief belastingjaar"-instelling -- elke loonrun leidt zijn tabel-id af uit zijn eigen periode (nl-{jaar van periode}).');

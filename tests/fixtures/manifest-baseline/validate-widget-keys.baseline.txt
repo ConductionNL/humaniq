@@ -1,4 +1,4 @@
-[validate-widget-keys] manifest: /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/hrmq/src/manifest.json
+[validate-widget-keys] manifest: /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/humaniq/src/manifest.json
 [validate-widget-keys] distinct widgetKeys used: 9 (banner, chart, data, files, object-list, object-table, related, stat, stats-block)
 [validate-widget-keys] layer 1 (src/registry.js consumer override): AdministrationSwitcher, ProformaPayslip, actions, chart, lifecycle-actions, stat
 [validate-widget-keys] layer 2 (nc-vue BUILT_IN_WIDGETS, static object — always safe): audit-trail, banner, card-grid, data, divider, form-renderer, header, integration, map-viewer, metadata, nav-card-grid, object-geo, object-table, related, text
@@ -9,7 +9,7 @@ Building undefined undefined
 [validate-widget-keys] layer 3 check could not complete — treating all pending keys as UNRESOLVED.
 TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received undefined
     at Object.join (node:path:1354:7)
-    at Object.<anonymous> (/home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/hrmq/node_modules/@nextcloud/webpack-vue-config/webpack.config.js:31:20)
+    at Object.<anonymous> (/home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/humaniq/node_modules/@nextcloud/webpack-vue-config/webpack.config.js:31:20)
     at Module._compile (node:internal/modules/cjs/loader:1706:14)
     at Object..js (node:internal/modules/cjs/loader:1839:10)
     at Module.load (node:internal/modules/cjs/loader:1441:32)

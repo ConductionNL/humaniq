@@ -10,7 +10,7 @@
  * this period nor an employer charge this period.
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll\Dsl\Ops
+ * @package  OCA\Humaniq\Payroll\Dsl\Ops
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -26,9 +26,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll\Dsl\Ops;
+namespace OCA\Humaniq\Payroll\Dsl\Ops;
 
-use OCA\Hrmq\Payroll\Dsl\StepContext;
+use OCA\Humaniq\Payroll\Dsl\StepContext;
 
 /**
  * A straight percentage of a base.

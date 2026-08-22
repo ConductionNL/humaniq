@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-13-mss-team-scope
 # mss-team-scope Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [mss-team-scope](../../changes/archive/2026-07-13-mss-team-scope/) _(archived 2026-07-13)_ — denormalized `managerUserId` on Timesheet/Expense/LeaveRequest (the round-2 `userId` trade-off applied to the manager axis — two-hop filtering does not exist in the manifest token grammar), three `Team*goedkeuring` pages pre-filtered `managerUserId: @me`, Dashboard approver widgets re-scoped to the manager's team with a global HR fallback row, and the recommended-severity `nl-mss-manager-consistency` corpus rule cross-checking every stamp against the org-chart-basic structure (kind: config)
 - [hrmq-hours-process-redesign](../../changes/archive/2026-08-22-hrmq-hours-process-redesign/) _(archived 2026-08-22, merged as humaniq#128)_ — turns `Timesheet.managerUserId` into a server-maintained cache stamped from the org chain on every write (the same `OrgResolutionService` the `nl-mss-manager-consistency` audit evaluates), inert to client input; `Expense`/`LeaveRequest` remain HR-populated until their own process redesigns (kind: code)
@@ -74,7 +74,7 @@ the organisation structure" for Timesheet), with the denormalization rationale i
 `src/manifest.json` SHALL gain three index pages that copy their global approval page's config and add the fixed base filter `{ "managerUserId": "@me" }` (the `MijnUren` base-filter mechanism, composing with the approval pages' `defaultFilters: { "status": "submitted" }` and user-facing `filters`): `TeamUrengoedkeuring` (`/timesheets/team-approval`, Timesheet, mirroring `TimesheetApproval`'s columns/filters/sort), `TeamDeclaratiegoedkeuring` (`/expenses/team-approval`, Expense, mirroring `ExpenseApproval`) and `TeamVerlofgoedkeuring` (`/leave-requests/team-approval`, LeaveRequest, mirroring `LeaveApproval`). Menu placement per ADR-001 Rule 2: one child per existing group (`TimesheetsGroup` / `ExpensesGroup` / `VerlofVerzuimGroup`), each directly after the global approval entry, icon `AccountCheckOutline`, labels `Team-urengoedkeuring` / `Team-declaratiegoedkeuring` / `Team-verlofgoedkeuring`. NO new top-level menu entry and no "Manager portaal". The global approval pages stay byte-identical.
 
 #### Scenario: Team queue shows only my team's submitted records
-@e2e exclude declarative page filtering is covered by the shared CnIndexPage/resolveFilterTokens library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative page filtering is covered by the shared CnIndexPage/resolveFilterTokens library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** a logged-in `admin` and the seeded records (three submitted seeds stamped `managerUserId: "admin"`)
 - **WHEN** `TeamUrengoedkeuring` renders
 - **THEN** only submitted timesheets stamped `managerUserId: "admin"` are listed (the base `@me` filter resolves to the current user at fetch time)
@@ -88,17 +88,17 @@ the organisation structure" for Timesheet), with the denormalization rationale i
 On the existing `Dashboard` page (adjusted in place, not duplicated): `dash-approve-hours` and `dash-approve-expenses` SHALL change their stat `content.source.filter` from the global `{ "status": "submitted" }` to `{ "managerUserId": "@me", "status": "submitted" }`, retitle to name the team scope ("(mijn team)"), and re-route to `TeamUrengoedkeuring` / `TeamDeclaratiegoedkeuring`; a new `dash-team-approve-leave` stat (LeaveRequest, same team filter, route `TeamVerlofgoedkeuring`) SHALL complete the approver trio as a 3 × width-4 row; and a new HR fallback row of two stats (`dash-hr-approve-hours` / `dash-hr-approve-expenses`, 2 × width-6) SHALL restore exactly the two global submitted-counts the re-scope removed, routing to the existing global `TimesheetApproval` / `ExpenseApproval` pages with captions marking "alle medewerkers". No global leave widget is added here (the sibling change `verzuim-analytics-widgets` owns leave/verzuim analytics). All widgets keep the proven `stat` shape (`register`/`schema`/`metric: "count"`/token-resolved `filter`); the `@me`-scoped object-table shifts down; the page `_note` documents the round-3 re-scope and fallback rationale.
 
 #### Scenario: Team widget counts only my team
-@e2e exclude declarative widget wiring is covered by the shared CnStatWidget library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget wiring is covered by the shared CnStatWidget library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** a logged-in `admin` and the seeded data
 - **WHEN** the Dashboard renders
 - **THEN** "Te beoordelen uren (mijn team)" counts exactly the submitted timesheets stamped `managerUserId: "admin"`, and the HR fallback widget counts every submitted timesheet regardless of stamp
 
 ### Requirement: The labour corpus SHALL gain the recommended-severity `nl-mss-manager-consistency` rule (REQ-MSS-004)
 
-`lib/Standards/rules/labour.json` SHALL gain `nl-mss-manager-consistency`: `domain: labour`, `jurisdiction: NL`, `framework: hr-org-core` (the EXISTING org-integrity slug from org-chart-basic — no new framework, no `SCHEMA.md` edit), `severity: recommended` (a stale stamp degrades list scoping only — it breaks no statutory duty, so it must not trip the `hrmq-rule-compliance-enforcement` mandatory exit gate), `machineCheckable: true`, control-style `source` (administration-integrity control, no `sourceUrl`). The statement: a Timesheet/Expense/LeaveRequest record's `managerUserId` SHOULD equal the `nextcloudUserId` of the manager of the record's employee's active OrgAssignment unit. `RuleCatalogue::VERSION` SHALL bump (checked fresh at HEAD: `2026-07.9` → `2026-07.10`, per SCHEMA.md's "bump on any change" rule).
+`lib/Standards/rules/labour.json` SHALL gain `nl-mss-manager-consistency`: `domain: labour`, `jurisdiction: NL`, `framework: hr-org-core` (the EXISTING org-integrity slug from org-chart-basic — no new framework, no `SCHEMA.md` edit), `severity: recommended` (a stale stamp degrades list scoping only — it breaks no statutory duty, so it must not trip the `humaniq-rule-compliance-enforcement` mandatory exit gate), `machineCheckable: true`, control-style `source` (administration-integrity control, no `sourceUrl`). The statement: a Timesheet/Expense/LeaveRequest record's `managerUserId` SHOULD equal the `nextcloudUserId` of the manager of the record's employee's active OrgAssignment unit. `RuleCatalogue::VERSION` SHALL bump (checked fresh at HEAD: `2026-07.9` → `2026-07.10`, per SCHEMA.md's "bump on any change" rule).
 
 #### Scenario: Corpus stays loadable and versioned
-- **WHEN** `occ hrmq:rules:audit` runs after the corpus edit
+- **WHEN** `occ humaniq:rules:audit` runs after the corpus edit
 - **THEN** the RuleCatalogue loads without error, reports the current version, and reports `nl-mss-manager-consistency` as enforced (a CheckProvider predicate exists)
 
 ### Requirement: `NlOrgChecks` SHALL enforce manager consistency via consistently-extended related-context indexes (REQ-MSS-005)
@@ -107,7 +107,7 @@ On the existing `Dashboard` page (adjusted in place, not duplicated): `dash-appr
 
 #### Scenario: Mismatching stamp flagged
 - **GIVEN** a submitted Timesheet with `managerUserId: "someone-else"` whose employee's active assignment resolves to a unit managed by an Employee with `nextcloudUserId: "admin"`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** a `nl-mss-manager-consistency` violation with recommended severity is reported for that timesheet
 
 #### Scenario: Matching stamp passes
@@ -131,7 +131,7 @@ On the existing `Dashboard` page (adjusted in place, not duplicated): `dash-appr
 
 #### Scenario: Seeded audit stays green for the new rule
 - **GIVEN** the seeded data after the stamps and the manager re-point
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** zero `nl-mss-manager-consistency` violations are reported, the three stamped records evaluate non-vacuously, and no pre-existing check regresses
 
 #### Scenario: Idempotent seed

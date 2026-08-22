@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-15-wkr-administration
 # wkr-administration Specification
 
 **Status**: done
-**Scope**: hrmq (`depends_on: []`)
+**Scope**: humaniq (`depends_on: []`)
 **OpenSpec changes**:
 - [wkr-administration](../../changes/archive/2026-07-15-wkr-administration/) _(archived 2026-07-15)_
   — the werkkostenregeling (WKR) administration + reporting layer above the pre-existing per-payslip
@@ -19,7 +19,7 @@ built_by: openspec/changes/archive/2026-07-15-wkr-administration
   `WkrAssessment` keyed `(administrationId, year)`, the RuleEngine-reachable administration-level
   rule `nl-wkr-eindheffing-exposure` (`lib/Standards/Checks/NlWkrChecks.php`, fed by
   `RuleAuditService::buildWkrContext()` — the `buildPayrollContext()` cross-object pre-pass idiom,
-  injected into both `audit()` and `auditPayrollRunScope()`), the `hrmq:wkr:assess` occ command
+  injected into both `audit()` and `auditPayrollRunScope()`), the `humaniq:wkr:assess` occ command
   (`--administration`/`--year`/`--all`), one admin/HR-guarded `POST /api/payroll/wkr-assess`
   endpoint, and the `WkrDeclarations`/`WkrDeclarationDetail`/`WkrAssessments`/`WkrAssessmentDetail`
   manifest pages filed under the existing `PayrollGroup` (Loonadministratie) menu — no new
@@ -131,19 +131,19 @@ SHALL be satisfied when `used ≤ available`; and SHALL be a violation when `use
 the assessment recorded the exposure (`status: eindheffing-verschuldigd`, `excess` cents-equal to
 `used − available`, `eindheffingRate` 80, `eindheffingDue` cents-equal to `round2(excess × 80%)`).
 Because the predicate is keyed to a persisted, audit-loaded object, it SHALL be reached by
-`occ hrmq:rules:audit` with no bespoke caller.
+`occ humaniq:rules:audit` with no bespoke caller.
 
 #### Scenario: An over-budget administration that flagged the eindheffing is compliant
 - **GIVEN** a WkrAssessment whose aggregate shows `used €5.000,00` against `available €4.000,00`, with
   `status: eindheffing-verschuldigd`, `excess €1.000,00`, `eindheffingRate 80` and
   `eindheffingDue €800,00`
-- **WHEN** `occ hrmq:rules:audit` evaluates it
+- **WHEN** `occ humaniq:rules:audit` evaluates it
 - **THEN** `nl-wkr-eindheffing-exposure` reports no violation for that assessment
 
 #### Scenario: An over-budget administration that did not flag the eindheffing is a violation
 - **GIVEN** the same aggregate (`used €5.000,00` > `available €4.000,00`) but a WkrAssessment left
   `status: binnen-vrije-ruimte` with `eindheffingDue €0,00`
-- **WHEN** `occ hrmq:rules:audit` evaluates it
+- **WHEN** `occ humaniq:rules:audit` evaluates it
 - **THEN** an `nl-wkr-eindheffing-exposure` violation is reported for that assessment
 
 #### Scenario: An administration with no payslips is out of scope
@@ -154,7 +154,7 @@ Because the predicate is keyed to a persisted, audit-loaded object, it SHALL be 
 
 ### Requirement: An occ command SHALL compute and persist the WKR assessment (REQ-WKR-005)
 
-`lib/Command/WkrAssessCommand.php` SHALL register `hrmq:wkr:assess --administration ADM --year YYYY [--all]` in `appinfo/info.xml`.
+`lib/Command/WkrAssessCommand.php` SHALL register `humaniq:wkr:assess --administration ADM --year YYYY [--all]` in `appinfo/info.xml`.
 
 The command SHALL invoke `WkrService::assess` for the given administration and year (or, with
 `--all`, for every distinct (administrationId, year) pair found across the payslips) and print the
@@ -163,7 +163,7 @@ eindheffing due.
 
 #### Scenario: The command computes an assessment from live data
 - **GIVEN** payslips and vrije-ruimte declarations for `ADM-001` in 2026
-- **WHEN** `occ hrmq:wkr:assess --administration ADM-001 --year 2026` runs
+- **WHEN** `occ humaniq:wkr:assess --administration ADM-001 --year 2026` runs
 - **THEN** a WkrAssessment for `(ADM-001, 2026)` is persisted and the outcome prints the loonsom,
   vrije ruimte, used, remaining, excess and eindheffing figures
 
@@ -179,14 +179,14 @@ frozen; WKR is an administration/reporting surface inside Loonadministratie). `n
 MUST pass.
 
 #### Scenario: WKR pages appear under Loonadministratie
-@e2e exclude declarative manifest/menu wiring is covered by the shared CnPageRenderer library tests; the app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative manifest/menu wiring is covered by the shared CnPageRenderer library tests; the app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** the manifest after this change
 - **WHEN** the menu is rendered
 - **THEN** `WkrDeclarations` and `WkrAssessments` appear as pages under the existing `PayrollGroup`
   group and no new top-level menu group has been introduced
 
 #### Scenario: The assessment detail shows the eindheffing headline
-@e2e exclude declarative manifest/action wiring is covered by the shared CnPageRenderer library tests; the app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative manifest/action wiring is covered by the shared CnPageRenderer library tests; the app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** a WkrAssessment for `(ADM-001, 2026)` with `status: eindheffing-verschuldigd`
 - **WHEN** `WkrAssessmentDetail` renders it
 - **THEN** the fiscale loonsom, vrije ruimte, vrije-ruimte used and eindheffing due are shown as stat

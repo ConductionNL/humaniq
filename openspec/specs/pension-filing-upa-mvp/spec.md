@@ -7,13 +7,13 @@ built_by: openspec/changes/archive/2026-07-12-pension-filing-upa-mvp
 # pension-filing-upa-mvp Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [pension-filing-upa-mvp](../../changes/archive/2026-07-12-pension-filing-upa-mvp/) _(archived 2026-07-12)_ — new `PensionFiling` schema in a new `hr-pension` fragment with a declarative concept→gecontroleerd→bevestigd→verzonden lifecycle gated by `PayrollRunApprovedGuard`, 3 new machine-checkable NL UPA rules (framework `nl-pensioenaangifte`), and pension-filing index/detail pages (kind: config)
 
 ## Purpose
 
-Give hrmq its first sector-pension filing surface (UPA — Uniforme
+Give humaniq its first sector-pension filing surface (UPA — Uniforme
 Pensioenaangifte): a `PensionFiling` per period×fund for the APG-administered
 funds (ABP, SPW, bpfBOUW, Schoonmaak, PFAB, PWRI), with a declarative
 create→review→confirm→send lifecycle whose review step is server-side gated on
@@ -29,7 +29,7 @@ explicitly out of scope.
 
 ### REQ-PFU-001: A new `hr-pension` fragment SHALL define the `PensionFiling` schema
 
-`lib/Settings/register.d/hr-pension.json` (new file, `x-hrmq-fragment: hr-pension`, OpenAPI 3.0.0 `components.schemas` shape like `hr-leave.json`) declares `PensionFiling` (slug `PensionFiling`, icon `PiggyBankOutline`, version `0.1.0`, `x-schema-org: schema:Action`) with properties: `payrollRunId` (string, format uuid, `$ref: PayrollRun`), `period` (string, YYYY-MM), `fund` (enum `abp|spw|bpf-bouw|schoonmaak|pfab|pwri`), `aanleverkenmerk` (string, nullable), `deadline` (string, format date), `status` (enum `concept|gecontroleerd|bevestigd|verzonden`, default `concept`), `responseStatus` (enum `geen|ontvangen-ok|afgekeurd`, default `geen`), `responseMessage` (string, nullable), `submittedDate` (date, nullable), `verzondenDoor` (string, nullable). `required: [payrollRunId, period, fund, deadline, status]`. The existing register Repair import picks the fragment up without code changes.
+`lib/Settings/register.d/hr-pension.json` (new file, `x-humaniq-fragment: hr-pension`, OpenAPI 3.0.0 `components.schemas` shape like `hr-leave.json`) declares `PensionFiling` (slug `PensionFiling`, icon `PiggyBankOutline`, version `0.1.0`, `x-schema-org: schema:Action`) with properties: `payrollRunId` (string, format uuid, `$ref: PayrollRun`), `period` (string, YYYY-MM), `fund` (enum `abp|spw|bpf-bouw|schoonmaak|pfab|pwri`), `aanleverkenmerk` (string, nullable), `deadline` (string, format date), `status` (enum `concept|gecontroleerd|bevestigd|verzonden`, default `concept`), `responseStatus` (enum `geen|ontvangen-ok|afgekeurd`, default `geen`), `responseMessage` (string, nullable), `submittedDate` (date, nullable), `verzondenDoor` (string, nullable). `required: [payrollRunId, period, fund, deadline, status]`. The existing register Repair import picks the fragment up without code changes.
 
 #### Scenario: Schema validates a complete filing
 - **GIVEN** the imported hrmq register
@@ -42,7 +42,7 @@ explicitly out of scope.
 
 ### REQ-PFU-002: `PensionFiling` SHALL carry a declarative lifecycle `concept → gecontroleerd → bevestigd → verzonden`
 
-`configuration.x-openregister-lifecycle` on the schema declares `field: status`, `initial: concept`, and transitions `controleren` (concept→gecontroleerd, `requires: OCA\Hrmq\Lifecycle\PayrollRunApprovedGuard`), `bevestigen` (gecontroleerd→bevestigd), `verzenden` (bevestigd→verzonden), `heropenen` (gecontroleerd|bevestigd→concept), `corrigeren` (verzonden→concept). The `verzenden` description documents that `submittedDate` and `verzondenDoor` are stamped on the carrying write (Timesheet `approvedAt`/`approvedBy` pattern; guards are read-only).
+`configuration.x-openregister-lifecycle` on the schema declares `field: status`, `initial: concept`, and transitions `controleren` (concept→gecontroleerd, `requires: OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard`), `bevestigen` (gecontroleerd→bevestigd), `verzenden` (bevestigd→verzonden), `heropenen` (gecontroleerd|bevestigd→concept), `corrigeren` (verzonden→concept). The `verzenden` description documents that `submittedDate` and `verzondenDoor` are stamped on the carrying write (Timesheet `approvedAt`/`approvedBy` pattern; guards are read-only).
 
 #### Scenario: Filing walks the happy path
 - **GIVEN** a `PensionFiling` referencing a PayrollRun with `status: approved`
@@ -83,7 +83,7 @@ explicitly out of scope.
 `lib/Standards/rules/payroll.json` gains `nl-upa-payrollrun-approved`, `nl-upa-monthly-completeness`, `nl-upa-deadline-alert` (all `domain: reporting`, `jurisdiction: NL`, `framework: nl-pensioenaangifte`, `severity: mandatory`, `machineCheckable: true`, `sourceUrl: https://www.sivi.org/standaarden/uniforme-pensioenaangifte/`, sources per the design.md table). `nl-pensioenaangifte` is a new framework slug, added to the examples list in `lib/Standards/rules/SCHEMA.md`. `RuleCatalogue::VERSION` stayed at `2026-07` — the loonaangifte-filing-lifecycle change already bumped it this month, and SCHEMA.md's version string carries no finer granularity than year-month, so no further bump was needed.
 
 #### Scenario: Corpus stays loadable and versioned
-- **WHEN** `occ hrmq:rules:audit` runs after the corpus edit
+- **WHEN** `occ humaniq:rules:audit` runs after the corpus edit
 - **THEN** the RuleCatalogue loads without error and reports the three new rules as enforced (each has a CheckProvider predicate)
 
 ### REQ-PFU-005: `NlPensionFilingChecks` SHALL enforce reference integrity, monthly completeness, and deadline alerting
@@ -96,7 +96,7 @@ New auto-discovered provider `lib/Standards/Checks/NlPensionFilingChecks.php` (i
 
 #### Scenario: Filing on a draft run flagged
 - **GIVEN** a PensionFiling whose referenced PayrollRun has `status: draft`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** a `nl-upa-payrollrun-approved` violation is reported for that filing
 
 #### Scenario: Approved run without any filing flagged
@@ -123,7 +123,7 @@ New auto-discovered provider `lib/Standards/Checks/NlPensionFilingChecks.php` (i
 - **THEN** it exits 0
 
 #### Scenario: Detail page drives the lifecycle
-@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** a filing in status `concept` (on an approved run) opened on `PensionFilingDetail`
 - **WHEN** the user executes Controleren
 - **THEN** the page reflects status `gecontroleerd` and offers Bevestigen
@@ -133,7 +133,7 @@ New auto-discovered provider `lib/Standards/Checks/NlPensionFilingChecks.php` (i
 `lib/Settings/register.d/hr-seed.json` gains two NL PayrollRun seeds in `approved` status (`payrollrun-2026-05`, `payrollrun-2026-06`, GL fields internally consistent so existing payroll checks stay green) and three PensionFiling seeds (verzonden+ontvangen-ok on 2026-05/abp; concept on 2026-06/abp; bevestigd overdue on 2026-05/spw), referencing the runs by slug exactly as Timesheet seeds reference employees. All identifiers are obvious placeholders (`ADM-001`, `UPA-000000000000`). `NlPensionFilingChecks` seeds no provider objects: a self-contained sample cannot carry a resolvable `payrollRunId` and would violate the fail-closed reference rule.
 
 #### Scenario: Idempotent seed
-- **WHEN** the register Repair import (and `occ hrmq:rules:seed-testdata`) runs twice
+- **WHEN** the register Repair import (and `occ humaniq:rules:seed-testdata`) runs twice
 - **THEN** the two runs and three filings exist exactly once
 
 #### Scenario: Seeded periods are complete

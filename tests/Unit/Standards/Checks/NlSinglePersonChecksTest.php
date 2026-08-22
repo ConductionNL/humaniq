@@ -11,11 +11,11 @@
  * one Employee has isDga true; violated at 0, 2+, or 1-but-not-DGA. The suite
  * closes with a REAL `RuleEngine::evaluate()` integration test (catalogue +
  * auto-discovered CheckProviders) proving the rule is genuinely reachable via
- * `occ hrmq:rules:audit`, at recommended severity, and never an orphaned
+ * `occ humaniq:rules:audit`, at recommended severity, and never an orphaned
  * capability.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
+ * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,10 +31,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
+namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlSinglePersonChecks;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\Checks\NlSinglePersonChecks;
+use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -214,7 +214,7 @@ class NlSinglePersonChecksTest extends TestCase {
 	 * REQ-SPM-005 — the drift case driven through the REAL
 	 * `RuleEngine::evaluate()` (catalogue + auto-discovered CheckProviders),
 	 * proving `nl-single-person-mode-employee-count` is genuinely reachable
-	 * via `occ hrmq:rules:audit` at recommended severity — not an orphaned
+	 * via `occ humaniq:rules:audit` at recommended severity — not an orphaned
 	 * capability.
 	 *
 	 * @return void

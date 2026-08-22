@@ -1,10 +1,10 @@
-# time-entry-capture — delta for hrmq-hours-process-redesign
+# time-entry-capture — delta for humaniq-hours-process-redesign
 
 ## MODIFIED Requirements
 
-### Requirement: hrmq captures time entries under a submit→approve lifecycle (REQ-TEC-001)
+### Requirement: humaniq captures time entries under a submit→approve lifecycle (REQ-TEC-001)
 
-hrmq SHALL capture worked time at two granularities with English schema names (Dutch only via
+humaniq SHALL capture worked time at two granularities with English schema names (Dutch only via
 l10n labels): an individual booking is a **`TimeEntry`** (NL "urenregistratie") carrying
 `startedAt`/`endedAt` timestamps, an optional `breakMinutes`, a server-derived `hours` value, a
 `description`, an optional `projectId` and a `billable` flag; the per-employee, per-period
@@ -112,7 +112,7 @@ to them is inert and overwritten by the recompute.
 The system SHALL refuse any create, update or delete of a TimeEntry whose parent Timesheet is
 not in state `draft` or `rejected`, with a structured error naming the parent's state. The
 `reopen` transition (unchanged) is the sanctioned route to correcting an approved timesheet.
-hrmq's own migration and aggregation writes are exempt via an internal-writer marker that is
+humaniq's own migration and aggregation writes are exempt via an internal-writer marker that is
 request-scoped, never global.
 
 #### Scenario: A booking cannot be edited after submission

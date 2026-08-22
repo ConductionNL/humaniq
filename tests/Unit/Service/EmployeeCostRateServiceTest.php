@@ -17,7 +17,7 @@
  * costing regression.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,12 +31,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
 use InvalidArgumentException;
-use OCA\Hrmq\Service\EmployeeCostRateService;
-use OCA\Hrmq\Service\HourlyCostAdditions;
-use OCA\Hrmq\Service\ProformaPayslipService;
+use OCA\Humaniq\Service\EmployeeCostRateService;
+use OCA\Humaniq\Service\HourlyCostAdditions;
+use OCA\Humaniq\Service\ProformaPayslipService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use RuntimeException;

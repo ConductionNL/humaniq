@@ -48,7 +48,7 @@ norm — unless a justification is on file:
   gebruikelijkloon norm
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Named non-goals

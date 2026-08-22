@@ -1,6 +1,6 @@
 ## Purpose
 
-hrmq builds its effective frontend manifest — pages, menu, and templated-page expansion — from
+humaniq builds its effective frontend manifest — pages, menu, and templated-page expansion — from
 modular `src/manifest.d/*.json` fragments and a `src/menu-layout.json` via the shared
 `@conduction/nextcloud-vue` `buildManifest()` pipeline (ADR-037/ADR-044), instead of importing one
 monolithic `src/manifest.json`, with the effective result observably identical to the pre-existing
@@ -8,7 +8,7 @@ monolith.
 
 ## ADDED Requirements
 
-### Requirement: hrmq builds its effective manifest via the shared buildManifest pipeline
+### Requirement: humaniq builds its effective manifest via the shared buildManifest pipeline
 
 `src/main.js` SHALL build the manifest handed to `CnAppRoot`/the vue-router route table by calling
 `buildManifest(base, fragments, menuLayout)` from `@conduction/nextcloud-vue`, where `fragments` is
@@ -26,7 +26,7 @@ page-template expansion inline (ADR-044 Decision 1).
   plus the base, and this merged manifest — not the raw import of `src/manifest.json` — is what is
   passed to the router and to `CnAppRoot`
 
-@e2e exclude hrmq has no e2e suite yet (tracked by the active change `hrmq-test-coverage-baseline`);
+@e2e exclude humaniq has no e2e suite yet (tracked by the active change `humaniq-test-coverage-baseline`);
 this scenario is a build-time/boot-path assertion better covered by a Node script comparing the
 built bundle's route table against the pre-change baseline (see design.md/tasks.md), which this
 change adds.

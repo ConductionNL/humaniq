@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-loonbeslag",
+    "x-humaniq-fragment": "hr-loonbeslag",
     "components": {
         "schemas": {
             "Loonbeslag": {

@@ -4,14 +4,14 @@
  * Unit tests for MigrateAssetDialect.
  *
  * The repair step is the UNCONDITIONAL half of this migration's delivery: the
- * `occ hrmq:assets:migrate-dialect` command is opt-in and a human has to know
+ * `occ humaniq:assets:migrate-dialect` command is opt-in and a human has to know
  * to run it, whereas this runs on every upgrade. It was the one new class in
  * the change with no direct test, which the coverage ratchet correctly caught.
  *
  * Three behaviours are worth pinning, and all three are refusals rather than
  * happy paths:
  *
- *  1. **OpenRegister absent → warn and return.** hrmq owns no tables; with
+ *  1. **OpenRegister absent → warn and return.** humaniq owns no tables; with
  *     OpenRegister missing there is nothing to migrate and the migration must
  *     not be attempted, let alone throw. An upgrade that dies here would take
  *     the whole instance down for a data fix that was never applicable.
@@ -24,7 +24,7 @@
  *     had nothing to do, so the counts are the only thing distinguishing them.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Repair
+ * @package  OCA\Humaniq\Tests\Unit\Repair
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -35,16 +35,16 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Repair;
+namespace OCA\Humaniq\Tests\Unit\Repair;
 
-use OCA\Hrmq\Repair\MigrateAssetDialect;
-use OCA\Hrmq\Service\AssetDialectMigrationService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Repair\MigrateAssetDialect;
+use OCA\Humaniq\Service\AssetDialectMigrationService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -52,7 +52,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for MigrateAssetDialect.
  *
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
  */
 class MigrateAssetDialectTest extends TestCase {
 
@@ -159,7 +159,7 @@ class MigrateAssetDialectTest extends TestCase {
 
 	/**
 	 * REFUSAL 1. With OpenRegister absent the step warns and returns without
-	 * touching the migration at all — hrmq owns no tables, so there is nothing
+	 * touching the migration at all — humaniq owns no tables, so there is nothing
 	 * to migrate, and an upgrade must not die over a data fix that does not
 	 * apply.
 	 *

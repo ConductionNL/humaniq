@@ -6,7 +6,7 @@
  * The compile-time allow-list backing the named escape hatch
  * (jurisdiction-packs design.md D9, ADR-101 decision 3).
  *
- * Only handlers constructed INTO this registry from hrmq's own code are
+ * Only handlers constructed INTO this registry from humaniq's own code are
  * resolvable. A pack contributes a name; it can never contribute a class,
  * a path, a callable, or a file — there is no code path here that turns
  * pack-supplied data into an executable artefact.
@@ -17,7 +17,7 @@
  * before the first country hits it.
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll
+ * @package  OCA\Humaniq\Payroll
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -33,12 +33,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll;
+namespace OCA\Humaniq\Payroll;
 
-use OCA\Hrmq\Payroll\Dsl\DslException;
+use OCA\Humaniq\Payroll\Dsl\DslException;
 
 /**
- * The allow-list of escape-hatch handlers that ship inside hrmq.
+ * The allow-list of escape-hatch handlers that ship inside humaniq.
  */
 final class StepHandlerRegistry {
 
@@ -50,7 +50,7 @@ final class StepHandlerRegistry {
 	private array $handlers = [];
 
 	/**
-	 * @param array<int, JurisdictionStepHandlerInterface> $handlers The handlers hrmq ships (empty by design).
+	 * @param array<int, JurisdictionStepHandlerInterface> $handlers The handlers humaniq ships (empty by design).
 	 */
 	public function __construct(array $handlers = []) {
 		foreach ($handlers as $handler) {
@@ -105,7 +105,7 @@ final class StepHandlerRegistry {
 	 */
 	private function describe(): string {
 		if ($this->handlers === []) {
-			return 'de allow-list is leeg: hrmq levert geen enkele handler mee';
+			return 'de allow-list is leeg: humaniq levert geen enkele handler mee';
 		}
 
 		return 'toegestaan: ' . implode(', ', $this->names());

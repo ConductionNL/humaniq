@@ -7,14 +7,14 @@ built_by: openspec/changes/archive/2026-07-13-asset-management-mvp
 # asset-management Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [asset-management-mvp](../../changes/archive/2026-07-13-asset-management-mvp/) _(archived 2026-07-13)_ — new `Asset` (category/serienummer/kenteken, declarative `beschikbaar`→`uitgegeven`→`ingenomen`→`beschikbaar`/`afgeschreven` custody lifecycle) and effective-dated `AssetAssignment` schemas in a new `hr-assets` fragment, `$ref`-driven related surfaces, 2 new machine-checkable asset-custody rules (framework `hr-assets-core`, defensive against the parallel offboarding-wizard-mvp), asset pages under the expenses group and seed data (kind: config)
 - [hrmq-asset-fleet-merge](../../changes/hrmq-asset-fleet-merge/) — **Status**: in-progress — merges the retired `Vehicle`/`CarAssignment` schemas (fleet-bijtelling) into `Asset`/`AssetAssignment`, renames every Dutch field/enum on both schemas to English, guards the three vehicle-only fiscal fields with the audit-time corpus rule `nl-asset-voertuig-fiscale-velden-compleet` (a schema-level conditional-required cannot reach OpenRegister's validator, design.md D2), and retires the `Vehicles`/`CarAssignments` menu entries and pages
 
 ## Purpose
 
-Give hrmq its first asset register: company property (laptops, phones,
+Give humaniq its first asset register: company property (laptops, phones,
 vehicles, tools, access passes, clothing) as `Asset` records with a
 declarative custody lifecycle, and effective-dated `AssetAssignment`
 uitgiftes linking assets to employees — in a new `hr-assets` register
@@ -23,7 +23,7 @@ custody-integrity rules in the labour corpus (open uitgifte ⇒ asset
 `uitgegeven` with fail-closed reference resolution; open uitgiftes past an
 employee's offboarding planned completion), asset pages under the expenses
 menu group (the frozen ADR-001 menu 7 "Declaraties & assets" placement,
-re-homed by `hrmq-ia-navigation-alignment`), and seeded examples including
+re-homed by `humaniq-ia-navigation-alignment`), and seeded examples including
 one deliberate violation. Vehicles are Assets with a `kenteken`; fiscal
 bijtelling is an explicit non-goal (engine-blocked per Spectr
 `hrmq-canon-fleet-bijtelling` — follow-up spec `fleet-bijtelling`). The
@@ -48,7 +48,7 @@ Offboarding schema is absent.
 
 #### Scenario: Capability surface is declarative
 
-- GIVEN the hrmq codebase with this change applied
+- GIVEN the humaniq codebase with this change applied
 - WHEN the asset surface is inspected
 - THEN the data model lives in `lib/Settings/register.d/hr-assets.json`, the UI in `src/manifest.json` page/menu/deepLink entries, and the only imperative code is the `NlAssetChecks` corpus predicates plus the `buildRelatedContext()` index pre-pass (the established ADR-031 exception)
 - @e2e exclude structural code-layout assertion with no UI runtime surface; enforced by the change's quality-gate task (manifest check, PHPUnit, rules audit) and hydra gates
@@ -57,11 +57,11 @@ Offboarding schema is absent.
 
 `lib/Settings/register.d/hr-assets.json` SHALL declare the `Asset` schema entirely in English field/enum names, including the three vehicle-only fiscal-facts fields absorbed from the retired `Vehicle` schema, required exactly when `category` is `vehicle`.
 
-`lib/Settings/register.d/hr-assets.json` (`x-hrmq-fragment: hr-assets`, OpenAPI 3.0.0 `components.schemas` shape like `hr-org.json`) declares `Asset` (slug `Asset`, icon `PackageVariantClosed`, `x-schema-org: schema:IndividualProduct`) with properties: `name` (string), `category` (enum `laptop|phone|vehicle|tool|accessPass|clothing|other`), `serialNumber` (string, nullable), `licencePlate` (string, nullable — meaningful for category `vehicle`; carries no fiscal semantics), `purchaseDate` (string, format date, nullable), `purchaseValue` (number, nullable), `status` (enum `available|issued|checkedIn|writtenOff`), `active` (boolean, default `true`), `administrationId` (string, nullable). `required: [name, category, status]`. `status` carries an `x-openregister-lifecycle` (initial `available`, terminal `writtenOff`) with exactly four transitions: `issue` (`available`→`issued`), `checkIn` (`issued`→`checkedIn`), `release` (`checkedIn`→`available`), `writeOff` (`available`/`checkedIn`→`writtenOff`) — no guards.
+`lib/Settings/register.d/hr-assets.json` (`x-humaniq-fragment: hr-assets`, OpenAPI 3.0.0 `components.schemas` shape like `hr-org.json`) declares `Asset` (slug `Asset`, icon `PackageVariantClosed`, `x-schema-org: schema:IndividualProduct`) with properties: `name` (string), `category` (enum `laptop|phone|vehicle|tool|accessPass|clothing|other`), `serialNumber` (string, nullable), `licencePlate` (string, nullable — meaningful for category `vehicle`; carries no fiscal semantics), `purchaseDate` (string, format date, nullable), `purchaseValue` (number, nullable), `status` (enum `available|issued|checkedIn|writtenOff`), `active` (boolean, default `true`), `administrationId` (string, nullable). `required: [name, category, status]`. `status` carries an `x-openregister-lifecycle` (initial `available`, terminal `writtenOff`) with exactly four transitions: `issue` (`available`→`issued`), `checkIn` (`issued`→`checkedIn`), `release` (`checkedIn`→`available`), `writeOff` (`available`/`checkedIn`→`writtenOff`) — no guards.
 
 `Asset` additionally gains three fiscal-facts properties absorbed from the retired `Vehicle` schema (see the modified `fleet-bijtelling` capability): `listPrice` (number, nullable), `fuelType` (enum `gasoline|diesel|hybrid|fullyElectric|hydrogen|other`, nullable), `companyCarTaxCategory` (enum `standard|evReducedCapped`, nullable). None of the three is in the schema's unconditional `required` array — they are meaningless for any `category` other than `vehicle`. Their completeness when `category === "vehicle"` SHALL be enforced by a machine-checkable corpus rule `nl-asset-voertuig-fiscale-velden-compleet` (predicate in `NlFleetChecks`), **not** by a schema-level conditional. A JSON Schema `allOf`/`if`/`then` block cannot work here: `Schema::getSchemaObject()` builds the object handed to the validator from `title`/`description`/`version`/`type`/`required`/`properties` only, so composition keywords never reach `opis/json-schema` however faithfully they are declared (measured — see design.md D2). Declaring one would be enforced nowhere while reading as a guarantee.
 
-This is an **audit-time** guard, and deliberately weaker than what it replaces: before this change a `Vehicle` without a `cataloguswaarde` was rejected at write time by `Vehicle`'s own unconditional `required`. After the merge an incomplete vehicle `Asset` is writable, and is caught on the next `occ hrmq:rules:audit` instead. The consequence is bounded rather than silent — `PayrollRunService::bijtellingCentsFor()`'s existing `is_numeric` guard yields €0, a missing benefit rather than a wrong one — but the downgrade is real and is recorded as such.
+This is an **audit-time** guard, and deliberately weaker than what it replaces: before this change a `Vehicle` without a `cataloguswaarde` was rejected at write time by `Vehicle`'s own unconditional `required`. After the merge an incomplete vehicle `Asset` is writable, and is caught on the next `occ humaniq:rules:audit` instead. The consequence is bounded rather than silent — `PayrollRunService::bijtellingCentsFor()`'s existing `is_numeric` guard yields €0, a missing benefit rather than a wrong one — but the downgrade is real and is recorded as such.
 
 #### Scenario: Schema validates a new asset in stock
 
@@ -90,9 +90,9 @@ This is an **audit-time** guard, and deliberately weaker than what it replaces: 
 
 - WHEN an object `{name: "Tesla Model Y", category: "vehicle", status: "available"}` is created with no `listPrice`, `fuelType`, or `companyCarTaxCategory`
 - THEN the object is **accepted** by OpenRegister schema validation — the schema layer cannot express a conditional-required (see design.md D2: `Schema::getSchemaObject()` emits no `allOf`/`if`/`then`, so the validator never sees one)
-- AND `occ hrmq:rules:audit` reports a `nl-asset-voertuig-fiscale-velden-compleet` violation for that object
+- AND `occ humaniq:rules:audit` reports a `nl-asset-voertuig-fiscale-velden-compleet` violation for that object
 - AND `PayrollRunService::bijtellingCentsFor()` yields €0 for it rather than a wrong figure, so the incomplete record costs a missing benefit, never a miscalculated one
-- @e2e exclude rule-engine predicate behaviour; covered by a PHPUnit fixture over `NlFleetChecks` in the `RuleAuditServiceTest` precedent, not a UI flow — app-level e2e suite does not exist yet (tracked by active change `hrmq-test-coverage-baseline`)
+- @e2e exclude rule-engine predicate behaviour; covered by a PHPUnit fixture over `NlFleetChecks` in the `RuleAuditServiceTest` precedent, not a UI flow — app-level e2e suite does not exist yet (tracked by active change `humaniq-test-coverage-baseline`)
 
 #### Scenario: The guard is weaker than the one it replaces, and the tasks say so
 
@@ -133,7 +133,7 @@ Both reference fields (`AssetAssignment.assetId`→Asset, `AssetAssignment.emplo
 - GIVEN a seeded AssetAssignment opened on `AssetAssignmentDetail`
 - WHEN the page renders
 - THEN the Related panel lists the referenced Asset and Employee by name, each linking to its detail page
-- @e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+- @e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 
 ### Requirement: The labour corpus SHALL gain two machine-checkable asset-custody rules (REQ-AST-004)
 
@@ -141,7 +141,7 @@ Both reference fields (`AssetAssignment.assetId`→Asset, `AssetAssignment.emplo
 
 #### Scenario: Corpus stays loadable and versioned
 
-- WHEN `occ hrmq:rules:audit` runs after the corpus edit
+- WHEN `occ humaniq:rules:audit` runs after the corpus edit
 - THEN the RuleCatalogue loads without error and reports both new rules as enforced (each has a CheckProvider predicate)
 
 ### Requirement: `NlAssetChecks` SHALL enforce assignment consistency and offboarding asset return via the related-context (REQ-AST-005)
@@ -156,7 +156,7 @@ Both predicates SHALL read the renamed `issuedOn`/`returnedOn`/`issued` fields a
 #### Scenario: Incoherent dates flagged
 
 - GIVEN an AssetAssignment with `issuedOn: 2026-06-01` and `returnedOn: 2026-05-01`
-- WHEN `occ hrmq:rules:audit` runs
+- WHEN `occ humaniq:rules:audit` runs
 - THEN a `nl-asset-assignment-consistency` violation is reported for that assignment
 
 #### Scenario: Open uitgifte on an in-stock asset flagged
@@ -192,7 +192,7 @@ Both predicates SHALL read the renamed `issuedOn`/`returnedOn`/`issued` fields a
 #### Scenario: The renamed fields produce the identical violation count as before the merge
 
 - GIVEN the seeded fixture data (three Assets, two AssetAssignments, one deliberately open uitgifte on an `available` asset) both immediately before this change (Dutch field names) and immediately after (English field names)
-- WHEN `occ hrmq:rules:audit` runs against each
+- WHEN `occ humaniq:rules:audit` runs against each
 - THEN both runs report exactly one `nl-asset-assignment-consistency` violation and zero `nl-asset-inname-bij-offboarding` violations — the rename changes no arithmetic or resolution logic, only field names, so the before/after counts MUST be asserted equal, not merely "the tests pass" (the silent-empty failure mode named in the wave-1 brief: a check reading a field that moved does not throw, it silently stops matching)
 - @e2e exclude before/after count parity is a PHPUnit/CLI assertion (`RuleAuditServiceTest`), not a UI flow
 
@@ -202,7 +202,7 @@ Pinned by `tests/Unit/Standards/Checks/NlAssetChecksTest.php` (both predicates, 
 
 `src/manifest.json` SHALL retire the `Vehicles`/`CarAssignments` menu entries, pages, and `deepLinks` entries, SHALL redirect their former URL patterns to the merged Asset/AssetAssignment detail routes, and SHALL hide the three vehicle-only fiscal fields on non-`vehicle` Asset detail pages.
 
-`src/manifest.json` carries (a) an `Assets` index page (route `/assets`, register `hrmq`, schema `Asset`) with columns `name`, `category`, `status`, `serialNumber`, filters `category`/`status`, default sort `name` ascending; (b) an `AssetDetail` detail page (route `/assets/:id`) with a `data` widget (`content.include`: `name`/`category`/`serialNumber`/`licencePlate`/`purchaseDate`/`purchaseValue`/`status`/`active`/`listPrice`/`fuelType`/`companyCarTaxCategory`, `content.hideEmpty: true` — the documented `CnObjectDataWidget` "discriminated supertype" mechanism, so a non-`vehicle` Asset's detail page does not render three permanently-empty fiscal fields as em dashes), `lifecycleActions` exposing exactly the four fragment transitions (`issue`/`checkIn`/`release`/`writeOff`), a `related` widget, an FK-scoped `object-list` "Uitgiftes" (`AssetAssignment`, `filter: { assetId: "@objectId" }`, sort `issuedOn` descending, rowRoute `AssetAssignmentDetail`), an `integration: files` widget for signed uitgiftebonnen and an audit-history sidebar tab; (c) an `AssetAssignments` index page (route `/asset-assignments`) with columns `assetId`, `employeeId`, `issuedOn`, `returnedOn`, `issueReceiptSigned`, sort `issuedOn` descending; (d) an `AssetAssignmentDetail` detail page (route `/asset-assignments/:id`) with a `data` widget (excluding `assetId`/`employeeId`; including `employeeContribution`), a `related` widget and an audit-history sidebar tab, and no lifecycleActions; (e) menu children `Assets` and `AssetAssignments` under the existing `ExpensesGroup`, unchanged in position by this change; (f) `deepLinks` entries for `Asset` (`/apps/hrmq/assets/{uuid}`) and `AssetAssignment` (`/apps/hrmq/asset-assignments/{uuid}`), unchanged. The manifest validates (`npm run check:manifest`).
+`src/manifest.json` carries (a) an `Assets` index page (route `/assets`, register `hrmq`, schema `Asset`) with columns `name`, `category`, `status`, `serialNumber`, filters `category`/`status`, default sort `name` ascending; (b) an `AssetDetail` detail page (route `/assets/:id`) with a `data` widget (`content.include`: `name`/`category`/`serialNumber`/`licencePlate`/`purchaseDate`/`purchaseValue`/`status`/`active`/`listPrice`/`fuelType`/`companyCarTaxCategory`, `content.hideEmpty: true` — the documented `CnObjectDataWidget` "discriminated supertype" mechanism, so a non-`vehicle` Asset's detail page does not render three permanently-empty fiscal fields as em dashes), `lifecycleActions` exposing exactly the four fragment transitions (`issue`/`checkIn`/`release`/`writeOff`), a `related` widget, an FK-scoped `object-list` "Uitgiftes" (`AssetAssignment`, `filter: { assetId: "@objectId" }`, sort `issuedOn` descending, rowRoute `AssetAssignmentDetail`), an `integration: files` widget for signed uitgiftebonnen and an audit-history sidebar tab; (c) an `AssetAssignments` index page (route `/asset-assignments`) with columns `assetId`, `employeeId`, `issuedOn`, `returnedOn`, `issueReceiptSigned`, sort `issuedOn` descending; (d) an `AssetAssignmentDetail` detail page (route `/asset-assignments/:id`) with a `data` widget (excluding `assetId`/`employeeId`; including `employeeContribution`), a `related` widget and an audit-history sidebar tab, and no lifecycleActions; (e) menu children `Assets` and `AssetAssignments` under the existing `ExpensesGroup`, unchanged in position by this change; (f) `deepLinks` entries for `Asset` (`/apps/humaniq/assets/{uuid}`) and `AssetAssignment` (`/apps/humaniq/asset-assignments/{uuid}`), unchanged. The manifest validates (`npm run check:manifest`).
 
 The `ExpensesGroup` menu's `Vehicles`/`CarAssignments` children, the `Vehicles`/`VehicleDetail`/`CarAssignments`/`CarAssignmentDetail` pages, and the `Vehicle`/`CarAssignment` `deepLinks` entries are removed (their schemas no longer exist — see the modified `fleet-bijtelling` capability). Their two former URL patterns become vue-router redirects to the merged Asset/AssetAssignment detail routes (`/vehicles/:id` → `/assets/:id`, `/car-assignments/:id` → `/asset-assignments/:id`), so a stale bookmark or external link resolves instead of 404ing.
 
@@ -216,21 +216,21 @@ The `ExpensesGroup` menu's `Vehicles`/`CarAssignments` children, the `Vehicles`/
 - GIVEN the seeded `asset-bus-transit` opened on `AssetDetail`
 - WHEN the page renders
 - THEN the data card shows the licence plate, the lifecycle actions offer only the transitions valid from the current status, and the Uitgiftes list shows the closed visser assignment linking to its detail page
-- @e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+- @e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 
 #### Scenario: A non-vehicle asset's detail page hides the fiscal fields
 
 - GIVEN the seeded `asset-laptop-latitude` (category `laptop`) opened on `AssetDetail`
 - WHEN the page renders
 - THEN the data card does not render `listPrice`/`fuelType`/`companyCarTaxCategory` as empty fields (hideEmpty)
-- @e2e exclude declarative widget config (`content.hideEmpty`); covered by the shared `CnObjectDataWidget` library tests, not an app-level e2e flow — app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+- @e2e exclude declarative widget config (`content.hideEmpty`); covered by the shared `CnObjectDataWidget` library tests, not an app-level e2e flow — app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 
 #### Scenario: A stale Vehicle URL redirects instead of 404ing
 
-- GIVEN a browser navigates to `/apps/hrmq/vehicles/<any-uuid>`
+- GIVEN a browser navigates to `/apps/humaniq/vehicles/<any-uuid>`
 - WHEN vue-router resolves the route
-- THEN it redirects to `/apps/hrmq/assets/<the-same-uuid>` rather than rendering the catch-all "no match" route
-- @e2e exclude router redirect; no live Vehicle object has ever existed to link to one (0 rows at merge time — Measured facts), so this is forward-looking deep-link hygiene rather than a fix for a reachable broken link; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+- THEN it redirects to `/apps/humaniq/assets/<the-same-uuid>` rather than rendering the catch-all "no match" route
+- @e2e exclude router redirect; no live Vehicle object has ever existed to link to one (0 rows at merge time — Measured facts), so this is forward-looking deep-link hygiene rather than a fix for a reachable broken link; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 
 ### Requirement: Seed data SHALL provide three assets and two uitgiftes with one deliberate inconsistency (REQ-AST-007)
 
@@ -240,7 +240,7 @@ The `ExpensesGroup` menu's `Vehicles`/`CarAssignments` children, the `Vehicles`/
 
 #### Scenario: Idempotent seed
 
-- WHEN the register Repair import (and `occ hrmq:rules:seed-testdata`) runs twice
+- WHEN the register Repair import (and `occ humaniq:rules:seed-testdata`) runs twice
 - THEN the three assets and two assignments exist exactly once
 
 #### Scenario: Exactly one seeded asset violation
@@ -255,7 +255,7 @@ Pinned by `RuleAuditServiceTest::testSeededAssetDataFlagsExactlyOneAssignmentCon
 
 Every pre-existing `Asset` and `AssetAssignment` object SHALL be rewritten from the old Dutch dialect to the renamed one, and the rewrite MUST NOT delete any object.
 
-The rename in REQ-AST-001/REQ-AST-002 changed schema field names and enum values but, because OpenRegister's register-config seed import is create-only, never patches an object that already exists. Objects created before this change carry the old Dutch field names/enum values indefinitely unless something rewrites them. `AssetDialectMigrationService::migrate()` performs that rewrite for every existing `Asset`/`AssetAssignment` object, invoked by both the `MigrateAssetDialect` repair step (unconditional on upgrade, and on `occ maintenance:repair`) and the `occ hrmq:assets:migrate-dialect` command (on-demand re-run). It never deletes an object, and reports counts per schema: rows inspected, rewritten, already-current, and skipped-with-reason.
+The rename in REQ-AST-001/REQ-AST-002 changed schema field names and enum values but, because OpenRegister's register-config seed import is create-only, never patches an object that already exists. Objects created before this change carry the old Dutch field names/enum values indefinitely unless something rewrites them. `AssetDialectMigrationService::migrate()` performs that rewrite for every existing `Asset`/`AssetAssignment` object, invoked by both the `MigrateAssetDialect` repair step (unconditional on upgrade, and on `occ maintenance:repair`) and the `occ humaniq:assets:migrate-dialect` command (on-demand re-run). It never deletes an object, and reports counts per schema: rows inspected, rewritten, already-current, and skipped-with-reason.
 
 #### Scenario: An old-dialect Asset is rewritten
 
@@ -296,5 +296,5 @@ The rename in REQ-AST-001/REQ-AST-002 changed schema field names and enum values
 #### Scenario: The fiscal-fields rule audit reaches migrated data
 
 - GIVEN a pre-existing `Asset` with `category: voertuig` and no `listPrice`/`fuelType`/`companyCarTaxCategory`, alongside a newly-seeded `Asset` with `category: vehicle` and the same gap
-- WHEN the migration runs and `occ hrmq:rules:audit` runs afterward
+- WHEN the migration runs and `occ humaniq:rules:audit` runs afterward
 - THEN `nl-asset-voertuig-fiscale-velden-compleet` flags BOTH vehicles (`Asset ... withViolations=2`), not just the one that was already in the new dialect

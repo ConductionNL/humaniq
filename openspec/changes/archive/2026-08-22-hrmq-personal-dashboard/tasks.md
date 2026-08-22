@@ -1,8 +1,8 @@
-# Tasks — hrmq personal dashboard
+# Tasks — humaniq personal dashboard
 
 Ordering is load-bearing: V (verify) gates the widget configs; this change lands AFTER
-`hrmq-hours-process-redesign` (widgets bind to `TimeEntry` and `Timesheet.entryCount`) and
-BEFORE `hrmq-i18n-locale-completeness` (labels stay Dutch literals here).
+`humaniq-hours-process-redesign` (widgets bind to `TimeEntry` and `Timesheet.entryCount`) and
+BEFORE `humaniq-i18n-locale-completeness` (labels stay Dutch literals here).
 
 ## V. Verify the design's data-binding assumptions (BLOCKING — before finalizing widget configs)
 
@@ -25,9 +25,9 @@ BEFORE `hrmq-i18n-locale-completeness` (labels stay Dutch literals here).
       its SHIPPING spelling (`schema: "TimeEntry"`) rendered **0.00**. The aggregation endpoint
       resolves a schema slug GLOBALLY (`SchemaMapper::find`, `LOWER(slug)` across every
       register; the `{register}` path segment is not used to disambiguate), and on this shared
-      instance `TimeEntry` resolves to planix's #161 rather than hrmq's #9466 — and `Expense` to
-      pipelinq's #507 rather than hrmq's #5026, i.e. widget 4 counts another app's rows. The
-      probe therefore pinned the operator-filter question with the hrmq schema id so the two
+      instance `TimeEntry` resolves to planninq's #161 rather than humaniq's #9466 — and `Expense` to
+      pipelinq's #507 rather than humaniq's #5026, i.e. widget 4 counts another app's rows. The
+      probe therefore pinned the operator-filter question with the humaniq schema id so the two
       questions stayed separable. No manifest spelling can fix it (a slug is the only portable
       form); the fix belongs in OpenRegister or in `occ openregister:schemas:dedup` on the dev
       box. Single-app instances and CI are unaffected. Recorded in design.md Risks.
@@ -53,11 +53,11 @@ BEFORE `hrmq-i18n-locale-completeness` (labels stay Dutch literals here).
       (route-less-group branch, `CnAppNav.vue:1266`).
       **PASS (2026-08-22).** With the fragment's `route` key present, the rendered entry is
       `<li data-testid="cn-nav-entry-MijnHrGroup" data-cn-route="MijnHr">` whose title is
-      `<a href="/apps/hrmq/mijn">`, its nine children render beneath it, and clicking the title
-      navigated to `/apps/hrmq/mijn` (`[data-page-id="MijnHr"]`, six widget wrappers).
+      `<a href="/apps/humaniq/mijn">`, its nine children render beneath it, and clicking the title
+      navigated to `/apps/humaniq/mijn` (`[data-page-id="MijnHr"]`, six widget wrappers).
       **Must-fail control**: the same fragment rebuilt with the `route` key removed rendered
       `href="#"`, no `data-cn-route` attribute, and clicking the title left the URL on
-      `/apps/hrmq/timesheets` — no navigation. In-nav control in the SAME render: the route-less
+      `/apps/humaniq/timesheets` — no navigation. In-nav control in the SAME render: the route-less
       `EmployeesGroup` ("Personeel") also renders `href="#"`.
 
 ## 1. Manifest fragment + base route normalization
@@ -98,10 +98,10 @@ BEFORE `hrmq-i18n-locale-completeness` (labels stay Dutch literals here).
       `/mijn` with six widgets; every existing child entry still navigates; open
       `/mijn-hr/gebruikelijk-loon` by URL → redirected to `/mijn/gebruikelijk-loon` and the
       page renders (never assert from the manifest alone). Verified live 2026-08-22: title click
-      → `/apps/hrmq/mijn`, `[data-page-id="MijnHr"]`, 6 `.cn-widget-wrapper`s; all six widgets
+      → `/apps/humaniq/mijn`, `[data-page-id="MijnHr"]`, 6 `.cn-widget-wrapper`s; all six widgets
       fired correctly-scoped requests (`filter[userId]=admin` / `filter[managerUserId]=admin` on
       the stats, `userId=admin` on the three lists); the three stat tiles rendered as
-      `<a href="/apps/hrmq/mijn/uren">`, `…/mijn/declaraties`, `…/timesheets/team-approval`.
+      `<a href="/apps/humaniq/mijn/uren">`, `…/mijn/declaraties`, `…/timesheets/team-approval`.
       The `@workspace.activeAdministrationId?` token was DROPPED on every widget (never sent as
       a literal) — `CnDashboardPage`'s workspace context does not publish that key, the
       documented optional-token degradation. The redirect path is covered by the e2e journey
@@ -113,7 +113,7 @@ BEFORE `hrmq-i18n-locale-completeness` (labels stay Dutch literals here).
 - [x] 2.1 `lib/Settings/register.d/hr-leave.json`: add `userId` (string, nullable) to
       `LeaveBalance` per the REQ-MHS-002 convention — user-oriented description, rationale
       (never a `$ref`; mirrors `approvedBy`) in `x-notes`; bump LeaveBalance 0.2.0 → 0.3.0 and
-      the register `info.version` in `lib/Settings/hrmq_register.json` (0.16.0 → 0.17.0, both
+      the register `info.version` in `lib/Settings/humaniq_register.json` (0.16.0 → 0.17.0, both
       occurrences). `required` unchanged.
 - [x] 2.2 `lib/BackgroundJob/LeaveAccrualJob.php`: stamp `userId` from the resolved Employee's
       `nextcloudUserId` on BOTH the create path and the update path; null when the employee has
@@ -177,7 +177,7 @@ BEFORE `hrmq-i18n-locale-completeness` (labels stay Dutch literals here).
       scenario name in comments, every non-excluded scenario of this change's spec deltas
       (gate-19 traceability) — 7 scenarios across the two UI-bearing deltas, plus machine-
       readable `@e2e <spec>::<slug>` anchors on the test declarations (the short form gate-19's
-      `_E2E_SHORT_RE` reads; hrmq's existing e2e files carry prose references only, which
+      `_E2E_SHORT_RE` reads; humaniq's existing e2e files carry prose references only, which
       gate-19 does not count). 5 journeys: (a) group TITLE click → `/mijn` + six widgets, with
       the ADR-001 menu order and the routed-vs-bare-parent contrast in the same test;
       (b) chevron expands the children without navigating, then a child still navigates;
@@ -211,7 +211,7 @@ BEFORE `hrmq-i18n-locale-completeness` (labels stay Dutch literals here).
 - [ ] 5.1 `composer check:strict` + PHPUnit + `npm run test` green; run
       `scripts/run-hydra-gates.sh` — gate-16 (`@spec` on changed methods), gate-19 (scenario
       traceability), manifest gates clean. If gate-65 (`navigation-budget`) has landed by then,
-      confirm its emitted count for hrmq is 5 (exemption verified); if it has not, record the
+      confirm its emitted count for humaniq is 5 (exemption verified); if it has not, record the
       before/after count (6 → 5) in the PR body against ADR-097's census table.
       **PARTIAL.** Green: PHPUnit (`composer test:all` — 1274 tests, 4935 assertions, 1 skipped,
       OK), `npm run lint` (eslint src — clean), `npm run build` (exit 0), `composer psalm`
@@ -220,7 +220,7 @@ BEFORE `hrmq-i18n-locale-completeness` (labels stay Dutch literals here).
       is blocked by the vendor/ breakage recorded in 2.4. gate-19's checker reads
       `openspec/specs/`, so this change's deltas are outside its scope until `opsx-sync`; the
       `@e2e` anchors are written to match once they land. gate-65 has not landed — **record in
-      the PR body: hrmq's counted `main` top-level entries go 6 → 5, because `MijnHrGroup` now
+      the PR body: humaniq's counted `main` top-level entries go 6 → 5, because `MijnHrGroup` now
       satisfies both ADR-097 Decision 3 conditions (routes to a `type:"dashboard"` caller-scoped
       page AND carries children) instead of claiming an exemption it could not demonstrate.**
       Live top-level order, unchanged apart from the new route: Dashboard, MijnHrGroup,
@@ -242,7 +242,7 @@ BEFORE `hrmq-i18n-locale-completeness` (labels stay Dutch literals here).
       the legacy redirect), `LeaveBalance` added to the denormalized-`userId` set with the
       accrual job named as its custodian and the self-heal explained, and the stale
       "Dashboard KPIs" section — which described the `@me` widgets
-      `hrmq-dashboard-steering-indicators` REMOVED from `/dashboard` — replaced by a
+      `humaniq-dashboard-steering-indicators` REMOVED from `/dashboard` — replaced by a
       "The personal dashboard" section describing the six real widgets. The manager section's
       claim about re-scoped Dashboard approver widgets was corrected the same way.
 - [x] 5.3 Hand design.md's two open questions (catch-all default landing;

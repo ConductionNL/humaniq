@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-13-recruiting-ats-basic
 # recruiting-applications Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [recruiting-ats-basic](../../changes/archive/2026-07-13-recruiting-ats-basic/) _(archived 2026-07-13)_ — new `Application` schema (fragment hr-ats.json; candidate PII inside the application, no Candidate entity) with declarative pipeline lifecycle nieuw→screening→gesprek→aanbod→aangenomen/afgewezen, stored-but-rule-checked `retentionExpiryDate` (AP sollicitatie-richtlijn: 4 weken, 1 jaar met talent-pool-toestemming), 2 machine-checkable AVG rules in a new privacy corpus + `NlAtsChecks`, Applications/ApplicationDetail pages, seeded expired-retention violation (kind: config)
 - [offer-esign](../../changes/archive/2026-07-15-offer-esign/) _(archived 2026-07-15)_ — amends this leaf: `Application` v0.3.0 gains additive `offerLetterFileId`/`offerSigningRequestId`/`offerSigningStatus` and one new `aanbod`-stage seed; supersedes the `aanbieden` transition's own docblock claim ("No offer-letter generation/e-signature in the MVP.") for the generation/request half via the new `offer-esign` capability — see `openspec/specs/offer-esign/spec.md`. Signing COMPLETION and auto-hire remain explicitly out of scope; the `aanbieden`/`aannemen` transitions and their descriptions below are otherwise unchanged.
@@ -22,7 +22,7 @@ Autoriteit Persoonsgegevens sollicitatie-bewaartermijn (delete at the
 latest 4 weeks after rejection; at most 1 year with explicit
 `talentPoolOptIn` consent) is a stored, machine-checkable fact enforced by
 `nl-ats-retentie-derivatie` / `nl-ats-retentie-verlopen` via
-`occ hrmq:rules:audit`. The kanban board (nc-vue widget follow-up), public
+`occ humaniq:rules:audit`. The kanban board (nc-vue widget follow-up), public
 career page (portaliq per ADR-046), interviews, offers/e-signature
 (docudesk/decidesk follow-up), automatic Employee creation on hire, and the
 automatic deletion job are explicitly out of scope.
@@ -57,7 +57,7 @@ automatic deletion job are explicitly out of scope.
 A new corpus file `lib/Standards/rules/privacy.json` (`{"domain": "privacy", "version": "2026-07", "rules": [...]}` — payroll.json is tax/reporting, labour.json is labour law; sollicitatie-bewaartermijnen are privacy law, and SCHEMA.md prescribes one file per sub-domain) SHALL gain `nl-ats-retentie-derivatie` (a rejected Application carries `rejectedDate` and `retentionExpiryDate = rejectedDate + 4 weken` without talent-pool consent or `+ 1 jaar` with `talentPoolOptIn: true`; on `afgewezen` neither field may be null; carries `parameters.retentionDays: 28` and `parameters.optInRetentionDays: 365` so the offsets are rule data, not PHP constants) and `nl-ats-retentie-verlopen` (an Application whose `retentionExpiryDate` lies in the past must no longer exist un-anonymised in the register; one still present at audit time is a violation). Both: `domain: gdpr-recruitment`, `jurisdiction: NL`, `framework: gdpr`, `severity: mandatory`, `machineCheckable: true`, `effectiveDate: 2018-05-25`, `source` citing AVG art. 5 lid 1 sub e (opslagbeperking), the Autoriteit Persoonsgegevens richtlijn sollicitatiegegevens and the UAVG (`https://wetten.overheid.nl/BWBR0040940`), `sourceUrl: https://autoriteitpersoonsgegevens.nl/themas/werk-en-uitkering/sollicitaties` (verified live 2026-07-12). `RuleCatalogue::VERSION` bumped to `2026-07.1`.
 
 #### Scenario: Corpus stays loadable and versioned
-- **WHEN** `occ hrmq:rules:audit` runs after the corpus edit
+- **WHEN** `occ humaniq:rules:audit` runs after the corpus edit
 - **THEN** the RuleCatalogue loads payroll.json, labour.json AND privacy.json without error and reports the two new rules as enforced (each has a CheckProvider predicate)
 
 ### Requirement: `NlAtsChecks` SHALL enforce derivation and expiry as single-object predicates (REQ-RCA-003)
@@ -70,7 +70,7 @@ Each predicate is side-effect free and keyed by its corpus rule id.
 
 #### Scenario: Expired rejected application flagged
 - **GIVEN** the seed application `application-voorbeeld-afgewezen` (`rejectedDate: 2026-06-01`, `talentPoolOptIn: false`, `retentionExpiryDate: 2026-06-29`)
-- **WHEN** `occ hrmq:rules:audit` runs on any date after 2026-06-29
+- **WHEN** `occ humaniq:rules:audit` runs on any date after 2026-06-29
 - **THEN** a `nl-ats-retentie-verlopen` violation with mandatory severity is reported for that object
 
 #### Scenario: Correct derivation passes
@@ -95,14 +95,14 @@ Each predicate is side-effect free and keyed by its corpus rule id.
 
 ### Requirement: The application pages SHALL surface the pipeline, the retention clock, and the CV under `Onboarding & ATS` (REQ-RCA-004)
 
-`src/manifest.json` gains, under the `OnboardingAtsGroup` menu group (REQ-RCV-002): `Applications` (index over `Application`, route `/applications`: columns `candidateName`, `vacancyId`, `status`, `talentPoolOptIn`, `retentionExpiryDate`; filters `status` — the MVP pipeline surface: each stage is one filter value, the kanban board is a deferred nc-vue widget follow-up (design D7); sort `candidateName` asc — submission time is OpenRegister object metadata, no fake recency column (design D8)) and `ApplicationDetail` (detail, route `/applications/:id`: an "Application" data widget excluding `vacancyId` and the three privacy fields, a "Privacy & retention" data widget with `talentPoolOptIn`/`rejectedDate`/`retentionExpiryDate`, a related widget, a files widget "CV & motivatiebrief", `lifecycleActions` exposing exactly `screenen`/`uitnodigen`/`aanbieden`/`aannemen`/`afwijzen` with Dutch labels, an audit-history sidebar tab, and a page `_note` documenting the PII-inside-Application decision and the manual onboarding hand-off on `aannemen`). An `Application` deepLink (`/apps/hrmq/applications/{uuid}`) is registered, and `src/icons.js` registers `FileAccountOutline`. The manifest validates (`npm run check:manifest`).
+`src/manifest.json` gains, under the `OnboardingAtsGroup` menu group (REQ-RCV-002): `Applications` (index over `Application`, route `/applications`: columns `candidateName`, `vacancyId`, `status`, `talentPoolOptIn`, `retentionExpiryDate`; filters `status` — the MVP pipeline surface: each stage is one filter value, the kanban board is a deferred nc-vue widget follow-up (design D7); sort `candidateName` asc — submission time is OpenRegister object metadata, no fake recency column (design D8)) and `ApplicationDetail` (detail, route `/applications/:id`: an "Application" data widget excluding `vacancyId` and the three privacy fields, a "Privacy & retention" data widget with `talentPoolOptIn`/`rejectedDate`/`retentionExpiryDate`, a related widget, a files widget "CV & motivatiebrief", `lifecycleActions` exposing exactly `screenen`/`uitnodigen`/`aanbieden`/`aannemen`/`afwijzen` with Dutch labels, an audit-history sidebar tab, and a page `_note` documenting the PII-inside-Application decision and the manual onboarding hand-off on `aannemen`). An `Application` deepLink (`/apps/humaniq/applications/{uuid}`) is registered, and `src/icons.js` registers `FileAccountOutline`. The manifest validates (`npm run check:manifest`).
 
 #### Scenario: Manifest stays valid
 - **WHEN** `npm run check:manifest` runs
 - **THEN** it exits 0
 
 #### Scenario: Detail page drives the pipeline
-@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** an Application in status `nieuw` opened on `ApplicationDetail`
 - **WHEN** the user executes Screenen
 - **THEN** the page reflects status `screening` and offers Uitnodigen and Afwijzen
@@ -121,5 +121,5 @@ Each predicate is side-effect free and keyed by its corpus rule id.
 
 #### Scenario: Seeded audit shows exactly the intended ATS violations
 - **GIVEN** a fresh import of the seed data
-- **WHEN** `occ hrmq:rules:audit` runs on 2026-07-12
+- **WHEN** `occ humaniq:rules:audit` runs on 2026-07-12
 - **THEN** the ATS violations are exactly: one mandatory `nl-ats-retentie-verlopen` for `application-voorbeeld-afgewezen`, and no `nl-ats-retentie-derivatie` violations anywhere

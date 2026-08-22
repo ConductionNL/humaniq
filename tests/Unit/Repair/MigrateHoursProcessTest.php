@@ -12,7 +12,7 @@
  * marker path.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Repair
+ * @package  OCA\Humaniq\Tests\Unit\Repair
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -23,22 +23,22 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Repair;
+namespace OCA\Humaniq\Tests\Unit\Repair;
 
-use OCA\Hrmq\Repair\MigrateHoursProcess;
-use OCA\Hrmq\Service\HoursMigrationRunner;
-use OCA\Hrmq\Service\InternalWriteMarker;
-use OCA\Hrmq\Service\OrgResolutionService;
-use OCA\Hrmq\Service\SettingsService;
-use OCA\Hrmq\Service\TimesheetAggregationService;
-use OCA\Hrmq\Tests\Unit\Support\FakeContainer;
-use OCA\Hrmq\Tests\Unit\Support\FakeObjectStore;
+use OCA\Humaniq\Repair\MigrateHoursProcess;
+use OCA\Humaniq\Service\HoursMigrationRunner;
+use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\OrgResolutionService;
+use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\TimesheetAggregationService;
+use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
+use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
 use OCP\BackgroundJob\IJobList;
 use OCP\IGroupManager;
 use OCP\IUser;

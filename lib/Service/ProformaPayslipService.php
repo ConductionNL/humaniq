@@ -15,7 +15,7 @@
  * adds ZERO tax logic: every figure comes from the reused calculator.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -32,13 +32,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
-use OCA\Hrmq\Payroll\CalculationInput;
-use OCA\Hrmq\Payroll\PayrollCalculator;
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\CalculationInput;
+use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Payroll\TaxTables;
 
 /**
  * Stateless builder: hypothetical params in, full gross-to-net breakdown out,

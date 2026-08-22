@@ -1,4 +1,4 @@
-# employer-hourly-cost-rate — delta for hrmq-hours-process-redesign
+# employer-hourly-cost-rate — delta for humaniq-hours-process-redesign
 
 ## ADDED Requirements
 

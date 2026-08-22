@@ -3,7 +3,7 @@
 > Verify against HEAD, not this brief — OpenRegister's `ObjectsController` route table
 > (`/api/objects/{register}/{schema}` + verbs), its `@NoAdminRequired`/`@NoCSRFRequired` posture,
 > its RBAC enforcement (`SEC-CTRL-1`) and `RenderHandler::redactWriteOnlyFromRows()`, and
-> `hrmq-mcp-adoption`'s six-schema allow-list are already merged/live at HEAD; this change
+> `humaniq-mcp-adoption`'s six-schema allow-list are already merged/live at HEAD; this change
 > documents and catalogues them, it does not build them.
 
 - [ ] 1. Schema: NEW fragment `lib/Settings/register.d/hr-integrations.json` — `IntegrationAccount`
@@ -11,7 +11,7 @@
   actief/ingetrokken, reviewedBy, reviewedAt, createdAt; each property's description states its
   audit/governance role, `grantedSchemas`' description explicitly states it does NOT enforce
   access per design.md D2) per REQ-HRIS-003
-- [ ] 2. Register: `lib/Settings/hrmq_register.json` `info.version` bump (new fragment)
+- [ ] 2. Register: `lib/Settings/humaniq_register.json` `info.version` bump (new fragment)
 - [ ] 3. Manifest: `IntegrationAccounts` index (name/purpose/status/reviewedAt columns) +
   `IntegrationAccountDetail` (data + audit sidebar, no lifecycleActions) under `Configuratie ›
   Integraties` (the previously-unclaimed ADR-001 slot), admin-only per REQ-HRIS-005; `npm run
@@ -21,9 +21,9 @@
 - [ ] 5. Docs: README/docs "Public HRIS API" section — the real `/api/objects/{register}/{schema}`
   endpoint pattern + 5 CRUD verbs (verified against the live `openregister` route table, not
   invented), Nextcloud app-password auth (Settings › Personal › Security), the RBAC/writeOnly-
-  redaction model, and the recommended six-schema default subset citing `hrmq-mcp-adoption`
+  redaction model, and the recommended six-schema default subset citing `humaniq-mcp-adoption`
   directly per REQ-HRIS-001/-002/-004
-- [ ] 6. Docs: explicit statement that this change adds zero hrmq routes/controllers/services —
+- [ ] 6. Docs: explicit statement that this change adds zero humaniq routes/controllers/services —
   the diff itself should have none outside `hr-integrations.json`/`hr-seed.json`/manifest/docs, per
   REQ-HRIS-001
 - [ ] 7. Tests: schema validation test for `IntegrationAccount` (required fields, enum values,

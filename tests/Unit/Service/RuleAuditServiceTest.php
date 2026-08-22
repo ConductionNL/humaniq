@@ -11,7 +11,7 @@
  * OpenRegister ObjectService is a sibling-app dependency not available in
  * this standalone suite) with the exact pension-filing-upa-mvp seed fixture
  * shapes, and asserts the resulting report matches what `occ
- * hrmq:rules:audit` would show against the seeded register. mss-team-scope
+ * humaniq:rules:audit` would show against the seeded register. mss-team-scope
  * (round 3) adds coverage for the Employee.nextcloudUserId/OrgUnit.managerId
  * index extensions and the new OrgAssignment.byEmployeeId index, through the
  * exact seeded Timesheet/Expense/LeaveRequest managerUserId stamps.
@@ -25,7 +25,7 @@
  * for that same run (design.md Seed Data).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -43,9 +43,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Service\RuleAuditService;
+use OCA\Humaniq\Service\RuleAuditService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -911,8 +911,8 @@ class RuleAuditServiceTest extends TestCase {
 		$service = $this->serviceWithRows($this->seededSignalsRows());
 		$report = $service->audit(['jurisdiction' => 'NL']);
 
-		$this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
-		$enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+		$this->assertSame(\OCA\Humaniq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+		$enforceable = \OCA\Humaniq\Standards\RuleEngine::checkedRuleIds();
 		$this->assertContains('nl-signaal-contract-verloopt', $enforceable);
 		$this->assertContains('nl-aanzegtermijn-bewaking', $enforceable);
 
@@ -1060,8 +1060,8 @@ class RuleAuditServiceTest extends TestCase {
 		$service = $this->serviceWithRows($this->seededMssRows());
 		$report = $service->audit(['jurisdiction' => 'NL']);
 
-		$this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
-		$enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+		$this->assertSame(\OCA\Humaniq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+		$enforceable = \OCA\Humaniq\Standards\RuleEngine::checkedRuleIds();
 		$this->assertContains('nl-mss-manager-consistency', $enforceable);
 
 	}//end testSeededMssDataReportsBumpedCatalogueVersionAndRuleEnforceable()
@@ -1131,7 +1131,7 @@ class RuleAuditServiceTest extends TestCase {
 	}//end testSeededMileageDataFlagsOnlyTheOverRateExpenseThroughAudit()
 
 	/**
-	 * occ hrmq:rules:audit reports the rule as enforced: it counts toward
+	 * occ humaniq:rules:audit reports the rule as enforced: it counts toward
 	 * both machine-checkable and enforceable coverage, and the catalogue
 	 * version is the bumped one (REQ-MILE-002 / REQ-MILE-003).
 	 *
@@ -1144,12 +1144,12 @@ class RuleAuditServiceTest extends TestCase {
 		$service = $this->serviceWithRows($this->seededMileageRows());
 		$report = $service->audit(['jurisdiction' => 'NL']);
 
-		$this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+		$this->assertSame(\OCA\Humaniq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
 
-		$machineCheckable = array_column(\OCA\Hrmq\Standards\RuleCatalogue::machineCheckable(), 'id');
+		$machineCheckable = array_column(\OCA\Humaniq\Standards\RuleCatalogue::machineCheckable(), 'id');
 		$this->assertContains('nl-reiskosten-onbelast-tarief', $machineCheckable);
 
-		$enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+		$enforceable = \OCA\Humaniq\Standards\RuleEngine::checkedRuleIds();
 		$this->assertContains('nl-reiskosten-onbelast-tarief', $enforceable);
 
 	}//end testSeededMileageDataReportsBumpedCatalogueVersionAndRuleEnforceable()
@@ -1267,8 +1267,8 @@ class RuleAuditServiceTest extends TestCase {
 		$service = $this->serviceWithRows($this->seededAbpRows());
 		$report = $service->audit(['jurisdiction' => 'NL']);
 
-		$this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
-		$enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+		$this->assertSame(\OCA\Humaniq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+		$enforceable = \OCA\Humaniq\Standards\RuleEngine::checkedRuleIds();
 		$this->assertContains('nl-abp-fund-required', $enforceable);
 
 	}//end testSeededAbpDataReportsBumpedCatalogueVersionAndRuleEnforceable()
@@ -1371,7 +1371,7 @@ class RuleAuditServiceTest extends TestCase {
 	 * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-003
 	 */
 	public function testNoCoverageRatioRuleExistsInTheCorpus(): void {
-		$ids = array_column(\OCA\Hrmq\Standards\RuleCatalogue::all(), 'id');
+		$ids = array_column(\OCA\Humaniq\Standards\RuleCatalogue::all(), 'id');
 
 		foreach ($ids as $id) {
 			$this->assertDoesNotMatchRegularExpression('/dekking|coverage|ratio/i', $id);
@@ -1388,8 +1388,8 @@ class RuleAuditServiceTest extends TestCase {
 		$service = $this->serviceWithRows($this->seededBhvRows());
 		$report = $service->audit(['jurisdiction' => 'NL']);
 
-		$this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
-		$enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+		$this->assertSame(\OCA\Humaniq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+		$enforceable = \OCA\Humaniq\Standards\RuleEngine::checkedRuleIds();
 		$this->assertContains('nl-bhv-certificaat-verloopt', $enforceable);
 
 	}//end testSeededBhvDataReportsBumpedCatalogueVersionAndRuleEnforceable()
@@ -1493,7 +1493,7 @@ class RuleAuditServiceTest extends TestCase {
 	}//end testSeededUitzendDataFlagsExactlyTheIntendedUitzendbedingViolation()
 
 	/**
-	 * occ hrmq:rules:audit reports the two new rules as enforced against the
+	 * occ humaniq:rules:audit reports the two new rules as enforced against the
 	 * bumped catalogue version.
 	 *
 	 * @return void
@@ -1504,9 +1504,9 @@ class RuleAuditServiceTest extends TestCase {
 		$service = $this->serviceWithRows($this->seededUitzendRows());
 		$report = $service->audit(['jurisdiction' => 'NL']);
 
-		$this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+		$this->assertSame(\OCA\Humaniq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
 
-		$enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+		$enforceable = \OCA\Humaniq\Standards\RuleEngine::checkedRuleIds();
 		$this->assertContains('nl-uitzendbeding-alleen-fase-a', $enforceable);
 		$this->assertContains('nl-inlenersbeloning-onderbouwing-vereist', $enforceable);
 
@@ -1624,8 +1624,8 @@ class RuleAuditServiceTest extends TestCase {
 		$service = $this->serviceWithRows($this->seededStagiairRows());
 		$report = $service->audit(['jurisdiction' => 'NL']);
 
-		$this->assertSame(\OCA\Hrmq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
-		$enforceable = \OCA\Hrmq\Standards\RuleEngine::checkedRuleIds();
+		$this->assertSame(\OCA\Humaniq\Standards\RuleCatalogue::VERSION, $report['catalogueVersion']);
+		$enforceable = \OCA\Humaniq\Standards\RuleEngine::checkedRuleIds();
 		$this->assertContains('nl-bpv-overeenkomst-vereist', $enforceable);
 
 	}//end testBblContractReportsBumpedCatalogueVersionAndRuleEnforceable()

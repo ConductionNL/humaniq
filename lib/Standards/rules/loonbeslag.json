@@ -19,7 +19,7 @@
       "domain": "payroll",
       "jurisdiction": "NL",
       "framework": "nl-loonbeslag",
-      "source": "hrmq loonbeslag MVP scope (design.md D4) -- BW art. 475d governs priority ordering across simultaneous garnishments, not yet implemented",
+      "source": "humaniq loonbeslag MVP scope (design.md D4) -- BW art. 475d governs priority ordering across simultaneous garnishments, not yet implemented",
       "statement": "Until priority/preferente-vordering ordering across simultaneous garnishments is implemented, an employer's payroll administration shall carry at most one actief Loonbeslag per employee per effective period.",
       "severity": "conditional",
       "machineCheckable": true,

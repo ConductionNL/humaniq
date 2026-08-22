@@ -22,7 +22,7 @@ standalone "Onkosten" top-level group).
 
 #### Scenario: Expense pages are reachable under Declaraties & assets
 
-- GIVEN the hrmq app menu is rendered
+- GIVEN the humaniq app menu is rendered
 - WHEN a user looks for expense claims
 - THEN the `Expenses` and `ExpenseApproval` entries MUST be found under the "Declaraties & assets"
   top-level menu group, not under a standalone "Onkosten" top-level group

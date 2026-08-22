@@ -7,9 +7,9 @@ built_by: openspec/changes/archive/2026-07-15-offer-esign
 # offer-esign Specification
 
 **Status**: done
-**Scope**: hrmq (offer-letter generation + e-signature request for recruiting `Application`s at the `aanbod` stage, through the existing docudesk consumption leaf)
+**Scope**: humaniq (offer-letter generation + e-signature request for recruiting `Application`s at the `aanbod` stage, through the existing docudesk consumption leaf)
 **OpenSpec changes**:
-- [offer-esign](../../changes/archive/2026-07-15-offer-esign/) _(archived 2026-07-15)_ — `Application` v0.3.0 (additive `offerLetterFileId`/`offerSigningRequestId`/`offerSigningStatus`), new `OfferEsignService` (duck-typed docudesk probe, config-first/discovery-second/fail-closed `aanbiedingsbrief` template selection, render+store via `FileService::addFile()`→real `File::getId()`, `SigningService::createRequest()` with the verified real `signers` field shape + provenance fields, single-slot idempotency, no-auto-hire boundary), two occ commands (`hrmq:offer:request-signature`/`hrmq:offer:sync-signature`), one guarded `OfferController` endpoint, `ApplicationDetail` manifest action, one seed (kind: code)
+- [offer-esign](../../changes/archive/2026-07-15-offer-esign/) _(archived 2026-07-15)_ — `Application` v0.3.0 (additive `offerLetterFileId`/`offerSigningRequestId`/`offerSigningStatus`), new `OfferEsignService` (duck-typed docudesk probe, config-first/discovery-second/fail-closed `aanbiedingsbrief` template selection, render+store via `FileService::addFile()`→real `File::getId()`, `SigningService::createRequest()` with the verified real `signers` field shape + provenance fields, single-slot idempotency, no-auto-hire boundary), two occ commands (`humaniq:offer:request-signature`/`humaniq:offer:sync-signature`), one guarded `OfferController` endpoint, `ApplicationDetail` manifest action, one seed (kind: code)
 
 ## Purpose
 
@@ -17,7 +17,7 @@ Close the MVP gap the `Application.aanbieden` transition's own docblock names ("
 
 ## ADDED Requirements
 
-@e2e exclude backend occ/service/controller change plus declarative manifest action; hrmq has no app-level e2e suite yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude backend occ/service/controller change plus declarative manifest action; humaniq has no app-level e2e suite yet (tracked by active change humaniq-test-coverage-baseline)
 
 ### Requirement: `Application` SHALL gain additive offer-signing tracking fields (REQ-OFFR-001)
 
@@ -59,19 +59,19 @@ Close the MVP gap the `Application.aanbieden` transition's own docblock names ("
 
 ### Requirement: `OfferEsignService` SHALL request an e-signature via docudesk's real `createRequest()` contract (REQ-OFFR-003)
 
-Immediately after a successful letter generation (REQ-OFFR-002), `OfferEsignService` SHALL call `OCA\DocuDesk\Service\SigningService::createRequest(array $data): array` with the VERIFIED real field shape — `documentFileId` (the stored file id), `documentName`, `signatureLevel: 'SES'`, `signingMode: 'sequential'`, `deadline` (now plus `SettingsService::getOfferSigningDeadlineDays()`), and `signers` — an array of `{userId, displayName, email, order}` (NOT a `signerIds` field, which `createRequest()` does not accept as input; `signerIds` is a field `createRequest()` derives internally from the created `signers` and returns) — with exactly one entry for the candidate: `{userId: '', displayName: candidateName, email, order: 0}`. The call SHALL also thread the seven optional provenance fields `createRequest()` accepts directly (`sourceApp: 'hrmq'`, `subjectRegister`, `subjectSchema: 'Application'`, `subjectId: applicationId`, `subjectLabel: candidateName`, `externalReference: applicationId`, `correlationId: applicationId`). The entire write sub-pipeline (any idempotent supersede plus this call) SHALL be wrapped so that `RuntimeException('No authenticated user')` — thrown by `createRequest()`/`cancelRequest()` whenever `IUserSession::getUser()` is null, which is ALWAYS true for a genuine `occ` CLI process — is caught and turned into a `failed` outcome carrying the real exception message, never allowed to escape uncaught. On success, `Application.offerSigningRequestId` and `offerSigningStatus` (from the created request's own `status`) SHALL be persisted.
+Immediately after a successful letter generation (REQ-OFFR-002), `OfferEsignService` SHALL call `OCA\DocuDesk\Service\SigningService::createRequest(array $data): array` with the VERIFIED real field shape — `documentFileId` (the stored file id), `documentName`, `signatureLevel: 'SES'`, `signingMode: 'sequential'`, `deadline` (now plus `SettingsService::getOfferSigningDeadlineDays()`), and `signers` — an array of `{userId, displayName, email, order}` (NOT a `signerIds` field, which `createRequest()` does not accept as input; `signerIds` is a field `createRequest()` derives internally from the created `signers` and returns) — with exactly one entry for the candidate: `{userId: '', displayName: candidateName, email, order: 0}`. The call SHALL also thread the seven optional provenance fields `createRequest()` accepts directly (`sourceApp: 'humaniq'`, `subjectRegister`, `subjectSchema: 'Application'`, `subjectId: applicationId`, `subjectLabel: candidateName`, `externalReference: applicationId`, `correlationId: applicationId`). The entire write sub-pipeline (any idempotent supersede plus this call) SHALL be wrapped so that `RuntimeException('No authenticated user')` — thrown by `createRequest()`/`cancelRequest()` whenever `IUserSession::getUser()` is null, which is ALWAYS true for a genuine `occ` CLI process — is caught and turned into a `failed` outcome carrying the real exception message, never allowed to escape uncaught. On success, `Application.offerSigningRequestId` and `offerSigningStatus` (from the created request's own `status`) SHALL be persisted.
 
 #### Scenario: Real signers payload, not signerIds
 - **GIVEN** a successfully generated offer letter for candidate "Sanne Voorbeeld" (sanne.voorbeeld@example.org)
 - **WHEN** the service calls `createRequest()`
 - **THEN** the passed `$data['signers']` is `[{userId: '', displayName: 'Sanne Voorbeeld', email: 'sanne.voorbeeld@example.org', order: 0}]` and `$data` contains no `signerIds` key
 
-#### Scenario: Provenance fields correlate back to hrmq
+#### Scenario: Provenance fields correlate back to humaniq
 - **WHEN** `createRequest()` is called
-- **THEN** `$data['sourceApp'] === 'hrmq'`, `$data['subjectSchema'] === 'Application'`, and `$data['subjectId']` equals the Application's id
+- **THEN** `$data['sourceApp'] === 'humaniq'`, `$data['subjectSchema'] === 'Application'`, and `$data['subjectId']` equals the Application's id
 
 #### Scenario: CLI session gap surfaces as a failed outcome, never an uncaught exception
-- **GIVEN** `hrmq:offer:request-signature` invoked from a genuine `occ` CLI process (no Nextcloud user session)
+- **GIVEN** `humaniq:offer:request-signature` invoked from a genuine `occ` CLI process (no Nextcloud user session)
 - **WHEN** the underlying `createRequest()` throws `RuntimeException('No authenticated user')`
 - **THEN** the command's outcome is `failed` with that message surfaced, the process exits 1, and no exception propagates out of the service
 
@@ -118,13 +118,13 @@ Neither `requestSignature()` nor `syncSignatureStatus(?string $applicationId=nul
 - **THEN** `Application.offerSigningStatus` becomes `COMPLETED` but `Application.status` remains `aanbod` — no `aannemen` transition is executed
 
 #### Scenario: Sync is read-only and CLI-safe
-- **GIVEN** `hrmq:offer:sync-signature` invoked from a genuine `occ` CLI process with no Nextcloud user session
+- **GIVEN** `humaniq:offer:sync-signature` invoked from a genuine `occ` CLI process with no Nextcloud user session
 - **WHEN** it polls a live signing request via `getRequest()`
 - **THEN** the call succeeds (no `RuntimeException('No authenticated user')`) and the Application's `offerSigningStatus` is updated
 
 ### Requirement: Triggers SHALL be an admin/HR-only occ command pair plus a guarded, resolve-first manifest action (REQ-OFFR-007)
 
-`occ hrmq:offer:request-signature --application <id>` SHALL invoke `requestSignature()` for exactly one Application (`--application` required — no backlog semantics, an HR judgement call, not a scan) and exit 1 when the outcome is `failed`/`usage-error`, 0 otherwise; its docblock/help text SHALL state the CLI-session limitation (REQ-OFFR-003) plainly. `occ hrmq:offer:sync-signature [--application <id>]` SHALL default to every Application whose `offerSigningRequestId` is set and `offerSigningStatus` is `PENDING`/`IN_PROGRESS`. `OfferController::requestSignature(string $applicationId): JSONResponse`, behind `#[NoAdminRequired]`, SHALL reject a caller for whom `isAdminOrHr()` is false with HTTP 403 BEFORE any resolve or docudesk call, SHALL resolve the posted `applicationId` through `ObjectService::find()` under the caller's ambient RBAC and return HTTP 404 when it does not exist or is unauthorized (both collapsing to the same response, the no-admin-idor guard) BEFORE any docudesk call, and SHALL return HTTP 400 when the resolved Application's status is not `aanbod`. `ApplicationDetail` SHALL gain a page-level `api-call` action `request-offer-signature` (`url: /api/offer/request-signature`, `method: POST`, `params: {applicationId: "@objectId"}`, `confirm: true`) mirroring the `PayslipDetail` `generate-loonstrook` shape, and its "Application" data widget's exclude list SHALL gain `offerLetterFileId`/`offerSigningRequestId` (internal correlation ids); `offerSigningStatus` SHALL stay visible as the human-readable state. `npm run check:manifest` MUST keep passing.
+`occ humaniq:offer:request-signature --application <id>` SHALL invoke `requestSignature()` for exactly one Application (`--application` required — no backlog semantics, an HR judgement call, not a scan) and exit 1 when the outcome is `failed`/`usage-error`, 0 otherwise; its docblock/help text SHALL state the CLI-session limitation (REQ-OFFR-003) plainly. `occ humaniq:offer:sync-signature [--application <id>]` SHALL default to every Application whose `offerSigningRequestId` is set and `offerSigningStatus` is `PENDING`/`IN_PROGRESS`. `OfferController::requestSignature(string $applicationId): JSONResponse`, behind `#[NoAdminRequired]`, SHALL reject a caller for whom `isAdminOrHr()` is false with HTTP 403 BEFORE any resolve or docudesk call, SHALL resolve the posted `applicationId` through `ObjectService::find()` under the caller's ambient RBAC and return HTTP 404 when it does not exist or is unauthorized (both collapsing to the same response, the no-admin-idor guard) BEFORE any docudesk call, and SHALL return HTTP 400 when the resolved Application's status is not `aanbod`. `ApplicationDetail` SHALL gain a page-level `api-call` action `request-offer-signature` (`url: /api/offer/request-signature`, `method: POST`, `params: {applicationId: "@objectId"}`, `confirm: true`) mirroring the `PayslipDetail` `generate-loonstrook` shape, and its "Application" data widget's exclude list SHALL gain `offerLetterFileId`/`offerSigningRequestId` (internal correlation ids); `offerSigningStatus` SHALL stay visible as the human-readable state. `npm run check:manifest` MUST keep passing.
 
 #### Scenario: Non-admin/non-HR caller rejected before any resolve
 - **GIVEN** an authenticated caller who is neither an admin nor HR
@@ -155,5 +155,5 @@ Neither `requestSignature()` nor `syncSignatureStatus(?string $applicationId=nul
 
 #### Scenario: Seed is ready for the new action
 - **GIVEN** a fresh import of the seed data
-- **WHEN** `occ hrmq:offer:request-signature --application application-voorbeeld-aanbod` is run with docudesk installed and a resolvable `aanbiedingsbrief` template
+- **WHEN** `occ humaniq:offer:request-signature --application application-voorbeeld-aanbod` is run with docudesk installed and a resolvable `aanbiedingsbrief` template
 - **THEN** the outcome is neither `usage-error` (the seed is correctly in status `aanbod`) nor blocked by stale idempotency state (all three new fields start null)

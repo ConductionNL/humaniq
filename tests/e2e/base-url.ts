@@ -9,7 +9,7 @@
  * Two apps in this fleet were found running their e2e suites against the
  * SHARED dev container on :8080, by two different mechanisms — and one of
  * them was the login spec, so every run fired failed logins and brute-force
- * lockouts into an instance other people were using. hrmq had the same shape:
+ * lockouts into an instance other people were using. humaniq had the same shape:
  * `playwright.config.ts` and `global-setup.ts` each computed
  * `process.env.NEXTCLOUD_URL || 'http://localhost:8080'`, and
  * `core-journeys.spec.ts` recomputed it a THIRD time for its OpenRegister
@@ -31,7 +31,7 @@
  * Conduction quality workflow exports the target instance as `BASE_URL` —
  * not `PLAYWRIGHT_BASE_URL`. openconnector adopted a `PLAYWRIGHT_BASE_URL`-only
  * resolver during its own Vue 3 migration and its E2E job has hard-failed on
- * every run since with `Error: PLAYWRIGHT_BASE_URL is not set.` hrmq ships no
+ * every run since with `Error: PLAYWRIGHT_BASE_URL is not set.` humaniq ships no
  * `.github/workflows/` at all today, so nothing exercises this yet — which is
  * precisely why it has to be right before CI is added, rather than after the
  * first red run. Accepting the CI name costs nothing and keeps rule 1 intact:

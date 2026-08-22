@@ -7,15 +7,15 @@ built_by: openspec/changes/absence-rate-partial-recovery
 # absence-rate Specification
 
 **Status**: proposed
-**Scope**: hrmq
+**Scope**: humaniq
 **Kind**: code (one schema fragment + one pure service + manifest widget + one analytics endpoint)
 **OpenSpec changes**:
 - [absence-rate-partial-recovery](../../changes/absence-rate-partial-recovery/) — `SickLeaveCase.absenceProgression` + `currentAbsencePercentage`, `AbsenceRateService` (FTE-weighted verzuimpercentage over a period, `percentage: null` on zero availability), the `SickLeaveCaseDetail` "Work resumption" widget (kind: code)
-- [hrmq-dashboard-steering-indicators](../../changes/hrmq-dashboard-steering-indicators/) — **Status**: in-progress — exposes `AbsenceRateService` as a period trend through the guarded `GET /apps/hrmq/api/analytics/trends?metric=absence-rate` endpoint, the analytics-endpoint exposure this capability's own spec named as future work
+- [hrmq-dashboard-steering-indicators](../../changes/hrmq-dashboard-steering-indicators/) — **Status**: in-progress — exposes `AbsenceRateService` as a period trend through the guarded `GET /apps/humaniq/api/analytics/trends?metric=absence-rate` endpoint, the analytics-endpoint exposure this capability's own spec named as future work
 
 ## Purpose
 
-Give hrmq the FTE-weighted verzuimpercentage the sector reports, by recording partial work
+Give humaniq the FTE-weighted verzuimpercentage the sector reports, by recording partial work
 resumption on `SickLeaveCase` and computing a rate from it — rather than counting whole calendar
 days, which overstates every case where the employee is partly back at work.
 
@@ -39,7 +39,7 @@ The array SHALL carry no free-text, reason, note, diagnosis, symptom or cause fi
 `verzuim-wvp` REQ-VWP-002 unchanged.
 
 #### Scenario: A case recorded before the field existed is unaffected
-@e2e exclude pure schema + calculator contract; covered by AbsenceRateServiceTest, and the app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude pure schema + calculator contract; covered by AbsenceRateServiceTest, and the app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** a `SickLeaveCase` with `firstSickDay` 2025-12-01, status `gemeld`, and no `absenceProgression`
 - **WHEN** the absence rate is computed over January 2026 for a 40h/week employee
 - **THEN** it reports 31 absent day-equivalents of 31 available — 100% — the same figure whole-day counting produced
@@ -142,16 +142,16 @@ widget so they render once. The manifest MUST validate.
 
 ### Requirement: `AbsenceRateService` SHALL be exposed as a period trend through a guarded analytics endpoint (REQ-ABSRATE-006)
 
-`GET /apps/hrmq/api/analytics/trends?metric=absence-rate` SHALL call
+`GET /apps/humaniq/api/analytics/trends?metric=absence-rate` SHALL call
 `AbsenceRateService::absenceRate()` once per bucketed period over the requested range, scoped to
-the caller's active administration (`hrmq-dashboard-steering-indicators` REQ-DSI-005), and SHALL
+the caller's active administration (`humaniq-dashboard-steering-indicators` REQ-DSI-005), and SHALL
 return each bucket's `percentage` exactly as the service returns it — including `null` when
 `availableDayEquivalents` is zero, never coerced to `0`. This is the analytics-endpoint exposure
 the capability's own spec named as future work ("wiring it to an analytics endpoint is a separate
 change") rather than a change to the calculation contract, which is untouched.
 
 #### Scenario: The endpoint's null contract matches the service's own contract
-@e2e exclude endpoint contract assertion, covered by a controller/service unit test asserting the raw series payload against AbsenceRateServiceTest's own fixtures — hrmq's e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude endpoint contract assertion, covered by a controller/service unit test asserting the raw series payload against AbsenceRateServiceTest's own fixtures — humaniq's e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** the same zero-availability fixture `AbsenceRateServiceTest`'s "No availability yields null rather than zero" scenario already pins
-- **WHEN** `GET /apps/hrmq/api/analytics/trends?metric=absence-rate` resolves the corresponding period
+- **WHEN** `GET /apps/humaniq/api/analytics/trends?metric=absence-rate` resolves the corresponding period
 - **THEN** the bucket's value in the JSON response is `null`, matching `AbsenceRateService::absenceRate()['percentage']` for the same inputs

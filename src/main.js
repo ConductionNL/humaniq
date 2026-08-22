@@ -58,7 +58,7 @@ import '@conduction/nextcloud-vue/dist/esm/components/CnWidgetGrid/registerDashb
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
 // gridstack is a REQUIRED peer of @conduction/nextcloud-vue that no consumer
-// declares, and its stylesheet is the silent half: hrmq ships two
+// declares, and its stylesheet is the silent half: humaniq ships two
 // `type: "dashboard"` pages, and gridstack v12 sizes every item with
 // `width: var(--gs-column-width)`. Without this import each dashboard item
 // renders 0 px wide with NO console error — heights still look right (those
@@ -77,7 +77,7 @@ try {
 } catch (e) {
 	// Non-fatal — lib translations fall back to English source.
 	 
-	console.warn('[hrmq] registerTranslations failed; falling back to English', e)
+	console.warn('[humaniq] registerTranslations failed; falling back to English', e)
 }
 
 // Fire-and-forget translation load. Some Nextcloud installs only allow the
@@ -89,7 +89,7 @@ try {
  */
 function tryLoadTranslations() {
 	try {
-		const result = loadTranslations('hrmq', () => {})
+		const result = loadTranslations('humaniq', () => {})
 		if (result && typeof result.then === 'function') {
 			result.then(() => {}, () => {})
 		}
@@ -149,7 +149,7 @@ function routesFromManifest(manifest) {
 	// catch-all so they take priority over it.
 	routes.push({ path: '/vehicles/:id', redirect: (to) => '/assets/' + to.params.id })
 	routes.push({ path: '/car-assignments/:id', redirect: (to) => '/asset-assignments/' + to.params.id })
-	// hrmq-personal-dashboard (REQ-MHS-007): MijnGebruikelijkLoon moved under
+	// humaniq-personal-dashboard (REQ-MHS-007): MijnGebruikelijkLoon moved under
 	// the `/mijn/...` prefix with every other Mijn surface, so the legacy path
 	// redirects instead of falling through to the catch-all below.
 	routes.push({ path: '/mijn-hr/gebruikelijk-loon', redirect: '/mijn/gebruikelijk-loon' })
@@ -163,7 +163,7 @@ function routesFromManifest(manifest) {
 }
 
 const router = createRouter({
-	history: createWebHistory(generateUrl('/apps/hrmq')),
+	history: createWebHistory(generateUrl('/apps/humaniq')),
 	routes: routesFromManifest(mergedManifest),
 })
 
@@ -200,4 +200,4 @@ app.use(router)
 // this template renders inside, and Vue 3 `mount()` renders INSIDE the match
 // (Vue 2 `$mount()` REPLACED it). Selecting `#content` therefore resolved to
 // core's wrapper, not ours. See the comment in templates/index.php.
-app.mount('#hrmq-app')
+app.mount('#humaniq-app')

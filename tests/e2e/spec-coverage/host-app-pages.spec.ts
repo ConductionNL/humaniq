@@ -4,7 +4,7 @@
  *
  * Host-app SFC pages — ProformaPayslip and AdministrationSwitcher.
  *
- * These are the only two `kind: 'page'` components hrmq registers in
+ * These are the only two `kind: 'page'` components humaniq registers in
  * src/registry.js, and they exist precisely because no declarative manifest
  * primitive can express what they do (see the `_note` on each registration):
  *
@@ -35,7 +35,7 @@ import { expect, test, type Page } from '@playwright/test'
  *
  * NOT by reading the landed pathname after visiting the app root. The root
  * REDIRECTS to the default route, so that reads back
- * `/index.php/apps/hrmq/timesheets` and every route built on it becomes
+ * `/index.php/apps/humaniq/timesheets` and every route built on it becomes
  * `…/timesheets/payroll/proforma`, which matches nothing, falls through to the
  * catch-all, and lands back on the default route. The first version of this
  * helper did exactly that and the failure looked like a broken PAGE rather
@@ -51,14 +51,14 @@ async function appBase(page: Page): Promise<string> {
 		return cachedBase
 	}
 
-	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
+	await page.goto('/index.php/apps/humaniq/', { waitUntil: 'domcontentloaded' })
 	const resolved = await page.evaluate(
 		() => (window as unknown as { OC?: { generateUrl?: (_path: string) => string } })
-			.OC?.generateUrl?.('/apps/hrmq'),
+			.OC?.generateUrl?.('/apps/humaniq'),
 	)
 	if (!resolved) {
 		throw new Error(
-			'OC.generateUrl is not available on the hrmq page, so the router base cannot '
+			'OC.generateUrl is not available on the humaniq page, so the router base cannot '
 			+ 'be resolved — every route assertion below would be measuring the wrong URL.',
 		)
 	}

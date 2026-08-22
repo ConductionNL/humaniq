@@ -14,7 +14,7 @@
  * seedObjects() samples satisfy every predicate keyed to their type.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -30,9 +30,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\TaxTables;
 
 /**
  * Dutch payroll / loonheffingen + global GL-control + EU A1 executable checks.
@@ -243,7 +243,7 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 					'i9VerifiedWithinThreeDays' => true,
 					'newHireReportedDate' => '2022-01-05',
 					// payroll-sepa-netpay-shillinq: placeholder bank details so
-					// `occ hrmq:rules:audit` stays green under nl-netpay-iban-present
+					// `occ humaniq:rules:audit` stays green under nl-netpay-iban-present
 					// for this seeded run/payslip (both payable).
 					'iban' => 'NL00BANK0000000001',
 					'tenaamstelling' => 'S. de Vries',

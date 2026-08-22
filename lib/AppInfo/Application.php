@@ -1,16 +1,16 @@
 <?php
 
 /**
- * Hrmq Application bootstrap
+ * Humaniq Application bootstrap
  *
- * Minimal IBootstrap entry point for the hrmq (HR / payroll) app. It registers the
- * two rule-engine occ commands (`hrmq:rules:audit` / `hrmq:rules:seed-testdata`)
+ * Minimal IBootstrap entry point for the humaniq (HR / payroll) app. It registers the
+ * two rule-engine occ commands (`humaniq:rules:audit` / `humaniq:rules:seed-testdata`)
  * and resolves OpenRegister's ObjectService for the compliance services. The app
  * stores no data of its own — all HR/labour objects live in the OpenRegister
- * `hrmq` register, imported by the InitializeRegister repair step.
+ * `humaniq` register, imported by the InitializeRegister repair step.
  *
  * @category AppInfo
- * @package  OCA\Hrmq\AppInfo
+ * @package  OCA\Humaniq\AppInfo
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -26,25 +26,25 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\AppInfo;
+namespace OCA\Humaniq\AppInfo;
 
-use OCA\Hrmq\Command\RulesAuditCommand;
-use OCA\Hrmq\Command\RulesSeedTestDataCommand;
-use OCA\Hrmq\Lifecycle\CompEffectiveDateGuard;
-use OCA\Hrmq\Lifecycle\LeaveBuySellApprovalGuard;
-use OCA\Hrmq\Lifecycle\LeaveSettlementPeriodGuard;
-use OCA\Hrmq\Lifecycle\NoSelfApprovalGuard;
-use OCA\Hrmq\Lifecycle\PayrollRunApprovedGuard;
-use OCA\Hrmq\Lifecycle\TimesheetNotEmptyGuard;
-use OCA\Hrmq\Listener\TimeEntryStampListener;
-use OCA\Hrmq\Listener\TimesheetAggregateListener;
-use OCA\Hrmq\Listener\TimesheetApprovalListener;
-use OCA\Hrmq\Listener\TimesheetProcessStampListener;
-use OCA\Hrmq\Payroll\PackRepository;
-use OCA\Hrmq\Payroll\PayrollCalculator;
-use OCA\Hrmq\Service\InternalWriteMarker;
-use OCA\Hrmq\Service\JurisdictionPackService;
-use OCA\Hrmq\Service\TimeEntryEventService;
+use OCA\Humaniq\Command\RulesAuditCommand;
+use OCA\Humaniq\Command\RulesSeedTestDataCommand;
+use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
+use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
+use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
+use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
+use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
+use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
+use OCA\Humaniq\Listener\TimeEntryStampListener;
+use OCA\Humaniq\Listener\TimesheetAggregateListener;
+use OCA\Humaniq\Listener\TimesheetApprovalListener;
+use OCA\Humaniq\Listener\TimesheetProcessStampListener;
+use OCA\Humaniq\Payroll\PackRepository;
+use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\JurisdictionPackService;
+use OCA\Humaniq\Service\TimeEntryEventService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -58,7 +58,7 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\EventDispatcher\IEventDispatcher;
 
 /**
- * The hrmq application bootstrap.
+ * The humaniq application bootstrap.
  *
  * @spec exclude composition root — wires guards, services and listeners owned by many capabilities; no single requirement owns the bootstrap itself
  */
@@ -69,7 +69,7 @@ class Application extends App implements IBootstrap {
 	 *
 	 * @var string
 	 */
-	public const APP_ID = 'hrmq';
+	public const APP_ID = 'humaniq';
 
 	/**
 	 * Construct the application.
@@ -98,14 +98,14 @@ class Application extends App implements IBootstrap {
 		$context->registerService(
 			RulesAuditCommand::class,
 			static function ($c): RulesAuditCommand {
-				return new RulesAuditCommand($c->get(\OCA\Hrmq\Service\RuleAuditService::class));
+				return new RulesAuditCommand($c->get(\OCA\Humaniq\Service\RuleAuditService::class));
 			}
 		);
 
 		$context->registerService(
 			RulesSeedTestDataCommand::class,
 			static function ($c): RulesSeedTestDataCommand {
-				return new RulesSeedTestDataCommand($c->get(\OCA\Hrmq\Service\RuleTestDataSeeder::class));
+				return new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class));
 			}
 		);
 
@@ -239,7 +239,7 @@ class Application extends App implements IBootstrap {
 	 * OpenRegister's `ObjectEventSubscription` records the register/schema slugs
 	 * a listener reacts to and routes dispatches through a single shared proxy,
 	 * so an uninterested listener is neither constructed nor invoked. When
-	 * OpenRegister is absent — hrmq carries no hard dependency on it — this
+	 * OpenRegister is absent — humaniq carries no hard dependency on it — this
 	 * degrades to the plain global registration it replaced, which is exactly
 	 * the behaviour every listener had before.
 	 *
@@ -302,8 +302,8 @@ class Application extends App implements IBootstrap {
 	 * @return void
 	 *
 	 * @spec openspec/changes/time-entry-capture/specs/time-entry-capture/spec.md#REQ-TEC-002
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/hrmq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
 	 */
 	public function boot(IBootContext $context): void {
 		$dispatcher = $context->getServerContainer()->get(IEventDispatcher::class);
@@ -316,7 +316,7 @@ class Application extends App implements IBootstrap {
 		// missing consumer never fails the approval write (REQ-TEC-002).
 		//
 		// That Timesheet-schema filter is now also declared at REGISTRATION
-		// time (TimeEntryEventService::TIMESHEET_SLUG, shipped by hrmq's own
+		// time (TimeEntryEventService::TIMESHEET_SLUG, shipped by humaniq's own
 		// register fragment lib/Settings/register.d/hr-timesheet.json as slug
 		// `Timesheet`), so an unrelated app's object update no longer
 		// constructs the listener — nor performs the SchemaMapper lookup

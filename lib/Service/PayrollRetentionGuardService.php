@@ -7,7 +7,7 @@
  * already-known retention ceiling into a real OpenRegister legal hold, so
  * OpenRegister's own guarded erase (`Gdpr\DataSubjectRequestService::erase()`,
  * `RetentionService::hasActiveLegalHold()`/`validateNotImmutable()`) refuses
- * a still-retained payroll object on its own -- never a bespoke hrmq
+ * a still-retained payroll object on its own -- never a bespoke humaniq
  * per-object exclusion computed ad hoc at DSAR time (the deleted
  * `AvgDsrRetentionClassifier`'s job).
  *
@@ -26,7 +26,7 @@
  *     hrmq#99), or
  *   - OpenRegister's own `retention.archiefactiedatum`, when the object's
  *     schema carries an `archive` config (`RetentionService
- *     ::applyArchivalMetadata()` computes it automatically on save; hrmq
+ *     ::applyArchivalMetadata()` computes it automatically on save; humaniq
  *     does no date derivation of its own for this case) --
  *
  * and, when that date has not yet passed, PLACES a legal hold
@@ -62,7 +62,7 @@
  * remains a SEPARATE, pre-existing, unrelated derivation for the AUDIT/CHECK
  * side (verifying a manually-entered `retainedUntil` on `LoonaangifteFiling`
  * meets the floor) -- not touched by hrmq#99, not a second hold-placing copy.
- * `PensionFiling`/`LoonaangifteFiling` have NO discovered hrmq-owned creation
+ * `PensionFiling`/`LoonaangifteFiling` have NO discovered humaniq-owned creation
  * service in this codebase to hook a hold into (`grep`-confirmed: no service
  * class saves either schema; both currently have zero live objects) --
  * `placeStatutoryFloorHold()` is written generically (period field + years +
@@ -84,7 +84,7 @@
  * ::saveObject()`, to persist a placed/inherited hold.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -100,7 +100,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use Psr\Container\ContainerInterface;

@@ -18,8 +18,8 @@
  * absent (an administration/year with no payslips is out of scope).
  *
  * Because the predicate is keyed to a real, persisted, audit-loaded object
- * type, it is reached by `occ hrmq:rules:audit` (and by every
- * `hrmq:wkr:assess`-produced assessment) with no bespoke caller — the
+ * type, it is reached by `occ humaniq:rules:audit` (and by every
+ * `humaniq:wkr:assess`-produced assessment) with no bespoke caller — the
  * capability has a caller by construction (no orphaned-write defect).
  *
  * Also implements SeedsObjects: one WkrDeclaration + one WkrAssessment
@@ -27,11 +27,11 @@
  * (fiscale loonsom €200.000 -> vrije ruimte €4.000,00), so a fresh environment
  * demonstrates the happy path (used well within available) with zero
  * violations. The dev-container gate supersedes these illustrative figures
- * with a live recompute via `occ hrmq:wkr:assess` (the assessment is
+ * with a live recompute via `occ humaniq:wkr:assess` (the assessment is
  * idempotent, so re-running converges it to the true register data).
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -47,9 +47,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\TaxTables;
 
 /**
  * Administration-level WKR eindheffing-exposure executable check.

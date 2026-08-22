@@ -43,7 +43,7 @@ maintained by whoever updates it — **not** a declarative calculation.
 The underlying arithmetic (a key result's `(current − start) / (target
 − start) × 100`, and an objective's average across its key results)
 needs division and cross-row aggregation, both outside the declarative
-calculation vocabulary HRMQ's schema layer supports for same-object
+calculation vocabulary Humaniq's schema layer supports for same-object
 arithmetic. The measurable source values (`startValue`/`targetValue`/
 `currentValue`) are always stored regardless, so `progress` never
 fabricates a number it can't be recomputed from — a server-computed

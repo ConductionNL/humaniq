@@ -16,7 +16,7 @@
  * calls docudesk's `SigningService::createRequest()` with the VERIFIED real
  * field shape -- `signers` (an array of `{userId, displayName, email,
  * order}`), never a fabricated `signerIds` -- plus the seven optional
- * provenance fields that correlate the request back to hrmq (design.md
+ * provenance fields that correlate the request back to humaniq (design.md
  * Context).
  *
  * Availability is duck-typed (ADR-046 philosophy): when docudesk is not
@@ -50,7 +50,7 @@
  * Orphaned-request recovery (design.md D8): `createRequest()` writes the
  * request row, THEN loops the `signerRecord` writes -- any throw in that
  * loop (the NOT NULL violation above, or any other docudesk-side failure)
- * leaves a signing-request row nobody in hrmq has the id for. Since that
+ * leaves a signing-request row nobody in humaniq has the id for. Since that
  * row is stamped with `correlationId`/`documentFileId` BEFORE the failing
  * write (`SigningService::PROVENANCE_FIELDS`), `createSigningRequest()`'s
  * catch makes a best-effort recovery via `listRequests()` (like
@@ -77,7 +77,7 @@
  * nulled by a partial offer-esign update.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -93,7 +93,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -401,6 +401,10 @@ class OfferEsignService {
 			// Provenance fields threaded through for cross-app correlation
 			// (design.md Context / D3) AND for the orphan-recovery lookup
 			// below (design.md D8, defect-3).
+			// FROZEN at the old app id: this value is BOTH written onto new docudesk
+			// signing requests AND used as the lookup key that recovers orphaned
+			// in-flight ones. Renaming it would make every already-raised request
+			// unfindable. Not to be "finished" with the rest of the rename.
 			'sourceApp' => 'hrmq',
 			'subjectRegister' => $this->settingsService->getRegisterSlug(),
 			'subjectSchema' => self::APPLICATION_SCHEMA,

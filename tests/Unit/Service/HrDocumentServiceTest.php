@@ -14,7 +14,7 @@
  * this standalone suite -- mirrors the PayrollGLPostServiceTest pattern.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -32,17 +32,17 @@
  * `inheritLegalHold()`, mocked here as a collaborator double), and does NOT
  * when the source is not retained.
  *
- * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md
+ * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md
  * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Service\HrDocumentService;
-use OCA\Hrmq\Service\PayrollRetentionGuardService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Service\HrDocumentService;
+use OCA\Humaniq\Service\PayrollRetentionGuardService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -51,7 +51,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for HrDocumentService.
  *
- * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md
+ * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md
  */
 class HrDocumentServiceTest extends TestCase {
 

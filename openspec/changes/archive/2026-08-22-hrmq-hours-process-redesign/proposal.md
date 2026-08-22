@@ -4,7 +4,7 @@ kind: code+config
 
 ## Why
 
-hrmq's hours process is one schema doing two jobs. `Timesheet`
+humaniq's hours process is one schema doing two jobs. `Timesheet`
 (`lib/Settings/register.d/hr-timesheet.json`) is simultaneously the thing an employee books
 ("urenregistratie": one period, one `hours` number, one project) and the thing a manager approves
 ("urenstaat": the submit → approve/reject lifecycle). That conflation produces four concrete
@@ -41,7 +41,7 @@ defects, all verified against this checkout:
   project, billable flag — plus server-stamped denormalizations. Verb surface: "uren boeken".
 - **`Timesheet` becomes the period aggregate** ("urenstaat"): keeps `period` and the
   submit/approve/reject/reopen lifecycle (reusing `x-openregister-lifecycle` +
-  `OCA\Hrmq\Lifecycle\NoSelfApprovalGuard` unchanged); its `hours`, `projectId`, `costCenter` and
+  `OCA\Humaniq\Lifecycle\NoSelfApprovalGuard` unchanged); its `hours`, `projectId`, `costCenter` and
   `billable` become server-recomputed aggregates over its entries. A new `TimesheetNotEmptyGuard`
   refuses submitting an empty timesheet.
 - **Approval becomes a process, not form fields.** A pre-save stamping listener makes
@@ -63,7 +63,7 @@ defects, all verified against this checkout:
   `MijnUrenstaten`, `TimeEntries` (HR), `TimeEntryDetail` pages; `TimesheetDetail` gains an
   entries list and read-only process panels; the approval queues keep their filters and gain a
   clear open-to-approve flow. All page work lands as manifest fragments against the structure the
-  `hrmq-manifest-fragment-pipeline` change installs (modified pages edited in their domain
+  `humaniq-manifest-fragment-pipeline` change installs (modified pages edited in their domain
   fragment `src/manifest.d/hr-timesheet.json`; new pages in a per-change fragment, per ADR-037).
 - **Idempotent migration** (repair step) backfills the denormalizations on existing Timesheet rows
   and synthesizes one `origin: "migration"` TimeEntry per legacy timesheet, with warn-once
@@ -72,7 +72,7 @@ defects, all verified against this checkout:
 ## Capabilities
 
 - **Modified**: `time-entry-capture` (entry granularity, aggregation, event-contract
-  clarification), `hrmq-timesheet-approval` (stamping, inert process fields, rejection-reason
+  clarification), `humaniq-timesheet-approval` (stamping, inert process fields, rejection-reason
   capture, form allowlists), `mss-team-scope` (`managerUserId` becomes a server-maintained cache),
   `mijn-hr-self-service` (`userId` auto-stamped; Mijn pages redesigned),
   `employer-hourly-cost-rate` (cost-allocation references live on the entry, never hand-typed).
@@ -90,7 +90,7 @@ defects, all verified against this checkout:
   "Add Timesheet" assertion changes (timesheets are no longer hand-created).
 - **External dependencies (separate repos, flagged work items — see design.md Decision 6):**
   `@conduction/nextcloud-vue` (transition input prompt; optional row-level queue actions) and
-  `openregister` (transition endpoint accepts allowlisted input data). hrmq degrades gracefully
+  `openregister` (transition endpoint accepts allowlisted input data). humaniq degrades gracefully
   until they land.
 - Event contract `nl.conduction.hrmq.timeentry.approved` and the typed `TimesheetApprovedEvent`:
   **envelope unchanged**; provenance fields become reliably populated (they are empty today on the
@@ -102,7 +102,7 @@ defects, all verified against this checkout:
   navigation tree stay out — that is the separate dashboard/navigation change. This change edits
   page content and adds leaf entries under the existing groups only.
 - Changing the CloudEvent envelope or the typed event's fields (additive-only guarantee kept).
-- Cost-centre bookkeeping semantics (shillinq domain) — hrmq only derives and forwards.
+- Cost-centre bookkeeping semantics (shillinq domain) — humaniq only derives and forwards.
 - Rostering/attendance (`hr-attendance.json`, `hr-roster.json`) — clock-in/out devices and shift
   planning are adjacent capabilities, untouched.
 - Collapsing the role-lens approval-queue duplicates (`TimesheetApproval` vs

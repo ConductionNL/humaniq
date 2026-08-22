@@ -6,6 +6,6 @@
   "link": {
     "type": "generated-index",
     "title": "Compliance",
-    "description": "The versioned, machine-checkable rule corpus and the RuleEngine that audits HRMQ's data against it."
+    "description": "The versioned, machine-checkable rule corpus and the RuleEngine that audits Humaniq's data against it."
   }
 }

@@ -17,7 +17,7 @@
  * silent.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards
+ * @package  OCA\Humaniq\Tests\Unit\Standards
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -33,10 +33,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards;
+namespace OCA\Humaniq\Tests\Unit\Standards;
 
-use OCA\Hrmq\Standards\Checks\NlWntChecks;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\Checks\NlWntChecks;
+use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -233,7 +233,7 @@ class NlWntChecksTest extends TestCase {
 	 * REQ-WNT-003 — the violation branch driven through the REAL
 	 * `RuleEngine::evaluate()` (catalogue + auto-discovered CheckProviders +
 	 * the nl-2026 table), proving `nl-wnt-norm-overschrijding` is genuinely
-	 * reachable via `occ hrmq:rules:audit` and not an orphaned capability.
+	 * reachable via `occ humaniq:rules:audit` and not an orphaned capability.
 	 *
 	 * @return void
 	 */

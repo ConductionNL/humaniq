@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <!--
- HRMQ app shell. Mounts CnAppRoot with the bundled manifest. Every page is a
+ Humaniq app shell. Mounts CnAppRoot with the bundled manifest. Every page is a
  declarative `type: "index"` / `type: "detail"` page rendered generically by
  the @conduction/nextcloud-vue library from its register+schema config — there
  are no bespoke page components, so the registry is empty. CnAppRoot reads
@@ -28,7 +28,7 @@
 		:manifest="effectiveManifest"
 		:registry="registry"
 		:pageTypes="pageTypes"
-		appId="hrmq"
+		appId="humaniq"
 		:translate="translateForApp" />
 </template>
 
@@ -71,10 +71,11 @@ export default {
 	 * `CnDashboardPage` provides and every widget's `workspaceCtx()` computed
 	 * already knows how to unwrap (`'value' in c ? c.value : c`).
 	 *
+	 * @spec openspec/specs/multi-administratie/spec.md#REQ-MULTI-004
 	 * @return {void}
 	 */
 	setup() {
-		const initialAdministrationId = loadState('hrmq', 'activeAdministrationId', '')
+		const initialAdministrationId = loadState('humaniq', 'activeAdministrationId', '')
 		const cnWorkspaceContext = ref(
 			initialAdministrationId ? { activeAdministrationId: initialAdministrationId } : {},
 		)
@@ -87,7 +88,7 @@ export default {
 		 * merged in from the `activeAdministrationMode` initial state
 		 * `PageController::index()` stamps (single-person-modes REQ-SPM-002/D2).
 		 * This is the FIRST real consumer of nc-vue's `visibleIf` primitive in
-		 * hrmq: `CnAppNav` evaluates each menu item's `visibleIf` against
+		 * humaniq: `CnAppNav` evaluates each menu item's `visibleIf` against
 		 * `effectiveManifest.runtime` (`utils/visibleIfContext.js`), so a
 		 * `{"user.administrationMode": {...}}` predicate resolves against the
 		 * key merged here. Defaults to `standard` (the no-menu-change default)
@@ -95,10 +96,11 @@ export default {
 		 * administratie renders exactly as before this change. A reload picks up
 		 * a fresh mode after an administratie switch (REQ-SPM-002 scenario).
 		 *
+		 * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
 		 * @return {object} The bundled manifest with runtime.user.administrationMode set.
 		 */
 		effectiveManifest() {
-			const mode = loadState('hrmq', 'activeAdministrationMode', 'standard') || 'standard'
+			const mode = loadState('humaniq', 'activeAdministrationMode', 'standard') || 'standard'
 			const base = this.manifest || {}
 			const runtime = { ...(base.runtime || {}) }
 			runtime.user = { ...(runtime.user || {}), administrationMode: mode }
@@ -107,9 +109,17 @@ export default {
 	},
 
 	methods: {
-		// Translate library/manifest strings against the hrmq l10n domain.
+		/**
+		 * Translate library/manifest strings against the humaniq l10n domain.
+		 *
+		 * @spec exclude one-line `@nextcloud/l10n` binding that supplies CnAppRoot's `translate` prop with this app's l10n domain; it adds no behaviour of its own, and the domain string it passes is the app id whose rename is owned by openspec/specs/app-identity/spec.md.
+		 *
+		 * @param {string} key The translation key.
+		 * @param {object} vars Interpolation variables.
+		 * @return {string} The translated string.
+		 */
 		translateForApp(key, vars) {
-			return ncT('hrmq', key, vars)
+			return ncT('humaniq', key, vars)
 		},
 	},
 }

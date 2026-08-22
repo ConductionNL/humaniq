@@ -18,7 +18,7 @@
  * hand-computed figures.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -40,13 +40,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Payroll\PayrollCalculator;
-use OCA\Hrmq\Payroll\SickPayCalculator;
-use OCA\Hrmq\Service\PayrollRetentionGuardService;
-use OCA\Hrmq\Service\PayrollRunService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Service\PayrollRetentionGuardService;
+use OCA\Humaniq\Service\PayrollRunService;
+use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -533,7 +533,7 @@ class PayrollRunServiceTest extends TestCase {
 	 * edited in place, but a draft recalculation is an explicit, deliberate
 	 * regeneration, not a silent retroactive rewrite); the guarantee this
 	 * change closes is that a SEALED (non-draft) run's payslip is never
-	 * touched again, which `hrmq:payroll:reproduce`'s use of the SEALED
+	 * touched again, which `humaniq:payroll:reproduce`'s use of the SEALED
 	 * value proves.
 	 *
 	 * @return void

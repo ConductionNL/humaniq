@@ -5,7 +5,7 @@ description: Dossier-anchored performance reviews, review cycles, and the BW 7:6
 
 # Performance reviews
 
-Performance in HRMQ is **dossier-anchored** — there is no standalone
+Performance in Humaniq is **dossier-anchored** — there is no standalone
 "performance" module and no 10th top-level menu entry. Per ADR-001 Rule
 6, the review surface hangs off the personnel dossier (`EmployeeDetail`)
 and the existing Personeel menu group.
@@ -49,7 +49,7 @@ cannot vaststellen their own beoordeling. `heropenen` returns a
 
 A `vastgesteld` review without a `rating` or `afspraken` is no
 ontslagdossier — BW art. 7:669 lid 3 sub d requires a documented,
-substantiated basis for a disfunctioneren dismissal. HRMQ makes this a
+substantiated basis for a disfunctioneren dismissal. Humaniq makes this a
 machine-checkable, `recommended`-severity rule:
 
 **`nl-performance-dossiervorming`** — a `vastgesteld` `PerformanceReview`
@@ -58,7 +58,7 @@ earlier status pass vacuously — an unfinished review legitimately lacks a
 rating yet.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Where reviews show up

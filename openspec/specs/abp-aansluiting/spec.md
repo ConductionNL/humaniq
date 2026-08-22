@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-17-abp-aansluiting
 # abp-aansluiting Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [abp-aansluiting](../../changes/archive/2026-07-17-abp-aansluiting/) _(archived 2026-07-17)_ — `Administration.abpAansluitingsplichtig` mandatory-affiliation determination field, a new fund- and tenant-scoped `nl-abp-fund-required` corpus rule additive alongside the shipped `nl-upa-monthly-completeness`, a new auto-discovered `NlAbpChecks` provider, `RuleAuditService` context enrichment, and seed data proving both branches in one audit run (kind: config+code)
 
@@ -37,10 +37,10 @@ gained `abpAansluitingsplichtig` (boolean, default `false`), an admin-set
 determination that this client administratie is obligated under the Wet
 Privatisering ABP (1996, BWBR0007791) to affiliate with ABP and file its
 pension-bearing payroll there. The field is never derived or computed from
-any sector, function, or CAO field — hrmq carries no employer-sector taxonomy
+any sector, function, or CAO field — humaniq carries no employer-sector taxonomy
 today, so an admin sets it explicitly. `lib/Settings/register.d/hr-objects.json`'s
 `PayrollRun.administrationId` description, which previously stated no
-Administration schema is modeled in hrmq, was corrected to reflect the
+Administration schema is modeled in humaniq, was corrected to reflect the
 shipped `multi-administratie` `Administration` schema.
 
 #### Scenario: An administratie is marked ABP-obligated
@@ -66,7 +66,7 @@ was bumped from `2026-07.26` to `2026-07.27`.
 
 #### Scenario: The corpus stays loadable and versioned
 - **GIVEN** the corpus edit adding `nl-abp-fund-required`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** the RuleCatalogue loads without error and reports `nl-abp-fund-required` as enforced (a `CheckProvider` predicate exists for it)
 - **AND** `nl-upa-monthly-completeness` still reports exactly the same coverage it did before this change
 
@@ -90,7 +90,7 @@ the run's own `(period, administrationId)` pair is absent from
 
 #### Scenario: An obligated administratie's unfiled period is flagged
 - **GIVEN** an NL `PayrollRun` in status `approved`, `administrationId: "ADM-003"`, period `"2026-06"`, where `Administration` `ADM-003` has `abpAansluitingsplichtig: true` and no `PensionFiling` with `fund: "abp"` exists for `("2026-06", "ADM-003")`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** a `nl-abp-fund-required` violation is reported for that run
 
 #### Scenario: A non-obligated administratie never violates
@@ -131,5 +131,5 @@ NL `PayrollRun` scoped to `ADM-003` for period `"2026-06"`, with no
 
 #### Scenario: Seeded data reproduces both branches in one audit
 - **GIVEN** the seeded `ADM-001` and `ADM-003` data
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** exactly one `nl-abp-fund-required` violation is reported (for the `ADM-003` run) and none for either `ADM-001` run

@@ -3,7 +3,7 @@
 /**
  * Unit tests for RuleAuditService::auditPayrollRunScope().
  *
- * Pins the `occ hrmq:payroll:verify` semantics (payroll-core-engine design.md
+ * Pins the `occ humaniq:payroll:verify` semantics (payroll-core-engine design.md
  * D7 / REQ-PCE-006) end-to-end through a fake ObjectService double: a freshly
  * generated engine run (the design.md D2 anchor figures) carries ZERO
  * mandatory violations (recommended advisories like the not-yet-generated
@@ -18,7 +18,7 @@
  * `nl-engine-provenance-complete` rule, not just the pre-existing two.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -35,9 +35,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Service\RuleAuditService;
+use OCA\Humaniq\Service\RuleAuditService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;

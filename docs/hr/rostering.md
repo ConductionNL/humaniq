@@ -1,11 +1,11 @@
 ---
 sidebar_position: 6
-description: Forward-looking shift planning that pre-checks a roster against the same Arbeidstijdenwet rules HRMQ already enforces on realised clock data.
+description: Forward-looking shift planning that pre-checks a roster against the same Arbeidstijdenwet rules Humaniq already enforces on realised clock data.
 ---
 
 # Rostering
 
-HRMQ administers who is employed, what they clocked, and what they
+Humaniq administers who is employed, what they clocked, and what they
 claim, but historically had no forward-looking plan. Rostering fills
 that gap: define reusable shifts, assign employees per period, publish
 the resulting roster, and — the differentiator — **check the planned
@@ -32,20 +32,20 @@ The roster check does not invent a new working-time rule — it runs the
 the *planned* assignments instead:
 
 ```bash
-occ hrmq:roster:check --roster <id>
-occ hrmq:roster:check --period 2026-W28 --administration ADM-001
+occ humaniq:roster:check --roster <id>
+occ humaniq:roster:check --period 2026-W28 --administration ADM-001
 ```
 
 Exits non-zero on any mandatory violation. The same check is available
 as an "ATW-controle" action from a roster's detail page, and published
-assignments also join the standing `occ hrmq:rules:audit`.
+assignments also join the standing `occ humaniq:rules:audit`.
 
 ## What this is not
 
 Deeper workforce management — auto-optimisation, demand forecasting,
 rule-based auto-scheduling, a drag-and-drop planbord,
 availability/preferences, skills-matching, open-shift bidding/shift-swap,
-and coverage alerts — is deliberately out of scope. HRMQ owns the plan
+and coverage alerts — is deliberately out of scope. Humaniq owns the plan
 of record and the ATW compliance view, not a workforce-management
 optimiser; deeper WFM tooling is meant to integrate via
 [openconnector](https://openconnector.conduction.nl), not be rebuilt

@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Hrmq Page Controller
+ * Humaniq Page Controller
  *
  * Renders the SPA shell that mounts the @conduction/nextcloud-vue manifest
  * renderer (CnAppRoot) and serves the bundled app manifest (ADR-024 §4). The
  * app stores no data of its own — the Timesheet/Expense pages are declarative
- * `type: "index"` / `type: "detail"` pages that read and write the hrmq
+ * `type: "index"` / `type: "detail"` pages that read and write the humaniq
  * OpenRegister register directly via the library's object store; this
  * controller is pure SPA-shell glue.
  *
@@ -19,7 +19,7 @@
  * not only after a switch.
  *
  * @category Controller
- * @package  OCA\Hrmq\Controller
+ * @package  OCA\Humaniq\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -36,10 +36,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Controller;
+namespace OCA\Humaniq\Controller;
 
-use OCA\Hrmq\AppInfo\Application;
-use OCA\Hrmq\Service\AdministrationService;
+use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\AdministrationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -99,7 +99,7 @@ class PageController extends Controller {
 	 *
 	 * Stamps the caller's active administratie id (when set) as initial
 	 * state under the `activeAdministrationId` key BEFORE the template
-	 * renders, so the frontend's `loadState('hrmq', 'activeAdministrationId',
+	 * renders, so the frontend's `loadState('humaniq', 'activeAdministrationId',
 	 * '')` seeds the `cnWorkspaceContext` it provides at the SPA root with
 	 * the right value on first paint (REQ-MULTI-004). Unset (never switched)
 	 * intentionally stamps nothing — `loadState()` then falls back to `''`
@@ -159,7 +159,7 @@ class PageController extends Controller {
 				// page renders unscoped, which is the same state a fresh install
 				// is in before an administratie has been chosen.
 				$this->logger->debug(
-					'hrmq: active-administratie state not stamped; rendering the shell unscoped.',
+					'humaniq: active-administratie state not stamped; rendering the shell unscoped.',
 					['exception' => $e]
 				);
 			}

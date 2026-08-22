@@ -3,18 +3,18 @@
 /**
  * Employer cost-rate read API.
  *
- * The HTTP surface of {@see EmployeeCostRateService} — the hrmq half of
+ * The HTTP surface of {@see EmployeeCostRateService} — the humaniq half of
  * ADR-081's `hourlyCost = wageCost + Σ additions`. Shillinq is the only
  * intended consumer today.
  *
  * @category Controller
- * @package  OCA\Hrmq\Controller
+ * @package  OCA\Humaniq\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://hrmq.nl
+ * @link https://humaniq.nl
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -24,11 +24,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Controller;
+namespace OCA\Humaniq\Controller;
 
-use OCA\Hrmq\AppInfo\Application;
-use OCA\Hrmq\Service\EmployeeCostRateService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\EmployeeCostRateService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -41,9 +41,9 @@ use RuntimeException;
 /**
  * Serve one employee's loaded employer cost per hour.
  *
- * WHY THIS EXISTS. ADR-081 puts the wage half of an hour's cost in hrmq and
+ * WHY THIS EXISTS. ADR-081 puts the wage half of an hour's cost in humaniq and
  * the ledger-derived half (overhead, equipment) in Shillinq, because Shillinq
- * owns the general ledger those pools live in. hrmq has had
+ * owns the general ledger those pools live in. humaniq has had
  * {@see EmployeeCostRateService} since #68 and it already accepts
  * `extraAdditions` for exactly that caller — but the service had no HTTP
  * surface, so nothing outside this app could reach it. This is that surface.
@@ -261,7 +261,7 @@ class EmployerCostRateController extends Controller {
 		// itself.
 		if ($this->settings->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 

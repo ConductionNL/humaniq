@@ -19,7 +19,7 @@
  * present to evaluate, and `standard` is the no-menu-change default.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Controller
+ * @package  OCA\Humaniq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -36,10 +36,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Controller;
+namespace OCA\Humaniq\Tests\Unit\Controller;
 
-use OCA\Hrmq\Controller\PageController;
-use OCA\Hrmq\Service\AdministrationService;
+use OCA\Humaniq\Controller\PageController;
+use OCA\Humaniq\Service\AdministrationService;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\IRequest;

@@ -11,7 +11,7 @@
  * upgrade re-attempts (and re-enqueues on maintenance-mode failure).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\BackgroundJob
+ * @package  OCA\Humaniq\Tests\Unit\BackgroundJob
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -22,16 +22,16 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\BackgroundJob;
+namespace OCA\Humaniq\Tests\Unit\BackgroundJob;
 
-use OCA\Hrmq\BackgroundJob\CompleteHoursMigrationJob;
-use OCA\Hrmq\Repair\MigrateHoursProcess;
-use OCA\Hrmq\Tests\Unit\Support\FakeContainer;
+use OCA\Humaniq\BackgroundJob\CompleteHoursMigrationJob;
+use OCA\Humaniq\Repair\MigrateHoursProcess;
+use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;

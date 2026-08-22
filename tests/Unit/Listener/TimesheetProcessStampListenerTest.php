@@ -11,7 +11,7 @@
  * aggregate pass-through (which still keeps process fields inert).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Listener
+ * @package  OCA\Humaniq\Tests\Unit\Listener
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -22,22 +22,22 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/hrmq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Listener;
+namespace OCA\Humaniq\Tests\Unit\Listener;
 
-use OCA\Hrmq\Listener\TimesheetProcessStampListener;
-use OCA\Hrmq\Service\HoursRegisterGateway;
-use OCA\Hrmq\Service\InternalWriteMarker;
-use OCA\Hrmq\Service\OrgResolutionService;
-use OCA\Hrmq\Service\SettingsService;
-use OCA\Hrmq\Tests\Unit\Support\FakeContainer;
-use OCA\Hrmq\Tests\Unit\Support\FakeObjectStore;
-use OCA\Hrmq\Tests\Unit\Support\FakeSchemaMapper;
+use OCA\Humaniq\Listener\TimesheetProcessStampListener;
+use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\OrgResolutionService;
+use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
+use OCA\Humaniq\Tests\Unit\Support\FakeObjectStore;
+use OCA\Humaniq\Tests\Unit\Support\FakeSchemaMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
@@ -283,7 +283,7 @@ class TimesheetProcessStampListenerTest extends TestCase {
 	/**
 	 * The reject edge stamps the verdict AND accepts the incoming
 	 * rejectionReason — the single allowlisted client-supplied process
-	 * value (the D1 transition-input contract's hrmq half).
+	 * value (the D1 transition-input contract's humaniq half).
 	 *
 	 * @return void
 	 */

@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: HRMQ ships English-source manifest text with real locale catalogues
+### Requirement: Humaniq ships English-source manifest text with real locale catalogues
 
 `src/manifest.json` menu/page text SHALL use English sentence-case strings as i18n keys, and the
 app SHALL ship `l10n/en.json` + `l10n/nl.json` with an identical key set, per ADR-007.
@@ -24,7 +24,7 @@ app SHALL ship `l10n/en.json` + `l10n/nl.json` with an identical key set, per AD
 ### Requirement: The app-nav menu renders in the session locale
 
 Navigation labels rendered via `CnAppNav`'s `effectiveTranslate(item.label)` SHALL resolve against
-a real `hrmq` locale catalogue rather than falling back to the raw manifest string.
+a real `humaniq` locale catalogue rather than falling back to the raw manifest string.
 
 **Feature tier**: MVP
 
@@ -44,7 +44,7 @@ a real `hrmq` locale catalogue rather than falling back to the raw manifest stri
 
 ### Requirement: The translation fetch resolves to real content
 
-`loadTranslations('hrmq', ...)` SHALL fetch a locale file that actually exists for at least the
+`loadTranslations('humaniq', ...)` SHALL fetch a locale file that actually exists for at least the
 supported `en`/`nl` locales.
 
 **Feature tier**: MVP
@@ -53,5 +53,5 @@ supported `en`/`nl` locales.
 
 - GIVEN a non-default supported locale (e.g. `nl`)
 - WHEN `src/main.js`'s `tryLoadTranslations()` fires on app boot
-- THEN the underlying `GET /custom_apps/hrmq/l10n/nl.json` request MUST succeed
+- THEN the underlying `GET /custom_apps/humaniq/l10n/nl.json` request MUST succeed
 - AND MUST NOT 404

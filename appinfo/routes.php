@@ -4,8 +4,8 @@
 declare(strict_types=1);
 
 /*
- * HRMQ routes. The app is OpenRegister-backed: the Timesheet/Expense pages are
- * declarative manifest pages that read and write the hrmq register directly via
+ * Humaniq routes. The app is OpenRegister-backed: the Timesheet/Expense pages are
+ * declarative manifest pages that read and write the humaniq register directly via
  * the @conduction/nextcloud-vue object store, so there are no domain CRUD
  * routes here — only the SPA shell + the bundled-manifest endpoint (ADR-024 §4).
  */
@@ -16,7 +16,7 @@ return [
         ['name' => 'page#index',    'url' => '/',             'verb' => 'GET'],
         // ADR-024 §4 — manifest endpoint (bundled blob).
         ['name' => 'page#manifest', 'url' => '/api/manifest', 'verb' => 'GET'],
-        // hrmq-docudesk-documents — guarded trigger for the EmploymentContractDetail
+        // humaniq-docudesk-documents — guarded trigger for the EmploymentContractDetail
         // "Genereer arbeidsovereenkomst" manifest api-call action (design.md D7).
         ['name' => 'document#generate', 'url' => '/api/documents/generate', 'verb' => 'POST'],
         // payroll-core-engine — guarded trigger for the PayrollRunDetail
@@ -92,7 +92,7 @@ return [
         // (design.md D6): resolve-first RBAC (ObjectService::find under
         // ambient RBAC) BEFORE any calendar write.
         ['name' => 'interview#sync', 'url' => '/api/interviews/sync', 'verb' => 'POST'],
-        // employer-cost-rate — the hrmq half of ADR-081's
+        // employer-cost-rate — the humaniq half of ADR-081's
         // `hourlyCost = wageCost + Σ additions`. Read-only and derived: a rate
         // is computed from the contract on every call rather than stored, so
         // there is no second copy to go stale when a contract or CLA changes.
@@ -101,7 +101,7 @@ return [
         // is written. Resolve-first RBAC (ObjectService::find under ambient
         // RBAC) BEFORE any salary-derived figure is produced — ADR-005 Rule 3.
         ['name' => 'employerCostRate#show', 'url' => '/api/employees/cost-rate', 'verb' => 'POST'],
-        // hrmq-dashboard-steering-indicators — guarded read-only analytics
+        // humaniq-dashboard-steering-indicators — guarded read-only analytics
         // for the Dashboard's five trend widgets + Obligations list
         // (design.md D3/D4): both actions resolve the caller's active
         // administration server-side and require an hr/accountant

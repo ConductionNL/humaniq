@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-comp",
+    "x-humaniq-fragment": "hr-comp",
     "components": {
         "schemas": {
             "SalaryBand": {
@@ -187,7 +187,7 @@
                                     "proposed"
                                 ],
                                 "to": "approved",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
                                 "description": "A different manager approves the proposal. NoSelfApprovalGuard rejects self-approval (the approver may not be the proposer)."
                             },
                             "reject": {
@@ -195,7 +195,7 @@
                                     "proposed"
                                 ],
                                 "to": "draft",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
                                 "description": "The proposal is rejected and returns to draft for revision and re-proposal. NoSelfApprovalGuard rejects self-rejection."
                             },
                             "effectuate": {
@@ -203,7 +203,7 @@
                                     "approved"
                                 ],
                                 "to": "effective",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\CompEffectiveDateGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\CompEffectiveDateGuard",
                                 "description": "The approved adjustment takes effect. CompEffectiveDateGuard fail-closed denies unless effectiveDate is present and on or before today. Read-only guard: the actual grossMonthlySalary write happens imperatively in CompAdjustmentService, not in the guard."
                             }
                         }

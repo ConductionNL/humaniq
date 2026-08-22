@@ -4,9 +4,9 @@
  * Leave Calendar Service
  *
  * Projects approved absence (LeaveRequest/SickLeaveCase) onto one configured
- * shared Nextcloud calendar as all-day VEVENTs (design.md D1-D6). hrmq holds
+ * shared Nextcloud calendar as all-day VEVENTs (design.md D1-D6). humaniq holds
  * no calendar storage of its own — the sync is a stateless, idempotent
- * upsert/remove pass driven on operator demand (occ hrmq:calendar:sync), not
+ * upsert/remove pass driven on operator demand (occ humaniq:calendar:sync), not
  * an event listener or background job.
  *
  * The CalDAV store is reached exclusively through a duck-typed,
@@ -19,7 +19,7 @@
  * needs (design.md Context, D1). Any miss (backend unresolvable, config
  * unset, calendar deleted/URI wrong) degrades to a recorded
  * `skipped-no-calendar` outcome — never an exception, nothing above INFO in
- * the log — and hrmq gains no info.xml/composer dependency on the calendar
+ * the log — and humaniq gains no info.xml/composer dependency on the calendar
  * or dav apps.
  *
  * AVG boundary (design.md D5): rendered events carry only a fixed-format
@@ -30,7 +30,7 @@
  * reach the calendar.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -46,7 +46,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -59,7 +59,7 @@ class LeaveCalendarService {
 
 	/**
 	 * The duck-typed CalDAV backend's FQCN, resolved from the container by
-	 * string (design.md D1) — never a `use` import, so hrmq carries no
+	 * string (design.md D1) — never a `use` import, so humaniq carries no
 	 * composer/info.xml dependency on the dav app.
 	 *
 	 * @var string
@@ -86,6 +86,9 @@ class LeaveCalendarService {
 	 *
 	 * @var string
 	 */
+	// FROZEN at the old app id: already-synced CalDAV events carry this URI
+	// prefix. Renaming it would double-create every leave event and orphan the
+	// existing ones beyond the reconciler's reach.
 	private const LEAVE_URI_PREFIX = 'hrmq-leave-';
 
 	/**
@@ -93,6 +96,7 @@ class LeaveCalendarService {
 	 *
 	 * @var string
 	 */
+	// FROZEN at the old app id — same reason as LEAVE_URI_PREFIX above.
 	private const SICK_URI_PREFIX = 'hrmq-sick-';
 
 	/**
@@ -118,7 +122,7 @@ class LeaveCalendarService {
 	/**
 	 * Run the sync: upsert one all-day VEVENT per in-scope approved
 	 * LeaveRequest / SickLeaveCase, remove events of LeaveRequests that left
-	 * scope, and reconcile orphaned `hrmq-`-prefixed events whose source was
+	 * scope, and reconcile orphaned `humaniq-`-prefixed events whose source was
 	 * hard-deleted from the register (design.md D1-D6).
 	 *
 	 * @param string|null $from Optional ISO date (Y-m-d). Bounds the upsert set
@@ -480,9 +484,9 @@ class LeaveCalendarService {
 
 	/**
 	 * Orphan reconciliation (design.md D2, REQ-LC-005): list the configured
-	 * calendar's objects and delete every `hrmq-leave-*.ics` / `hrmq-sick-*.ics`
+	 * calendar's objects and delete every `humaniq-leave-*.ics` / `humaniq-sick-*.ics`
 	 * URI whose embedded uuid is not among the given (full, unbounded) live
-	 * id sets. Objects without the `hrmq-` prefix (manually created by users)
+	 * id sets. Objects without the `humaniq-` prefix (manually created by users)
 	 * are never touched.
 	 *
 	 * @param mixed $backend The duck-typed CalDavBackend.
@@ -507,7 +511,7 @@ class LeaveCalendarService {
 			$objectUri = (string)(is_array($object) === true ? ($object['uri'] ?? '') : '');
 			[$type, $sourceId] = $this->parseHrmqUri($objectUri);
 			if ($type === null || $sourceId === null) {
-				// Not an hrmq-managed event (manually created by a user); never touched.
+				// Not an humaniq-managed event (manually created by a user); never touched.
 				continue;
 			}
 
@@ -533,9 +537,9 @@ class LeaveCalendarService {
 	}//end reconcileOrphans()
 
 	/**
-	 * Parse an hrmq-managed object URI (`hrmq-leave-{uuid}.ics` /
-	 * `hrmq-sick-{uuid}.ics`) into its source type and id, or
-	 * `[null, null]` when the URI carries no hrmq prefix.
+	 * Parse an humaniq-managed object URI (`humaniq-leave-{uuid}.ics` /
+	 * `humaniq-sick-{uuid}.ics`) into its source type and id, or
+	 * `[null, null]` when the URI carries no humaniq prefix.
 	 *
 	 * @param string $objectUri The calendar object's URI.
 	 *
@@ -663,7 +667,7 @@ class LeaveCalendarService {
 		$lines = [
 			'BEGIN:VCALENDAR',
 			'VERSION:2.0',
-			'PRODID:-//Conduction//hrmq leave-calendar-nc//EN',
+			'PRODID:-//Conduction//humaniq leave-calendar-nc//EN',
 			'CALSCALE:GREGORIAN',
 			'BEGIN:VEVENT',
 			'UID:' . $uid,
@@ -969,7 +973,7 @@ class LeaveCalendarService {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -977,7 +981,7 @@ class LeaveCalendarService {
 	}//end objectService()
 
 	/**
-	 * @return string The configured hrmq register slug.
+	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();

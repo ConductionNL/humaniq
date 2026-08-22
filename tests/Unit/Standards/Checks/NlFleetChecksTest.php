@@ -13,11 +13,11 @@
  * hrmq-asset-fleet-merge design.md D2): fires when `category: vehicle` and
  * any of `listPrice`/`fuelType`/`companyCarTaxCategory` is absent. The suite
  * closes with a REAL `RuleEngine::evaluate()` integration test proving both
- * rules are genuinely reachable via `occ hrmq:rules:audit`, not an orphaned
+ * rules are genuinely reachable via `occ humaniq:rules:audit`, not an orphaned
  * capability (the `NlWageGarnishmentChecksTest` precedent).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
+ * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,16 +29,16 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/fleet-bijtelling/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-001
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-001
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
+namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlFleetChecks;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\Checks\NlFleetChecks;
+use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -291,7 +291,7 @@ class NlFleetChecksTest extends TestCase {
 	 * REQ-FLEET-004 Scenario 2, through the REAL `RuleEngine::evaluate()`
 	 * (catalogue + auto-discovered CheckProviders), proving
 	 * `nl-bijtelling-auto-privegebruik` is genuinely reachable via
-	 * `occ hrmq:rules:audit` and not an orphaned capability.
+	 * `occ humaniq:rules:audit` and not an orphaned capability.
 	 *
 	 * @return void
 	 */
@@ -395,7 +395,7 @@ class NlFleetChecksTest extends TestCase {
 	/**
 	 * spec.md REQ-AST-001, through the REAL `RuleEngine::evaluate()`,
 	 * proving `nl-asset-voertuig-fiscale-velden-compleet` is genuinely
-	 * reachable via `occ hrmq:rules:audit` and not an orphaned capability.
+	 * reachable via `occ humaniq:rules:audit` and not an orphaned capability.
 	 *
 	 * @return void
 	 */

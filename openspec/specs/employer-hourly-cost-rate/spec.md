@@ -3,11 +3,11 @@
 ## Purpose
 
 Expose what an hour of an employee's time costs the employer, so another app
-can compose it into a total. This is the hrmq half of hydra ADR-081's
+can compose it into a total. This is the humaniq half of hydra ADR-081's
 
     hourlyCost = wageCost + Σ additions
 
-hrmq owns `wageCost` and derives it from the **contract**, never from a
+humaniq owns `wageCost` and derives it from the **contract**, never from a
 payslip. Shillinq owns the ledger-derived additions (overhead, equipment),
 because it owns the general ledger those pools live in.
 
@@ -20,7 +20,7 @@ described by ADR-081 did not exist.
 
 ### Requirement: The cost rate is served over HTTP and never persisted
 
-hrmq SHALL expose the resolved employer cost per hour at
+humaniq SHALL expose the resolved employer cost per hour at
 `POST /api/employees/cost-rate`, taking `employeeId`, an optional `period`
 (`YYYY-MM`, defaulting to the current month) and an optional `additions[]`
 array supplied by the caller.

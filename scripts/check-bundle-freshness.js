@@ -34,12 +34,12 @@
  * a check that cannot see its subject must say so, not guess.
  */
 
-const { execSync } = require('child_process')
+const { execFileSync } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 
 const REPO_ROOT = path.resolve(__dirname, '..')
-const BUNDLE = path.join(REPO_ROOT, 'js', 'hrmq-main.js')
+const BUNDLE = path.join(REPO_ROOT, 'js', 'humaniq-main.js')
 
 /**
  * A stamp written by `postbuild` on EVERY successful build.
@@ -64,7 +64,13 @@ const STAMP = path.join(REPO_ROOT, 'js', '.build-stamp')
  */
 function lastCommitTime(rel) {
 	try {
-		const out = execSync(`git -C ${JSON.stringify(REPO_ROOT)} log -1 --format=%cI -- ${JSON.stringify(rel)}`, {
+		/* execFileSync with an argv array, not execSync with an interpolated
+		   string: no shell is involved, so a path containing shell
+		   metacharacters is passed through as a single argument instead of
+		   being parsed. JSON.stringify quoting happened to hold here, but it
+		   is quoting for JSON, not for a shell - the two only coincide by
+		   luck. `--` still separates the pathspec from the options. */
+		const out = execFileSync('git', ['-C', REPO_ROOT, 'log', '-1', '--format=%cI', '--', rel], {
 			encoding: 'utf8',
 			stdio: ['ignore', 'pipe', 'ignore'],
 		}).trim()
@@ -75,7 +81,7 @@ function lastCommitTime(rel) {
 }
 
 if (!fs.existsSync(BUNDLE)) {
-	console.error('[check-bundle-freshness] FAIL — js/hrmq-main.js does not exist. Run `npm run build`.')
+	console.error('[check-bundle-freshness] FAIL — js/humaniq-main.js does not exist. Run `npm run build`.')
 	process.exit(1)
 }
 

@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-14-goals-okr
 # goals-okr Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [goals-okr](../../changes/archive/2026-07-14-goals-okr/) _(archived 2026-07-15)_ — `Objective` (concept→actief→afgesloten lifecycle, employee/team ownership, optional review-cycle tie) + `KeyResult` (`$ref` child, measurable start/target/current) schema pair in `hr-okr.json`, a writer-maintained `progress` % documented against the `x-openregister-calculations` limit, ADR-001 Rule 6 detail-tab surfaces (`EmployeeDetail` emp-objectives row, `ObjectiveDetail` with its Key-Results list, `ReviewCycleDetail` rc-objectives row, `KeyResultDetail`), the `MijnDoelen` `userId=@me` self-service page, deep-links/icons, and seed data (kind: config)
 
@@ -49,7 +49,7 @@ new objective (the `ReviewCycle` no-resurrection precedent).
 - **THEN** the status is `afgesloten`, `afgesloten` has no outgoing transition, and the scored
   `uitkomst` (e.g. `behaald`) is recorded in its own field independent of `status`
 - @e2e exclude declarative lifecycle transition covered by OpenRegister's `x-openregister-lifecycle`
-  engine tests; app-level e2e suite does not exist yet (tracked by hrmq-test-coverage-baseline)
+  engine tests; app-level e2e suite does not exist yet (tracked by humaniq-test-coverage-baseline)
 
 #### Scenario: An objective can run without a review cycle
 - **GIVEN** an `Objective` with `cycleId` null and `period` set to `2026-Q1`
@@ -77,7 +77,7 @@ the reviews MVP). A `KeyResult` without an `objectiveId` SHALL be invalid.
 - **WHEN** it is validated
 - **THEN** it fails validation because `objectiveId` is required
 - @e2e exclude schema-level required-property validation covered by OpenRegister's own JSON-schema
-  validation tests; app-level e2e suite does not exist yet (tracked by hrmq-test-coverage-baseline)
+  validation tests; app-level e2e suite does not exist yet (tracked by humaniq-test-coverage-baseline)
 
 ### Requirement: Progress SHALL be a writer-maintained number, not a declarative calculation (REQ-OKR-003)
 
@@ -128,7 +128,7 @@ child) with a `data` widget and a `related` widget resolving `objectiveId`; and 
 - **THEN** the "Doelen & OKR's" object-list row lists that objective and its row navigates to
   `ObjectiveDetail`, and no new top-level menu entry has been added anywhere
 - @e2e exclude declarative widget wiring covered by the shared CnPageRenderer library tests;
-  app-level e2e suite does not exist yet (tracked by hrmq-test-coverage-baseline)
+  app-level e2e suite does not exist yet (tracked by humaniq-test-coverage-baseline)
 
 #### Scenario: The objective detail lists its key results and drives the lifecycle
 - **GIVEN** an `Objective` in status `concept` with two `KeyResult`s referencing it
@@ -136,21 +136,21 @@ child) with a `data` widget and a `related` widget resolving `objectiveId`; and 
 - **THEN** the "Key results" list shows both KeyResults with their current/target/progress and the
   `lifecycleActions` offer exactly `activeren` (and, once `actief`, `afsluiten`)
 - @e2e exclude declarative widget/lifecycleActions wiring covered by the shared CnPageRenderer
-  library tests; app-level e2e suite does not exist yet (tracked by hrmq-test-coverage-baseline)
+  library tests; app-level e2e suite does not exist yet (tracked by humaniq-test-coverage-baseline)
 
 #### Scenario: The review cycle lists its tied OKRs
 - **GIVEN** an `Objective` whose `cycleId` is an open `ReviewCycle`
 - **WHEN** `ReviewCycleDetail` for that cycle is opened
 - **THEN** the "OKR's in deze cyclus" list includes that objective
 - @e2e exclude declarative widget wiring covered by the shared CnPageRenderer library tests;
-  app-level e2e suite does not exist yet (tracked by hrmq-test-coverage-baseline)
+  app-level e2e suite does not exist yet (tracked by humaniq-test-coverage-baseline)
 
 ### Requirement: Objectives SHALL be reachable via self-service and deep-links (REQ-OKR-005)
 
 `src/manifest.json` SHALL add a `MijnDoelen` index page over `Objective` (route `/mijn/doelen`,
 `filter: {userId: "@me"}`, columns `title`/`status`/`progress`/`cycleId`) — the `MijnBeoordelingen`
-mijn-hr precedent — and `deepLinks` for `Objective` (`/apps/hrmq/objectives/{uuid}`) and `KeyResult`
-(`/apps/hrmq/key-results/{uuid}`). The `Objective` `userId` SHALL denormalise the owning employee's
+mijn-hr precedent — and `deepLinks` for `Objective` (`/apps/humaniq/objectives/{uuid}`) and `KeyResult`
+(`/apps/humaniq/key-results/{uuid}`). The `Objective` `userId` SHALL denormalise the owning employee's
 `nextcloudUserId` (nullable, a plain NC-user-id string, never a `$ref` — the `Timesheet.userId` /
 `PerformanceReview.userId` convention) so the `@me` filter works without a cross-schema join.
 `src/icons.js` SHALL register `BullseyeArrow` and `TargetVariant`.
@@ -160,11 +160,11 @@ mijn-hr precedent — and `deepLinks` for `Objective` (`/apps/hrmq/objectives/{u
 - **WHEN** an employee opens `MijnDoelen`
 - **THEN** only the objective whose `userId` matches the `@me` token is listed
 - @e2e exclude declarative index filtering covered by the shared CnPageRenderer library tests;
-  app-level e2e suite does not exist yet (tracked by hrmq-test-coverage-baseline)
+  app-level e2e suite does not exist yet (tracked by humaniq-test-coverage-baseline)
 
 #### Scenario: An objective is deep-linkable
 - **GIVEN** an `Objective` with a known uuid
-- **WHEN** its deep-link `/apps/hrmq/objectives/{uuid}` is followed
+- **WHEN** its deep-link `/apps/humaniq/objectives/{uuid}` is followed
 - **THEN** `ObjectiveDetail` for that objective opens
 
 ### Requirement: Seed data SHALL populate a runnable OKR set and the register MUST validate (REQ-OKR-006)
@@ -184,7 +184,7 @@ app-manifest-v2.
 - **THEN** the "Doelen & OKR's" row shows the seeded `actief` objective and its "Key results" list
   shows the seeded KeyResults with matching current/target/progress values
 - @e2e exclude declarative seed-data rendering covered by the shared CnPageRenderer library tests;
-  app-level e2e suite does not exist yet (tracked by hrmq-test-coverage-baseline)
+  app-level e2e suite does not exist yet (tracked by humaniq-test-coverage-baseline)
 
 #### Scenario: The manifest and register validate
 - **WHEN** `npm run check:manifest` runs after this change

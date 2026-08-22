@@ -7,10 +7,10 @@ built_by: openspec/changes/archive/2026-07-14-multi-administratie
 # multi-administratie Specification
 
 **Status**: done (automatic per-page scoping delivered — see #64 correction under Delivered scope;
-REQ-MULTI-004's "Delivered" status is further corrected 2026-08-19 — see `hrmq-boot-integrity` below
+REQ-MULTI-004's "Delivered" status is further corrected 2026-08-19 — see `humaniq-boot-integrity` below
 and the requirement's own MODIFIED delta — it is live-conditional on the boot-integrity guards
 passing, not unconditionally delivered)
-**Scope**: hrmq (`kind: code+config`) — the accountant multi-client / multi-company tenant model.
+**Scope**: humaniq (`kind: code+config`) — the accountant multi-client / multi-company tenant model.
 Reuses the `PayrollRun` plain-string `administrationId` convention (ADR-062 rule 7: never a `$ref`),
 the `userId`/`managerUserId` denormalization precedent, and ADR-001 Rule 3 (tenant switch, no menu
 duplication). Adds zero payroll-engine logic.
@@ -20,14 +20,14 @@ duplication). Adds zero payroll-engine logic.
   the HR/payroll schemas, an access-guarded per-user active-administratie selection
   (`GET/POST /api/administration/*`), a `Configuratie › Administraties` switcher, a
   `nl-administratie-scope-consistency` corpus rule, and seeds proving the switch.
-- [hrmq-boot-integrity](../../changes/hrmq-boot-integrity/) — **Status**: in-progress — corrects
+- [humaniq-boot-integrity](../../changes/humaniq-boot-integrity/) — **Status**: in-progress — corrects
   REQ-MULTI-004's "Delivered" status (live-verified false: the token reaches the API unresolved on
   the currently-deployed bundle) and ties its status to the new `boot-integrity` capability's
   bundle-freshness and manifest-sentinel-resolution guards passing.
 
 ## Purpose
 
-Let one hrmq instance carry multiple administraties (companies/clients) — the dominant NL
+Let one humaniq instance carry multiple administraties (companies/clients) — the dominant NL
 distribution wedge, where one accountant's office runs payroll for many SMBs (Nmbrs, Loket and
 Employes all monetize this per-payslip). The tenant axis is a denormalized plain-string
 `administrationId` on every scoped object plus a per-user active-administratie pointer, selected
@@ -77,7 +77,7 @@ Every list and detail page is implicitly scoped to the active administratie via
   single-app token inventions in favour of it (e.g. pipelinq's `@currentFiscalYear` →
   `@workspace.<key>`). Inventing `@administration` would have been the anti-pattern the library
   forbids, not a legitimate follow-up. `cnWorkspaceContext` is a Vue provide/inject bag documented as
-  "provided by CnDashboardPage" (page-scoped), but Vue's inject walks the WHOLE ancestor chain — hrmq
+  "provided by CnDashboardPage" (page-scoped), but Vue's inject walks the WHOLE ancestor chain — humaniq
   provides it once at its own SPA root (`App.vue`) instead, which makes it available fleet-wide across
   every page type with zero nextcloud-vue change. No upstream issue was ever needed; none is filed.
 ### Requirement: The switcher lives under Configuratie and adds no top-level menu (REQ-MULTI-006)
@@ -116,7 +116,7 @@ organisation) remains a named security fast-follow, unrelated to #64.
 `@administration` token added upstream to nextcloud-vue — was wrong. It was never filed as an upstream
 issue and never will be; nextcloud-vue's existing, general `@workspace.<key>` context covers this
 exact case and its own vocabulary deprecates single-app token inventions like the one REQ-MULTI-005
-proposed. The fix was entirely local to hrmq: use the token that already existed, and provide the
-`cnWorkspaceContext` Vue already supports injecting fleet-wide from hrmq's own SPA root rather than
+proposed. The fix was entirely local to humaniq: use the token that already existed, and provide the
+`cnWorkspaceContext` Vue already supports injecting fleet-wide from humaniq's own SPA root rather than
 only page-scoped. Said plainly, so this isn't silently rewritten: the original spec's assumption was
 incorrect, not merely superseded by a later design choice.

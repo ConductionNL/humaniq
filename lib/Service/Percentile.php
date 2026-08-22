@@ -25,7 +25,7 @@
  * on the exact shape of data it exists to surface).
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -36,12 +36,12 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 /**
  * Percentile-over-a-sorted-array calculator. Instantiated (never called
@@ -50,7 +50,7 @@ namespace OCA\Hrmq\Service;
  * fleet's phpmd `StaticAccess` rule's own preferred fix (instance calls,
  * not `Foo::bar()`).
  *
- * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
+ * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
  */
 final class Percentile {
 
@@ -65,7 +65,7 @@ final class Percentile {
 	 *
 	 * @return float|null The percentile value, rounded to 2 decimals, or null when `$sortedValues` is empty.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
 	 */
 	public function value(array $sortedValues, float $rank): ?float {
 		$count = count($sortedValues);

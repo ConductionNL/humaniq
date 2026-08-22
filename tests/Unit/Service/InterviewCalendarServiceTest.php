@@ -20,7 +20,7 @@
  * available in this standalone suite.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -36,10 +36,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Service\InterviewCalendarService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Service\InterviewCalendarService;
+use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -760,7 +760,7 @@ class InterviewCalendarServiceTest extends TestCase {
 		$service->sync();
 		$this->assertTrue($backend->hasObject('hrmq-interview-intv-1.ics'));
 
-		// A manually-created, non-hrmq event on the same calendar must
+		// A manually-created, non-humaniq event on the same calendar must
 		// survive the cancellation-driven removal.
 		$backend->seedObject('manual-event.ics', 'manual-uid', "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
 
@@ -842,7 +842,7 @@ class InterviewCalendarServiceTest extends TestCase {
 	/**
 	 * @return void
 	 */
-	public function testOrphanReconciliationNeverTouchesNonHrmqEvents(): void {
+	public function testOrphanReconciliationNeverTouchesNonHumaniqEvents(): void {
 		[$service, $backend] = $this->service([]);
 		$backend->seedObject('someone-elses-event.ics', 'random-uid', "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
 
@@ -851,7 +851,7 @@ class InterviewCalendarServiceTest extends TestCase {
 		$this->assertTrue($backend->hasObject('someone-elses-event.ics'));
 		$this->assertSame([], $backend->deleted);
 
-	}//end testOrphanReconciliationNeverTouchesNonHrmqEvents()
+	}//end testOrphanReconciliationNeverTouchesNonHumaniqEvents()
 
 	/**
 	 * REQ-INTV-005 Scenario "Summary carries name and role, nothing else

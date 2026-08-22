@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-13-performance-reviews-mvp
 # performance-reviews Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [performance-reviews-mvp](../../changes/archive/2026-07-13-performance-reviews-mvp/) _(archived 2026-07-13)_ — `PerformanceReview` schema (goals inside the review, no Goal entity) with declarative concept→ingediend→besproken→vastgesteld/heropenen lifecycle, `NoSelfApprovalGuard` reuse on vaststellen, `nl-performance-dossiervorming` corpus rule + `NlPerformanceChecks` provider, EmployeeDetail Beoordelingen row + PerformanceReviewDetail + MijnBeoordelingen, seeded complete + intentionally incomplete reviews (kind: config)
 
@@ -36,7 +36,7 @@ frameworks are explicitly out of scope (separate drafts).
 The review capability MUST consist solely of the `PerformanceReview` schema
 in `lib/Settings/register.d/hr-performance.json` (goals array inside the
 review — no `Goal` schema anywhere; declarative lifecycle with
-`vaststellen.requires` the existing `OCA\Hrmq\Lifecycle\NoSelfApprovalGuard`,
+`vaststellen.requires` the existing `OCA\Humaniq\Lifecycle\NoSelfApprovalGuard`,
 reused unchanged), one `recommended`-severity corpus rule
 (`nl-performance-dossiervorming`) with its check provider, manifest surfaces
 anchored on the personnel dossier per ADR-001 Rule 6 (EmployeeDetail row,
@@ -46,7 +46,7 @@ guard class, or any OKR/9-box/kalibratie/comp-cycle object.
 
 #### Scenario: Dossier-anchored surface, reused guard
 
-- GIVEN the hrmq codebase with this capability applied
+- GIVEN the humaniq codebase with this capability applied
 - WHEN `src/manifest.json`, `lib/Settings/register.d/` and `lib/Lifecycle/` are inspected
 - THEN the review surface hangs off `EmployeeDetail`/`MijnHrGroup` with no new menu group, `hr-performance.json` declares no `Goal` schema, and `vaststellen` references the pre-existing `NoSelfApprovalGuard` FQCN with no new guard class added
 - @e2e exclude structural manifest/register assertion with no user-observable flow of its own; covered by check:manifest and the delta spec's scenarios
@@ -65,7 +65,7 @@ The fragment `lib/Settings/register.d/hr-performance.json` SHALL declare `Perfor
 
 ### Requirement: The review lifecycle SHALL be declarative and `vaststellen` SHALL require the existing `NoSelfApprovalGuard` (REQ-PRV-002)
 
-`PerformanceReview.configuration` SHALL declare `x-openregister-lifecycle`: `field: status`, `initial: concept`, terminal `[]` (the Timesheet precedent — vastgesteld is re-openable), transitions `indienen` (concept→ingediend), `bespreken` (ingediend→besproken; description documents that `besprokenOp` is stamped on the carrying write), `vaststellen` (besproken→vastgesteld; **`requires: OCA\Hrmq\Lifecycle\NoSelfApprovalGuard`**; description documents that `vastgesteldDoor` is stamped on the carrying write) and `heropenen` (vastgesteld→besproken — the correction edge; every path back to vastgesteld passes the guard again). No other edges. The guard is reused **unchanged**: its contract — deny when the acting user equals the object's `employeeId`, fail closed on unknown actor or employee — is exactly the review separation-of-duties rule (the employee under review must not vaststellen their own beoordeling), and `PerformanceReview` deliberately names its subject field `employeeId` to match the guard's Timesheet/Expense contract. The guard's class docblock SHALL be updated to name the third consumer; no behavioural change to the guard. `indienen`/`bespreken`/`heropenen` carry no guard.
+`PerformanceReview.configuration` SHALL declare `x-openregister-lifecycle`: `field: status`, `initial: concept`, terminal `[]` (the Timesheet precedent — vastgesteld is re-openable), transitions `indienen` (concept→ingediend), `bespreken` (ingediend→besproken; description documents that `besprokenOp` is stamped on the carrying write), `vaststellen` (besproken→vastgesteld; **`requires: OCA\Humaniq\Lifecycle\NoSelfApprovalGuard`**; description documents that `vastgesteldDoor` is stamped on the carrying write) and `heropenen` (vastgesteld→besproken — the correction edge; every path back to vastgesteld passes the guard again). No other edges. The guard is reused **unchanged**: its contract — deny when the acting user equals the object's `employeeId`, fail closed on unknown actor or employee — is exactly the review separation-of-duties rule (the employee under review must not vaststellen their own beoordeling), and `PerformanceReview` deliberately names its subject field `employeeId` to match the guard's Timesheet/Expense contract. The guard's class docblock SHALL be updated to name the third consumer; no behavioural change to the guard. `indienen`/`bespreken`/`heropenen` carry no guard.
 
 #### Scenario: Review walks the full lifecycle
 - **GIVEN** a PerformanceReview in status `concept`
@@ -84,7 +84,7 @@ The fragment `lib/Settings/register.d/hr-performance.json` SHALL declare `Perfor
 
 ### Requirement: A machine-checkable dossiervorming rule SHALL flag vastgesteld reviews without rating + afspraken (REQ-PRV-003)
 
-`lib/Standards/rules/labour.json` SHALL gain rule `nl-performance-dossiervorming`: `domain: labour`, `jurisdiction: NL`, `framework: bw7-10`, source "BW art. 7:669 lid 3 sub d (redelijke grond disfunctioneren, ontslagrecht via Wet werk en zekerheid); vaste rechtspraak over dossieropbouw/verbetertraject", `sourceUrl: https://wetten.overheid.nl/BWBR0005290`, `severity: recommended` (no statute obliges recording a rating — but without the documented dossier a sub-d dismissal fails at the kantonrechter), `machineCheckable: true`, `effectiveDate: 2015-07-01`; statement: a `vastgesteld` PerformanceReview must carry a non-null `rating` and non-empty `afspraken`. A new check provider `lib/Standards/Checks/NlPerformanceChecks.php` (SPDX docblock, auto-discovered by `RuleEngine::providers()`) SHALL register the predicate, evaluated only on `status: vastgesteld` — all other statuses pass vacuously (an unfinished review legitimately lacks a rating). `RuleCatalogue::VERSION` bumps `2026-07.7` → `2026-07.8` (the HEAD value was re-verified at apply time — prior merges had already advanced it past the design's `2026-07.5`→`2026-07.6` baseline); violations surface via the existing `occ hrmq:rules:audit`.
+`lib/Standards/rules/labour.json` SHALL gain rule `nl-performance-dossiervorming`: `domain: labour`, `jurisdiction: NL`, `framework: bw7-10`, source "BW art. 7:669 lid 3 sub d (redelijke grond disfunctioneren, ontslagrecht via Wet werk en zekerheid); vaste rechtspraak over dossieropbouw/verbetertraject", `sourceUrl: https://wetten.overheid.nl/BWBR0005290`, `severity: recommended` (no statute obliges recording a rating — but without the documented dossier a sub-d dismissal fails at the kantonrechter), `machineCheckable: true`, `effectiveDate: 2015-07-01`; statement: a `vastgesteld` PerformanceReview must carry a non-null `rating` and non-empty `afspraken`. A new check provider `lib/Standards/Checks/NlPerformanceChecks.php` (SPDX docblock, auto-discovered by `RuleEngine::providers()`) SHALL register the predicate, evaluated only on `status: vastgesteld` — all other statuses pass vacuously (an unfinished review legitimately lacks a rating). `RuleCatalogue::VERSION` bumps `2026-07.7` → `2026-07.8` (the HEAD value was re-verified at apply time — prior merges had already advanced it past the design's `2026-07.5`→`2026-07.6` baseline); violations surface via the existing `occ humaniq:rules:audit`.
 
 #### Scenario: Complete vastgesteld review passes
 - **GIVEN** a PerformanceReview with status `vastgesteld`, rating `goed` and non-empty `afspraken`
@@ -103,10 +103,10 @@ The fragment `lib/Settings/register.d/hr-performance.json` SHALL declare `Perfor
 
 ### Requirement: The personnel dossier SHALL anchor the review surface per ADR-001 Rule 6 (REQ-PRV-004)
 
-`src/manifest.json` SHALL add to `EmployeeDetail` an object-list widget `emp-reviews` ("Beoordelingen", icon `ClipboardAccountOutline`; schema `PerformanceReview`, filter `employeeId: @objectId`, sort `besprokenOp` desc, columns `cycleId`/`status`/`rating`/`besprokenOp`, `rowRoute: PerformanceReviewDetail`) as a full-width layout row inserted before the personnel-file Files leaf, which shifts down — the exact `emp-assignments` insertion pattern of the org-chart build. The row deliberately carries no `viewAllRoute`: there is no org-wide reviews index in the MVP (reviews are dossier-anchored per ADR-001 Rule 6; the per-cycle list lives on `ReviewCycleDetail`). The manifest SHALL further add `PerformanceReviewDetail` (detail over `PerformanceReview`, route `/reviews/:id`, **not** a menu child — the TimesheetDetail convention): a "Beoordeling" data widget (rating/sterktes/ontwikkelpunten/afspraken/goals/besprokenOp/vastgesteldDoor; exclude `employeeId`/`cycleId`/`reviewerId` — Related resolves them — and `userId`), a related widget, `lifecycleActions` exposing **exactly** `indienen`/`bespreken`/`vaststellen`/`heropenen` with Dutch labels, and an audit-history sidebar tab; a page `_note` documents the goals-inside-review decision and the guard on vaststellen. A deepLink `PerformanceReview` → `/apps/hrmq/reviews/{uuid}` is registered and `src/icons.js` registers `ClipboardAccountOutline`. No new menu group and no new top-level menu entry is created anywhere in this change. The manifest MUST validate (`npm run check:manifest`).
+`src/manifest.json` SHALL add to `EmployeeDetail` an object-list widget `emp-reviews` ("Beoordelingen", icon `ClipboardAccountOutline`; schema `PerformanceReview`, filter `employeeId: @objectId`, sort `besprokenOp` desc, columns `cycleId`/`status`/`rating`/`besprokenOp`, `rowRoute: PerformanceReviewDetail`) as a full-width layout row inserted before the personnel-file Files leaf, which shifts down — the exact `emp-assignments` insertion pattern of the org-chart build. The row deliberately carries no `viewAllRoute`: there is no org-wide reviews index in the MVP (reviews are dossier-anchored per ADR-001 Rule 6; the per-cycle list lives on `ReviewCycleDetail`). The manifest SHALL further add `PerformanceReviewDetail` (detail over `PerformanceReview`, route `/reviews/:id`, **not** a menu child — the TimesheetDetail convention): a "Beoordeling" data widget (rating/sterktes/ontwikkelpunten/afspraken/goals/besprokenOp/vastgesteldDoor; exclude `employeeId`/`cycleId`/`reviewerId` — Related resolves them — and `userId`), a related widget, `lifecycleActions` exposing **exactly** `indienen`/`bespreken`/`vaststellen`/`heropenen` with Dutch labels, and an audit-history sidebar tab; a page `_note` documents the goals-inside-review decision and the guard on vaststellen. A deepLink `PerformanceReview` → `/apps/humaniq/reviews/{uuid}` is registered and `src/icons.js` registers `ClipboardAccountOutline`. No new menu group and no new top-level menu entry is created anywhere in this change. The manifest MUST validate (`npm run check:manifest`).
 
 #### Scenario: Dossier shows the employee's reviews
-@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** a seeded employee with one PerformanceReview
 - **WHEN** `EmployeeDetail` renders for that employee
 - **THEN** the "Beoordelingen" row lists the review and its row navigates to `PerformanceReviewDetail`
@@ -120,7 +120,7 @@ The fragment `lib/Settings/register.d/hr-performance.json` SHALL declare `Perfor
 `src/manifest.json` SHALL add child `MijnBeoordelingen` ("Mijn beoordelingen", icon `StarCheckOutline`, registered in `src/icons.js`) to the **existing** `MijnHrGroup`, backed by page `MijnBeoordelingen` (index over `PerformanceReview`, route `/mijn/beoordelingen`, filter `userId: @me`, columns `cycleId`/`status`/`rating`/`besprokenOp`, sort `besprokenOp` desc) — the established mijn-hr-self-service pattern (MijnUren/MijnVerlof et al.). This works because `PerformanceReview.userId` carries the denormalized NC uid per REQ-PRV-001; reviews of employees without a Nextcloud account keep `userId` null and never appear on a Mijn page (their portal view is ADR-046 portaliq territory, out of scope).
 
 #### Scenario: Employee sees own review only
-@e2e exclude declarative index filtering is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative index filtering is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** the seeded review with `userId: admin` and the seeded review with `userId: null`
 - **WHEN** the `admin` user opens `MijnBeoordelingen`
 - **THEN** exactly the `userId: admin` review is listed

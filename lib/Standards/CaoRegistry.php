@@ -20,7 +20,7 @@
  * `NlCaoChecks` treats null as a vacuous pass.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards
+ * @package  OCA\Humaniq\Standards
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -36,7 +36,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards;
+namespace OCA\Humaniq\Standards;
 
 /**
  * Read-only accessor over the per-CAO JSON corpus files.

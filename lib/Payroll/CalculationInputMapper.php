@@ -3,14 +3,14 @@
 /**
  * Calculation Input Mapper
  *
- * The boundary between hrmq's `CalculationInput` DTO and a pack's own declared
+ * The boundary between humaniq's `CalculationInput` DTO and a pack's own declared
  * input vocabulary (jurisdiction-packs design.md D6/D10).
  *
  * **The awfTariff seam, written down rather than papered over.**
  * `CalculationInput::$awfTariff` is `low|high` while the tables' keys are
  * `laag|hoog` — at HEAD `PayrollCalculator` bridged that with an inline PHP
  * ternary (`$input->awfTariff === 'high' ? ... : ...`). That mismatch is an
- * accident of hrmq's own DTO, not a fact about Dutch payroll, and **a pack
+ * accident of humaniq's own DTO, not a fact about Dutch payroll, and **a pack
  * must not inherit it**: the NL pack's vocabulary matches its own tables
  * (`laag|hoog`) and knows nothing about `low|high`. So the mapping happens
  * HERE, at the boundary, exactly once — `CalculationInput`'s public contract
@@ -26,7 +26,7 @@
  * never drift.
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll
+ * @package  OCA\Humaniq\Payroll
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -42,7 +42,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll;
+namespace OCA\Humaniq\Payroll;
 
 /**
  * Maps a `CalculationInput` into a pack's declared input vocabulary.
@@ -50,7 +50,7 @@ namespace OCA\Hrmq\Payroll;
 final class CalculationInputMapper {
 
 	/**
-	 * Map hrmq's DTO onto the pack's input contract.
+	 * Map humaniq's DTO onto the pack's input contract.
 	 *
 	 * @param CalculationInput $input The calculation input.
 	 *

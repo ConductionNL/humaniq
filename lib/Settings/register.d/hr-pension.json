@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-pension",
+    "x-humaniq-fragment": "hr-pension",
     "components": {
         "schemas": {
             "PensionFiling": {
@@ -28,7 +28,7 @@
                                     "concept"
                                 ],
                                 "to": "gecontroleerd",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\PayrollRunApprovedGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\PayrollRunApprovedGuard",
                                 "description": "Marks the filing as reviewed. PayrollRunApprovedGuard denies the transition unless the referenced PayrollRun's status is approved, posted or paid — an HR admin may still prepare a concept filing while the run is in review, but cannot progress it further until the run is approved."
                             },
                             "bevestigen": {

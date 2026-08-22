@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-onboarding",
+    "x-humaniq-fragment": "hr-onboarding",
     "components": {
         "schemas": {
             "Onboarding": {
@@ -7,7 +7,7 @@
                 "icon": "AccountPlus",
                 "version": "0.2.0",
                 "title": "Onboarding case",
-                "description": "A deterministic onboarding case (one per hire): the concrete legal gates for a new employee's first week — contract signed, WID identity check, BSN/IBAN validated, IT provisioned, pensioen aangemeld — as checklist boolean/date fields, governed by a simplified six-state declarative lifecycle (onboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/onboarding-wizard draft's 13-state machine and 15-step wizard stepper: no OnboardingStep/WIDCheck/BSNValidatie/Reminder side entities, no wizard stepper UI (follow-up nc-vue widget, design.md D6), no BSN elfproef/IBAN modulus-97 validation services, no IT auto-provisioning, no reminder/escalation engine. The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOnboardingChecks.php), NOT by write-time guard classes — guard wiring for compliance-checked schemas is owned by the active hrmq-rule-compliance-enforcement change (design.md D2).",
+                "description": "A deterministic onboarding case (one per hire): the concrete legal gates for a new employee's first week — contract signed, WID identity check, BSN/IBAN validated, IT provisioned, pensioen aangemeld — as checklist boolean/date fields, governed by a simplified six-state declarative lifecycle (onboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/onboarding-wizard draft's 13-state machine and 15-step wizard stepper: no OnboardingStep/WIDCheck/BSNValidatie/Reminder side entities, no wizard stepper UI (follow-up nc-vue widget, design.md D6), no BSN elfproef/IBAN modulus-97 validation services, no IT auto-provisioning, no reminder/escalation engine. The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOnboardingChecks.php), NOT by write-time guard classes — guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2).",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [
@@ -29,7 +29,7 @@
                                     "aangenomen"
                                 ],
                                 "to": "contract_getekend",
-                                "description": "The employment contract has been signed. Checklist gate: contractSigned = true (enforced by audit rule, not a write-time guard — see hrmq-rule-compliance-enforcement)."
+                                "description": "The employment contract has been signed. Checklist gate: contractSigned = true (enforced by audit rule, not a write-time guard — see humaniq-rule-compliance-enforcement)."
                             },
                             "gegevens_valideren": {
                                 "from": [
@@ -171,7 +171,7 @@
                 "icon": "AccountMinus",
                 "version": "0.1.0",
                 "title": "Offboarding case",
-                "description": "A deterministic offboarding case (one per departure): the concrete gates for a leaving employee — exit interview held, assets returned, access revoked — and the statutory eindafrekening components (verlofsaldo paid out, vakantiegeld settled, transitievergoeding recorded, getuigschrift provided) as checklist boolean/date fields, governed by a simplified five-state declarative lifecycle (offboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/offboarding-wizard draft's 17-state machine and 7 entity schemas: no OffboardingStep/Eindafrekening/EquipmentReturn/ExitInterview/Getuigschrift/RetentionTimer side entities, no eindafrekening computation engine, no UWV WW-melding/pensioenfonds/ZVW submissions, no AVG retention timers, no per-item asset tracking (the parallel asset-management-mvp owns asset data — loose coupling only, design.md D6). The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOffboardingChecks.php), NOT by write-time guard classes — guard wiring for compliance-checked schemas is owned by the active hrmq-rule-compliance-enforcement change (design.md D2).",
+                "description": "A deterministic offboarding case (one per departure): the concrete gates for a leaving employee — exit interview held, assets returned, access revoked — and the statutory eindafrekening components (verlofsaldo paid out, vakantiegeld settled, transitievergoeding recorded, getuigschrift provided) as checklist boolean/date fields, governed by a simplified five-state declarative lifecycle (offboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/offboarding-wizard draft's 17-state machine and 7 entity schemas: no OffboardingStep/Eindafrekening/EquipmentReturn/ExitInterview/Getuigschrift/RetentionTimer side entities, no eindafrekening computation engine, no UWV WW-melding/pensioenfonds/ZVW submissions, no AVG retention timers, no per-item asset tracking (the parallel asset-management-mvp owns asset data — loose coupling only, design.md D6). The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOffboardingChecks.php), NOT by write-time guard classes — guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2).",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [
@@ -201,7 +201,7 @@
                                     "afronding_gepland"
                                 ],
                                 "to": "eindafrekening_gereed",
-                                "description": "The eindafrekening is ready. Checklist gate: verlofsaldoUitbetaald = true when an open leave balance remains (BW 7:641), vakantiegeldAfgerekend = true, transitievergoedingBedrag recorded for dismissal-initiated reasons (BW 7:673) (enforced by audit rule, not a write-time guard — see hrmq-rule-compliance-enforcement)."
+                                "description": "The eindafrekening is ready. Checklist gate: verlofsaldoUitbetaald = true when an open leave balance remains (BW 7:641), vakantiegeldAfgerekend = true, transitievergoedingBedrag recorded for dismissal-initiated reasons (BW 7:673) (enforced by audit rule, not a write-time guard — see humaniq-rule-compliance-enforcement)."
                             },
                             "afronden": {
                                 "from": [

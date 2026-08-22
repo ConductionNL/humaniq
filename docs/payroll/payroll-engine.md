@@ -5,7 +5,7 @@ description: The country-pluggable payroll calculation engine — jurisdiction p
 
 # The payroll engine
 
-HRMQ ships a **country-pluggable payroll calculation engine**. The
+Humaniq ships a **country-pluggable payroll calculation engine**. The
 gross-to-net chain — brackets, credits, employer charges, the whole
 formula — is not hardcoded per country in PHP. It is a declarative
 **step-DSL** (a jurisdiction pack) executed by a small, pure interpreter
@@ -14,7 +14,7 @@ shipping a new PHP calculator class.
 
 The Netherlands ships as the first, bundled pack
 (`lib/Standards/packs/nl-2026.pack.json`), and as far as the project's
-market research has found, HRMQ's NL chain remains the only open-source
+market research has found, Humaniq's NL chain remains the only open-source
 Dutch payroll calculation engine available (Odoo's NL payroll
 localisation is Enterprise-only).
 
@@ -72,13 +72,13 @@ contribution *does* reduce net simply declares that step
 
 A pack step may declare `op: "phpStep"` with a `handler` name. The
 interpreter resolves that name against a **compile-time allow-list** of
-handlers already shipping inside HRMQ — a pack can never supply code, a
+handlers already shipping inside Humaniq — a pack can never supply code, a
 class path, or a callable, only a name and parameters. Resolution
 happens at **pack-validation time, not at runtime**: a pack naming an
 unknown handler is rejected at upload with the offending name in the
 error, and never reaches a payroll run to fail silently or "degrade
 gracefully" into a skipped step that quietly under-taxes someone.
-**HRMQ ships zero registered handlers, and the bundled NL pack uses
+**Humaniq ships zero registered handlers, and the bundled NL pack uses
 zero of them** — every one of NL's steps, including the AOW-age switch,
 the groene-tabel selection, and the DGA `verzekeringsplichtig` gate, is
 expressed as declared `when` predicates and `match` selections, not
@@ -155,7 +155,7 @@ level you could act on:
    comes out of the fold automatically — you never write a net rule.
 3. **Reach for `phpStep` only for genuine national exotica** that the
    DSL cannot express (see Known limits below) — and only by naming an
-   allow-listed handler that already ships in HRMQ.
+   allow-listed handler that already ships in Humaniq.
 4. **Write golden self-test vectors** — at least one `{input,
    expected}` pair the interpreter must reproduce exactly. This is
    required, not optional: no vectors, no activation.
@@ -238,8 +238,8 @@ Create (or recalculate) the draft `PayrollRun` and its `Payslip` objects
 for a wage period:
 
 ```bash
-occ hrmq:payroll:run --period=2026-06 --administration=ADM-001
-occ hrmq:payroll:run --period=2026-06 --recalculate
+occ humaniq:payroll:run --period=2026-06 --administration=ADM-001
+occ humaniq:payroll:run --period=2026-06 --recalculate
 ```
 
 - `--period` — the wage period, `YYYY-MM`
@@ -253,10 +253,10 @@ Audit one period's run(s) and their payslips against the
 machine-checkable rule corpus:
 
 ```bash
-occ hrmq:payroll:verify --period=2026-06 --administration=ADM-001 --jurisdiction=NL
+occ humaniq:payroll:verify --period=2026-06 --administration=ADM-001 --jurisdiction=NL
 ```
 
-`hrmq:payroll:verify` is a **run-scoped corpus audit** — the same
+`humaniq:payroll:verify` is a **run-scoped corpus audit** — the same
 `RuleCatalogue`/`RuleEngine` that audits hand-entered HR data also
 audits the engine's own output, and the command exits non-zero on any
 mandatory violation. Every computed `PayrollRun` carries `engineVersion`

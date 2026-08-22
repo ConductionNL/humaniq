@@ -36,7 +36,7 @@ otherwise prevent.
 
 `Loonbeslag.beslagvrijeVoet` is a required, HR-entered field, trusted
 as the authoritative figure the deurwaarder is legally required to
-state on the garnishment order. HRMQ does **not** compute the protected
+state on the garnishment order. Humaniq does **not** compute the protected
 minimum from income and household composition per the Wet
 vereenvoudiging beslagvrije voet (partner income, co-residents, housing
 costs, health-insurance premium) — that computation is a named
@@ -44,7 +44,7 @@ fast-follow. The stored value is used as-is.
 
 ## Single-active-beslag is the MVP scope
 
-HRMQ selects at most **one** `actief` Loonbeslag per employee per
+Humaniq selects at most **one** `actief` Loonbeslag per employee per
 period. Priority/preferente-vordering ordering across multiple
 simultaneous garnishments for the same employee (BW art. 475d) is a
 named fast-follow, not silently glossed over: `nl-loonbeslag-single-active`
@@ -65,7 +65,7 @@ writes through a guarded controller endpoint only.
 ## Machine-checked audit
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 Reports both `nl-loonbeslag-beslagvrije-voet-floor` (the floor never

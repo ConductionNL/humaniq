@@ -3,16 +3,16 @@
 /**
  * Payroll Verify Command
  *
- * `occ hrmq:payroll:verify --period YYYY-MM [--administration ADM]` — the
+ * `occ humaniq:payroll:verify --period YYYY-MM [--administration ADM]` — the
  * run-scoped corpus audit (payroll-core-engine design.md D7): resolves the
  * period's PayrollRun(s) + their engine payslips and runs the RuleEngine over
  * exactly that object set, printing every violation and exiting non-zero on
- * any MANDATORY violation, 0 otherwise (the `hrmq:rules:audit` exit-code
+ * any MANDATORY violation, 0 otherwise (the `humaniq:rules:audit` exit-code
  * convention). A computed run is audited by the same corpus that audits
  * hand-entered data — the engine has no private truth.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -28,9 +28,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\RuleAuditService;
+use OCA\Humaniq\Service\RuleAuditService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -57,7 +57,7 @@ class PayrollVerifyCommand extends Command {
 	 * @spec openspec/changes/payroll-core-engine/specs/payroll-core-engine/spec.md#REQ-PCE-006
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:payroll:verify')
+		$this->setName('humaniq:payroll:verify')
 			->setDescription('Audit one wage period\'s PayrollRun(s) + their payslips against the machine-checkable rule corpus (run-scoped).')
 			->addOption('period', null, InputOption::VALUE_REQUIRED, 'Wage period (YYYY-MM).')
 			->addOption('administration', null, InputOption::VALUE_REQUIRED, 'Only runs of this administration.')
@@ -90,7 +90,7 @@ class PayrollVerifyCommand extends Command {
 			['jurisdiction' => (string)$input->getOption('jurisdiction')]
 		);
 
-		$output->writeln('<info>Hrmq payroll verify</info>');
+		$output->writeln('<info>Humaniq payroll verify</info>');
 		$output->writeln(sprintf('  periode           : %s', $period));
 		$output->writeln(sprintf('  runs gecontroleerd: %d', $report['runsChecked']));
 		$output->writeln(sprintf('  loonstroken       : %d', $report['payslipsChecked']));

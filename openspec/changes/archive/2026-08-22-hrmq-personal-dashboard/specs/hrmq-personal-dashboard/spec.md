@@ -1,4 +1,4 @@
-# hrmq-personal-dashboard — delta for hrmq-personal-dashboard
+# humaniq-personal-dashboard — delta for humaniq-personal-dashboard
 
 ## ADDED Requirements
 
@@ -57,7 +57,7 @@ The widget set, bindings and click-throughs (full configs in design.md D3):
    `TeamUrengoedkeuring`. The widget grammar has no conditional-visibility primitive for stat
    tiles (design.md D4), so the tile SHALL always render — a caller who manages nobody sees 0.
 
-All titles/captions are Dutch literals; `hrmq-i18n-locale-completeness` owns their later
+All titles/captions are Dutch literals; `humaniq-i18n-locale-completeness` owns their later
 conversion and this change SHALL add no English keys.
 
 Two binding SPELLINGS are fixed by the render path rather than by preference (measured live —
@@ -104,7 +104,7 @@ group (`hasActiveChild`). Together with REQ-PDB-001 this satisfies both conditio
 ADR-097 Decision 3 — the entry "route[s] to a `type: "dashboard"` page scoped to the caller"
 AND "carr[ies] children, which are the caller's own collections" — so gate-65's Decision 2/3
 check verifies the exemption instead of counting the entry (Decision 8: "An entry claiming the
-exemption and meeting neither is counted against the budget"). hrmq's counted main-menu total
+exemption and meeting neither is counted against the budget"). humaniq's counted main-menu total
 drops 6 → 5.
 
 #### Scenario: Group title navigates; chevron still folds
@@ -125,7 +125,7 @@ drops 6 → 5.
 
 ## Notes
 
-- **Ordering**: after `hrmq-hours-process-redesign` (TimeEntry / `entryCount` bindings), before
-  `hrmq-i18n-locale-completeness` (Dutch literals).
-- **Non-collision**: `hrmq-dashboard-steering-indicators`' REQ-DSI-001 constraints are scoped
+- **Ordering**: after `humaniq-hours-process-redesign` (TimeEntry / `entryCount` bindings), before
+  `humaniq-i18n-locale-completeness` (Dutch literals).
+- **Non-collision**: `humaniq-dashboard-steering-indicators`' REQ-DSI-001 constraints are scoped
   to the `Dashboard` page's widget array and are unaffected by this new page (design.md D7).

@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-14-payroll-mutation-reports
 # payroll-mutation-reports Specification
 
 **Status**: done
-**Scope**: hrmq (`depends_on: [payroll-core-engine]`)
+**Scope**: humaniq (`depends_on: [payroll-core-engine]`)
 **OpenSpec changes**:
 - [payroll-mutation-reports](../../changes/archive/2026-07-14-payroll-mutation-reports/) _(archived
   2026-07-14)_ — a pure, read-only run-to-run payroll diff service
@@ -15,7 +15,7 @@ built_by: openspec/changes/archive/2026-07-14-payroll-mutation-reports
   per-component integer-cents deltas (gross/net/loonheffing/employer-cost) + run-level roll-ups
   (`totalWageCostDelta` + counts), prior-run auto-resolution + same-administration guard,
   first-run-all-entered handling, an idempotent `PayrollMutationReport` keyed `(fromRunId, toRunId)`,
-  the `hrmq:payroll:mutations` occ command, one admin/HR-guarded `POST /api/payroll/mutations`
+  the `humaniq:payroll:mutations` occ command, one admin/HR-guarded `POST /api/payroll/mutations`
   endpoint, and the `PayrollMutations`/`PayrollMutationReportDetail` manifest pages +
   `PayrollRunDetail` "Mutatieoverzicht" action (kind: code+config). The report READS persisted
   payslips and subtracts — it never constructs `PayrollCalculator`, reads a tax table, or writes a
@@ -88,7 +88,7 @@ counts as 0, a left employee's `to` side as 0), `totalWageCostDelta = grossDelta
 
 ### Requirement: An occ command SHALL print the mutation report (REQ-MUT-004)
 
-`occ hrmq:payroll:mutations --from <runId> --to <runId> [--persist]` SHALL print the per-employee
+`occ humaniq:payroll:mutations --from <runId> --to <runId> [--persist]` SHALL print the per-employee
 mutation table (entered / left / changed rows with the per-component deltas) and the run-level
 deltas + counts. `--to <runId>` alone (no `--from`) SHALL auto-resolve the prior run (REQ-MUT-006).
 `--persist` SHALL upsert the `PayrollMutationReport` (REQ-MUT-005). The command SHALL be registered
@@ -96,7 +96,7 @@ in `appinfo/info.xml`.
 
 #### Scenario: The command prints entered/left/changed rows and run-level totals
 - **GIVEN** two engine-computed runs for administration ADM-001 (2026-02 and 2026-03)
-- **WHEN** `occ hrmq:payroll:mutations --from <feb> --to <mar>` runs
+- **WHEN** `occ humaniq:payroll:mutations --from <feb> --to <mar>` runs
 - **THEN** it prints each employee's classification and headline deltas and the run-level
   `totalWageCostDelta` and `changedEmployeeCount`
 
@@ -127,7 +127,7 @@ refuse the diff if their `administrationId` differ (a cross-administration compa
 
 #### Scenario: Prior period of the same administration is auto-resolved
 - **GIVEN** administration ADM-001 has runs for 2026-01, 2026-02 and 2026-03
-- **WHEN** `hrmq:payroll:mutations --to <2026-03 run>` runs
+- **WHEN** `humaniq:payroll:mutations --to <2026-03 run>` runs
 - **THEN** the report compares the 2026-02 run against the 2026-03 run
 
 #### Scenario: A cross-administration pair is refused
@@ -145,7 +145,7 @@ input, not an error.
 
 #### Scenario: The first run of an administration diffs against nothing
 - **GIVEN** administration ADM-050 whose only run is 2026-01 (no earlier period)
-- **WHEN** `hrmq:payroll:mutations --to <2026-01 run> --persist` runs
+- **WHEN** `humaniq:payroll:mutations --to <2026-01 run> --persist` runs
 - **THEN** every employee is classified `entered` with `before = 0`, `totalWageCostDelta` equals the
   run's gross + employer charges, and the persisted report's `fromRunId` is null
 
@@ -168,7 +168,7 @@ table), both admin-scoped under the Payroll nav group, and a `PayrollRunDetail` 
 - **THEN** the response is 403 and no report is generated or persisted
 
 #### Scenario: The run page generates a mutation report
-@e2e exclude declarative action wiring is covered by the shared CnPageRenderer library tests; the app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative action wiring is covered by the shared CnPageRenderer library tests; the app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** an admin on `PayrollRunDetail` for a run with a prior period
 - **WHEN** they execute "Mutatieoverzicht"
 - **THEN** the endpoint generates + persists the report and routes to `PayrollMutationReportDetail`

@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-13-recruiting-ats-basic
 # recruiting-vacancies Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [recruiting-ats-basic](../../changes/archive/2026-07-13-recruiting-ats-basic/) _(archived 2026-07-13)_ — `Onboarding & ATS` menu group (frozen ADR-001 menu 6, tuple coordinated with the parallel `onboarding-wizard-mvp`), new `Vacancy` schema (fragment hr-ats.json) with declarative concept→gepubliceerd→gesloten lifecycle, Vacancies/VacancyDetail pages, seeded published vacancy (kind: config)
 
@@ -28,7 +28,7 @@ public career page (portaliq per ADR-046) are explicitly out of scope.
 
 ### Requirement: A new `Vacancy` schema SHALL model the vacancy with a declarative publish lifecycle (REQ-RCV-001)
 
-A new fragment `lib/Settings/register.d/hr-ats.json` (`x-hrmq-fragment: hr-ats`) SHALL declare `Vacancy` (version 0.1.0, icon `BriefcaseSearchOutline`): `title` (string, required — job title), `description` (string, nullable — vacancy text), `department` (string, nullable), `status` (enum `concept`/`gepubliceerd`/`gesloten`, default `concept`, required — governed by the lifecycle), `publishedDate` (string, format date, nullable — description documents that it is stamped on the carrying write of `publiceren`, the Timesheet `approvedAt` pattern), `closingDate` (string, format date, nullable — application deadline, informational in the MVP). Required: `title`, `status`. `configuration` declares `x-openregister-lifecycle`: `field: status`, `initial: concept`, transitions `publiceren` (concept→gepubliceerd) and `sluiten` (gepubliceerd→gesloten), terminal `gesloten` — no re-open or publish-from-closed edge (a closed vacancy is re-created, not resurrected). Every property carries title + description (gate-28). Register `lib/Settings/hrmq_register.json` `info.version` bumped 0.3.0 → 0.4.0.
+A new fragment `lib/Settings/register.d/hr-ats.json` (`x-humaniq-fragment: hr-ats`) SHALL declare `Vacancy` (version 0.1.0, icon `BriefcaseSearchOutline`): `title` (string, required — job title), `description` (string, nullable — vacancy text), `department` (string, nullable), `status` (enum `concept`/`gepubliceerd`/`gesloten`, default `concept`, required — governed by the lifecycle), `publishedDate` (string, format date, nullable — description documents that it is stamped on the carrying write of `publiceren`, the Timesheet `approvedAt` pattern), `closingDate` (string, format date, nullable — application deadline, informational in the MVP). Required: `title`, `status`. `configuration` declares `x-openregister-lifecycle`: `field: status`, `initial: concept`, transitions `publiceren` (concept→gepubliceerd) and `sluiten` (gepubliceerd→gesloten), terminal `gesloten` — no re-open or publish-from-closed edge (a closed vacancy is re-created, not resurrected). Every property carries title + description (gate-28). Register `lib/Settings/humaniq_register.json` `info.version` bumped 0.3.0 → 0.4.0.
 
 #### Scenario: Vacancy walks publish and close
 - **GIVEN** a Vacancy created with `title: "Medior Vue-developer"` (status defaults to `concept`)
@@ -46,7 +46,7 @@ A new fragment `lib/Settings/register.d/hr-ats.json` (`x-hrmq-fragment: hr-ats`)
 
 ### Requirement: The manifest SHALL add the `Onboarding & ATS` menu group with the exact coordination tuple (REQ-RCV-002)
 
-`src/manifest.json` gains menu group `OnboardingAtsGroup` (label "Onboarding & ATS", icon `AccountPlus`, order 106 — the frozen ADR-001 menu-6 top-level entry, so no ADR amendment is needed; order 106 is the provisional slot between Verlof & verzuim 105 and Onkosten 110, final ordering owned by `hrmq-ia-navigation-alignment`) with children `Vacancies` ("Vacatures", `BriefcaseSearchOutline`) and `Applications` ("Sollicitaties", spec'd in `recruiting-applications`). The group already existed at HEAD (declared by the merged `onboarding-wizard-mvp` with an `Onboardings` child); this change adds `Vacancies` and `Applications` as further children without re-declaring the group's id/label/icon/order — a clean union (design D6). deepLinks for `Vacancy` (`/apps/hrmq/vacancies/{uuid}`) are registered, and `src/icons.js` registers `AccountPlus` (pre-existing) and `BriefcaseSearchOutline`. The manifest validates against app-manifest-v2 (`npm run check:manifest`).
+`src/manifest.json` gains menu group `OnboardingAtsGroup` (label "Onboarding & ATS", icon `AccountPlus`, order 106 — the frozen ADR-001 menu-6 top-level entry, so no ADR amendment is needed; order 106 is the provisional slot between Verlof & verzuim 105 and Onkosten 110, final ordering owned by `humaniq-ia-navigation-alignment`) with children `Vacancies` ("Vacatures", `BriefcaseSearchOutline`) and `Applications` ("Sollicitaties", spec'd in `recruiting-applications`). The group already existed at HEAD (declared by the merged `onboarding-wizard-mvp` with an `Onboardings` child); this change adds `Vacancies` and `Applications` as further children without re-declaring the group's id/label/icon/order — a clean union (design D6). deepLinks for `Vacancy` (`/apps/humaniq/vacancies/{uuid}`) are registered, and `src/icons.js` registers `AccountPlus` (pre-existing) and `BriefcaseSearchOutline`. The manifest validates against app-manifest-v2 (`npm run check:manifest`).
 
 #### Scenario: Manifest stays valid
 - **WHEN** `npm run check:manifest` runs
@@ -61,7 +61,7 @@ A new fragment `lib/Settings/register.d/hr-ats.json` (`x-hrmq-fragment: hr-ats`)
 The manifest SHALL add, under the group: `Vacancies` (index over `Vacancy`, route `/vacancies`: columns `title`, `department`, `status`, `publishedDate`, `closingDate`; filters `status`, `department`; sort `publishedDate` desc) and `VacancyDetail` (detail over `Vacancy`, route `/vacancies/:id`) carrying: a "Vacancy" data widget (all fields), a related widget "Sollicitaties" (incoming `Application.vacancyId` references resolve here — the per-vacancy candidate list), `lifecycleActions` exposing **exactly** `publiceren` ("Publiceren", from `concept`) and `sluiten` ("Sluiten", from `gepubliceerd`) — no invented edges — and an audit-history sidebar tab.
 
 #### Scenario: Detail page walks the publish workflow
-@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** a Vacancy in status `concept` opened on `VacancyDetail`
 - **WHEN** the user executes Publiceren
 - **THEN** the page reflects status `gepubliceerd` and offers Sluiten

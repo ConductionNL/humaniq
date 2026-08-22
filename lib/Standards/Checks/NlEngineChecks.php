@@ -28,7 +28,7 @@
  *   `jurisdiction` field consistent with the run's engine artefact's own
  *   declared jurisdiction. Deliberately does NOT invoke `PayrollCalculator`/
  *   the pack interpreter — byte-exact recomputation is
- *   `hrmq:payroll:reproduce`'s job, not a per-audit-pass cost.
+ *   `humaniq:payroll:reproduce`'s job, not a per-audit-pass cost.
  *
  * This provider does NOT implement SeedsObjects: the pre-existing seeded
  * run/payslip stay hand-entered (null engineVersion/payrollRunId) and vacuous
@@ -36,7 +36,7 @@
  * canonical data (design.md Seed Data).
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -53,10 +53,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
-use OCA\Hrmq\Payroll\PackRepository;
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\PackRepository;
+use OCA\Humaniq\Payroll\TaxTables;
 
 /**
  * Payroll-engine traceability + output-consistency executable checks.
@@ -76,7 +76,7 @@ final class NlEngineChecks implements CheckProvider {
 	 * predicate additionally needs each pack's DECLARED `jurisdiction()`.
 	 * Globbed once, same memoisation discipline as `bundledPackIdsCache`.
 	 *
-	 * @var array<string, \OCA\Hrmq\Payroll\JurisdictionPack>|null
+	 * @var array<string, \OCA\Humaniq\Payroll\JurisdictionPack>|null
 	 */
 	private static ?array $bundledPacksByIdCache = null;
 
@@ -164,7 +164,7 @@ final class NlEngineChecks implements CheckProvider {
 	}//end artefactOf()
 
 	/**
-	 * Whether an artefact id names a jurisdiction pack that ships with hrmq,
+	 * Whether an artefact id names a jurisdiction pack that ships with humaniq,
 	 * or a versioned tax-year table file (the legacy stamp).
 	 *
 	 * @param string $artefact The artefact id.
@@ -211,7 +211,7 @@ final class NlEngineChecks implements CheckProvider {
 	 * REQ-AUDP-005) — the `bundledPackIds()` precedent, but keeping the pack
 	 * itself (needed for its declared `jurisdiction()`) instead of just ids.
 	 *
-	 * @return array<string, \OCA\Hrmq\Payroll\JurisdictionPack>
+	 * @return array<string, \OCA\Humaniq\Payroll\JurisdictionPack>
 	 */
 	private static function bundledPacksById(): array {
 		if (self::$bundledPacksByIdCache !== null) {
@@ -295,7 +295,7 @@ final class NlEngineChecks implements CheckProvider {
 	 * exact same scoping as `nl-engine-output-consistency` (hand-entered
 	 * payslip, or unresolvable/hand-entered run). Never invokes
 	 * `PayrollCalculator`/the pack interpreter — that is
-	 * `hrmq:payroll:reproduce`'s job (REQ-AUDP-002), not a per-audit-pass
+	 * `humaniq:payroll:reproduce`'s job (REQ-AUDP-002), not a per-audit-pass
 	 * cost.
 	 *
 	 * `engineInputSnapshot` comes back as EITHER a raw JSON string (a

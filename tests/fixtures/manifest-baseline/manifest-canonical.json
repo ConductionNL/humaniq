@@ -5,223 +5,223 @@
       "displayName": "Timesheet",
       "registerSlug": "hrmq",
       "schemaSlug": "Timesheet",
-      "urlTemplate": "/apps/hrmq/timesheets/{uuid}"
+      "urlTemplate": "/apps/humaniq/timesheets/{uuid}"
     },
     {
       "displayName": "Expense",
       "registerSlug": "hrmq",
       "schemaSlug": "Expense",
-      "urlTemplate": "/apps/hrmq/expenses/{uuid}"
+      "urlTemplate": "/apps/humaniq/expenses/{uuid}"
     },
     {
       "displayName": "Employee",
       "registerSlug": "hrmq",
       "schemaSlug": "Employee",
-      "urlTemplate": "/apps/hrmq/employees/{uuid}"
+      "urlTemplate": "/apps/humaniq/employees/{uuid}"
     },
     {
       "displayName": "Employment Contract",
       "registerSlug": "hrmq",
       "schemaSlug": "EmploymentContract",
-      "urlTemplate": "/apps/hrmq/contracts/{uuid}"
+      "urlTemplate": "/apps/humaniq/contracts/{uuid}"
     },
     {
       "displayName": "Payslip",
       "registerSlug": "hrmq",
       "schemaSlug": "Payslip",
-      "urlTemplate": "/apps/hrmq/payslips/{uuid}"
+      "urlTemplate": "/apps/humaniq/payslips/{uuid}"
     },
     {
       "displayName": "Payroll Run",
       "registerSlug": "hrmq",
       "schemaSlug": "PayrollRun",
-      "urlTemplate": "/apps/hrmq/payroll-runs/{uuid}"
+      "urlTemplate": "/apps/humaniq/payroll-runs/{uuid}"
     },
     {
       "displayName": "Payroll Mutation Report",
       "registerSlug": "hrmq",
       "schemaSlug": "PayrollMutationReport",
-      "urlTemplate": "/apps/hrmq/payroll-mutations/{uuid}"
+      "urlTemplate": "/apps/humaniq/payroll-mutations/{uuid}"
     },
     {
       "displayName": "Wage Tax Filing",
       "registerSlug": "hrmq",
       "schemaSlug": "LoonaangifteFiling",
-      "urlTemplate": "/apps/hrmq/filings/{uuid}"
+      "urlTemplate": "/apps/humaniq/filings/{uuid}"
     },
     {
       "displayName": "Pension Filing",
       "registerSlug": "hrmq",
       "schemaSlug": "PensionFiling",
-      "urlTemplate": "/apps/hrmq/pension-filings/{uuid}"
+      "urlTemplate": "/apps/humaniq/pension-filings/{uuid}"
     },
     {
       "displayName": "Payroll GL Post",
       "registerSlug": "hrmq",
       "schemaSlug": "PayrollGLPost",
-      "urlTemplate": "/apps/hrmq/gl-posts/{uuid}"
+      "urlTemplate": "/apps/humaniq/gl-posts/{uuid}"
     },
     {
       "displayName": "Payroll Payment Batch",
       "registerSlug": "hrmq",
       "schemaSlug": "PayrollPaymentBatch",
-      "urlTemplate": "/apps/hrmq/payment-batches/{uuid}"
+      "urlTemplate": "/apps/humaniq/payment-batches/{uuid}"
     },
     {
       "displayName": "Leave Request",
       "registerSlug": "hrmq",
       "schemaSlug": "LeaveRequest",
-      "urlTemplate": "/apps/hrmq/leave-requests/{uuid}"
+      "urlTemplate": "/apps/humaniq/leave-requests/{uuid}"
     },
     {
       "displayName": "Leave Balance",
       "registerSlug": "hrmq",
       "schemaSlug": "LeaveBalance",
-      "urlTemplate": "/apps/hrmq/leave-balances/{uuid}"
+      "urlTemplate": "/apps/humaniq/leave-balances/{uuid}"
     },
     {
       "displayName": "Sick Leave Case",
       "registerSlug": "hrmq",
       "schemaSlug": "SickLeaveCase",
-      "urlTemplate": "/apps/hrmq/sick-leave/{uuid}"
+      "urlTemplate": "/apps/humaniq/sick-leave/{uuid}"
     },
     {
       "displayName": "Onboarding",
       "registerSlug": "hrmq",
       "schemaSlug": "Onboarding",
-      "urlTemplate": "/apps/hrmq/onboardings/{uuid}"
+      "urlTemplate": "/apps/humaniq/onboardings/{uuid}"
     },
     {
       "displayName": "Stagiair",
       "registerSlug": "hrmq",
       "schemaSlug": "Stagiair",
-      "urlTemplate": "/apps/hrmq/stagiairs/{uuid}"
+      "urlTemplate": "/apps/humaniq/stagiairs/{uuid}"
     },
     {
       "displayName": "Vacancy",
       "registerSlug": "hrmq",
       "schemaSlug": "Vacancy",
-      "urlTemplate": "/apps/hrmq/vacancies/{uuid}"
+      "urlTemplate": "/apps/humaniq/vacancies/{uuid}"
     },
     {
       "displayName": "Application",
       "registerSlug": "hrmq",
       "schemaSlug": "Application",
-      "urlTemplate": "/apps/hrmq/applications/{uuid}"
+      "urlTemplate": "/apps/humaniq/applications/{uuid}"
     },
     {
       "displayName": "Organisational Unit",
       "registerSlug": "hrmq",
       "schemaSlug": "OrgUnit",
-      "urlTemplate": "/apps/hrmq/org-units/{uuid}"
+      "urlTemplate": "/apps/humaniq/org-units/{uuid}"
     },
     {
       "displayName": "Organisational Assignment",
       "registerSlug": "hrmq",
       "schemaSlug": "OrgAssignment",
-      "urlTemplate": "/apps/hrmq/org-assignments/{uuid}"
+      "urlTemplate": "/apps/humaniq/org-assignments/{uuid}"
     },
     {
       "displayName": "Attendance Record",
       "registerSlug": "hrmq",
       "schemaSlug": "AttendanceRecord",
-      "urlTemplate": "/apps/hrmq/attendance/{uuid}"
+      "urlTemplate": "/apps/humaniq/attendance/{uuid}"
     },
     {
       "displayName": "Asset",
       "registerSlug": "hrmq",
       "schemaSlug": "Asset",
-      "urlTemplate": "/apps/hrmq/assets/{uuid}"
+      "urlTemplate": "/apps/humaniq/assets/{uuid}"
     },
     {
       "displayName": "Asset Assignment",
       "registerSlug": "hrmq",
       "schemaSlug": "AssetAssignment",
-      "urlTemplate": "/apps/hrmq/asset-assignments/{uuid}"
+      "urlTemplate": "/apps/humaniq/asset-assignments/{uuid}"
     },
     {
       "displayName": "Review Cycle",
       "registerSlug": "hrmq",
       "schemaSlug": "ReviewCycle",
-      "urlTemplate": "/apps/hrmq/review-cycles/{uuid}"
+      "urlTemplate": "/apps/humaniq/review-cycles/{uuid}"
     },
     {
       "displayName": "Performance Review",
       "registerSlug": "hrmq",
       "schemaSlug": "PerformanceReview",
-      "urlTemplate": "/apps/hrmq/reviews/{uuid}"
+      "urlTemplate": "/apps/humaniq/reviews/{uuid}"
     },
     {
       "displayName": "Shift",
       "registerSlug": "hrmq",
       "schemaSlug": "Shift",
-      "urlTemplate": "/apps/hrmq/shifts/{uuid}"
+      "urlTemplate": "/apps/humaniq/shifts/{uuid}"
     },
     {
       "displayName": "Roster",
       "registerSlug": "hrmq",
       "schemaSlug": "Roster",
-      "urlTemplate": "/apps/hrmq/rosters/{uuid}"
+      "urlTemplate": "/apps/humaniq/rosters/{uuid}"
     },
     {
       "displayName": "Roster Assignment",
       "registerSlug": "hrmq",
       "schemaSlug": "RosterAssignment",
-      "urlTemplate": "/apps/hrmq/roster-assignments/{uuid}"
+      "urlTemplate": "/apps/humaniq/roster-assignments/{uuid}"
     },
     {
       "displayName": "Objective",
       "registerSlug": "hrmq",
       "schemaSlug": "Objective",
-      "urlTemplate": "/apps/hrmq/objectives/{uuid}"
+      "urlTemplate": "/apps/humaniq/objectives/{uuid}"
     },
     {
       "displayName": "Key Result",
       "registerSlug": "hrmq",
       "schemaSlug": "KeyResult",
-      "urlTemplate": "/apps/hrmq/key-results/{uuid}"
+      "urlTemplate": "/apps/humaniq/key-results/{uuid}"
     },
     {
       "displayName": "Salary Band",
       "registerSlug": "hrmq",
       "schemaSlug": "SalaryBand",
-      "urlTemplate": "/apps/hrmq/salary-bands/{uuid}"
+      "urlTemplate": "/apps/humaniq/salary-bands/{uuid}"
     },
     {
       "displayName": "Compensation Review Cycle",
       "registerSlug": "hrmq",
       "schemaSlug": "CompReviewCycle",
-      "urlTemplate": "/apps/hrmq/comp-review-cycles/{uuid}"
+      "urlTemplate": "/apps/humaniq/comp-review-cycles/{uuid}"
     },
     {
       "displayName": "Compensation Adjustment",
       "registerSlug": "hrmq",
       "schemaSlug": "CompAdjustment",
-      "urlTemplate": "/apps/hrmq/comp-adjustments/{uuid}"
+      "urlTemplate": "/apps/humaniq/comp-adjustments/{uuid}"
     },
     {
       "displayName": "Leave Transaction",
       "registerSlug": "hrmq",
       "schemaSlug": "LeaveTransaction",
-      "urlTemplate": "/apps/hrmq/leave-transactions/{uuid}"
+      "urlTemplate": "/apps/humaniq/leave-transactions/{uuid}"
     },
     {
       "displayName": "WKR Declaration",
       "registerSlug": "hrmq",
       "schemaSlug": "WkrDeclaration",
-      "urlTemplate": "/apps/hrmq/wkr-declarations/{uuid}"
+      "urlTemplate": "/apps/humaniq/wkr-declarations/{uuid}"
     },
     {
       "displayName": "WKR Assessment",
       "registerSlug": "hrmq",
       "schemaSlug": "WkrAssessment",
-      "urlTemplate": "/apps/hrmq/wkr-assessments/{uuid}"
+      "urlTemplate": "/apps/humaniq/wkr-assessments/{uuid}"
     },
     {
       "displayName": "Loonbeslag",
       "registerSlug": "hrmq",
       "schemaSlug": "Loonbeslag",
-      "urlTemplate": "/apps/hrmq/loonbeslagen/{uuid}"
+      "urlTemplate": "/apps/humaniq/loonbeslagen/{uuid}"
     }
   ],
   "dependencies": [
@@ -738,7 +738,7 @@
   ],
   "pageTemplates": [
     {
-      "_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the one shape every hrmq index page shares — a schema-bound CnIndexPage with columns/sort and no widgets. All 58 index pages instantiate this template; the only variance is the presence of the optional keys below, which expandPageTemplates() drops from the expanded page when the instantiation omits them (exact-match placeholder + absent optional param). `filters` is optional because the nine Mijn* self-service pages and VerzuimOverzicht pin their result set with `filter` alone and offer no user-facing filter bar. `actions` (page-level create buttons, e.g. PayrollRuns' 'Loonrun aanmaken') and `note` (the page's own maintainer prose, landing as config._note) ride along as ordinary parameters so an instantiation stays the single complete description of its page.",
+      "_note": "humaniq-manifest-fragment-pipeline (2026-08-21): the one shape every humaniq index page shares — a schema-bound CnIndexPage with columns/sort and no widgets. All 58 index pages instantiate this template; the only variance is the presence of the optional keys below, which expandPageTemplates() drops from the expanded page when the instantiation omits them (exact-match placeholder + absent optional param). `filters` is optional because the nine Mijn* self-service pages and VerzuimOverzicht pin their result set with `filter` alone and offer no user-facing filter bar. `actions` (page-level create buttons, e.g. PayrollRuns' 'Loonrun aanmaken') and `note` (the page's own maintainer prose, landing as config._note) ride along as ordinary parameters so an instantiation stays the single complete description of its page.",
       "id": "indexScaffold",
       "page": {
         "actions": "{{actions}}",
@@ -824,7 +824,7 @@
       ]
     },
     {
-      "_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the two-panel leaf detail — one `data` panel 8-wide beside one `related` panel 4-wide, equal heights, metadata sidebar, no child collections. 17 detail pages share this exact grid (verified coordinate-identical, only gridHeight varies with field count). Workflow affordances are parameters, not structure: a page whose schema declares x-openregister-lifecycle passes `lifecycleActions` (its own transitions list) and one with server-side document/API actions passes `headerActions`; both keys are dropped from the expanded page when absent. Each instantiation's `note` param carries that page's full original maintainer prose verbatim (relocated intact per the fragment-pipeline change; the shared two-panel rationale lives here so the per-page notes no longer need to restate it).",
+      "_note": "humaniq-manifest-fragment-pipeline (2026-08-21): the two-panel leaf detail — one `data` panel 8-wide beside one `related` panel 4-wide, equal heights, metadata sidebar, no child collections. 17 detail pages share this exact grid (verified coordinate-identical, only gridHeight varies with field count). Workflow affordances are parameters, not structure: a page whose schema declares x-openregister-lifecycle passes `lifecycleActions` (its own transitions list) and one with server-side document/API actions passes `headerActions`; both keys are dropped from the expanded page when absent. Each instantiation's `note` param carries that page's full original maintainer prose verbatim (relocated intact per the fragment-pipeline change; the shared two-panel rationale lives here so the per-page notes no longer need to restate it).",
       "id": "simpleDetailScaffold",
       "page": {
         "config": {
@@ -949,7 +949,7 @@
       ]
     },
     {
-      "_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the outcome-record detail — a 4-column `data` status strip (include + read-only overrides) over a 2-column `data` body panel (exclude), with `related` filling the right rail at the two panels' combined height. 5 filing/ledger-style pages share this exact grid (status strip fixed at height 3; body and rail heights are the two height parameters). Pages whose transitions are user-driven pass `lifecycleActions`; GeneratedDocumentDetail alone passes `hiddenTabs` to keep the sidebar's Files tab (its stored PDF) while hiding Notes/Tags/Tasks — see its own note param for why. Each instantiation's `note` param carries that page's full original maintainer prose verbatim.",
+      "_note": "humaniq-manifest-fragment-pipeline (2026-08-21): the outcome-record detail — a 4-column `data` status strip (include + read-only overrides) over a 2-column `data` body panel (exclude), with `related` filling the right rail at the two panels' combined height. 5 filing/ledger-style pages share this exact grid (status strip fixed at height 3; body and rail heights are the two height parameters). Pages whose transitions are user-driven pass `lifecycleActions`; GeneratedDocumentDetail alone passes `hiddenTabs` to keep the sidebar's Files tab (its stored PDF) while hiding Notes/Tags/Tasks — see its own note param for why. Each instantiation's `note` param carries that page's full original maintainer prose verbatim.",
       "id": "dualDataScaffold",
       "page": {
         "config": {
@@ -1100,7 +1100,7 @@
       ]
     },
     {
-      "_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the reference-data detail — one full-width (12-wide) 2-column `data` panel, metadata sidebar, no related rail and no child collections, for records that are pure lookup rows (norm functions, salary bands, integration accounts). The page title doubles as the widget and content title (true for all 3 instances). `allowCreate` and `include` ride along as optional parameters. Each instantiation's `note` param carries that page's full original maintainer prose verbatim.",
+      "_note": "humaniq-manifest-fragment-pipeline (2026-08-21): the reference-data detail — one full-width (12-wide) 2-column `data` panel, metadata sidebar, no related rail and no child collections, for records that are pure lookup rows (norm functions, salary bands, integration accounts). The page title doubles as the widget and content title (true for all 3 instances). `allowCreate` and `include` ride along as optional parameters. Each instantiation's `note` param carries that page's full original maintainer prose verbatim.",
       "id": "singleDataScaffold",
       "page": {
         "config": {
@@ -1188,7 +1188,7 @@
   "pages": [
     {
       "config": {
-        "_note": "hrmq-dashboard-steering-indicators replaces the prior 15-widget queue-depth Dashboard (12 stat tiles + 3 object-table lists) with 6 steering indicators. Billable ratio and Headcount & turnover bind via dataSource (raw GraphQL, no new backend endpoint, unguarded — the same exposure every Employees/Timesheets index page already has today); the filter/tenant-scoping token grammar (`@workspace.activeAdministrationId?`) does NOT apply to the raw-GraphQL dataSource form (`useDataSource.js`'s `queryAndVars` passes `graphql.query`/`graphql.variables` through unresolved — confirmed by reading the composable, both in the sibling source tree and the installed dist), so these two widgets are UNSCOPED across administrations rather than carrying the (broken, per brief §6) sentinel token — no worse than today's index-page exposure, but not literally what design.md D4 describes either. Both are also single-series, not the two-named-series design.md's D1 table describes: `useDataSource`'s raw-GraphQL `selectors` map performs one dot-path pluck per output key (`selectByPath` in `useGraphQL.js`) with no mechanism to assemble two differently-aliased root fields into one `[{name,data}]` series array — verified against the installed dist, not just the source tree. Absence rate / Payroll cost per period / Approval lead time bind via `endpointSource` to the new guarded `AnalyticsController::trends()` (REQ-DSI-004/006/007); Obligations binds via `endpointSource` to `AnalyticsController::obligations()` (REQ-DSI-008/009). All three trend `endpointSource` widgets go through the local `chart` widgetKey override (`registry.js` → `src/widgets/TrendChartWidget.vue`), which does its OWN null-safe series mapping rather than delegating to CnChartWidget's native `endpointSource` prop — that prop's own `Number(value) || 0` mapping (`CnChartWidget.vue`'s `endpointChartData`, confirmed in the installed dist) silently turns a `null` bucket into `0`, which is exactly the 'measurement that never ran reads as a good result' failure REQ-DSI-004's null-not-zero contract exists to prevent. The `chart` widgetKey is ALSO overridden for a second, independent reason: CnChartWidget (registered in the library's dashboard-widget catalog) was built to be embedded inside CnDashboardPage's own per-widget template, which supplies the title bar externally — it has no `title` prop and does not self-wrap in CnWidgetWrapper, and `CnWidgetGrid` (the only renderer hrmq's pages use, since every page has a `slot:\"body\"` widget) mounts it bare. `TrendChartWidget.vue` bridges both gaps — the SAME `effectiveRegistry`-wins-over-catalog mechanism `registry.js` already uses for `stat`, and the same bridge-a-mismatched-library-component pattern already used for `actions`/`lifecycle-actions`. The Obligations `object-table` widget uses CnWidgetObjectTable's REAL flat prop names directly (`endpointSource`/`columns`/`emptyText`, siblings of `title` under `props`) rather than nesting them under a `content` key the way the removed 'Aflopende contracten'/'Aflopende BHV-certificaten' widgets did — CnWidgetObjectTable declares no `content` prop (confirmed in both the source tree and the installed dist), so that nested shape would not have reached the component; a per-row route to each obligation's own detail page (SickLeaveCaseDetail/EmploymentContractDetail/BhvCertificeringDetail, varying by row TYPE) is not wired: CnWidgetObjectTable's `rowRoute` is a single STATIC route-name string for the whole table, not a per-row dynamic selector, so the endpoint's own per-row `route` field is carried in the response but not yet clickable from this widget.",
+        "_note": "humaniq-dashboard-steering-indicators replaces the prior 15-widget queue-depth Dashboard (12 stat tiles + 3 object-table lists) with 6 steering indicators. Billable ratio and Headcount & turnover bind via dataSource (raw GraphQL, no new backend endpoint, unguarded — the same exposure every Employees/Timesheets index page already has today); the filter/tenant-scoping token grammar (`@workspace.activeAdministrationId?`) does NOT apply to the raw-GraphQL dataSource form (`useDataSource.js`'s `queryAndVars` passes `graphql.query`/`graphql.variables` through unresolved — confirmed by reading the composable, both in the sibling source tree and the installed dist), so these two widgets are UNSCOPED across administrations rather than carrying the (broken, per brief §6) sentinel token — no worse than today's index-page exposure, but not literally what design.md D4 describes either. Both are also single-series, not the two-named-series design.md's D1 table describes: `useDataSource`'s raw-GraphQL `selectors` map performs one dot-path pluck per output key (`selectByPath` in `useGraphQL.js`) with no mechanism to assemble two differently-aliased root fields into one `[{name,data}]` series array — verified against the installed dist, not just the source tree. Absence rate / Payroll cost per period / Approval lead time bind via `endpointSource` to the new guarded `AnalyticsController::trends()` (REQ-DSI-004/006/007); Obligations binds via `endpointSource` to `AnalyticsController::obligations()` (REQ-DSI-008/009). All three trend `endpointSource` widgets go through the local `chart` widgetKey override (`registry.js` → `src/widgets/TrendChartWidget.vue`), which does its OWN null-safe series mapping rather than delegating to CnChartWidget's native `endpointSource` prop — that prop's own `Number(value) || 0` mapping (`CnChartWidget.vue`'s `endpointChartData`, confirmed in the installed dist) silently turns a `null` bucket into `0`, which is exactly the 'measurement that never ran reads as a good result' failure REQ-DSI-004's null-not-zero contract exists to prevent. The `chart` widgetKey is ALSO overridden for a second, independent reason: CnChartWidget (registered in the library's dashboard-widget catalog) was built to be embedded inside CnDashboardPage's own per-widget template, which supplies the title bar externally — it has no `title` prop and does not self-wrap in CnWidgetWrapper, and `CnWidgetGrid` (the only renderer humaniq's pages use, since every page has a `slot:\"body\"` widget) mounts it bare. `TrendChartWidget.vue` bridges both gaps — the SAME `effectiveRegistry`-wins-over-catalog mechanism `registry.js` already uses for `stat`, and the same bridge-a-mismatched-library-component pattern already used for `actions`/`lifecycle-actions`. The Obligations `object-table` widget uses CnWidgetObjectTable's REAL flat prop names directly (`endpointSource`/`columns`/`emptyText`, siblings of `title` under `props`) rather than nesting them under a `content` key the way the removed 'Aflopende contracten'/'Aflopende BHV-certificaten' widgets did — CnWidgetObjectTable declares no `content` prop (confirmed in both the source tree and the installed dist), so that nested shape would not have reached the component; a per-row route to each obligation's own detail page (SickLeaveCaseDetail/EmploymentContractDetail/BhvCertificeringDetail, varying by row TYPE) is not wired: CnWidgetObjectTable's `rowRoute` is a single STATIC route-name string for the whole table, not a per-row dynamic selector, so the endpoint's own per-row `route` field is carried in the response but not yet clickable from this widget.",
         "description": "Six steering indicators: five trends, and one list of obligations that carry a deadline.",
         "layout": [
           {
@@ -1242,7 +1242,7 @@
         ],
         "widgets": [
           {
-            "_note": "REQ-DSI-002. Bound to the GUARDED, register-scoped AnalyticsController::trends() endpoint, not to a raw-GraphQL dataSource. The dataSource form resolved a type by NAME across every register on the instance: measured live, the sibling Headcount widget's `Employee` root field resolved to schema 5050 in an unrelated register (the GraphQL type is named `Employee5050Connection`), NOT hrmq's Employee (1080) -- `startDate` answered 'not a declared property' while `employeeNumber` cheerfully returned three rows belonging to another app. It also could not carry an administrationId filter at all (useDataSource passes graphql.query through without resolving @workspace.* tokens), so it was unscoped across tenants. The endpoint is scoped by register AND by the caller's authorized administration, and emits null (never 0) for a period with no registered hours.",
+            "_note": "REQ-DSI-002. Bound to the GUARDED, register-scoped AnalyticsController::trends() endpoint, not to a raw-GraphQL dataSource. The dataSource form resolved a type by NAME across every register on the instance: measured live, the sibling Headcount widget's `Employee` root field resolved to schema 5050 in an unrelated register (the GraphQL type is named `Employee5050Connection`), NOT humaniq's Employee (1080) -- `startDate` answered 'not a declared property' while `employeeNumber` cheerfully returned three rows belonging to another app. It also could not carry an administrationId filter at all (useDataSource passes graphql.query through without resolving @workspace.* tokens), so it was unscoped across tenants. The endpoint is scoped by register AND by the caller's authorized administration, and emits null (never 0) for a period with no registered hours.",
             "content": {
               "emptyLabel": "No hours registered yet",
               "endpointSource": {
@@ -1250,7 +1250,7 @@
                   "metric": "billable-ratio"
                 },
                 "responsePath": "series",
-                "url": "/apps/hrmq/api/analytics/trends"
+                "url": "/apps/humaniq/api/analytics/trends"
               },
               "height": "100%",
               "labelsPath": "date",
@@ -1275,7 +1275,7 @@
                   "metric": "absence-rate"
                 },
                 "responsePath": "series",
-                "url": "/apps/hrmq/api/analytics/trends"
+                "url": "/apps/humaniq/api/analytics/trends"
               },
               "height": "100%",
               "labelsPath": "date",
@@ -1301,7 +1301,7 @@
                   "metric": "headcount"
                 },
                 "responsePath": "series",
-                "url": "/apps/hrmq/api/analytics/trends"
+                "url": "/apps/humaniq/api/analytics/trends"
               },
               "height": "100%",
               "labelsPath": "date",
@@ -1333,7 +1333,7 @@
                   "metric": "payroll-cost"
                 },
                 "responsePath": "series",
-                "url": "/apps/hrmq/api/analytics/trends"
+                "url": "/apps/humaniq/api/analytics/trends"
               },
               "height": "100%",
               "labelsPath": "date",
@@ -1362,7 +1362,7 @@
                   "metric": "approval-lead-time"
                 },
                 "responsePath": "series",
-                "url": "/apps/hrmq/api/analytics/trends"
+                "url": "/apps/humaniq/api/analytics/trends"
               },
               "height": "100%",
               "labelsPath": "date",
@@ -1404,7 +1404,7 @@
               "emptyText": "No open obligations",
               "endpointSource": {
                 "responsePath": "obligations",
-                "url": "/apps/hrmq/api/analytics/obligations"
+                "url": "/apps/humaniq/api/analytics/obligations"
               }
             },
             "id": "object-table",
@@ -1419,7 +1419,7 @@
       "type": "dashboard"
     },
     {
-      "_note": "proforma-payslip design.md D6: manifest v2 has no declarative primitive for a persist-nothing interactive compute-form. open-form is bound to a register/schema and PERSISTS the created object -- exactly what a pro-forma simulation must not do. api-call only interpolates fixed/@token params against a form-less trigger and surfaces a toast + page refresh -- it cannot gather a bespoke set of hypothetical inputs (bruto, tabel, geboortedatum, deeltijdfactor, bijzondere beloning, periode) nor render the returned JSON breakdown. So this page is a host-app SFC (ProformaPayslip.vue, registered in src/registry.js) that renders the input form and calls POST /api/payroll/proforma directly, showing the full gross-to-net breakdown. No register/schema is referenced and no object is ever created -- the stable, test-covered contract is the endpoint (PayrollController::proforma) + the hrmq:payroll:proforma occ command.",
+      "_note": "proforma-payslip design.md D6: manifest v2 has no declarative primitive for a persist-nothing interactive compute-form. open-form is bound to a register/schema and PERSISTS the created object -- exactly what a pro-forma simulation must not do. api-call only interpolates fixed/@token params against a form-less trigger and surfaces a toast + page refresh -- it cannot gather a bespoke set of hypothetical inputs (bruto, tabel, geboortedatum, deeltijdfactor, bijzondere beloning, periode) nor render the returned JSON breakdown. So this page is a host-app SFC (ProformaPayslip.vue, registered in src/registry.js) that renders the input form and calls POST /api/payroll/proforma directly, showing the full gross-to-net breakdown. No register/schema is referenced and no object is ever created -- the stable, test-covered contract is the endpoint (PayrollController::proforma) + the humaniq:payroll:proforma occ command.",
       "component": "ProformaPayslip",
       "id": "ProformaPayslip",
       "route": "/payroll/proforma",
@@ -1428,7 +1428,7 @@
     },
     {
       "config": {
-        "_note": "single-person-modes (REQ-SPM-006/D5): a self-service surface for the EXISTING nl-gebruikelijkloon-norm verdict for the caller's own DGA Employee. The whole menu entry is visibleIf-gated on administrationMode: dga_single_person (D2/D3). The warning banner is bound to the read-only, stateless GET /apps/hrmq/api/payroll/dga-status endpoint (PayrollController::dgaStatus, which REUSES NlDgaChecks' predicate -- zero new tax logic, zero new persistence): visibleWhen {endpoint, field: met, op: eq, value: false} renders it only when the caller's own annualised loon is below norm AND unjustified. The endpoint takes no per-object parameter (it always means 'my own record', D5.1), so the visibleWhen.endpoint non-templated same-origin path applies cleanly -- no object id to interpolate, the documented fallback (a custom widget) is not needed. Fail-safe: the banner stays hidden on a 404 (no Employee, or Employee not a DGA -- both collapse to the same status, D5.1) or any fetch failure, so a non-DGA caller who somehow reaches this route sees no alert. The info banner is always visible and explains the page. Both widgets are built-in `banner` (CnBannerWidget) -- no custom component, no single-widget-dashboard anti-pattern.",
+        "_note": "single-person-modes (REQ-SPM-006/D5): a self-service surface for the EXISTING nl-gebruikelijkloon-norm verdict for the caller's own DGA Employee. The whole menu entry is visibleIf-gated on administrationMode: dga_single_person (D2/D3). The warning banner is bound to the read-only, stateless GET /apps/humaniq/api/payroll/dga-status endpoint (PayrollController::dgaStatus, which REUSES NlDgaChecks' predicate -- zero new tax logic, zero new persistence): visibleWhen {endpoint, field: met, op: eq, value: false} renders it only when the caller's own annualised loon is below norm AND unjustified. The endpoint takes no per-object parameter (it always means 'my own record', D5.1), so the visibleWhen.endpoint non-templated same-origin path applies cleanly -- no object id to interpolate, the documented fallback (a custom widget) is not needed. Fail-safe: the banner stays hidden on a 404 (no Employee, or Employee not a DGA -- both collapse to the same status, D5.1) or any fetch failure, so a non-DGA caller who somehow reaches this route sees no alert. The info banner is always visible and explains the page. Both widgets are built-in `banner` (CnBannerWidget) -- no custom component, no single-widget-dashboard anti-pattern.",
         "description": "See whether your salary as a DGA meets the customary wage standard -- without an accountant or occ tool.",
         "layout": [
           {
@@ -1462,7 +1462,7 @@
               "text": "Your salary is below the customary wage standard and no justification has been recorded. Raise your monthly salary or record a justification on your employee record.",
               "variant": "warning",
               "visibleWhen": {
-                "endpoint": "/apps/hrmq/api/payroll/dga-status",
+                "endpoint": "/apps/humaniq/api/payroll/dga-status",
                 "field": "met",
                 "op": "eq",
                 "value": false
@@ -1598,7 +1598,7 @@
       "type": "detail"
     },
     {
-      "_note": "multi-administratie design.md D4/D5 (REQ-MULTI-006): the ADR-001 Rule 3 active-administratie indicator + switch, homed under Configuratie as a SETTING surface (never a per-tenant menu duplication). The manifest v2 renderer chrome exposes no topbar-switcher slot (the known v2 renderer chrome gap), and no declarative primitive can gather the caller's accessible administraties, POST a guarded switch, and re-scope sibling pages -- open-form persists a register object (wrong: the active pointer is a per-user IConfig value, not domain data) and api-call cannot render the returned accessible-administration list. So this page is a host-app SFC (AdministrationSwitcher.vue, registered in src/registry.js) calling GET/POST /api/administration/* (AdministrationController, no-admin-idor guarded server-side). The true topbar chrome slot is a named upstream nc-vue fast-follow; the sibling hrmq-ia-navigation-alignment change owns the Configuratie menu-9 drawer -- this page lands under it as a clean union (neither re-declares the group).",
+      "_note": "multi-administratie design.md D4/D5 (REQ-MULTI-006): the ADR-001 Rule 3 active-administratie indicator + switch, homed under Configuratie as a SETTING surface (never a per-tenant menu duplication). The manifest v2 renderer chrome exposes no topbar-switcher slot (the known v2 renderer chrome gap), and no declarative primitive can gather the caller's accessible administraties, POST a guarded switch, and re-scope sibling pages -- open-form persists a register object (wrong: the active pointer is a per-user IConfig value, not domain data) and api-call cannot render the returned accessible-administration list. So this page is a host-app SFC (AdministrationSwitcher.vue, registered in src/registry.js) calling GET/POST /api/administration/* (AdministrationController, no-admin-idor guarded server-side). The true topbar chrome slot is a named upstream nc-vue fast-follow; the sibling humaniq-ia-navigation-alignment change owns the Configuratie menu-9 drawer -- this page lands under it as a clean union (neither re-declares the group).",
       "component": "AdministrationSwitcher",
       "id": "Administraties",
       "route": "/configuratie/administraties",
@@ -2722,7 +2722,7 @@
     },
     {
       "config": {
-        "_note": "Hub archetype: Employee is the record every other HR/payroll schema in hrmq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab.",
+        "_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab.",
         "layout": [
           {
             "gridHeight": 6,
@@ -4380,7 +4380,7 @@
     },
     {
       "config": {
-        "_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), NOT write-time guards: no transition here blocks on an unmet checklist field -- guard wiring for compliance-checked schemas is owned by the active hrmq-rule-compliance-enforcement change (design.md D2). Audit history is a sidebar tab.",
+        "_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), NOT write-time guards: no transition here blocks on an unmet checklist field -- guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2). Audit history is a sidebar tab.",
         "layout": [
           {
             "gridHeight": 5,
@@ -4544,7 +4544,7 @@
     },
     {
       "config": {
-        "_note": "offboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the departing Employee), the checklist/eindafrekening fields and notes, leaving reason/status/lastWorkingDay; the 'Checklist' widget groups exitGesprekDone/assetsIngeleverd/toegangIngetrokken; the 'Eindafrekening' widget groups verlofsaldoUitbetaald/vakantiegeldAfgerekend/transitievergoedingBedrag/getuigschriftVerstrekt/notes -- the OnboardingDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OFB-002 edges (afronding_plannen/eindafrekening_gereedmelden/afronden/annuleren) -- no invented edges. Checklist/eindafrekening gates are audit-enforced (lib/Standards/Checks/NlOffboardingChecks.php), NOT write-time guards: no transition here blocks on an unmet gate field -- guard wiring for compliance-checked schemas is owned by the active hrmq-rule-compliance-enforcement change (design.md D2). Audit history is a sidebar tab.",
+        "_note": "offboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the departing Employee), the checklist/eindafrekening fields and notes, leaving reason/status/lastWorkingDay; the 'Checklist' widget groups exitGesprekDone/assetsIngeleverd/toegangIngetrokken; the 'Eindafrekening' widget groups verlofsaldoUitbetaald/vakantiegeldAfgerekend/transitievergoedingBedrag/getuigschriftVerstrekt/notes -- the OnboardingDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OFB-002 edges (afronding_plannen/eindafrekening_gereedmelden/afronden/annuleren) -- no invented edges. Checklist/eindafrekening gates are audit-enforced (lib/Standards/Checks/NlOffboardingChecks.php), NOT write-time guards: no transition here blocks on an unmet gate field -- guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2). Audit history is a sidebar tab.",
         "layout": [
           {
             "gridHeight": 5,
@@ -4710,7 +4710,7 @@
     },
     {
       "config": {
-        "_note": "org-chart-basic (2026-07-13): hrmq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab.",
+        "_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab.",
         "layout": [
           {
             "gridHeight": 6,
@@ -5123,7 +5123,7 @@
     },
     {
       "config": {
-        "_note": "rostering (2026-07-14): the publishable roster header. Unlike PayrollRun, Roster carries a REAL x-openregister-lifecycle (concept <-> gepubliceerd via publiceren/intrekken), so RosterDetail legitimately renders a lifecycleActions widget for exactly those two transitions -- no invented edge (the AttendanceRecordDetail sluiten/heropenen precedent). The 'Rooster' data widget carries period/administrationId/status; Related resolves and links the optional orgUnitId scope (excluded from data). The page-level 'ATW-controle' api-call action posts {rosterId: @objectId} to POST /api/roster/check (guarded server-side by RosterController::authorizeRoster()) and surfaces the Arbeidstijdenwet verdict over the roster's assignments regardless of publish status -- publishing itself is NOT hard-blocked on a violation (guard wiring is hrmq-rule-compliance-enforcement's scope, design.md Non-Goal). The FK-scoped 'Roosterindelingen' child object-list (RosterAssignment.rosterId = @objectId) is the plan itself. No stat KPI -- a header has no numeric headline. Audit history is a sidebar tab.",
+        "_note": "rostering (2026-07-14): the publishable roster header. Unlike PayrollRun, Roster carries a REAL x-openregister-lifecycle (concept <-> gepubliceerd via publiceren/intrekken), so RosterDetail legitimately renders a lifecycleActions widget for exactly those two transitions -- no invented edge (the AttendanceRecordDetail sluiten/heropenen precedent). The 'Rooster' data widget carries period/administrationId/status; Related resolves and links the optional orgUnitId scope (excluded from data). The page-level 'ATW-controle' api-call action posts {rosterId: @objectId} to POST /api/roster/check (guarded server-side by RosterController::authorizeRoster()) and surfaces the Arbeidstijdenwet verdict over the roster's assignments regardless of publish status -- publishing itself is NOT hard-blocked on a violation (guard wiring is humaniq-rule-compliance-enforcement's scope, design.md Non-Goal). The FK-scoped 'Roosterindelingen' child object-list (RosterAssignment.rosterId = @objectId) is the plan itself. No stat KPI -- a header has no numeric headline. Audit history is a sidebar tab.",
         "headerActions": [
           {
             "confirm": true,
@@ -5720,7 +5720,7 @@
     },
     {
       "config": {
-        "_note": "hrmq-personal-dashboard (design.md D1/D3): the caller-scoped personal landing surface hydra ADR-097 Decision 3 requires — 'route to a type: \"dashboard\" page scoped to the caller … Not an index page, and not a bare parent with no route of its own'. The MijnHrGroup menu entry gains route: \"MijnHr\" through this fragment's menu block (mergeMenuItems fills the base group's undefined route key), so the group title lands here while its nine children stay under the collapse chevron — both of Decision 3's conditions, which moves hrmq's counted main-menu total from 6 to 5. Every widget carries a caller-scope filter (userId: \"@me\", or managerUserId: \"@me\" for the approver's own queue) plus the OPTIONAL administration token @workspace.activeAdministrationId? — unresolved means dropped, so a widget degrades to user-scoped-only, never to another user's rows. Only the built-in `stat` and `object-table` types are used (stat resolves through hrmq's own registry.js override, which is load-bearing: the library's self-registration is tree-shaken out of the production bundle); no custom widget, no new backend endpoint, no raw-GraphQL dataSource (the steering Dashboard's _note documents why that form resolves a schema by name across every register on the instance). Widget 6 has no conditional-visibility primitive available — the dashboard widget grammar has none for stat tiles (design.md D4) — so it always renders and shows 0 for a caller who manages nobody; its caption keeps the zero legible. The stat tiles' click-through uses content.route in the vue-router LOCATION-OBJECT form ({\"name\": \"…\"}), not the bare string design.md D3 writes: widgetLink passes a string straight to <router-link :to>, where vue-router 4 reads it as a PATH, so a bare route NAME would fall through to the catch-all. Same spelling the hr-objects nav-card entries already use. The three object-table widgets carry the FLAT content contract (register/schema/filter/sort{field,dir}/limit/columns/rowRoute/viewAllRoute/emptyText), NOT the nested `source` shape design.md D3 writes — measured live 2026-08-22, not inferred: on a type:\"dashboard\" page CnDashboardPage.registryRenderer looks up getWidgetTypeEntry(canonicalWidgetType(type)), and utils/widgetTypeAliases.js maps `object-table` -> `table`, which registerDashboardWidgets.js registers INLINE to CnObjectListWidget. The alias therefore never reaches CnWidgetObjectTable's dashboardRegistration (its `object-table` key is registered under a name the canonicaliser has already rewritten away, in a side-effect module ADR-061 tree-shaking drops anyway). With the `source` shape the widget rendered its emptyText and fired ZERO fetches, because CnObjectListWidget reads content.register/content.schema and has no `source` key at all. Consequences of the real contract, accepted: `limit` is a FETCH CAP (ADR-062), not a render promise — the visible row count fits the cell — and there is no per-row-route escape, which is fine since rowRoute is already a single static route name. All three also carry allowCreate: false — CnObjectListWidget renders a \"+ Toevoegen\" create affordance by DEFAULT (measured live), and all three collections are read-only to the employee: Timesheets are server-created by the booking flow (MijnUrenstaten already sets showAdd: false), LeaveBalance is written only by LeaveAccrualJob, and payslips are payroll-generated (REQ-MHS-004's read-only posture). Labels are Dutch literals; hrmq-i18n-locale-completeness owns their conversion and this change adds no English keys.",
+        "_note": "hrmq-personal-dashboard (design.md D1/D3): the caller-scoped personal landing surface hydra ADR-097 Decision 3 requires — 'route to a type: \"dashboard\" page scoped to the caller … Not an index page, and not a bare parent with no route of its own'. The MijnHrGroup menu entry gains route: \"MijnHr\" through this fragment's menu block (mergeMenuItems fills the base group's undefined route key), so the group title lands here while its nine children stay under the collapse chevron — both of Decision 3's conditions, which moves humaniq's counted main-menu total from 6 to 5. Every widget carries a caller-scope filter (userId: \"@me\", or managerUserId: \"@me\" for the approver's own queue) plus the OPTIONAL administration token @workspace.activeAdministrationId? — unresolved means dropped, so a widget degrades to user-scoped-only, never to another user's rows. Only the built-in `stat` and `object-table` types are used (stat resolves through humaniq's own registry.js override, which is load-bearing: the library's self-registration is tree-shaken out of the production bundle); no custom widget, no new backend endpoint, no raw-GraphQL dataSource (the steering Dashboard's _note documents why that form resolves a schema by name across every register on the instance). Widget 6 has no conditional-visibility primitive available — the dashboard widget grammar has none for stat tiles (design.md D4) — so it always renders and shows 0 for a caller who manages nobody; its caption keeps the zero legible. The stat tiles' click-through uses content.route in the vue-router LOCATION-OBJECT form ({\"name\": \"…\"}), not the bare string design.md D3 writes: widgetLink passes a string straight to <router-link :to>, where vue-router 4 reads it as a PATH, so a bare route NAME would fall through to the catch-all. Same spelling the hr-objects nav-card entries already use. The three object-table widgets carry the FLAT content contract (register/schema/filter/sort{field,dir}/limit/columns/rowRoute/viewAllRoute/emptyText), NOT the nested `source` shape design.md D3 writes — measured live 2026-08-22, not inferred: on a type:\"dashboard\" page CnDashboardPage.registryRenderer looks up getWidgetTypeEntry(canonicalWidgetType(type)), and utils/widgetTypeAliases.js maps `object-table` -> `table`, which registerDashboardWidgets.js registers INLINE to CnObjectListWidget. The alias therefore never reaches CnWidgetObjectTable's dashboardRegistration (its `object-table` key is registered under a name the canonicaliser has already rewritten away, in a side-effect module ADR-061 tree-shaking drops anyway). With the `source` shape the widget rendered its emptyText and fired ZERO fetches, because CnObjectListWidget reads content.register/content.schema and has no `source` key at all. Consequences of the real contract, accepted: `limit` is a FETCH CAP (ADR-062), not a render promise — the visible row count fits the cell — and there is no per-row-route escape, which is fine since rowRoute is already a single static route name. All three also carry allowCreate: false — CnObjectListWidget renders a \"+ Toevoegen\" create affordance by DEFAULT (measured live), and all three collections are read-only to the employee: Timesheets are server-created by the booking flow (MijnUrenstaten already sets showAdd: false), LeaveBalance is written only by LeaveAccrualJob, and payslips are payroll-generated (REQ-MHS-004's read-only posture). Labels are Dutch literals; hrmq-i18n-locale-completeness owns their conversion and this change adds no English keys.",
         "description": "Your personal overview: hours, leave, expenses and payslips.",
         "layout": [
           {
@@ -6238,7 +6238,7 @@
           "mode",
           "status"
         ],
-        "description": "interview-scheduling: scheduled, completed and cancelled job interviews. An interview is synced to the shared calendar through the InterviewDetail page or 'occ hrmq:interview:sync' (design D1/D6).",
+        "description": "interview-scheduling: scheduled, completed and cancelled job interviews. An interview is synced to the shared calendar through the InterviewDetail page or 'occ humaniq:interview:sync' (design D1/D6).",
         "filters": [
           "status",
           "mode"
@@ -6854,7 +6854,7 @@
     },
     {
       "config": {
-        "_note": "hrmq-docudesk-documents (2026-07-13): GeneratedDocument is hrmq's log of ONE docudesk render+store handoff (design.md D1), the PayrollGLPostDetail split applied to a document instead of a ledger entry -- gd-status leads with the outcome facts (status/generatedAt/errorMessage), gd-related resolves the Employee and (nullable) EmploymentContract, gd-data carries the remaining fields (documentType/templateRef/filePath) below. No lifecycleActions -- HrDocumentService drives every transition server-side, exactly the PayrollGLPostDetail precedent. Unlike every other hrmq detail page this one IS a document, so the sidebar keeps the library's default Files tab (the stored PDF -- design.md D4, 'the whole point') alongside the default Audit Trail tab, hiding only Notes/Tags/Tasks which carry no meaning here: the custom audit-only `tabs` override the rest of hrmq uses would suppress Files too (CnObjectSidebar's open-enum `tabs` widget registry has no `files` entry), so this page opts into `hiddenTabs` instead of `tabs` -- a deliberate, documented deviation from the fleet's usual sidebar convention, needed to actually show the per-object file. payslip-pdf-docudesk (2026-07-14): gd-data additionally excludes the new payslipId/jaaropgaafId $ref fields -- gd-related resolves both.",
+        "_note": "humaniq-docudesk-documents (2026-07-13): GeneratedDocument is humaniq's log of ONE docudesk render+store handoff (design.md D1), the PayrollGLPostDetail split applied to a document instead of a ledger entry -- gd-status leads with the outcome facts (status/generatedAt/errorMessage), gd-related resolves the Employee and (nullable) EmploymentContract, gd-data carries the remaining fields (documentType/templateRef/filePath) below. No lifecycleActions -- HrDocumentService drives every transition server-side, exactly the PayrollGLPostDetail precedent. Unlike every other humaniq detail page this one IS a document, so the sidebar keeps the library's default Files tab (the stored PDF -- design.md D4, 'the whole point') alongside the default Audit Trail tab, hiding only Notes/Tags/Tasks which carry no meaning here: the custom audit-only `tabs` override the rest of humaniq uses would suppress Files too (CnObjectSidebar's open-enum `tabs` widget registry has no `files` entry), so this page opts into `hiddenTabs` instead of `tabs` -- a deliberate, documented deviation from the fleet's usual sidebar convention, needed to actually show the per-object file. payslip-pdf-docudesk (2026-07-14): gd-data additionally excludes the new payslipId/jaaropgaafId $ref fields -- gd-related resolves both.",
         "layout": [
           {
             "gridHeight": 3,
@@ -7327,7 +7327,7 @@
     },
     {
       "config": {
-        "_note": "payroll-glpost-shillinq (2026-07-12): a PayrollGLPost is hrmq's log of ONE handoff attempt into shillinq's JournalEntry register -- never the journal itself (design.md D1). TimesheetDetail/PensionFilingDetail split: pg-status leads top-left with the prominent outcome facts (status/postedAt/errorMessage), pg-related sits top-right to resolve and link the referenced PayrollRun (a real $ref, unlike journalEntryId), then pg-data runs below with the remaining record fields including the journalNumber/journalEntryId pointer into shillinq (plain display only -- no cross-app deep link in MVP, per design.md's 'posted != materialised' risk note) and the lines snapshot. NO lifecycleActions: status has no x-openregister-lifecycle transition map -- PayrollGLPostService drives every transition server-side from `occ hrmq:glpost:run`, exactly the PayrollRunDetail precedent (never invent a user-facing transition the backend does not guard). No Files/calendar/comms leaves -- this is a system-generated audit record, not a document or event. Audit history is a sidebar tab.",
+        "_note": "payroll-glpost-shillinq (2026-07-12): a PayrollGLPost is humaniq's log of ONE handoff attempt into shillinq's JournalEntry register -- never the journal itself (design.md D1). TimesheetDetail/PensionFilingDetail split: pg-status leads top-left with the prominent outcome facts (status/postedAt/errorMessage), pg-related sits top-right to resolve and link the referenced PayrollRun (a real $ref, unlike journalEntryId), then pg-data runs below with the remaining record fields including the journalNumber/journalEntryId pointer into shillinq (plain display only -- no cross-app deep link in MVP, per design.md's 'posted != materialised' risk note) and the lines snapshot. NO lifecycleActions: status has no x-openregister-lifecycle transition map -- PayrollGLPostService drives every transition server-side from `occ humaniq:glpost:run`, exactly the PayrollRunDetail precedent (never invent a user-facing transition the backend does not guard). No Files/calendar/comms leaves -- this is a system-generated audit record, not a document or event. Audit history is a sidebar tab.",
         "layout": [
           {
             "gridHeight": 3,
@@ -7452,7 +7452,7 @@
     },
     {
       "config": {
-        "_note": "functiehuis-hr21 (2026-07-18): read-only HR21 normfunctie reference detail (the CaoDetail allowCreate:false shape). The 'Normfunctie' data widget carries every field (functiecode/naam/functiegroep/caoSchaal/caoSchaalVerified/caoSchaalSource) -- no Related widget, since no other schema in hrmq references Normfunctie's own object identity here (EmploymentContract.normfunctieId points AT a Normfunctie, not the reverse). No lifecycleActions (Normfunctie has no x-openregister-lifecycle). No create/edit affordances (seeded reference data). Audit history is a sidebar tab.",
+        "_note": "functiehuis-hr21 (2026-07-18): read-only HR21 normfunctie reference detail (the CaoDetail allowCreate:false shape). The 'Normfunctie' data widget carries every field (functiecode/naam/functiegroep/caoSchaal/caoSchaalVerified/caoSchaalSource) -- no Related widget, since no other schema in humaniq references Normfunctie's own object identity here (EmploymentContract.normfunctieId points AT a Normfunctie, not the reverse). No lifecycleActions (Normfunctie has no x-openregister-lifecycle). No create/edit affordances (seeded reference data). Audit history is a sidebar tab.",
         "allowCreate": false,
         "layout": [
           {
@@ -7516,7 +7516,7 @@
           "status",
           "reviewedAt"
         ],
-        "description": "Governance/audit catalogue of external systems that have been granted access to hrmq through OpenRegister's public REST API (/api/objects/{register}/{schema}, authenticated with a Nextcloud app password). This overview RECORDS which external system has access, for what, and when that access was last reviewed — it does NOT grant or enforce that access (the real RBAC grant lives in OpenRegister, outside hrmq; hris-api-public design.md D2). Administrator-only surface.",
+        "description": "Governance/audit catalogue of external systems that have been granted access to humaniq through OpenRegister's public REST API (/api/objects/{register}/{schema}, authenticated with a Nextcloud app password). This overview RECORDS which external system has access, for what, and when that access was last reviewed — it does NOT grant or enforce that access (the real RBAC grant lives in OpenRegister, outside humaniq; hris-api-public design.md D2). Administrator-only surface.",
         "filters": [
           "status"
         ],
@@ -7534,7 +7534,7 @@
     },
     {
       "config": {
-        "_note": "hris-api-public (2026-07-18): a governance/audit record of one external system granted access to hrmq via OpenRegister's public REST surface. The 'Integratie' data widget carries the whole record (name/purpose/nextcloudUserId/grantedSchemas/status/reviewedBy/reviewedAt/createdAt); no exclude, because IntegrationAccount carries NO $ref field (nextcloudUserId is a plain string per ADR-062 rule 7, never a $ref to an Employee), so there is no Related panel to resolve. NO lifecycleActions: status is a plain actief/ingetrokken enum with no x-openregister-lifecycle transition map (the OrgUnitDetail/ShiftDetail precedent) -- toggling it records a governance state, it does not run a guarded workflow, and it changes NOTHING about actual access (design.md D2). No stat/files/calendar/comms leaves -- a catalog record has no numeric headline aggregate, document, appointment, or correspondence thread. Audit history stays a sidebar tab so a reviewer can see who changed the catalog record and when. Alleen-beheerder surface (like DsrRequestDetail); enforcement is server-side OpenRegister RBAC, not a manifest flag.",
+        "_note": "hris-api-public (2026-07-18): a governance/audit record of one external system granted access to humaniq via OpenRegister's public REST surface. The 'Integratie' data widget carries the whole record (name/purpose/nextcloudUserId/grantedSchemas/status/reviewedBy/reviewedAt/createdAt); no exclude, because IntegrationAccount carries NO $ref field (nextcloudUserId is a plain string per ADR-062 rule 7, never a $ref to an Employee), so there is no Related panel to resolve. NO lifecycleActions: status is a plain actief/ingetrokken enum with no x-openregister-lifecycle transition map (the OrgUnitDetail/ShiftDetail precedent) -- toggling it records a governance state, it does not run a guarded workflow, and it changes NOTHING about actual access (design.md D2). No stat/files/calendar/comms leaves -- a catalog record has no numeric headline aggregate, document, appointment, or correspondence thread. Audit history stays a sidebar tab so a reviewer can see who changed the catalog record and when. Alleen-beheerder surface (like DsrRequestDetail); enforcement is server-side OpenRegister RBAC, not a manifest flag.",
         "layout": [
           {
             "gridHeight": 6,
@@ -7979,7 +7979,7 @@
     },
     {
       "config": {
-        "_note": "Leaf compliance record: no other schema in hrmq references EmploymentContract by FK, so the page is a simple two-panel layout -- the data widget (type/writtenContract/dates/hoursPerWeek/hourlyWage/cao/caoSchaal/awfTariff plus the jurisdiction-specific fields: workingTimeDocumented, overtimeMultiplier, ftePartOfYearMinijob, dpaeFiledBeforeStart) at 8-wide, excluding employeeId since the Related panel already resolves and links the owning Employee by name -- and Related at 4-wide for that one meaningful outbound ref. cao-library (2026-07-14): the ct-data widget excludes only employeeId, so the contract's cao (the referenced CAO library id) and caoSchaal (its pay scale) render here for free -- no widget change needed. No child lists (nothing points at a contract), no files/calendar/comms leaves (no linkedType or document field evidence on this schema), no lifecycleActions (EmploymentContract has no x-openregister-lifecycle). Audit history is a sidebar tab. functiehuis-hr21 (2026-07-18): the ct-data widget now also excludes normfunctieId (the new $ref, the employeeId precedent) -- the Related panel resolves and links the assigned Normfunctie by name for free, confirmed rendering the contract's HR21 function assignment.",
+        "_note": "Leaf compliance record: no other schema in humaniq references EmploymentContract by FK, so the page is a simple two-panel layout -- the data widget (type/writtenContract/dates/hoursPerWeek/hourlyWage/cao/caoSchaal/awfTariff plus the jurisdiction-specific fields: workingTimeDocumented, overtimeMultiplier, ftePartOfYearMinijob, dpaeFiledBeforeStart) at 8-wide, excluding employeeId since the Related panel already resolves and links the owning Employee by name -- and Related at 4-wide for that one meaningful outbound ref. cao-library (2026-07-14): the ct-data widget excludes only employeeId, so the contract's cao (the referenced CAO library id) and caoSchaal (its pay scale) render here for free -- no widget change needed. No child lists (nothing points at a contract), no files/calendar/comms leaves (no linkedType or document field evidence on this schema), no lifecycleActions (EmploymentContract has no x-openregister-lifecycle). Audit history is a sidebar tab. functiehuis-hr21 (2026-07-18): the ct-data widget now also excludes normfunctieId (the new $ref, the employeeId precedent) -- the Related panel resolves and links the assigned Normfunctie by name for free, confirmed rendering the contract's HR21 function assignment.",
         "headerActions": [
           {
             "confirm": true,
@@ -8162,7 +8162,7 @@
           "totalWageCostDelta",
           "generatedAt"
         ],
-        "description": "Run-to-run payroll mutation reports: per period who joined and left and the total wage-cost change (payroll-mutation-reports). Admin/HR only -- generated through the \"Mutation report\" action on a payroll run or through occ hrmq:payroll:mutations --persist.",
+        "description": "Run-to-run payroll mutation reports: per period who joined and left and the total wage-cost change (payroll-mutation-reports). Admin/HR only -- generated through the \"Mutation report\" action on a payroll run or through occ humaniq:payroll:mutations --persist.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -8291,7 +8291,7 @@
           "eindheffingDue",
           "status"
         ],
-        "description": "Work-related costs scheme assessments calculated per administration/year: taxable wage bill, free margin, used, and the 80% final levy on any excess (wkr-administration). Generated through occ hrmq:wkr:assess or the Assess action.",
+        "description": "Work-related costs scheme assessments calculated per administration/year: taxable wage bill, free margin, used, and the 80% final levy on any excess (wkr-administration). Generated through occ humaniq:wkr:assess or the Assess action.",
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
@@ -8590,7 +8590,7 @@
     },
     {
       "config": {
-        "_note": "payroll-sepa-netpay-shillinq (2026-07-13): a PayrollPaymentBatch is hrmq's log of ONE net-pay handoff attempt into shillinq's PaymentRun register -- never the payment batch itself (design.md D1), same PayrollGLPostDetail shape. pb-status leads top-left with the prominent outcome facts (status/createdAt/errorMessage), pb-related sits top-right to resolve and link the referenced PayrollRun (a real $ref, unlike shillinqPaymentRunRef), then pb-data runs below with the remaining record fields including the runNumber/shillinqPaymentRunRef pointer into shillinq (plain display only -- no cross-app deep link in MVP). Copy says 'klaargezet in shillinq', NEVER 'betaald': created != paid, money only moves after shillinq's controller approves and exports (design.md D4). NO lifecycleActions: status has no x-openregister-lifecycle transition map -- PayrollNetPayService drives every transition server-side from `occ hrmq:netpay:run`, exactly the PayrollGLPostDetail precedent (never invent a user-facing transition the backend does not guard). No Files/calendar/comms leaves -- this is a system-generated audit record, not a document or event. Audit history is a sidebar tab.",
+        "_note": "payroll-sepa-netpay-shillinq (2026-07-13): a PayrollPaymentBatch is humaniq's log of ONE net-pay handoff attempt into shillinq's PaymentRun register -- never the payment batch itself (design.md D1), same PayrollGLPostDetail shape. pb-status leads top-left with the prominent outcome facts (status/createdAt/errorMessage), pb-related sits top-right to resolve and link the referenced PayrollRun (a real $ref, unlike shillinqPaymentRunRef), then pb-data runs below with the remaining record fields including the runNumber/shillinqPaymentRunRef pointer into shillinq (plain display only -- no cross-app deep link in MVP). Copy says 'klaargezet in shillinq', NEVER 'betaald': created != paid, money only moves after shillinq's controller approves and exports (design.md D4). NO lifecycleActions: status has no x-openregister-lifecycle transition map -- PayrollNetPayService drives every transition server-side from `occ humaniq:netpay:run`, exactly the PayrollGLPostDetail precedent (never invent a user-facing transition the backend does not guard). No Files/calendar/comms leaves -- this is a system-generated audit record, not a document or event. Audit history is a sidebar tab.",
         "layout": [
           {
             "gridHeight": 3,

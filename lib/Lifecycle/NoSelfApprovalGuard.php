@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq NoSelfApprovalGuard
+ * Humaniq NoSelfApprovalGuard
  *
  * OpenRegister lifecycle guard shared by the Timesheet and Expense `approve`
  * and `reject` transitions, and by the PerformanceReview `vaststellen`
@@ -36,7 +36,7 @@
  * `x-openregister-lifecycle.transitions.vaststellen.requires`.
  *
  * @category Lifecycle
- * @package  OCA\Hrmq\Lifecycle
+ * @package  OCA\Humaniq\Lifecycle
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -47,12 +47,12 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-timesheet-approval/specs/hrmq-timesheet-approval/spec.md
+ * @spec openspec/changes/archive/2026-06-22-hrmq-timesheet-approval/specs/hrmq-timesheet-approval/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Lifecycle;
+namespace OCA\Humaniq\Lifecycle;
 
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
@@ -81,7 +81,7 @@ class NoSelfApprovalGuard implements LifecycleGuardInterface {
 	 *  LifecycleGuardInterface signature; the same separation-of-duties rule
 	 *  applies to both approve and reject.
 	 *
-	 * @spec openspec/changes/hrmq-timesheet-approval/specs/hrmq-timesheet-approval/spec.md
+	 * @spec openspec/changes/archive/2026-06-22-hrmq-timesheet-approval/specs/hrmq-timesheet-approval/spec.md
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		if ($userId === '') {
@@ -105,7 +105,7 @@ class NoSelfApprovalGuard implements LifecycleGuardInterface {
 		}
 
 		// An empty `userId` on an identified claimant means that employee has
-		// no Nextcloud account at all (hrmq seeds several), so the acting user
+		// no Nextcloud account at all (humaniq seeds several), so the acting user
 		// provably is not them — allow. This is NOT the unknown-claimant case,
 		// which is denied above on the missing employeeId.
 		return GuardResult::allow();

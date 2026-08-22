@@ -39,7 +39,7 @@ approval views and no bespoke reimbursement service code.
 
 An `Expense` with an attached `receiptFile` can be automatically
 prefilled from the receipt via [docudesk](https://docudesk.conduction.nl)'s
-financial-extraction service — HRMQ assembles the request and applies
+financial-extraction service — Humaniq assembles the request and applies
 the result; docudesk owns all OCR/extraction logic.
 
 **The rule that matters: prefill only empty fields, never overwrite a
@@ -63,8 +63,8 @@ When docudesk is not installed, extraction degrades to
 touched.
 
 ```bash
-occ hrmq:expense:extract-receipt
-occ hrmq:expense:extract-receipt --expense <id>
+occ humaniq:expense:extract-receipt
+occ humaniq:expense:extract-receipt --expense <id>
 ```
 
 With no options this processes the backlog of every Expense with a
@@ -86,7 +86,7 @@ audit-time compliance signal, never a write-time block: an
 over-rate claim still submits/approves/reimburses exactly as before.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 No gross-up of the excess onto any Payslip/PayrollRun is computed

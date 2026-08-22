@@ -1,4 +1,4 @@
-# mss-team-scope — delta for hrmq-hours-process-redesign
+# mss-team-scope — delta for humaniq-hours-process-redesign
 
 ## MODIFIED Requirements
 

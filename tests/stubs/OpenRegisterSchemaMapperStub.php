@@ -25,7 +25,7 @@
  * composer.json's autoload map.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests
+ * @package  OCA\Humaniq\Tests
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.

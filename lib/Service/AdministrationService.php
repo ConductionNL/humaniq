@@ -23,7 +23,7 @@
  *   controller, the write in the service).
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -40,9 +40,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
-use OCA\Hrmq\AppInfo\Application;
+use OCA\Humaniq\AppInfo\Application;
 use OCP\IConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -150,7 +150,7 @@ class AdministrationService {
 	/**
 	 * The caller's active administratie's `AdministrationAccess.role` for
 	 * the caller, or null when no active administratie is resolved or no
-	 * matching access row exists (hrmq-dashboard-steering-indicators
+	 * matching access row exists (humaniq-dashboard-steering-indicators
 	 * REQ-DSI-005/design.md D3): the first reader of this field past row
 	 * presence. Reuses `accessibleAdministrations()` rather than
 	 * re-querying `AdministrationAccess` directly, so the two callers never
@@ -160,7 +160,7 @@ class AdministrationService {
 	 *
 	 * @return string|null One of `accountant`/`hr`/`employee`, or null.
 	 *
-	 * @spec openspec/changes/hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
 	 */
 	public function getActiveAdministrationRole(string $userId): ?string {
 		$activeId = $this->getActiveAdministrationId($userId);
@@ -394,7 +394,7 @@ class AdministrationService {
 	/**
 	 * The OpenRegister ObjectService, once availability has been established.
 	 *
-	 * ADR-083: the reach is guarded rather than blind. hrmq owns no database
+	 * ADR-083: the reach is guarded rather than blind. humaniq owns no database
 	 * tables — every object it manages lives in OpenRegister — so this is not
 	 * an optional capability in the sense of a feature that degrades. What the
 	 * guard buys is the ADR's rule 3 promise: an instance without OpenRegister
@@ -409,7 +409,7 @@ class AdministrationService {
 	private function objectService(): mixed {
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance. '
+				'humaniq requires the OpenRegister app, which is not installed on this instance. '
 				. 'Install and enable it, then reload.'
 			);
 		}

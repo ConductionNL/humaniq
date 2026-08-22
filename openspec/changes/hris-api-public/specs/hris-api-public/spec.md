@@ -5,15 +5,15 @@ stack) against current HEAD with the honest finding that the CRUD/pagination/fil
 substance of "a public HRIS API" is **already delivered** by OpenRegister's `ObjectsController`
 (`GET/POST/PUT/PATCH/DELETE /api/objects/{register}/{schema}`, authenticated via standard
 Nextcloud app passwords, RBAC-enforced server-side). The genuine delta is a small governance
-catalog — `IntegrationAccount` — extending `hrmq-mcp-adoption`'s privacy-review discipline from the
+catalog — `IntegrationAccount` — extending `humaniq-mcp-adoption`'s privacy-review discipline from the
 LLM tool surface to the wider, ungated REST surface, plus documentation of the API contract that
 already exists.
 
 ## ADDED Requirements
 
-### Requirement: hrmq SHALL NOT build a parallel REST, GraphQL, webhook, or SCIM API stack (REQ-HRIS-001)
+### Requirement: humaniq SHALL NOT build a parallel REST, GraphQL, webhook, or SCIM API stack (REQ-HRIS-001)
 
-hrmq SHALL document OpenRegister's existing `/api/objects/{register}/{schema}` REST surface (GET index, POST create, GET/PUT/PATCH/DELETE by id) as its public HRIS API contract. This change SHALL add no new hrmq route, controller, or service implementing object CRUD, filtering, pagination, GraphQL resolution, webhook dispatch, or SCIM provisioning.
+humaniq SHALL document OpenRegister's existing `/api/objects/{register}/{schema}` REST surface (GET index, POST create, GET/PUT/PATCH/DELETE by id) as its public HRIS API contract. This change SHALL add no new humaniq route, controller, or service implementing object CRUD, filtering, pagination, GraphQL resolution, webhook dispatch, or SCIM provisioning.
 
 #### Scenario: No duplicate API surface exists in the diff
 - **GIVEN** this change's full diff
@@ -23,11 +23,11 @@ hrmq SHALL document OpenRegister's existing `/api/objects/{register}/{schema}` R
 #### Scenario: The documented endpoint matches the live one
 - **GIVEN** the README's "Public HRIS API" section
 - **WHEN** `GET /api/objects/hrmq/Vacancy` is called with a valid authenticated Nextcloud session or app password
-- **THEN** it returns a paginated JSON response, exactly as documented, served entirely by OpenRegister's `ObjectsController` with no hrmq code in the request path
+- **THEN** it returns a paginated JSON response, exactly as documented, served entirely by OpenRegister's `ObjectsController` with no humaniq code in the request path
 
 ### Requirement: External integrator authentication SHALL use standard Nextcloud app passwords; no custom credential system SHALL be built (REQ-HRIS-002)
 
-hrmq's documentation SHALL describe Nextcloud app passwords (Settings › Personal › Security, Basic Auth) as the credential mechanism for external HRIS integrations. This change SHALL NOT introduce a bespoke API-key, token-scope, or rate-limit-tier system.
+humaniq's documentation SHALL describe Nextcloud app passwords (Settings › Personal › Security, Basic Auth) as the credential mechanism for external HRIS integrations. This change SHALL NOT introduce a bespoke API-key, token-scope, or rate-limit-tier system.
 
 #### Scenario: No custom credential schema or service exists
 - **GIVEN** this change's full diff
@@ -37,7 +37,7 @@ hrmq's documentation SHALL describe Nextcloud app passwords (Settings › Person
 #### Scenario: Documentation names the real credential mechanism
 - **GIVEN** the README's "Public HRIS API" section
 - **WHEN** it describes how an external system authenticates
-- **THEN** it names Nextcloud app passwords issued via Settings › Personal › Security, not a custom hrmq-issued key
+- **THEN** it names Nextcloud app passwords issued via Settings › Personal › Security, not a custom humaniq-issued key
 
 ### Requirement: An IntegrationAccount catalog SHALL record which external systems have HRIS access, for governance and audit, without enforcing that access (REQ-HRIS-003)
 
@@ -53,14 +53,14 @@ hrmq's documentation SHALL describe Nextcloud app passwords (Settings › Person
 - **WHEN** the associated Nextcloud account's app password is still active and RBAC-granted at the OpenRegister level
 - **THEN** `GET /api/objects/hrmq/Vacancy` still succeeds for that account — the `IntegrationAccount` record alone changes nothing about actual access; revoking access requires revoking the app password and/or the RBAC grant, a fact the schema's description states
 
-### Requirement: Recommended external-access defaults SHALL reuse hrmq-mcp-adoption's AVG-grounded schema classification, not a new analysis (REQ-HRIS-004)
+### Requirement: Recommended external-access defaults SHALL reuse humaniq-mcp-adoption's AVG-grounded schema classification, not a new analysis (REQ-HRIS-004)
 
-hrmq's documentation SHALL recommend, as the default starting grant for a new `IntegrationAccount`, the same six read-only, non-special-category schemas `hrmq-mcp-adoption` already vetted (`Vacancy`, `OrgUnit`, `Asset`, `AssetAssignment`, `Timesheet`, `Expense`), and SHALL state that any wider grant (e.g. access to `Payslip`, `Employee`, or any schema carrying BSN/IBAN/health/special-category data) requires an explicit, documented reason recorded in `IntegrationAccount.purpose`.
+humaniq's documentation SHALL recommend, as the default starting grant for a new `IntegrationAccount`, the same six read-only, non-special-category schemas `humaniq-mcp-adoption` already vetted (`Vacancy`, `OrgUnit`, `Asset`, `AssetAssignment`, `Timesheet`, `Expense`), and SHALL state that any wider grant (e.g. access to `Payslip`, `Employee`, or any schema carrying BSN/IBAN/health/special-category data) requires an explicit, documented reason recorded in `IntegrationAccount.purpose`.
 
 #### Scenario: Documentation cites the existing classification, not a fresh one
 - **GIVEN** the README's recommended-subset guidance
 - **WHEN** it is read
-- **THEN** it names the same six schemas `hrmq-mcp-adoption`'s design.md allow-lists, with a direct reference to that change rather than a restated AVG analysis
+- **THEN** it names the same six schemas `humaniq-mcp-adoption`'s design.md allow-lists, with a direct reference to that change rather than a restated AVG analysis
 
 #### Scenario: A wider grant is documented, not silently allowed
 - **GIVEN** the seeded `IntegrationAccount` example

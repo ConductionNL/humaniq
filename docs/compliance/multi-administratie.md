@@ -5,7 +5,7 @@ description: The accountant multi-client model — administrations, the active-a
 
 # Multi-administratie (accountant multi-client)
 
-One HRMQ instance can carry **multiple administraties** (companies or
+One Humaniq instance can carry **multiple administraties** (companies or
 clients) — the dominant Dutch payroll distribution channel, where one
 accountant's office runs payroll for many SMBs.
 
@@ -37,7 +37,7 @@ its parent's — vacuous when the field is absent, so a single-administratie
 install is entirely unaffected by this rule.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Scoping is NOT a security boundary — read this before relying on it

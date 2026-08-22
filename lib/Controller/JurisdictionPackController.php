@@ -19,7 +19,7 @@
  * refused (REQ-JP-008).
  *
  * @category Controller
- * @package  OCA\Hrmq\Controller
+ * @package  OCA\Humaniq\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -37,11 +37,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Controller;
+namespace OCA\Humaniq\Controller;
 
-use OCA\Hrmq\AppInfo\Application;
-use OCA\Hrmq\Payroll\Dsl\DslException;
-use OCA\Hrmq\Service\JurisdictionPackService;
+use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Payroll\Dsl\DslException;
+use OCA\Humaniq\Service\JurisdictionPackService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -122,7 +122,7 @@ class JurisdictionPackController extends Controller {
 			// offending op/ref/handler/bound so the author can fix their pack.
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		} catch (Throwable $e) {
-			$this->logger->error('hrmq: jurisdictiepack-upload mislukt: ' . $e->getMessage(), ['exception' => $e]);
+			$this->logger->error('humaniq: jurisdictiepack-upload mislukt: ' . $e->getMessage(), ['exception' => $e]);
 			return new JSONResponse(['error' => 'Pack-upload mislukt.'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 

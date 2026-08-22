@@ -3,7 +3,7 @@
 /**
  * Leave Buy/Sell Settle Command
  *
- * `occ hrmq:leave:settle --id TRANSACTION_ID` — the occ entry point for
+ * `occ humaniq:leave:settle --id TRANSACTION_ID` — the occ entry point for
  * settling one approved LeaveTransaction (leave-buy-sell design.md D4):
  * idempotent (an already-settled transaction is a no-op), refuses
  * non-approved/missing-settlement-period/balance-unresolvable/insufficient-
@@ -11,7 +11,7 @@
  * `LeaveBalance.bovenwettelijkHours` and stamps the transaction settled.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -27,9 +27,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\LeaveBuySellSettlementService;
+use OCA\Humaniq\Service\LeaveBuySellSettlementService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -51,10 +51,14 @@ class LeaveBuySellSettleCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and options; the buy/sell settlement behaviour those options drive is specified at openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-004, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:leave:settle')
+		$this->setName('humaniq:leave:settle')
 			->setDescription('Settle one approved LeaveTransaction (buy/sell leave hours).')
 			->addOption('id', null, InputOption::VALUE_REQUIRED, 'The LeaveTransaction id.');
 
@@ -79,7 +83,7 @@ class LeaveBuySellSettleCommand extends Command {
 		$result = $this->service->settle($id);
 		$status = (string)$result['status'];
 
-		$output->writeln('<info>Hrmq leave buy/sell settlement</info>');
+		$output->writeln('<info>Humaniq leave buy/sell settlement</info>');
 		$output->writeln(sprintf('  transactie %s: %s — %s', (string)($result['transactionId'] ?? 'onbekend'), $status, (string)$result['message']));
 
 		return in_array($status, ['settled', 'already-settled'], true) === true ? 0 : 1;

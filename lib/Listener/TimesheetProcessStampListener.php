@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq TimesheetProcessStampListener
+ * Humaniq TimesheetProcessStampListener
  *
  * Pre-save listener on OpenRegister's `ObjectCreatingEvent` /
  * `ObjectUpdatingEvent` for the `Timesheet` schema (hours-process-redesign
@@ -28,7 +28,7 @@
  * The mutate-and-persist channel (`setModifiedData()`) is proven by
  * OpenRegisterPreSaveMutationContractTest (task V1, must-fail control).
  *
- * hrmq's own internal writes (aggregate recompute, migration) carry the
+ * humaniq's own internal writes (aggregate recompute, migration) carry the
  * request-scoped {@see InternalWriteMarker}: under it the aggregates pass
  * through untouched, but process-field inertness still applies — an internal
  * writer may maintain totals, never fabricate approvals.
@@ -37,7 +37,7 @@
  * ObjectService per use); this class carries only the decisions.
  *
  * @category Listener
- * @package  OCA\Hrmq\Listener
+ * @package  OCA\Humaniq\Listener
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -48,18 +48,18 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/hrmq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Listener;
+namespace OCA\Humaniq\Listener;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Hrmq\Service\HoursRegisterGateway;
-use OCA\Hrmq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\InternalWriteMarker;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IUserSession;
@@ -70,7 +70,7 @@ use Psr\Log\LoggerInterface;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/hrmq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
  */
 class TimesheetProcessStampListener implements IEventListener {
 
@@ -119,7 +119,7 @@ class TimesheetProcessStampListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/hrmq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
 	 */
 	public function handle(Event $event): void {
 		try {
@@ -157,7 +157,7 @@ class TimesheetProcessStampListener implements IEventListener {
 			$event->setModifiedData($this->stampUpdate(($entity->getObject() ?? []), $stored));
 		} catch (\Throwable $e) {
 			$this->logger->warning(
-				'hrmq: TimesheetProcessStampListener could not stamp a Timesheet write',
+				'humaniq: TimesheetProcessStampListener could not stamp a Timesheet write',
 				['exception' => $e->getMessage()]
 			);
 			$this->refuse($event, 'De urenstaat kon niet worden verwerkt; probeer het later opnieuw.');
@@ -184,7 +184,7 @@ class TimesheetProcessStampListener implements IEventListener {
 	 *
 	 * @return array<string, mixed> The modified-data map.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/hrmq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
 	 */
 	private function stampCreate(array $incoming): array {
 		$modified = ['status' => 'draft'];
@@ -209,7 +209,7 @@ class TimesheetProcessStampListener implements IEventListener {
 	 *
 	 * @return array<string, mixed> The modified-data map.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/hrmq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
 	 */
 	private function stampUpdate(array $incoming, array $stored): array {
 		$modified = [];
@@ -220,7 +220,7 @@ class TimesheetProcessStampListener implements IEventListener {
 			$modified[$field] = ($stored[$field] ?? null);
 		}
 
-		// Aggregates: inert to clients; hrmq's own aggregation/migration
+		// Aggregates: inert to clients; humaniq's own aggregation/migration
 		// writes (marker) carry them through untouched.
 		if ($this->marker->isInternal() === false) {
 			foreach (self::AGGREGATE_FIELDS as $field) {
@@ -249,7 +249,7 @@ class TimesheetProcessStampListener implements IEventListener {
 	 *
 	 * @return array<string, mixed> Stamps for the detected edge (possibly empty).
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/hrmq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/humaniq-timesheet-approval/spec.md#Requirement:-Process-fields-are-server-stamped-and-inert-to-client-input
 	 */
 	private function stampEdge(array $incoming, array $stored): array {
 		$from = strtolower(trim((string)($stored['status'] ?? '')));
@@ -337,7 +337,7 @@ class TimesheetProcessStampListener implements IEventListener {
 	 *
 	 * @return array<string, mixed> The three cache values.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mss-team-scope/spec.md#Requirement:-The-approval-carrying-schemas-SHALL-gain-an-optional-denormalized-managerUserId-scoping-property-(REQ-MSS-001)
 	 */
 	private function deriveIdentityCaches(string $employeeId, array $fallback): array {
 		$kept = [
@@ -367,7 +367,7 @@ class TimesheetProcessStampListener implements IEventListener {
 			];
 		} catch (\Throwable $e) {
 			$this->logger->info(
-				'hrmq: identity-cache derivation failed; keeping stored values',
+				'humaniq: identity-cache derivation failed; keeping stored values',
 				['exception' => $e->getMessage()]
 			);
 

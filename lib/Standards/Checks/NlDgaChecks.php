@@ -21,7 +21,7 @@
  * vacuously compliant with no seed backfill needed.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -37,9 +37,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\TaxTables;
 
 /**
  * The gebruikelijkloon-norm self-check: a DGA's annualised salary vs the

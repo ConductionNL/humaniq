@@ -19,7 +19,7 @@
  * payslip.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -38,11 +38,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Payroll\PayrollCalculator;
-use OCA\Hrmq\Service\RetroAdjustmentService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Service\RetroAdjustmentService;
+use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;

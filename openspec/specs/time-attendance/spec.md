@@ -7,13 +7,13 @@ built_by: openspec/changes/archive/2026-07-13-time-attendance-mvp
 # time-attendance Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [time-attendance-mvp](../../changes/archive/2026-07-13-time-attendance-mvp/) _(archived 2026-07-13)_ — `AttendanceRecord` per-day clock schema with open⇄gesloten lifecycle, 3 machine-checkable Arbeidstijdenwet rules (dagelijkse rust / max werkdag / pauze) under the new `nl-arbeidstijdenwet` framework with `NlAttendanceChecks` + the cross-record daily-rest audit context, attendance pages under `Verlof & verzuim` and `MijnAanwezigheid` under `Mijn HR` (kind: config)
 
 ## Purpose
 
-Give hrmq a raw clock surface with Dutch working-time-law depth no Nextcloud
+Give humaniq a raw clock surface with Dutch working-time-law depth no Nextcloud
 app has (Spectr `hrmq-insight-nc-ecosystem-gap`: German ArbZG time-compliance
 apps exist in the ecosystem, nothing covers the Arbeidstijdenwet): a
 per-employee/per-day `AttendanceRecord` (clockIn/clockOut/breakMinutes,
@@ -34,7 +34,7 @@ verification and CAO overtime/toeslag calculation from the 2026-05-23
 
 ### Requirement: A new `AttendanceRecord` schema SHALL model one clock day per employee with an open⇄gesloten lifecycle (REQ-TA-001)
 
-A new fragment `lib/Settings/register.d/hr-attendance.json` (`x-hrmq-fragment: hr-attendance`) declares `AttendanceRecord` (version 0.1.0): `employeeId` (string, format uuid, `$ref` Employee, required), `date` (string, format date, required — the working day the record belongs to, including for night shifts whose clock-out falls after midnight), `clockIn` (string, format date-time, required — ISO 8601 UTC, the fleet's `submittedAt` timestamp convention), `clockOut` (string, format date-time, nullable — null while the day is open), `breakMinutes` (number, minimum 0, default 0), `workedHours` (number, nullable — stored per REQ-TA-002), `location` (string enum `kantoor`/`thuis`/`klant`/`anders`, nullable), `userId` (string, nullable — denormalized NC user id, the `Timesheet.userId` mijn-hr-self-service pattern: a plain string copy of the linked Employee's `nextcloudUserId`, never a `$ref`), `status` (string enum `open`/`gesloten`, default `open`, required). `configuration` declares `x-openregister-lifecycle`: `field: status`, `initial: open`, transitions `sluiten` (open→gesloten; description documents that the carrying write supplies `clockOut` and `workedHours`) and `heropenen` (gesloten→open; description documents reopening for correction under the audit trail). No approval states — approval lives on `Timesheet` (design D4/D5), and the schema description documents that boundary. Every property carries title + description (gate-28). Required: `employeeId`, `date`, `clockIn`, `status`. Register `info.version` bumped 0.4.0 → 0.5.0 (HEAD had already advanced past the proposal's assumed 0.3.0 baseline via intervening merges).
+A new fragment `lib/Settings/register.d/hr-attendance.json` (`x-humaniq-fragment: hr-attendance`) declares `AttendanceRecord` (version 0.1.0): `employeeId` (string, format uuid, `$ref` Employee, required), `date` (string, format date, required — the working day the record belongs to, including for night shifts whose clock-out falls after midnight), `clockIn` (string, format date-time, required — ISO 8601 UTC, the fleet's `submittedAt` timestamp convention), `clockOut` (string, format date-time, nullable — null while the day is open), `breakMinutes` (number, minimum 0, default 0), `workedHours` (number, nullable — stored per REQ-TA-002), `location` (string enum `kantoor`/`thuis`/`klant`/`anders`, nullable), `userId` (string, nullable — denormalized NC user id, the `Timesheet.userId` mijn-hr-self-service pattern: a plain string copy of the linked Employee's `nextcloudUserId`, never a `$ref`), `status` (string enum `open`/`gesloten`, default `open`, required). `configuration` declares `x-openregister-lifecycle`: `field: status`, `initial: open`, transitions `sluiten` (open→gesloten; description documents that the carrying write supplies `clockOut` and `workedHours`) and `heropenen` (gesloten→open; description documents reopening for correction under the audit trail). No approval states — approval lives on `Timesheet` (design D4/D5), and the schema description documents that boundary. Every property carries title + description (gate-28). Required: `employeeId`, `date`, `clockIn`, `status`. Register `info.version` bumped 0.4.0 → 0.5.0 (HEAD had already advanced past the proposal's assumed 0.3.0 baseline via intervening merges).
 
 #### Scenario: Record walks close and reopen
 - **GIVEN** an AttendanceRecord created with `date: 2026-07-09` and `clockIn` (status defaults to `open`)
@@ -56,7 +56,7 @@ The `x-openregister-calculations` operator vocabulary (`prop`/`+`/`-` over numer
 
 #### Scenario: Checks are independent of workedHours
 - **GIVEN** an AttendanceRecord with `clockIn: 2026-07-10T08:00:00Z`, `clockOut: 2026-07-10T21:00:00Z` (13h elapsed) and a hand-edited `workedHours: 8`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** a `nl-atw-max-werkdag` violation is reported regardless of the `workedHours` value
 
 Pinned by `tests/Unit/Standards/Checks/NlAttendanceChecksTest::testMaxWerkdagIgnoresAHandEditedWorkedHours`.
@@ -66,7 +66,7 @@ Pinned by `tests/Unit/Standards/Checks/NlAttendanceChecksTest::testMaxWerkdagIgn
 `lib/Standards/rules/labour.json` gained `nl-atw-dagelijkse-rust` (ATW art. 5:3 lid 2 — ≥11 hours unbroken rest between consecutive working days: `clockIn(D) − clockOut(D−1) ≥ 11h` per employee; the statement notes the once-per-7-days 8-hour reduction is not modeled, so the check is the strict default norm), `nl-atw-max-werkdag` (ATW art. 5:7 lid 1 — `clockOut − clockIn ≤ 12h` per dienst) and `nl-atw-pauze` (ATW art. 5:4 lid 1 — work >5.5h requires ≥30 min break, >10h requires ≥45 min; tiers carried in `parameters.breakTiers` so the thresholds are rule data, not PHP constants — the `milestoneWeeks` convention). All three: `domain: labour`, `jurisdiction: NL`, `framework: nl-arbeidstijdenwet`, `severity: mandatory` (the corpus severity enum has no advisory tier — the `NlVerzuimChecks` precedent), `machineCheckable: true`, `effectiveDate: "1996-01-01"`, `sourceUrl: https://wetten.overheid.nl/BWBR0007671`. `lib/Standards/rules/SCHEMA.md`'s framework examples gained `nl-arbeidstijdenwet`. `RuleCatalogue::VERSION` was bumped `2026-07.2` → `2026-07.3` (HEAD had already advanced past the proposal's assumed `2026-07` baseline via intervening merges).
 
 #### Scenario: Corpus stays loadable and versioned
-- **WHEN** `occ hrmq:rules:audit` runs after the corpus edit
+- **WHEN** `occ humaniq:rules:audit` runs after the corpus edit
 - **THEN** the RuleCatalogue loads payroll.json AND labour.json without error, reports version `2026-07.3`, and reports the three ATW rules as enforced (each has a CheckProvider predicate)
 
 ### Requirement: `NlAttendanceChecks` SHALL enforce the three ATW rules, with the daily-rest sibling index built by `RuleAuditService` (REQ-TA-004)
@@ -80,7 +80,7 @@ A new auto-discovered provider `lib/Standards/Checks/NlAttendanceChecks.php` (im
 
 #### Scenario: Short overnight rest raises mandatory violation
 - **GIVEN** the seed records `attendance-devries-0708` (`clockOut: 2026-07-08T23:00:00Z`) and `attendance-devries-0709` (`clockIn: 2026-07-09T07:00:00Z` — an 8-hour gap)
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** a `nl-atw-dagelijkse-rust` violation with mandatory severity is reported for `attendance-devries-0709`
 
 #### Scenario: Missing break flagged
@@ -102,7 +102,7 @@ Pinned by `tests/Unit/Standards/Checks/NlAttendanceChecksTest.php` (15 tests —
 
 ### Requirement: The attendance pages SHALL surface the record, the lifecycle, and the `@me` self-service view (REQ-TA-005)
 
-`src/manifest.json` gained: menu child `AttendanceRecords` ("Aanwezigheid", icon `ClockOutline`) under the existing `VerlofVerzuimGroup`; menu child `MijnAanwezigheid` ("Mijn aanwezigheid", icon `ClockOutline`) under the existing `MijnHrGroup`; page `AttendanceRecords` (index over `AttendanceRecord`, route `/attendance`: columns `employeeId`, `date`, `clockIn`, `clockOut`, `workedHours`, `status`; filters `status`, `location`; sort `date` desc); page `AttendanceRecordDetail` (detail, route `/attendance/:id`: "Attendance" data widget excluding `employeeId` — Related resolves the Employee —, related widget, `lifecycleActions` exposing exactly `sluiten` ("Sluiten") and `heropenen` ("Heropenen"), audit-history sidebar tab; no files widget — the schema carries no document/retention field, the EmploymentContractDetail no-fabricated-leaves reasoning); page `MijnAanwezigheid` (index, route `/mijn/aanwezigheid`, `filter: {userId: "@me"}`, columns `date`, `clockIn`, `clockOut`, `workedHours`, `status`, sort `date` desc — mirroring `MijnUren` exactly). An `AttendanceRecord` deepLink (`/apps/hrmq/attendance/{uuid}`) is registered. The manifest validates against app-manifest-v2 (`npm run check:manifest`).
+`src/manifest.json` gained: menu child `AttendanceRecords` ("Aanwezigheid", icon `ClockOutline`) under the existing `VerlofVerzuimGroup`; menu child `MijnAanwezigheid` ("Mijn aanwezigheid", icon `ClockOutline`) under the existing `MijnHrGroup`; page `AttendanceRecords` (index over `AttendanceRecord`, route `/attendance`: columns `employeeId`, `date`, `clockIn`, `clockOut`, `workedHours`, `status`; filters `status`, `location`; sort `date` desc); page `AttendanceRecordDetail` (detail, route `/attendance/:id`: "Attendance" data widget excluding `employeeId` — Related resolves the Employee —, related widget, `lifecycleActions` exposing exactly `sluiten` ("Sluiten") and `heropenen` ("Heropenen"), audit-history sidebar tab; no files widget — the schema carries no document/retention field, the EmploymentContractDetail no-fabricated-leaves reasoning); page `MijnAanwezigheid` (index, route `/mijn/aanwezigheid`, `filter: {userId: "@me"}`, columns `date`, `clockIn`, `clockOut`, `workedHours`, `status`, sort `date` desc — mirroring `MijnUren` exactly). An `AttendanceRecord` deepLink (`/apps/humaniq/attendance/{uuid}`) is registered. The manifest validates against app-manifest-v2 (`npm run check:manifest`).
 
 #### Scenario: Manifest stays valid
 - **WHEN** `npm run check:manifest` runs
@@ -113,7 +113,7 @@ Pinned by `tests/Unit/Standards/Checks/NlAttendanceChecksTest.php` (15 tests —
 - **THEN** they match action-for-action (`sluiten`/`heropenen`, same from/to) with no additional action
 
 #### Scenario: Self-service page shows only own records
-@e2e exclude declarative index filtering (@me token) is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative index filtering (@me token) is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** AttendanceRecords with `userId: "admin"` and records without a userId
 - **WHEN** the `MijnAanwezigheid` page loads for the `admin` user
 - **THEN** only the `userId: "admin"` records are listed, newest working day first
@@ -128,7 +128,7 @@ Pinned by `tests/Unit/Standards/Checks/NlAttendanceChecksTest.php` (15 tests —
 
 #### Scenario: Seeded audit shows exactly the intended attendance violations
 - **GIVEN** a fresh import of the seed data
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** the attendance violations are exactly: one `nl-atw-dagelijkse-rust` for `attendance-devries-0709` and one `nl-atw-pauze` for `attendance-bakker-0710`, with no `nl-atw-max-werkdag` violations and no pre-existing rule regressing
 
 Pinned by `RuleAuditServiceTest::testSeededAttendanceDataFlagsExactlyTheIntendedViolations`, run against the exact seeded fixture shapes.

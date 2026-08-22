@@ -4,7 +4,7 @@
 
 **Verified against HEAD 2026-07-17.** Read read-only, directly grounding this design:
 
-- `openspec/specs/hrmq-docudesk-documents/spec.md` — `GeneratedDocument` (`lib/Settings/register.d/
+- `openspec/specs/humaniq-docudesk-documents/spec.md` — `GeneratedDocument` (`lib/Settings/register.d/
   hr-documents.json`, v0.2.0): `documentType` (enum `arbeidsovereenkomst|aanbiedingsbrief|
   werkgeversverklaring|getuigschrift|loonstrook|jaaropgaaf`), `employeeId`, `contractId`, `payslipId`,
   `jaaropgaafId`, `templateRef`, `status`, `filePath`, `errorMessage`, `generatedAt` — **no retention field**.
@@ -172,7 +172,7 @@ that SAME, already-shipped `lib/Standards/Checks/NlDossierRetentionChecks.php` p
 
 Vacuous whenever the relevant field is unpopulated (nothing to check — the same posture every other check in
 this corpus takes for an absent field). This is a **recommended-severity flag**, surfaced only through `occ
-hrmq:rules:audit` (the existing, only audit surface) — it does not delete, anonymise, or destroy anything (the
+humaniq:rules:audit` (the existing, only audit surface) — it does not delete, anonymise, or destroy anything (the
 proposal's explicit Non-Goal: no automated destruction job). An HR admin acts on the flag manually, exactly the
 posture `nl-administratie-scope-consistency` and `nl-single-person-mode-employee-count` (a sibling change) both
 already take for a soft compliance signal.
@@ -199,11 +199,11 @@ field means because those checks are the ones that populate/validate it.
 1. **Loonbelastingverklaring retention, compliant**: the anchor `employee-jansen` gains
    `loonheffingenVerklaringOnFile: true`, `loonheffingenVerklaringRetainedUntil` set far enough past `endDate`
    (still-employed → vacuously satisfied per `retainedAtLeastYearsAfterEnd()`'s own "clock has not started" rule,
-   mirroring the existing `identityDocumentRetainedUntil` seed value shape) — `occ hrmq:rules:audit` reports zero
+   mirroring the existing `identityDocumentRetainedUntil` seed value shape) — `occ humaniq:rules:audit` reports zero
    `nl-loonbelastingverklaring-bewaarplicht-5jaar` violations for this employee.
 2. **Loonbelastingverklaring retention, violated**: a second seeded `Employee` with `loonheffingenVerklaringOnFile:
    true`, `endDate` set in the past, and `loonheffingenVerklaringRetainedUntil` left null — the dev-container
-   verification gate: `occ hrmq:rules:audit` reports exactly one `nl-loonbelastingverklaring-bewaarplicht-5jaar`
+   verification gate: `occ humaniq:rules:audit` reports exactly one `nl-loonbelastingverklaring-bewaarplicht-5jaar`
    violation for this employee, and (since the field is unpopulated) zero `nl-bewaartermijn-verstreken` violations
    for the same field on the same record (D4 is vacuous on an unpopulated field — the two checks report distinct
    facts, never overlapping on the same cause).
@@ -212,7 +212,7 @@ field means because those checks are the ones that populate/validate it.
    (`PayrollRetentionGuardService::inheritLegalHold()`); `AvgDsrService::previewErasure()` lists it in `retained`,
    not `wouldErase`. See hrmq#99's live-verification evidence, not a seed fixture here.
 4. **Storage-limitation ceiling, violated (Employee, this change's own seed addition)**: a NEW seeded `Employee`
-   with `identityDocumentRetainedUntil` set to a date in the past and still on file — `occ hrmq:rules:audit`
+   with `identityDocumentRetainedUntil` set to a date in the past and still on file — `occ humaniq:rules:audit`
    reports exactly one `nl-bewaartermijn-verstreken` violation naming it (the `Employee`-scoped entry this change
    adds to `NlDossierRetentionChecks`). The `GeneratedDocument`/payroll-family ceiling case is already covered by
    hrmq#99's own seed/tests, not duplicated here.

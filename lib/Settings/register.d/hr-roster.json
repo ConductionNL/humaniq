@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-roster",
+    "x-humaniq-fragment": "hr-roster",
     "components": {
         "schemas": {
             "Shift": {
@@ -43,7 +43,7 @@
                             "publiceren": {
                                 "from": ["concept"],
                                 "to": "gepubliceerd",
-                                "description": "Freeze the plan and make it the team's roster. Its RosterAssignments join the standing occ hrmq:rules:audit ATW cross-check once published (design D4)."
+                                "description": "Freeze the plan and make it the team's roster. Its RosterAssignments join the standing occ humaniq:rules:audit ATW cross-check once published (design D4)."
                             },
                             "intrekken": {
                                 "from": ["gepubliceerd"],

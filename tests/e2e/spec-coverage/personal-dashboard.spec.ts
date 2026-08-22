@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Personal-dashboard journeys (gate-19 spec coverage) for the OpenSpec change
- * `hrmq-personal-dashboard` — the caller-scoped `MijnHr` dashboard at `/mijn`,
+ * `humaniq-personal-dashboard` — the caller-scoped `MijnHr` dashboard at `/mijn`,
  * the `Mijn HR` menu group routing to it while keeping its children, and the
  * `/mijn-hr/gebruikelijk-loon` → `/mijn/gebruikelijk-loon` redirect.
  *
@@ -11,12 +11,12 @@
  * by its verbatim name (the excluded ones carry a reason-bearing
  * `@e2e exclude` in the spec files themselves):
  *
- * openspec/changes/hrmq-personal-dashboard/specs/hrmq-personal-dashboard/spec.md
+ * openspec/changes/humaniq-personal-dashboard/specs/humaniq-personal-dashboard/spec.md
  *   Scenario: Widgets show only the caller's rows
  *   Scenario: The pending-approvals tile renders for every caller and routes to the queue
  *   Scenario: Group title navigates; chevron still folds
  *
- * openspec/changes/hrmq-personal-dashboard/specs/mijn-hr-self-service/spec.md
+ * openspec/changes/humaniq-personal-dashboard/specs/mijn-hr-self-service/spec.md
  *   Scenario: Balances without userId never leak onto the personal dashboard
  *   Scenario: Menu order matches ADR-001
  *   Scenario: Mijn HR is a routed group, not a bare parent
@@ -37,7 +37,7 @@
  * WHAT THIS FILE ASSERTS ON, AND WHY (tasks.md 4.2)
  * -------------------------------------------------
  * Manifest ids and routes, not Dutch display strings — the instance renders
- * Dutch today and `hrmq-i18n-locale-completeness` lands next, so a spec keyed
+ * Dutch today and `humaniq-i18n-locale-completeness` lands next, so a spec keyed
  * on visible copy would go red on a change that alters nothing it tests.
  * Three stable, measured hooks carry that:
  *   - `li[data-testid="cn-nav-entry-<menu id>"]` and its `data-cn-route`
@@ -58,18 +58,18 @@ import type { Page } from '@playwright/test'
 import { expect, request, test } from '@playwright/test'
 import { ADMIN_CREDENTIALS, resolveBaseURL } from '../base-url.ts'
 
-// PATH-form base — the hrmq router runs in HISTORY mode; resolve the base
+// PATH-form base — the humaniq router runs in HISTORY mode; resolve the base
 // from the running app via OC.generateUrl (see core-journeys.spec.ts for the
 // measured failure mode of hardcoding it).
 let _appBase: string | null = null
 async function appBase(page: Page): Promise<string> {
 	if (_appBase) return _appBase
-	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
+	await page.goto('/index.php/apps/humaniq/', { waitUntil: 'domcontentloaded' })
 	const resolved = await page.evaluate(
-		() => (window as unknown as { OC?: { generateUrl?: (_p: string) => string } }).OC?.generateUrl?.('/apps/hrmq'),
+		() => (window as unknown as { OC?: { generateUrl?: (_p: string) => string } }).OC?.generateUrl?.('/apps/humaniq'),
 	)
 	if (!resolved) {
-		throw new Error('OC.generateUrl unavailable — cannot resolve the hrmq router base.')
+		throw new Error('OC.generateUrl unavailable — cannot resolve the humaniq router base.')
 	}
 	_appBase = resolved.replace(/\/+$/, '')
 	return _appBase
@@ -105,16 +105,16 @@ test.describe('personal dashboard — Mijn HR routes to a caller-scoped dashboar
 	// Scenario: Group title navigates; chevron still folds
 	// Scenario: Mijn HR is a routed group, not a bare parent
 	// Scenario: Menu order matches ADR-001
-	// @e2e hrmq-personal-dashboard::group-title-navigates-chevron-still-folds
+	// @e2e humaniq-personal-dashboard::group-title-navigates-chevron-still-folds
 	// @e2e mijn-hr-self-service::mijn-hr-is-a-routed-group-not-a-bare-parent
 	// @e2e mijn-hr-self-service::menu-order-matches-adr-001
-	// (hrmq-personal-dashboard REQ-PDB-003 + mijn-hr-self-service REQ-MHS-003 —
+	// (humaniq-personal-dashboard REQ-PDB-003 + mijn-hr-self-service REQ-MHS-003 —
 	// the two ADR-097 Decision 3 conditions in one journey: the group TITLE
 	// navigates to the dashboard, AND the children stay reachable behind the
 	// chevron. Asserted through the nav a user actually clicks, never from the
 	// manifest.)
 	test('the Mijn HR group title navigates to /mijn and the six widgets render', async ({ page }) => {
-		await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
+		await page.goto('/index.php/apps/humaniq/', { waitUntil: 'domcontentloaded' })
 		await expect(page.locator('#app-content, .app-content').first()).toBeVisible({ timeout: 20_000 })
 
 		const nav = page.locator('#app-navigation-vue, .app-navigation').first()
@@ -142,7 +142,7 @@ test.describe('personal dashboard — Mijn HR routes to a caller-scoped dashboar
 
 		// Clicking the TITLE navigates (not merely toggles).
 		await group.locator('> div > a.app-navigation-entry-link').click()
-		await expect(page, 'the group title lands on the personal dashboard').toHaveURL(/\/apps\/hrmq\/mijn$/, { timeout: 15_000 })
+		await expect(page, 'the group title lands on the personal dashboard').toHaveURL(/\/apps\/humaniq\/mijn$/, { timeout: 15_000 })
 		await expect(page.locator('[data-testid-page-id="MijnHr"]')).toBeVisible({ timeout: 15_000 })
 
 		// All six widgets are placed and rendered.
@@ -152,7 +152,7 @@ test.describe('personal dashboard — Mijn HR routes to a caller-scoped dashboar
 	})
 
 	// Scenario: Group title navigates; chevron still folds
-	// @e2e hrmq-personal-dashboard::group-title-navigates-chevron-still-folds
+	// @e2e humaniq-personal-dashboard::group-title-navigates-chevron-still-folds
 	// (the second half of the same scenario, as its own journey: the chevron
 	// toggles the children WITHOUT navigating. A fresh CI session starts with
 	// the nav groups COLLAPSED, so the first click here EXPANDS.)
@@ -182,9 +182,9 @@ test.describe('personal dashboard — Mijn HR routes to a caller-scoped dashboar
 
 	// Scenario: Widgets show only the caller's rows
 	// Scenario: Balances without userId never leak onto the personal dashboard
-	// @e2e hrmq-personal-dashboard::widgets-show-only-the-callers-rows
+	// @e2e humaniq-personal-dashboard::widgets-show-only-the-callers-rows
 	// @e2e mijn-hr-self-service::balances-without-userid-never-leak-onto-the-personal-dashboard
-	// (hrmq-personal-dashboard REQ-PDB-002 + mijn-hr-self-service REQ-MHS-002 —
+	// (humaniq-personal-dashboard REQ-PDB-002 + mijn-hr-self-service REQ-MHS-002 —
 	// the fail-closed contract. The register is read first so the assertion is
 	// "one of N", not "one": a table showing a single row because only one row
 	// EXISTS would prove nothing about filtering.)
@@ -213,8 +213,8 @@ test.describe('personal dashboard — Mijn HR routes to a caller-scoped dashboar
 	})
 
 	// Scenario: The pending-approvals tile renders for every caller and routes to the queue
-	// @e2e hrmq-personal-dashboard::the-pending-approvals-tile-renders-for-every-caller-and-routes-to-the-queue
-	// (hrmq-personal-dashboard REQ-PDB-002 / design D4 — the widget grammar has
+	// @e2e humaniq-personal-dashboard::the-pending-approvals-tile-renders-for-every-caller-and-routes-to-the-queue
+	// (humaniq-personal-dashboard REQ-PDB-002 / design D4 — the widget grammar has
 	// no conditional-visibility primitive for stat tiles, so the tile ALWAYS
 	// renders; zero is a legitimate value and is asserted as such rather than
 	// pinned to a seeded count.)
@@ -244,7 +244,7 @@ test.describe('personal dashboard — Mijn HR routes to a caller-scoped dashboar
 		await expect(page.locator('#app-content, .app-content').first()).toBeVisible({ timeout: 20_000 })
 
 		await expect(page, 'the stale path resolves instead of falling through to the catch-all')
-			.toHaveURL(/\/apps\/hrmq\/mijn\/gebruikelijk-loon$/, { timeout: 15_000 })
+			.toHaveURL(/\/apps\/humaniq\/mijn\/gebruikelijk-loon$/, { timeout: 15_000 })
 		await expect(
 			page.locator('[data-testid-page-id="MijnGebruikelijkLoon"]'),
 			'and the gebruikelijk-loon dashboard actually renders',

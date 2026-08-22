@@ -47,7 +47,7 @@
 				"title": "Job profile",
 				"dataIcon": "BriefcaseOutline",
 				"gridHeight": 7,
-				"note": "functiehuis-hr21 (2026-07-18): read-only HR21 normfunctie reference detail (the CaoDetail allowCreate:false shape). The 'Normfunctie' data widget carries every field (functiecode/naam/functiegroep/caoSchaal/caoSchaalVerified/caoSchaalSource) -- no Related widget, since no other schema in hrmq references Normfunctie's own object identity here (EmploymentContract.normfunctieId points AT a Normfunctie, not the reverse). No lifecycleActions (Normfunctie has no x-openregister-lifecycle). No create/edit affordances (seeded reference data). Audit history is a sidebar tab.",
+				"note": "functiehuis-hr21 (2026-07-18): read-only HR21 normfunctie reference detail (the CaoDetail allowCreate:false shape). The 'Normfunctie' data widget carries every field (functiecode/naam/functiegroep/caoSchaal/caoSchaalVerified/caoSchaalSource) -- no Related widget, since no other schema in humaniq references Normfunctie's own object identity here (EmploymentContract.normfunctieId points AT a Normfunctie, not the reverse). No lifecycleActions (Normfunctie has no x-openregister-lifecycle). No create/edit affordances (seeded reference data). Audit history is a sidebar tab.",
 				"allowCreate": false,
 				"include": [
 					"functiecode",

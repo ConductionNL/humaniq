@@ -4,13 +4,13 @@
  * EmployerCostRateController Unit Tests
  *
  * @category Tests
- * @package  OCA\Hrmq\Tests\Unit\Controller
+ * @package  OCA\Humaniq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://hrmq.nl
+ * @link https://humaniq.nl
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -18,11 +18,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Controller;
+namespace OCA\Humaniq\Tests\Unit\Controller;
 
-use OCA\Hrmq\Controller\EmployerCostRateController;
-use OCA\Hrmq\Service\EmployeeCostRateService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\Controller\EmployerCostRateController;
+use OCA\Humaniq\Service\EmployeeCostRateService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * Rule 3, and it is the shape gate-7 exists to catch: `#[NoAdminRequired]` on
  * a method with no per-object guard.
  *
- * @covers \OCA\Hrmq\Controller\EmployerCostRateController
+ * @covers \OCA\Humaniq\Controller\EmployerCostRateController
  */
 class EmployerCostRateControllerTest extends TestCase {
 

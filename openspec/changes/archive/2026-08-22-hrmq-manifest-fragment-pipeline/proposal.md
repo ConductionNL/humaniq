@@ -9,25 +9,25 @@ file, with no `src/manifest.d/` and no `src/menu-layout.json`. `src/main.js` imp
 builds routes from it; it never calls `@conduction/nextcloud-vue`'s shared `buildManifest(base,
 fragments, menuLayout)`. Nine-plus other apps (pipelinq, procest, openregister, decidesk,
 openconnector, opencatalogi, softwarecatalog, larpingapp, doriath) already run this pipeline
-(ADR-044 Consequences); hrmq is the one app that hasn't, and ADR-044 Rule 6 makes adopting it a
-hard prerequisite before hrmq can touch its navigation at all: "An app whose manifest is a single
+(ADR-044 Consequences); humaniq is the one app that hasn't, and ADR-044 Rule 6 makes adopting it a
+hard prerequisite before humaniq can touch its navigation at all: "An app whose manifest is a single
 monolithic `src/manifest.json`... MUST first adopt the ADR-037 fragment pipeline... before it can
 adopt `buildManifest` and this ADR."
 
-hrmq's own backend already runs the equivalent pattern for its OpenAPI register — 32
+humaniq's own backend already runs the equivalent pattern for its OpenAPI register — 32
 `lib/Settings/register.d/*.json` domain fragments deep-merged by `SettingsService::loadConfiguration()`
 (`lib/Repair/InitializeRegister.php`) — so the frontend gap is the odd one out, not a new idea for
 this codebase.
 
 This matters now for two concrete reasons beyond "match the fleet pattern":
 
-1. **ADR-097 (navigation budget, proposed 2026-08-19) names hrmq as the measurement that started
+1. **ADR-097 (navigation budget, proposed 2026-08-19) names humaniq as the measurement that started
    it** — 11 top-level groups against a 6-entry ceiling, 18 of 64 entries that are the same query
    four times over (role-lens duplication, ADR-097 §5), three unauthorised groups that are a record
    type, a lifecycle stage, and a single tool (ADR-097 §4). ADR-097's own Related section names
-   the fragment pipeline as "the prerequisite for most per-app budget work." Nobody can fix hrmq's
+   the fragment pipeline as "the prerequisite for most per-app budget work." Nobody can fix humaniq's
    menu without it.
-2. **`openspec/changes/hrmq-ia-navigation-alignment`** (open, unapplied) already proposes exactly
+2. **`openspec/changes/humaniq-ia-navigation-alignment`** (open, unapplied) already proposes exactly
    this pipeline as step 1 of a change that then relocates four leaves under two ADR-001 groups.
    That change predates ADR-097; its relocation target (ADR-001's frozen 9) is itself now stale
    next to ADR-097's stricter 6-entry ceiling and role-lens-collapse guidance. Re-doing the
@@ -68,7 +68,7 @@ entries, must resolve identically before and after.
   `buildManifest()` reads only `pages`/`menu`/`pageTemplates`/`pageInstances`/`sets` from a
   fragment (confirmed by reading `nextcloud-vue/src/utils/buildManifest.js`); any other key placed
   in a fragment is silently dropped. This is stated as a hard constraint in Design, not a choice.
-- **Supersede `openspec/changes/hrmq-ia-navigation-alignment`.** That change proposed the same
+- **Supersede `openspec/changes/humaniq-ia-navigation-alignment`.** That change proposed the same
   pipeline adoption as its own prerequisite step, then bundled a specific relocation (Timesheets/
   TimesheetApproval → Verlof & verzuim; Expenses/ExpenseApproval → Declaraties & assets) that this
   change does not make. The orchestrator should retire/archive that change without applying it once
@@ -79,7 +79,7 @@ entries, must resolve identically before and after.
 
 ### Explicitly out of scope (non-goals)
 
-- **The menu restructure itself** — collapsing hrmq's 11 top-level groups toward ADR-097's ceiling,
+- **The menu restructure itself** — collapsing humaniq's 11 top-level groups toward ADR-097's ceiling,
   fixing the 18 role-lens duplicate index pages via `menu[].query`/`authorization` (ADR-097 §5),
   retiring the three unauthorised groups (`Uren`, `Planning`, `Simuleer loonstrook`), or moving
   `Configuratie` out of the main menu (ADR-079 Decision 5). This change makes relocation *possible*
@@ -95,12 +95,12 @@ entries, must resolve identically before and after.
 ## Capabilities
 
 ### New Capabilities
-- `hrmq-manifest-pipeline`: hrmq builds its effective frontend manifest via the shared ADR-037/
+- `humaniq-manifest-pipeline`: humaniq builds its effective frontend manifest via the shared ADR-037/
   ADR-044 fragment + `buildManifest` + page-template-expansion pipeline instead of a monolithic
   `src/manifest.json`, with zero observable change to pages, routes, widgets, or menu structure.
 
 ### Modified Capabilities
-(none — `hrmq-expenses` and `hrmq-timesheet-approval` are untouched; their menu-group wording
+(none — `humaniq-expenses` and `humaniq-timesheet-approval` are untouched; their menu-group wording
 corrections belong to whichever later change actually relocates them, not this one)
 
 ## Impact
@@ -121,15 +121,15 @@ corrections belong to whichever later change actually relocates them, not this o
   fragment split the base shrinks to ~4 pages; left unmodified, this script would still print
   `PASS (0 errors)` while validating roughly 4% of the page surface, silently losing the coverage
   the brief warns against ("a filter on a property that does not exist returns HTTP 200... reads as
-  success"). Confirmed this is not just an hrmq gap: `pipelinq/tests/validate-manifest.js` and
+  success"). Confirmed this is not just an humaniq gap: `pipelinq/tests/validate-manifest.js` and
   `openconnector/tests/validate-manifest.js` have the identical gap — neither builds the effective
-  manifest before validating, they only read the base file. This change fixes hrmq's copy (build the
+  manifest before validating, they only read the base file. This change fixes humaniq's copy (build the
   effective manifest — fragments + `buildManifest()` — before validating) rather than inheriting the
   fleet's gap; it does not fix the other apps' copies (out of scope, flagged in design.md).
 - **`tests/validate-widget-keys.js`** — baselined RED at clean HEAD (drifted `node_modules`
   `@conduction/nextcloud-vue` build failure, unrelated to this change — see design.md Risks). Not
   this change's job to fix.
-- **`openspec/changes/hrmq-ia-navigation-alignment/`** — superseded; flagged for the orchestrator to
+- **`openspec/changes/humaniq-ia-navigation-alignment/`** — superseded; flagged for the orchestrator to
   archive without applying (this change does not touch that directory itself, per the write-scope
   constraint).
 - No PHP, route, schema, or widget-behaviour change. No `composer install`/`npm install` required to

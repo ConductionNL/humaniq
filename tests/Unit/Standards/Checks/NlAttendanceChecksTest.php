@@ -13,7 +13,7 @@
  * can neither mask nor fabricate a violation (design D2, REQ-TA-002).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
+ * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,9 +29,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
+namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlAttendanceChecks;
+use OCA\Humaniq\Standards\Checks\NlAttendanceChecks;
 use PHPUnit\Framework\TestCase;
 
 /**

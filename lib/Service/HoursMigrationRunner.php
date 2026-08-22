@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq Hours Migration Runner.
+ * Humaniq Hours Migration Runner.
  *
  * Execution context for the hours-process migration pass: resolves an acting
  * user (occ has no session, and OpenRegister's folder access check
@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -26,12 +26,12 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use OCP\BackgroundJob\IJobList;
 use OCP\IGroupManager;
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Acting-user scope + maintenance-mode deferral for the hours migration pass.
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
  */
 class HoursMigrationRunner {
 
@@ -76,7 +76,7 @@ class HoursMigrationRunner {
 	 *
 	 * @return array{processed: int, entriesCreated: int, unresolvableUserLinks: int} The pass result.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
 	 */
 	public function runAsActingUser(callable $pass): array {
 		if ($this->userSession->getUser() !== null) {
@@ -94,7 +94,7 @@ class HoursMigrationRunner {
 			}
 		} catch (\Throwable $e) {
 			$this->logger->warning(
-				'hrmq: hours-process migration could not resolve an acting admin user',
+				'humaniq: hours-process migration could not resolve an acting admin user',
 				['exception' => $e->getMessage()]
 			);
 		}
@@ -124,7 +124,7 @@ class HoursMigrationRunner {
 	 *
 	 * @return bool True when the failure was deferred to the job.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
 	 */
 	public function deferIfMaintenanceDenied(\Throwable $e, string $jobClass): bool {
 		if (is_a($e, 'OCA\OpenRegister\Exception\FolderAccessDeniedException') === false) {

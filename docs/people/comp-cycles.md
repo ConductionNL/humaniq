@@ -47,7 +47,7 @@ draft → proposed → approved → effective
 ```
 
 **Separation of duties**: `approve` reuses the same `NoSelfApprovalGuard`
-used everywhere else in HRMQ — the approver may never be the proposer.
+used everywhere else in Humaniq — the approver may never be the proposer.
 
 **Effective-dating is enforced, not just labelled**: `effectuate`
 (`approved → effective`) is gated by a read-only guard that denies the
@@ -66,8 +66,8 @@ machine-checkable rule (vacuous when no target band is set); an
 already-effective adjustment is a no-op on retry.
 
 ```bash
-occ hrmq:comp:effectuate --cycle <cycleId>
-occ hrmq:comp:effectuate --cycle <cycleId> --date 2026-07-01 --dry-run
+occ humaniq:comp:effectuate --cycle <cycleId>
+occ humaniq:comp:effectuate --cycle <cycleId> --date 2026-07-01 --dry-run
 ```
 
 The endpoint that backs the "Effectueren" detail-page action resolves

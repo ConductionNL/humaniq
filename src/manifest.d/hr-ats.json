@@ -344,7 +344,7 @@
 					"status",
 					"mode"
 				],
-				"description": "interview-scheduling: scheduled, completed and cancelled job interviews. An interview is synced to the shared calendar through the InterviewDetail page or 'occ hrmq:interview:sync' (design D1/D6)."
+				"description": "interview-scheduling: scheduled, completed and cancelled job interviews. An interview is synced to the shared calendar through the InterviewDetail page or 'occ humaniq:interview:sync' (design D1/D6)."
 			}
 		},
 		{

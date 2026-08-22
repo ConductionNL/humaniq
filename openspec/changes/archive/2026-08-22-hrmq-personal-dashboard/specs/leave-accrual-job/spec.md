@@ -1,4 +1,4 @@
-# leave-accrual-job — delta for hrmq-personal-dashboard
+# leave-accrual-job — delta for humaniq-personal-dashboard
 
 ## ADDED Requirements
 

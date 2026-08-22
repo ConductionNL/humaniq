@@ -57,7 +57,7 @@
  * row in this state is already-current and is NEVER written again.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -68,14 +68,14 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Service\AssetDialectMigrationService;
+use OCA\Humaniq\Service\AssetDialectMigrationService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -84,7 +84,7 @@ use OCP\IAppConfig;
 /**
  * Tests for AssetDialectMigrationService.
  *
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
  */
 class AssetDialectMigrationServiceTest extends TestCase {
 

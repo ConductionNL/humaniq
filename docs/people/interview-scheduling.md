@@ -61,8 +61,8 @@ An unconfigured instance (interview calendar principal/URI unset)
 skips cleanly — `skipped-no-calendar` — never an error:
 
 ```bash
-occ hrmq:interview:sync
-occ hrmq:interview:sync --from 2026-07-01
+occ humaniq:interview:sync
+occ humaniq:interview:sync --from 2026-07-01
 ```
 
 `--from` bounds which Interviews are pushed; omitted, every `scheduled`

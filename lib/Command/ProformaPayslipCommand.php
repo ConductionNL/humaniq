@@ -3,7 +3,7 @@
 /**
  * Proforma Payslip Command
  *
- * `occ hrmq:payroll:proforma --gross 3800 [--table wit|groen]
+ * `occ humaniq:payroll:proforma --gross 3800 [--table wit|groen]
  * [--date-of-birth YYYY-MM-DD] [--parttime 1.0] [--bijzonder 0]
  * [--period YYYY-MM] [--aof laag|hoog] [--whk 1.52]` — the support-facing
  * mirror of `POST /api/payroll/proforma` (proforma-payslip design.md D5):
@@ -12,7 +12,7 @@
  * a net figure with no browser and no DB access.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -28,9 +28,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\ProformaPayslipService;
+use OCA\Humaniq\Service\ProformaPayslipService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -57,7 +57,7 @@ class ProformaPayslipCommand extends Command {
 	 * @spec openspec/changes/proforma-payslip/specs/proforma-payslip/spec.md#REQ-PRO-003
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:payroll:proforma')
+		$this->setName('humaniq:payroll:proforma')
 			->setDescription('Simuleer een loonstrook (bruto-naar-netto) zonder iets op te slaan.')
 			->addOption('gross', null, InputOption::VALUE_REQUIRED, 'Bruto maandsalaris (euro).')
 			->addOption('table', null, InputOption::VALUE_REQUIRED, 'Loonheffingstabel: wit of groen (default wit).')
@@ -98,7 +98,7 @@ class ProformaPayslipCommand extends Command {
 			return 1;
 		}
 
-		$output->writeln('<info>Hrmq pro-forma loonstrook (niets opgeslagen)</info>');
+		$output->writeln('<info>Humaniq pro-forma loonstrook (niets opgeslagen)</info>');
 		$output->writeln(sprintf('  periode                 : %s', (string)$breakdown['input']['period']));
 		$output->writeln(sprintf('  tabel                   : %s', (string)$breakdown['input']['table']));
 		$output->writeln(sprintf('  bruto                   : %.2f', (float)$breakdown['grossPay']));

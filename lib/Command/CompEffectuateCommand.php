@@ -3,7 +3,7 @@
 /**
  * Comp Effectuate Command
  *
- * `occ hrmq:comp:effectuate --cycle CYCLE [--date YYYY-MM-DD] [--dry-run]` —
+ * `occ humaniq:comp:effectuate --cycle CYCLE [--date YYYY-MM-DD] [--dry-run]` —
  * the batch-effectuation trigger for compensation review cycles
  * (comp-cycles design.md D5): effectuates every approved, due CompAdjustment
  * in one CompReviewCycle, printing one outcome line per adjustment plus a
@@ -11,7 +11,7 @@
  * use); `--dry-run` evaluates and reports without writing anything.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -27,9 +27,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\CompAdjustmentService;
+use OCA\Humaniq\Service\CompAdjustmentService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -52,10 +52,14 @@ class CompEffectuateCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and options; the effectuation behaviour those options drive is specified at openspec/specs/comp-cycles/spec.md#REQ-COMP-006, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:comp:effectuate')
+		$this->setName('humaniq:comp:effectuate')
 			->setDescription('Effectuate every approved, due CompAdjustment in one compensation review cycle.')
 			->addOption('cycle', null, InputOption::VALUE_REQUIRED, 'The CompReviewCycle id.')
 			->addOption('date', null, InputOption::VALUE_REQUIRED, 'Evaluate "due" against this date (YYYY-MM-DD) instead of today.')
@@ -85,7 +89,7 @@ class CompEffectuateCommand extends Command {
 
 		$results = $this->service->effectuateCycle($cycle, $date, $dryRun);
 
-		$output->writeln('<info>Hrmq compensation-cycle effectuation</info>' . ($dryRun === true ? ' <comment>(dry-run)</comment>' : ''));
+		$output->writeln('<info>Humaniq compensation-cycle effectuation</info>' . ($dryRun === true ? ' <comment>(dry-run)</comment>' : ''));
 
 		if ($results === []) {
 			$output->writeln('  geen aanpassingen gevonden voor cyclus ' . $cycle . '.');

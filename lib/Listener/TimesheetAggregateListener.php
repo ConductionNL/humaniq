@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq TimesheetAggregateListener
+ * Humaniq TimesheetAggregateListener
  *
  * Post-save listener on OpenRegister's `ObjectCreatedEvent` /
  * `ObjectUpdatedEvent` / `ObjectDeletedEvent` for the `TimeEntry` schema
@@ -15,7 +15,7 @@
  * Loop safety: this listener reacts only to `timeentry` events and writes
  * only Timesheet objects, so it cannot re-trigger itself. The Timesheet
  * write it performs does trigger TimesheetApprovalListener, which no-ops
- * (status unchanged; the approval check is edge-triggered). hrmq's own
+ * (status unchanged; the approval check is edge-triggered). humaniq's own
  * internal writes (migration synthesis under the InternalWriteMarker) are
  * skipped — the repair step invokes the recompute directly, once, instead
  * of once per synthesized entry.
@@ -25,7 +25,7 @@
  * write self-heals the total (recompute-from-truth).
  *
  * @category Listener
- * @package  OCA\Hrmq\Listener
+ * @package  OCA\Humaniq\Listener
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -36,16 +36,16 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Listener;
+namespace OCA\Humaniq\Listener;
 
-use OCA\Hrmq\Service\HoursRegisterGateway;
-use OCA\Hrmq\Service\InternalWriteMarker;
-use OCA\Hrmq\Service\TimesheetAggregationService;
+use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\TimesheetAggregationService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -55,7 +55,7 @@ use Psr\Log\LoggerInterface;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
  */
 class TimesheetAggregateListener implements IEventListener {
 
@@ -90,7 +90,7 @@ class TimesheetAggregateListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
 	 */
 	public function handle(Event $event): void {
 		if ($this->marker->isInternal() === true) {
@@ -105,7 +105,7 @@ class TimesheetAggregateListener implements IEventListener {
 		} catch (\Throwable $e) {
 			// Never break the save path — the next entry write self-heals.
 			$this->logger->warning(
-				'hrmq: TimesheetAggregateListener could not recompute aggregates',
+				'humaniq: TimesheetAggregateListener could not recompute aggregates',
 				['exception' => $e->getMessage()]
 			);
 		}
@@ -120,7 +120,7 @@ class TimesheetAggregateListener implements IEventListener {
 	 *
 	 * @return array<int, string> Distinct timesheet uuids.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
 	 */
 	private function affectedTimesheetIds(Event $event): array {
 		$ids = [];

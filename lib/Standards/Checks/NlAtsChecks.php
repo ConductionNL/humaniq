@@ -21,7 +21,7 @@
  * sample cannot carry a resolvable vacancyId cross-reference).
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -37,10 +37,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
 use DateTimeImmutable;
-use OCA\Hrmq\Standards\RuleCatalogue;
+use OCA\Humaniq\Standards\RuleCatalogue;
 
 /**
  * Dutch ATS/recruitment AVG-retention executable checks.

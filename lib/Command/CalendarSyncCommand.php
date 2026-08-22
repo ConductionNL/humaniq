@@ -3,7 +3,7 @@
 /**
  * Calendar Sync Command
  *
- * `occ hrmq:calendar:sync [--from DATE]` — the MVP trigger for
+ * `occ humaniq:calendar:sync [--from DATE]` — the MVP trigger for
  * leave-calendar-nc (design.md D6): upserts one all-day VEVENT per approved
  * LeaveRequest / SickLeaveCase into the configured shared Nextcloud
  * calendar, removes events that left scope, and reconciles orphaned events
@@ -11,12 +11,12 @@
  * per touched source plus a summary. Duck-typed no-op
  * (`skipped-no-calendar`, exit 0) when the calendar is not configured or
  * cannot be resolved. No event listener or background job ships in this
- * change — LeaveRequest transitions carry no hrmq-owned lifecycle hook yet,
+ * change — LeaveRequest transitions carry no humaniq-owned lifecycle hook yet,
  * so this command is run on operator demand until
- * `hrmq-rule-compliance-enforcement` wires guards/events.
+ * `humaniq-rule-compliance-enforcement` wires guards/events.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -32,9 +32,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\LeaveCalendarService;
+use OCA\Humaniq\Service\LeaveCalendarService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -57,10 +57,14 @@ class CalendarSyncCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and options; the sync behaviour those options drive is specified at openspec/specs/leave-calendar-nc/spec.md#REQ-LC-007, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:calendar:sync')
+		$this->setName('humaniq:calendar:sync')
 			->setDescription('Sync approved leave and sickness absence onto the configured shared Nextcloud calendar (MVP trigger; run on operator demand). Calendar edits made by hand are overwritten by the next sync (one-way projection).')
 			->addOption('from', null, InputOption::VALUE_REQUIRED, 'Bound the upsert set to sources whose absence period ends on/after this date (Y-m-d). Reconciliation and open sickness cases are always unbounded.');
 
@@ -80,7 +84,7 @@ class CalendarSyncCommand extends Command {
 
 		$results = $this->service->sync($from);
 
-		$output->writeln('<info>Hrmq leave calendar sync</info>');
+		$output->writeln('<info>Humaniq leave calendar sync</info>');
 
 		$failed = 0;
 		foreach ($results as $result) {

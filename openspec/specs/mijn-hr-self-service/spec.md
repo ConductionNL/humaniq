@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-12-mijn-hr-self-service
 # mijn-hr-self-service Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [mijn-hr-self-service](../../changes/archive/2026-07-12-mijn-hr-self-service/) _(archived 2026-07-12)_ — `Mijn HR` menu group (ADR-001 menu 2) with four `@me`-scoped employee index pages (uren / declaraties / verlof / loonstroken), a `Dashboard` page (ADR-001 menu 1) with self-service + approver KPI widgets, `Employee.nextcloudUserId` account link, and the denormalized `userId` scoping property on Timesheet/Expense/LeaveRequest/Payslip (kind: config)
 - [hrmq-dashboard-steering-indicators](../../changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/) _(archived 2026-08-20)_ — removes REQ-MHS-005 (the Dashboard self/approver KPI widgets); the menu group, the four self-service pages, and the account link are unchanged
@@ -16,7 +16,7 @@ built_by: openspec/changes/archive/2026-07-12-mijn-hr-self-service
 
 ## Purpose
 
-Give hrmq's logged-in employees an in-app self-service surface per ADR-001
+Give humaniq's logged-in employees an in-app self-service surface per ADR-001
 Rule 2 (role-filtered wrapper, never a sibling portal app): `Mijn HR` index
 pages that show only the current user's records — scoped by a denormalized
 `userId` property filtered with the renderer's `@me` token, the one mechanism
@@ -187,7 +187,7 @@ New `type: dashboard` page `Dashboard` (route `/dashboard`) using `config.widget
 - **THEN** "Mijn ingediende uren" counts 1 while "Te beoordelen uren" counts every submitted timesheet
 
 #### Scenario: KPI deep-links land on the matching page
-@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer/CnDashboardPage library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer/CnDashboardPage library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **WHEN** the user activates the "Te beoordelen declaraties" stat
 - **THEN** the router navigates to `ExpenseApproval`
 

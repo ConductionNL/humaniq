@@ -23,7 +23,7 @@
  *   machine-checkable rather than a silent doc note.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -41,7 +41,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * Loonbeslag floor-enforcement + single-active-beslag executable checks.

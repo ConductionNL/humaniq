@@ -1,4 +1,4 @@
-# mijn-hr-self-service — delta for hrmq-hours-process-redesign
+# mijn-hr-self-service — delta for humaniq-hours-process-redesign
 
 ## MODIFIED Requirements
 

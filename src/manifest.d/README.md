@@ -5,7 +5,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 
 # Manifest fragments (`manifest.d/`)
 
-Modular frontend-manifest fragments for hrmq (ADR-037 / ADR-044).
+Modular frontend-manifest fragments for humaniq (ADR-037 / ADR-044).
 
 Every `*.json` file in this directory is collected by `src/main.js` via webpack
 `require.context`, sorted by filename, and merged onto the bundled

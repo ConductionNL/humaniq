@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-13-hr-signals
 # hr-signals Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [hr-signals](../../changes/archive/2026-07-13-hr-signals/) _(archived 2026-07-13)_ — corpus-first HR-moment signalling: `nl-signaal-contract-verloopt` (temporary contract ending ≤60 days, no successor — advisory) + `nl-aanzegtermijn-bewaking` (BW 7:668 lid 1, mandatory) with the new `aanzegdOn` field, `NlSignalChecks` + the `signals` audit context, the 'Aflopende contracten' dashboard widget, and one intended-violation seed (kind: config)
 - [hrmq-dashboard-steering-indicators](../../changes/hrmq-dashboard-steering-indicators/) — **Status**: in-progress — modifies REQ-SIG-005: the 'Aflopende contracten' signal folds into the Dashboard's merged Obligations list instead of a dedicated widget; the rule, the 60-day window, and REQ-SIG-001–004/006 are unchanged
@@ -34,7 +34,7 @@ scope.
 #### Scenario: Expiring contract without successor is flagged
 
 - GIVEN a temporary contract ending 19 days from today with no other contract for the same employee
-- WHEN `occ hrmq:rules:audit` runs
+- WHEN `occ humaniq:rules:audit` runs
 - THEN the contract is reported with an `nl-signaal-contract-verloopt` violation at severity `recommended`
 
 #### Scenario: A successor clears the signal
@@ -73,7 +73,7 @@ scope.
 
 ### Requirement: EmploymentContract records the aanzegging date (REQ-SIG-003)
 
-`EmploymentContract` (`lib/Settings/register.d/hr-objects.json`) SHALL gain the nullable property `aanzegdOn` (string, format date, title and description present per the gate-28 discipline; the description SHALL name BW 7:668 lid 1 and the one-month deadline). The schema version SHALL bump 0.1.0 → 0.2.0 and the register `info.version` (`lib/Settings/hrmq_register.json`) SHALL bump (bumped `0.6.0` → `0.7.0` — recent merges had already advanced the register past the design's assumed `0.5.0` start). No lifecycle, boolean flag, or workflow SHALL accompany the field — it records the fact needed by REQ-SIG-002, nothing more.
+`EmploymentContract` (`lib/Settings/register.d/hr-objects.json`) SHALL gain the nullable property `aanzegdOn` (string, format date, title and description present per the gate-28 discipline; the description SHALL name BW 7:668 lid 1 and the one-month deadline). The schema version SHALL bump 0.1.0 → 0.2.0 and the register `info.version` (`lib/Settings/humaniq_register.json`) SHALL bump (bumped `0.6.0` → `0.7.0` — recent merges had already advanced the register past the design's assumed `0.5.0` start). No lifecycle, boolean flag, or workflow SHALL accompany the field — it records the fact needed by REQ-SIG-002, nothing more.
 
 #### Scenario: Field validates after re-import
 
@@ -88,7 +88,7 @@ A NEW provider `lib/Standards/Checks/NlSignalChecks.php` SHALL register both pre
 #### Scenario: Provider is auto-discovered and coverage rises
 
 - GIVEN the new provider and corpus rows
-- WHEN `occ hrmq:rules:audit` prints its coverage header
+- WHEN `occ humaniq:rules:audit` prints its coverage header
 - THEN `enforceableRules` includes both new rule ids and the catalogue version reads the bumped `RuleCatalogue::VERSION`
 
 #### Scenario: Sibling awareness comes from the context, not re-querying
@@ -100,7 +100,7 @@ A NEW provider `lib/Standards/Checks/NlSignalChecks.php` SHALL register both pre
 ### Requirement: The dashboard shows 'Aflopende contracten' (REQ-SIG-005)
 
 The existing `Dashboard` page in `src/manifest.json` SHALL surface the expiring-temporary-contract
-signal as rows in the Obligations `object-table` widget (`hrmq-dashboard-steering-indicators`
+signal as rows in the Obligations `object-table` widget (`humaniq-dashboard-steering-indicators`
 REQ-DSI-008), not as a dedicated full-width `object-table` widget. The underlying filter SHALL be
 unchanged: `EmploymentContract` records with `type: "temporary"` and `endDate` within the next 60
 days, columns `employeeId`/`endDate`/`aanzegdOn` equivalent data, `rowRoute: EmploymentContractDetail`.
@@ -126,5 +126,5 @@ still touches both. `npm run check:manifest` SHALL stay green.
 #### Scenario: Seeded audit shows the intended violations
 
 - GIVEN a fresh register import on 2026-07-13
-- WHEN `occ hrmq:rules:audit` runs
+- WHEN `occ humaniq:rules:audit` runs
 - THEN `contract-devries-tijdelijk` carries exactly the two new violations and every other seeded object reports the same results as before this change

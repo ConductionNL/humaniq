@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-14-cao-library
 # cao-library Specification
 
 **Status**: done
-**Scope**: hrmq (kind: config+code; `depends_on: [payroll-core-engine]`)
+**Scope**: humaniq (kind: config+code; `depends_on: [payroll-core-engine]`)
 **OpenSpec changes**:
 - [cao-library](../../changes/archive/2026-07-14-cao-library/) _(archived 2026-07-14)_ — the
   versioned CAO (collectieve arbeidsovereenkomst) corpus (`lib/Standards/cao/{cao-id}.json`,
@@ -124,7 +124,7 @@ violation.
 #### Scenario: Below the verified CAO minimum raises a mandatory violation
 - **GIVEN** a contract `cao: "cao-generiek"`, `caoSchaal` set, whose employee's `grossMonthlySalary`
   is below the CAO's verified minimum maandloon for that scale
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** a mandatory `nl-cao-minimumloon-schaal` violation is reported for that contract
 
 #### Scenario: At or above the minimum passes; a placeholder scale is advisory
@@ -138,7 +138,7 @@ violation.
 - **GIVEN** a maintainer confirms `cao-rijk`'s `payScales` leaf against the official BBRA loontabel
   and flips it to `verified: true`, and a contract `cao: "cao-rijk"`, `caoSchaal` set, whose
   employee's `grossMonthlySalary` is below that confirmed minimum
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** a mandatory `nl-cao-minimumloon-schaal` violation is reported, with zero lines of
   `NlCaoChecks`/`RuleAuditService`/rule-catalogue code changed to make this happen
 
@@ -189,7 +189,7 @@ working-time norms. The selected CAO (`cao` + `caoSchaal`) SHALL render on `Empl
   CAO's scales, allowances, leave and working-time
 
 #### Scenario: Re-seeding after adding sector CAOs surfaces them with no manifest edit (cao-sector-datasets)
-- **GIVEN** the six `cao-sector-datasets` corpus files exist and `occ hrmq:rules:seed-test-data` has
+- **GIVEN** the six `cao-sector-datasets` corpus files exist and `occ humaniq:rules:seed-test-data` has
   been run
 - **WHEN** a user opens the `Caos` page
 - **THEN** all six appear alongside the original three, with zero lines changed in

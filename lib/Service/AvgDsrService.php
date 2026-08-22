@@ -3,7 +3,7 @@
 /**
  * AVG Data-Subject-Rights Service
  *
- * Thin hrmq orchestration layer over OpenRegister's RBAC/tenant-scoped
+ * Thin humaniq orchestration layer over OpenRegister's RBAC/tenant-scoped
  * `OCA\OpenRegister\Service\Gdpr\DataSubjectRequestService` (hrmq#99 --
  * consume-not-rebuild correction, superseding the original avg-dsr design):
  * maps a `DsrRequest.employeeId` to the subject value the guarded service
@@ -13,7 +13,7 @@
  * guarded service's own `erase()` -- which REFUSES a legal-hold or
  * immutable-archival-status object on its own, from OpenRegister's real
  * retention/legal-hold machinery (`RetentionService`), not a bespoke
- * per-object exclusion loop hrmq maintained itself.
+ * per-object exclusion loop humaniq maintained itself.
  *
  * hrmq#99 background: the previous design duplicated OpenRegister's
  * retention/legal-hold machinery with its own `AvgDsrRetentionClassifier`
@@ -39,10 +39,10 @@
  * `DataSubjectRequestService` has no new call sites beyond its public
  * `findSubjectData()`/`erase()`/`rectify()` methods -- no reimplementation of
  * entity matching, soft-delete, pseudonymisation, or retention-guarding logic
- * lives in hrmq (ADR-022).
+ * lives in humaniq (ADR-022).
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -62,7 +62,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -72,7 +72,7 @@ use RuntimeException;
 /**
  * Orchestrates AVG data-subject-rights operations over OpenRegister's
  * guarded, RBAC/tenant-scoped `Gdpr\DataSubjectRequestService` -- retention
- * enforcement on erasure is OpenRegister's, not a bespoke hrmq classifier.
+ * enforcement on erasure is OpenRegister's, not a bespoke humaniq classifier.
  */
 class AvgDsrService {
 
@@ -214,7 +214,7 @@ class AvgDsrService {
 	 * Zero-write erasure preview (design.md D5, hrmq#99): calls the guarded
 	 * service's own `erase(..., dryRun: true)` -- the SAME retention guard
 	 * (`RetentionService::hasActiveLegalHold()` + `validateNotImmutable()`)
-	 * `eraseSubject()` would hit, never a bespoke hrmq classification. When
+	 * `eraseSubject()` would hit, never a bespoke humaniq classification. When
 	 * `$dsrRequestId` is given, the preview is RECORDED onto that
 	 * `DsrRequest` -- the evidence `eraseSubject()`'s precondition checks
 	 * for. That write touches only the `DsrRequest` bookkeeping record,
@@ -251,7 +251,7 @@ class AvgDsrService {
 	 * recorded `retainedObjectRefs` -- the preview marker `previewErasure()`
 	 * writes). Calls the guarded service's `erase()` directly (dryRun:
 	 * false) -- it refuses a legal-hold or immutable-archival-status object
-	 * itself; hrmq no longer excludes objects via its own classification
+	 * itself; humaniq no longer excludes objects via its own classification
 	 * before the call.
 	 *
 	 * @param string $employeeId The Employee id.
@@ -351,7 +351,7 @@ class AvgDsrService {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 

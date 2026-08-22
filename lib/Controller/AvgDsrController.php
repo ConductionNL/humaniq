@@ -15,7 +15,7 @@
  * scoped `Gdpr\DataSubjectRequestService` rather than the privileged,
  * admin-only `DsarService` -- that guarded service does not itself require
  * `IGroupManager::isAdmin()` or throw a privilege `RuntimeException`. The
- * admin-only gate below is now a deliberate hrmq POLICY choice (AVG
+ * admin-only gate below is now a deliberate humaniq POLICY choice (AVG
  * data-subject-rights handling for an employee stays an administrator-only
  * operation in this app), not a requirement imposed by the consumed
  * OpenRegister service. The `RuntimeException` catch in every action method
@@ -23,7 +23,7 @@
  * a thrown privilege error) even though the guarded service does not throw
  * one today.
  *
- * design.md D3 hard constraint (retained as hrmq's own policy, not an
+ * design.md D3 hard constraint (retained as humaniq's own policy, not an
  * OpenRegister requirement): this controller's admin gate MUST NOT widen to
  * admit a future dedicated "HR" Nextcloud group the way other
  * `isAdminOrHr()`-gated endpoints in this app may correctly do -- AVG
@@ -31,7 +31,7 @@
  * administrator-only.
  *
  * @category Controller
- * @package  OCA\Hrmq\Controller
+ * @package  OCA\Humaniq\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -50,11 +50,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Controller;
+namespace OCA\Humaniq\Controller;
 
-use OCA\Hrmq\AppInfo\Application;
-use OCA\Hrmq\Service\AvgDsrService;
-use OCA\Hrmq\Service\SettingsService;
+use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\AvgDsrService;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -263,7 +263,7 @@ class AvgDsrController extends Controller {
 	 * Whether the current caller is a Nextcloud admin -- the gate for every
 	 * method on this controller. MUST NOT widen to `isAdminOrHr()` even
 	 * after a future dedicated HR group ships elsewhere in this app
-	 * (design.md D3) -- a deliberate hrmq policy choice (AVG data-subject-
+	 * (design.md D3) -- a deliberate humaniq policy choice (AVG data-subject-
 	 * rights handling stays administrator-only), not a requirement of the
 	 * guarded OpenRegister service this controller now consumes (hrmq#99).
 	 *
@@ -358,7 +358,7 @@ class AvgDsrController extends Controller {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 

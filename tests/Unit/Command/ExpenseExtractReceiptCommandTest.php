@@ -18,7 +18,7 @@
  * `ReceiptExtractionService`.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Command
+ * @package  OCA\Humaniq\Tests\Unit\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -34,11 +34,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Command;
+namespace OCA\Humaniq\Tests\Unit\Command;
 
-use OCA\Hrmq\Command\ExpenseExtractReceiptCommand;
-use OCA\Hrmq\Command\PrivilegedSessionResolver;
-use OCA\Hrmq\Service\ReceiptExtractionService;
+use OCA\Humaniq\Command\ExpenseExtractReceiptCommand;
+use OCA\Humaniq\Command\PrivilegedSessionResolver;
+use OCA\Humaniq\Service\ReceiptExtractionService;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -58,7 +58,7 @@ class ExpenseExtractReceiptCommandTest extends TestCase {
 	 * An unresolvable --as-user (unknown/non-admin uid) is refused BEFORE
 	 * any ReceiptExtractionService::backlog() call, exit 1 -- the same
 	 * "no Anonymous actor ever reaches docudesk/OR" contract as the
-	 * hrmq:avg:* commands.
+	 * humaniq:avg:* commands.
 	 *
 	 * @return void
 	 */

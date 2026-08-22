@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-14-fleet-bijtelling
 # fleet-bijtelling Specification
 
 **Status**: done
-**Scope**: hrmq (`depends_on: []`)
+**Scope**: humaniq (`depends_on: []`)
 **OpenSpec changes**:
 - [fleet-bijtelling](../../changes/archive/2026-07-14-fleet-bijtelling/) _(archived 2026-07-14)_
   — the fiscal addition (bijtelling privégebruik auto) for private use of a company car: a
@@ -92,7 +92,7 @@ A referenced `Asset` whose `category` is not `vehicle`, or whose `listPrice` is 
 #### Scenario: A correctly computed payslip audits clean
 
 - GIVEN the bijtelling-anchor payslip from REQ-FLEET-003
-- WHEN `occ hrmq:rules:audit` (or the run-scoped `hrmq:payroll:verify`) runs
+- WHEN `occ humaniq:rules:audit` (or the run-scoped `humaniq:payroll:verify`) runs
 - THEN no `nl-bijtelling-auto-privegebruik` violation is reported for that payslip
 
 #### Scenario: A tampered bijtelling value fails the check

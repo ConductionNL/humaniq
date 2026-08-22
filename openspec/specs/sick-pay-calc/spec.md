@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-14-sick-pay-calc
 # sick-pay-calc Specification
 
 **Status**: done
-**Scope**: hrmq (consumes the merged `payroll-core-engine` and `leave-verzuim-mvp`, no `depends_on`)
+**Scope**: humaniq (consumes the merged `payroll-core-engine` and `leave-verzuim-mvp`, no `depends_on`)
 **OpenSpec changes**:
 - [sick-pay-calc](../../changes/archive/2026-07-14-sick-pay-calc/) _(archived 2026-07-15)_ — pure
   integer-cents `SickPayCalculator` (statutory 70%, year-1 minimum-wage floor, wachtdag deduction,
@@ -17,7 +17,7 @@ built_by: openspec/changes/archive/2026-07-14-sick-pay-calc
 
 ## Purpose
 
-hrmq already modelled the *administrative* side of sickness (`leave-verzuim-mvp`'s `SickLeaveCase`
+humaniq already modelled the *administrative* side of sickness (`leave-verzuim-mvp`'s `SickLeaveCase`
 + the `nl-loondoorbetaling-minimum` check) and already had the actual gross-to-net engine
 (`payroll-core-engine`'s `PayrollCalculator`/`PayrollRunService`) — but the two were never
 connected: a sick employee's payslip fed the engine the full `grossMonthlySalary`, silently
@@ -136,7 +136,7 @@ and `npm run check:manifest` MUST pass.
 
 #### Scenario: The sick payslip carries the continued wage, not the salary
 - **GIVEN** an open `SickLeaveCase` (70%, year 1, no wachtdag) for a €3.800,00 full-time employee
-- **WHEN** `hrmq:payroll:run --period 2026-06` generates the run
+- **WHEN** `humaniq:payroll:run --period 2026-06` generates the run
 - **THEN** the employee's Payslip `grossPay` is €2.660,00 (the doorbetaald loon, not €3.800,00),
   `sickLeaveCaseId` references the case, `doorbetaaldLoon` is €2.660,00 and loonheffing/net are
   computed on €2.660,00
@@ -158,7 +158,7 @@ engine constraint).
 #### Scenario: A sub-floor payslip is a mandatory violation
 - **GIVEN** a generated sick-pay Payslip whose `doorbetaaldLoon` was hand-edited to €2.000,00 while
   `sickPayReferenceWage` €3.800,00 (70% floor €2.660,00) still stands
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** a mandatory `nl-loondoorbetaling-floor` violation is reported for that payslip
 
 #### Scenario: A correctly-floored payslip and a non-sick payslip both pass
@@ -189,6 +189,6 @@ same (period, administrationId) without `--recalculate` yields no second run and
 #### Scenario: Re-running a sick payroll is idempotent
 - **GIVEN** a draft run generated for (2026-06, ADM-001) containing an open-case employee's
   doorbetaald-loon payslip
-- **WHEN** `hrmq:payroll:run --period 2026-06` runs again without `--recalculate`
+- **WHEN** `humaniq:payroll:run --period 2026-06` runs again without `--recalculate`
 - **THEN** no second PayrollRun and no duplicate Payslip exist, and the existing sick-pay payslip is
   unchanged

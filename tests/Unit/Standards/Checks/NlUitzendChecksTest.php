@@ -18,7 +18,7 @@
  *   contract is never evaluated.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Standards\Checks
+ * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -34,11 +34,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Standards\Checks;
+namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Hrmq\Standards\Checks\NlUitzendChecks;
-use OCA\Hrmq\Standards\RuleCatalogue;
-use OCA\Hrmq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\Checks\NlUitzendChecks;
+use OCA\Humaniq\Standards\RuleCatalogue;
+use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -104,7 +104,7 @@ class NlUitzendChecksTest extends TestCase {
 	/**
 	 * Whether the evaluated violations contain a given rule id.
 	 *
-	 * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
+	 * @param array<int, \OCA\Humaniq\Standards\Violation> $violations The violations.
 	 * @param string $ruleId The rule id to look for.
 	 *
 	 * @return bool
@@ -122,10 +122,10 @@ class NlUitzendChecksTest extends TestCase {
 	/**
 	 * The single violation for a given rule id, or null.
 	 *
-	 * @param array<int, \OCA\Hrmq\Standards\Violation> $violations The violations.
+	 * @param array<int, \OCA\Humaniq\Standards\Violation> $violations The violations.
 	 * @param string $ruleId The rule id.
 	 *
-	 * @return \OCA\Hrmq\Standards\Violation|null
+	 * @return \OCA\Humaniq\Standards\Violation|null
 	 */
 	private function violationFor(array $violations, string $ruleId): mixed {
 		foreach ($violations as $violation) {

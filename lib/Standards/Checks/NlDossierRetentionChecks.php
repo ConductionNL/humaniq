@@ -14,10 +14,10 @@
  * `nl-bewaartermijn-verstreken` reads OpenRegister's own computed
  * `retention.archiefactiedatum` (`RetentionService::applyArchivalMetadata()`/
  * `calculateArchiefactiedatum()`, populated automatically on save for any
- * schema with an `archive` config) -- NEVER a bespoke hrmq field. This is
+ * schema with an `archive` config) -- NEVER a bespoke humaniq field. This is
  * deliberately the SAME ceiling `Archival\DestructionService
  * ::findEligibleObjects()` already reads to list destruction candidates; this
- * check surfaces the fact at audit time (`occ hrmq:rules:audit`), it does
+ * check surfaces the fact at audit time (`occ humaniq:rules:audit`), it does
  * not act on it -- no automated destruction job exists here (a materially
  * different, materially riskier capability, out of scope).
  *
@@ -29,7 +29,7 @@
  * own `archive` config).
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -45,7 +45,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
 use DateTimeImmutable;
 

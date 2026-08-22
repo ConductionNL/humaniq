@@ -7,14 +7,14 @@ built_by: openspec/changes/archive/2026-07-14-time-entry-capture
 # time-entry-capture Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
-- [time-entry-capture](../../changes/archive/2026-07-14-time-entry-capture/) _(archived 2026-07-14)_ — verify-first: hrmq already owned time-entry capture + the submit→approve lifecycle (the `Timesheet` schema, its `x-openregister-lifecycle`, and `NoSelfApprovalGuard`); this change added the missing hand-off — a `nl.conduction.hrmq.timeentry.approved` CloudEvent emitted on the approval edge via OpenRegister's `WebhookService` so a finance app (shillinq) can consume approved hours for invoice-from-time / WBSO.
+- [time-entry-capture](../../changes/archive/2026-07-14-time-entry-capture/) _(archived 2026-07-14)_ — verify-first: humaniq already owned time-entry capture + the submit→approve lifecycle (the `Timesheet` schema, its `x-openregister-lifecycle`, and `NoSelfApprovalGuard`); this change added the missing hand-off — a `nl.conduction.hrmq.timeentry.approved` CloudEvent emitted on the approval edge via OpenRegister's `WebhookService` so a finance app (shillinq) can consume approved hours for invoice-from-time / WBSO.
 - [hrmq-hours-process-redesign](../../changes/archive/2026-08-22-hrmq-hours-process-redesign/) _(archived 2026-08-22, merged as humaniq#128)_ — splits capture into the `TimeEntry` booking and the `Timesheet` period aggregate (the lifecycle lives on the aggregate alone), derives `hours` server-side, recomputes the timesheet aggregates from the entries, freezes entries once their timesheet leaves `draft`/`rejected`, and fixes the empty approval provenance the transition-endpoint path used to emit — the CloudEvent envelope and its `data` keys are unchanged (kind: code+config)
 
 ## Purpose
 
-Home the fleet's timesheet / hours-capture surface in hrmq (HR's domain) and emit
+Home the fleet's timesheet / hours-capture surface in humaniq (HR's domain) and emit
 an approved-time-entry event a finance app consumes — so shillinq's hours-consumers
 (WBSO export, urencriterium, invoice-from-time) have a real source, closing the
 dangling `bookkeeping-time-tracking` dependency declared by `zzp-urencriterium-tracker`.
@@ -25,9 +25,9 @@ follow-up and is not part of this capability.
 
 ## Requirements
 
-### Requirement: hrmq captures time entries under a submit→approve lifecycle (REQ-TEC-001)
+### Requirement: humaniq captures time entries under a submit→approve lifecycle (REQ-TEC-001)
 
-hrmq SHALL capture worked time at two granularities with English schema names (Dutch only via
+humaniq SHALL capture worked time at two granularities with English schema names (Dutch only via
 l10n labels): an individual booking is a **`TimeEntry`** (NL "urenregistratie") carrying
 `startedAt`/`endedAt` timestamps, an optional `breakMinutes`, a server-derived `hours` value, a
 `description`, an optional `projectId` and a `billable` flag; the per-employee, per-period
@@ -62,7 +62,7 @@ its start, or whose break exceeds the span, SHALL be refused with a structured e
 ### Requirement: Approving a timesheet emits the approved-time-entry CloudEvent (REQ-TEC-002)
 
 When a `Timesheet` transitions **into** `approved` (old status not `approved`, new
-status `approved`), hrmq SHALL emit exactly one `nl.conduction.hrmq.timeentry.approved`
+status `approved`), humaniq SHALL emit exactly one `nl.conduction.hrmq.timeentry.approved`
 CloudEvent through OpenRegister's `WebhookService`, dispatched fire-and-forget so a
 missing consumer or an unavailable OpenRegister never fails the approval write. A
 change that is not the approval edge — a non-approval transition, or a re-save of an
@@ -167,7 +167,7 @@ to them is inert and overwritten by the recompute.
 The system SHALL refuse any create, update or delete of a TimeEntry whose parent Timesheet is
 not in state `draft` or `rejected`, with a structured error naming the parent's state. The
 `reopen` transition (unchanged) is the sanctioned route to correcting an approved timesheet.
-hrmq's own migration and aggregation writes are exempt via an internal-writer marker that is
+humaniq's own migration and aggregation writes are exempt via an internal-writer marker that is
 request-scoped, never global.
 
 #### Scenario: A booking cannot be edited after submission

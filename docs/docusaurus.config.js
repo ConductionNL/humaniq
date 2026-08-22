@@ -1,7 +1,7 @@
 // @ts-check
 
 /**
- * HRMQ documentation site.
+ * Humaniq documentation site.
  *
  * Built on @conduction/docusaurus-preset for brand defaults (tokens,
  * theme swizzles for Navbar / Footer, i18n scaffolding, KvK / BTW
@@ -23,13 +23,15 @@ const { createConfig, baseFooterLinks } = require('@conduction/docusaurus-preset
 const BRAND_THEME = require.resolve('@conduction/docusaurus-preset/theme');
 
 const config = createConfig({
-  title: 'HRMQ',
+  title: 'Humaniq',
   tagline: 'Open-source Dutch HR & payroll administration for Nextcloud',
+  /* Docs subdomain deliberately still `hrmq.conduction.nl` — the DNS move
+     to a humaniq subdomain happens separately from the app rename. */
   url: 'https://hrmq.conduction.nl',
   baseUrl: '/',
 
   organizationName: 'Conduction',
-  projectName: 'hrmq',
+  projectName: 'humaniq',
 
   /* Locales: en (primary) + nl (declared so the locale dropdown is
      present for translators; Dutch markdown is a follow-up). If SSR
@@ -62,7 +64,7 @@ const config = createConfig({
              plus the standard node_modules/scripts/build buckets. */
           exclude: ['**/node_modules/**', 'src/**', 'scripts/**', 'build/**'],
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://codeberg.org/Conduction/hrmq/src/branch/development/docs/',
+          editUrl: 'https://github.com/ConductionNL/humaniq/tree/development/docs/',
         },
         blog: false,
         theme: {
@@ -75,8 +77,8 @@ const config = createConfig({
   themes: [BRAND_THEME, '@docusaurus/theme-mermaid'],
 
   /* Brand navbar provides locale dropdown + GitHub by default; we
-     replace items[] with HRMQ's own (Documentation sidebar link,
-     Codeberg link, locale dropdown). Object.assign in createConfig is
+     replace items[] with Humaniq's own (Documentation sidebar link,
+     GitHub link, locale dropdown). Object.assign in createConfig is
      shallow, so items: replaces wholesale. */
   navbar: {
     items: [
@@ -87,8 +89,8 @@ const config = createConfig({
         label: 'Documentation',
       },
       {
-        href: 'https://codeberg.org/Conduction/hrmq',
-        label: 'Codeberg',
+        href: 'https://github.com/ConductionNL/humaniq',
+        label: 'GitHub',
         position: 'right',
       },
       { type: 'localeDropdown', position: 'right' },

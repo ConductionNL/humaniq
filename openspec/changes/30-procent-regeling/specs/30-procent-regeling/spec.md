@@ -80,7 +80,7 @@ No `phpStep` handler SHALL be used or added for this computation.
 
 #### Scenario: A ruling past its 5-year term is flagged
 - **GIVEN** an `Employee` with `thirtyPercentRulingGranted: true`, `thirtyPercentRulingStartDate: "2019-01-01"`, `thirtyPercentRulingEndDate: "2024-12-31"` (already passed)
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** an `nl-30-regeling-looptijd-5jaar` violation is reported for that employee
 
 #### Scenario: An end date beyond 60 months from the start date is flagged

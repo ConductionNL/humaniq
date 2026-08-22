@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-hr21",
+    "x-humaniq-fragment": "hr-hr21",
     "components": {
         "schemas": {
             "Normfunctie": {

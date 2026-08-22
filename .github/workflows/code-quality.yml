@@ -7,9 +7,17 @@ on:
     branches: [main, master, development, beta]
   workflow_dispatch:
 
+# Explicit permissions rather than the broad default token. A caller CAPS what
+# the reusable workflow can request, so these match what shared quality.yml
+# declares for its jobs: contents to read the tree, actions to manage its own
+# runs (cache/artifact cleanup).
+permissions:
+  contents: write
+  actions: write
+
 jobs:
   quality:
-    # hrmq's FIRST repo-level workflow. Before this, `.github/workflows/` did
+    # humaniq's FIRST repo-level workflow. Before this, `.github/workflows/` did
     # not exist at all — the only things running were GitHub's two DYNAMIC
     # workflows (`dynamic/github-code-scanning/codeql` and
     # `dynamic/dependabot/dependabot-updates`), which have no file in the repo.
@@ -20,7 +28,7 @@ jobs:
     # check has ever run against this repo.
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
-      app-name: hrmq
+      app-name: humaniq
 
       # composer.json pins `platform.php: 8.3` and requires `php: ^8.3`;
       # appinfo/info.xml declares <php min-version="8.3"/>.
@@ -63,7 +71,7 @@ jobs:
       # Without this input the shared workflow's default is FALSE, and BOTH
       # coverage jobs — `Coverage Baseline Protection` (PR) and `Coverage
       # Baseline Check` (push) — report `skipped` forever. A skipped gate is
-      # indistinguishable from a passing one on the checks list, so hrmq has
+      # indistinguishable from a passing one on the checks list, so humaniq has
       # been carrying two permanently-dead gates since the pipeline landed.
       #
       # The baseline is a bare number the ratchet compares EXACTLY: below it,
@@ -82,7 +90,7 @@ jobs:
       enable-eslint: true
       # Two repo-specific validators that already exist as self-contained node
       # scripts (tests/validate-manifest.js, tests/validate-widget-keys.js) and
-      # until now had no runner. hrmq is the fleet's manifest-purity flagship —
+      # until now had no runner. humaniq is the fleet's manifest-purity flagship —
       # 113 of its 115 pages come out of src/manifest.json — so a malformed
       # manifest or a widget key that resolves to nothing is not a cosmetic
       # defect here, it is most of the app failing to render.
@@ -133,9 +141,9 @@ jobs:
       #
       # The first run of this pipeline (run 30904454063, E2E job 91976455533)
       # was 68 failed / 2 passed because the `hrmq` register did not exist:
-      # `occ app:enable hrmq` never ran the register-import repair step at all
+      # `occ app:enable humaniq` never ran the register-import repair step at all
       # (it was declared `<post-migration>` only, and Nextcloud skips that block
-      # on a fresh install), and `hrmq_register.json` declared no
+      # on a fresh install), and `humaniq_register.json` declared no
       # `components.registers` section for it to import even if it had. Both are
       # fixed in the app in this same change.
       #
@@ -150,17 +158,17 @@ jobs:
       # fixes work on their own.
       #
       # cwd for this step is the Nextcloud server root, hence the apps/ prefix.
-      playwright-seed-command: 'bash apps/hrmq/tests/e2e/ci-seed.sh'
+      playwright-seed-command: 'bash apps/humaniq/tests/e2e/ci-seed.sh'
       # src/manifest.json declares `"dependencies": ["openregister"]`, and
       # nc-vue's CnAppRoot honours that at runtime: with the dependency absent
       # it renders the "Required apps are missing" gate INSTEAD of the router
       # outlet, so every shell assertion fails with "element(s) not found"
-      # while the app is behaving exactly as designed. Beyond the gate, hrmq is
+      # while the app is behaving exactly as designed. Beyond the gate, humaniq is
       # a THIN CLIENT — Employee, EmploymentContract, PayrollRun, Payslip and
       # WageTaxFiling are all OpenRegister objects — so core-journeys.spec.ts
       # has nothing to seed against either.
       #
-      # Was pinned to `main` "only because this is hrmq's first CI run ever and
+      # Was pinned to `main` "only because this is humaniq's first CI run ever and
       # the foundation app should not be a moving confound while we read the
       # baseline". That baseline has long since been read, and the pin has
       # stopped being conservative and started being wrong:
@@ -177,10 +185,10 @@ jobs:
       #     identical fixture returns 200 locally. The Dashboard e2e spec has
       #     been failing on six 403s for exactly this reason, with the seed
       #     proving pointer AND access row were both correctly in place.
-      #   * hrmq was the only app pinning `main`: docudesk, opencatalogi,
+      #   * humaniq was the only app pinning `main`: docudesk, opencatalogi,
       #     openconnector, hermiq and softwarecatalog all pin `development`.
       #
-      # So this pin made hrmq's CI test the app against a foundation it is not
+      # So this pin made humaniq's CI test the app against a foundation it is not
       # built on, and reported the difference as an application bug.
       additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
 
@@ -201,7 +209,7 @@ jobs:
       # 16 gates were dead fleet-wide while every one reported PASS (.github#159),
       # and a default flipped at @main later reached those old runners and made
       # them red on gates they had no subject matter for (.github#173) — exactly
-      # the "red for a reason that is not hrmq's" this comment used to guard.
+      # the "red for a reason that is not humaniq's" this comment used to guard.
       # To hold this repo still for a specific reason, set the input explicitly
       # and say why — it is still honoured. To roll back for everyone, revert on
       # ConductionNL/.github main.
@@ -254,7 +262,7 @@ jobs:
       #   installed.
       #
       # enable-playwright-coverage: needs a defensible threshold; there is no
-      #   measured V8 baseline for hrmq yet. Set it after this pipeline has a
+      #   measured V8 baseline for humaniq yet. Set it after this pipeline has a
       #   few green runs to measure from, not before.
       #
       # enable-journeydoc-capture: per ADR-030 this belongs in its own

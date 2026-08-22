@@ -1,7 +1,7 @@
-# Tasks — hrmq hours-process redesign
+# Tasks — humaniq hours-process redesign
 
 Ordering is load-bearing: V (verify) gates everything; D (dependencies) can run in parallel in
-their own repos; sections 1–7 are hrmq work. Every task is small enough to verify on its own.
+their own repos; sections 1–7 are humaniq work. Every task is small enough to verify on its own.
 
 ## V. Verify the design's two load-bearing assumptions (BLOCKING — before any implementation)
 
@@ -40,9 +40,9 @@ their own repos; sections 1–7 are hrmq work. Every task is small enough to ver
       0.1.0.
 - [x] 1.2 Same file: rework `Timesheet` per Decision 2 — add `entryCount`; rewrite every
       `description` user-oriented with rationale moved to `x-notes`; add
-      `transitions.submit.requires: OCA\\Hrmq\\Lifecycle\\TimesheetNotEmptyGuard`; keep the
+      `transitions.submit.requires: OCA\\Humaniq\\Lifecycle\\TimesheetNotEmptyGuard`; keep the
       lifecycle block and `NoSelfApprovalGuard` wiring otherwise byte-identical. Bump Timesheet
-      0.5.0 → 0.6.0 and the register `info.version` in `lib/Settings/hrmq_register.json`.
+      0.5.0 → 0.6.0 and the register `info.version` in `lib/Settings/humaniq_register.json`.
 - [x] 1.3 `lib/Settings/register.d/hr-cost-rate.json`: move the `domainObjectRef` /
       `domainObjectType` / `allocationKey` extension from `Timesheet` to `TimeEntry`; keep
       denormalized aggregate copies on `Timesheet` only if the shillinq consumer contract needs
@@ -98,7 +98,7 @@ their own repos; sections 1–7 are hrmq work. Every task is small enough to ver
 - [ ] 3.3 Run on the dev instance; verify the 3 existing rows: aggregates recomputed, one
       migration entry each, summary line correct.
 
-## 4. Manifest fragments (pages + forms — builds on hrmq-manifest-fragment-pipeline)
+## 4. Manifest fragments (pages + forms — builds on humaniq-manifest-fragment-pipeline)
 
 - [x] 4.1 Edit `src/manifest.d/hr-timesheet.json`: apply the Decision 8 modifications to
       `MijnUren`, `Timesheets`, `TimesheetApproval`, `TeamUrengoedkeuring`, `TimesheetDetail`

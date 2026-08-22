@@ -9,14 +9,21 @@
   {
     "slug": "absence-rate",
     "title": "Absence Rate",
-    "summary": "Give hrmq the FTE-weighted verzuimpercentage the sector reports, by recording partial work resumption on SickLeaveCase and computing a rate from it.",
+    "summary": "Give humaniq the FTE-weighted verzuimpercentage the sector reports, by recording partial work resumption on SickLeaveCase and computing a rate from it.",
     "status": "soon",
     "docsUrl": "openspec/specs/absence-rate/spec.md"
   },
   {
+    "slug": "app-identity",
+    "title": "App Identity",
+    "summary": "The app's Nextcloud identity.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/app-identity/spec.md"
+  },
+  {
     "slug": "asset-management",
     "title": "Asset Management",
-    "summary": "Give hrmq its first asset register: company property (laptops, phones, vehicles, tools, access passes, clothing) as Asset records with a declarative custody lifecycle, and effective-dated AssetAssignment uitgiftes linking assets to employees.",
+    "summary": "Give humaniq its first asset register: company property (laptops, phones, vehicles, tools, access passes, clothing) as Asset records with a declarative custody lifecycle, and effective-dated AssetAssignment uitgiftes linking assets to employees.",
     "status": "stable",
     "docsUrl": "openspec/specs/asset-management/spec.md"
   },
@@ -51,7 +58,7 @@
   {
     "slug": "comp-cycles",
     "title": "Comp Cycles",
-    "summary": "Hrmq owns the personnel dossier, the payroll engine that reads Employee.grossMonthlySalary, and a maintained CAO corpus, but had no surface for the recurring management ritual every employer runs on top of those numbers: a periodic compensation review where managers propose salary adjustments against a band, a second actor approves them, and the approved figure lands on the employee's compensation on a chosen effective date.",
+    "summary": "Humaniq owns the personnel dossier, the payroll engine that reads Employee.grossMonthlySalary, and a maintained CAO corpus, but had no surface for the recurring management ritual every employer runs on top of those numbers: a periodic compensation review where managers propose salary adjustments against a band, a second actor approves them, and the approved figure lands on the employee's compensation on a chosen effective date.",
     "status": "stable",
     "docsUrl": "openspec/specs/comp-cycles/spec.md"
   },
@@ -93,16 +100,9 @@
   {
     "slug": "hrm-rule-engine",
     "title": "Hrm Rule Engine",
-    "summary": "Hrmq audits its HR, labour and payroll data against a versioned corpus of machine-checkable rules drawn from EU labour directives, ILO core conventions, GDPR for employee data, occupational health & safety, national labour law (NL first, then DE/FR/BE) and payroll / wage-tax & social-security compliance.",
+    "summary": "Humaniq audits its HR, labour and payroll data against a versioned corpus of machine-checkable rules drawn from EU labour directives, ILO core conventions, GDPR for employee data, occupational health & safety, national labour law (NL first, then DE/FR/BE) and payroll / wage-tax & social-security compliance.",
     "status": "stable",
     "docsUrl": "openspec/specs/hrm-rule-engine/spec.md"
-  },
-  {
-    "slug": "hrmq-docudesk-documents",
-    "title": "Hrmq Docudesk Documents",
-    "summary": "Generate the standard Dutch HR documents (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift) from templates hosted in docudesk (namespace: hrmq), by calling docudesk's DocumentService::generateDocument() on the same instance (never HTTP), storing the returned PDF on a new GeneratedDocument record via OpenRegister's FileService, degrading gracefully to skipped-no-docudesk when docudesk is absent, and giving EmploymentContract.writtenContract machine-checked document evidence (nl-contract-schriftelijk).",
-    "status": "stable",
-    "docsUrl": "openspec/specs/hrmq-docudesk-documents/spec.md"
   },
   {
     "slug": "hrmq-i18n-locale-completeness",
@@ -119,6 +119,13 @@
     "docsUrl": "openspec/specs/hrmq-personal-dashboard/spec.md"
   },
   {
+    "slug": "humaniq-docudesk-documents",
+    "title": "Humaniq Docudesk Documents",
+    "summary": "Generate the standard Dutch HR documents (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift) from templates hosted in docudesk (namespace: hrmq), by calling docudesk's DocumentService::generateDocument() on the same instance (never HTTP), storing the returned PDF on a new GeneratedDocument record via OpenRegister's FileService, degrading gracefully to skipped-no-docudesk when docudesk is absent, and giving EmploymentContract.writtenContract machine-checked document evidence (nl-contract-schriftelijk).",
+    "status": "stable",
+    "docsUrl": "openspec/specs/humaniq-docudesk-documents/spec.md"
+  },
+  {
     "slug": "interview-scheduling",
     "title": "Interview Scheduling",
     "summary": "Close the gap recruiting-ats-basic's uitnodigen transition docblock states plainly (\"No calendar/scheduling integration in the MVP\"): today an interview invitation is a bare status flip with no artifact, so nobody on the recruiting team can see from a calendar when and with whom a gesprek is actually happening.",
@@ -128,7 +135,7 @@
   {
     "slug": "jurisdiction-packs",
     "title": "Jurisdiction Packs",
-    "summary": "Hrmq owns the first open-source Dutch payroll engine, and its *parameters* were already data (lib/Standards/tables/nl-2026.json).",
+    "summary": "Humaniq owns the first open-source Dutch payroll engine, and its *parameters* were already data (lib/Standards/tables/nl-2026.json).",
     "status": "stable",
     "docsUrl": "openspec/specs/jurisdiction-packs/spec.md"
   },
@@ -142,7 +149,7 @@
   {
     "slug": "leave-buy-sell",
     "title": "Leave Buy Sell",
-    "summary": "Hrmq's leave surface (leave-management) gives employees a LeaveRequest workflow and a LeaveBalance ledger with a declaratively calculated remainingHours (entitledHours + bovenwettelijkHours − usedHours), guarded by the three mandatory NL leave rules in lib/Standards/rules/labour.json (nl-verlof-wettelijk-minimum, nl-verlof-saldo-niet-negatief, nl-verlof-vervaltermijn).",
+    "summary": "Humaniq's leave surface (leave-management) gives employees a LeaveRequest workflow and a LeaveBalance ledger with a declaratively calculated remainingHours (entitledHours + bovenwettelijkHours − usedHours), guarded by the three mandatory NL leave rules in lib/Standards/rules/labour.json (nl-verlof-wettelijk-minimum, nl-verlof-saldo-niet-negatief, nl-verlof-vervaltermijn).",
     "status": "stable",
     "docsUrl": "openspec/specs/leave-buy-sell/spec.md"
   },
@@ -170,14 +177,14 @@
   {
     "slug": "loonbeslag",
     "title": "Loonbeslag",
-    "summary": "Hrmq computes NL gross-to-net (PayrollCalculator, pure, table-driven) and already folds current-run, post-tax components onto Payslip.nettoPay without ever re-invoking the calculator (retro-adjustments, leave-buy-sell).",
+    "summary": "Humaniq computes NL gross-to-net (PayrollCalculator, pure, table-driven) and already folds current-run, post-tax components onto Payslip.nettoPay without ever re-invoking the calculator (retro-adjustments, leave-buy-sell).",
     "status": "stable",
     "docsUrl": "openspec/specs/loonbeslag/spec.md"
   },
   {
     "slug": "mijn-hr-self-service",
     "title": "Mijn Hr Self Service",
-    "summary": "Give hrmq's logged-in employees an in-app self-service surface per ADR-001 Rule 2 (role-filtered wrapper, never a sibling portal app): Mijn HR index pages that show only the current user's records.",
+    "summary": "Give humaniq's logged-in employees an in-app self-service surface per ADR-001 Rule 2 (role-filtered wrapper, never a sibling portal app): Mijn HR index pages that show only the current user's records.",
     "status": "stable",
     "docsUrl": "openspec/specs/mijn-hr-self-service/spec.md"
   },
@@ -198,14 +205,14 @@
   {
     "slug": "multi-administratie",
     "title": "Multi Administratie",
-    "summary": "Let one hrmq instance carry multiple administraties (companies/clients).",
+    "summary": "Let one humaniq instance carry multiple administraties (companies/clients).",
     "status": "stable",
     "docsUrl": "openspec/specs/multi-administratie/spec.md"
   },
   {
     "slug": "offboarding-wizard",
     "title": "Offboarding Wizard",
-    "summary": "Give hrmq its departure surface, closing the hire-to-leave case bracket the hr-onboarding fragment opened: one Offboarding case per departure with a deterministic, declarative lifecycle whose milestones (departure announced, afronding planned, eindafrekening ready, completed) are gated by concrete checklist and eindafrekening fields.",
+    "summary": "Give humaniq its departure surface, closing the hire-to-leave case bracket the hr-onboarding fragment opened: one Offboarding case per departure with a deterministic, declarative lifecycle whose milestones (departure announced, afronding planned, eindafrekening ready, completed) are gated by concrete checklist and eindafrekening fields.",
     "status": "stable",
     "docsUrl": "openspec/specs/offboarding-wizard/spec.md"
   },
@@ -219,14 +226,14 @@
   {
     "slug": "onboarding-wizard",
     "title": "Onboarding Wizard",
-    "summary": "Give hrmq its first onboarding surface: one Onboarding case per hire with a deterministic, declarative lifecycle whose milestones (contract signed, data validated, ready for first workday, proeftijd running, completed) are gated by concrete checklist fields.",
+    "summary": "Give humaniq its first onboarding surface: one Onboarding case per hire with a deterministic, declarative lifecycle whose milestones (contract signed, data validated, ready for first workday, proeftijd running, completed) are gated by concrete checklist fields.",
     "status": "stable",
     "docsUrl": "openspec/specs/onboarding-wizard/spec.md"
   },
   {
     "slug": "org-chart-basic",
     "title": "Org Chart Basic",
-    "summary": "Give hrmq its first organisational model: an OrgUnit hierarchy (self-referencing parent, type, cost-center, manager) and effective-dated OrgAssignment placements linking employees to units, in a new hr-org register fragment.",
+    "summary": "Give humaniq its first organisational model: an OrgUnit hierarchy (self-referencing parent, type, cost-center, manager) and effective-dated OrgAssignment placements linking employees to units, in a new hr-org register fragment.",
     "status": "stable",
     "docsUrl": "openspec/specs/org-chart-basic/spec.md"
   },
@@ -275,7 +282,7 @@
   {
     "slug": "pension-filing-upa-mvp",
     "title": "Pension Filing Upa Mvp",
-    "summary": "Give hrmq its first sector-pension filing surface (UPA.",
+    "summary": "Give humaniq its first sector-pension filing surface (UPA.",
     "status": "stable",
     "docsUrl": "openspec/specs/pension-filing-upa-mvp/spec.md"
   },
@@ -296,14 +303,14 @@
   {
     "slug": "portal-contribution",
     "title": "Portal Contribution",
-    "summary": "Hrmq contributes to portaliq, the shared external portal for people without Nextcloud accounts (hydra ADR-046 + 2026-07-06 amendment, contribution contract v2): external employees get UUID-scoped self-service over their own employee record, payslips, employment contracts, timesheets, expenses and leave requests (with strict create whitelists for timesheet/expense/leave), and clients get a read-only view over the timesheets whose billable hours they review.",
+    "summary": "Humaniq contributes to portaliq, the shared external portal for people without Nextcloud accounts (hydra ADR-046 + 2026-07-06 amendment, contribution contract v2): external employees get UUID-scoped self-service over their own employee record, payslips, employment contracts, timesheets, expenses and leave requests (with strict create whitelists for timesheet/expense/leave), and clients get a read-only view over the timesheets whose billable hours they review.",
     "status": "beta",
     "docsUrl": "openspec/specs/portal-contribution/spec.md"
   },
   {
     "slug": "portal-schemas",
     "title": "Portal Schemas",
-    "summary": "Declarative register foundation for hrmq's Wave-1 contribution to portaliq, the shared external portal for people without Nextcloud accounts (hydra ADR-046 + 2026-07-06 amendment).",
+    "summary": "Declarative register foundation for humaniq's Wave-1 contribution to portaliq, the shared external portal for people without Nextcloud accounts (hydra ADR-046 + 2026-07-06 amendment).",
     "status": "beta",
     "docsUrl": "openspec/specs/portal-schemas/spec.md"
   },
@@ -345,28 +352,28 @@
   {
     "slug": "rostering",
     "title": "Rostering",
-    "summary": "Hrmq administers who is employed, what they clocked and what they claim, but had no forward-looking plan.",
+    "summary": "Humaniq administers who is employed, what they clocked and what they claim, but had no forward-looking plan.",
     "status": "stable",
     "docsUrl": "openspec/specs/rostering/spec.md"
   },
   {
     "slug": "sick-pay-calc",
     "title": "Sick Pay Calc",
-    "summary": "Hrmq already modelled the *administrative* side of sickness (leave-verzuim-mvp's SickLeaveCase + the nl-loondoorbetaling-minimum check) and already had the actual gross-to-net engine (payroll-core-engine's PayrollCalculator/PayrollRunService).",
+    "summary": "Humaniq already modelled the *administrative* side of sickness (leave-verzuim-mvp's SickLeaveCase + the nl-loondoorbetaling-minimum check) and already had the actual gross-to-net engine (payroll-core-engine's PayrollCalculator/PayrollRunService).",
     "status": "stable",
     "docsUrl": "openspec/specs/sick-pay-calc/spec.md"
   },
   {
     "slug": "time-attendance",
     "title": "Time Attendance",
-    "summary": "Give hrmq a raw clock surface with Dutch working-time-law depth no Nextcloud app has (Spectr hrmq-insight-nc-ecosystem-gap: German ArbZG time-compliance apps exist in the ecosystem, nothing covers the Arbeidstijdenwet): a per-employee/per-day AttendanceRecord (clockIn/clockOut/breakMinutes, stored writer-maintained workedHours, declarative open⇄gesloten lifecycle), three versioned machine-checkable ATW rules.",
+    "summary": "Give humaniq a raw clock surface with Dutch working-time-law depth no Nextcloud app has (Spectr hrmq-insight-nc-ecosystem-gap: German ArbZG time-compliance apps exist in the ecosystem, nothing covers the Arbeidstijdenwet): a per-employee/per-day AttendanceRecord (clockIn/clockOut/breakMinutes, stored writer-maintained workedHours, declarative open⇄gesloten lifecycle), three versioned machine-checkable ATW rules.",
     "status": "stable",
     "docsUrl": "openspec/specs/time-attendance/spec.md"
   },
   {
     "slug": "time-entry-capture",
     "title": "Time Entry Capture",
-    "summary": "Home the fleet's timesheet / hours-capture surface in hrmq (HR's domain) and emit an approved-time-entry event a finance app consumes.",
+    "summary": "Home the fleet's timesheet / hours-capture surface in humaniq (HR's domain) and emit an approved-time-entry event a finance app consumes.",
     "status": "stable",
     "docsUrl": "openspec/specs/time-entry-capture/spec.md"
   },

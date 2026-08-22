@@ -1,17 +1,17 @@
 <?php
 
 /**
- * Hrmq Settings Service
+ * Humaniq Settings Service
  *
- * Loads the hrmq OpenRegister register from lib/Settings/hrmq_register.json,
+ * Loads the humaniq OpenRegister register from lib/Settings/humaniq_register.json,
  * deep-merging any modular schema fragments from lib/Settings/register.d/*.json
  * (ADR-037), and hands the merged configuration to OpenRegister's
  * ConfigurationService::importFromApp. The fragment-content signature is folded
  * into the version so OpenRegister re-imports whenever a fragment changes. This is
- * the only configuration hrmq owns — every HR/labour object lives in the register.
+ * the only configuration humaniq owns — every HR/labour object lives in the register.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -27,16 +27,16 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
-use OCA\Hrmq\AppInfo\Application;
+use OCA\Humaniq\AppInfo\Application;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Imports the hrmq register into OpenRegister.
+ * Imports the humaniq register into OpenRegister.
  */
 class SettingsService {
 
@@ -66,6 +66,14 @@ class SettingsService {
 
 	/**
 	 * The configured register slug, falling back to 'hrmq' when unset.
+	 *
+	 * The 'hrmq' fallback is FROZEN across the `hrmq` -> `humaniq` rename and
+	 * MUST NOT be "finished" later. OpenRegister's
+	 * ImportHandler::autoCreateRegisterIfApplication() resolves the register BY
+	 * SLUG (from `x-openregister.app` in lib/Settings/humaniq_register.json).
+	 * Renaming this would not move the register — it would create a second,
+	 * empty one and orphan every employee, contract, payslip and payroll run
+	 * already stored under the 'hrmq' slug.
 	 *
 	 * @return string
 	 */
@@ -166,7 +174,7 @@ class SettingsService {
 
 	/**
 	 * The docudesk template UUID configured for one HR document type
-	 * (hrmq-docudesk-documents design.md D3 -- config-first template
+	 * (humaniq-docudesk-documents design.md D3 -- config-first template
 	 * selection), configurable via app config key
 	 * `documents_template_{documentType}`. Empty default means the caller
 	 * falls through to namespace/category discovery.
@@ -175,7 +183,7 @@ class SettingsService {
 	 *
 	 * @return string The configured template UUID, or '' when unset.
 	 *
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-003
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-003
 	 */
 	public function getDocumentsTemplateId(string $documentType): string {
 		return $this->appConfig->getValueString(Application::APP_ID, 'documents_template_' . $documentType, '');
@@ -183,12 +191,12 @@ class SettingsService {
 
 	/**
 	 * The employer name merged into every docudesk render's `adHocData.employer`
-	 * block (hrmq-docudesk-documents design.md D2), configurable via app config
+	 * block (humaniq-docudesk-documents design.md D2), configurable via app config
 	 * key `documents_employer_name`.
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
 	 */
 	public function getDocumentsEmployerName(): string {
 		return $this->documentsEmployerField('documents_employer_name', 'Voorbeeld Werkgever B.V.');
@@ -201,7 +209,7 @@ class SettingsService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
 	 */
 	public function getDocumentsEmployerAddress(): string {
 		return $this->documentsEmployerField('documents_employer_address', 'Voorbeeldstraat 1, 1234 AB Amsterdam');
@@ -214,7 +222,7 @@ class SettingsService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
 	 */
 	public function getDocumentsEmployerKvkNumber(): string {
 		return $this->documentsEmployerField('documents_employer_kvk', '12345678');
@@ -236,12 +244,12 @@ class SettingsService {
 
 	/**
 	 * The full employer block passed as `adHocData.employer` on every docudesk
-	 * render call (hrmq-docudesk-documents design.md D2; `loonheffingennummer`
+	 * render call (humaniq-docudesk-documents design.md D2; `loonheffingennummer`
 	 * added by payslip-pdf-docudesk design.md D3).
 	 *
 	 * @return array<string, string>
 	 *
-	 * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
+	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-002
 	 * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
 	 */
 	public function getDocumentsEmployerBlock(): array {
@@ -273,7 +281,7 @@ class SettingsService {
 	 * `deadline` passed into docudesk's `SigningService::createRequest()` for
 	 * an offer-letter signing request (offer-esign design.md "Config delta").
 	 * Distinct from docudesk's own generic `signing_request_expiry_days`
-	 * (30-day default) — this is hrmq's own business rule for how long a
+	 * (30-day default) — this is humaniq's own business rule for how long a
 	 * candidate has to accept an offer. Configurable via app config key
 	 * `offer_signing_deadline_days`.
 	 *
@@ -336,7 +344,7 @@ class SettingsService {
 	 * `skipped-no-calendar`. The configured calendar SHOULD be one the
 	 * owning account shares with the team — the sync is a one-way
 	 * projection, so events manually edited on the calendar are overwritten
-	 * by the next `occ hrmq:calendar:sync`.
+	 * by the next `occ humaniq:calendar:sync`.
 	 *
 	 * @return string
 	 *
@@ -374,7 +382,7 @@ class SettingsService {
 	 * the company-wide absence calendar. The configured calendar SHOULD be
 	 * one the owning account shares with the interview panel — the sync is
 	 * a one-way projection, so events manually edited on the calendar are
-	 * overwritten by the next `occ hrmq:interview:sync`.
+	 * overwritten by the next `occ humaniq:interview:sync`.
 	 *
 	 * @return string
 	 *
@@ -456,24 +464,24 @@ class SettingsService {
 	}//end loadConfigurationForced()
 
 	/**
-	 * Load and parse hrmq_register.json, deep-merging register.d/*.json fragments.
+	 * Load and parse humaniq_register.json, deep-merging register.d/*.json fragments.
 	 *
 	 * @return array<string, mixed> Either ['data' => array, 'version' => string]
 	 *                              or ['success' => false, 'message' => string].
 	 */
 	private function loadRegisterConfigData(): array {
-		$configPath = __DIR__ . '/../Settings/hrmq_register.json';
+		$configPath = __DIR__ . '/../Settings/humaniq_register.json';
 		if (file_exists($configPath) === false) {
-			$this->logger->error('Hrmq: hrmq_register.json not found at ' . $configPath);
+			$this->logger->error('Humaniq: humaniq_register.json not found at ' . $configPath);
 			return [
 				'success' => false,
-				'message' => 'Configuration file hrmq_register.json not found.',
+				'message' => 'Configuration file humaniq_register.json not found.',
 			];
 		}
 
 		$configContent = file_get_contents($configPath);
 		if ($configContent === false) {
-			$this->logger->error('Hrmq: failed to read hrmq_register.json');
+			$this->logger->error('Humaniq: failed to read humaniq_register.json');
 			return [
 				'success' => false,
 				'message' => 'Failed to read configuration file.',
@@ -482,7 +490,7 @@ class SettingsService {
 
 		$configData = json_decode($configContent, true);
 		if (json_last_error() !== JSON_ERROR_NONE) {
-			$this->logger->error('Hrmq: failed to parse hrmq_register.json: ' . json_last_error_msg());
+			$this->logger->error('Humaniq: failed to parse humaniq_register.json: ' . json_last_error_msg());
 			return [
 				'success' => false,
 				'message' => 'Failed to parse configuration file: ' . json_last_error_msg(),
@@ -507,7 +515,7 @@ class SettingsService {
 				$fragmentData = json_decode($fragmentContent, true);
 				if (json_last_error() !== JSON_ERROR_NONE) {
 					$this->logger->warning(
-						'Hrmq: skipping malformed register fragment ' . basename($fragmentFile)
+						'Humaniq: skipping malformed register fragment ' . basename($fragmentFile)
 						. ': ' . json_last_error_msg()
 					);
 					continue;
@@ -589,7 +597,7 @@ class SettingsService {
 	 */
 	private function runLoadConfiguration(bool $force): array {
 		if ($this->isOpenRegisterAvailable() === false) {
-			$this->logger->warning('Hrmq: OpenRegister not available, skipping register initialization');
+			$this->logger->warning('Humaniq: OpenRegister not available, skipping register initialization');
 			return [
 				'success' => false,
 				'message' => 'OpenRegister is not installed or enabled.',
@@ -618,7 +626,7 @@ class SettingsService {
 				$warnings = ($result['warnings'] ?? []);
 
 				if (empty($errors) === false) {
-					$this->logger->error('Hrmq: register configuration imported with errors', ['errors' => $errors]);
+					$this->logger->error('Humaniq: register configuration imported with errors', ['errors' => $errors]);
 					return [
 						'success' => false,
 						'message' => 'Configuration import completed with errors.',
@@ -629,10 +637,10 @@ class SettingsService {
 				}
 
 				if (empty($warnings) === false) {
-					$this->logger->warning('Hrmq: register configuration imported with warnings', ['warnings' => $warnings]);
+					$this->logger->warning('Humaniq: register configuration imported with warnings', ['warnings' => $warnings]);
 				}
 
-				$this->logger->info('Hrmq: register configuration imported successfully');
+				$this->logger->info('Humaniq: register configuration imported successfully');
 				return [
 					'success' => true,
 					'message' => 'Configuration imported successfully.',
@@ -644,14 +652,14 @@ class SettingsService {
 			// OR's importFromApp returns an all-empty result on the version-unchanged
 			// idempotent-skip path (force=false, same version). That is success, not
 			// failure — the register is already up-to-date.
-			$this->logger->info('Hrmq: register configuration already up-to-date (version-unchanged skip)');
+			$this->logger->info('Humaniq: register configuration already up-to-date (version-unchanged skip)');
 			return [
 				'success' => true,
 				'skipped' => true,
 				'message' => 'Configuration already up-to-date (version-unchanged skip).',
 			];
 		} catch (\Throwable $e) {
-			$this->logger->error('Hrmq: configuration import failed', ['exception' => $e->getMessage()]);
+			$this->logger->error('Humaniq: configuration import failed', ['exception' => $e->getMessage()]);
 			return [
 				'success' => false,
 				'message' => $e->getMessage(),

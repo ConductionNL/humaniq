@@ -7,13 +7,13 @@ built_by: openspec/changes/archive/2026-07-13-offboarding-wizard-mvp
 # offboarding-wizard Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [offboarding-wizard-mvp](../../changes/archive/2026-07-13-offboarding-wizard-mvp/) _(archived 2026-07-13)_ — new `Offboarding` schema in the existing `hr-onboarding` fragment with a simplified declarative `aangekondigd → afronding_gepland → eindafrekening_gereed → afgerond` lifecycle (cancellable pre-afgerond, checklist/eindafrekening-gated by rule checks — no guard classes), 4 new machine-checkable NL rules (transitievergoeding BW 7:673 with the formula constants as rule parameters, verlofsaldo-uitbetaling BW 7:641, getuigschrift BW 7:656, einddatum-consistentie BW 7:667), and offboarding pages under the existing ADR-001 `Onboarding & ATS` menu group (kind: config)
 
 ## Purpose
 
-Give hrmq its departure surface, closing the hire-to-leave case bracket the
+Give humaniq its departure surface, closing the hire-to-leave case bracket the
 `hr-onboarding` fragment opened: one `Offboarding` case per departure with a
 deterministic, declarative lifecycle whose milestones (departure announced,
 afronding planned, eindafrekening ready, completed) are gated by concrete
@@ -21,7 +21,7 @@ checklist and eindafrekening fields — `exitGesprekDone`, `assetsIngeleverd`,
 `toegangIngetrokken`, `verlofsaldoUitbetaald`, `vakantiegeldAfgerekend`,
 `transitievergoedingBedrag`, `getuigschriftVerstrekt` — documented on the
 transitions and enforced by audit rules (write-time guard wiring is owned by
-the active `hrmq-rule-compliance-enforcement` change). Four machine-checkable
+the active `humaniq-rule-compliance-enforcement` change). Four machine-checkable
 NL rules cover the statutory transitievergoeding for dismissal-initiated
 departures (formula constants versioned as rule parameters data, BW 7:673),
 the payout of open leave balances (BW 7:641), the getuigschrift obligation
@@ -40,7 +40,7 @@ out of scope.
 
 ### Requirement: The `hr-onboarding` fragment SHALL define the `Offboarding` schema (REQ-OFB-001)
 
-`lib/Settings/register.d/hr-onboarding.json` (existing fragment, `x-hrmq-fragment: hr-onboarding`) SHALL gain a second schema **`Offboarding`** as a sibling of `Onboarding` (slug `Offboarding`, icon `AccountMinus`, version `0.1.0`, `x-schema-org: schema:Action`) with properties: `employeeId` (string, format uuid, `$ref: Employee`), `lastWorkingDay` (string, format date), `reason` (enum `opzegging-werknemer|opzegging-werkgever|einde-contract|pensioen|overlijden|vso`), `status` (enum `aangekondigd|afronding_gepland|eindafrekening_gereed|afgerond|geannuleerd`, default `aangekondigd`), `exitGesprekDone` (string, format date, nullable), checklist booleans `assetsIngeleverd`, `toegangIngetrokken`, `verlofsaldoUitbetaald`, `vakantiegeldAfgerekend`, `getuigschriftVerstrekt` (all default false), `transitievergoedingBedrag` (number, nullable), `notes` (string, nullable). `required: [employeeId, lastWorkingDay, reason, status]`. The existing register Repair import picks the extended fragment up without code changes.
+`lib/Settings/register.d/hr-onboarding.json` (existing fragment, `x-humaniq-fragment: hr-onboarding`) SHALL gain a second schema **`Offboarding`** as a sibling of `Onboarding` (slug `Offboarding`, icon `AccountMinus`, version `0.1.0`, `x-schema-org: schema:Action`) with properties: `employeeId` (string, format uuid, `$ref: Employee`), `lastWorkingDay` (string, format date), `reason` (enum `opzegging-werknemer|opzegging-werkgever|einde-contract|pensioen|overlijden|vso`), `status` (enum `aangekondigd|afronding_gepland|eindafrekening_gereed|afgerond|geannuleerd`, default `aangekondigd`), `exitGesprekDone` (string, format date, nullable), checklist booleans `assetsIngeleverd`, `toegangIngetrokken`, `verlofsaldoUitbetaald`, `vakantiegeldAfgerekend`, `getuigschriftVerstrekt` (all default false), `transitievergoedingBedrag` (number, nullable), `notes` (string, nullable). `required: [employeeId, lastWorkingDay, reason, status]`. The existing register Repair import picks the extended fragment up without code changes.
 
 #### Scenario: Schema validates a complete case
 - **GIVEN** the imported hrmq register
@@ -53,7 +53,7 @@ out of scope.
 
 ### Requirement: `Offboarding` SHALL carry a declarative lifecycle `aangekondigd → … → afgerond` with `annuleren` from every pre-`afgerond` state (REQ-OFB-002)
 
-`configuration.x-openregister-lifecycle` on the schema SHALL declare `field: status`, `initial: aangekondigd`, `terminal: [afgerond, geannuleerd]`, and transitions `afronding_plannen` (aangekondigd→afronding_gepland), `eindafrekening_gereedmelden` (afronding_gepland→eindafrekening_gereed), `afronden` (eindafrekening_gereed→afgerond), `annuleren` (aangekondigd|afronding_gepland|eindafrekening_gereed→geannuleerd). Each forward transition's description documents its gate (`eindafrekening_gereedmelden`: verlofsaldoUitbetaald when an open leave balance remains + vakantiegeldAfgerekend + transitievergoedingBedrag recorded for dismissal-initiated reasons; `afronden`: exitGesprekDone recorded + assetsIngeleverd + toegangIngetrokken + getuigschriftVerstrekt on request + Employee.endDate equals lastWorkingDay). **No transition SHALL carry a `requires:` guard** — gate enforcement stays in the audit rules because the active `hrmq-rule-compliance-enforcement` change owns write-time guard wiring for compliance-checked schemas (the onboarding-wizard-mvp D2 precedent).
+`configuration.x-openregister-lifecycle` on the schema SHALL declare `field: status`, `initial: aangekondigd`, `terminal: [afgerond, geannuleerd]`, and transitions `afronding_plannen` (aangekondigd→afronding_gepland), `eindafrekening_gereedmelden` (afronding_gepland→eindafrekening_gereed), `afronden` (eindafrekening_gereed→afgerond), `annuleren` (aangekondigd|afronding_gepland|eindafrekening_gereed→geannuleerd). Each forward transition's description documents its gate (`eindafrekening_gereedmelden`: verlofsaldoUitbetaald when an open leave balance remains + vakantiegeldAfgerekend + transitievergoedingBedrag recorded for dismissal-initiated reasons; `afronden`: exitGesprekDone recorded + assetsIngeleverd + toegangIngetrokken + getuigschriftVerstrekt on request + Employee.endDate equals lastWorkingDay). **No transition SHALL carry a `requires:` guard** — gate enforcement stays in the audit rules because the active `humaniq-rule-compliance-enforcement` change owns write-time guard wiring for compliance-checked schemas (the onboarding-wizard-mvp D2 precedent).
 
 #### Scenario: Case walks the happy path
 - **GIVEN** an `Offboarding` in status `aangekondigd`
@@ -79,7 +79,7 @@ out of scope.
 `lib/Standards/rules/labour.json` SHALL gain `nl-offboarding-transitievergoeding` (source BW art. 7:673; `severity: mandatory`; `parameters` carrying the formula constants as data: `wageFractionPerServiceYear: "1/3"`, `capEur: 98000` — a TODO-commented placeholder equal to the published 2025 indexed cap, to be replaced with the published 2026 Regeling indexering figure during implementation — `capAlternative` (one gross annual salary when higher), `dismissalInitiatedReasons: ["opzegging-werkgever", "einde-contract"]`), `nl-offboarding-verlofsaldo-uitbetaling` (source BW art. 7:641; `severity: mandatory`), `nl-offboarding-getuigschrift` (source BW art. 7:656; `severity: recommended` — the obligation is on-request and the MVP has no request field), and `nl-offboarding-einddatum-consistentie` (source BW art. 7:667; `severity: mandatory`). All four: framework `bw7-10`, `domain: labour`, `jurisdiction: NL`, `machineCheckable: true`, `sourceUrl: https://wetten.overheid.nl/BWBR0005290`. `RuleCatalogue::VERSION` bumped `2026-07.5` → `2026-07.6`.
 
 #### Scenario: Corpus stays loadable and versioned
-- **WHEN** `occ hrmq:rules:audit` runs after the corpus edit
+- **WHEN** `occ humaniq:rules:audit` runs after the corpus edit
 - **THEN** the RuleCatalogue loads without error at version `2026-07.6` and reports the four new rules as enforced (each has a CheckProvider predicate)
 
 #### Scenario: Formula constants are data, not code
@@ -97,7 +97,7 @@ New auto-discovered provider `lib/Standards/Checks/NlOffboardingChecks.php` (imp
 
 #### Scenario: Missing transitievergoeding flagged on a ready eindafrekening
 - **GIVEN** the seed case `offboarding-jansen` (`reason: opzegging-werkgever`, status `eindafrekening_gereed`, `transitievergoedingBedrag: null`)
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** a `nl-offboarding-transitievergoeding` violation is reported for that case
 
 #### Scenario: Resignation never requires a transitievergoeding
@@ -139,7 +139,7 @@ New auto-discovered provider `lib/Standards/Checks/NlOffboardingChecks.php` (imp
 - **THEN** it exits 0
 
 #### Scenario: Detail page drives the lifecycle
-@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** a case in status `aangekondigd` opened on `OffboardingDetail`
 - **WHEN** the user executes Afronding plannen
 - **THEN** the page reflects status `afronding_gepland` and offers Eindafrekening gereedmelden

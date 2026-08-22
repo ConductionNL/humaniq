@@ -1,4 +1,4 @@
-# hrmq-timesheet-approval — delta for hrmq-hours-process-redesign
+# humaniq-timesheet-approval — delta for humaniq-hours-process-redesign
 
 ## MODIFIED Requirements
 
@@ -14,7 +14,7 @@ least `employeeId`, `period`, `hours`, `entryCount`, `status`, `submittedAt`, `a
 register fragment — not in bespoke PHP transition code. Additionally: `hours` and `entryCount`
 are server-maintained aggregates of the timesheet's TimeEntry bookings (time-entry-capture
 REQ-TEC-004), the `submit` transition SHALL declare
-`requires: OCA\Hrmq\Lifecycle\TimesheetNotEmptyGuard` (an empty timesheet cannot be submitted),
+`requires: OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard` (an empty timesheet cannot be submitted),
 and `submittedAt`/`approvedBy`/`approvedAt`/`rejectionReason` are lifecycle-stamped process
 fields per the process-field requirement below — never hand-entered data.
 
@@ -53,7 +53,7 @@ additionally `managerUserId: @me`), and `TimesheetDetail` (`/timesheets/:id`, ca
 lifecycle actions, the read-only process panels and the bookings list). Every page that offers a
 create or edit form SHALL declare an explicit `config.includeFields` allowlist (with
 `fieldOverrides` as needed) so the form shows exactly the process-relevant fields; no hours form
-may rely on the schema's full property set. HRMQ SHALL appear in the Nextcloud app menu via an
+may rely on the schema's full property set. Humaniq SHALL appear in the Nextcloud app menu via an
 `<navigations>` entry routing to the SPA shell. The exact per-page configs are fixed by this
 change's design.md Decision 8.
 
@@ -68,11 +68,11 @@ change's design.md Decision 8.
 - AND opening a row MUST land on `TimesheetDetail`, where the allowed transitions render as
   lifecycle actions
 
-#### Scenario: HRMQ is reachable from the app menu
+#### Scenario: Humaniq is reachable from the app menu
 
-- GIVEN hrmq is installed and enabled
+- GIVEN humaniq is installed and enabled
 - WHEN the user opens the Nextcloud app menu
-- THEN HRMQ MUST appear and open its SPA shell at the timesheets list
+- THEN Humaniq MUST appear and open its SPA shell at the timesheets list
 
 #### Scenario: The booking form is an allowlist
 

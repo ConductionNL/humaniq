@@ -1,17 +1,17 @@
 <?php
 
 /**
- * PHPUnit bootstrap for the hrmq unit suite.
+ * PHPUnit bootstrap for the humaniq unit suite.
  *
- * Registers Composer's autoloader (which maps OCA\Hrmq\ to lib/ and
- * OCA\Hrmq\Tests\ to tests/) and the OCP namespace from the nextcloud/ocp
+ * Registers Composer's autoloader (which maps OCA\Humaniq\ to lib/ and
+ * OCA\Humaniq\Tests\ to tests/) and the OCP namespace from the nextcloud/ocp
  * dev dependency, so the unit suite runs standalone in a bare php:8.3-cli
  * container — no installed Nextcloud server required. When a full server
  * checkout is present (app mounted under custom_apps), its base.php is
  * loaded opportunistically for integration-leaning tests.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests
+ * @package  OCA\Humaniq\Tests
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -49,10 +49,10 @@ if (file_exists(__DIR__ . '/../../../lib/base.php') === true) {
 }
 
 // OpenRegister's lifecycle guard contract (LifecycleGuardInterface/GuardResult) is
-// a sibling-app dependency, not a composer package — hrmq's guards
+// a sibling-app dependency, not a composer package — humaniq's guards
 // (NoSelfApprovalGuard, PayrollRunApprovedGuard) implement/return it, but the
 // classes only exist when the OpenRegister app is actually installed alongside
-// hrmq. Load the TEST-ONLY stub (tests/stubs/OpenRegisterLifecycleStub.php) when
+// humaniq. Load the TEST-ONLY stub (tests/stubs/OpenRegisterLifecycleStub.php) when
 // they are absent, so the standalone PHPUnit suite can exercise guard logic. Never
 // loaded via composer.json autoload, and skipped entirely when the real classes
 // are already resolvable (e.g. a full server checkout with OpenRegister installed

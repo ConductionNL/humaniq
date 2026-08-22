@@ -11,7 +11,7 @@
  * documentFileId, never guessing between ambiguous matches (defect-3).
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -27,9 +27,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Hrmq\Service\OfferSigningRecoveryService;
+use OCA\Humaniq\Service\OfferSigningRecoveryService;
 use OCP\IUser;
 use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;

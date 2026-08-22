@@ -27,7 +27,7 @@
  *      ambiguous matches).
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -43,7 +43,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
@@ -99,7 +99,7 @@ class OfferSigningRecoveryService {
 	 * unresolved and surfaced in the caller's failure message instead.
 	 *
 	 * @param mixed $signingService docudesk's SigningService, already resolved by the caller.
-	 * @param string $applicationId The Application id (== the correlationId/subjectId hrmq sent).
+	 * @param string $applicationId The Application id (== the correlationId/subjectId humaniq sent).
 	 * @param int $fileId The offer-letter file id sent as `documentFileId`.
 	 *
 	 * @return string|null The recovered signing-request id, or null when it cannot be determined unambiguously.

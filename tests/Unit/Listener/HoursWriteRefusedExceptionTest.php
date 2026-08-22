@@ -8,7 +8,7 @@
  * class's entire reason to exist.
  *
  * @category Test
- * @package  OCA\Hrmq\Tests\Unit\Listener
+ * @package  OCA\Humaniq\Tests\Unit\Listener
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -19,14 +19,14 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Tests\Unit\Listener;
+namespace OCA\Humaniq\Tests\Unit\Listener;
 
-use OCA\Hrmq\Listener\HoursWriteRefusedException;
+use OCA\Humaniq\Listener\HoursWriteRefusedException;
 use PHPUnit\Framework\TestCase;
 
 /**

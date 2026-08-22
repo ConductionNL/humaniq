@@ -9,7 +9,7 @@ The recruiting MVP lives under the same `Onboarding & ATS` menu group as
 [onboarding and offboarding](/docs/people/onboarding-offboarding), split
 into `Vacancy` (the job posting) and `Application` (the candidate).
 External multiposting (werk.nl/LinkedIn) and a public career page are
-explicitly out of scope — HRMQ manages the internal pipeline.
+explicitly out of scope — Humaniq manages the internal pipeline.
 
 ## Vacancies
 
@@ -49,7 +49,7 @@ manual follow-up action in the MVP, not automatic.
 The Autoriteit Persoonsgegevens sollicitatie-bewaartermijn requires
 deleting rejected candidate data at the latest 4 weeks after rejection —
 or up to 1 year with the candidate's explicit consent to stay in a
-talent pool. HRMQ makes this a **stored, machine-checked fact**, not a
+talent pool. Humaniq makes this a **stored, machine-checked fact**, not a
 background deletion job (the automatic deletion job itself is out of
 scope for this MVP — the rule surfaces what needs deleting):
 
@@ -70,12 +70,12 @@ sollicitatiegegevens) enforce the clock:
    have been deleted or anonymised.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Offer letters and e-signature
 
-For an Application at the `aanbod` stage, HRMQ can generate a real
+For an Application at the `aanbod` stage, Humaniq can generate a real
 offer-letter PDF from the Application/Vacancy data and raise a real
 signing request, both through [docudesk](https://docudesk.conduction.nl)
 — tracked directly on the Application
@@ -88,8 +88,8 @@ signature reaches `COMPLETED`. Hiring stays an explicit, separate HR
 action; syncing is a read-only poll of the signing status only.
 
 ```bash
-occ hrmq:offer:request-signature --application <id>
-occ hrmq:offer:sync-signature
+occ humaniq:offer:request-signature --application <id>
+occ humaniq:offer:sync-signature
 ```
 
 When docudesk is not installed, requesting a signature degrades to

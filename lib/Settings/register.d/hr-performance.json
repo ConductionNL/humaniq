@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-performance",
+    "x-humaniq-fragment": "hr-performance",
     "components": {
         "schemas": {
             "ReviewCycle": {
@@ -133,7 +133,7 @@
                                     "besproken"
                                 ],
                                 "to": "vastgesteld",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
                                 "description": "The beoordeling is vastgesteld. NoSelfApprovalGuard denies the transition when the acting user equals employeeId -- the employee under review may not vaststellen their own beoordeling. vastgesteldDoor is stamped on the carrying write."
                             },
                             "heropenen": {

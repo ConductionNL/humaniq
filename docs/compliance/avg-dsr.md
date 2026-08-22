@@ -5,10 +5,10 @@ description: AVG (GDPR) data-subject rights — inzage, portabiliteit, vergetelh
 
 # AVG data-subject rights
 
-HRMQ orchestrates all four AVG (GDPR) data-subject rights — Art 15
+Humaniq orchestrates all four AVG (GDPR) data-subject rights — Art 15
 inzage, Art 20 portabiliteit, Art 17 vergetelheid, and Art 16
 rectificatie — as a thin layer over OpenRegister's own `DsarService`.
-HRMQ owns no entity-matching, soft-delete, or anonymisation logic of its
+Humaniq owns no entity-matching, soft-delete, or anonymisation logic of its
 own: locating every object referencing a subject, erasing a subject's
 data, and rectifying a single object are all OpenRegister primitives.
 
@@ -51,8 +51,8 @@ erase refuses any request whose preview was not first recorded against
 it — there is no path that skips straight to a destructive write.
 
 ```bash
-occ hrmq:avg:erase --dsr-request-id <id>
-occ hrmq:avg:erase --dsr-request-id <id> --confirm
+occ humaniq:avg:erase --dsr-request-id <id>
+occ humaniq:avg:erase --dsr-request-id <id> --confirm
 ```
 
 Defaults to preview-only; `--confirm` is required to actually execute,
@@ -78,11 +78,11 @@ retained-object list, onto the outcome summary, or into any log line
 
 The endpoint gate for this capability requires actual Nextcloud admin
 rights — not the broader admin-or-HR check some other guarded
-endpoints (loonbeslag, payroll mutations) use elsewhere in HRMQ, and
-that distinction is intentional: this is the one surface in HRMQ where
+endpoints (loonbeslag, payroll mutations) use elsewhere in Humaniq, and
+that distinction is intentional: this is the one surface in Humaniq where
 widening the gate to admit HR callers would be a real regression, not
 just a convenience trade-off.
 
 ```bash
-occ hrmq:avg:erase --dsr-request-id <id>
+occ humaniq:avg:erase --dsr-request-id <id>
 ```

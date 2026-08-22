@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Hrmq Migrate Hours Process Repair Step
+ * Humaniq Migrate Hours Process Repair Step
  *
  * hours-process-redesign Decision 9: idempotent one-pass migration of
  * pre-existing Timesheet rows onto the entry/aggregate split. Per row:
@@ -25,7 +25,7 @@
  *
  * Idempotency: step 2's guard is "zero existing entries" (a re-run creates
  * nothing); steps 1 and 3 are pure recomputes. Warn-once semantics: exactly
- * ONE summary line per run — `hrmq: hours-process migration: N timesheets
+ * ONE summary line per run — `humaniq: hours-process migration: N timesheets
  * processed, M entries created, K rows with unresolvable user link` — never
  * one warning per row.
  *
@@ -41,7 +41,7 @@
  * identically. Fails soft when OpenRegister is not (yet) enabled.
  *
  * @category Repair
- * @package  OCA\Hrmq\Repair
+ * @package  OCA\Humaniq\Repair
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -52,18 +52,18 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Repair;
+namespace OCA\Humaniq\Repair;
 
-use OCA\Hrmq\Service\InternalWriteMarker;
-use OCA\Hrmq\Service\OrgResolutionService;
-use OCA\Hrmq\Service\SettingsService;
-use OCA\Hrmq\Service\TimesheetAggregationService;
+use OCA\Humaniq\Service\InternalWriteMarker;
+use OCA\Humaniq\Service\OrgResolutionService;
+use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\TimesheetAggregationService;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
@@ -73,7 +73,7 @@ use Psr\Log\LoggerInterface;
  * Backfills identity caches, synthesizes migration entries, recomputes
  * aggregates — idempotently, with one summary line per run.
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
  */
 class MigrateHoursProcess implements IRepairStep {
 
@@ -91,7 +91,7 @@ class MigrateHoursProcess implements IRepairStep {
 	 * @param InternalWriteMarker $marker The request-scoped internal-writer marker.
 	 * @param OrgResolutionService $orgResolution The shared org-chain resolver.
 	 * @param TimesheetAggregationService $aggregationService The shared aggregate recompute.
-	 * @param SettingsService $settingsService The hrmq settings (register slug).
+	 * @param SettingsService $settingsService The humaniq settings (register slug).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
@@ -113,7 +113,7 @@ class MigrateHoursProcess implements IRepairStep {
 	 * @spec exclude IRepairStep boilerplate — a display label with no behaviour
 	 */
 	public function getName(): string {
-		return 'Migrate hrmq timesheets onto the hours-process entry/aggregate split';
+		return 'Migrate humaniq timesheets onto the hours-process entry/aggregate split';
 	}//end getName()
 
 	/**
@@ -123,20 +123,20 @@ class MigrateHoursProcess implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
 	 */
 	public function run(IOutput $output): void {
 		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
 			// Fail soft: OpenRegister not (yet) enabled — the InitializeRegister precedent.
-			$output->info('hrmq: hours-process migration skipped (OpenRegister is not available).');
+			$output->info('humaniq: hours-process migration skipped (OpenRegister is not available).');
 			return;
 		}
 
 		try {
 			$summary = $this->runner()->runAsActingUser(fn (): array => $this->migrate());
 		} catch (\Throwable $e) {
-			if ($this->runner()->deferIfMaintenanceDenied($e, 'OCA\Hrmq\BackgroundJob\CompleteHoursMigrationJob') === true) {
-				$message = 'hrmq: hours-process migration deferred to a background job '
+			if ($this->runner()->deferIfMaintenanceDenied($e, 'OCA\Humaniq\BackgroundJob\CompleteHoursMigrationJob') === true) {
+				$message = 'humaniq: hours-process migration deferred to a background job '
 					. '(object folders are unreachable while maintenance mode is on).';
 				$output->info($message);
 				$this->logger->info($message);
@@ -144,15 +144,15 @@ class MigrateHoursProcess implements IRepairStep {
 			}
 
 			$this->logger->warning(
-				'hrmq: hours-process migration failed',
+				'humaniq: hours-process migration failed',
 				['exception' => $e->getMessage()]
 			);
-			$output->warning('hrmq: hours-process migration failed: ' . $e->getMessage());
+			$output->warning('humaniq: hours-process migration failed: ' . $e->getMessage());
 			return;
 		}
 
 		$line = sprintf(
-			'hrmq: hours-process migration: %d timesheets processed, %d entries created, %d rows with unresolvable user link',
+			'humaniq: hours-process migration: %d timesheets processed, %d entries created, %d rows with unresolvable user link',
 			$summary['processed'],
 			$summary['entriesCreated'],
 			$summary['unresolvableUserLinks']
@@ -166,7 +166,7 @@ class MigrateHoursProcess implements IRepairStep {
 	 *
 	 * @return array{processed: int, entriesCreated: int, unresolvableUserLinks: int} The summary counters.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
 	 */
 	public function runDeferred(): array {
 		return $this->runner()->runAsActingUser(fn (): array => $this->migrate());
@@ -175,12 +175,12 @@ class MigrateHoursProcess implements IRepairStep {
 	/**
 	 * The lazily resolved execution-context runner (acting user + deferral).
 	 *
-	 * @return \OCA\Hrmq\Service\HoursMigrationRunner The runner.
+	 * @return \OCA\Humaniq\Service\HoursMigrationRunner The runner.
 	 *
 	 * @spec exclude Trivial lazy container accessor; behaviour lives on HoursMigrationRunner.
 	 */
-	private function runner(): \OCA\Hrmq\Service\HoursMigrationRunner {
-		return $this->container->get(\OCA\Hrmq\Service\HoursMigrationRunner::class);
+	private function runner(): \OCA\Humaniq\Service\HoursMigrationRunner {
+		return $this->container->get(\OCA\Humaniq\Service\HoursMigrationRunner::class);
 	}//end runner()
 
 	/**
@@ -189,7 +189,7 @@ class MigrateHoursProcess implements IRepairStep {
 	 *
 	 * @return array{processed: int, entriesCreated: int, unresolvableUserLinks: int} The summary counters.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
 	 */
 	public function migrate(): array {
 		$employeesById = $this->indexById($this->loadAll('Employee'));
@@ -252,7 +252,7 @@ class MigrateHoursProcess implements IRepairStep {
 	 *
 	 * @return bool True when the user link resolved, false when it stays null.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/mijn-hr-self-service/spec.md#REQ-MHS-002:-Timesheet,-Expense,-LeaveRequest-and-Payslip-SHALL-carry-an-optional-denormalized-userId
 	 */
 	private function backfillCaches(
 		string $timesheetId,
@@ -315,7 +315,7 @@ class MigrateHoursProcess implements IRepairStep {
 	 *
 	 * @return bool True when an entry was created.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
 	 */
 	private function synthesizeEntry(string $timesheetId, array $timesheet): bool {
 		$startedAt = $this->periodStart(trim((string)($timesheet['period'] ?? '')));
@@ -466,7 +466,7 @@ class MigrateHoursProcess implements IRepairStep {
 				->setSchema($schema)
 				->findAll(['limit' => self::LOOKUP_LIMIT], false, false);
 		} catch (\Throwable $e) {
-			$this->logger->warning('hrmq: MigrateHoursProcess could not load ' . $schema . ': ' . $e->getMessage());
+			$this->logger->warning('humaniq: MigrateHoursProcess could not load ' . $schema . ': ' . $e->getMessage());
 			return [];
 		}
 

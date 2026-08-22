@@ -5,7 +5,7 @@
  *
  * Executable checks for two document-evidence rules: the written-contract
  * rule (`nl-contract-schriftelijk`, lib/Standards/rules/labour.json,
- * hrmq-docudesk-documents), mapped onto `EmploymentContract`, and the
+ * humaniq-docudesk-documents), mapped onto `EmploymentContract`, and the
  * loonstrook-evidence rule (`nl-loonstrook-verplicht`,
  * lib/Standards/rules/payroll.json, payslip-pdf-docudesk design.md D7),
  * mapped onto `Payslip`.
@@ -35,7 +35,7 @@
  * predicates whose sample would otherwise need a resolvable sibling reference.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -46,13 +46,13 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-009
+ * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-009
  * @spec openspec/changes/payslip-pdf-docudesk/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-004
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * Written-permanent-contract document-evidence executable check.

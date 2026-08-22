@@ -41,7 +41,7 @@ Three machine-checkable rules audit every `LeaveBalance` (domain
    1 July `expiryDate`.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Automatic accrual
@@ -75,7 +75,7 @@ money, or money into hours — a small IKB-style flexibility standard in
 many Dutch CAOs. A `LeaveTransaction` runs a declarative
 `draft → submitted → approved/rejected → settled` request/approve
 lifecycle with the same separation-of-duties guard used everywhere else
-in HRMQ (`NoSelfApprovalGuard`): the approver may never be the
+in Humaniq (`NoSelfApprovalGuard`): the approver may never be the
 requesting employee.
 
 **Only bovenwettelijk hours are sellable — the statutory floor is
@@ -103,7 +103,7 @@ adjustments](/docs/payroll/retro-adjustments) fold into a run.
 amount.
 
 ```bash
-occ hrmq:leave:settle --id <transactionId>
+occ humaniq:leave:settle --id <transactionId>
 ```
 
 Employees see their own buy/sell requests on a self-service page (no
@@ -128,7 +128,7 @@ gemeld ⇄ hersteld
 ### No medical data, ever
 
 Per the AVG and the Autoriteit Persoonsgegevens beleidsregels "De zieke
-werknemer", HRMQ records **only** that and how long an employee is sick
+werknemer", Humaniq records **only** that and how long an employee is sick
 and the re-integration process facts — never the nature or cause of the
 illness. The schema declares no diagnosis, symptom, cause, or medical-note
 field of any kind, and the files widget on the case detail page is
@@ -167,11 +167,11 @@ enforce the clock:
    be at least 70 on open cases.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 UWV wire transport and WIA / tweede-spoor flows are explicitly out of
-scope — HRMQ tracks the case, not the UWV submission channel.
+scope — Humaniq tracks the case, not the UWV submission channel.
 
 ## Visible on a shared calendar
 
@@ -185,7 +185,7 @@ Sync is a one-way projection: manual edits to synced events are
 overwritten by the next run.
 
 ```bash
-occ hrmq:calendar:sync
+occ humaniq:calendar:sync
 ```
 
 An unconfigured instance (no calendar principal/URI set) skips cleanly —

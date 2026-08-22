@@ -21,7 +21,7 @@
 				"filters": [
 					"status"
 				],
-				"description": "Governance/audit catalogue of external systems that have been granted access to hrmq through OpenRegister's public REST API (/api/objects/{register}/{schema}, authenticated with a Nextcloud app password). This overview RECORDS which external system has access, for what, and when that access was last reviewed — it does NOT grant or enforce that access (the real RBAC grant lives in OpenRegister, outside hrmq; hris-api-public design.md D2). Administrator-only surface.",
+				"description": "Governance/audit catalogue of external systems that have been granted access to humaniq through OpenRegister's public REST API (/api/objects/{register}/{schema}, authenticated with a Nextcloud app password). This overview RECORDS which external system has access, for what, and when that access was last reviewed — it does NOT grant or enforce that access (the real RBAC grant lives in OpenRegister, outside humaniq; hris-api-public design.md D2). Administrator-only surface.",
 				"actions": [
 					{
 						"id": "create-integration-account",
@@ -46,7 +46,7 @@
 				"title": "Integration",
 				"dataIcon": "PowerPlugOutline",
 				"gridHeight": 6,
-				"note": "hris-api-public (2026-07-18): a governance/audit record of one external system granted access to hrmq via OpenRegister's public REST surface. The 'Integratie' data widget carries the whole record (name/purpose/nextcloudUserId/grantedSchemas/status/reviewedBy/reviewedAt/createdAt); no exclude, because IntegrationAccount carries NO $ref field (nextcloudUserId is a plain string per ADR-062 rule 7, never a $ref to an Employee), so there is no Related panel to resolve. NO lifecycleActions: status is a plain actief/ingetrokken enum with no x-openregister-lifecycle transition map (the OrgUnitDetail/ShiftDetail precedent) -- toggling it records a governance state, it does not run a guarded workflow, and it changes NOTHING about actual access (design.md D2). No stat/files/calendar/comms leaves -- a catalog record has no numeric headline aggregate, document, appointment, or correspondence thread. Audit history stays a sidebar tab so a reviewer can see who changed the catalog record and when. Alleen-beheerder surface (like DsrRequestDetail); enforcement is server-side OpenRegister RBAC, not a manifest flag."
+				"note": "hris-api-public (2026-07-18): a governance/audit record of one external system granted access to humaniq via OpenRegister's public REST surface. The 'Integratie' data widget carries the whole record (name/purpose/nextcloudUserId/grantedSchemas/status/reviewedBy/reviewedAt/createdAt); no exclude, because IntegrationAccount carries NO $ref field (nextcloudUserId is a plain string per ADR-062 rule 7, never a $ref to an Employee), so there is no Related panel to resolve. NO lifecycleActions: status is a plain actief/ingetrokken enum with no x-openregister-lifecycle transition map (the OrgUnitDetail/ShiftDetail precedent) -- toggling it records a governance state, it does not run a guarded workflow, and it changes NOTHING about actual access (design.md D2). No stat/files/calendar/comms leaves -- a catalog record has no numeric headline aggregate, document, appointment, or correspondence thread. Audit history stays a sidebar tab so a reviewer can see who changed the catalog record and when. Alleen-beheerder surface (like DsrRequestDetail); enforcement is server-side OpenRegister RBAC, not a manifest flag."
 			}
 		}
 	]

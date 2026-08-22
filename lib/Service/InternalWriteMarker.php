@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Hrmq InternalWriteMarker
+ * Humaniq InternalWriteMarker
  *
- * Request-scoped marker distinguishing hrmq's OWN internal register writes
+ * Request-scoped marker distinguishing humaniq's OWN internal register writes
  * (the aggregate recompute of TimesheetAggregationService, the
  * MigrateHoursProcess repair step) from client-originated writes, so the
  * pre-save listeners can exempt them (hours-process-redesign Decisions 3/4):
@@ -19,7 +19,7 @@
  * same request.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -30,17 +30,17 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 /**
- * Request-scoped internal-writer marker for hrmq's own register writes.
+ * Request-scoped internal-writer marker for humaniq's own register writes.
  *
- * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
+ * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
  */
 class InternalWriteMarker {
 
@@ -54,11 +54,11 @@ class InternalWriteMarker {
 	private int $depth = 0;
 
 	/**
-	 * Whether the current call stack is inside an internal hrmq write.
+	 * Whether the current call stack is inside an internal humaniq write.
 	 *
 	 * @return bool True inside {@see runInternal()}.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
 	 */
 	public function isInternal(): bool {
 		return $this->depth > 0;
@@ -72,7 +72,7 @@ class InternalWriteMarker {
 	 *
 	 * @return mixed The callable's return value.
 	 *
-	 * @spec openspec/changes/hrmq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
+	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-Entries-of-a-submitted-or-approved-timesheet-are-immutable-(REQ-TEC-005)
 	 */
 	public function runInternal(callable $write): mixed {
 		++$this->depth;

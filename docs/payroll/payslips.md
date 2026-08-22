@@ -6,10 +6,11 @@ description: Loonstrook (payslip) and jaaropgaaf (annual statement) PDFs, render
 # Payslips & annual statements
 
 Every `Payslip` gets a downloadable loonstrook PDF, and every
-employee-year gets a jaaropgaaf PDF. HRMQ does not ship its own PDF
+employee-year gets a jaaropgaaf PDF. Humaniq does not ship its own PDF
 rendering engine — `HrDocumentService` assembles the data and hands it to
 [docudesk](https://docudesk.conduction.nl)'s template/rendering pipeline
-(`namespace: hrmq` templates), called same-instance through
+(`namespace: hrmq` templates — the docudesk template namespace is
+deliberately unchanged by the app rename), called same-instance through
 `DocumentService::generateDocument()`. When docudesk is not installed, the
 attempt degrades gracefully to `status: skipped-no-docudesk` rather than
 failing.
@@ -51,8 +52,8 @@ a diagnostic; no partial aggregate is ever written.
 ## Generating documents
 
 ```bash
-occ hrmq:documents:generate --type=loonstrook --employee=<employee-id> --period=2026-06
-occ hrmq:documents:generate --type=jaaropgaaf --employee=<employee-id> --year=2026
+occ humaniq:documents:generate --type=loonstrook --employee=<employee-id> --period=2026-06
+occ humaniq:documents:generate --type=jaaropgaaf --employee=<employee-id> --year=2026
 ```
 
 - `--type` — `loonstrook` or `jaaropgaaf` (also accepts the other HR
@@ -72,10 +73,10 @@ non-machine-checkable) obligation to provide employees with a loonstrook:
 every `Payslip` should have an active `generated` `GeneratedDocument` of
 type `loonstrook` referencing it. Whether the paper actually reached the
 employee is outside what the system can check — the rule only verifies
-that HRMQ generated the document.
+that Humaniq generated the document.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Jaaropgaven pages

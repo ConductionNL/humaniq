@@ -3,7 +3,7 @@
 /**
  * AVG DSR Export Command
  *
- * `occ hrmq:avg:export --employee <id> --as-user <admin-uid> --right
+ * `occ humaniq:avg:export --employee <id> --as-user <admin-uid> --right
  * inzage|portabiliteit [--dsr-request-id <id>]` -- the CLI mirror of Art 15
  * inzage / Art 20 portabiliteit (avg-dsr design.md D2/D3): `--as-user`
  * establishes the privileged session `DsarService::assertPrivileged()`
@@ -13,7 +13,7 @@
  * once and renders it for whichever right was requested.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -30,9 +30,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\AvgDsrService;
+use OCA\Humaniq\Service\AvgDsrService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -61,7 +61,7 @@ class AvgDsrExportCommand extends Command {
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-003
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:avg:export')
+		$this->setName('humaniq:avg:export')
 			->setDescription('Export the AVG data-subject-rights inzage/portabiliteit overview for one employee (Art 15 / Art 20 -- one findObjectsForSubject() call, rendered two ways).')
 			->addOption('employee', null, InputOption::VALUE_REQUIRED, 'The Employee id whose data is being exported.')
 			->addOption('as-user', null, InputOption::VALUE_REQUIRED, 'The Nextcloud administrator uid establishing the privileged DSAR session.')
@@ -114,7 +114,7 @@ class AvgDsrExportCommand extends Command {
 			return 1;
 		}
 
-		$output->writeln('<info>Hrmq AVG-export (' . $right . ')</info>');
+		$output->writeln('<info>Humaniq AVG-export (' . $right . ')</info>');
 		$output->writeln('  aantal objecten: ' . (int)($result['count'] ?? 0));
 
 		foreach ((array)($result['objects'] ?? []) as $entry) {

@@ -1,6 +1,6 @@
 ## Context
 
-See proposal.md for motivation. Measured directly against this checkout (hrmq 0.2.0, branch
+See proposal.md for motivation. Measured directly against this checkout (humaniq 0.2.0, branch
 `spec/hrmq-refactor-wave-1`, 2026-08-19):
 
 - `src/manifest.json`: 252,991 bytes (brief said 252,561 — corrected). 113 pages (60 index, 49
@@ -31,7 +31,7 @@ See proposal.md for motivation. Measured directly against this checkout (hrmq 0.
 - No app in the fleet has yet shipped `pageTemplates`/`pageInstances` in a live `manifest.json` or
   `manifest.d/` fragment (checked all 21 apps under `apps-extra/`) — only
   `nextcloud-vue/tests/utils/expandPageTemplates.spec.js` exercises the mechanism, with fixture data.
-  hrmq would be the first real adopter.
+  humaniq would be the first real adopter.
 
 ## Goals / Non-Goals
 
@@ -47,7 +47,7 @@ See proposal.md for motivation. Measured directly against this checkout (hrmq 0.
 - Deciding the target menu structure (ADR-097 ceiling, role-lens collapse, `Configuratie`
   relocation) — a later change's job, using the `relocations`/`settingsSection` mechanism this
   change installs but leaves empty.
-- Retrofitting every future hrmq change onto per-change fragments (ADR-037's literal convention).
+- Retrofitting every future humaniq change onto per-change fragments (ADR-037's literal convention).
   This change performs a one-time domain-based decomposition of pre-existing content; see Decision 1
   for why that diverges from ADR-037's per-change fragment naming, and why it doesn't have to
   converge — new changes add their own fragment on top of this baseline exactly as ADR-037 already
@@ -68,7 +68,7 @@ of 113 already-merged, already-interdependent pages: there is no single change b
 along (many of these pages predate the fragment pipeline's introduction into the fleet), and forcing
 one would produce fragments named after archived changes that no longer describe their contents.
 
-Instead, this change mirrors `lib/Settings/register.d/`'s domain grouping — a split hrmq's own
+Instead, this change mirrors `lib/Settings/register.d/`'s domain grouping — a split humaniq's own
 backend already uses successfully at a comparable scale (32 files, 55 schemas) for the identical
 problem (a monolithic OpenAPI register document that needed to stop growing as one file). Domain
 fragments read as a stable map a maintainer already knows (`hr-verzuim.json` holds the verzuim
@@ -136,7 +136,7 @@ lives in); Decision 3 below separately decides, for each placed page, whether it
 concrete page or as a `pageInstance` referencing a template — every one of the 113 pages gets exactly
 one placement and exactly one of those two authoring forms. `hr-cost-rate.json`, `hr-packs.json`, and
 `hr-seed.json` (JurisdictionPack config data / dev fixtures / the two extension-only schemas) end up
-with **zero** hrmq pages and get no `manifest.d` counterpart — a fragment is created only where there
+with **zero** humaniq pages and get no `manifest.d` counterpart — a fragment is created only where there
 is page content to hold, exactly as `openconnector`'s `manifest.d/` has real fragments only for the
 one feature that needed one, plus `_placeholder.json` for the always-non-empty glob.
 
@@ -236,7 +236,7 @@ object — nothing else. A fragment declaring `deepLinks` would have that key si
 merged and not erroring; `openconnector`'s own fragment carries a code comment confirming this
 (quoted in Context). This is stated as a design constraint, not a decision with alternatives,
 because there is no way to make it a choice without changing `buildManifest()` itself, which is out
-of this change's write-scope (shared library, not hrmq).
+of this change's write-scope (shared library, not humaniq).
 
 ### 6. Fixing `tests/validate-manifest.js`'s coverage, not inheriting the fleet's gap
 
@@ -247,7 +247,7 @@ today for those apps only because their bases still hold the bulk of `pages[]`; 
 class of defect the brief's "watch for the silent-empty failure mode" section describes: a check
 that returns 200/pass while covering a shrinking fraction of what it once covered.
 
-hrmq's copy of this script is updated (task in tasks.md) to require the fragment files and call
+humaniq's copy of this script is updated (task in tasks.md) to require the fragment files and call
 `buildManifest()` (or an equivalent minimal merge — `pages`/`menu` concatenation is the only part
 Ajv-relevant) before validating, and to print the page count it validated, so a future regression
 here is visible in the script's own output rather than requiring a reader to notice the file got
@@ -264,7 +264,7 @@ a candidate fleet-wide follow-up.
 - **[Risk] Route-order sensitivity**: six route pairs share a static/dynamic prefix
   (`/timesheets/approval` vs `/timesheets/:id`, and five more — see spec.md). Reordering `pages[]`
   across fragment-load order could, in principle, change which one a router resolves first. Verified
-  this is not actually order-sensitive for hrmq's router: vue-router 4 (`^4.6.4`, same version hrmq
+  this is not actually order-sensitive for humaniq's router: vue-router 4 (`^4.6.4`, same version humaniq
   and pipelinq both pin) ranks routes by a static-vs-dynamic-segment score at `addRoute` time, not by
   registration order — the current unsorted `routesFromManifest()` in `src/main.js` already resolves
   these six pairs correctly today with no explicit sort, which would not be reliably true if
@@ -293,7 +293,7 @@ a candidate fleet-wide follow-up.
    revision immediately before step 1 — this is the actual proof of the no-functionality-loss
    invariant, not an assertion.
 6. No deploy/rollback complexity beyond a normal frontend build — this ships in the same asset
-   bundle as any other hrmq frontend change; there is no data migration, no PHP change, and no
+   bundle as any other humaniq frontend change; there is no data migration, no PHP change, and no
    OpenRegister interaction.
 
 ## Open Questions

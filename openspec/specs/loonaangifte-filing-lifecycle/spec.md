@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-12-loonaangifte-filing-lifecycle
 # loonaangifte-filing-lifecycle Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [loonaangifte-filing-lifecycle](../../changes/archive/2026-07-12-loonaangifte-filing-lifecycle/) _(archived 2026-07-12)_ — declarative concept→klaargezet→bevestigd→verzonden lifecycle on `LoonaangifteFiling`, tijdvakcode + response fields, 3 new machine-checkable NL deadline/tijdvakcode rules, lifecycle actions + deadline KPIs on the filing pages (kind: config)
 
@@ -61,7 +61,7 @@ New properties on `LoonaangifteFiling`: `status` (enum `concept|klaargezet|beves
 `lib/Standards/rules/payroll.json` gains `nl-loonaangifte-tijdvakcode`, `nl-loonaangifte-deadline-derivation`, `nl-loonaangifte-deadline-alert` (all `domain: reporting`, `jurisdiction: NL`, `framework: nl-loonheffingen`, `machineCheckable: true`, `severity: mandatory`, sourced to Belastingdienst LH 210 2026 / AWR art. 19 with sourceUrl). `nl-loonaangifte-tijdvakcode` carries a `parameters` object with the 2026 code tables (`maand` prefix rule 60MM, the thirteen `vierweken` codes, `jaar: 6400`) so the annual re-issue is a data-only change.
 
 #### Scenario: Corpus stays loadable and versioned
-- **WHEN** `occ hrmq:rules:audit` runs after the corpus edit
+- **WHEN** `occ humaniq:rules:audit` runs after the corpus edit
 - **THEN** the RuleCatalogue loads without error and reports the three new rules as enforced (each has a CheckProvider method)
 
 ### REQ-LFL-004: `NlWageTaxFilingChecks` SHALL enforce tijdvakcode consistency, deadline derivation, and deadline alerting
@@ -75,7 +75,7 @@ Three new check methods, each auto-discovered by the RuleEngine and jurisdiction
 
 #### Scenario: Wrong tijdvakcode flagged
 - **GIVEN** a seeded filing `period: 2026-04, tijdvak: maand, tijdvakcode: 6050`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** a `nl-loonaangifte-tijdvakcode` violation is reported for that object
 
 #### Scenario: Weekend deadline is NOT extended
@@ -97,7 +97,7 @@ Three new check methods, each auto-discovered by the RuleEngine and jurisdiction
 - **THEN** it exits 0
 
 #### Scenario: Detail page drives the lifecycle
-@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** a filing in status `concept` opened on `LoonaangifteFilingDetail`
 - **WHEN** the user executes Klaarzetten
 - **THEN** the page reflects status `klaargezet` and offers Bevestigen
@@ -107,5 +107,5 @@ Three new check methods, each auto-discovered by the RuleEngine and jurisdiction
 `lib/Settings/register.d/hr-seed.json` gains the four filings from design.md (verzonden+ok, verzonden+geen response, bevestigd approaching, concept overdue), using placeholder identifiers only (loonheffingennummer `000000000L01`).
 
 #### Scenario: Idempotent seed
-- **WHEN** `occ hrmq:rules:seed-testdata` (or the register Repair import) runs twice
+- **WHEN** `occ humaniq:rules:seed-testdata` (or the register Repair import) runs twice
 - **THEN** the four filings exist exactly once

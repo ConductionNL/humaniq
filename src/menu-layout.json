@@ -7,7 +7,7 @@
 	"relocations": {},
 	"removals": [],
 	"settingsSection": [],
-	"_settingsSectionNote": "Empty on purpose. ADR-079 Decision 5 names hrmq's top-level Configuratie entry (Administraties, Integraties) as a candidate for the settings foldout, but relocating it is a menu-structure decision the fragment-pipeline change deliberately does not make (hrmq-manifest-fragment-pipeline is a byte-identical refactor; see its proposal.md non-goals). The later ADR-097-scoped navigation change decides what moves here.",
+	"_settingsSectionNote": "Empty on purpose. ADR-079 Decision 5 names humaniq's top-level Configuratie entry (Administraties, Integraties) as a candidate for the settings foldout, but relocating it is a menu-structure decision the fragment-pipeline change deliberately does not make (humaniq-manifest-fragment-pipeline is a byte-identical refactor; see its proposal.md non-goals). The later ADR-097-scoped navigation change decides what moves here.",
 	"_navigationRationale": {},
 	"_navigationRationaleNote": "Menu-structure decisions and their reasoning belong in this block (the pipelinq/openconnector convention) — manifest menu entries cannot carry their own rationale because the menuItem schema is additionalProperties:false. Empty because the pipeline-adoption change made no navigation decisions; the first entry lands with the first real relocation/removal."
 }

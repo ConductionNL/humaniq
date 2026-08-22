@@ -7,19 +7,19 @@ built_by: openspec/changes/archive/2026-07-13-onboarding-wizard-mvp
 # onboarding-wizard Specification
 
 **Status**: done
-**Scope**: hrmq
+**Scope**: humaniq
 **OpenSpec changes**:
 - [onboarding-wizard-mvp](../../changes/archive/2026-07-13-onboarding-wizard-mvp/) _(archived 2026-07-13)_ — new `Onboarding` schema in a new `hr-onboarding` fragment with a simplified declarative `aangenomen → … → afgerond` lifecycle (cancellable pre-afgerond, checklist-gated by rule checks — no guard classes), 3 new machine-checkable NL rules (WID check, proeftijd bewaking, loonheffingenverklaring), and onboarding pages under the new ADR-001 `Onboarding & ATS` menu group (kind: config)
 
 ## Purpose
 
-Give hrmq its first onboarding surface: one `Onboarding` case per hire with a
+Give humaniq its first onboarding surface: one `Onboarding` case per hire with a
 deterministic, declarative lifecycle whose milestones (contract signed, data
 validated, ready for first workday, proeftijd running, completed) are gated by
 concrete checklist fields — `contractSigned`, `widCheckDone`, `bsnValidated`,
 `ibanVerified`, `itProvisioned`, `pensioenAangemeld` — documented on the
 transitions and enforced by audit rules (write-time guard wiring is owned by
-the active `hrmq-rule-compliance-enforcement` change). Three machine-checkable
+the active `humaniq-rule-compliance-enforcement` change). Three machine-checkable
 NL rules cover the WID identity check before the first workday, BW 7:652
 proeftijd limits and overdue-proeftijd bewaking, and the loonheffingenverklaring
 before the first payroll run. MVP-scoped from the 2026-05 `spec/onboarding-wizard`
@@ -34,7 +34,7 @@ are explicitly out of scope.
 
 ### Requirement: A new `hr-onboarding` fragment SHALL define the `Onboarding` schema (REQ-OBW-001)
 
-`lib/Settings/register.d/hr-onboarding.json` (new file, `x-hrmq-fragment: hr-onboarding`, OpenAPI 3.0.0 `components.schemas` shape like `hr-verzuim.json`) declares `Onboarding` (slug `Onboarding`, icon `AccountPlus`, version `0.1.0`, `x-schema-org: schema:Action`) with properties: `employeeId` (string, format uuid, `$ref: Employee`), `startDate` (string, format date), `proeftijdEndDate` (string, format date, nullable), `status` (enum `aangenomen|contract_getekend|gegevens_gevalideerd|gereed_eerste_werkdag|proeftijd_lopend|afgerond|geannuleerd`, default `aangenomen`), checklist booleans `contractSigned`, `widCheckDone`, `bsnValidated`, `ibanVerified`, `itProvisioned`, `pensioenAangemeld` (all default false), `widCheckDate` (string, format date, nullable), `notes` (string, nullable). `required: [employeeId, startDate, status]`. The existing register Repair import picks the fragment up without code changes.
+`lib/Settings/register.d/hr-onboarding.json` (new file, `x-humaniq-fragment: hr-onboarding`, OpenAPI 3.0.0 `components.schemas` shape like `hr-verzuim.json`) declares `Onboarding` (slug `Onboarding`, icon `AccountPlus`, version `0.1.0`, `x-schema-org: schema:Action`) with properties: `employeeId` (string, format uuid, `$ref: Employee`), `startDate` (string, format date), `proeftijdEndDate` (string, format date, nullable), `status` (enum `aangenomen|contract_getekend|gegevens_gevalideerd|gereed_eerste_werkdag|proeftijd_lopend|afgerond|geannuleerd`, default `aangenomen`), checklist booleans `contractSigned`, `widCheckDone`, `bsnValidated`, `ibanVerified`, `itProvisioned`, `pensioenAangemeld` (all default false), `widCheckDate` (string, format date, nullable), `notes` (string, nullable). `required: [employeeId, startDate, status]`. The existing register Repair import picks the fragment up without code changes.
 
 #### Scenario: Schema validates a complete case
 - **GIVEN** the imported hrmq register
@@ -47,7 +47,7 @@ are explicitly out of scope.
 
 ### Requirement: `Onboarding` SHALL carry a declarative lifecycle `aangenomen → … → afgerond` with `annuleren` from every pre-`afgerond` state (REQ-OBW-002)
 
-`configuration.x-openregister-lifecycle` on the schema declares `field: status`, `initial: aangenomen`, `terminal: [afgerond, geannuleerd]`, and transitions `contract_bevestigen` (aangenomen→contract_getekend), `gegevens_valideren` (contract_getekend→gegevens_gevalideerd), `gereed_melden` (gegevens_gevalideerd→gereed_eerste_werkdag), `starten` (gereed_eerste_werkdag→proeftijd_lopend), `afronden` (proeftijd_lopend→afgerond), `annuleren` (aangenomen|contract_getekend|gegevens_gevalideerd|gereed_eerste_werkdag|proeftijd_lopend→geannuleerd). Each forward transition's description documents its checklist gate (`contract_bevestigen`: contractSigned; `gegevens_valideren`: bsnValidated + ibanVerified; `gereed_melden`: widCheckDone + itProvisioned + pensioenAangemeld). **No transition carries a `requires:` guard** — gate enforcement stays in the audit rules because the active `hrmq-rule-compliance-enforcement` change owns write-time guard wiring for compliance-checked schemas.
+`configuration.x-openregister-lifecycle` on the schema declares `field: status`, `initial: aangenomen`, `terminal: [afgerond, geannuleerd]`, and transitions `contract_bevestigen` (aangenomen→contract_getekend), `gegevens_valideren` (contract_getekend→gegevens_gevalideerd), `gereed_melden` (gegevens_gevalideerd→gereed_eerste_werkdag), `starten` (gereed_eerste_werkdag→proeftijd_lopend), `afronden` (proeftijd_lopend→afgerond), `annuleren` (aangenomen|contract_getekend|gegevens_gevalideerd|gereed_eerste_werkdag|proeftijd_lopend→geannuleerd). Each forward transition's description documents its checklist gate (`contract_bevestigen`: contractSigned; `gegevens_valideren`: bsnValidated + ibanVerified; `gereed_melden`: widCheckDone + itProvisioned + pensioenAangemeld). **No transition carries a `requires:` guard** — gate enforcement stays in the audit rules because the active `humaniq-rule-compliance-enforcement` change owns write-time guard wiring for compliance-checked schemas.
 
 #### Scenario: Case walks the happy path
 - **GIVEN** an `Onboarding` in status `aangenomen`
@@ -73,7 +73,7 @@ are explicitly out of scope.
 `lib/Standards/rules/labour.json` gains `nl-onboarding-wid-check` (framework `nl-wid` — new slug, added to the examples in `lib/Standards/rules/SCHEMA.md`; source Wet op de identificatieplicht art. 15 jo. Wet LB 1964 art. 28 lid 1 onder f; `sourceUrl: https://wetten.overheid.nl/BWBR0006297`; domain `labour`), `nl-onboarding-proeftijd-bewaking` (framework `bw7-10`; source BW art. 7:652; `sourceUrl: https://wetten.overheid.nl/BWBR0005290`; domain `labour`), and `nl-onboarding-loonheffingenverklaring` (framework `nl-loonheffingen`; source Wet LB 1964 art. 29 jo. 28; `sourceUrl: https://wetten.overheid.nl/BWBR0002471`; domain `payroll`). All three: `jurisdiction: NL`, `severity: mandatory`, `machineCheckable: true`. `RuleCatalogue::VERSION` stays `2026-07` (already reflects the current month per SCHEMA.md's year-month granularity).
 
 #### Scenario: Corpus stays loadable and versioned
-- **WHEN** `occ hrmq:rules:audit` runs after the corpus edit
+- **WHEN** `occ humaniq:rules:audit` runs after the corpus edit
 - **THEN** the RuleCatalogue loads without error and reports the three new rules as enforced (each has a CheckProvider predicate)
 
 ### Requirement: `NlOnboardingChecks` SHALL enforce WID timing, proeftijd limits, and loonheffingenverklaring presence (REQ-OBW-004)
@@ -86,7 +86,7 @@ New auto-discovered provider `lib/Standards/Checks/NlOnboardingChecks.php` (impl
 
 #### Scenario: Overdue WID check flagged
 - **GIVEN** the seed case `onboarding-visser` (startDate `2026-07-01`, `widCheckDone: false`, status `gegevens_gevalideerd`)
-- **WHEN** `occ hrmq:rules:audit` runs on any date after 2026-07-01
+- **WHEN** `occ humaniq:rules:audit` runs on any date after 2026-07-01
 - **THEN** a `nl-onboarding-wid-check` violation is reported for that case
 
 #### Scenario: Cancelled case never WID-flagged
@@ -123,7 +123,7 @@ New auto-discovered provider `lib/Standards/Checks/NlOnboardingChecks.php` (impl
 - **THEN** it exits 0
 
 #### Scenario: Detail page drives the lifecycle
-@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude declarative widget wiring is covered by the shared CnPageRenderer library tests; app-level e2e suite does not exist yet (tracked by active change humaniq-test-coverage-baseline)
 - **GIVEN** a case in status `aangenomen` opened on `OnboardingDetail`
 - **WHEN** the user executes Contract bevestigen
 - **THEN** the page reflects status `contract_getekend` and offers Gegevens valideren

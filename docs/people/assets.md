@@ -54,7 +54,7 @@ Two machine-checkable rules (domain `labour`, framework
    because the offboarding capability isn't present or hasn't run yet.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Pages

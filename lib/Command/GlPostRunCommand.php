@@ -3,17 +3,17 @@
 /**
  * GL Post Run Command
  *
- * `occ hrmq:glpost:run [--period YYYY-MM]` — the MVP trigger for
+ * `occ humaniq:glpost:run [--period YYYY-MM]` — the MVP trigger for
  * payroll-glpost-shillinq (design.md D5): posts every approved-but-unposted
  * PayrollRun as a balanced loonjournaalpost into shillinq's JournalEntry
  * register (optionally filtered to one wage period), printing one outcome
  * line per run plus a summary. No automatic lifecycle hook exists yet —
  * PayrollRun transitions are plain data edits today, so this command is run
- * on operator demand until `hrmq-rule-compliance-enforcement` wires
+ * on operator demand until `humaniq-rule-compliance-enforcement` wires
  * guards/events.
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -29,9 +29,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\PayrollGLPostService;
+use OCA\Humaniq\Service\PayrollGLPostService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -53,10 +53,14 @@ class GlPostRunCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and options; the GL-posting behaviour those options drive is specified at openspec/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-006, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:glpost:run')
+		$this->setName('humaniq:glpost:run')
 			->setDescription('Post each approved PayrollRun as a balanced loonjournaalpost into shillinq (MVP trigger; run on operator demand).')
 			->addOption('period', null, InputOption::VALUE_REQUIRED, 'Only post runs for this wage period (YYYY-MM).');
 
@@ -76,7 +80,7 @@ class GlPostRunCommand extends Command {
 
 		$results = $this->service->postApprovedRuns($period);
 
-		$output->writeln('<info>Hrmq payroll GL-post</info>');
+		$output->writeln('<info>Humaniq payroll GL-post</info>');
 
 		if ($results === []) {
 			$output->writeln('  geen goedgekeurde loonruns geselecteerd' . ($period !== null ? ' voor periode ' . $period : '') . '.');

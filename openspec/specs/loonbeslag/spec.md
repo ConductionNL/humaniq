@@ -7,7 +7,7 @@ built_by: openspec/changes/archive/2026-07-14-loonbeslag
 # loonbeslag Specification
 
 **Status**: done
-**Scope**: hrmq (`depends_on: []`)
+**Scope**: humaniq (`depends_on: []`)
 **OpenSpec changes**:
 - [loonbeslag](../../changes/archive/2026-07-14-loonbeslag/) _(archived 2026-07-14)_
   — court/deurwaarder-ordered wage garnishment: the `Loonbeslag` schema, the floor-clamped
@@ -18,13 +18,13 @@ built_by: openspec/changes/archive/2026-07-14-loonbeslag
 
 ## Purpose
 
-hrmq computes NL gross-to-net (`PayrollCalculator`, pure, table-driven) and already folds
+humaniq computes NL gross-to-net (`PayrollCalculator`, pure, table-driven) and already folds
 current-run, post-tax components onto `Payslip.nettoPay` without ever re-invoking the calculator
 (retro-adjustments, leave-buy-sell). A wage garnishment (derdenbeslag / loonbeslag) is the same
 shape: a court or deurwaarder orders a periodic deduction from an employee's NET pay to satisfy a
 debt, but Dutch law (Wetboek van Burgerlijke Rechtsvordering art. 475b–475e, and from 2021 the Wet
 vereenvoudiging beslagvrije voet) guarantees the employee keeps at least the *beslagvrije voet* —
-the protected minimum. Before this change hrmq had no representation of this: nothing modeled a
+the protected minimum. Before this change humaniq had no representation of this: nothing modeled a
 garnishment order, nothing computed the floor-clamped deduction, and nothing folded it into a
 payslip. This change adds exactly that, as a fourth current-run post-tax component — never a fifth
 code path in `PayrollCalculator`, which stays pure and untouched. Because a garnishment order is
@@ -137,7 +137,7 @@ silent doc note.
 
 #### Scenario: Recalculating a draft run reproduces the identical deduction
 - **GIVEN** a draft PayrollRun already generated with a garnishment-affected Payslip
-- **WHEN** `hrmq:payroll:run --period 2026-08 --recalculate` runs again with no change to the
+- **WHEN** `humaniq:payroll:run --period 2026-08 --recalculate` runs again with no change to the
   Loonbeslag or the employee's other figures
 - **THEN** `Payslip.loonbeslag` and `nettoPay` are byte-identical to the first generation
 
@@ -190,7 +190,7 @@ records for the same employee). `RuleAuditService::audit()` SHALL enrich its con
 #### Scenario: The provider is reachable with no registration code
 - **GIVEN** `NlLoonbeslagChecks.php` exists under `lib/Standards/Checks/` implementing
   `CheckProvider`
-- **WHEN** `occ hrmq:rules:audit` runs
+- **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** both `nl-loonbeslag-beslagvrije-voet-floor` and `nl-loonbeslag-single-active` are listed
   among the enforced rules, with no edit to `Application.php` or any other registration file
 

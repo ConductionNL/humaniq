@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-expense",
+    "x-humaniq-fragment": "hr-expense",
     "components": {
         "schemas": {
             "Expense": {
@@ -7,7 +7,7 @@
                 "icon": "Receipt",
                 "version": "0.6.0",
                 "title": "Expense",
-                "description": "An employee expense-reimbursement claim (onkostendeclaratie / declaratie). An employee submits a claim (amount, category, date, receipt), a manager approves or rejects it, and once approved the amount is reimbursed to the employee. The submit → approve → reimburse lifecycle is owned here in hrmq, the HR/labour app — re-homing the Expenses feature that previously lived in pipelinq. The pipelinq-specific Shillinq accounts-payable sync coupling is intentionally NOT ported: reimbursement here is the HR-side claim workflow; any downstream AP/GL posting is a separate integration concern that OpenConnector/shillinq own.",
+                "description": "An employee expense-reimbursement claim (onkostendeclaratie / declaratie). An employee submits a claim (amount, category, date, receipt), a manager approves or rejects it, and once approved the amount is reimbursed to the employee. The submit → approve → reimburse lifecycle is owned here in humaniq, the HR/labour app — re-homing the Expenses feature that previously lived in pipelinq. The pipelinq-specific Shillinq accounts-payable sync coupling is intentionally NOT ported: reimbursement here is the HR-side claim workflow; any downstream AP/GL posting is a separate integration concern that OpenConnector/shillinq own.",
                 "type": "object",
                 "x-schema-org": "schema:Invoice",
                 "required": [
@@ -37,7 +37,7 @@
                                     "submitted"
                                 ],
                                 "to": "approved",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
                                 "description": "A manager approves the claim. The NoSelfApprovalGuard rejects self-approval (the approver may not be the claiming employee); approvedBy and approvedAt are stamped on the carrying write."
                             },
                             "reject": {
@@ -45,7 +45,7 @@
                                     "submitted"
                                 ],
                                 "to": "rejected",
-                                "requires": "OCA\\Hrmq\\Lifecycle\\NoSelfApprovalGuard",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
                                 "description": "A manager rejects the claim (with a rejectionReason). The NoSelfApprovalGuard rejects self-rejection. The employee may correct it and re-submit."
                             },
                             "reimburse": {
@@ -205,7 +205,7 @@
                 "icon": "TextRecognition",
                 "version": "0.1.0",
                 "title": "ReceiptExtraction",
-                "description": "The hrmq-side record of one receipt-OCR extraction attempt against an Expense (receipt-ocr, REQ-RCPT-001): the raw extracted values and confidence docudesk's FinancialExtractionService returned, and which Expense fields this attempt actually wrote (appliedFields) -- the provenance trail a reviewer reads to see a value was machine-suggested rather than hand-entered. hrmq performs no OCR/extraction of its own; docudesk owns that surface entirely.",
+                "description": "The humaniq-side record of one receipt-OCR extraction attempt against an Expense (receipt-ocr, REQ-RCPT-001): the raw extracted values and confidence docudesk's FinancialExtractionService returned, and which Expense fields this attempt actually wrote (appliedFields) -- the provenance trail a reviewer reads to see a value was machine-suggested rather than hand-entered. humaniq performs no OCR/extraction of its own; docudesk owns that surface entirely.",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [

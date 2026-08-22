@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
-    <id>hrmq</id>
-    <name lang="en">HRMQ</name>
-    <name lang="nl">HRMQ</name>
+    <id>humaniq</id>
+    <name lang="en">Humaniq</name>
+    <name lang="nl">Humaniq</name>
     <summary lang="en">Open-source HR and payroll administration with built-in labour-law and wage-tax compliance.</summary>
     <summary lang="nl">Open-source HR- en salarisadministratie met ingebouwde arbeidsrecht- en loonheffingencompliance.</summary>
     <description lang="en"><![CDATA[Open-source HR and payroll administration for Dutch and EU employers, built on the OpenRegister data layer.
@@ -16,8 +16,8 @@ Employees log hours and submit expense claims through a submit → approve/rejec
 - **Expense claims** — submit → approve/reject → reimbursed workflow for employee expense claims
 - **OpenRegister integration** — Employee / EmploymentContract / Payslip / PayrollRun / WageTaxFiling objects live in the OpenRegister `hrmq` register
 - **Compliance rule engine** — auto-discovered per-domain CheckProviders enforce the machine-checkable rule corpus
-- **`occ hrmq:rules:audit`** — reports enforced ÷ machine-checkable coverage, violations, and per-object-type compliance
-- **`occ hrmq:rules:seed-testdata`** — idempotently seeds compliant local test data
+- **`occ humaniq:rules:audit`** — reports enforced ÷ machine-checkable coverage, violations, and per-object-type compliance
+- **`occ humaniq:rules:seed-testdata`** — idempotently seeds compliant local test data
 - **Full quality pipeline** — PHPCS, PHPMD, Psalm, PHPStan
 
 Free and open source under the EUPL-1.2 license.
@@ -34,8 +34,8 @@ Medewerkers registreren uren en dienen declaraties in via een indienen → goedk
 - **Declaraties** — indienen → goedkeuren/afkeuren → vergoed-workflow voor declaraties van medewerkers
 - **OpenRegister-integratie** — Employee-, EmploymentContract-, Payslip-, PayrollRun- en WageTaxFiling-objecten leven in het OpenRegister `hrmq`-register
 - **Compliance-regelengine** — automatisch gedetecteerde CheckProviders per domein handhaven het machine-controleerbare regelcorpus
-- **`occ hrmq:rules:audit`** — rapporteert gehandhaafd ÷ machine-controleerbaar dekkingspercentage, overtredingen en compliance per objecttype
-- **`occ hrmq:rules:seed-testdata`** — vult idempotent lokale testdata die aan de gehandhaafde regels voldoet
+- **`occ humaniq:rules:audit`** — rapporteert gehandhaafd ÷ machine-controleerbaar dekkingspercentage, overtredingen en compliance per objecttype
+- **`occ humaniq:rules:seed-testdata`** — vult idempotent lokale testdata die aan de gehandhaafde regels voldoet
 
 Vrij en open source onder de EUPL-1.2-licentie.
 
@@ -44,7 +44,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
     <version>0.2.0</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
-    <namespace>Hrmq</namespace>
+    <namespace>Humaniq</namespace>
     <documentation>
         <user>https://github.com/ConductionNL/humaniq</user>
         <admin>https://github.com/ConductionNL/humaniq</admin>
@@ -68,13 +68,21 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <php min-version="8.3"/>
         <nextcloud min-version="32" max-version="34"/>
         <!-- App dependency (not expressible in app-info.xsd): OpenRegister.
-             HRMQ owns no database tables — Employee / EmploymentContract /
+             Humaniq owns no database tables — Employee / EmploymentContract /
              PayrollRun / Payslip / WageTaxFiling / Timesheet / Expense objects
              all live in the OpenRegister `hrmq` register (imported via
-             OCA\Hrmq\Repair\InitializeRegister), and the Vue manifest pages
+             OCA\Humaniq\Repair\InitializeRegister), and the Vue manifest pages
              read/write that register directly through the
              @conduction/nextcloud-vue object store (src/manifest.json
-             declares "dependencies": ["openregister"]). -->
+             declares "dependencies": ["openregister"]).
+
+             THE REGISTER SLUG IS DELIBERATELY STILL `hrmq`. OpenRegister's
+             ImportHandler::autoCreateRegisterIfApplication() looks the register
+             up by slug (derived from x-openregister.app in
+             lib/Settings/humaniq_register.json). Renaming the slug alongside
+             the app id would not move the register — it would create a second,
+             empty one and orphan every existing employee, contract, payslip
+             and payroll run. See the comment in humaniq_register.json. -->
     </dependencies>
 
     <!-- ORDER IS LOAD-BEARING, and this file had it wrong three ways. info.xsd
@@ -93,18 +101,32 @@ Vrij en open source onder de EUPL-1.2-licentie.
              employee's holiday LeaveBalance (leave-accrual-job). Fires ~daily;
              the per-balance lastAccruedPeriod marker — not the interval —
              defines "once a month". Gated by the leave_accrual_enabled toggle. -->
-        <job>OCA\Hrmq\BackgroundJob\LeaveAccrualJob</job>
+        <job>OCA\Humaniq\BackgroundJob\LeaveAccrualJob</job>
     </background-jobs>
 
     <repair-steps>
         <!-- Order here is a SEQUENCE too: pre-migration, post-migration,
              live-migration, install, uninstall. <install> used to come first,
-             which the schema rejects. Both steps are unchanged. -->
+             which the schema rejects.
+
+             THE TWO Migrate* STEPS CARRY THE `hrmq` -> `humaniq` APP-ID RENAME
+             AND MUST RUN FIRST IN BOTH BLOCKS. Nextcloud namespaces both
+             `oc_appconfig` and `oc_preferences` by app id, so the rename makes
+             every previously stored value unreachable — the new id is simply a
+             different app. MigrateAppConfigKeys must precede InitializeRegister
+             because InitializeRegister (via SettingsService) writes the imported
+             register/schema-id bookkeeping keys itself; if it ran first those
+             keys would already exist under `humaniq` and the migration would
+             skip them as "already present", stranding the old values. -->
         <post-migration>
-            <!-- Import the hrmq register (lib/Settings/hrmq_register.json +
+            <!-- Copy every stored IAppConfig value from the `hrmq` namespace. -->
+            <step>OCA\Humaniq\Repair\MigrateAppConfigKeys</step>
+            <!-- Copy every per-user preference from the `hrmq` namespace. -->
+            <step>OCA\Humaniq\Repair\MigrateUserPreferences</step>
+            <!-- Import the hrmq register (lib/Settings/humaniq_register.json +
                  register.d/*.json fragments) into OpenRegister. Idempotent;
                  fails soft when OpenRegister is not installed. -->
-            <step>OCA\Hrmq\Repair\InitializeRegister</step>
+            <step>OCA\Humaniq\Repair\InitializeRegister</step>
             <!-- hrmq-asset-fleet-merge (tasks.md section 13, blocking defect):
                  rewrite pre-existing Asset/AssetAssignment objects from the
                  old Dutch dialect (category/status enum values, kenteken/
@@ -117,7 +139,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  not installed. post-migration (not live-migration) so it also
                  re-runs on `occ maintenance:repair`, not only on a real app
                  upgrade — see the step's own docblock. -->
-            <step>OCA\Hrmq\Repair\MigrateAssetDialect</step>
+            <step>OCA\Humaniq\Repair\MigrateAssetDialect</step>
             <!-- hours-process-redesign (Decision 9): backfill the Timesheet
                  identity caches (userId/managerUserId/administrationId),
                  synthesize one origin:"migration" TimeEntry per legacy
@@ -127,163 +149,170 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  TimeEntry schema is already imported. Idempotent (re-runs
                  create nothing); one summary line per run; fails soft when
                  OpenRegister is not installed. -->
-            <step>OCA\Hrmq\Repair\MigrateHoursProcess</step>
+            <step>OCA\Humaniq\Repair\MigrateHoursProcess</step>
         </post-migration>
         <install>
-            <!-- SAME step as post-migration, and that duplication is the point.
+            <!-- SAME steps as post-migration, and that duplication is the point.
                  Nextcloud's Installer::installAppLastSteps() guards BOTH the
                  pre- and post-migration blocks with `if ($previousVersion !== '')`
                  — on a FRESH install `installed_version` is still empty, so
                  neither block runs. Only `repair-steps/install` is executed
                  unconditionally.
 
-                 hrmq declared post-migration ONLY, so on every fresh install
-                 the register import never ran at all: `occ app:enable hrmq`
-                 printed "hrmq 0.2.0 enabled" and NOT ONE line of this step's
-                 own output, the `hrmq` register was absent from OpenRegister,
-                 and the SPA fell back to its default route on every page — the
-                 shape the CI E2E suite hit as 68 failures whose two "passes"
-                 were both the default route.
+                 THIS IS THE PATH THE RENAME ACTUALLY TAKES. Nextcloud discovers
+                 `humaniq` as a DIFFERENT app from `hrmq`, so enabling it is a
+                 fresh install with an empty `installed_version` — the
+                 post-migration block above never fires and the two Migrate*
+                 steps would never run if they were declared only there.
 
-                 The step is idempotent and fails soft when OpenRegister is not
-                 yet enabled, so running it on install AND on upgrade is safe;
-                 whichever fires first wins and the other is a version-unchanged
-                 skip. -->
-            <step>OCA\Hrmq\Repair\InitializeRegister</step>
+                 The app previously declared post-migration ONLY, so on every
+                 fresh install the register import never ran at all:
+                 `occ app:enable hrmq` printed "hrmq 0.2.0 enabled" and NOT ONE
+                 line of that step's own output, the `hrmq` register was absent
+                 from OpenRegister, and the SPA fell back to its default route on
+                 every page — the shape the CI E2E suite hit as 68 failures whose
+                 two "passes" were both the default route.
+
+                 Every step here is idempotent and fails soft, so running them on
+                 install AND on upgrade is safe; whichever fires first wins and
+                 the other is a version-unchanged skip. -->
+            <step>OCA\Humaniq\Repair\MigrateAppConfigKeys</step>
+            <step>OCA\Humaniq\Repair\MigrateUserPreferences</step>
+            <step>OCA\Humaniq\Repair\InitializeRegister</step>
             <!-- hours-process-redesign: <install> is the ONLY hook that runs
                  unconditionally on a fresh install (see above) — without this
                  entry a fresh install would seed legacy-shaped timesheets and
                  never migrate them. Runs AFTER InitializeRegister; on fresh
                  installs it finds the seed rows and behaves identically. -->
-            <step>OCA\Hrmq\Repair\MigrateHoursProcess</step>
+            <step>OCA\Humaniq\Repair\MigrateHoursProcess</step>
         </install>
     </repair-steps>
 
     <commands>
         <!-- Audit the register's HR/labour objects against the machine-checkable
              rule corpus (lib/Standards/RuleCatalogue + RuleEngine). Read-only. -->
-        <command>OCA\Hrmq\Command\RulesAuditCommand</command>
+        <command>OCA\Humaniq\Command\RulesAuditCommand</command>
         <!-- Idempotently backfill local TEST data to satisfy the enforced rules
              (provider sample objects + provider field defaults). Test/dev. -->
-        <command>OCA\Hrmq\Command\RulesSeedTestDataCommand</command>
-        <!-- On-demand, hrmq-only re-run of the Asset/AssetAssignment dialect
+        <command>OCA\Humaniq\Command\RulesSeedTestDataCommand</command>
+        <!-- On-demand, humaniq-only re-run of the Asset/AssetAssignment dialect
              migration (hrmq-asset-fleet-merge, tasks.md section 13) also
              wired as the MigrateAssetDialect post-migration repair step.
              Idempotent; prints per-schema inspected/rewritten/alreadyCurrent/
              skipped counts and every skip reason. -->
-        <command>OCA\Hrmq\Command\AssetsMigrateDialectCommand</command>
+        <command>OCA\Humaniq\Command\AssetsMigrateDialectCommand</command>
         <!-- Post each approved PayrollRun as a balanced loonjournaalpost into
              shillinq's JournalEntry register (payroll-glpost-shillinq MVP
              trigger). Duck-typed no-op when shillinq is absent. -->
-        <command>OCA\Hrmq\Command\GlPostRunCommand</command>
+        <command>OCA\Humaniq\Command\GlPostRunCommand</command>
         <!-- Hand off each payable PayrollRun's payslips as a draft SEPA
              PaymentRun into shillinq's PaymentRun register
              (payroll-sepa-netpay-shillinq MVP trigger). Duck-typed no-op when
              shillinq is absent. -->
-        <command>OCA\Hrmq\Command\NetPayRunCommand</command>
+        <command>OCA\Humaniq\Command\NetPayRunCommand</command>
         <!-- Generate standard HR documents (arbeidsovereenkomst, aanbiedingsbrief,
              werkgeversverklaring, getuigschrift) via docudesk's template/rendering
-             engine (hrmq-docudesk-documents MVP trigger). Duck-typed no-op
+             engine (humaniq-docudesk-documents MVP trigger). Duck-typed no-op
              (skipped-no-docudesk) when docudesk is absent. -->
-        <command>OCA\Hrmq\Command\DocumentsGenerateCommand</command>
+        <command>OCA\Humaniq\Command\DocumentsGenerateCommand</command>
         <!-- Extract receipt fields via docudesk's FinancialExtractionService
              and prefill still-empty Expense amount/expenseDate/vendor/
              vatAmount fields (receipt-ocr MVP trigger). Duck-typed no-op
              (skipped-no-docudesk) when docudesk is absent; never overwrites a
              human-entered value or changes Expense.status. -->
-        <command>OCA\Hrmq\Command\ExpenseExtractReceiptCommand</command>
+        <command>OCA\Humaniq\Command\ExpenseExtractReceiptCommand</command>
         <!-- Sync approved leave and sickness absence onto the configured
              shared Nextcloud calendar (leave-calendar-nc MVP trigger).
              Duck-typed no-op (skipped-no-calendar) when the calendar is not
              configured or cannot be resolved. -->
-        <command>OCA\Hrmq\Command\CalendarSyncCommand</command>
+        <command>OCA\Humaniq\Command\CalendarSyncCommand</command>
         <!-- Create (or, with the recalculate option) the draft PayrollRun + engine Payslips
              for a wage period via the table-driven NL payroll calculator
              (payroll-core-engine MVP trigger). Draft-only; approval stays a
              human act. -->
-        <command>OCA\Hrmq\Command\PayrollRunCommand</command>
+        <command>OCA\Humaniq\Command\PayrollRunCommand</command>
         <!-- Run-scoped corpus audit over one period's PayrollRun(s) + their
              payslips (payroll-core-engine); exits non-zero on any mandatory
              violation. -->
-        <command>OCA\Hrmq\Command\PayrollVerifyCommand</command>
+        <command>OCA\Humaniq\Command\PayrollVerifyCommand</command>
         <!-- Recompute a sealed Payslip from its stored engineInputSnapshot
              (never the live Employee/EmploymentContract state) and compare
              cents-exact against the archived figures (audit-trail-payroll,
-             fixing hrmq#98); exits non-zero on any mismatch or missing
+             fixing humaniq#98); exits non-zero on any mismatch or missing
              snapshot. -->
-        <command>OCA\Hrmq\Command\PayrollReproduceCommand</command>
+        <command>OCA\Humaniq\Command\PayrollReproduceCommand</command>
         <!-- Print (and optionally persist) the run-to-run payroll mutation
              report — who joined/left and each shared employee's per-component
              cents delta between two PayrollRuns (payroll-mutation-reports).
              Pure read over persisted payslips; never recomputes. -->
-        <command>OCA\Hrmq\Command\PayrollMutationsCommand</command>
+        <command>OCA\Humaniq\Command\PayrollMutationsCommand</command>
         <!-- Support-facing mirror of POST /api/payroll/proforma — simulate a
              gross-to-net breakdown from CLI flags (proforma-payslip MVP
              trigger). Persists nothing. -->
-        <command>OCA\Hrmq\Command\ProformaPayslipCommand</command>
+        <command>OCA\Humaniq\Command\ProformaPayslipCommand</command>
         <!-- Compute (and, with the apply option, settle) a terugwerkende
              kracht (TWK) correction for a sealed prior-period payslip as a
              delta — never mutates the sealed original (retro-adjustments
              MVP trigger). -->
-        <command>OCA\Hrmq\Command\PayrollAdjustCommand</command>
+        <command>OCA\Humaniq\Command\PayrollAdjustCommand</command>
         <!-- Annual tax-year roll preflight: asserts the new nl-YYYY.json
              table exists and reports the data-only, period-derived design
              (retro-adjustments). Changes no engine state. -->
-        <command>OCA\Hrmq\Command\PayrollYearTransitionCommand</command>
+        <command>OCA\Humaniq\Command\PayrollYearTransitionCommand</command>
         <!-- On-demand Arbeidstijdenwet cross-check over one Roster (by id or
              period) and its RosterAssignments, regardless of publish status
              (rostering MVP). Read-only; exits non-zero on any mandatory
              violation. -->
-        <command>OCA\Hrmq\Command\RosterCheckCommand</command>
+        <command>OCA\Humaniq\Command\RosterCheckCommand</command>
         <!-- Batch-effectuate every approved, due CompAdjustment in one
              compensation review cycle (comp-cycles MVP trigger): writes the
              new grossMonthlySalary onto the Employee and drives the
              effectuate transition. The dry-run option evaluates without writing. -->
-        <command>OCA\Hrmq\Command\CompEffectuateCommand</command>
+        <command>OCA\Humaniq\Command\CompEffectuateCommand</command>
         <!-- Settle one approved LeaveTransaction (buy/sell leave hours,
              leave-buy-sell MVP trigger): idempotent, adjusts only
              LeaveBalance.bovenwettelijkHours and stamps the transaction
              settled, entitledHours/usedHours are never touched. -->
-        <command>OCA\Hrmq\Command\LeaveBuySellSettleCommand</command>
+        <command>OCA\Humaniq\Command\LeaveBuySellSettleCommand</command>
         <!-- Compute/persist the idempotent per-(administration, year)
              werkkostenregeling vrije-ruimte assessment (wkr-administration
              MVP trigger): rolls the cross-object fiscale loonsom + WKR
              declarations into WkrAssessment. The all option iterates every
              distinct (administration, year) pair found across the payslips. -->
-        <command>OCA\Hrmq\Command\WkrAssessCommand</command>
+        <command>OCA\Humaniq\Command\WkrAssessCommand</command>
         <!-- AVG data-subject-rights orchestration over OpenRegister's DsarService
              (avg-dsr MVP trigger): export (Art 15 inzage / Art 20 portabiliteit),
              retention-guarded erase preview/execute (Art 17 vergetelheid), and
              rectify (Art 16). Each requires the as-user option to establish the
              privileged session DsarService::assertPrivileged() demands. -->
-        <command>OCA\Hrmq\Command\AvgDsrExportCommand</command>
-        <command>OCA\Hrmq\Command\AvgDsrEraseCommand</command>
-        <command>OCA\Hrmq\Command\AvgDsrRectifyCommand</command>
+        <command>OCA\Humaniq\Command\AvgDsrExportCommand</command>
+        <command>OCA\Humaniq\Command\AvgDsrEraseCommand</command>
+        <command>OCA\Humaniq\Command\AvgDsrRectifyCommand</command>
         <!-- offer-esign: generate the offer-letter (aanbiedingsbrief) PDF and
              raise a docudesk e-signature request for one Application in
              status "aanbod". KNOWN LIMITATION: docudesk's
              SigningService::createRequest() throws "No authenticated user"
              from a genuine occ CLI process; the ApplicationDetail manifest
              action is the primary, actually-working write trigger. -->
-        <command>OCA\Hrmq\Command\OfferRequestSignatureCommand</command>
+        <command>OCA\Humaniq\Command\OfferRequestSignatureCommand</command>
         <!-- offer-esign: read-only poll of docudesk signing-request status
              onto Application.offerSigningStatus (getRequest() carries no
              session guard, so this genuinely works from CLI). Never writes
              Application.status or invokes the aannemen transition. -->
-        <command>OCA\Hrmq\Command\OfferSyncSignatureCommand</command>
+        <command>OCA\Humaniq\Command\OfferSyncSignatureCommand</command>
         <!-- interview-scheduling: sync scheduled recruiting Interviews onto
              the configured shared Nextcloud calendar (fork of
              CalendarSyncCommand for a second, separately-configured shared
              calendar). Duck-typed no-op (skipped-no-calendar) when the
              calendar is not configured or cannot be resolved. -->
-        <command>OCA\Hrmq\Command\InterviewCalendarSyncCommand</command>
+        <command>OCA\Humaniq\Command\InterviewCalendarSyncCommand</command>
     </commands>
 
     <navigations>
         <navigation>
-            <id>hrmq</id>
-            <name>HRMQ</name>
-            <route>hrmq.page.index</route>
+            <id>humaniq</id>
+            <name>Humaniq</name>
+            <route>humaniq.page.index</route>
             <icon>app.svg</icon>
         </navigation>
     </navigations>

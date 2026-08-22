@@ -16,7 +16,7 @@
  * vocabulary.
  *
  * Widening this grammar into a general language would void the trust model
- * that lets hrmq execute an uploaded pack at all: "config, not code" is only
+ * that lets humaniq execute an uploaded pack at all: "config, not code" is only
  * true while `expr` cannot express computation the validator cannot bound.
  * ADR-101 forbids widening it, and names where the pressure will come from
  * (VCR — cumulative year-to-date recalculation, which needs cross-period
@@ -31,7 +31,7 @@
  * unambiguously the subtraction operator here (`@step.x1 - @step.ahk`).
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll\Dsl
+ * @package  OCA\Humaniq\Payroll\Dsl
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -48,7 +48,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll\Dsl;
+namespace OCA\Humaniq\Payroll\Dsl;
 
 /**
  * Parses and evaluates the closed, total `expr` arithmetic grammar.

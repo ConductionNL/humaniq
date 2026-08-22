@@ -6,7 +6,7 @@ description: Retroactive corrections (TWK) to a sealed prior period — a delta 
 # Retroactive adjustments (TWK)
 
 Real payroll inputs change *after* a period is sealed — a backdated
-raise, a late-corrected sick day, a retroactive contract fix. HRMQ
+raise, a late-corrected sick day, a retroactive contract fix. Humaniq
 settles these the Dutch way: **terugwerkende kracht herrekening
 (TWK)**. A `PayrollAdjustment` models the correction as a **delta**,
 never as a rewrite of the sealed original.
@@ -26,7 +26,7 @@ recompute directly.
 
 An adjustment can only be created against a **sealed** original run
 (`approved`/`posted`/`paid`). A still-`draft` original is corrected
-directly via `hrmq:payroll:run --recalculate`, the ordinary engine path
+directly via `humaniq:payroll:run --recalculate`, the ordinary engine path
 — attempting an adjustment against a draft original is refused
 (`refused-original-draft`).
 
@@ -66,7 +66,7 @@ refusal make that stamp immutable. The annual roll is therefore
 `YYYY-MM` periods pick it up automatically.
 
 ```bash
-occ hrmq:payroll:year-transition --year 2027
+occ humaniq:payroll:year-transition --year 2027
 ```
 
 This is the preflight for the annual roll: it asserts the new table
@@ -89,13 +89,13 @@ adjustment's delta during the standing audit, so a tampered delta is a
 mandatory violation:
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Booking a correction
 
 ```bash
-occ hrmq:payroll:adjust --original-period 2026-02 --employee EID \
+occ humaniq:payroll:adjust --original-period 2026-02 --employee EID \
   --correction-ref t1 --gross 4000 --settlement-period 2026-04 --apply
 ```
 

@@ -4,7 +4,7 @@ kind: code
 
 ## Why
 
-HRMQ ships **zero** locale files and uses Dutch literal text as its i18n keys, in direct violation
+Humaniq ships **zero** locale files and uses Dutch literal text as its i18n keys, in direct violation
 of hydra ADR-007 (§"Required Languages": "`l10n/en.json` and `l10n/nl.json` MUST exist in every app
 with a UI") and ADR-007's explicit consequence: "Dutch strings used as translation keys ... are a
 violation — the English equivalent must be the key."
@@ -25,13 +25,13 @@ Verified at HEAD:
 - `@conduction/nextcloud-vue`'s `CnAppNav` renders every menu entry via
   `this.effectiveTranslate(item.label)` (`nextcloud-vue/src/components/CnAppNav/CnAppNav.vue:688`) —
   i.e. the Dutch literal string in `item.label` is passed as the **translation key** to
-  `translate('hrmq', key)` (`src/App.vue:51`, `main.js` wiring). With no `hrmq` l10n catalogue
+  `translate('humaniq', key)` (`src/App.vue:51`, `main.js` wiring). With no `humaniq` l10n catalogue
   loaded, `@nextcloud/l10n` returns the key itself: Dutch text is shown to every locale, English
-  included, and if an `hrmq` Dutch catalogue were ever added with a *different* Dutch phrasing, the
+  included, and if an `humaniq` Dutch catalogue were ever added with a *different* Dutch phrasing, the
   nav item would silently show two different Dutch strings depending on locale — the literal
   "translation key" and its "translation" would both be Dutch.
 - `src/main.js`'s `tryLoadTranslations()` (`src/main.js:47-56`) unconditionally calls
-  `loadTranslations('hrmq', ...)` on every app boot. Since no `l10n/<locale>.json` file is ever
+  `loadTranslations('humaniq', ...)` on every app boot. Since no `l10n/<locale>.json` file is ever
   built or shipped, this network request 404s on every single page load in every locale — a
   wasted request the code's own comment (`src/main.js:43-46`) anticipates ("Some Nextcloud installs
   only allow the JS/CSS allowlist... 404s in those environments") without noting it 404s in *every*
@@ -50,7 +50,7 @@ Verified at HEAD:
   translations for the same key set) covering every string introduced above, per ADR-007's
   "MUST exist in every app with a UI" / "MUST contain exactly the same keys, with zero gaps."
 - Wire the build so `l10n/*.json` is actually served (Nextcloud's standard
-  `/custom_apps/hrmq/l10n/<locale>.json` static-file convention — no new backend code required,
+  `/custom_apps/humaniq/l10n/<locale>.json` static-file convention — no new backend code required,
   only the files themselves plus confirming `appinfo/info.xml` doesn't need an explicit
   declaration for this, matching sibling apps).
 - Leave `tryLoadTranslations()`'s fire-and-forget/non-fatal design in `src/main.js` unchanged
@@ -60,7 +60,7 @@ Verified at HEAD:
 ## Capabilities
 
 ### New Capabilities
-- `hrmq-i18n-locale-completeness`: HRMQ ships real `en`/`nl` locale catalogues and its manifest
+- `humaniq-i18n-locale-completeness`: Humaniq ships real `en`/`nl` locale catalogues and its manifest
   text uses English source keys, matching ADR-007 and the rest of the fleet.
 
 ## Impact
@@ -69,7 +69,7 @@ Verified at HEAD:
   source keys (no structural/schema change, no route/id changes).
 - **`l10n/en.json`**, **`l10n/nl.json`** (new).
 - **`src/main.js`** — no code change; `tryLoadTranslations()` now has a real payload to fetch.
-- Coordinate with the in-flight `hrmq-ia-navigation-alignment` change, which also touches
+- Coordinate with the in-flight `humaniq-ia-navigation-alignment` change, which also touches
   `src/main.js` (switching `bundledManifest` consumption to `buildManifest()`) and relocates menu
   entries via `menu-layout.json` — this change only touches string *values*, not menu structure or
   IDs, so it should not conflict, but land after or rebase against whichever merges first to avoid

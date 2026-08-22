@@ -11,7 +11,7 @@
  * under `lib/Payroll/` stays free of Nextcloud and OpenRegister imports so the
  * engine remains portable and directly unit-testable. Bundled packs live in
  * code (`lib/Standards/packs/`, the `lib/Standards/tables/` precedent);
- * uploaded packs live as `JurisdictionPack` objects in the hrmq register
+ * uploaded packs live as `JurisdictionPack` objects in the humaniq register
  * (ADR-022 — per-tenant config lives in OpenRegister).
  *
  * **Activation is recorded here, never read from the pack.** A pack document
@@ -22,7 +22,7 @@
  * — including the explicit-override gate.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -39,14 +39,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
-use OCA\Hrmq\Payroll\Dsl\DslException;
-use OCA\Hrmq\Payroll\JurisdictionPack;
-use OCA\Hrmq\Payroll\PackRepository;
-use OCA\Hrmq\Payroll\PackSourceInterface;
-use OCA\Hrmq\Payroll\PackValidator;
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\Dsl\DslException;
+use OCA\Humaniq\Payroll\JurisdictionPack;
+use OCA\Humaniq\Payroll\PackRepository;
+use OCA\Humaniq\Payroll\PackSourceInterface;
+use OCA\Humaniq\Payroll\PackValidator;
+use OCA\Humaniq\Payroll\TaxTables;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -58,7 +58,7 @@ use Throwable;
 class JurisdictionPackService implements PackSourceInterface {
 
 	/**
-	 * The `JurisdictionPack` schema slug in the hrmq register.
+	 * The `JurisdictionPack` schema slug in the humaniq register.
 	 *
 	 * @var string
 	 */
@@ -80,7 +80,7 @@ class JurisdictionPackService implements PackSourceInterface {
 	 * uploads would answer the wrong question anyway.
 	 *
 	 * @param ContainerInterface $container The DI container (OpenRegister is resolved lazily at runtime).
-	 * @param SettingsService $settingsService The hrmq settings.
+	 * @param SettingsService $settingsService The humaniq settings.
 	 * @param PackValidator $validator The blocking upload validator.
 	 * @param LoggerInterface $logger Logger.
 	 */
@@ -172,7 +172,7 @@ class JurisdictionPackService implements PackSourceInterface {
 			// A pack store that cannot be read must never silently fall through
 			// to "no uploaded pack" when an override IS active — that would
 			// resolve the bundled pack and pay everyone from the wrong chain.
-			$this->logger->error('hrmq: kon geüploade jurisdictiepacks niet lezen: ' . $e->getMessage(), ['exception' => $e]);
+			$this->logger->error('humaniq: kon geüploade jurisdictiepacks niet lezen: ' . $e->getMessage(), ['exception' => $e]);
 			throw new DslException('Pack: kon de geüploade jurisdictiepacks niet lezen — een run mag niet stilzwijgend terugvallen op een ander pack.', 0, $e);
 		}
 
@@ -263,7 +263,7 @@ class JurisdictionPackService implements PackSourceInterface {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -271,7 +271,7 @@ class JurisdictionPackService implements PackSourceInterface {
 	}//end objectService()
 
 	/**
-	 * @return string The configured hrmq register slug.
+	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();

@@ -32,7 +32,7 @@
  * silently going stale after the first seed run.
  *
  * @category Standards
- * @package  OCA\Hrmq\Standards\Checks
+ * @package  OCA\Humaniq\Standards\Checks
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -50,9 +50,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Standards\Checks;
+namespace OCA\Humaniq\Standards\Checks;
 
-use OCA\Hrmq\Standards\CaoRegistry;
+use OCA\Humaniq\Standards\CaoRegistry;
 
 /**
  * Below-CAO-minimum (pay scale + leave) executable checks, plus the CAO

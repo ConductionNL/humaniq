@@ -55,8 +55,8 @@ bijtelling from the referenced `CarAssignment`/`Vehicle` and flags any
 cents-mismatch against the recorded `Payslip.bijtelling`:
 
 ```bash
-occ hrmq:rules:audit
-occ hrmq:payroll:verify --period 2026-06
+occ humaniq:rules:audit
+occ humaniq:payroll:verify --period 2026-06
 ```
 
 Bijtelling is computed automatically as part of the normal run — there

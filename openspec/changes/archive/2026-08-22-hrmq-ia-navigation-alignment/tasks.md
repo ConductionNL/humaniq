@@ -20,7 +20,7 @@ editing `menu[]` in `src/manifest.json` directly and setting
 **Why not the pipeline:** sections 1.1-1.5 below adopt `manifest.d/` +
 `menu-layout.json` + `buildManifest()` purely so that a RELOCATION can be
 expressed declaratively. That is the right long-term shape and
-`hrmq-manifest-fragment-pipeline` still owns it — but it is a 109-page
+`humaniq-manifest-fragment-pipeline` still owns it — but it is a 109-page
 restructure whose only purpose here was to move five menu entries. Doing the
 restructure first would have put a large, hard-to-review diff between the brief
 ("its main menu, that is huge") and its answer.
@@ -28,7 +28,7 @@ restructure first would have put a large, hard-to-review diff between the brief
 **What this change still owns**, and why it stays open:
 
 - 1.1-1.5 — the fragment pipeline adoption itself. Deferred to
-  `hrmq-manifest-fragment-pipeline`, which is where it belongs; this change
+  `humaniq-manifest-fragment-pipeline`, which is where it belongs; this change
   should not be the reason it happens.
 - 2.1 / 2.2 — `VerlofVerzuim` exists and now owns the timesheet entries; a
   distinct `DeclaratiesAssets` group was NOT created. The existing
@@ -49,7 +49,7 @@ restructure first would have put a large, hard-to-review diff between the brief
 ## 1. Adopt the ADR-037/ADR-044 fragment pipeline (prerequisite)
 
 - [ ] 1.1 Create `src/manifest.d/` and move the current `src/manifest.json` contents into a single
-      fragment file there (e.g. `src/manifest.d/00-hrmq.json`), keeping `src/manifest.json` as the
+      fragment file there (e.g. `src/manifest.d/00-humaniq.json`), keeping `src/manifest.json` as the
       minimal `{ "$schema": ..., "version": ..., "dependencies": [...] }` base per the shared
       pipeline's contract.
 - [ ] 1.2 Add `require.context`-based fragment collection in `src/main.js` (ADR-037 — the only
@@ -59,7 +59,7 @@ restructure first would have put a large, hard-to-review diff between the brief
       matching the pipelinq/procest convention), `relocations`, and (empty for now) `removals`.
 - [ ] 1.4 Replace the direct `bundledManifest` consumption in `src/main.js` with
       `buildManifest(base, fragments, menuLayout)` from `@conduction/nextcloud-vue`.
-- [ ] 1.5 `npm run build`; confirm `js/hrmq-main.js` emits with no manifest-schema validation
+- [ ] 1.5 `npm run build`; confirm `js/humaniq-main.js` emits with no manifest-schema validation
       errors.
 
 ## 2. Add the two frozen top-level groups from ADR-001
@@ -84,17 +84,17 @@ restructure first would have put a large, hard-to-review diff between the brief
 
 ## 4. Spec + doc corrections
 
-- [ ] 4.1 Update `openspec/specs/hrmq-expenses/spec.md`'s "Declarative expense pages" requirement
+- [ ] 4.1 Update `openspec/specs/humaniq-expenses/spec.md`'s "Declarative expense pages" requirement
       text — replace "reached from an 'Onkosten' menu group" with the corrected placement under
       "Declaraties & assets".
-- [ ] 4.2 Update `openspec/specs/hrmq-timesheet-approval/spec.md`'s menu-placement wording
+- [ ] 4.2 Update `openspec/specs/humaniq-timesheet-approval/spec.md`'s menu-placement wording
       similarly for "Verlof & verzuim".
 
 ## 5. Verify
 
-- [ ] 5.1 Manual/Playwright: open the Nextcloud app menu for hrmq, confirm exactly the ADR-001
-      frozen top-level entries that hrmq currently has content for are present (no orphan "Uren"/
+- [ ] 5.1 Manual/Playwright: open the Nextcloud app menu for humaniq, confirm exactly the ADR-001
+      frozen top-level entries that humaniq currently has content for are present (no orphan "Uren"/
       "Onkosten" top-level items), and confirm all four leaf pages are reachable under their new
       parent groups.
 - [ ] 5.2 Confirm the `related`/deep-link/e2e targets referencing these routes (if any exist in
-      other apps' `deepLinks` config pointing at hrmq) still resolve — ADR-029 route-reachability.
+      other apps' `deepLinks` config pointing at humaniq) still resolve — ADR-029 route-reachability.

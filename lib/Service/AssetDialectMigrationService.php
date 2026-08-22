@@ -3,7 +3,7 @@
 /**
  * Asset Dialect Migration Service
  *
- * hrmq-asset-fleet-merge (tasks.md section 13, blocking defect): rewrites
+ * humaniq-asset-fleet-merge (tasks.md section 13, blocking defect): rewrites
  * pre-existing `Asset`/`AssetAssignment` objects from the retired Dutch
  * dialect to the renamed one. OpenRegister's register-config seed import is
  * create-only -- it never patches an object that already exists -- so the
@@ -63,7 +63,7 @@
  * silently. Expand/contract needs no bypass at all.
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -74,14 +74,14 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+ * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
  */
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
-use OCA\Hrmq\AppInfo\Application;
+use OCA\Humaniq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -106,7 +106,7 @@ class AssetDialectMigrationService {
 	 * @param LoggerInterface $logger Logger.
 	 * @param AssetDialectMapper $mapper Pure old->new dialect row mapping.
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -128,7 +128,7 @@ class AssetDialectMigrationService {
 	 * row can have its category/fields rewritten AND have its status
 	 * skipped-with-reason on the same run (Asset.status, see class docblock).
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function migrate(): array {
 		return [
@@ -143,7 +143,7 @@ class AssetDialectMigrationService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function migrateAssets(): array {
 		$report = $this->emptyReport();
@@ -201,7 +201,7 @@ class AssetDialectMigrationService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function writeAssetRow(string $id, array $row, array $mapped, array &$report): void {
 		if ($mapped['nonStatusChanged'] === false && $mapped['statusChanged'] === false) {
@@ -240,7 +240,7 @@ class AssetDialectMigrationService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function migrateAssignments(): array {
 		$report = $this->emptyReport();
@@ -290,7 +290,7 @@ class AssetDialectMigrationService {
 	/**
 	 * @return array<string, mixed> An empty per-schema report shape.
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function emptyReport(): array {
 		return [
@@ -310,7 +310,7 @@ class AssetDialectMigrationService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function stripSelf(array $row): array {
 		unset($row['@self']);
@@ -324,7 +324,7 @@ class AssetDialectMigrationService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function idOf(array $row): string {
 		return (string)($row['id'] ?? $row['@self']['id'] ?? '');
@@ -340,7 +340,7 @@ class AssetDialectMigrationService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function loadAll(string $schema): array {
 		try {
@@ -372,7 +372,7 @@ class AssetDialectMigrationService {
 	/**
 	 * @return mixed The OpenRegister ObjectService.
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function objectService(): mixed {
 		// ADR-083: establish availability before reaching. class_exists() rather
@@ -382,7 +382,7 @@ class AssetDialectMigrationService {
 		// same question the container would otherwise have answered fatally.
 		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -393,7 +393,12 @@ class AssetDialectMigrationService {
 	/**
 	 * @return string The configured register slug.
 	 *
-	 * @spec openspec/changes/hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
+	 * The 'hrmq' fallback is FROZEN across the Humaniq rename: OpenRegister's
+	 * ImportHandler resolves the register BY SLUG. Renaming it would create a
+	 * second, empty register and orphan every employee, contract, payslip and
+	 * payroll run already stored under the 'hrmq' slug.
+	 *
+	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function register(): string {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');

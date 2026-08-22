@@ -8,7 +8,7 @@ description: Case-managed onboarding and offboarding, gated by checklist fields 
 The `Onboarding & ATS` menu group gives every hire and every departure a
 dedicated case with a deterministic, declarative lifecycle. Milestones are
 gated by concrete checklist fields, and correctness is enforced by audit
-rules rather than write-time guard classes — HRMQ's onboarding/offboarding
+rules rather than write-time guard classes — Humaniq's onboarding/offboarding
 lifecycles declare **no `requires:` guards** at all; gate enforcement is
 the compliance rule corpus's job.
 
@@ -46,7 +46,7 @@ Three machine-checkable rules (domain `labour`/`payroll`, jurisdiction
    loonheffingenverklaring on file.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Offboarding
@@ -80,7 +80,7 @@ audited by four rules:
    completed case's `lastWorkingDay` must match the employee's `endDate`.
 
 ```bash
-occ hrmq:rules:audit
+occ humaniq:rules:audit
 ```
 
 ## Out of scope for both
@@ -88,7 +88,7 @@ occ hrmq:rules:audit
 The eindafrekening computation engine, UWV WW-melding, pensioenfonds and
 ZVW submissions, AVG retention timers, and automatic
 `Employee.endDate` updates are all explicitly out of scope for this MVP —
-HRMQ tracks the case and its checklist, not the downstream government
+Humaniq tracks the case and its checklist, not the downstream government
 filings or payroll math those checklist items imply. Per-item asset
 tracking for `assetsIngeleverd` is loosely coupled to the separate
 [asset register](/docs/people/assets), not owned by this capability.

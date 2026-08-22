@@ -3,15 +3,15 @@
 
 use OCP\Util;
 
-$appId = OCA\Hrmq\AppInfo\Application::APP_ID;
+$appId = OCA\Humaniq\AppInfo\Application::APP_ID;
 Util::addScript($appId, $appId . '-main');
 ?>
 <?php
 /*
- * The mount host is `#hrmq-app`, NOT `#content`.
+ * The mount host is `#humaniq-app`, NOT `#content`.
  *
  * Nextcloud core's own `core/templates/layout.user.php` already emits
- * `<div id="content" class="app-hrmq">` and this template renders INSIDE it,
+ * `<div id="content" class="app-humaniq">` and this template renders INSIDE it,
  * so a `<div id="content">` here is a DUPLICATE id nested in the original.
  *
  * Vue 2 hid the problem: `new Vue().$mount('#content')` REPLACED the matched
@@ -25,4 +25,4 @@ Util::addScript($appId, $appId . '-main');
  * A unique id removes the ambiguity rather than relying on which div wins.
  */
 ?>
-<div id="hrmq-app"></div>
+<div id="humaniq-app"></div>

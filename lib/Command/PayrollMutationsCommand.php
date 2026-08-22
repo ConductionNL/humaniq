@@ -3,7 +3,7 @@
 /**
  * Payroll Mutations Command
  *
- * `occ hrmq:payroll:mutations --to <runId> [--from <runId>] [--persist]` —
+ * `occ humaniq:payroll:mutations --to <runId> [--from <runId>] [--persist]` —
  * the run-to-run payroll diff trigger (payroll-mutation-reports design.md
  * D6): prints the per-employee entered/left/changed table with headline
  * component deltas and the run-level roll-up totals. `--from` omitted
@@ -11,7 +11,7 @@
  * `--persist` upserts the idempotent `PayrollMutationReport` (design.md D7).
  *
  * @category Command
- * @package  OCA\Hrmq\Command
+ * @package  OCA\Humaniq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -27,9 +27,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Command;
+namespace OCA\Humaniq\Command;
 
-use OCA\Hrmq\Service\PayrollMutationService;
+use OCA\Humaniq\Service\PayrollMutationService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -56,7 +56,7 @@ class PayrollMutationsCommand extends Command {
 	 * @spec openspec/changes/payroll-mutation-reports/specs/payroll-mutation-reports/spec.md#REQ-MUT-004
 	 */
 	protected function configure(): void {
-		$this->setName('hrmq:payroll:mutations')
+		$this->setName('humaniq:payroll:mutations')
 			->setDescription('Print (and optionally persist) the payroll mutation report between two runs (--from omitted auto-resolves the prior period).')
 			->addOption('to', null, InputOption::VALUE_REQUIRED, 'The PayrollRun being reviewed.')
 			->addOption('from', null, InputOption::VALUE_REQUIRED, 'The baseline PayrollRun (omit to auto-resolve the prior period of the same administration).')
@@ -92,7 +92,7 @@ class PayrollMutationsCommand extends Command {
 
 		$report = $outcome['report'];
 
-		$output->writeln('<info>Hrmq payroll mutations</info>');
+		$output->writeln('<info>Humaniq payroll mutations</info>');
 		$output->writeln(sprintf('  van periode    : %s (%s)', (string)($report['fromPeriod'] ?? '(geen — eerste run)'), (string)($report['fromRunId'] ?? '-')));
 		$output->writeln(sprintf('  naar periode   : %s (%s)', (string)$report['toPeriod'], (string)$report['toRunId']));
 		$output->writeln(sprintf('  administratie  : %s', (string)$report['administrationId']));

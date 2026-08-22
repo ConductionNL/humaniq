@@ -1,5 +1,5 @@
 {
-    "x-hrmq-fragment": "hr-okr",
+    "x-humaniq-fragment": "hr-okr",
     "components": {
         "schemas": {
             "Objective": {
@@ -35,7 +35,7 @@
                                     "actief"
                                 ],
                                 "to": "afgesloten",
-                                "description": "Close the objective. uitkomst is stamped on this carrying write. A closed objective is history and is not reopened (the ReviewCycle no-resurrection precedent) -- a correction means a new objective. No guard: authorization on who may close is owned by hrmq-rule-compliance-enforcement, not this change."
+                                "description": "Close the objective. uitkomst is stamped on this carrying write. A closed objective is history and is not reopened (the ReviewCycle no-resurrection precedent) -- a correction means a new objective. No guard: authorization on who may close is owned by humaniq-rule-compliance-enforcement, not this change."
                             }
                         }
                     }

@@ -5,7 +5,7 @@ description: Hour booking on time entries, per-period timesheets aggregated from
 
 # Hours & timesheets
 
-Since the hours-process redesign, HRMQ captures worked time at **two
+Since the hours-process redesign, Humaniq captures worked time at **two
 granularities**, both as OpenRegister objects in the `hrmq` register:
 
 - **`TimeEntry`** ("urenregistratie", the booking) — one worked span:
@@ -90,7 +90,7 @@ approved timesheet.
 
 An employee cannot approve or reject their own timesheet. The `approve`
 and `reject` transitions each declare `requires:
-OCA\Hrmq\Lifecycle\NoSelfApprovalGuard` — an OpenRegister lifecycle guard
+OCA\Humaniq\Lifecycle\NoSelfApprovalGuard` — an OpenRegister lifecycle guard
 that denies the transition when the acting user equals the timesheet's
 `employeeId`. The guard **fails closed**: if the acting user or the
 claiming employee cannot be identified at all, the transition is denied

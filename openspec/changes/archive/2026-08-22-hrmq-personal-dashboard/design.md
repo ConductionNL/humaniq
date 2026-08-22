@@ -1,4 +1,4 @@
-# Design — hrmq personal dashboard ("Mijn HR" → `/mijn`)
+# Design — humaniq personal dashboard ("Mijn HR" → `/mijn`)
 
 ## Context (verified against this checkout, 2026-08-21)
 
@@ -45,7 +45,7 @@
   `CnDashboardPage`. A registry-resolved widget receives its `content` both as the `content`
   prop and spread via `v-bind` (`CnDashboardPage.vue:561-563`), which is how flat-prop widgets
   (`object-table`) and content-prop widgets (`stat`, `banner`) both work from the same manifest
-  shape. `stat` resolves through hrmq's own registry override (`src/registry.js`, the
+  shape. `stat` resolves through humaniq's own registry override (`src/registry.js`, the
   `CnStatWidget` re-registration — the library's self-registration is tree-shaken out of the
   production bundle; that override is load-bearing for this page).
 - **`stat` widget data binding** (`CnStatWidget.vue`): `content.source = { register, schema,
@@ -73,7 +73,7 @@
   (endpoint-bound, `CnBannerWidget.vue`) and in the dashboard header-actions config
   (`CnDashboardPage.vue:1086`); `CnStatWidget`'s `variantWhen` switches the tile's *variant*,
   never its presence.
-- **Data model after `hrmq-hours-process-redesign`** (this change lands directly after it):
+- **Data model after `humaniq-hours-process-redesign`** (this change lands directly after it):
   `TimeEntry` (individual booking; `hours` server-derived, `userId` server-stamped,
   `startedAt` date-time), `Timesheet` (period aggregate; server-maintained `hours`,
   `entryCount`, lifecycle `draft|submitted|approved|rejected`, caches
@@ -93,7 +93,7 @@
   base) at `/mijn-hr/gebruikelijk-loon` — the only Mijn surface outside `/mijn/...`. Its menu
   entry references it by route **name**, not path (`05-menu.json:55-64`), so a path change
   does not touch the menu. All 37 `deepLinks[]` are schema `urlTemplate`s
-  (`/apps/hrmq/<collection>/{uuid}`); none references `/mijn-hr` — verified by dumping the
+  (`/apps/humaniq/<collection>/{uuid}`); none references `/mijn-hr` — verified by dumping the
   array. `src/main.js:150-151` is the standing precedent for hand-written redirect routes
   (`/vehicles/:id` → `/assets/:id`), added before the catch-all.
 - **e2e**: specs live in `tests/e2e/spec-coverage/*.spec.ts`; CI seeds via
@@ -149,7 +149,7 @@ Two edits cannot live in the fragment, by mechanism rather than choice:
 
 `type: "dashboard"`, route `/mijn`, title `"Mijn HR"`, description
 `"Jouw persoonlijke overzicht: uren, verlof, declaraties en loonstroken."` — Dutch literals,
-matching the app's current state; `hrmq-i18n-locale-completeness` converts them later and this
+matching the app's current state; `humaniq-i18n-locale-completeness` converts them later and this
 change deliberately adds no English keys.
 
 All widgets use the **proven** dashboard grammar (`{id, type, title, content}` + `layout[]`,
@@ -192,8 +192,8 @@ in the browser, not inferred, and each is recorded in the page's `_note`.
    PATH — `"MijnUren"` would have resolved to the path `MijnUren`, missed every route and landed
    on the catch-all. The manifest uses `{ "name": "MijnUren" }`, the same spelling the
    `hr-objects` nav-card entries already use. Verified live: the three tiles render as
-   `<a href="/apps/hrmq/mijn/uren">`, `/apps/hrmq/mijn/declaraties` and
-   `/apps/hrmq/timesheets/team-approval`.
+   `<a href="/apps/humaniq/mijn/uren">`, `/apps/humaniq/mijn/declaraties` and
+   `/apps/humaniq/timesheets/team-approval`.
 2. **`object-table` on a `type:"dashboard"` page is `CnObjectListWidget`, with the FLAT content
    contract** — `{ register, schema, filter, sort: { field, dir }, limit, columns, rowRoute,
    viewAllRoute, emptyText, allowCreate }` — not the nested `source` shape this design assumed.
@@ -307,7 +307,7 @@ that, per the page's `_note`).
   (pending approvals) is still caller-scoped — it is *the caller's own* work queue
   (`managerUserId: "@me"`), the same lens `TeamUrengoedkeuring` already applies, not an
   unscoped management surface.
-- **`hrmq-dashboard-steering-indicators`**: its REQ-DSI-001 scenarios ("no stat widget SHALL
+- **`humaniq-dashboard-steering-indicators`**: its REQ-DSI-001 scenarios ("no stat widget SHALL
   remain **on the page**", pairwise-duplication check over "the six widgets") are scoped to the
   `Dashboard` page's `widgets` array and are untouched. The steering page keeps zero
   `@me`-filtered widgets; this page keeps zero management trends — the two surfaces partition
@@ -316,7 +316,7 @@ that, per the page's `_note`).
   for different callers — not the row-1–3 role-filter duplication REQ-DSI-001's scenario
   polices, which is again page-scoped.
 - **i18n**: Dutch literals throughout, zero new keys, zero conversions —
-  `hrmq-i18n-locale-completeness` lands after this change and owns the sweep. Its scope
+  `humaniq-i18n-locale-completeness` lands after this change and owns the sweep. Its scope
   includes every manifest label; the new page's strings will be converted there with the rest.
 
 ## Risks / Trade-offs
@@ -333,7 +333,7 @@ that, per the page's `_note`).
   replacement `@config.fiscalYear`, removal **2026-10-01**). It validates today via the schema's
   deprecated-during-window overlay, so the gate warns rather than fails, but this change adds a
   new use roughly six weeks before removal. Migrating it to `@config.fiscalYear` needs an
-  IAppConfig key hrmq does not have; flagged to the orchestrator as a follow-up.
+  IAppConfig key humaniq does not have; flagged to the orchestrator as a follow-up.
 - **[RESOLVED — V1, 2026-08-22] operator filter (`gte`) through the stat widget's aggregation
   endpoint.** Proven through the shipping render path (a rendered `stat` tile, not a curl
   approximation): the widget emitted
@@ -346,18 +346,18 @@ that, per the page's `_note`).
   `SchemaMapper::find($slug)`, which matches `LOWER(slug)` across every register on the
   instance and tie-breaks on app-ownership-then-lowest-id; the `{register}` path segment is
   never used to disambiguate. On this shared dev box that is not theoretical: `TimeEntry`
-  resolves to **planix's** schema #161 (hrmq's is #9466) and `Expense` to **pipelinq's** #507
-  (hrmq's is #5026), so widget 1 renders `0.00` while the data exists, and widget 4 renders a
+  resolves to **planninq's** schema #161 (humaniq's is #9466) and `Expense` to **pipelinq's** #507
+  (humaniq's is #5026), so widget 1 renders `0.00` while the data exists, and widget 4 renders a
   count of *another app's* expenses. Both were measured live; V1's probe therefore carried the
-  hrmq schema id alongside the shipping slug so the operator-filter question stayed isolated
+  humaniq schema id alongside the shipping slug so the operator-filter question stayed isolated
   from the resolution question. Nothing in this manifest can fix it — a slug is the only
-  portable spelling, and hrmq's own schema slugs are not renameable — so the fix belongs in
+  portable spelling, and humaniq's own schema slugs are not renameable — so the fix belongs in
   OpenRegister (resolve the schema within the named register's `schemas[]` before falling back
   to the global lookup) or in an `occ openregister:schemas:dedup` pass on the dev instance. It
   does not affect a single-app instance or CI, where no competing slug exists. **The three
   object-list widgets are unaffected**: `/api/objects/{register}/{schema}` resolves the schema
   within the register (measured — the same `Timesheet`/`LeaveBalance`/`Payslip` slugs return
-  hrmq's rows). Flagged to the orchestrator.
+  humaniq's rows). Flagged to the orchestrator.
 - **[CONFIRMED, benign] `@workspace.activeAdministrationId?` does NOT resolve inside dashboard
   widget context.** Measured 2026-08-22 on an instance where the active-administration pointer
   IS set (the Timesheets *index* page sent `administrationId=ADM-001` in the same session):

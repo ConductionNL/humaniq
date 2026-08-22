@@ -7,17 +7,17 @@ built_by: openspec/changes/archive/2026-07-15-interview-scheduling
 # interview-scheduling Specification
 
 **Status**: done
-**Scope**: hrmq (NC-platform leaf; writes into the host Nextcloud instance's own CalDAV store — no other app dependency)
+**Scope**: humaniq (NC-platform leaf; writes into the host Nextcloud instance's own CalDAV store — no other app dependency)
 **OpenSpec changes**:
-- [interview-scheduling](../../changes/archive/2026-07-15-interview-scheduling/) _(archived 2026-07-15)_ — a new `Interview` schema per Application interview round, `InterviewCalendarService` upserting one timed VEVENT per `scheduled` Interview into a configured shared Nextcloud calendar via a duck-typed, container-resolved `OCA\DAV\CalDAV\CalDavBackend`, a STORED `calendarEventUid` idempotency marker, the AVG summary boundary, `skipped-no-calendar` degradation, the occ trigger `hrmq:interview:sync`, and a guarded single-Interview manifest action (kind: code)
+- [interview-scheduling](../../changes/archive/2026-07-15-interview-scheduling/) _(archived 2026-07-15)_ — a new `Interview` schema per Application interview round, `InterviewCalendarService` upserting one timed VEVENT per `scheduled` Interview into a configured shared Nextcloud calendar via a duck-typed, container-resolved `OCA\DAV\CalDAV\CalDavBackend`, a STORED `calendarEventUid` idempotency marker, the AVG summary boundary, `skipped-no-calendar` degradation, the occ trigger `humaniq:interview:sync`, and a guarded single-Interview manifest action (kind: code)
 
 ## Purpose
 
-Close the gap `recruiting-ats-basic`'s `uitnodigen` transition docblock states plainly ("No calendar/scheduling integration in the MVP"): today an interview invitation is a bare status flip with no artifact, so nobody on the recruiting team can see from a calendar when and with whom a `gesprek` is actually happening. `leave-calendar-nc` already proved the mechanism hrmq needs — an on-demand service that projects register objects onto one configured shared Nextcloud calendar through a duck-typed `CalDavBackend`, degrading cleanly when unconfigured. Interview scheduling forks that pattern for a second object type, with one deliberate divergence: because interviews are scheduled/rescheduled/cancelled as individual, direct actions (not swept as one whole set every run), `InterviewCalendarService` PERSISTS the derived `calendarEventUid` back onto the Interview after first sync — an inspectable "has this ever reached the calendar" marker — rather than only deriving it at render time. AVG boundary: unlike absence (where even the kind of leave is excluded), an interview event's whole purpose is telling the panel who and what role, so SUMMARY carries the candidate name and vacancy title; everything else Application-sensitive (email, phone, cvFile, motivation, talentPoolOptIn, rejectedDate, retentionExpiryDate) never reaches the render path, and interviewers appear as plain DESCRIPTION text, never as an ATTENDEE/ORGANIZER (so no iMIP scheduling mail ever fires).
+Close the gap `recruiting-ats-basic`'s `uitnodigen` transition docblock states plainly ("No calendar/scheduling integration in the MVP"): today an interview invitation is a bare status flip with no artifact, so nobody on the recruiting team can see from a calendar when and with whom a `gesprek` is actually happening. `leave-calendar-nc` already proved the mechanism humaniq needs — an on-demand service that projects register objects onto one configured shared Nextcloud calendar through a duck-typed `CalDavBackend`, degrading cleanly when unconfigured. Interview scheduling forks that pattern for a second object type, with one deliberate divergence: because interviews are scheduled/rescheduled/cancelled as individual, direct actions (not swept as one whole set every run), `InterviewCalendarService` PERSISTS the derived `calendarEventUid` back onto the Interview after first sync — an inspectable "has this ever reached the calendar" marker — rather than only deriving it at render time. AVG boundary: unlike absence (where even the kind of leave is excluded), an interview event's whole purpose is telling the panel who and what role, so SUMMARY carries the candidate name and vacancy title; everything else Application-sensitive (email, phone, cvFile, motivation, talentPoolOptIn, rejectedDate, retentionExpiryDate) never reaches the render path, and interviewers appear as plain DESCRIPTION text, never as an ATTENDEE/ORGANIZER (so no iMIP scheduling mail ever fires).
 
 ## Requirements
 
-@e2e exclude backend occ/service/controller integration with the Nextcloud CalDAV store; no e2e suite exists yet for hrmq's manifest surfaces (tracked by active change hrmq-test-coverage-baseline)
+@e2e exclude backend occ/service/controller integration with the Nextcloud CalDAV store; no e2e suite exists yet for humaniq's manifest surfaces (tracked by active change humaniq-test-coverage-baseline)
 
 ### REQ-INTV-001: Interview is a scheduling record tied to one Application
 
@@ -40,7 +40,7 @@ Close the gap `recruiting-ats-basic`'s `uitnodigen` transition docblock states p
 #### Scenario: Dedicated config keys are independent of the leave calendar
 - **GIVEN** `leave_calendar_principal`/`leave_calendar_uri` are configured to a company-wide absence calendar
 - **AND** `interview_calendar_principal`/`interview_calendar_uri` are unset
-- **WHEN** `occ hrmq:interview:sync` runs
+- **WHEN** `occ humaniq:interview:sync` runs
 - **THEN** the run ends `skipped-no-calendar` even though the leave calendar sync would succeed
 
 ### REQ-INTV-003: Scheduling SHALL upsert one deterministic event, identified by a stored calendarEventUid
@@ -102,25 +102,25 @@ Events render SUMMARY exactly `Sollicitatiegesprek — {candidateName} ({vacancy
 
 ### REQ-INTV-006: Absent calendar stack SHALL degrade to a recorded skip
 
-Availability is duck-typed per run: `OCA\DAV\CalDAV\CalDavBackend` resolvable from the container AND `getCalendarByUri(principal, uri)` returning a calendar for the configured `interview_calendar_principal`/`interview_calendar_uri` values. Any miss (backend unresolvable, either config key unset, calendar deleted or URI wrong) ends the run `skipped-no-calendar` with an explanatory message — never an exception, nothing above INFO in the log. hrmq gains no info.xml or composer dependency on the calendar or dav apps from this change.
+Availability is duck-typed per run: `OCA\DAV\CalDAV\CalDavBackend` resolvable from the container AND `getCalendarByUri(principal, uri)` returning a calendar for the configured `interview_calendar_principal`/`interview_calendar_uri` values. Any miss (backend unresolvable, either config key unset, calendar deleted or URI wrong) ends the run `skipped-no-calendar` with an explanatory message — never an exception, nothing above INFO in the log. humaniq gains no info.xml or composer dependency on the calendar or dav apps from this change.
 
 #### Scenario: Unconfigured instance skips cleanly
 - **GIVEN** a fresh install where `interview_calendar_principal` and `interview_calendar_uri` are unset
-- **WHEN** `occ hrmq:interview:sync` runs
+- **WHEN** `occ humaniq:interview:sync` runs
 - **THEN** the command exits `0`, reports `skipped-no-calendar`, and no calendar object is created, updated, or deleted
 
 #### Scenario: Misconfigured calendar URI
 - **GIVEN** `interview_calendar_uri` pointing at a calendar that does not exist on the configured principal
-- **WHEN** `occ hrmq:interview:sync` runs
+- **WHEN** `occ humaniq:interview:sync` runs
 - **THEN** the command exits `0`, reports `skipped-no-calendar` with the unresolved principal/URI, and throws no exception
 
 ### REQ-INTV-007: An occ command SHALL mirror the leave-calendar sync trigger
 
-`lib/Command/InterviewCalendarSyncCommand.php` registers `hrmq:interview:sync` with optional `--from DATE` in `appinfo/info.xml` `<commands>` (next to `hrmq:calendar:sync`). `--from` bounds the upsert set to Interviews whose `scheduledStart` is on or after DATE; omitted means all `scheduled` Interviews (capped by the ObjectService load limit). Reconciliation always uses the full live-id set regardless of `--from`. The command prints one outcome line per touched Interview (`created|updated|removed|unchanged|failed|skipped`) plus a summary, and exits `0` when no source ended `failed` (a fully skipped run is a healthy `0`) and `1` otherwise.
+`lib/Command/InterviewCalendarSyncCommand.php` registers `humaniq:interview:sync` with optional `--from DATE` in `appinfo/info.xml` `<commands>` (next to `humaniq:calendar:sync`). `--from` bounds the upsert set to Interviews whose `scheduledStart` is on or after DATE; omitted means all `scheduled` Interviews (capped by the ObjectService load limit). Reconciliation always uses the full live-id set regardless of `--from`. The command prints one outcome line per touched Interview (`created|updated|removed|unchanged|failed|skipped`) plus a summary, and exits `0` when no source ended `failed` (a fully skipped run is a healthy `0`) and `1` otherwise.
 
 #### Scenario: Bounded sync
 - **GIVEN** scheduled Interviews starting 2026-06-01 and 2026-08-14
-- **WHEN** `occ hrmq:interview:sync --from 2026-07-01` runs
+- **WHEN** `occ humaniq:interview:sync --from 2026-07-01` runs
 - **THEN** only the August Interview is upserted, and the June Interview's existing event (if any) is not deleted by reconciliation
 
 #### Scenario: Failure surfaces in the exit code
@@ -130,7 +130,7 @@ Availability is duck-typed per run: `OCA\DAV\CalDAV\CalDavBackend` resolvable fr
 
 ### REQ-INTV-008: A guarded manifest action SHALL trigger a single-Interview sync
 
-`InterviewDetail` exposes an `api-call` action ("Sync naar agenda") that calls `POST /api/interviews/sync` (`interviewId` as a body param, the established `request-offer-signature`/`payroll#calculate` shape used by every other guarded hrmq manifest action) backed by `InterviewController::sync()`. The endpoint rejects the request unless the acting user is an admin or a member of the established HR-role check (the `isAdminOrHr()` precedent shared with `PayrollController`/`LoonbeslagController`/`OfferController`) — BEFORE any resolve; the posted `interviewId` then resolves through OpenRegister's ObjectService under the caller's ambient RBAC (unresolvable/unauthorized collapses to the same 404, the `OfferController::authorizeApplication()` no-admin-idor shape). An authorized call invokes `InterviewCalendarService::syncOne()` for exactly the one Interview identified and returns its outcome.
+`InterviewDetail` exposes an `api-call` action ("Sync naar agenda") that calls `POST /api/interviews/sync` (`interviewId` as a body param, the established `request-offer-signature`/`payroll#calculate` shape used by every other guarded humaniq manifest action) backed by `InterviewController::sync()`. The endpoint rejects the request unless the acting user is an admin or a member of the established HR-role check (the `isAdminOrHr()` precedent shared with `PayrollController`/`LoonbeslagController`/`OfferController`) — BEFORE any resolve; the posted `interviewId` then resolves through OpenRegister's ObjectService under the caller's ambient RBAC (unresolvable/unauthorized collapses to the same 404, the `OfferController::authorizeApplication()` no-admin-idor shape). An authorized call invokes `InterviewCalendarService::syncOne()` for exactly the one Interview identified and returns its outcome.
 
 #### Scenario: Admin/HR user syncs one interview from the detail page
 - **GIVEN** an admin or HR-group user viewing a scheduled Interview's detail page with a configured calendar
@@ -147,7 +147,7 @@ Availability is duck-typed per run: `OCA\DAV\CalDAV\CalDavBackend` resolvable fr
 `Interviews` (list) and `InterviewDetail` pages are children of the existing `OnboardingAtsGroup` menu group in `src/manifest.json`, alongside `Onboardings`/`Vacancies`/`Applications`/`Offboardings` — no new top-level menu group is added for this change, per ADR-001. `ApplicationDetail` gains an `object-list` widget ("Gesprekken") resolving `Interview.applicationId` for the current Application, so an interview round is reachable from its Application without a separate navigation path.
 
 #### Scenario: Interview pages appear under Onboarding & ATS
-- **GIVEN** the hrmq navigation menu
+- **GIVEN** the humaniq navigation menu
 - **WHEN** the "Onboarding & ATS" group is expanded
 - **THEN** it lists `Onboardings`, `Vacatures`, `Sollicitaties`, an Interview entry, and `Offboardings`, with no new top-level menu item added anywhere else
 

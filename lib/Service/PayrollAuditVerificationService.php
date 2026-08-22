@@ -19,12 +19,12 @@
  * service returns nothing useful here. The per-object audit-row read path
  * OpenRegister actually exposes for this is
  * `OCA\OpenRegister\Service\Object\AuditHandler::getLogs($uuid)` — already
- * the read path wired into hrmq's 43 `audit-trail` manifest widgets — which
+ * the read path wired into humaniq's 43 `audit-trail` manifest widgets — which
  * queries `AuditTrailMapper` directly and returns real `AuditTrail` rows
  * (numeric `id`, the same id space `AuditHashService::verifyChain()` takes).
  *
  * @category Service
- * @package  OCA\Hrmq\Service
+ * @package  OCA\Humaniq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -40,7 +40,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Service;
+namespace OCA\Humaniq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -300,7 +300,7 @@ final class PayrollAuditVerificationService {
 		// itself.
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
 			throw new RuntimeException(
-				'hrmq requires the OpenRegister app, which is not installed on this instance.'
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}
 
@@ -322,7 +322,7 @@ final class PayrollAuditVerificationService {
 	}//end auditHashService()
 
 	/**
-	 * @return string The configured hrmq register slug.
+	 * @return string The configured humaniq register slug.
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();

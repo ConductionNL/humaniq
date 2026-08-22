@@ -106,7 +106,7 @@ duration 60 months (5 years) — all `verified: true` with primary/corroborated 
 
 - **The 30%-ruling netto-operation** (grossing up an agreed NET salary under the ruling — an
   inverse solve) — explicitly out of scope per ADR-101; the DSL cannot express it (design.md D1).
-  hrmq issue #81 tracks it as the DSL escape hatch's likely first customer.
+  humaniq issue #81 tracks it as the DSL escape hatch's likely first customer.
 - **Partial non-resident (partieel buitenlands belastingplichtige) status** — the box-2/box-3
   election some 30%-ruling holders can make; unrelated to the loon/loonheffing computation this
   change touches. Named follow-up.

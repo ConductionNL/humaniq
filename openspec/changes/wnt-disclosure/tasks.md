@@ -9,7 +9,7 @@
   (boolean, default `false`) per REQ-WNT-001
 - [ ] 2. Schema: `Employee` gains `wntUitzonderingReden` (nullable enum
   `overgangsrecht`/`ontheffing-minister`, default null) per REQ-WNT-001
-- [ ] 3. NEW fragment `lib/Settings/register.d/hr-wnt.json` (`x-hrmq-fragment: hr-wnt`) declaring
+- [ ] 3. NEW fragment `lib/Settings/register.d/hr-wnt.json` (`x-humaniq-fragment: hr-wnt`) declaring
   `WntDisclosure` (slug `WntDisclosure`, `x-schema-org: schema:Report`, required
   `[employeeId, year, totalCompensation, status]`) with `employeeId` ($ref Employee), `year` (string,
   YYYY), `totalCompensation` (number, cents or euro — pick one and document it), `status` (enum

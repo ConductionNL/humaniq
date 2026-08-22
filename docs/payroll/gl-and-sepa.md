@@ -5,7 +5,7 @@ description: How an approved payroll run posts to the general ledger and hands o
 
 # GL posting & SEPA net-pay
 
-HRMQ stays a **leaf app** for both bookkeeping and payments: it never
+Humaniq stays a **leaf app** for both bookkeeping and payments: it never
 touches the general ledger directly and never emits SEPA XML. Instead,
 every approved `PayrollRun` produces a draft object in
 [shillinq](https://shillinq.conduction.nl) — Conduction's bookkeeping
@@ -13,7 +13,7 @@ app — via same-instance OpenRegister calls. shillinq owns everything from
 there: approval, journal posting, the pain.001.001.03 SEPA export, and
 CAMT.053 reconciliation.
 
-Both integrations are **duck-typed**: HRMQ checks whether shillinq is
+Both integrations are **duck-typed**: Humaniq checks whether shillinq is
 installed and its expected register/schema resolve, and degrades to a
 recorded `skipped-no-shillinq` outcome rather than throwing when it isn't
 — no `info.xml` or composer dependency on shillinq is added. A run that
@@ -40,11 +40,11 @@ remainder would be negative, the attempt fails closed — nothing is written
 to shillinq, and the `PayrollGLPost` record carries a diagnostic
 `errorMessage`.
 
-The journal lands as a **draft** `JournalEntry` — HRMQ never drives
+The journal lands as a **draft** `JournalEntry` — Humaniq never drives
 shillinq's own posting/approval lifecycle. Posting is idempotent per run.
 
 ```bash
-occ hrmq:glpost:run --period=2026-06
+occ humaniq:glpost:run --period=2026-06
 ```
 
 ## SEPA net-pay
@@ -64,7 +64,7 @@ object is created — the whole batch fails with every line's diagnostic
 recorded, so a partial salary run can never go out. An empty line set
 (no payslips, or all zero) likewise fails.
 
-The resulting `PaymentRun` is created as `draft` in shillinq — HRMQ never
+The resulting `PaymentRun` is created as `draft` in shillinq — Humaniq never
 generates SEPA pain.001 XML itself and never advances shillinq's approval,
 export, or reconciliation lifecycle. Batch creation is idempotent per run
 with crash recovery: a deterministic `runNumber`
@@ -74,7 +74,7 @@ salary payment is the top-severity failure this guards against, with
 shillinq's own mandatory human approval gate as the final backstop.
 
 ```bash
-occ hrmq:netpay:run --period=2026-06
+occ humaniq:netpay:run --period=2026-06
 ```
 
 ## Employee bank details

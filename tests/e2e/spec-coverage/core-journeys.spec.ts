@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Core journeys — deep rendered-content assertions for hrmq's primary
+ * Core journeys — deep rendered-content assertions for humaniq's primary
  * surfaces, complementing the shallow manifest smoke suite
  * (manifest-pages.spec.ts).
  *
@@ -26,34 +26,36 @@
 
 import type { APIRequestContext, Page } from '@playwright/test';
 
+import { randomUUID } from 'node:crypto'
+
 import { appDialog } from '@conduction/nextcloud-vue/testing/playwright'
 import { expect, request, test } from '@playwright/test'
 import { ADMIN_CREDENTIALS, resolveBaseURL } from '../base-url.ts'
 
-// PATH-form base: the hrmq router runs in HISTORY mode (`createWebHistory`,
+// PATH-form base: the humaniq router runs in HISTORY mode (`createWebHistory`,
 // src/main.js). Hash-form deep links are silently ignored and land on
 // the default page — observed live 2026-07-26.
 //
 // ⚠️ The base is NOT a constant. `src/main.js` builds the router with
-// `createWebHistory(generateUrl('/apps/hrmq'))`, which returns `/apps/hrmq` when
-// the front controller is inactive and `/index.php/apps/hrmq` when it is. This
-// file used to hardcode `/apps/hrmq`; on CI `generateUrl` returns the
+// `createWebHistory(generateUrl('/apps/humaniq'))`, which returns `/apps/humaniq` when
+// the front controller is inactive and `/index.php/apps/humaniq` when it is. This
+// file used to hardcode `/apps/humaniq`; on CI `generateUrl` returns the
 // `/index.php` form, so every `page.goto` here addressed a path OUTSIDE the
 // router base, matched nothing, and fell through main.js's `/:pathMatch(.*)*`
 // catch-all to its default page. Measured on run 30919961510 (job 92028085860):
 // every route assertion failed with `Received string:
-// "/index.php/apps/hrmq/timesheets"` — including `/employees`, whose page is
+// "/index.php/apps/humaniq/timesheets"` — including `/employees`, whose page is
 // fine. Resolve it from the running app instead, per page.
 let _appBase: string | null = null
 async function appBase(page: Page): Promise<string> {
 	if (_appBase) return _appBase
-	await page.goto('/index.php/apps/hrmq/', { waitUntil: 'domcontentloaded' })
+	await page.goto('/index.php/apps/humaniq/', { waitUntil: 'domcontentloaded' })
 	const resolved = await page.evaluate(
-		() => (window as unknown as { OC?: { generateUrl?: (_p: string) => string } }).OC?.generateUrl?.('/apps/hrmq'),
+		() => (window as unknown as { OC?: { generateUrl?: (_p: string) => string } }).OC?.generateUrl?.('/apps/humaniq'),
 	)
 	if (!resolved) {
 		throw new Error(
-			'OC.generateUrl is not available on the hrmq page, so the router base cannot be '
+			'OC.generateUrl is not available on the humaniq page, so the router base cannot be '
 			+ 'resolved — every route assertion below would be measuring the wrong URL.',
 		)
 	}
@@ -77,7 +79,11 @@ const AUTH = ADMIN_CREDENTIALS
 const HEADERS = { 'OCS-APIRequest': 'true', 'Content-Type': 'application/json' }
 
 /** Unique run id so repeated runs never collide and cleanup is exact. */
-const RUN_ID = `e2e-${Date.now()}-${Math.floor(Math.random() * 1e4)}`
+/* randomUUID rather than Math.random: this id namespaces every fixture this
+   run creates in a SHARED OpenRegister register, so a collision with a
+   concurrent run cross-contaminates both. Math.random also trips CodeQL's
+   js/insecure-randomness. */
+const RUN_ID = `e2e-${Date.now()}-${randomUUID().slice(0, 8)}`
 
 /**
  * Resolve the Employee schema path segment on the live instance.
@@ -121,7 +127,7 @@ async function gotoRoute(page: Page, route: string): Promise<void> {
  * table/list or an explicit empty state. Never a blank shell, and never
  * a different schema's page (the greenwash failure mode).
  *
- * NOTE (live finding, 2026-07-26): hrmq's CnIndexPage renders NO page
+ * NOTE (live finding, 2026-07-26): humaniq's CnIndexPage renders NO page
  * title heading at all — the manifest `title` ("Employees", …) appears
  * only in the left nav, not as a role=heading in main. Page identity is
  * therefore asserted via the schema-specific create button, which IS
@@ -136,7 +142,7 @@ async function expectIndexRendered(page: Page, addButton: RegExp): Promise<void>
 	).toBeVisible({ timeout: 20_000 })
 	// A CnIndexPage always resolves to one of: a data table/listing, or an
 	// explicit empty-state note ("No items found"). Match either — but
-	// SOMETHING must be there. NOTE: hrmq's main content element is
+	// SOMETHING must be there. NOTE: humaniq's main content element is
 	// `<main id="app-content-vue" class="app-content">` — there is no
 	// `#app-content` id, so scope via the `main` element itself.
 	const content = page.locator(

@@ -19,7 +19,7 @@
  * gate 3).
  *
  * @category Payroll
- * @package  OCA\Hrmq\Payroll\Dsl
+ * @package  OCA\Humaniq\Payroll\Dsl
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -35,9 +35,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Hrmq\Payroll\Dsl;
+namespace OCA\Humaniq\Payroll\Dsl;
 
-use OCA\Hrmq\Payroll\TaxTables;
+use OCA\Humaniq\Payroll\TaxTables;
 
 /**
  * The pure per-run binding/step store handed to every op.
