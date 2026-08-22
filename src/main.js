@@ -149,6 +149,10 @@ function routesFromManifest(manifest) {
 	// catch-all so they take priority over it.
 	routes.push({ path: '/vehicles/:id', redirect: (to) => '/assets/' + to.params.id })
 	routes.push({ path: '/car-assignments/:id', redirect: (to) => '/asset-assignments/' + to.params.id })
+	// hrmq-personal-dashboard (REQ-MHS-007): MijnGebruikelijkLoon moved under
+	// the `/mijn/...` prefix with every other Mijn surface, so the legacy path
+	// redirects instead of falling through to the catch-all below.
+	routes.push({ path: '/mijn-hr/gebruikelijk-loon', redirect: '/mijn/gebruikelijk-loon' })
 
 	// Catch-all redirect to the first page. vue-router 4 REMOVED the bare
 	// `path: '*'` wildcard: it matches nothing and raises no error, so any

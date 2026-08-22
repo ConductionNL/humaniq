@@ -222,18 +222,23 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 		// (Urenboekingen) before Urenstaten. Click-through proves reachable.
 		// A fresh session starts with the nav GROUPS COLLAPSED (children exist
 		// but are hidden), so do what a user does: expand the group first.
+		// Expand via the group's CHEVRON, never its title: Mijn HR is a routed
+		// group (hrmq-personal-dashboard), so clicking its title navigates to
+		// /mijn instead of toggling. The chevron is the only affordance that
+		// toggles for both routed and route-less groups, and targeting it by
+		// the group's data-testid keeps this independent of the label language.
 		const nav = page.locator('#app-navigation-vue, .app-navigation').first()
-		const revealNavLeaf = async (leafLabel: string, groupLabel: string) => {
+		const revealNavLeaf = async (leafLabel: string, groupId: string) => {
 			const leaf = nav.getByText(leafLabel, { exact: true })
 			if (!(await leaf.isVisible())) {
-				await nav.getByText(groupLabel, { exact: true }).click()
+				await nav.locator(`li[data-testid="cn-nav-entry-${groupId}"] button`).first().click()
 			}
 			await expect(leaf).toBeVisible({ timeout: 15_000 })
 			return leaf
 		}
-		await (await revealNavLeaf('Mijn urenstaten', 'Mijn HR')).click()
+		await (await revealNavLeaf('Mijn urenstaten', 'MijnHrGroup')).click()
 		await expect(page).toHaveURL(/\/mijn\/urenstaten$/, { timeout: 15_000 })
-		await (await revealNavLeaf('Urenboekingen', 'Verlof & verzuim')).click()
+		await (await revealNavLeaf('Urenboekingen', 'VerlofVerzuimGroup')).click()
 		await expect(page).toHaveURL(/\/time-entries$/, { timeout: 15_000 })
 	})
 

@@ -306,7 +306,8 @@
       "icon": "Account",
       "id": "MijnHrGroup",
       "label": "Mijn HR",
-      "order": 20
+      "order": 20,
+      "route": "MijnHr"
     },
     {
       "children": [
@@ -735,6 +736,455 @@
       "section": "settings"
     }
   ],
+  "pageTemplates": [
+    {
+      "_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the one shape every hrmq index page shares — a schema-bound CnIndexPage with columns/sort and no widgets. All 58 index pages instantiate this template; the only variance is the presence of the optional keys below, which expandPageTemplates() drops from the expanded page when the instantiation omits them (exact-match placeholder + absent optional param). `filters` is optional because the nine Mijn* self-service pages and VerzuimOverzicht pin their result set with `filter` alone and offer no user-facing filter bar. `actions` (page-level create buttons, e.g. PayrollRuns' 'Loonrun aanmaken') and `note` (the page's own maintainer prose, landing as config._note) ride along as ordinary parameters so an instantiation stays the single complete description of its page.",
+      "id": "indexScaffold",
+      "page": {
+        "actions": "{{actions}}",
+        "config": {
+          "_note": "{{note}}",
+          "actionToggles": "{{actionToggles}}",
+          "allowCreate": "{{allowCreate}}",
+          "columns": "{{columns}}",
+          "defaultFilters": "{{defaultFilters}}",
+          "description": "{{description}}",
+          "filter": "{{filter}}",
+          "filters": "{{filters}}",
+          "register": "{{register}}",
+          "schema": "{{schema}}",
+          "sort": "{{sort}}"
+        },
+        "id": "{{id}}",
+        "route": "{{route}}",
+        "title": "{{title}}",
+        "type": "index"
+      },
+      "params": [
+        {
+          "name": "id",
+          "required": true
+        },
+        {
+          "name": "route",
+          "required": true
+        },
+        {
+          "name": "title",
+          "required": true
+        },
+        {
+          "name": "register",
+          "required": true
+        },
+        {
+          "name": "schema",
+          "required": true
+        },
+        {
+          "name": "columns",
+          "required": true
+        },
+        {
+          "name": "sort",
+          "required": true
+        },
+        {
+          "name": "filters",
+          "required": false
+        },
+        {
+          "name": "filter",
+          "required": false
+        },
+        {
+          "name": "description",
+          "required": false
+        },
+        {
+          "name": "allowCreate",
+          "required": false
+        },
+        {
+          "name": "actionToggles",
+          "required": false
+        },
+        {
+          "name": "defaultFilters",
+          "required": false
+        },
+        {
+          "name": "note",
+          "required": false
+        },
+        {
+          "name": "actions",
+          "required": false
+        }
+      ]
+    },
+    {
+      "_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the two-panel leaf detail — one `data` panel 8-wide beside one `related` panel 4-wide, equal heights, metadata sidebar, no child collections. 17 detail pages share this exact grid (verified coordinate-identical, only gridHeight varies with field count). Workflow affordances are parameters, not structure: a page whose schema declares x-openregister-lifecycle passes `lifecycleActions` (its own transitions list) and one with server-side document/API actions passes `headerActions`; both keys are dropped from the expanded page when absent. Each instantiation's `note` param carries that page's full original maintainer prose verbatim (relocated intact per the fragment-pipeline change; the shared two-panel rationale lives here so the per-page notes no longer need to restate it).",
+      "id": "simpleDetailScaffold",
+      "page": {
+        "config": {
+          "_note": "{{note}}",
+          "headerActions": "{{headerActions}}",
+          "layout": [
+            {
+              "gridHeight": "{{gridHeight}}",
+              "gridWidth": 8,
+              "gridX": 0,
+              "gridY": 0,
+              "id": 1,
+              "widgetId": "data"
+            },
+            {
+              "gridHeight": "{{gridHeight}}",
+              "gridWidth": 4,
+              "gridX": 8,
+              "gridY": 0,
+              "id": 2,
+              "widgetId": "related"
+            }
+          ],
+          "lifecycleActions": "{{lifecycleActions}}",
+          "register": "{{register}}",
+          "schema": "{{schema}}",
+          "sidebar": {
+            "enabled": true,
+            "showMetadata": true
+          },
+          "widgets": [
+            {
+              "content": {
+                "columns": 2,
+                "exclude": "{{exclude}}",
+                "include": "{{include}}",
+                "overrides": "{{overrides}}",
+                "title": "{{dataTitle}}"
+              },
+              "icon": "{{dataIcon}}",
+              "id": "data",
+              "title": "{{dataTitle}}",
+              "type": "data"
+            },
+            {
+              "content": {
+                "title": "{{relatedTitle}}"
+              },
+              "icon": "LinkVariant",
+              "id": "related",
+              "title": "{{relatedTitle}}",
+              "type": "related"
+            }
+          ]
+        },
+        "id": "{{id}}",
+        "route": "{{route}}",
+        "title": "{{title}}",
+        "type": "detail"
+      },
+      "params": [
+        {
+          "name": "id",
+          "required": true
+        },
+        {
+          "name": "route",
+          "required": true
+        },
+        {
+          "name": "title",
+          "required": true
+        },
+        {
+          "name": "register",
+          "required": true
+        },
+        {
+          "name": "schema",
+          "required": true
+        },
+        {
+          "name": "dataTitle",
+          "required": true
+        },
+        {
+          "name": "dataIcon",
+          "required": true
+        },
+        {
+          "name": "relatedTitle",
+          "required": true
+        },
+        {
+          "name": "gridHeight",
+          "required": true
+        },
+        {
+          "name": "note",
+          "required": false
+        },
+        {
+          "name": "include",
+          "required": false
+        },
+        {
+          "name": "exclude",
+          "required": false
+        },
+        {
+          "name": "overrides",
+          "required": false
+        },
+        {
+          "name": "headerActions",
+          "required": false
+        },
+        {
+          "name": "lifecycleActions",
+          "required": false
+        }
+      ]
+    },
+    {
+      "_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the outcome-record detail — a 4-column `data` status strip (include + read-only overrides) over a 2-column `data` body panel (exclude), with `related` filling the right rail at the two panels' combined height. 5 filing/ledger-style pages share this exact grid (status strip fixed at height 3; body and rail heights are the two height parameters). Pages whose transitions are user-driven pass `lifecycleActions`; GeneratedDocumentDetail alone passes `hiddenTabs` to keep the sidebar's Files tab (its stored PDF) while hiding Notes/Tags/Tasks — see its own note param for why. Each instantiation's `note` param carries that page's full original maintainer prose verbatim.",
+      "id": "dualDataScaffold",
+      "page": {
+        "config": {
+          "_note": "{{note}}",
+          "layout": [
+            {
+              "gridHeight": 3,
+              "gridWidth": 8,
+              "gridX": 0,
+              "gridY": 0,
+              "id": 1,
+              "widgetId": "data"
+            },
+            {
+              "gridHeight": "{{dataHeight}}",
+              "gridWidth": 8,
+              "gridX": 0,
+              "gridY": 3,
+              "id": 2,
+              "widgetId": "data-2"
+            },
+            {
+              "gridHeight": "{{relatedHeight}}",
+              "gridWidth": 4,
+              "gridX": 8,
+              "gridY": 0,
+              "id": 3,
+              "widgetId": "related"
+            }
+          ],
+          "lifecycleActions": "{{lifecycleActions}}",
+          "register": "{{register}}",
+          "schema": "{{schema}}",
+          "sidebar": {
+            "enabled": true,
+            "hiddenTabs": "{{hiddenTabs}}",
+            "showMetadata": true
+          },
+          "widgets": [
+            {
+              "content": {
+                "columns": 4,
+                "include": "{{statusInclude}}",
+                "overrides": "{{statusOverrides}}",
+                "title": "{{statusTitle}}"
+              },
+              "icon": "{{statusIcon}}",
+              "id": "data",
+              "title": "{{statusTitle}}",
+              "type": "data"
+            },
+            {
+              "content": {
+                "columns": 2,
+                "exclude": "{{dataExclude}}",
+                "title": "{{dataTitle}}"
+              },
+              "icon": "{{dataIcon}}",
+              "id": "data-2",
+              "title": "{{dataTitle}}",
+              "type": "data"
+            },
+            {
+              "content": {
+                "title": "Related"
+              },
+              "icon": "LinkVariant",
+              "id": "related",
+              "title": "Related",
+              "type": "related"
+            }
+          ]
+        },
+        "id": "{{id}}",
+        "route": "{{route}}",
+        "title": "{{title}}",
+        "type": "detail"
+      },
+      "params": [
+        {
+          "name": "id",
+          "required": true
+        },
+        {
+          "name": "route",
+          "required": true
+        },
+        {
+          "name": "title",
+          "required": true
+        },
+        {
+          "name": "register",
+          "required": true
+        },
+        {
+          "name": "schema",
+          "required": true
+        },
+        {
+          "name": "statusTitle",
+          "required": true
+        },
+        {
+          "name": "statusIcon",
+          "required": true
+        },
+        {
+          "name": "statusInclude",
+          "required": true
+        },
+        {
+          "name": "statusOverrides",
+          "required": true
+        },
+        {
+          "name": "dataTitle",
+          "required": true
+        },
+        {
+          "name": "dataIcon",
+          "required": true
+        },
+        {
+          "name": "dataExclude",
+          "required": true
+        },
+        {
+          "name": "dataHeight",
+          "required": true
+        },
+        {
+          "name": "relatedHeight",
+          "required": true
+        },
+        {
+          "name": "note",
+          "required": false
+        },
+        {
+          "name": "hiddenTabs",
+          "required": false
+        },
+        {
+          "name": "lifecycleActions",
+          "required": false
+        }
+      ]
+    },
+    {
+      "_note": "hrmq-manifest-fragment-pipeline (2026-08-21): the reference-data detail — one full-width (12-wide) 2-column `data` panel, metadata sidebar, no related rail and no child collections, for records that are pure lookup rows (norm functions, salary bands, integration accounts). The page title doubles as the widget and content title (true for all 3 instances). `allowCreate` and `include` ride along as optional parameters. Each instantiation's `note` param carries that page's full original maintainer prose verbatim.",
+      "id": "singleDataScaffold",
+      "page": {
+        "config": {
+          "_note": "{{note}}",
+          "allowCreate": "{{allowCreate}}",
+          "layout": [
+            {
+              "gridHeight": "{{gridHeight}}",
+              "gridWidth": 12,
+              "gridX": 0,
+              "gridY": 0,
+              "id": 1,
+              "widgetId": "data"
+            }
+          ],
+          "register": "{{register}}",
+          "schema": "{{schema}}",
+          "sidebar": {
+            "enabled": true,
+            "showMetadata": true
+          },
+          "widgets": [
+            {
+              "content": {
+                "columns": 2,
+                "include": "{{include}}",
+                "title": "{{title}}"
+              },
+              "icon": "{{dataIcon}}",
+              "id": "data",
+              "title": "{{title}}",
+              "type": "data"
+            }
+          ]
+        },
+        "id": "{{id}}",
+        "route": "{{route}}",
+        "title": "{{title}}",
+        "type": "detail"
+      },
+      "params": [
+        {
+          "name": "id",
+          "required": true
+        },
+        {
+          "name": "route",
+          "required": true
+        },
+        {
+          "name": "title",
+          "required": true
+        },
+        {
+          "name": "register",
+          "required": true
+        },
+        {
+          "name": "schema",
+          "required": true
+        },
+        {
+          "name": "dataIcon",
+          "required": true
+        },
+        {
+          "name": "gridHeight",
+          "required": true
+        },
+        {
+          "name": "note",
+          "required": false
+        },
+        {
+          "name": "allowCreate",
+          "required": false
+        },
+        {
+          "name": "include",
+          "required": false
+        }
+      ]
+    }
+  ],
   "pages": [
     {
       "config": {
@@ -1024,7 +1474,7 @@
         ]
       },
       "id": "MijnGebruikelijkLoon",
-      "route": "/mijn-hr/gebruikelijk-loon",
+      "route": "/mijn/gebruikelijk-loon",
       "title": "Mijn gebruikelijk loon",
       "type": "dashboard"
     },
@@ -5267,6 +5717,228 @@
       "route": "/sick-leave/:id",
       "title": "Ziekmelding",
       "type": "detail"
+    },
+    {
+      "config": {
+        "_note": "hrmq-personal-dashboard (design.md D1/D3): the caller-scoped personal landing surface hydra ADR-097 Decision 3 requires — 'route to a type: \"dashboard\" page scoped to the caller … Not an index page, and not a bare parent with no route of its own'. The MijnHrGroup menu entry gains route: \"MijnHr\" through this fragment's menu block (mergeMenuItems fills the base group's undefined route key), so the group title lands here while its nine children stay under the collapse chevron — both of Decision 3's conditions, which moves hrmq's counted main-menu total from 6 to 5. Every widget carries a caller-scope filter (userId: \"@me\", or managerUserId: \"@me\" for the approver's own queue) plus the OPTIONAL administration token @workspace.activeAdministrationId? — unresolved means dropped, so a widget degrades to user-scoped-only, never to another user's rows. Only the built-in `stat` and `object-table` types are used (stat resolves through hrmq's own registry.js override, which is load-bearing: the library's self-registration is tree-shaken out of the production bundle); no custom widget, no new backend endpoint, no raw-GraphQL dataSource (the steering Dashboard's _note documents why that form resolves a schema by name across every register on the instance). Widget 6 has no conditional-visibility primitive available — the dashboard widget grammar has none for stat tiles (design.md D4) — so it always renders and shows 0 for a caller who manages nobody; its caption keeps the zero legible. The stat tiles' click-through uses content.route in the vue-router LOCATION-OBJECT form ({\"name\": \"…\"}), not the bare string design.md D3 writes: widgetLink passes a string straight to <router-link :to>, where vue-router 4 reads it as a PATH, so a bare route NAME would fall through to the catch-all. Same spelling the hr-objects nav-card entries already use. The three object-table widgets carry the FLAT content contract (register/schema/filter/sort{field,dir}/limit/columns/rowRoute/viewAllRoute/emptyText), NOT the nested `source` shape design.md D3 writes — measured live 2026-08-22, not inferred: on a type:\"dashboard\" page CnDashboardPage.registryRenderer looks up getWidgetTypeEntry(canonicalWidgetType(type)), and utils/widgetTypeAliases.js maps `object-table` -> `table`, which registerDashboardWidgets.js registers INLINE to CnObjectListWidget. The alias therefore never reaches CnWidgetObjectTable's dashboardRegistration (its `object-table` key is registered under a name the canonicaliser has already rewritten away, in a side-effect module ADR-061 tree-shaking drops anyway). With the `source` shape the widget rendered its emptyText and fired ZERO fetches, because CnObjectListWidget reads content.register/content.schema and has no `source` key at all. Consequences of the real contract, accepted: `limit` is a FETCH CAP (ADR-062), not a render promise — the visible row count fits the cell — and there is no per-row-route escape, which is fine since rowRoute is already a single static route name. All three also carry allowCreate: false — CnObjectListWidget renders a \"+ Toevoegen\" create affordance by DEFAULT (measured live), and all three collections are read-only to the employee: Timesheets are server-created by the booking flow (MijnUrenstaten already sets showAdd: false), LeaveBalance is written only by LeaveAccrualJob, and payslips are payroll-generated (REQ-MHS-004's read-only posture). Labels are Dutch literals; hrmq-i18n-locale-completeness owns their conversion and this change adds no English keys.",
+        "description": "Jouw persoonlijke overzicht: uren, verlof, declaraties en loonstroken.",
+        "layout": [
+          {
+            "gridHeight": 3,
+            "gridWidth": 4,
+            "gridX": 0,
+            "gridY": 0,
+            "id": 1,
+            "widgetId": "uren-maand"
+          },
+          {
+            "gridHeight": 3,
+            "gridWidth": 4,
+            "gridX": 4,
+            "gridY": 0,
+            "id": 2,
+            "widgetId": "declaraties"
+          },
+          {
+            "gridHeight": 3,
+            "gridWidth": 4,
+            "gridX": 8,
+            "gridY": 0,
+            "id": 3,
+            "widgetId": "te-beoordelen"
+          },
+          {
+            "gridHeight": 4,
+            "gridWidth": 6,
+            "gridX": 0,
+            "gridY": 3,
+            "id": 4,
+            "widgetId": "urenstaten"
+          },
+          {
+            "gridHeight": 4,
+            "gridWidth": 6,
+            "gridX": 6,
+            "gridY": 3,
+            "id": 5,
+            "widgetId": "verlofsaldo"
+          },
+          {
+            "gridHeight": 4,
+            "gridWidth": 12,
+            "gridX": 0,
+            "gridY": 7,
+            "id": 6,
+            "widgetId": "loonstroken"
+          }
+        ],
+        "widgets": [
+          {
+            "content": {
+              "caption": "geboekt deze maand",
+              "format": {
+                "decimals": 2,
+                "style": "number"
+              },
+              "icon": "ClockCheckOutline",
+              "label": "Mijn uren deze maand",
+              "route": {
+                "name": "MijnUren"
+              },
+              "source": {
+                "field": "hours",
+                "filter": {
+                  "administrationId": "@workspace.activeAdministrationId?",
+                  "startedAt": {
+                    "gte": "@monthStart"
+                  },
+                  "userId": "@me"
+                },
+                "metric": "sum",
+                "register": "hrmq",
+                "schema": "TimeEntry"
+              }
+            },
+            "icon": "ClockCheckOutline",
+            "id": "uren-maand",
+            "title": "Mijn uren deze maand",
+            "type": "stat"
+          },
+          {
+            "content": {
+              "caption": "in behandeling",
+              "icon": "ReceiptOutline",
+              "label": "Mijn open declaraties",
+              "route": {
+                "name": "MijnDeclaraties"
+              },
+              "source": {
+                "filter": {
+                  "administrationId": "@workspace.activeAdministrationId?",
+                  "status": "submitted",
+                  "userId": "@me"
+                },
+                "metric": "count",
+                "register": "hrmq",
+                "schema": "Expense"
+              }
+            },
+            "icon": "ReceiptOutline",
+            "id": "declaraties",
+            "title": "Mijn open declaraties",
+            "type": "stat"
+          },
+          {
+            "content": {
+              "caption": "wachten op jouw goedkeuring",
+              "icon": "CheckDecagramOutline",
+              "label": "Te beoordelen urenstaten",
+              "route": {
+                "name": "TeamUrengoedkeuring"
+              },
+              "source": {
+                "filter": {
+                  "administrationId": "@workspace.activeAdministrationId?",
+                  "managerUserId": "@me",
+                  "status": "submitted"
+                },
+                "metric": "count",
+                "register": "hrmq",
+                "schema": "Timesheet"
+              }
+            },
+            "icon": "CheckDecagramOutline",
+            "id": "te-beoordelen",
+            "title": "Te beoordelen urenstaten",
+            "type": "stat"
+          },
+          {
+            "content": {
+              "allowCreate": false,
+              "columns": [
+                "period",
+                "hours",
+                "entryCount",
+                "status"
+              ],
+              "emptyText": "Nog geen urenstaten",
+              "filter": {
+                "administrationId": "@workspace.activeAdministrationId?",
+                "userId": "@me"
+              },
+              "limit": 3,
+              "register": "hrmq",
+              "rowRoute": "TimesheetDetail",
+              "schema": "Timesheet",
+              "sort": {
+                "dir": "desc",
+                "field": "period"
+              },
+              "viewAllRoute": "MijnUrenstaten"
+            },
+            "id": "urenstaten",
+            "title": "Mijn urenstaten",
+            "type": "object-table"
+          },
+          {
+            "content": {
+              "allowCreate": false,
+              "columns": [
+                "leaveType",
+                "entitledHours",
+                "bovenwettelijkHours",
+                "usedHours"
+              ],
+              "emptyText": "Nog geen verlofsaldo",
+              "filter": {
+                "administrationId": "@workspace.activeAdministrationId?",
+                "userId": "@me",
+                "year": "@currentFiscalYear"
+              },
+              "register": "hrmq",
+              "schema": "LeaveBalance",
+              "sort": {
+                "dir": "asc",
+                "field": "leaveType"
+              }
+            },
+            "id": "verlofsaldo",
+            "title": "Mijn verlofsaldo",
+            "type": "object-table"
+          },
+          {
+            "content": {
+              "allowCreate": false,
+              "columns": [
+                "period",
+                "grossPay",
+                "nettoPay"
+              ],
+              "emptyText": "Nog geen loonstroken",
+              "filter": {
+                "administrationId": "@workspace.activeAdministrationId?",
+                "userId": "@me"
+              },
+              "limit": 3,
+              "register": "hrmq",
+              "rowRoute": "PayslipDetail",
+              "schema": "Payslip",
+              "sort": {
+                "dir": "desc",
+                "field": "period"
+              },
+              "viewAllRoute": "MijnLoonstroken"
+            },
+            "id": "loonstroken",
+            "title": "Mijn recente loonstroken",
+            "type": "object-table"
+          }
+        ]
+      },
+      "id": "MijnHr",
+      "route": "/mijn",
+      "title": "Mijn HR",
+      "type": "dashboard"
     },
     {
       "config": {

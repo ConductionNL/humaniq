@@ -145,6 +145,7 @@ class LeaveAccrualJob extends TimedJob {
 	 *
 	 * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-001
 	 * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-005
+	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
 	public function runAccrual(): array {
 		if ($this->settingsService->isLeaveAccrualEnabled() === false) {
@@ -192,10 +193,15 @@ class LeaveAccrualJob extends TimedJob {
 
 			$hoursPerWeek = (float)$hoursPerWeek;
 			$existing = ($balancesByEmployeeId[$employeeId] ?? null);
+			// hrmq-personal-dashboard REQ-ACCR-006: the denormalized account
+			// link, resolved from the SAME Employee row this iteration already
+			// selected. Null for an employee with no linked account — never
+			// guessed, never another account (fail-closed for @me surfaces).
+			$userId = $this->nullableTrim($employee['nextcloudUserId'] ?? null);
 
 			if ($existing === null) {
 				try {
-					$saved = $this->provision($employeeId, $year, $period, $hoursPerWeek, $deltaBovenwettelijk);
+					$saved = $this->provision($employeeId, $year, $period, $hoursPerWeek, $deltaBovenwettelijk, $userId);
 				} catch (\Throwable $e) {
 					$this->logger->warning('LeaveAccrualJob: kon LeaveBalance niet aanmaken voor ' . $employeeLabel . ': ' . $e->getMessage());
 					$skipped[] = ['employee' => $employeeLabel, 'reason' => 'save-failed'];
@@ -216,7 +222,7 @@ class LeaveAccrualJob extends TimedJob {
 			}
 
 			try {
-				$saved = $this->accrueExisting($existing, $period, $hoursPerWeek, $deltaBovenwettelijk);
+				$saved = $this->accrueExisting($existing, $period, $hoursPerWeek, $deltaBovenwettelijk, $userId);
 			} catch (\Throwable $e) {
 				$this->logger->warning('LeaveAccrualJob: kon LeaveBalance niet bijwerken voor ' . $employeeLabel . ': ' . $e->getMessage());
 				$skipped[] = ['employee' => $employeeLabel, 'reason' => 'save-failed'];
@@ -239,12 +245,14 @@ class LeaveAccrualJob extends TimedJob {
 	 * @param string $period Current wage period (YYYY-MM), stamped as `lastAccruedPeriod`.
 	 * @param float $hoursPerWeek The covering contract's `hoursPerWeek`.
 	 * @param float $deltaBovenwettelijk This month's bovenwettelijk slice (`round1(annual/12)`).
+	 * @param string|null $userId The employee's linked Nextcloud account id, or null when unlinked.
 	 *
 	 * @return array<string, mixed> The saved LeaveBalance.
 	 *
 	 * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-002
+	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
-	private function provision(string $employeeId, int $year, string $period, float $hoursPerWeek, float $deltaBovenwettelijk): array {
+	private function provision(string $employeeId, int $year, string $period, float $hoursPerWeek, float $deltaBovenwettelijk, ?string $userId = null): array {
 		$payload = [
 			'employeeId' => $employeeId,
 			'year' => $year,
@@ -255,6 +263,12 @@ class LeaveAccrualJob extends TimedJob {
 			'contractHoursPerWeek' => $hoursPerWeek,
 			'expiryDate' => sprintf('%04d-07-01', ($year + 1)),
 			'lastAccruedPeriod' => $period,
+			// REQ-ACCR-006 / REQ-MHS-002: denormalized copy of the linked
+			// Employee's nextcloudUserId, so the personal dashboard's
+			// verlofsaldo widget can filter with the @me token. Null when the
+			// employee has no account — the row then never appears on a Mijn
+			// surface rather than being mis-attributed.
+			'userId' => $userId,
 		];
 
 		return $this->toArray(
@@ -280,13 +294,15 @@ class LeaveAccrualJob extends TimedJob {
 	 * @param string $period Current wage period (YYYY-MM).
 	 * @param float $hoursPerWeek The covering contract's `hoursPerWeek`.
 	 * @param float $deltaBovenwettelijk This month's bovenwettelijk slice.
+	 * @param string|null $userId The employee's linked Nextcloud account id, or null when unlinked.
 	 *
 	 * @return array<string, mixed> The saved LeaveBalance.
 	 *
 	 * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-003
 	 * @spec openspec/changes/leave-accrual-job/specs/leave-accrual-job/spec.md#REQ-ACCR-004
+	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
 	 */
-	private function accrueExisting(array $existing, string $period, float $hoursPerWeek, float $deltaBovenwettelijk): array {
+	private function accrueExisting(array $existing, string $period, float $hoursPerWeek, float $deltaBovenwettelijk, ?string $userId = null): array {
 		$currentEntitled = (float)($existing['entitledHours'] ?? 0);
 		$currentContractHours = (float)($existing['contractHoursPerWeek'] ?? 0);
 		$currentBovenwettelijk = (float)($existing['bovenwettelijkHours'] ?? 0);
@@ -298,6 +314,14 @@ class LeaveAccrualJob extends TimedJob {
 				'bovenwettelijkHours' => ($currentBovenwettelijk + $deltaBovenwettelijk),
 				'contractHoursPerWeek' => max($currentContractHours, $hoursPerWeek),
 				'lastAccruedPeriod' => $period,
+				// REQ-ACCR-006: re-stamped on EVERY monthly slice, not only on
+				// create, so a balance written before the property existed
+				// self-heals on the next accrual run — no dedicated repair
+				// step. Overwrites unconditionally: the Employee row is the
+				// authority for the link, so a stale copy is corrected and an
+				// unlinked employee is reset to null rather than keeping a
+				// value that no longer names their account.
+				'userId' => $userId,
 			]
 		);
 		unset($payload['@self']);
@@ -543,6 +567,26 @@ class LeaveAccrualJob extends TimedJob {
 	private function idOf(array $row): string {
 		return (string)($row['id'] ?? $row['@self']['id'] ?? '');
 	}//end idOf()
+
+	/**
+	 * Normalise a denormalized-link value: trim, and collapse an empty string
+	 * to null so an absent link is stored as null rather than "" (the shape
+	 * the @me filter and the fail-closed contract both expect). Mirrors the
+	 * identically named helper on TimeEntryStampListener /
+	 * TimesheetProcessStampListener — the same convention across every writer
+	 * of a denormalized userId.
+	 *
+	 * @param mixed $value The raw value.
+	 *
+	 * @return string|null The trimmed value, or null when empty.
+	 *
+	 * @spec openspec/changes/hrmq-personal-dashboard/specs/leave-accrual-job/spec.md#REQ-ACCR-006
+	 */
+	private function nullableTrim(mixed $value): ?string {
+		$trimmed = trim((string)($value ?? ''));
+
+		return $trimmed === '' ? null : $trimmed;
+	}//end nullableTrim()
 
 	/**
 	 * @return mixed The OpenRegister ObjectService.
