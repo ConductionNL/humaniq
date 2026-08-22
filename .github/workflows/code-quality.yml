@@ -7,6 +7,14 @@ on:
     branches: [main, master, development, beta]
   workflow_dispatch:
 
+# Explicit permissions rather than the broad default token. A caller CAPS what
+# the reusable workflow can request, so these match what shared quality.yml
+# declares for its jobs: contents to read the tree, actions to manage its own
+# runs (cache/artifact cleanup).
+permissions:
+  contents: write
+  actions: write
+
 jobs:
   quality:
     # humaniq's FIRST repo-level workflow. Before this, `.github/workflows/` did

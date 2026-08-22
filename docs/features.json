@@ -14,6 +14,13 @@
     "docsUrl": "openspec/specs/absence-rate/spec.md"
   },
   {
+    "slug": "app-identity",
+    "title": "App Identity",
+    "summary": "The app's Nextcloud identity.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/app-identity/spec.md"
+  },
+  {
     "slug": "asset-management",
     "title": "Asset Management",
     "summary": "Give humaniq its first asset register: company property (laptops, phones, vehicles, tools, access passes, clothing) as Asset records with a declarative custody lifecycle, and effective-dated AssetAssignment uitgiftes linking assets to employees.",

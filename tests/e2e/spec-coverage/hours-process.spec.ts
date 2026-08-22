@@ -53,6 +53,8 @@
 
 import type { APIRequestContext, Page } from '@playwright/test';
 
+import { randomUUID } from 'node:crypto'
+
 import { appDialog } from '@conduction/nextcloud-vue/testing/playwright'
 import { expect, request, test } from '@playwright/test'
 import { ADMIN_CREDENTIALS, resolveBaseURL } from '../base-url.ts'
@@ -86,7 +88,11 @@ const OR_BASE = `${NC_URL}/index.php/apps/openregister/api/objects`
 const REGISTER = 'hrmq'
 const AUTH = ADMIN_CREDENTIALS
 const HEADERS = { 'OCS-APIRequest': 'true', 'Content-Type': 'application/json' }
-const RUN_ID = `e2e-hours-${Date.now()}-${Math.floor(Math.random() * 1e4)}`
+/* randomUUID rather than Math.random: this id namespaces every fixture this
+   run creates in a SHARED OpenRegister register, so a collision with a
+   concurrent run cross-contaminates both. Math.random also trips CodeQL's
+   js/insecure-randomness. */
+const RUN_ID = `e2e-hours-${Date.now()}-${randomUUID().slice(0, 8)}`
 
 /** Locate a data-widget value cell by its field label (CnObjectDataWidget). */
 function dataCell(page: Page, label: string) {

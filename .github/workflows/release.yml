@@ -27,6 +27,17 @@ concurrency:
   group: release-${{ github.ref_name }}
   cancel-in-progress: false
 
+# Explicit permissions, because the default token is broad and CodeQL's
+# actions/missing-workflow-permissions flags its absence. A caller CAPS what
+# the reusable workflow can request, so these must be >= what the shared
+# release job declares (contents: write to tag and push, pull-requests: write
+# because the version bump is routed through a PR rather than pushed at a
+# protected branch). Narrowing either one does not fail loudly - it fails at
+# release time, which this fleet has been burned by before.
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   unstable:
     if: github.ref == 'refs/heads/development'
