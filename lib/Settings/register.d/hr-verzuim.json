@@ -43,7 +43,7 @@
                         "format": "uuid",
                         "$ref": "Employee",
                         "title": "Employee",
-                        "description": "UUID reference to the sick employee."
+                        "description": "Who is sick.", "x-notes": "UUID reference to the sick employee."
                     },
                     "firstSickDay": {
                         "type": "string",
@@ -56,12 +56,13 @@
                         "format": "date",
                         "nullable": true,
                         "title": "Recovered date",
-                        "description": "Date the employee recovered, stamped on the herstellen carrying write and cleared on the heropenen carrying write."
+                        "description": "When the employee recovered. Cleared again if the case is reopened.", "x-notes": "Date the employee recovered, stamped on the herstellen carrying write and cleared on the heropenen carrying write."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Case lifecycle status. Governed by the x-openregister-lifecycle state machine (gemeld <-> hersteld).",
+                        "description": "Whether this case is open (reported) or closed (recovered).", "x-notes": "Case lifecycle status. Governed by the x-openregister-lifecycle state machine (gemeld <-> hersteld).",
+                        "x-enum-labels": {"gemeld": "Reported", "hersteld": "Recovered"},
                         "enum": [
                             "gemeld",
                             "hersteld"
@@ -71,81 +72,81 @@
                     "wachtdag": {
                         "type": "boolean",
                         "default": false,
-                        "title": "Wachtdag",
+                        "title": "Waiting day",
                         "description": "Whether the first sick day is treated as an unpaid waiting day, where the CAO/contract provides for one."
                     },
                     "loondoorbetalingPercentage": {
                         "type": "number",
                         "default": 70,
-                        "title": "Loondoorbetaling percentage",
-                        "description": "Percentage of wages continued during sickness. Statutory minimum is 70% for the first 104 weeks (BW art. 7:629 lid 1), with a first-year floor at the statutory minimum wage. Checked on open cases by nl-loondoorbetaling-minimum."
+                        "title": "Continued-pay percentage",
+                        "description": "How much of the wage continues during sickness. The legal minimum is 70% for the first 104 weeks, with a minimum-wage floor in the first year.", "x-notes": "Percentage of wages continued during sickness. Statutory minimum is 70% for the first 104 weeks (BW art. 7:629 lid 1), with a first-year floor at the statutory minimum wage. Checked on open cases by nl-loondoorbetaling-minimum."
                     },
                     "aangepastLoon": {
                         "type": "number",
                         "nullable": true,
-                        "title": "Aangepast loon",
-                        "description": "The wage still earned from partial work during this sickness period (samengesteld/aangepast loon) — composed with the continuation on the remainder by the sick-pay calculator (BW art. 7:629 lid 1). Null/absent means fully sick (treated as 0)."
+                        "title": "Adjusted wage",
+                        "description": "Wages still earned from partial work in this period. Leave empty when the employee is fully absent.", "x-notes": "The wage still earned from partial work during this sickness period (samengesteld/aangepast loon) — composed with the continuation on the remainder by the sick-pay calculator (BW art. 7:629 lid 1). Null/absent means fully sick (treated as 0)."
                     },
                     "probleemanalyseDue": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Probleemanalyse due",
-                        "description": "Statutory deadline for the probleemanalyse: firstSickDay + 6 weeks (Regeling procesgang eerste en tweede ziektejaar art. 2). Derived but stored (audit trail + UWV-deferral editability); checked by nl-wvp-milestone-derivation / nl-wvp-milestone-overdue."
+                        "title": "Problem analysis due",
+                        "description": "Deadline for the problem analysis: six weeks after the first day of sickness.", "x-notes": "Statutory deadline for the probleemanalyse: firstSickDay + 6 weeks (Regeling procesgang eerste en tweede ziektejaar art. 2). Derived but stored (audit trail + UWV-deferral editability); checked by nl-wvp-milestone-derivation / nl-wvp-milestone-overdue."
                     },
                     "probleemanalyseDone": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Probleemanalyse done",
+                        "title": "Problem analysis done",
                         "description": "Date the probleemanalyse was actually completed."
                     },
                     "planVanAanpakDue": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Plan van aanpak due",
-                        "description": "Statutory deadline for the plan van aanpak: firstSickDay + 8 weeks (Regeling procesgang art. 2)."
+                        "title": "Action plan due",
+                        "description": "Deadline for the action plan: eight weeks after the first day of sickness.", "x-notes": "Statutory deadline for the plan van aanpak: firstSickDay + 8 weeks (Regeling procesgang art. 2)."
                     },
                     "planVanAanpakDone": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Plan van aanpak done",
-                        "description": "Date the plan van aanpak was actually completed."
+                        "title": "Action plan done",
+                        "description": "Date the action plan was actually completed.", "x-notes": "Date the plan van aanpak was actually completed."
                     },
                     "uwv42WeekMeldingDue": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "UWV 42-week melding due",
-                        "description": "Statutory deadline for the UWV 42-wekenmelding: firstSickDay + 42 weeks (ZW art. 38)."
+                        "title": "UWV 42-week notification due",
+                        "description": "Deadline for the 42-week notification to the UWV: 42 weeks after the first day of sickness.", "x-notes": "Statutory deadline for the UWV 42-wekenmelding: firstSickDay + 42 weeks (ZW art. 38)."
                     },
                     "uwv42WeekMeldingDone": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "UWV 42-week melding done",
-                        "description": "Date the 42-wekenmelding was actually filed with UWV. Recorded here only — this app does not transmit it (no UWV wire integration)."
+                        "title": "UWV 42-week notification done",
+                        "description": "When the 42-week notification was filed with the UWV. Recorded here only — this app does not send it.", "x-notes": "Date the 42-wekenmelding was actually filed with UWV. Recorded here only — this app does not transmit it (no UWV wire integration)."
                     },
                     "eerstejaarsevaluatieDue": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Eerstejaarsevaluatie due",
-                        "description": "Statutory deadline for the eerstejaarsevaluatie: firstSickDay + 52 weeks (Regeling procesgang art. 4)."
+                        "title": "First-year evaluation due",
+                        "description": "Deadline for the first-year evaluation: 52 weeks after the first day of sickness.", "x-notes": "Statutory deadline for the eerstejaarsevaluatie: firstSickDay + 52 weeks (Regeling procesgang art. 4)."
                     },
                     "eerstejaarsevaluatieDone": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Eerstejaarsevaluatie done",
+                        "title": "First-year evaluation done",
                         "description": "Date the eerstejaarsevaluatie was actually completed."
                     },
                     "absenceProgression": {
                         "type": "array",
                         "title": "Absence progression",
-                        "description": "The time-resolved record of partial work resumption (gedeeltelijke werkhervatting) during this case: an ordered series of steps, each setting the percentage of contracted hours the employee is absent from `effectiveFrom` onward until the next step. This is the field a verzuimpercentage is computed from -- without it an absence can only be counted as whole calendar days, which overstates every case where the employee is partly back at work. ADMINISTRATIVE ONLY, and lawful for exactly that reason: the AP beleidsregels \"De zieke werknemer\" permit an employer to record TO WHAT EXTENT an employee can resume work (it drives loondoorbetaling and the WVP re-integration duty) while forbidding why -- so this array carries a date and a percentage and nothing else, and REQ-VWP-002's ban on diagnosis, symptom, cause and unconstrained free text holds unchanged. EMPTY OR ABSENT MEANS FULL ABSENCE for the whole case window: every case recorded before this field existed keeps counting exactly as it did, so adding the field regresses no figure. The euro-denominated `aangepastLoon` is the sibling of this field, not a duplicate of it -- that one carries what was still earned, this one carries when and how much was worked.",
+                        "description": "How the return to work progresses: each step sets the percentage the employee is absent from a given date onwards.", "x-notes": "The time-resolved record of partial work resumption (gedeeltelijke werkhervatting) during this case: an ordered series of steps, each setting the percentage of contracted hours the employee is absent from `effectiveFrom` onward until the next step. This is the field a verzuimpercentage is computed from -- without it an absence can only be counted as whole calendar days, which overstates every case where the employee is partly back at work. ADMINISTRATIVE ONLY, and lawful for exactly that reason: the AP beleidsregels \"De zieke werknemer\" permit an employer to record TO WHAT EXTENT an employee can resume work (it drives loondoorbetaling and the WVP re-integration duty) while forbidding why -- so this array carries a date and a percentage and nothing else, and REQ-VWP-002's ban on diagnosis, symptom, cause and unconstrained free text holds unchanged. EMPTY OR ABSENT MEANS FULL ABSENCE for the whole case window: every case recorded before this field existed keeps counting exactly as it did, so adding the field regresses no figure. The euro-denominated `aangepastLoon` is the sibling of this field, not a duplicate of it -- that one carries what was still earned, this one carries when and how much was worked.",
                         "items": {
                             "type": "object",
                             "required": [
@@ -157,14 +158,14 @@
                                     "type": "string",
                                     "format": "date",
                                     "title": "Effective from",
-                                    "description": "First day on which this absence percentage applies. A step dated before firstSickDay is clipped to firstSickDay; a step dated after the case closed contributes nothing."
+                                    "description": "First day this absence percentage applies. A date before the first sick day counts from the first sick day; a date after the case closed has no effect.", "x-notes": "First day on which this absence percentage applies. A step dated before firstSickDay is clipped to firstSickDay; a step dated after the case closed contributes nothing."
                                 },
                                 "absencePercentage": {
                                     "type": "number",
                                     "minimum": 0,
                                     "maximum": 100,
                                     "title": "Absence percentage",
-                                    "description": "Percentage of contracted hours the employee is absent from effectiveFrom onward. 100 = not working at all, 40 = working 60% of contracted hours. 0 records a full resumption, but it is NOT what closes the case: recoveredDate and the gemeld/hersteld lifecycle stay the single authority on that, and the calculation clips at recoveredDate regardless of what this array says."
+                                    "description": "How much of the contracted hours the employee is absent from that date on. 100 means not working at all, 40 means working 60% of the hours. Entering 0 records a full return to work, but it does not close the case — the recovery date does that.", "x-notes": "Percentage of contracted hours the employee is absent from effectiveFrom onward. 100 = not working at all, 40 = working 60% of contracted hours. 0 records a full resumption, but it is NOT what closes the case: recoveredDate and the gemeld/hersteld lifecycle stay the single authority on that, and the calculation clips at recoveredDate regardless of what this array says."
                                 }
                             }
                         }
@@ -175,14 +176,14 @@
                         "maximum": 100,
                         "nullable": true,
                         "title": "Current absence percentage",
-                        "description": "The absencePercentage of the latest absenceProgression step that has taken effect -- a stored projection, so an index column and a filter can read it without walking the array (the Jaaropgaaf aggregate precedent). NEVER read by AbsenceRateService: every rate is computed from absenceProgression itself, so a stale projection cannot corrupt a reported figure. Null on a case with no progression steps, which per that field's contract means fully absent, not unknown.",
+                        "description": "The absence percentage from the most recent step that has taken effect.", "x-notes": "The absencePercentage of the latest absenceProgression step that has taken effect -- a stored projection, so an index column and a filter can read it without walking the array (the Jaaropgaaf aggregate precedent). NEVER read by AbsenceRateService: every rate is computed from absenceProgression itself, so a stale projection cannot corrupt a reported figure. Null on a case with no progression steps, which per that field's contract means fully absent, not unknown.",
                         "example": 40
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this SickLeaveCase is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+                        "description": "Which administration this case belongs to. Normally the same as the employee's.", "x-notes": "Denormalized administratie key this SickLeaveCase is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
             }

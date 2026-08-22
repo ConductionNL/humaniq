@@ -69,7 +69,7 @@
                         "format": "uuid",
                         "$ref": "PayrollRun",
                         "title": "Payroll run",
-                        "description": "Reference to the approved PayrollRun this UPA delivery reports on. Drives PayrollRunApprovedGuard on the controleren transition and the nl-upa-payrollrun-approved reference-integrity check."
+                        "description": "The approved payroll run this filing reports on.", "x-notes": "Reference to the approved PayrollRun this UPA delivery reports on. Drives PayrollRunApprovedGuard on the controleren transition and the nl-upa-payrollrun-approved reference-integrity check."
                     },
                     "period": {
                         "type": "string",
@@ -79,7 +79,8 @@
                     "fund": {
                         "type": "string",
                         "title": "Fund",
-                        "description": "The sector pension fund this delivery is addressed to. APG-administered funds first (nl-pensioenaangifte); other administrators extend this enum in data later.",
+                        "description": "Which sector pension fund this filing goes to.", "x-notes": "The sector pension fund this delivery is addressed to. APG-administered funds first (nl-pensioenaangifte); other administrators extend this enum in data later.",
+                        "x-enum-labels": {"abp": "ABP", "spw": "SPW", "bpf-bouw": "BPF Bouw", "schoonmaak": "Schoonmaak", "pfab": "PFAB", "pwri": "PWRI"},
                         "enum": [
                             "abp",
                             "spw",
@@ -92,19 +93,20 @@
                     "aanleverkenmerk": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Aanleverkenmerk",
+                        "title": "Submission reference",
                         "description": "The UPA delivery reference agreed or returned for this delivery."
                     },
                     "deadline": {
                         "type": "string",
                         "format": "date",
                         "title": "Deadline",
-                        "description": "The fund's aanleverschema/uitvoeringsreglement deadline for this delivery. Authoritative input — unlike the loonaangifte, there is no single statutory derivation formula across funds, so this is not derived."
+                        "description": "The fund's own deadline for this filing. Enter it yourself — unlike the tax filing, there is no single formula across funds.", "x-notes": "The fund's aanleverschema/uitvoeringsreglement deadline for this delivery. Authoritative input — unlike the loonaangifte, there is no single statutory derivation formula across funds, so this is not derived."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "UPA delivery lifecycle status. Governed by the x-openregister-lifecycle state machine (concept -> gecontroleerd -> bevestigd -> verzonden).",
+                        "description": "Where this filing has got to: draft, checked, confirmed or sent.", "x-notes": "UPA delivery lifecycle status. Governed by the x-openregister-lifecycle state machine (concept -> gecontroleerd -> bevestigd -> verzonden).",
+                        "x-enum-labels": {"concept": "Draft", "gecontroleerd": "Checked", "bevestigd": "Confirmed", "verzonden": "Sent"},
                         "enum": [
                             "concept",
                             "gecontroleerd",
@@ -116,7 +118,8 @@
                     "responseStatus": {
                         "type": "string",
                         "title": "Response status",
-                        "description": "Outcome of the fund/APG response to a sent delivery. A rejected (afgekeurd) delivery is corrected via the corrigeren transition; no automated polling/ingestion happens in this app.",
+                        "description": "What the fund sent back. Correct a rejected filing with the 'corrigeren' action.", "x-notes": "Outcome of the fund/APG response to a sent delivery. A rejected (afgekeurd) delivery is corrected via the corrigeren transition; no automated polling/ingestion happens in this app.",
+                        "x-enum-labels": {"geen": "None", "ontvangen-ok": "Accepted", "afgekeurd": "Rejected"},
                         "enum": [
                             "geen",
                             "ontvangen-ok",
@@ -128,26 +131,26 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Response message",
-                        "description": "Free-text response message from the fund/APG (acceptance note or rejection reason)."
+                        "description": "What the fund wrote back — a confirmation, or the reason for rejection.", "x-notes": "Free-text response message from the fund/APG (acceptance note or rejection reason)."
                     },
                     "submittedDate": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
                         "title": "Submitted date",
-                        "description": "Date the delivery was sent, stamped on the verzenden carrying write."
+                        "description": "When the filing was sent.", "x-notes": "Date the delivery was sent, stamped on the verzenden carrying write."
                     },
                     "verzondenDoor": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Verzonden door",
-                        "description": "Display name of the person who sent the delivery, stamped on the verzenden carrying write (the Timesheet approvedBy pattern)."
+                        "title": "Sent by",
+                        "description": "Who sent the filing.", "x-notes": "Display name of the person who sent the delivery, stamped on the verzenden carrying write (the Timesheet approvedBy pattern)."
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this PensionFiling is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); nl-administratie-scope-consistency (REQ-MULTI-007) audits it against the referenced payrollRunId's PayrollRun.administrationId (the parent, the Payslip precedent)."
+                        "description": "Which administration this filing covers.", "x-notes": "Denormalized administratie key this PensionFiling is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); nl-administratie-scope-consistency (REQ-MULTI-007) audits it against the referenced payrollRunId's PayrollRun.administrationId (the parent, the Payslip precedent)."
                     }
                 }
             }

@@ -63,6 +63,7 @@
                     },
                     "category": {
                         "type": "string",
+                        "x-enum-labels": {"laptop": "Laptop", "phone": "Phone", "vehicle": "Vehicle", "tool": "Tool", "accessPass": "Access pass", "clothing": "Clothing", "other": "Other"},
                         "enum": [
                             "laptop",
                             "phone",
@@ -73,19 +74,19 @@
                             "other"
                         ],
                         "title": "Category",
-                        "description": "Kind of asset. Enum append-only: renaming a value later is breaking, adding one is not."
+                        "description": "What kind of asset this is.", "x-notes": "Kind of asset. Enum append-only: renaming a value later is breaking, adding one is not."
                     },
                     "serialNumber": {
                         "type": "string",
                         "nullable": true,
                         "title": "Serial number",
-                        "description": "Serial number; null for uncoded items (clothing, accessPass)."
+                        "description": "Serial number. Leave empty for items that do not have one, such as clothing or a pass.", "x-notes": "Serial number; null for uncoded items (clothing, accessPass)."
                     },
                     "licencePlate": {
                         "type": "string",
                         "nullable": true,
                         "title": "Licence plate",
-                        "description": "Dutch licence plate -- meaningful for category vehicle. Carries no fiscal semantics by itself; the fiscal facts live in listPrice/fuelType/companyCarTaxCategory below."
+                        "description": "Licence plate, for a vehicle. The tax details live in the catalogue value and tax category below.", "x-notes": "Dutch licence plate -- meaningful for category vehicle. Carries no fiscal semantics by itself; the fiscal facts live in listPrice/fuelType/companyCarTaxCategory below."
                     },
                     "purchaseDate": {
                         "type": "string",
@@ -102,6 +103,7 @@
                     },
                     "status": {
                         "type": "string",
+                        "x-enum-labels": {"available": "Available", "issued": "Issued", "checkedIn": "Checked in", "writtenOff": "Written off"},
                         "enum": [
                             "available",
                             "issued",
@@ -110,28 +112,29 @@
                         ],
                         "default": "available",
                         "title": "Status",
-                        "description": "Custody lifecycle status. Governed by the x-openregister-lifecycle state machine (available -> issued -> checkedIn -> available, or available/checkedIn -> writtenOff, terminal)."
+                        "description": "Where this asset is: available, issued, checked in, or written off.", "x-notes": "Custody lifecycle status. Governed by the x-openregister-lifecycle state machine (available -> issued -> checkedIn -> available, or available/checkedIn -> writtenOff, terminal)."
                     },
                     "active": {
                         "type": "boolean",
                         "default": true,
                         "title": "Active",
-                        "description": "Administrative visibility toggle (the OrgUnit convention), distinct from the custody lifecycle."
+                        "description": "Show this asset in the lists. Separate from whether it is currently issued.", "x-notes": "Administrative visibility toggle (the OrgUnit convention), distinct from the custody lifecycle."
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this Asset is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); an Asset has no single owning employee, so nl-administratie-scope-consistency does not evaluate this schema. Maintained by HR/back-office; the implicit page scoping (REQ-MULTI-004) filters on it."
+                        "description": "Which administration this asset belongs to.", "x-notes": "Denormalized administratie key this Asset is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); an Asset has no single owning employee, so nl-administratie-scope-consistency does not evaluate this schema. Maintained by HR/back-office; the implicit page scoping (REQ-MULTI-004) filters on it."
                     },
                     "listPrice": {
                         "type": "number",
                         "nullable": true,
                         "title": "List price",
-                        "description": "The fiscal catalog value in EUR -- the base the monthly bijtelling percentage is applied against (hrmq-asset-fleet-merge, absorbed from the retired Vehicle.cataloguswaarde). Meaningful only for category vehicle; null on every other category. Its completeness when category is vehicle is enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet, not by a schema-level required (design.md D2)."
+                        "description": "The catalogue value in euros — the basis for the monthly company-car addition. Only for a vehicle.", "x-notes": "The fiscal catalog value in EUR -- the base the monthly bijtelling percentage is applied against (hrmq-asset-fleet-merge, absorbed from the retired Vehicle.cataloguswaarde). Meaningful only for category vehicle; null on every other category. Its completeness when category is vehicle is enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet, not by a schema-level required (design.md D2)."
                     },
                     "fuelType": {
                         "type": "string",
+                        "x-enum-labels": {"gasoline": "Petrol", "diesel": "Diesel", "hybrid": "Hybrid", "fullyElectric": "Fully electric", "hydrogen": "Hydrogen", "other": "Other"},
                         "enum": [
                             "gasoline",
                             "diesel",
@@ -142,17 +145,18 @@
                         ],
                         "nullable": true,
                         "title": "Fuel type",
-                        "description": "Descriptive fuel type. Does not by itself select the bijtelling rate -- companyCarTaxCategory does. Meaningful only for category vehicle. Enum append-only: renaming a value later is breaking, adding one is not."
+                        "description": "The fuel type. It does not by itself set the tax rate; the tax category below does. Only for a vehicle.", "x-notes": "Descriptive fuel type. Does not by itself select the bijtelling rate -- companyCarTaxCategory does. Meaningful only for category vehicle. Enum append-only: renaming a value later is breaking, adding one is not."
                     },
                     "companyCarTaxCategory": {
                         "type": "string",
+                        "x-enum-labels": {"standard": "Standard rate", "evReducedCapped": "Reduced EV rate (capped)"},
                         "enum": [
                             "standard",
                             "evReducedCapped"
                         ],
                         "nullable": true,
                         "title": "Company car tax category",
-                        "description": "The fiscal classification selecting which nl-{year}.json bijtellingPrivegebruikAuto rate/cap row applies: standard = the flat standardPercent rate over the full listPrice; evReducedCapped = the reduced evReducedPercent rate up to evReducedCataloguswaardeCap, standardPercent on the excess (fleet-bijtelling design.md D3). Meaningful only for category vehicle. Enum append-only -- the hydrogen/fully-solar uncapped rate and grijs-kenteken/bestelauto regimes are named non-goals, not modelled by an enum value here yet."
+                        "description": "Which company-car tax rate applies: the standard rate over the full catalogue value, or the reduced electric rate up to the cap with the standard rate above it.", "x-notes": "The fiscal classification selecting which nl-{year}.json bijtellingPrivegebruikAuto rate/cap row applies: standard = the flat standardPercent rate over the full listPrice; evReducedCapped = the reduced evReducedPercent rate up to evReducedCataloguswaardeCap, standardPercent on the excess (fleet-bijtelling design.md D3). Meaningful only for category vehicle. Enum append-only -- the hydrogen/fully-solar uncapped rate and grijs-kenteken/bestelauto regimes are named non-goals, not modelled by an enum value here yet."
                     }
                 }
             },
@@ -175,27 +179,27 @@
                         "format": "uuid",
                         "$ref": "Asset",
                         "title": "Asset",
-                        "description": "UUID reference to the issued Asset."
+                        "description": "Which asset was issued.", "x-notes": "UUID reference to the issued Asset."
                     },
                     "employeeId": {
                         "type": "string",
                         "format": "uuid",
                         "$ref": "Employee",
                         "title": "Employee",
-                        "description": "UUID reference to the receiving Employee."
+                        "description": "Who received it.", "x-notes": "UUID reference to the receiving Employee."
                     },
                     "issuedOn": {
                         "type": "string",
                         "format": "date",
                         "title": "Issued on",
-                        "description": "Issued on (effective-dating per the OrgAssignment pattern)."
+                        "description": "When the asset was handed out.", "x-notes": "Issued on (effective-dating per the OrgAssignment pattern)."
                     },
                     "returnedOn": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
                         "title": "Returned on",
-                        "description": "Returned on; null while the asset is out. Must be on/after issuedOn when present (nl-asset-assignment-consistency)."
+                        "description": "When the asset came back. Leave empty while it is still out; it cannot be before the issue date.", "x-notes": "Returned on; null while the asset is out. Must be on/after issuedOn when present (nl-asset-assignment-consistency)."
                     },
                     "issueReceiptSigned": {
                         "type": "boolean",
@@ -207,19 +211,19 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Notes",
-                        "description": "Free-form notes (condition at handout/return)."
+                        "description": "Anything worth noting — the condition when it was handed out or returned.", "x-notes": "Free-form notes (condition at handout/return)."
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this AssetAssignment is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring the receiving employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+                        "description": "Which administration this assignment belongs to. Normally the same as the employee's.", "x-notes": "Denormalized administratie key this AssetAssignment is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring the receiving employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     },
                     "employeeContribution": {
                         "type": "number",
                         "default": 0,
                         "title": "Employee contribution",
-                        "description": "The employee's own monthly contribution (EUR) for private use of a company car (Wet LB 1964 art. 13bis lid 5; hrmq-asset-fleet-merge, absorbed from the retired CarAssignment.eigenBijdrage). Subtracted from the computed monthly bijtelling, floored at zero -- never a negative bijtelling (fleet-bijtelling design.md D3). Meaningless -- and harmless at its default 0 -- for any non-vehicle assignment."
+                        "description": "What the employee pays each month for private use of a company car. Subtracted from the addition, never below zero.", "x-notes": "The employee's own monthly contribution (EUR) for private use of a company car (Wet LB 1964 art. 13bis lid 5; hrmq-asset-fleet-merge, absorbed from the retired CarAssignment.eigenBijdrage). Subtracted from the computed monthly bijtelling, floored at zero -- never a negative bijtelling (fleet-bijtelling design.md D3). Meaningless -- and harmless at its default 0 -- for any non-vehicle assignment."
                     }
                 }
             }

@@ -56,6 +56,7 @@
                         "type": "string",
                         "title": "Type",
                         "description": "The kind of review round this cycle covers. Enum is append-only.",
+                        "x-enum-labels": {"jaargesprek": "Annual review", "beoordeling": "Appraisal", "tussentijds": "Interim review"},
                         "enum": [
                             "jaargesprek",
                             "beoordeling",
@@ -65,7 +66,8 @@
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Cycle workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "description": "Where this cycle has got to: draft, open or closed.", "x-notes": "Cycle workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "x-enum-labels": {"concept": "Draft", "open": "Open", "gesloten": "Closed"},
                         "enum": [
                             "concept",
                             "open",
@@ -91,7 +93,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this ReviewCycle is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); a cycle has no single employee to derive it from, so nl-administratie-scope-consistency does not evaluate this schema. Maintained by HR/back-office; the implicit page scoping (REQ-MULTI-004) filters on it."
+                        "description": "Which administration this cycle covers.", "x-notes": "Denormalized administratie key this ReviewCycle is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7); a cycle has no single employee to derive it from, so nl-administratie-scope-consistency does not evaluate this schema. Maintained by HR/back-office; the implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
             },
@@ -159,7 +161,7 @@
                         "format": "uuid",
                         "$ref": "ReviewCycle",
                         "title": "Review cycle",
-                        "description": "Reference to the ReviewCycle this review belongs to."
+                        "description": "The review cycle this review belongs to.", "x-notes": "Reference to the ReviewCycle this review belongs to."
                     },
                     "reviewerId": {
                         "type": "string",
@@ -167,12 +169,13 @@
                         "$ref": "Employee",
                         "nullable": true,
                         "title": "Reviewer",
-                        "description": "Optional reference to the manager/Employee conducting the beoordelingsgesprek."
+                        "description": "The manager holding the review conversation.", "x-notes": "Optional reference to the manager/Employee conducting the beoordelingsgesprek."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Review workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "description": "Where this review has got to: draft, submitted, discussed or finalised.", "x-notes": "Review workflow status. Governed by the x-openregister-lifecycle state machine.",
+                        "x-enum-labels": {"concept": "Draft", "ingediend": "Submitted", "besproken": "Discussed", "vastgesteld": "Finalised"},
                         "enum": [
                             "concept",
                             "ingediend",
@@ -185,7 +188,8 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Rating",
-                        "description": "Overall beoordeling rating. Nullable by design: a concept/ingediend review legitimately has no rating yet. A vastgesteld review without a rating is flagged by the nl-performance-dossiervorming audit rule, not blocked by the schema.",
+                        "description": "The overall rating. Leave empty while the review is still a draft or has only been submitted.", "x-notes": "Overall beoordeling rating. Nullable by design: a concept/ingediend review legitimately has no rating yet. A vastgesteld review without a rating is flagged by the nl-performance-dossiervorming audit rule, not blocked by the schema.",
+                        "x-enum-labels": {"onvoldoende": "Unsatisfactory", "matig": "Below expectations", "voldoende": "Meets expectations", "goed": "Good", "uitstekend": "Excellent"},
                         "enum": [
                             "onvoldoende",
                             "matig",
@@ -197,28 +201,28 @@
                     "sterktes": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Sterktes",
-                        "description": "Free-text description of the employee's strengths discussed in the gesprek.",
+                        "title": "Strengths",
+                        "description": "The employee's strengths, as discussed.", "x-notes": "Free-text description of the employee's strengths discussed in the gesprek.",
                         "maxLength": 4000
                     },
                     "ontwikkelpunten": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Ontwikkelpunten",
-                        "description": "Free-text description of development points discussed in the gesprek.",
+                        "title": "Development areas",
+                        "description": "What the employee will work on, as discussed.", "x-notes": "Free-text description of development points discussed in the gesprek.",
                         "maxLength": 4000
                     },
                     "afspraken": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Afspraken",
-                        "description": "Concrete afspraken/verbetertraject agreed in the gesprek -- the BW 7:669 lid 3 sub d dossiervorming evidence. A vastgesteld review with empty afspraken is flagged by the nl-performance-dossiervorming audit rule.",
+                        "title": "Agreed actions",
+                        "description": "What was agreed in the conversation, and any improvement plan. Fill this in before finalising.", "x-notes": "Concrete afspraken/verbetertraject agreed in the gesprek -- the BW 7:669 lid 3 sub d dossiervorming evidence. A vastgesteld review with empty afspraken is flagged by the nl-performance-dossiervorming audit rule.",
                         "maxLength": 4000
                     },
                     "goals": {
                         "type": "array",
                         "title": "Goals",
-                        "description": "Goals agreed as part of this review, recorded INSIDE the review rather than as a separate Goal entity (design D2) -- they freeze with the dossier under the same lifecycle, audit trail and retention context. A carried-over goal is re-entered in the next review; goals are not tracked across cycles in this MVP.",
+                        "description": "Goals agreed as part of this review. They stay with the review; carry one over by entering it again in the next one.", "x-notes": "Goals agreed as part of this review, recorded INSIDE the review rather than as a separate Goal entity (design D2) -- they freeze with the dossier under the same lifecycle, audit trail and retention context. A carried-over goal is re-entered in the next review; goals are not tracked across cycles in this MVP.",
                         "default": [],
                         "items": {
                             "type": "object",
@@ -228,13 +232,14 @@
                             "properties": {
                                 "titel": {
                                     "type": "string",
-                                    "title": "Titel",
-                                    "description": "Short description of the goal."
+                                    "title": "Title",
+                                    "description": "A short description of the goal.", "x-notes": "Short description of the goal."
                                 },
                                 "status": {
                                     "type": "string",
                                     "title": "Status",
                                     "description": "The goal's own status, independent of the review's lifecycle.",
+                                    "x-enum-labels": {"open": "Open", "behaald": "Achieved", "vervallen": "Dropped"},
                                     "enum": [
                                         "open",
                                         "behaald",
@@ -245,8 +250,8 @@
                                 "toelichting": {
                                     "type": "string",
                                     "nullable": true,
-                                    "title": "Toelichting",
-                                    "description": "Optional free-text explanation of the goal or its progress."
+                                    "title": "Explanation",
+                                    "description": "Any explanation of the goal or how it is going.", "x-notes": "Optional free-text explanation of the goal or its progress."
                                 }
                             }
                         }
@@ -255,26 +260,26 @@
                         "type": "string",
                         "format": "date",
                         "nullable": true,
-                        "title": "Besproken op",
-                        "description": "Date the beoordelingsgesprek took place. Stamped on the carrying write of the bespreken transition."
+                        "title": "Discussed on",
+                        "description": "When the review conversation took place.", "x-notes": "Date the beoordelingsgesprek took place. Stamped on the carrying write of the bespreken transition."
                     },
                     "vastgesteldDoor": {
                         "type": "string",
                         "nullable": true,
-                        "title": "Vastgesteld door",
-                        "description": "Nextcloud user id of the manager who vaststelde the beoordeling -- an NC user id, not an object FK (the approvedBy convention), never a $ref. Stamped on the carrying write of the vaststellen transition. Must differ from the reviewed employee (no self-approval)."
+                        "title": "Finalised by",
+                        "description": "The manager who finalised the review. It cannot be the employee being reviewed.", "x-notes": "Nextcloud user id of the manager who vaststelde the beoordeling -- an NC user id, not an object FK (the approvedBy convention), never a $ref. Stamped on the carrying write of the vaststellen transition. Must differ from the reviewed employee (no self-approval)."
                     },
                     "userId": {
                         "type": "string",
                         "nullable": true,
                         "title": "User",
-                        "description": "Denormalized Nextcloud user id of the employee this review belongs to (mijn-hr-self-service) -- a plain NC-user-id string, mirroring the Timesheet convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnBeoordelingen self-service page filters on it with the @me token."
+                        "description": "The Nextcloud account this review belongs to, so it appears under the employee's own reviews.", "x-notes": "Denormalized Nextcloud user id of the employee this review belongs to (mijn-hr-self-service) -- a plain NC-user-id string, mirroring the Timesheet convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnBeoordelingen self-service page filters on it with the @me token."
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this PerformanceReview is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring the reviewed employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+                        "description": "Which administration this review belongs to. Normally the same as the employee's.", "x-notes": "Denormalized administratie key this PerformanceReview is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring the reviewed employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
             }

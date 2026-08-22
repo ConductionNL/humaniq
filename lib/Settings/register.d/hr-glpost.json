@@ -21,7 +21,7 @@
                         "format": "uuid",
                         "$ref": "PayrollRun",
                         "title": "Payroll run",
-                        "description": "Reference to the PayrollRun this posting attempt belongs to."
+                        "description": "The payroll run this posting attempt belongs to.", "x-notes": "Reference to the PayrollRun this posting attempt belongs to."
                     },
                     "period": {
                         "type": "string",
@@ -30,6 +30,7 @@
                     },
                     "status": {
                         "type": "string",
+                        "x-enum-labels": {"pending": "Pending", "posted": "Posted", "failed": "Failed", "skipped-no-shillinq": "Skipped (no ledger app)"},
                         "enum": [
                             "pending",
                             "posted",
@@ -38,37 +39,37 @@
                         ],
                         "default": "pending",
                         "title": "Status",
-                        "description": "Outcome of this posting attempt. failed/skipped-no-shillinq are superseded by a retry; the run stays approved."
+                        "description": "How this posting attempt ended. A failed or skipped attempt is replaced by a retry; the run stays approved.", "x-notes": "Outcome of this posting attempt. failed/skipped-no-shillinq are superseded by a retry; the run stays approved."
                     },
                     "journalEntryId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Journal entry id",
-                        "description": "The shillinq JournalEntry object id this attempt produced -- plain string, NOT $ref, because it targets another app's register (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."
+                        "description": "The journal entry this attempt created in the bookkeeping system.", "x-notes": "The shillinq JournalEntry object id this attempt produced -- plain string, NOT $ref, because it targets another app's register (ADR-062 rule 7: only fields whose target exists in this register set get $ref)."
                     },
                     "journalNumber": {
                         "type": "string",
                         "nullable": true,
                         "title": "Journal number",
-                        "description": "The deterministic idempotency key sent to shillinq: HRMQ-LOON-{period}-{administrationId}. Doubles as the crash-recovery probe key (design.md D6)."
+                        "description": "The unique reference sent to the bookkeeping system, so the same period is never posted twice.", "x-notes": "The deterministic idempotency key sent to shillinq: HRMQ-LOON-{period}-{administrationId}. Doubles as the crash-recovery probe key (design.md D6)."
                     },
                     "errorMessage": {
                         "type": "string",
                         "nullable": true,
                         "title": "Error message",
-                        "description": "Failure or skip diagnostic (e.g. inconsistent run totals, shillinq unavailable, stale attempt superseded)."
+                        "description": "Why the posting failed or was skipped, for example totals that do not add up or the bookkeeping system being unavailable.", "x-notes": "Failure or skip diagnostic (e.g. inconsistent run totals, shillinq unavailable, stale attempt superseded)."
                     },
                     "postedAt": {
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
                         "title": "Posted at",
-                        "description": "When the JournalEntry was created (or adopted) in shillinq."
+                        "description": "When the journal entry was created in the bookkeeping system.", "x-notes": "When the JournalEntry was created (or adopted) in shillinq."
                     },
                     "lines": {
                         "type": "array",
                         "title": "Lines",
-                        "description": "Snapshot of exactly the balanced journal lines sent to shillinq (audit evidence, survives shillinq-side edits).",
+                        "description": "Exactly the journal lines that were sent, kept as evidence even if they are edited later on the other side.", "x-notes": "Snapshot of exactly the balanced journal lines sent to shillinq (audit evidence, survives shillinq-side edits).",
                         "items": {
                             "type": "object",
                             "required": [
@@ -80,12 +81,13 @@
                                 "accountNumber": {
                                     "type": "string",
                                     "title": "Account number",
-                                    "description": "RGS-coded GL account number (configurable via SettingsService)."
+                                    "description": "The general-ledger account number this line posts to.", "x-notes": "RGS-coded GL account number (configurable via SettingsService)."
                                 },
                                 "side": {
                                     "type": "string",
                                     "title": "Side",
                                     "description": "Which side of the journal this line posts to: debit or credit. The two sides of a posted run must balance to the cent.",
+                                    "x-enum-labels": {"debit": "Debit", "credit": "Credit"},
                                     "enum": [
                                         "debit",
                                         "credit"
@@ -94,12 +96,12 @@
                                 "amount": {
                                     "type": "number",
                                     "title": "Amount",
-                                    "description": "Line amount in the administration's currency, rounded to cents."
+                                    "description": "The line amount in the administration's currency, rounded to cents.", "x-notes": "Line amount in the administration's currency, rounded to cents."
                                 },
                                 "description": {
                                     "type": "string",
                                     "title": "Description",
-                                    "description": "Free-text label for the line as sent to shillinq, e.g. \"Loonkosten bruto\". Optional; the account number is what the ledger keys on.",
+                                    "description": "A label for this line as it is sent to the bookkeeping system, for example \"Loonkosten bruto\". Optional — the account number is what the ledger keys on.", "x-notes": "Free-text label for the line as sent to shillinq, e.g. \"Loonkosten bruto\". Optional; the account number is what the ledger keys on.",
                                     "nullable": true
                                 }
                             }
@@ -109,7 +111,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this GL-post belongs to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7). The design.md premise that this payroll aggregate already carried administrationId was inaccurate at HEAD (the journalNumber key HRMQ-LOON-{period}-{administrationId} referenced it, but the schema field was absent); added here so the Loonadministratie pages scope coherently. Copied from the referenced PayrollRun.administrationId when the post is created."
+                        "description": "Which administration this posting belongs to.", "x-notes": "Denormalized administratie key this GL-post belongs to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7). The design.md premise that this payroll aggregate already carried administrationId was inaccurate at HEAD (the journalNumber key HRMQ-LOON-{period}-{administrationId} referenced it, but the schema field was absent); added here so the Loonadministratie pages scope coherently. Copied from the referenced PayrollRun.administrationId when the post is created."
                     }
                 }
             }

@@ -21,12 +21,12 @@
                     "bandId": {
                         "type": "string",
                         "title": "Band id",
-                        "description": "Stable natural key for the band (e.g. \"A\", \"schaal-4\"), distinct from the OpenRegister object id."
+                        "description": "A short name for the band, for example 'A' or 'schaal-4'.", "x-notes": "Stable natural key for the band (e.g. \"A\", \"schaal-4\"), distinct from the OpenRegister object id."
                     },
                     "title": {
                         "type": "string",
                         "title": "Title",
-                        "description": "Human-readable name of the band (e.g. \"Schaal A — Junior\")."
+                        "description": "The band's name, for example 'Schaal A — Junior'.", "x-notes": "Human-readable name of the band (e.g. \"Schaal A — Junior\")."
                     },
                     "grade": {
                         "type": "string",
@@ -37,7 +37,7 @@
                     "minSalary": {
                         "type": "integer",
                         "title": "Minimum salary",
-                        "description": "Minimum gross monthly salary for this band, in integer cents (the same unit as CompAdjustment.currentSalary/proposedSalary)."
+                        "description": "Lowest gross monthly salary in this band, in cents.", "x-notes": "Minimum gross monthly salary for this band, in integer cents (the same unit as CompAdjustment.currentSalary/proposedSalary)."
                     },
                     "referenceSalary": {
                         "type": "integer",
@@ -54,26 +54,26 @@
                         "type": "string",
                         "default": "EUR",
                         "title": "Currency",
-                        "description": "ISO 4217 currency code the band's figures are denominated in."
+                        "description": "The currency these figures are in, for example EUR.", "x-notes": "ISO 4217 currency code the band's figures are denominated in."
                     },
                     "cao": {
                         "type": "string",
                         "nullable": true,
-                        "title": "CAO",
-                        "description": "Optional corpus caoId this band is anchored against (e.g. \"cao-generiek\") — a plain string link into the CAO corpus, mirroring EmploymentContract.cao, not a $ref relation."
+                        "title": "Collective labour agreement",
+                        "description": "The collective agreement this band is anchored to, if any.", "x-notes": "Optional corpus caoId this band is anchored against (e.g. \"cao-generiek\") — a plain string link into the CAO corpus, mirroring EmploymentContract.cao, not a $ref relation."
                     },
                     "caoSchaal": {
                         "type": "string",
                         "nullable": true,
-                        "title": "CAO schaal",
-                        "description": "Optional CAO pay-scale key (Cao.payScales) this band corresponds to. Meaningful only alongside cao."
+                        "title": "Collective agreement scale",
+                        "description": "The collective agreement scale this band matches. Only meaningful together with an agreement.", "x-notes": "Optional CAO pay-scale key (Cao.payScales) this band corresponds to. Meaningful only alongside cao."
                     },
                     "effectiveFrom": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
                         "title": "Effective from",
-                        "description": "ISO 8601 date this band's figures took effect."
+                        "description": "When this band's figures took effect.", "x-notes": "ISO 8601 date this band's figures took effect."
                     },
                     "active": {
                         "type": "boolean",
@@ -119,23 +119,24 @@
                     "name": {
                         "type": "string",
                         "title": "Name",
-                        "description": "Human-readable name of the review round (e.g. \"Jaarlijkse beloningsronde 2026\")."
+                        "description": "The name of this round, for example 'Jaarlijkse beloningsronde 2026'.", "x-notes": "Human-readable name of the review round (e.g. \"Jaarlijkse beloningsronde 2026\")."
                     },
                     "period": {
                         "type": "string",
                         "title": "Period",
-                        "description": "Free-text period label the round covers (e.g. \"2026\")."
+                        "description": "The period this round covers, for example '2026'.", "x-notes": "Free-text period label the round covers (e.g. \"2026\")."
                     },
                     "effectiveDate": {
                         "type": "string",
                         "format": "date",
                         "title": "Effective date",
-                        "description": "Default date the round's approved adjustments take effect. Individual CompAdjustments carry their own effectiveDate, which may differ."
+                        "description": "The default date approved changes in this round take effect. An individual change can have its own date.", "x-notes": "Default date the round's approved adjustments take effect. Individual CompAdjustments carry their own effectiveDate, which may differ."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Governed by the x-openregister-lifecycle state machine (open → closed). Independent of any adjustment's own status.",
+                        "description": "Whether this cycle is open or closed. Individual adjustments have their own status.", "x-notes": "Governed by the x-openregister-lifecycle state machine (open → closed). Independent of any adjustment's own status.",
+                        "x-enum-labels": {"open": "Open", "closed": "Closed"},
                         "enum": [
                             "open",
                             "closed"
@@ -215,27 +216,27 @@
                         "format": "uuid",
                         "$ref": "CompReviewCycle",
                         "title": "Review cycle",
-                        "description": "UUID reference to the CompReviewCycle this proposal belongs to."
+                        "description": "The review round this proposal belongs to.", "x-notes": "UUID reference to the CompReviewCycle this proposal belongs to."
                     },
                     "employeeId": {
                         "type": "string",
                         "format": "uuid",
                         "$ref": "Employee",
                         "title": "Employee",
-                        "description": "UUID reference to the Employee this compensation adjustment is proposed for."
+                        "description": "Who this pay change is for.", "x-notes": "UUID reference to the Employee this compensation adjustment is proposed for."
                     },
                     "contractId": {
                         "type": "string",
                         "format": "uuid",
                         "$ref": "EmploymentContract",
                         "title": "Employment contract",
-                        "description": "UUID reference to the active EmploymentContract term this change is bound to (audit + eligibility anchor). The effective-dated write itself lands on Employee.grossMonthlySalary — the field the payroll engine reads — not on this contract (verified: EmploymentContract carries only hourlyWage, no monthly-salary field)."
+                        "description": "The contract this change is tied to. The new salary itself lands on the employee record, which is what payroll reads.", "x-notes": "UUID reference to the active EmploymentContract term this change is bound to (audit + eligibility anchor). The effective-dated write itself lands on Employee.grossMonthlySalary — the field the payroll engine reads — not on this contract (verified: EmploymentContract carries only hourlyWage, no monthly-salary field)."
                     },
                     "currentSalary": {
                         "type": "integer",
                         "nullable": true,
                         "title": "Current salary",
-                        "description": "Snapshot of the employee's gross monthly salary at proposal time, in integer cents."
+                        "description": "The employee's gross monthly salary at the time this was proposed, in cents.", "x-notes": "Snapshot of the employee's gross monthly salary at proposal time, in integer cents."
                     },
                     "proposedSalary": {
                         "type": "integer",
@@ -248,18 +249,19 @@
                         "$ref": "SalaryBand",
                         "nullable": true,
                         "title": "Target band",
-                        "description": "Optional UUID reference to the SalaryBand this proposal is positioned against. The within-band check is vacuous when null (a band-less proposal raises no mandatory violation, the payScalesVerified advisory-until-confirmed precedent)."
+                        "description": "The salary band this proposal is measured against. Leave empty to skip the within-band check.", "x-notes": "Optional UUID reference to the SalaryBand this proposal is positioned against. The within-band check is vacuous when null (a band-less proposal raises no mandatory violation, the payScalesVerified advisory-until-confirmed precedent)."
                     },
                     "effectiveDate": {
                         "type": "string",
                         "format": "date",
                         "title": "Effective date",
-                        "description": "Date the adjustment takes effect once approved. CompEffectiveDateGuard fail-closed denies effectuate until this date has arrived."
+                        "description": "When the change takes effect once approved. It cannot be put into effect before this date.", "x-notes": "Date the adjustment takes effect once approved. CompEffectiveDateGuard fail-closed denies effectuate until this date has arrived."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Governed by the x-openregister-lifecycle state machine (draft → proposed → approved → effective).",
+                        "description": "Where this adjustment has got to: draft, proposed, approved, then in effect.", "x-notes": "Governed by the x-openregister-lifecycle state machine (draft → proposed → approved → effective).",
+                        "x-enum-labels": {"draft": "Draft", "proposed": "Proposed", "approved": "Approved", "effective": "In effect"},
                         "enum": [
                             "draft",
                             "proposed",
@@ -285,14 +287,14 @@
                         "nullable": true,
                         "maxLength": 2000,
                         "title": "Rationale",
-                        "description": "Free-text motivation for the proposed adjustment."
+                        "description": "Why this change is proposed.", "x-notes": "Free-text motivation for the proposed adjustment."
                     },
                     "appliedAt": {
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
                         "title": "Applied at",
-                        "description": "ISO 8601 UTC timestamp CompAdjustmentService stamped when it wrote the new grossMonthlySalary onto the Employee and drove the effectuate transition. Null until effectuated."
+                        "description": "When the new salary was actually written onto the employee. Empty until then.", "x-notes": "ISO 8601 UTC timestamp CompAdjustmentService stamped when it wrote the new grossMonthlySalary onto the Employee and drove the effectuate transition. Null until effectuated."
                     }
                 }
             }

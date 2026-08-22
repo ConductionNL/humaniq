@@ -385,7 +385,11 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 		const row = page.locator('#app-content tr, .app-content tr').filter({ hasText: '2026-07' }).first()
 		await expect(row, 'the 2026-07 draft timesheet must be listed').toBeVisible({ timeout: 20_000 })
 		await expect(row, 'hours must show the 8.00 aggregate').toContainText('8')
-		await expect(row, 'status must be draft').toContainText('draft')
+		// The badge shows the LABEL, not the stored code. It read `draft` until
+		// the status column learned to translate; asserting the raw code again
+		// would re-pin the defect that change fixed.
+		await expect(row, 'status must show the draft label').toContainText(/Draft|Concept/)
+		await expect(row, 'and never the raw stored code').not.toContainText('draft')
 	})
 
 	// Scenario: Employee submits a draft timesheet
@@ -402,7 +406,7 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 		await expect(lifecycleButton(page, 'submit'), 'a draft timesheet offers Submit').toBeVisible({ timeout: 20_000 })
 		await lifecycleButton(page, 'submit').click()
 
-		await expect(dataCell(page, 'Status'), 'status must move to submitted').toContainText('submitted', { timeout: 20_000 })
+		await expect(dataCell(page, 'Status'), 'status must move to submitted').toContainText(/Submitted|Ingediend/, { timeout: 20_000 })
 		await expect(dataCell(page, 'Submitted at'), 'submittedAt must render non-empty (server-stamped)')
 			.toContainText(/\d{4}/, { timeout: 15_000 })
 	})
@@ -429,7 +433,7 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 		await lifecycleButton(page, 'approve').click()
 		await expect(page.getByTestId('cn-lifecycle-actions-error'), 'the guard refusal must surface inline')
 			.toContainText(/eigen urenstaat/i, { timeout: 20_000 })
-		await expect(dataCell(page, 'Status'), 'the state must not change').toContainText('submitted')
+		await expect(dataCell(page, 'Status'), 'the state must not change').toContainText(/Submitted|Ingediend/)
 	})
 
 	// Scenario: Approving stamps provenance on the carrying write
@@ -446,7 +450,7 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 		await expect(lifecycleButton(page, 'approve')).toBeVisible({ timeout: 20_000 })
 		await lifecycleButton(page, 'approve').click()
 
-		await expect(dataCell(page, 'Status'), 'status must move to approved').toContainText('approved', { timeout: 20_000 })
+		await expect(dataCell(page, 'Status'), 'status must move to approved').toContainText(/Approved|Goedgekeurd/, { timeout: 20_000 })
 		await expect(dataCell(page, 'Approved by'), 'approvedBy must be the acting session uid, stamped on the carrying write')
 			.toContainText('admin', { timeout: 15_000 })
 		await expect(dataCell(page, 'Approved at'), 'approvedAt must render non-empty')
@@ -467,7 +471,7 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 		await lifecycleButton(page, 'submit').click()
 		await expect(page.getByTestId('cn-lifecycle-actions-error'), 'the empty-timesheet refusal must surface with the Dutch guard message')
 			.toContainText(/bevat geen urenboekingen|telt op tot nul uren/, { timeout: 20_000 })
-		await expect(dataCell(page, 'Status'), 'the timesheet must remain draft').toContainText('draft')
+		await expect(dataCell(page, 'Status'), 'the timesheet must remain draft').toContainText(/Draft|Concept/)
 	})
 
 	// Scenario: An impossible time span is refused
@@ -518,14 +522,14 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 	// the stamping clears approvedBy/approvedAt/rejectionReason.)
 	test('a rejected timesheet re-submits and the stamping clears the approval fields', async ({ page }) => {
 		await gotoRoute(page, `/timesheets/${bakkerTimesheetId}`)
-		await expect(dataCell(page, 'Status')).toContainText('rejected', { timeout: 20_000 })
+		await expect(dataCell(page, 'Status')).toContainText(/Rejected|Afgekeurd/, { timeout: 20_000 })
 		await expect(dataCell(page, 'Rejection reason'), 'the seeded reason must render read-only')
 			.toContainText('komt niet overeen', { timeout: 15_000 })
 
 		await expect(lifecycleButton(page, 'submit'), 'rejected offers Submit').toBeVisible({ timeout: 15_000 })
 		await lifecycleButton(page, 'submit').click()
 
-		await expect(dataCell(page, 'Status'), 'status must move to submitted').toContainText('submitted', { timeout: 20_000 })
+		await expect(dataCell(page, 'Status'), 'status must move to submitted').toContainText(/Submitted|Ingediend/, { timeout: 20_000 })
 		await expect(dataCell(page, 'Rejection reason'), 'the stamping must clear the previous reason')
 			.not.toContainText('komt niet overeen', { timeout: 15_000 })
 	})

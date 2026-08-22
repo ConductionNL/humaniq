@@ -56,12 +56,13 @@
                         "format": "uuid",
                         "$ref": "Employee",
                         "title": "Employee",
-                        "description": "UUID reference to the Employee domain object who requests the leave (the requester) — a domain-object reference, never a Nextcloud user id (ADR-046 A4). Drives the self-approval guard and scopes the portaliq external-employee view."
+                        "description": "The employee asking for the leave. Someone cannot approve their own request.", "x-notes": "UUID reference to the Employee domain object who requests the leave (the requester) — a domain-object reference, never a Nextcloud user id (ADR-046 A4). Drives the self-approval guard and scopes the portaliq external-employee view."
                     },
                     "leaveType": {
                         "type": "string",
                         "title": "Leave type",
-                        "description": "The kind of leave requested, aligned with Dutch HR practice (Wet arbeid en zorg / BW 7): holiday (vakantie), sick (ziekteverlof), unpaid (onbetaald verlof), special (bijzonder verlof), care (zorgverlof), parental (ouderschapsverlof).",
+                        "description": "The kind of leave: holiday, sick, unpaid, special, care or parental.", "x-notes": "The kind of leave requested, aligned with Dutch HR practice (Wet arbeid en zorg / BW 7): holiday (vakantie), sick (ziekteverlof), unpaid (onbetaald verlof), special (bijzonder verlof), care (zorgverlof), parental (ouderschapsverlof).",
+                        "x-enum-labels": {"holiday": "Holiday", "sick": "Sick leave", "unpaid": "Unpaid leave", "special": "Special leave", "care": "Care leave", "parental": "Parental leave"},
                         "enum": [
                             "holiday",
                             "sick",
@@ -75,13 +76,13 @@
                         "type": "string",
                         "format": "date",
                         "title": "Start date",
-                        "description": "First day of the requested leave period (ISO 8601 date)."
+                        "description": "First day of the leave.", "x-notes": "First day of the requested leave period (ISO 8601 date)."
                     },
                     "endDate": {
                         "type": "string",
                         "format": "date",
                         "title": "End date",
-                        "description": "Last day of the requested leave period, inclusive (ISO 8601 date)."
+                        "description": "Last day of the leave, inclusive.", "x-notes": "Last day of the requested leave period, inclusive (ISO 8601 date)."
                     },
                     "hours": {
                         "type": "number",
@@ -100,7 +101,8 @@
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Approval workflow status. Governed by the x-openregister-lifecycle state machine (draft → submitted → approved/rejected).",
+                        "description": "Where this request has got to: draft, submitted, approved or rejected.", "x-notes": "Approval workflow status. Governed by the x-openregister-lifecycle state machine (draft → submitted → approved/rejected).",
+                        "x-enum-labels": {"draft": "Draft", "submitted": "Submitted", "approved": "Approved", "rejected": "Rejected"},
                         "enum": [
                             "draft",
                             "submitted",
@@ -114,7 +116,7 @@
                         "format": "date-time",
                         "nullable": true,
                         "title": "Submitted at",
-                        "description": "ISO 8601 UTC timestamp the employee submitted the leave request for approval."
+                        "description": "When the employee submitted the request.", "x-notes": "ISO 8601 UTC timestamp the employee submitted the leave request for approval."
                     },
                     "approvedBy": {
                         "type": "string",
@@ -127,7 +129,7 @@
                         "format": "date-time",
                         "nullable": true,
                         "title": "Approved at",
-                        "description": "ISO 8601 UTC timestamp of approval or rejection."
+                        "description": "When the request was approved or rejected.", "x-notes": "ISO 8601 UTC timestamp of approval or rejection."
                     },
                     "rejectionReason": {
                         "type": "string",
@@ -140,19 +142,19 @@
                         "type": "string",
                         "nullable": true,
                         "title": "User",
-                        "description": "Denormalized Nextcloud user id of the employee this leave request belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the approvedBy convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnVerlof self-service page filters on it with the @me token."
+                        "description": "The Nextcloud account this request belongs to, so it appears under the employee's own leave.", "x-notes": "Denormalized Nextcloud user id of the employee this leave request belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the approvedBy convention, never a $ref relation. A copy of the linked Employee's nextcloudUserId, carried here because the manifest filter grammar cannot join across schemas. The MijnVerlof self-service page filters on it with the @me token."
                     },
                     "managerUserId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Manager user id",
-                        "description": "Denormalized Nextcloud user id of the employee's manager (mss-team-scope) — a plain NC-user-id string, never a $ref relation. A copy of the nextcloudUserId of the manager (OrgUnit.managerId) of the record's employee's active OrgAssignment unit, populated by HR/back-office alongside userId because the manifest filter grammar cannot join across schemas. The TeamVerlofgoedkeuring team page filters on it with the @me token; audited by nl-mss-manager-consistency."
+                        "description": "The Nextcloud account of the employee's manager, so the request reaches their approval queue.", "x-notes": "Denormalized Nextcloud user id of the employee's manager (mss-team-scope) — a plain NC-user-id string, never a $ref relation. A copy of the nextcloudUserId of the manager (OrgUnit.managerId) of the record's employee's active OrgAssignment unit, populated by HR/back-office alongside userId because the manifest filter grammar cannot join across schemas. The TeamVerlofgoedkeuring team page filters on it with the @me token; audited by nl-mss-manager-consistency."
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this LeaveRequest is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun/managerUserId convention), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+                        "description": "Which administration this request belongs to. Normally the same as the employee's.", "x-notes": "Denormalized administratie key this LeaveRequest is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PayrollRun/managerUserId convention), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     }
                 }
             },
@@ -196,7 +198,7 @@
                         "format": "uuid",
                         "$ref": "Employee",
                         "title": "Employee",
-                        "description": "UUID reference to the Employee domain object this leave balance belongs to."
+                        "description": "Whose leave balance this is.", "x-notes": "UUID reference to the Employee domain object this leave balance belongs to."
                     },
                     "year": {
                         "type": "integer",
@@ -206,7 +208,8 @@
                     "leaveType": {
                         "type": "string",
                         "title": "Leave type",
-                        "description": "The kind of leave this balance tracks, identical to the LeaveRequest.leaveType value set: holiday (vakantie), sick (ziekteverlof), unpaid (onbetaald verlof), special (bijzonder verlof), care (zorgverlof), parental (ouderschapsverlof).",
+                        "description": "The kind of leave this balance tracks: holiday, sick, unpaid, special, care or parental.", "x-notes": "The kind of leave this balance tracks, identical to the LeaveRequest.leaveType value set: holiday (vakantie), sick (ziekteverlof), unpaid (onbetaald verlof), special (bijzonder verlof), care (zorgverlof), parental (ouderschapsverlof).",
+                        "x-enum-labels": {"holiday": "Holiday", "sick": "Sick leave", "unpaid": "Unpaid leave", "special": "Special leave", "care": "Care leave", "parental": "Parental leave"},
                         "enum": [
                             "holiday",
                             "sick",
@@ -219,7 +222,7 @@
                     "entitledHours": {
                         "type": "number",
                         "title": "Entitled hours",
-                        "description": "Total hours entitled for the year. For statutory holiday leave the minimum is 4x the contractual weekly working time (BW art. 7:634) — checked by nl-verlof-wettelijk-minimum against the contractHoursPerWeek snapshot below."
+                        "description": "Hours the employee is entitled to this year. Statutory holiday leave is at least four times the weekly working hours.", "x-notes": "Total hours entitled for the year. For statutory holiday leave the minimum is 4x the contractual weekly working time (BW art. 7:634) — checked by nl-verlof-wettelijk-minimum against the contractHoursPerWeek snapshot below."
                     },
                     "bovenwettelijkHours": {
                         "type": "number",
@@ -231,32 +234,32 @@
                         "type": "number",
                         "default": 0,
                         "title": "Used hours",
-                        "description": "Hours of this leave type used/taken so far in the year. Recorded from approved LeaveRequests; not yet auto-posted (follow-up). Checked against the total entitlement by nl-verlof-saldo-niet-negatief."
+                        "description": "Hours of this leave type already taken this year.", "x-notes": "Hours of this leave type used/taken so far in the year. Recorded from approved LeaveRequests; not yet auto-posted (follow-up). Checked against the total entitlement by nl-verlof-saldo-niet-negatief."
                     },
                     "contractHoursPerWeek": {
                         "type": "number",
                         "nullable": true,
                         "title": "Contract hours per week",
-                        "description": "Snapshot of the employee's contractual weekly working hours at the time this balance was granted. RuleEngine predicates are single-object (no cross-object lookup), so this denormalised snapshot — not a live read of EmploymentContract — drives the nl-verlof-wettelijk-minimum check; left null when not decidable, in which case that check passes vacuously. May legitimately diverge from the employee's current contract after a later contract change — by design, the balance was granted under the hours in force at grant time."
+                        "description": "The employee's weekly working hours when this balance was granted, used to check the statutory minimum.", "x-notes": "Snapshot of the employee's contractual weekly working hours at the time this balance was granted. RuleEngine predicates are single-object (no cross-object lookup), so this denormalised snapshot — not a live read of EmploymentContract — drives the nl-verlof-wettelijk-minimum check; left null when not decidable, in which case that check passes vacuously. May legitimately diverge from the employee's current contract after a later contract change — by design, the balance was granted under the hours in force at grant time."
                     },
                     "expiryDate": {
                         "type": "string",
                         "format": "date",
                         "nullable": true,
                         "title": "Expiry date",
-                        "description": "Date the statutory leave hours of this year lapse — 1 July of the following year (BW art. 7:640a). Checked by nl-verlof-vervaltermijn."
+                        "description": "When this year's statutory leave hours lapse — 1 July of the following year.", "x-notes": "Date the statutory leave hours of this year lapse — 1 July of the following year (BW art. 7:640a). Checked by nl-verlof-vervaltermijn."
                     },
                     "lastAccruedPeriod": {
                         "type": "string",
                         "nullable": true,
                         "title": "Last accrued period",
-                        "description": "The last wage period (YYYY-MM) LeaveAccrualJob accrued onto this balance — the idempotency marker (leave-accrual-job). Null on every hand-seeded/legacy row (never touched by the job until its next monthly run). A run whose current period already equals this value is a no-op for this balance, so accrual happens at most once per (employee, year, month) regardless of the TimedJob's fire cadence."
+                        "description": "The last month leave was accrued onto this balance. Empty for balances entered by hand.", "x-notes": "The last wage period (YYYY-MM) LeaveAccrualJob accrued onto this balance — the idempotency marker (leave-accrual-job). Null on every hand-seeded/legacy row (never touched by the job until its next monthly run). A run whose current period already equals this value is a no-op for this balance, so accrual happens at most once per (employee, year, month) regardless of the TimedJob's fire cadence."
                     },
                     "administrationId": {
                         "type": "string",
                         "nullable": true,
                         "title": "Administration",
-                        "description": "Denormalized administratie key this LeaveBalance is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+                        "description": "Which administration this balance belongs to. Normally the same as the employee's.", "x-notes": "Denormalized administratie key this LeaveBalance is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     },
                     "userId": {
                         "type": "string",
@@ -333,12 +336,13 @@
                         "format": "uuid",
                         "$ref": "Employee",
                         "title": "Employee",
-                        "description": "UUID reference to the Employee domain object requesting the buy/sell — a domain-object reference, never a Nextcloud user id."
+                        "description": "Who is buying or selling the hours.", "x-notes": "UUID reference to the Employee domain object requesting the buy/sell — a domain-object reference, never a Nextcloud user id."
                     },
                     "transactionType": {
                         "type": "string",
                         "title": "Transaction type",
                         "description": "Whether the employee is buying (adding, a payroll deduction) or selling (drawing down, a payroll payment) leave hours.",
+                        "x-enum-labels": {"buy": "Buy", "sell": "Sell"},
                         "enum": [
                             "buy",
                             "sell"
@@ -347,12 +351,13 @@
                     "year": {
                         "type": "integer",
                         "title": "Year",
-                        "description": "Calendar year identifying the target LeaveBalance.year this transaction settles against."
+                        "description": "The year of the leave balance this settles against.", "x-notes": "Calendar year identifying the target LeaveBalance.year this transaction settles against."
                     },
                     "leaveType": {
                         "type": "string",
                         "title": "Leave type",
-                        "description": "The kind of leave this transaction concerns, identical to the LeaveBalance.leaveType value set — identifies the target LeaveBalance.leaveType. In practice only holiday balances carry meaningful bovenwettelijkHours.",
+                        "description": "The kind of leave this concerns. In practice only holiday balances carry hours above the statutory minimum.", "x-notes": "The kind of leave this transaction concerns, identical to the LeaveBalance.leaveType value set — identifies the target LeaveBalance.leaveType. In practice only holiday balances carry meaningful bovenwettelijkHours.",
+                        "x-enum-labels": {"holiday": "Holiday", "sick": "Sick leave", "unpaid": "Unpaid leave", "special": "Special leave", "care": "Care leave", "parental": "Parental leave"},
                         "enum": [
                             "holiday",
                             "sick",
@@ -366,24 +371,24 @@
                         "type": "number",
                         "minimum": 0,
                         "title": "Hours",
-                        "description": "Number of hours to buy or sell (exclusive of zero in practice)."
+                        "description": "How many hours to buy or sell.", "x-notes": "Number of hours to buy or sell (exclusive of zero in practice)."
                     },
                     "hourlyRate": {
                         "type": "number",
                         "title": "Hourly rate",
-                        "description": "The quoted euro rate per hour agreed for this transaction — an MVP caller-supplied input, not derived from the payroll engine (leave-buysell-derived-rate is a named follow-up). Visible on the request before approval so an HR reviewer can catch an obviously wrong rate."
+                        "description": "The agreed euro rate per hour for this transaction. Visible before approval, so a reviewer can spot a wrong rate.", "x-notes": "The quoted euro rate per hour agreed for this transaction — an MVP caller-supplied input, not derived from the payroll engine (leave-buysell-derived-rate is a named follow-up). Visible on the request before approval so an HR reviewer can catch an obviously wrong rate."
                     },
                     "settledAmount": {
                         "type": "number",
                         "nullable": true,
                         "title": "Settled amount",
-                        "description": "round(hours x hourlyRate, 2), computed once by LeaveBuySellSettlementService at settle time (a stored fact, never recomputed by the payroll engine). Null until settled."
+                        "description": "Hours × hourly rate, worked out once at settlement. Empty until then.", "x-notes": "round(hours x hourlyRate, 2), computed once by LeaveBuySellSettlementService at settle time (a stored fact, never recomputed by the payroll engine). Null until settled."
                     },
                     "settlementPeriod": {
                         "type": "string",
                         "nullable": true,
                         "title": "Settlement period",
-                        "description": "The wage period (YYYY-MM) this transaction settles into. Required (and YYYY-MM-shaped) before the settle transition (LeaveSettlementPeriodGuard); PayrollRunService.generate() folds every settled transaction whose settlementPeriod equals the draft run's period into that employee's Payslip.leaveBuySell."
+                        "description": "The wage period (YYYY-MM) this settles into. Required before it can be settled.", "x-notes": "The wage period (YYYY-MM) this transaction settles into. Required (and YYYY-MM-shaped) before the settle transition (LeaveSettlementPeriodGuard); PayrollRunService.generate() folds every settled transaction whose settlementPeriod equals the draft run's period into that employee's Payslip.leaveBuySell."
                     },
                     "settlementPayrollRunId": {
                         "type": "string",
@@ -391,12 +396,13 @@
                         "$ref": "PayrollRun",
                         "nullable": true,
                         "title": "Settlement payroll run",
-                        "description": "The PayrollRun of settlementPeriod, stamped once this transaction is settled (the retro-adjustments PayrollAdjustment.settlementPayrollRunId convention). Not required to exist -- best-effort, never blocks settlement."
+                        "description": "The payroll run for that period, recorded at settlement. Best effort — it never blocks settling.", "x-notes": "The PayrollRun of settlementPeriod, stamped once this transaction is settled (the retro-adjustments PayrollAdjustment.settlementPayrollRunId convention). Not required to exist -- best-effort, never blocks settlement."
                     },
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Lifecycle status. Governed by the x-openregister-lifecycle state machine (draft -> submitted -> approved/rejected -> settled, terminal: settled).",
+                        "description": "Where this transaction has got to: draft, submitted, approved or rejected, then settled.", "x-notes": "Lifecycle status. Governed by the x-openregister-lifecycle state machine (draft -> submitted -> approved/rejected -> settled, terminal: settled).",
+                        "x-enum-labels": {"draft": "Draft", "submitted": "Submitted", "approved": "Approved", "rejected": "Rejected", "settled": "Settled"},
                         "enum": [
                             "draft",
                             "submitted",
@@ -411,7 +417,7 @@
                         "format": "date-time",
                         "nullable": true,
                         "title": "Submitted at",
-                        "description": "ISO 8601 UTC timestamp the employee submitted the transaction for approval."
+                        "description": "When the employee submitted the request.", "x-notes": "ISO 8601 UTC timestamp the employee submitted the transaction for approval."
                     },
                     "approvedBy": {
                         "type": "string",
@@ -424,7 +430,7 @@
                         "format": "date-time",
                         "nullable": true,
                         "title": "Approved at",
-                        "description": "ISO 8601 UTC timestamp of approval or rejection."
+                        "description": "When the request was approved or rejected.", "x-notes": "ISO 8601 UTC timestamp of approval or rejection."
                     },
                     "rejectionReason": {
                         "type": "string",
@@ -438,13 +444,13 @@
                         "format": "date-time",
                         "nullable": true,
                         "title": "Settled at",
-                        "description": "ISO 8601 UTC timestamp LeaveBuySellSettlementService settled this transaction. Null until settled."
+                        "description": "When this transaction was settled. Empty until then.", "x-notes": "ISO 8601 UTC timestamp LeaveBuySellSettlementService settled this transaction. Null until settled."
                     },
                     "userId": {
                         "type": "string",
                         "nullable": true,
                         "title": "User",
-                        "description": "Denormalized Nextcloud user id of the employee this transaction belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the LeaveRequest.userId convention, never a $ref relation. The MijnVerlofKopenVerkopen self-service page filters on it with the @me token."
+                        "description": "The Nextcloud account this transaction belongs to, so it appears under the employee's own pages.", "x-notes": "Denormalized Nextcloud user id of the employee this transaction belongs to (mijn-hr-self-service) — a plain NC-user-id string, mirroring the LeaveRequest.userId convention, never a $ref relation. The MijnVerlofKopenVerkopen self-service page filters on it with the @me token."
                     }
                 }
             }
