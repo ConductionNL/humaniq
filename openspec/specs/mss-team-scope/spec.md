@@ -10,6 +10,7 @@ built_by: openspec/changes/archive/2026-07-13-mss-team-scope
 **Scope**: hrmq
 **OpenSpec changes**:
 - [mss-team-scope](../../changes/archive/2026-07-13-mss-team-scope/) _(archived 2026-07-13)_ — denormalized `managerUserId` on Timesheet/Expense/LeaveRequest (the round-2 `userId` trade-off applied to the manager axis — two-hop filtering does not exist in the manifest token grammar), three `Team*goedkeuring` pages pre-filtered `managerUserId: @me`, Dashboard approver widgets re-scoped to the manager's team with a global HR fallback row, and the recommended-severity `nl-mss-manager-consistency` corpus rule cross-checking every stamp against the org-chart-basic structure (kind: config)
+- [hrmq-hours-process-redesign](../../changes/archive/2026-08-22-hrmq-hours-process-redesign/) _(archived 2026-08-22, merged as humaniq#128)_ — turns `Timesheet.managerUserId` into a server-maintained cache stamped from the org chain on every write (the same `OrgResolutionService` the `nl-mss-manager-consistency` audit evaluates), inert to client input; `Expense`/`LeaveRequest` remain HR-populated until their own process redesigns (kind: code)
 
 ## Purpose
 
@@ -29,16 +30,44 @@ coverage).
 
 ### Requirement: The approval-carrying schemas SHALL gain an optional denormalized `managerUserId` scoping property (REQ-MSS-001)
 
-`Timesheet` (`lib/Settings/register.d/hr-timesheet.json`, version 0.3.0 → 0.4.0), `Expense` (`hr-expense.json`, 0.2.0 → 0.3.0) and `LeaveRequest` (`hr-leave.json`, 0.2.0 → 0.3.0) SHALL each declare `managerUserId`: string, nullable, NOT in `required`, NEVER a `$ref` (it names a Nextcloud *account*, mirroring the `userId`/`approvedBy` convention). Each property description SHALL state honestly that it is a denormalized copy of the `nextcloudUserId` of the manager (`OrgUnit.managerId`) of the record's employee's active `OrgAssignment` unit, populated by HR/back-office alongside `userId` because the manifest filter grammar cannot join across schemas, and audited by `nl-mss-manager-consistency`. The register `info.version` (`lib/Settings/hrmq_register.json`) bumps 0.7.0 → 0.8.0 (checked fresh at HEAD — prior rounds had already advanced it past the round-2 baseline). No lifecycle change on any schema. Only these three schemas gain the field (they alone carry an approval surface).
+`Timesheet` (`lib/Settings/register.d/hr-timesheet.json`), `Expense` (`hr-expense.json`) and
+`LeaveRequest` (`hr-leave.json`) SHALL each declare `managerUserId`: string, nullable, NOT in
+`required`, NEVER a `$ref` (it names a Nextcloud *account*, mirroring the `userId`/`approvedBy`
+convention). Manager assignment truth lives ONLY on the org structure (`OrgAssignment` →
+`OrgUnit.managerId`); `managerUserId` is a **server-maintained cache** of that chain, existing
+solely because the manifest filter grammar cannot join across schemas for the `@me` team-queue
+filters. For `Timesheet`, the cache SHALL be stamped server-side on every write by the process
+stamping listener via the shared `OrgResolutionService` — the same code path the
+`nl-mss-manager-consistency` audit (`NlOrgChecks`) evaluates, so stamp and audit cannot
+disagree; it SHALL never appear on any form, and client input to it is inert. For `Expense` and
+`LeaveRequest` the property, its filter role and its audit are unchanged by this change
+(server-stamping those two records is follow-up work, not regressed here — they remain
+HR/back-office-populated until their own process redesigns). Each property description SHALL be
+user-oriented ("The team manager who reviews this record — kept up to date automatically from
+the organisation structure" for Timesheet), with the denormalization rationale in `x-notes`.
 
 #### Scenario: Record without a manager stamp stays valid
+
+@e2e exclude Register-level validation of an optional nullable property; no UI journey exists for creating an org-managerless employee's timesheet — verified by the stamping listener unit tests (null path) and the register import
 - **GIVEN** the imported hrmq register after the schema bumps
-- **WHEN** a Timesheet is created without `managerUserId`
-- **THEN** creation succeeds (`managerUserId` is optional and nullable)
+- **WHEN** a Timesheet is created for an employee with no resolvable org manager
+- **THEN** creation succeeds and `managerUserId` is `null` (fail-closed: it appears in no team
+  queue)
 
 #### Scenario: Stamped record round-trips
+
+@e2e exclude Plain-string persistence contract on a schema this change does not redesign (Expense); backend round-trip verified by the existing register import tests
 - **WHEN** an Expense is written with `managerUserId: "admin"`
 - **THEN** the value persists and is returned as a plain string (no reference resolution)
+
+#### Scenario: The Timesheet cache follows the org structure, not the client
+
+@e2e exclude Stamping is a backend write-path behaviour; verified by TimesheetProcessStampListener + OrgResolutionService unit tests (the team-queue UI consequence is covered by the existing TeamUrengoedkeuring filter scenario)
+- **GIVEN** an employee whose active `OrgAssignment` unit's manager resolves to
+  `nextcloudUserId` "admin"
+- **WHEN** any write persists that employee's Timesheet, even one supplying
+  `managerUserId: "someone-else"`
+- **THEN** the persisted `managerUserId` is "admin" — the org chain wins, client input is inert
 
 ### Requirement: Three team-scoped approval pages SHALL pre-filter the existing approval queues to `managerUserId: @me` (REQ-MSS-002)
 
