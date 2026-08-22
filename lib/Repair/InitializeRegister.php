@@ -66,6 +66,8 @@ class InitializeRegister implements IRepairStep {
 	 *
 	 * @param IOutput $output The output interface for progress reporting.
 	 *
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-007
+	 *
 	 * @return void
 	 */
 	public function run(IOutput $output): void {

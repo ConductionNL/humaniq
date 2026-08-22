@@ -52,6 +52,10 @@ class CompEffectuateCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and options; the effectuation behaviour those options drive is specified at openspec/specs/comp-cycles/spec.md#REQ-COMP-006, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {

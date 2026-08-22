@@ -54,6 +54,10 @@ class NetPayRunCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and options; the SEPA net-pay behaviour those options drive is specified at openspec/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-007, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {

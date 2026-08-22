@@ -49,6 +49,10 @@ class RulesAuditCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and the --jurisdiction option; the audit behaviour that option drives is specified at openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-005, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {
@@ -59,8 +63,12 @@ class RulesAuditCommand extends Command {
 	}//end configure()
 
 	/**
+	 * Run the read-only rule audit and print the coverage report.
+	 *
 	 * @param InputInterface $input Console input.
 	 * @param OutputInterface $output Console output.
+	 *
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-005
 	 *
 	 * @return int
 	 */

@@ -71,6 +71,7 @@ export default {
 	 * `CnDashboardPage` provides and every widget's `workspaceCtx()` computed
 	 * already knows how to unwrap (`'value' in c ? c.value : c`).
 	 *
+	 * @spec openspec/specs/multi-administratie/spec.md#REQ-MULTI-004
 	 * @return {void}
 	 */
 	setup() {
@@ -95,6 +96,7 @@ export default {
 		 * administratie renders exactly as before this change. A reload picks up
 		 * a fresh mode after an administratie switch (REQ-SPM-002 scenario).
 		 *
+		 * @spec openspec/changes/single-person-modes/specs/single-person-modes/spec.md#REQ-SPM-002
 		 * @return {object} The bundled manifest with runtime.user.administrationMode set.
 		 */
 		effectiveManifest() {
@@ -107,7 +109,15 @@ export default {
 	},
 
 	methods: {
-		// Translate library/manifest strings against the humaniq l10n domain.
+		/**
+		 * Translate library/manifest strings against the humaniq l10n domain.
+		 *
+		 * @spec exclude one-line `@nextcloud/l10n` binding that supplies CnAppRoot's `translate` prop with this app's l10n domain; it adds no behaviour of its own, and the domain string it passes is the app id whose rename is owned by openspec/specs/app-identity/spec.md.
+		 *
+		 * @param {string} key The translation key.
+		 * @param {object} vars Interpolation variables.
+		 * @return {string} The translated string.
+		 */
 		translateForApp(key, vars) {
 			return ncT('humaniq', key, vars)
 		},

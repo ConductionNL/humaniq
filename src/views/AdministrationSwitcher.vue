@@ -120,6 +120,7 @@ export default {
 		 * GET the caller's active administratie id + accessible
 		 * administraties from the guarded context endpoint.
 		 *
+		 * @spec openspec/specs/multi-administratie/spec.md#REQ-MULTI-006
 		 * @return {Promise<void>}
 		 */
 		async loadContext() {
@@ -146,6 +147,8 @@ export default {
 		 * sibling page's `@workspace.activeAdministrationId?` base filter
 		 * re-resolves and re-fetches without a full reload.
 		 *
+		 * @spec openspec/specs/multi-administratie/spec.md#REQ-MULTI-003
+		 * @spec openspec/specs/multi-administratie/spec.md#REQ-MULTI-004
 		 * @param {string} administrationId The administratie id to activate.
 		 * @return {Promise<void>}
 		 */

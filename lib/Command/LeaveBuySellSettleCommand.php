@@ -51,6 +51,10 @@ class LeaveBuySellSettleCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and options; the buy/sell settlement behaviour those options drive is specified at openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-004, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {

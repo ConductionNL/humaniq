@@ -59,6 +59,10 @@ class InterviewCalendarSyncCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and options; the interview calendar-sync behaviour those options drive is specified at openspec/specs/interview-scheduling/spec.md#REQ-INTV-007, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {

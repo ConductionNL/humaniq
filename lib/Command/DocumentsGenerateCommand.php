@@ -80,6 +80,10 @@ class DocumentsGenerateCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and options; the generation behaviour those options drive is specified at openspec/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-007 and openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-003, both cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {

@@ -48,6 +48,10 @@ class RulesSeedTestDataCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name and description.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name and description and takes no options; the idempotent seeding behaviour is specified at openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-006, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {
@@ -57,8 +61,12 @@ class RulesSeedTestDataCommand extends Command {
 	}//end configure()
 
 	/**
+	 * Backfill local test data to a rule-compliant state, idempotently.
+	 *
 	 * @param InputInterface $input Console input.
 	 * @param OutputInterface $output Console output.
+	 *
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-006
 	 *
 	 * @return int
 	 */

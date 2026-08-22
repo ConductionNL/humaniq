@@ -68,6 +68,10 @@ class OfferRequestSignatureCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and options; the signature-request behaviour those options drive is specified at openspec/specs/offer-esign/spec.md#REQ-OFFR-007, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {

@@ -167,6 +167,7 @@ export default {
 		 * this is the only network call in the component, and it targets the
 		 * persist-nothing proforma endpoint exclusively.
 		 *
+		 * @spec openspec/specs/proforma-payslip/spec.md#REQ-PRO-005
 		 * @return {Promise<void>}
 		 */
 		async simulate() {

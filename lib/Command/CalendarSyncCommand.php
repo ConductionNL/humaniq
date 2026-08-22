@@ -57,6 +57,10 @@ class CalendarSyncCommand extends Command {
 	}//end __construct()
 
 	/**
+	 * Declare the command name, description and CLI options.
+	 *
+	 * @spec exclude Symfony Console plumbing — declares only this command's name, description and options; the sync behaviour those options drive is specified at openspec/specs/leave-calendar-nc/spec.md#REQ-LC-007, cited on execute() below.
+	 *
 	 * @return void
 	 */
 	protected function configure(): void {
