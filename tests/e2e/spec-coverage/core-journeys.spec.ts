@@ -26,6 +26,8 @@
 
 import type { APIRequestContext, Page } from '@playwright/test';
 
+import { randomUUID } from 'node:crypto'
+
 import { appDialog } from '@conduction/nextcloud-vue/testing/playwright'
 import { expect, request, test } from '@playwright/test'
 import { ADMIN_CREDENTIALS, resolveBaseURL } from '../base-url.ts'
@@ -77,7 +79,11 @@ const AUTH = ADMIN_CREDENTIALS
 const HEADERS = { 'OCS-APIRequest': 'true', 'Content-Type': 'application/json' }
 
 /** Unique run id so repeated runs never collide and cleanup is exact. */
-const RUN_ID = `e2e-${Date.now()}-${Math.floor(Math.random() * 1e4)}`
+/* randomUUID rather than Math.random: this id namespaces every fixture this
+   run creates in a SHARED OpenRegister register, so a collision with a
+   concurrent run cross-contaminates both. Math.random also trips CodeQL's
+   js/insecure-randomness. */
+const RUN_ID = `e2e-${Date.now()}-${randomUUID().slice(0, 8)}`
 
 /**
  * Resolve the Employee schema path segment on the live instance.

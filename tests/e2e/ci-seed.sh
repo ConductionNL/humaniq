@@ -305,7 +305,11 @@ import sys
 path, kind, code, app_dir, limit = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], int(sys.argv[5])
 
 with open(f'{app_dir}/lib/Settings/humaniq_register.json', encoding='utf-8') as fh:
-    declaration = json.load(fh)['components']['registers']['humaniq']
+    # 'hrmq', not 'humaniq': the FILE is named for the app, but the register
+    # key inside it is the OpenRegister slug, which the rename deliberately
+    # froze (renaming a slug orphans every stored object). Renaming this
+    # lookup is a KeyError that aborts the whole seed.
+    declaration = json.load(fh)['components']['registers']['hrmq']
 
 required = {
     'registers': [declaration['slug']],

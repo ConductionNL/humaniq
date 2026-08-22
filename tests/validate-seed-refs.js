@@ -112,6 +112,14 @@ function isPlainObject(value) {
  */
 function deepMerge(base, overlay) {
 	for (const [key, value] of Object.entries(overlay)) {
+		/* Skip the prototype keys. Seed files are repo-controlled, so this is
+		   not a live attack surface, but a merge that walks __proto__ writes
+		   onto Object.prototype and corrupts every later object in the
+		   process - including the seed objects this script then validates,
+		   which would make its verdict meaningless. */
+		if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+			continue
+		}
 		const current = base[key]
 		if (Array.isArray(value) && Array.isArray(current)) {
 			base[key] = current.concat(value)
