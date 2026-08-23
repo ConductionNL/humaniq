@@ -123,7 +123,12 @@ jobs:
       # `npm run l10n:build` -- so a key added to the JSON and forgotten in the
       # JS can only happen by not running the generator. `check:l10n` would
       # catch the resulting drift, but this check names the fix.
-      frontend-checks: '["check:manifest", "check:widget-keys", "check:seed-refs", "check:l10n", "check:l10n-js"]'
+      # `check:schema-l10n` is a RATCHET, not a gate. Every string inside a form
+      # comes from the schema and is a key in THIS app's catalogue; an absent key
+      # renders the English source inside an otherwise translated form, silently.
+      # The fleet had 30,459 such strings, so this records the current count and
+      # fails only when it GROWS — burning it down stays an ordinary PR.
+      frontend-checks: '["check:manifest", "check:widget-keys", "check:seed-refs", "check:l10n", "check:l10n-js", "check:schema-l10n"]'
 
       # ── E2E browser tests ────────────────────────────────────────────────
       # tests/e2e has existed and been maintained for a while — a parametrised

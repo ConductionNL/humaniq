@@ -84,7 +84,10 @@ function appId() {
  */
 function renderJs(id, translations, pluralForm) {
 	const body = Object.keys(translations)
-		.map((key) => `        ${JSON.stringify(key)}: ${JSON.stringify(translations[key])}`)
+		.map(
+			(key) =>
+				`        ${JSON.stringify(key)}: ${JSON.stringify(translations[key])}`,
+		)
 		.join(',\n')
 	return [
 		'OC.L10N.register(',
@@ -103,8 +106,13 @@ function main() {
 	const id = appId()
 	const stale = []
 
-	const locales = fs.readdirSync(L10N_DIR)
-		.filter((f) => f.endsWith('.json'))
+	const locales = fs
+		.readdirSync(L10N_DIR)
+		// Dotfiles are never locale catalogues. `l10n/.schema-l10n-baseline.json`
+		// sits here so prettier ignores it, and without this guard it was read as
+		// a locale named `.schema-l10n-baseline` and failed for having no
+		// `translations` key.
+		.filter((f) => f.endsWith('.json') && !f.startsWith('.'))
 		.map((f) => f.slice(0, -5))
 		.sort()
 	if (locales.length === 0) {
@@ -128,11 +136,19 @@ function main() {
 			process.exit(1)
 		}
 
-		const rendered = renderJs(id, doc.translations, doc.pluralForm || DEFAULT_PLURAL_FORM)
-		const current = fs.existsSync(jsFile) ? fs.readFileSync(jsFile, 'utf8') : null
+		const rendered = renderJs(
+			id,
+			doc.translations,
+			doc.pluralForm || DEFAULT_PLURAL_FORM,
+		)
+		const current = fs.existsSync(jsFile)
+			? fs.readFileSync(jsFile, 'utf8')
+			: null
 
 		if (current === rendered) {
-			console.log(`  ✓ l10n/${locale}.js up to date (${Object.keys(doc.translations).length} keys)`)
+			console.log(
+				`  ✓ l10n/${locale}.js up to date (${Object.keys(doc.translations).length} keys)`,
+			)
 			continue
 		}
 		if (check) {
@@ -140,7 +156,9 @@ function main() {
 			continue
 		}
 		fs.writeFileSync(jsFile, rendered)
-		console.log(`  ✎ l10n/${locale}.js written (${Object.keys(doc.translations).length} keys)`)
+		console.log(
+			`  ✎ l10n/${locale}.js written (${Object.keys(doc.translations).length} keys)`,
+		)
 	}
 
 	if (stale.length > 0) {
