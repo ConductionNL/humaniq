@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Roster",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "Roster",
 				"_note": "rostering (2026-07-14): the publishable roster header. Unlike PayrollRun, Roster carries a REAL x-openregister-lifecycle (concept <-> gepubliceerd via publiceren/intrekken), so RosterDetail legitimately renders a lifecycleActions widget for exactly those two transitions -- no invented edge (the AttendanceRecordDetail sluiten/heropenen precedent). The 'Rooster' data widget carries period/administrationId/status; Related resolves and links the optional orgUnitId scope (excluded from data). The page-level 'ATW-controle' api-call action posts {rosterId: @objectId} to POST /api/roster/check (guarded server-side by RosterController::authorizeRoster()) and surfaces the Arbeidstijdenwet verdict over the roster's assignments regardless of publish status -- publishing itself is NOT hard-blocked on a violation (guard wiring is humaniq-rule-compliance-enforcement's scope, design.md Non-Goal). The FK-scoped 'Roosterindelingen' child object-list (RosterAssignment.rosterId = @objectId) is the plan itself. No stat KPI -- a header has no numeric headline. Audit history is a sidebar tab.",
 				"sidebar": {
@@ -42,7 +42,7 @@
 						"title": "Roster assignments",
 						"icon": "AccountClockOutline",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "RosterAssignment",
 							"filter": {
 								"rosterId": "@objectId"
@@ -152,7 +152,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Shift",
 			"params": {
 				"id": "Shifts",
@@ -179,7 +179,7 @@
 						"label": "Create shift",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
-						"register": "hrmq",
+						"register": "humaniq",
 						"schema": "Shift",
 						"onSuccessRoute": "ShiftDetail",
 						"successMessage": "Shift created."
@@ -189,7 +189,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Shift",
 			"params": {
 				"id": "ShiftDetail",
@@ -207,7 +207,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Roster",
 			"params": {
 				"id": "Rosters",
@@ -236,7 +236,7 @@
 						"label": "Create roster",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
-						"register": "hrmq",
+						"register": "humaniq",
 						"schema": "Roster",
 						"onSuccessRoute": "RosterDetail",
 						"successMessage": "Draft roster created. Add roster assignments and run the working hours check before you publish."
@@ -246,7 +246,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "RosterAssignment",
 			"params": {
 				"id": "RosterAssignments",
@@ -272,7 +272,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "RosterAssignment",
 			"params": {
 				"id": "RosterAssignmentDetail",

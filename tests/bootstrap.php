@@ -37,6 +37,14 @@ if (is_dir(__DIR__ . '/../vendor/nextcloud/ocp/OCP') === true) {
 	$autoloader->addPsr4('NCU\\', __DIR__ . '/../vendor/nextcloud/ocp/NCU/');
 }
 
+// Doctrine placeholders, loaded BEFORE anything can mock an OCP DB interface.
+// IQueryBuilder evaluates constants referencing Doctrine\DBAL\ParameterType at
+// parse time, and IDBConnection::getQueryBuilder() returns IQueryBuilder — so
+// without these, createMock(IDBConnection::class) dies with
+// `Class "Doctrine\DBAL\ParameterType" not found`. Guarded, so a real runtime
+// still wins.
+require_once __DIR__ . '/stubs/DoctrineStubs.php';
+
 // Bootstrap Nextcloud when a full server environment is available. The include
 // is wrapped in a try/catch so unit tests still run in standalone mode (e.g. a
 // bare CI container without an installed Nextcloud).

@@ -3,223 +3,223 @@
   "deepLinks": [
     {
       "displayName": "Timesheet",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Timesheet",
       "urlTemplate": "/apps/humaniq/timesheets/{uuid}"
     },
     {
       "displayName": "Expense",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Expense",
       "urlTemplate": "/apps/humaniq/expenses/{uuid}"
     },
     {
       "displayName": "Employee",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Employee",
       "urlTemplate": "/apps/humaniq/employees/{uuid}"
     },
     {
       "displayName": "Employment Contract",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "EmploymentContract",
       "urlTemplate": "/apps/humaniq/contracts/{uuid}"
     },
     {
       "displayName": "Payslip",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Payslip",
       "urlTemplate": "/apps/humaniq/payslips/{uuid}"
     },
     {
       "displayName": "Payroll Run",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "PayrollRun",
       "urlTemplate": "/apps/humaniq/payroll-runs/{uuid}"
     },
     {
       "displayName": "Payroll Mutation Report",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "PayrollMutationReport",
       "urlTemplate": "/apps/humaniq/payroll-mutations/{uuid}"
     },
     {
       "displayName": "Wage Tax Filing",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "LoonaangifteFiling",
       "urlTemplate": "/apps/humaniq/filings/{uuid}"
     },
     {
       "displayName": "Pension Filing",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "PensionFiling",
       "urlTemplate": "/apps/humaniq/pension-filings/{uuid}"
     },
     {
       "displayName": "Payroll GL Post",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "PayrollGLPost",
       "urlTemplate": "/apps/humaniq/gl-posts/{uuid}"
     },
     {
       "displayName": "Payroll Payment Batch",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "PayrollPaymentBatch",
       "urlTemplate": "/apps/humaniq/payment-batches/{uuid}"
     },
     {
       "displayName": "Leave Request",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "LeaveRequest",
       "urlTemplate": "/apps/humaniq/leave-requests/{uuid}"
     },
     {
       "displayName": "Leave Balance",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "LeaveBalance",
       "urlTemplate": "/apps/humaniq/leave-balances/{uuid}"
     },
     {
       "displayName": "Sick Leave Case",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "SickLeaveCase",
       "urlTemplate": "/apps/humaniq/sick-leave/{uuid}"
     },
     {
       "displayName": "Onboarding",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Onboarding",
       "urlTemplate": "/apps/humaniq/onboardings/{uuid}"
     },
     {
       "displayName": "Stagiair",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Stagiair",
       "urlTemplate": "/apps/humaniq/stagiairs/{uuid}"
     },
     {
       "displayName": "Vacancy",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Vacancy",
       "urlTemplate": "/apps/humaniq/vacancies/{uuid}"
     },
     {
       "displayName": "Application",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Application",
       "urlTemplate": "/apps/humaniq/applications/{uuid}"
     },
     {
       "displayName": "Organisational Unit",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "OrgUnit",
       "urlTemplate": "/apps/humaniq/org-units/{uuid}"
     },
     {
       "displayName": "Organisational Assignment",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "OrgAssignment",
       "urlTemplate": "/apps/humaniq/org-assignments/{uuid}"
     },
     {
       "displayName": "Attendance Record",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "AttendanceRecord",
       "urlTemplate": "/apps/humaniq/attendance/{uuid}"
     },
     {
       "displayName": "Asset",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Asset",
       "urlTemplate": "/apps/humaniq/assets/{uuid}"
     },
     {
       "displayName": "Asset Assignment",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "AssetAssignment",
       "urlTemplate": "/apps/humaniq/asset-assignments/{uuid}"
     },
     {
       "displayName": "Review Cycle",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "ReviewCycle",
       "urlTemplate": "/apps/humaniq/review-cycles/{uuid}"
     },
     {
       "displayName": "Performance Review",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "PerformanceReview",
       "urlTemplate": "/apps/humaniq/reviews/{uuid}"
     },
     {
       "displayName": "Shift",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Shift",
       "urlTemplate": "/apps/humaniq/shifts/{uuid}"
     },
     {
       "displayName": "Roster",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Roster",
       "urlTemplate": "/apps/humaniq/rosters/{uuid}"
     },
     {
       "displayName": "Roster Assignment",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "RosterAssignment",
       "urlTemplate": "/apps/humaniq/roster-assignments/{uuid}"
     },
     {
       "displayName": "Objective",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Objective",
       "urlTemplate": "/apps/humaniq/objectives/{uuid}"
     },
     {
       "displayName": "Key Result",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "KeyResult",
       "urlTemplate": "/apps/humaniq/key-results/{uuid}"
     },
     {
       "displayName": "Salary Band",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "SalaryBand",
       "urlTemplate": "/apps/humaniq/salary-bands/{uuid}"
     },
     {
       "displayName": "Compensation Review Cycle",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "CompReviewCycle",
       "urlTemplate": "/apps/humaniq/comp-review-cycles/{uuid}"
     },
     {
       "displayName": "Compensation Adjustment",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "CompAdjustment",
       "urlTemplate": "/apps/humaniq/comp-adjustments/{uuid}"
     },
     {
       "displayName": "Leave Transaction",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "LeaveTransaction",
       "urlTemplate": "/apps/humaniq/leave-transactions/{uuid}"
     },
     {
       "displayName": "WKR Declaration",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "WkrDeclaration",
       "urlTemplate": "/apps/humaniq/wkr-declarations/{uuid}"
     },
     {
       "displayName": "WKR Assessment",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "WkrAssessment",
       "urlTemplate": "/apps/humaniq/wkr-assessments/{uuid}"
     },
     {
       "displayName": "Loonbeslag",
-      "registerSlug": "hrmq",
+      "registerSlug": "humaniq",
       "schemaSlug": "Loonbeslag",
       "urlTemplate": "/apps/humaniq/loonbeslagen/{uuid}"
     }
@@ -1509,7 +1509,7 @@
           "projectId",
           "billable"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "TimeEntry",
         "sort": {
           "field": "startedAt",
@@ -1542,7 +1542,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "TimeEntry",
         "sidebar": {
           "enabled": true,
@@ -1680,7 +1680,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Asset",
         "sidebar": {
           "enabled": true,
@@ -1750,7 +1750,7 @@
                 "assetId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "AssetAssignmentDetail",
               "schema": "AssetAssignment",
               "sort": {
@@ -1889,7 +1889,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Application",
         "sidebar": {
           "enabled": true,
@@ -1969,7 +1969,7 @@
                 "applicationId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "InterviewDetail",
               "schema": "Interview",
               "sort": {
@@ -2015,7 +2015,7 @@
             "widgetId": "data-2"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Cao",
         "sidebar": {
           "enabled": true,
@@ -2074,7 +2074,7 @@
             "id": "propose-comp-adjustment",
             "label": "Propose adjustment",
             "onSuccessRoute": "CompAdjustmentDetail",
-            "register": "hrmq",
+            "register": "humaniq",
             "schema": "CompAdjustment",
             "successMessage": "Compensation adjustment created.",
             "type": "open-form"
@@ -2111,7 +2111,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "CompReviewCycle",
         "sidebar": {
           "enabled": true,
@@ -2149,7 +2149,7 @@
                 "cycleId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "CompAdjustmentDetail",
               "schema": "CompAdjustment",
               "sort": {
@@ -2268,7 +2268,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Expense",
         "sidebar": {
           "enabled": true,
@@ -2291,7 +2291,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "Expense"
               },
               "valueColor": "#46ba61"
@@ -2446,7 +2446,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "LeaveRequest",
         "sidebar": {
           "enabled": true,
@@ -2609,7 +2609,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Loonbeslag",
         "sidebar": {
           "enabled": true,
@@ -2631,7 +2631,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "Loonbeslag"
               },
               "valueColor": "#e9322d"
@@ -2656,7 +2656,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "Loonbeslag"
               },
               "valueColor": "#46ba61"
@@ -2681,7 +2681,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "Loonbeslag"
               },
               "valueColor": "#0082c9"
@@ -2853,7 +2853,7 @@
             "widgetId": "files"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Employee",
         "sidebar": {
           "enabled": true,
@@ -2886,7 +2886,7 @@
                     "employeeId": "@objectId"
                   },
                   "metric": "count",
-                  "register": "hrmq",
+                  "register": "humaniq",
                   "route": {
                     "name": "EmploymentContracts"
                   },
@@ -2908,7 +2908,7 @@
                     "employeeId": "@objectId"
                   },
                   "metric": "count",
-                  "register": "hrmq",
+                  "register": "humaniq",
                   "route": {
                     "name": "Payslips"
                   },
@@ -2931,7 +2931,7 @@
                     "status": "submitted"
                   },
                   "metric": "count",
-                  "register": "hrmq",
+                  "register": "humaniq",
                   "route": {
                     "name": "ExpenseApproval"
                   },
@@ -2954,7 +2954,7 @@
                     "employeeId": "@objectId"
                   },
                   "metric": "sum",
-                  "register": "hrmq",
+                  "register": "humaniq",
                   "route": {
                     "name": "Timesheets"
                   },
@@ -3014,7 +3014,7 @@
                 "employeeId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "EmploymentContractDetail",
               "schema": "EmploymentContract",
               "sort": {
@@ -3052,7 +3052,7 @@
                 "employeeId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "TimesheetDetail",
               "schema": "Timesheet",
               "sort": {
@@ -3095,7 +3095,7 @@
                 "employeeId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "PayslipDetail",
               "schema": "Payslip",
               "sort": {
@@ -3133,7 +3133,7 @@
                 "employeeId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "ExpenseDetail",
               "schema": "Expense",
               "sort": {
@@ -3175,7 +3175,7 @@
                 "employeeId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "OrgAssignmentDetail",
               "schema": "OrgAssignment",
               "sort": {
@@ -3217,7 +3217,7 @@
                 "employeeId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "PerformanceReviewDetail",
               "schema": "PerformanceReview",
               "sort": {
@@ -3255,7 +3255,7 @@
                 "employeeId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "ObjectiveDetail",
               "schema": "Objective",
               "sort": {
@@ -3293,7 +3293,7 @@
                 "employeeId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "CompAdjustmentDetail",
               "schema": "CompAdjustment",
               "sort": {
@@ -3332,7 +3332,7 @@
                 "employeeId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "LeaveTransactionDetail",
               "schema": "LeaveTransaction",
               "sort": {
@@ -3412,7 +3412,7 @@
             "widgetId": "data"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Payslip",
         "sidebar": {
           "enabled": true,
@@ -3434,7 +3434,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "Payslip"
               },
               "valueColor": "#0082c9"
@@ -3459,7 +3459,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "Payslip"
               },
               "valueColor": "#46ba61"
@@ -3537,7 +3537,7 @@
             "id": "book-correction",
             "label": "Book retro correction",
             "onSuccessRoute": "PayrollAdjustmentDetail",
-            "register": "hrmq",
+            "register": "humaniq",
             "schema": "PayrollAdjustment",
             "successMessage": "Draft correction created — use Recompute to calculate the delta.",
             "type": "open-form"
@@ -3585,7 +3585,7 @@
             "widgetId": "object-list"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PayrollRun",
         "sidebar": {
           "enabled": true,
@@ -3607,7 +3607,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "PayrollRun"
               },
               "valueColor": "#0082c9"
@@ -3632,7 +3632,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "PayrollRun"
               },
               "valueColor": "#46ba61"
@@ -3657,7 +3657,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "PayrollRun"
               },
               "valueColor": "#e9322d"
@@ -3703,7 +3703,7 @@
                 "payrollRunId": "@objectId"
               },
               "limit": 50,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "PayslipDetail",
               "schema": "Payslip",
               "sort": {
@@ -3802,7 +3802,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "LoonaangifteFiling",
         "sidebar": {
           "enabled": true,
@@ -3908,7 +3908,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PayrollMutationReport",
         "sidebar": {
           "enabled": true,
@@ -3930,7 +3930,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "PayrollMutationReport"
               },
               "valueColor": "#0082c9"
@@ -3955,7 +3955,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "PayrollMutationReport"
               },
               "valueColor": "#46ba61"
@@ -3980,7 +3980,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "PayrollMutationReport"
               },
               "valueColor": "#e9322d"
@@ -4005,7 +4005,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "PayrollMutationReport"
               },
               "valueColor": "#f4a742"
@@ -4110,7 +4110,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "WkrAssessment",
         "sidebar": {
           "enabled": true,
@@ -4132,7 +4132,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "WkrAssessment"
               },
               "valueColor": "#0082c9"
@@ -4157,7 +4157,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "WkrAssessment"
               },
               "valueColor": "#46ba61"
@@ -4182,7 +4182,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "WkrAssessment"
               },
               "valueColor": "#f4a742"
@@ -4207,7 +4207,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "WkrAssessment"
               },
               "valueColor": "#e9322d"
@@ -4293,7 +4293,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Objective",
         "sidebar": {
           "enabled": true,
@@ -4358,7 +4358,7 @@
                 "objectiveId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "KeyResultDetail",
               "schema": "KeyResult",
               "sort": {
@@ -4472,7 +4472,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Onboarding",
         "sidebar": {
           "enabled": true,
@@ -4626,7 +4626,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Offboarding",
         "sidebar": {
           "enabled": true,
@@ -4745,7 +4745,7 @@
             "widgetId": "object-list-2"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "OrgUnit",
         "sidebar": {
           "enabled": true,
@@ -4800,7 +4800,7 @@
                 "parentUnitId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "OrgUnitDetail",
               "schema": "OrgUnit",
               "sort": {
@@ -4842,7 +4842,7 @@
                 "orgUnitId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "OrgAssignmentDetail",
               "schema": "OrgAssignment",
               "sort": {
@@ -4916,7 +4916,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "ReviewCycle",
         "sidebar": {
           "enabled": true,
@@ -4954,7 +4954,7 @@
                 "cycleId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "PerformanceReviewDetail",
               "schema": "PerformanceReview",
               "sort": {
@@ -4992,7 +4992,7 @@
                 "cycleId": "@objectId"
               },
               "limit": 25,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "ObjectiveDetail",
               "schema": "Objective",
               "sort": {
@@ -5057,7 +5057,7 @@
             "widgetId": "data"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PayrollAdjustment",
         "sidebar": {
           "enabled": true,
@@ -5079,7 +5079,7 @@
                   "id": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "PayrollAdjustment"
               },
               "valueColor": "#0082c9"
@@ -5187,7 +5187,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Roster",
         "sidebar": {
           "enabled": true,
@@ -5245,7 +5245,7 @@
                 "rosterId": "@objectId"
               },
               "limit": 50,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "RosterAssignmentDetail",
               "schema": "RosterAssignment",
               "sort": {
@@ -5360,7 +5360,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Timesheet",
         "sidebar": {
           "enabled": true,
@@ -5382,7 +5382,7 @@
                   "timesheetId": "@objectId"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "TimeEntry"
               },
               "valueColor": "#0082c9"
@@ -5496,7 +5496,7 @@
                 "timesheetId": "@objectId"
               },
               "limit": 50,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "TimeEntryDetail",
               "schema": "TimeEntry",
               "sort": {
@@ -5554,7 +5554,7 @@
           "projectId",
           "billable"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "TimeEntry",
         "sort": {
           "field": "startedAt",
@@ -5632,7 +5632,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "SickLeaveCase",
         "sidebar": {
           "enabled": true,
@@ -5795,7 +5795,7 @@
                   "userId": "@me"
                 },
                 "metric": "sum",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "TimeEntry"
               }
             },
@@ -5819,7 +5819,7 @@
                   "userId": "@me"
                 },
                 "metric": "count",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "Expense"
               }
             },
@@ -5843,7 +5843,7 @@
                   "status": "submitted"
                 },
                 "metric": "count",
-                "register": "hrmq",
+                "register": "humaniq",
                 "schema": "Timesheet"
               }
             },
@@ -5867,7 +5867,7 @@
                 "userId": "@me"
               },
               "limit": 3,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "TimesheetDetail",
               "schema": "Timesheet",
               "sort": {
@@ -5895,7 +5895,7 @@
                 "userId": "@me",
                 "year": "@currentFiscalYear"
               },
-              "register": "hrmq",
+              "register": "humaniq",
               "schema": "LeaveBalance",
               "sort": {
                 "dir": "asc",
@@ -5920,7 +5920,7 @@
                 "userId": "@me"
               },
               "limit": 3,
-              "register": "hrmq",
+              "register": "humaniq",
               "rowRoute": "PayslipDetail",
               "schema": "Payslip",
               "sort": {
@@ -5961,7 +5961,7 @@
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Timesheet",
         "sort": {
           "field": "period",
@@ -5989,7 +5989,7 @@
           "category",
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Asset",
         "sort": {
           "field": "name",
@@ -6014,7 +6014,7 @@
         "filter": {
           "administrationId": "@workspace.activeAdministrationId?"
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "AssetAssignment",
         "sort": {
           "field": "issuedOn",
@@ -6047,7 +6047,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "AssetAssignment",
         "sidebar": {
           "enabled": true,
@@ -6101,7 +6101,7 @@
           "status",
           "department"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Vacancy",
         "sort": {
           "field": "publishedDate",
@@ -6155,7 +6155,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Vacancy",
         "sidebar": {
           "enabled": true,
@@ -6217,7 +6217,7 @@
         "filters": [
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Application",
         "sort": {
           "field": "candidateName",
@@ -6243,7 +6243,7 @@
           "status",
           "mode"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Interview",
         "sort": {
           "field": "scheduledStart",
@@ -6313,7 +6313,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Interview",
         "sidebar": {
           "enabled": true,
@@ -6363,7 +6363,7 @@
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "AttendanceRecord",
         "sort": {
           "field": "date",
@@ -6393,7 +6393,7 @@
           "status",
           "location"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "AttendanceRecord",
         "sort": {
           "field": "date",
@@ -6447,7 +6447,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "AttendanceRecord",
         "sidebar": {
           "enabled": true,
@@ -6500,7 +6500,7 @@
           "orgUnitId",
           "rol"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "BhvCertificering",
         "sort": {
           "field": "certificaatGeldigTot",
@@ -6533,7 +6533,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "BhvCertificering",
         "sidebar": {
           "enabled": true,
@@ -6596,7 +6596,7 @@
         "filters": [
           "sector"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Cao",
         "sort": {
           "field": "name",
@@ -6636,7 +6636,7 @@
           "active",
           "grade"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "SalaryBand",
         "sort": {
           "field": "bandId",
@@ -6662,7 +6662,7 @@
             "widgetId": "data"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "SalaryBand",
         "sidebar": {
           "enabled": true,
@@ -6693,7 +6693,7 @@
           "id": "create-comp-cycle",
           "label": "Create compensation cycle",
           "onSuccessRoute": "CompReviewCycleDetail",
-          "register": "hrmq",
+          "register": "humaniq",
           "schema": "CompReviewCycle",
           "successMessage": "Compensation cycle created.",
           "type": "open-form"
@@ -6710,7 +6710,7 @@
         "filters": [
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "CompReviewCycle",
         "sort": {
           "field": "period",
@@ -6788,7 +6788,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "CompAdjustment",
         "sidebar": {
           "enabled": true,
@@ -6840,7 +6840,7 @@
           "documentType",
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "GeneratedDocument",
         "sort": {
           "field": "generatedAt",
@@ -6881,7 +6881,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "GeneratedDocument",
         "sidebar": {
           "enabled": true,
@@ -6961,7 +6961,7 @@
         "filters": [
           "year"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Jaaropgaaf",
         "sort": {
           "field": "year",
@@ -6994,7 +6994,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Jaaropgaaf",
         "sidebar": {
           "enabled": true,
@@ -7044,7 +7044,7 @@
           "status",
           "right"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "DsrRequest",
         "sort": {
           "field": "receivedDate",
@@ -7140,7 +7140,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "DsrRequest",
         "sidebar": {
           "enabled": true,
@@ -7190,7 +7190,7 @@
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Expense",
         "sort": {
           "field": "expenseDate",
@@ -7219,7 +7219,7 @@
           "status",
           "category"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Expense",
         "sort": {
           "field": "expenseDate",
@@ -7252,7 +7252,7 @@
           "status",
           "category"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Expense",
         "sort": {
           "field": "submittedAt",
@@ -7286,7 +7286,7 @@
           "status",
           "category"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Expense",
         "sort": {
           "field": "submittedAt",
@@ -7313,7 +7313,7 @@
         "filters": [
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PayrollGLPost",
         "sort": {
           "field": "postedAt",
@@ -7354,7 +7354,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PayrollGLPost",
         "sidebar": {
           "enabled": true,
@@ -7438,7 +7438,7 @@
         "filters": [
           "functiegroep"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Normfunctie",
         "sort": {
           "field": "functiecode",
@@ -7464,7 +7464,7 @@
             "widgetId": "data"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Normfunctie",
         "sidebar": {
           "enabled": true,
@@ -7503,7 +7503,7 @@
           "id": "create-integration-account",
           "label": "Register integration",
           "onSuccessRoute": "IntegrationAccountDetail",
-          "register": "hrmq",
+          "register": "humaniq",
           "schema": "IntegrationAccount",
           "successMessage": "Integration registered. Configure the actual RBAC access and the app password in OpenRegister / Nextcloud.",
           "type": "open-form"
@@ -7520,7 +7520,7 @@
         "filters": [
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "IntegrationAccount",
         "sort": {
           "field": "name",
@@ -7545,7 +7545,7 @@
             "widgetId": "data"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "IntegrationAccount",
         "sidebar": {
           "enabled": true,
@@ -7582,7 +7582,7 @@
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "LeaveRequest",
         "sort": {
           "field": "startDate",
@@ -7611,7 +7611,7 @@
           "status",
           "leaveType"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "LeaveRequest",
         "sort": {
           "field": "startDate",
@@ -7644,7 +7644,7 @@
           "status",
           "leaveType"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "LeaveRequest",
         "sort": {
           "field": "submittedAt",
@@ -7678,7 +7678,7 @@
           "status",
           "leaveType"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "LeaveRequest",
         "sort": {
           "field": "submittedAt",
@@ -7710,7 +7710,7 @@
           "year",
           "leaveType"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "LeaveBalance",
         "sort": {
           "field": "year",
@@ -7789,7 +7789,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "LeaveTransaction",
         "sidebar": {
           "enabled": true,
@@ -7838,7 +7838,7 @@
         "filter": {
           "userId": "@me"
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "LeaveTransaction",
         "sort": {
           "field": "submittedAt",
@@ -7857,7 +7857,7 @@
           "id": "create-loonbeslag",
           "label": "Register wage garnishment",
           "onSuccessRoute": "LoonbeslagDetail",
-          "register": "hrmq",
+          "register": "humaniq",
           "schema": "Loonbeslag",
           "successMessage": "Wage garnishment registered (status draft -- use Verify and activate to start deductions).",
           "type": "open-form"
@@ -7877,7 +7877,7 @@
         "filters": [
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Loonbeslag",
         "sort": {
           "field": "effectiveFrom",
@@ -7908,7 +7908,7 @@
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Payslip",
         "sort": {
           "field": "period",
@@ -7936,7 +7936,7 @@
         "filters": [
           "taxTableColor"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Employee",
         "sort": {
           "field": "lastName",
@@ -7965,7 +7965,7 @@
           "type",
           "awfTariff"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "EmploymentContract",
         "sort": {
           "field": "startDate",
@@ -8015,7 +8015,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "EmploymentContract",
         "sidebar": {
           "enabled": true,
@@ -8068,7 +8068,7 @@
           "jurisdiction",
           "period"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Payslip",
         "sort": {
           "field": "period",
@@ -8087,7 +8087,7 @@
           "id": "create-run",
           "label": "Create payroll run",
           "onSuccessRoute": "PayrollRunDetail",
-          "register": "hrmq",
+          "register": "humaniq",
           "schema": "PayrollRun",
           "successMessage": "Draft payroll run created. Use (Re)calculate to generate the payslips.",
           "type": "open-form"
@@ -8109,7 +8109,7 @@
           "status",
           "jurisdiction"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PayrollRun",
         "sort": {
           "field": "period",
@@ -8140,7 +8140,7 @@
           "filingType",
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "LoonaangifteFiling",
         "sort": {
           "field": "deadline",
@@ -8169,7 +8169,7 @@
         "filters": [
           "administrationId"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PayrollMutationReport",
         "sort": {
           "field": "generatedAt",
@@ -8188,7 +8188,7 @@
           "id": "create-wkr-declaration",
           "label": "Register declaration",
           "onSuccessRoute": "WkrDeclarationDetail",
-          "register": "hrmq",
+          "register": "humaniq",
           "schema": "WkrDeclaration",
           "successMessage": "WKR declaration registered.",
           "type": "open-form"
@@ -8212,7 +8212,7 @@
           "wkrCategory",
           "year"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "WkrDeclaration",
         "sort": {
           "field": "date",
@@ -8245,7 +8245,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "WkrDeclaration",
         "sidebar": {
           "enabled": true,
@@ -8299,7 +8299,7 @@
           "status",
           "year"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "WkrAssessment",
         "sort": {
           "field": "year",
@@ -8332,7 +8332,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "KeyResult",
         "sidebar": {
           "enabled": true,
@@ -8381,7 +8381,7 @@
         "filter": {
           "userId": "@me"
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Objective",
         "sort": {
           "field": "title",
@@ -8408,7 +8408,7 @@
         "filters": [
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Onboarding",
         "sort": {
           "field": "startDate",
@@ -8433,7 +8433,7 @@
           "status",
           "reason"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Offboarding",
         "sort": {
           "field": "lastWorkingDay",
@@ -8462,7 +8462,7 @@
           "type",
           "active"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "OrgUnit",
         "sort": {
           "field": "name",
@@ -8490,7 +8490,7 @@
         "filters": [
           "role"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "OrgAssignment",
         "sort": {
           "field": "startDate",
@@ -8523,7 +8523,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "OrgAssignment",
         "sidebar": {
           "enabled": true,
@@ -8576,7 +8576,7 @@
         "filters": [
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PayrollPaymentBatch",
         "sort": {
           "field": "createdAt",
@@ -8617,7 +8617,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PayrollPaymentBatch",
         "sidebar": {
           "enabled": true,
@@ -8693,7 +8693,7 @@
           "fund",
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PensionFiling",
         "sort": {
           "field": "deadline",
@@ -8780,7 +8780,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PensionFiling",
         "sidebar": {
           "enabled": true,
@@ -8856,7 +8856,7 @@
           "status",
           "type"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "ReviewCycle",
         "sort": {
           "field": "year",
@@ -8926,7 +8926,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PerformanceReview",
         "sidebar": {
           "enabled": true,
@@ -8978,7 +8978,7 @@
           "administrationId": "@workspace.activeAdministrationId?",
           "userId": "@me"
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PerformanceReview",
         "sort": {
           "field": "besprokenOp",
@@ -9005,7 +9005,7 @@
           "status",
           "settlementLine"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "PayrollAdjustment",
         "sort": {
           "field": "originalPeriod",
@@ -9024,7 +9024,7 @@
           "id": "create-shift",
           "label": "Create shift",
           "onSuccessRoute": "ShiftDetail",
-          "register": "hrmq",
+          "register": "humaniq",
           "schema": "Shift",
           "successMessage": "Shift created.",
           "type": "open-form"
@@ -9042,7 +9042,7 @@
         "filters": [
           "active"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Shift",
         "sort": {
           "field": "name",
@@ -9075,7 +9075,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Shift",
         "sidebar": {
           "enabled": true,
@@ -9118,7 +9118,7 @@
           "id": "create-roster",
           "label": "Create roster",
           "onSuccessRoute": "RosterDetail",
-          "register": "hrmq",
+          "register": "humaniq",
           "schema": "Roster",
           "successMessage": "Draft roster created. Add roster assignments and run the working hours check before you publish.",
           "type": "open-form"
@@ -9138,7 +9138,7 @@
         "filters": [
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Roster",
         "sort": {
           "field": "period",
@@ -9164,7 +9164,7 @@
           "rosterId",
           "employeeId"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "RosterAssignment",
         "sort": {
           "field": "date",
@@ -9197,7 +9197,7 @@
             "widgetId": "related"
           }
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "RosterAssignment",
         "sidebar": {
           "enabled": true,
@@ -9254,7 +9254,7 @@
           "status",
           "niveau"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Stagiair",
         "sort": {
           "field": "startDate",
@@ -9317,7 +9317,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Stagiair",
         "sidebar": {
           "enabled": true,
@@ -9375,7 +9375,7 @@
           "period",
           "billable"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Timesheet",
         "sort": {
           "field": "period",
@@ -9413,7 +9413,7 @@
           "status",
           "period"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Timesheet",
         "sort": {
           "field": "submittedAt",
@@ -9452,7 +9452,7 @@
           "status",
           "period"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "Timesheet",
         "sort": {
           "field": "submittedAt",
@@ -9479,7 +9479,7 @@
         "filters": [
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "SickLeaveCase",
         "sort": {
           "field": "firstSickDay",
@@ -9507,7 +9507,7 @@
           "administrationId": "@workspace.activeAdministrationId?",
           "status": "gemeld"
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "SickLeaveCase",
         "sort": {
           "field": "uwv42WeekMeldingDue",
@@ -9535,7 +9535,7 @@
           "year",
           "status"
         ],
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "WntDisclosure",
         "sort": {
           "field": "year",
@@ -9589,7 +9589,7 @@
             }
           ]
         },
-        "register": "hrmq",
+        "register": "humaniq",
         "schema": "WntDisclosure",
         "sidebar": {
           "enabled": true,

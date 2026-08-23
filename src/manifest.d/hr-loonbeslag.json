@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Wage garnishment",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "Loonbeslag",
 				"_note": "loonbeslag (2026-07-15): the WkrAssessmentDetail stat-tile precedent -- three headline KPIs (ordered amount, beslagvrije voet, total claim) lead the page since that is the exposure question HR checks first, then the full record (creditor/dossierRef/status/effectiveFrom/effectiveTo/activated*/settled*/withdrawn*) in the lb-data widget below. No lifecycleActions: Loonbeslag.status carries no x-openregister-lifecycle (design.md D5) -- the admin/HR-gate-before-resolve check a lifecycle guard's (object, action, userId) contract cannot express, so all three transitions are guarded api-call actions against LoonbeslagController instead. The withdraw action's `reason` param is currently a fixed default string (the manifest v2 api-call action type has no free-text prompt collection) -- a prompt-collecting modal is a named fast-follow (README). Admin/HR only, mirroring the Payroll nav group. Audit history is a sidebar tab.",
 				"sidebar": {
@@ -29,7 +29,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "Loonbeslag",
 								"metric": "sum",
 								"field": "orderedAmount",
@@ -54,7 +54,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "Loonbeslag",
 								"metric": "sum",
 								"field": "beslagvrijeVoet",
@@ -79,7 +79,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "Loonbeslag",
 								"metric": "sum",
 								"field": "totalClaim",
@@ -205,7 +205,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Loonbeslag",
 			"params": {
 				"id": "Loonbeslagen",
@@ -234,7 +234,7 @@
 						"label": "Register wage garnishment",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
-						"register": "hrmq",
+						"register": "humaniq",
 						"schema": "Loonbeslag",
 						"onSuccessRoute": "LoonbeslagDetail",
 						"successMessage": "Wage garnishment registered (status draft -- use Verify and activate to start deductions)."

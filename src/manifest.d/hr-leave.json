@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Leave request",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "LeaveRequest",
 				"_note": "leave-verzuim-mvp (2026-07-12): drives the EXISTING LeaveRequest lifecycle from portal-schemas (submit -> approve/reject, guarded server-side by NoSelfApprovalGuard) -- nothing on the schema changes here, only its UI. TimesheetDetail pattern: the data widget is SPLIT into 'Request' (leaveType/startDate/endDate/hours/reason -- what is being requested) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason -- the workflow trail), both excluding employeeId since Related already resolves and links the requesting Employee by name. Files sits full-width below for supporting documents (e.g. a bijzonder-verlof invitation). NO stat KPI tile: unlike Timesheet's hours-sum or Expense's amount-sum, a leave request has no single numeric headline worth a dedicated stat (hours is optional and nullable). lifecycleActions expose exactly submit/approve/reject -- no invented cancel/withdraw edge (PayrollRunDetail _note precedent: never claim a transition the backend does not guard). Audit history is a sidebar tab.",
 				"sidebar": {
@@ -144,7 +144,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "LeaveRequest",
 			"params": {
 				"id": "MijnVerlof",
@@ -169,7 +169,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "LeaveRequest",
 			"params": {
 				"id": "LeaveRequests",
@@ -198,7 +198,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "LeaveRequest",
 			"params": {
 				"id": "LeaveApproval",
@@ -231,7 +231,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "LeaveRequest",
 			"params": {
 				"id": "TeamVerlofgoedkeuring",
@@ -265,7 +265,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "LeaveBalance",
 			"params": {
 				"id": "LeaveBalances",
@@ -297,7 +297,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "LeaveTransaction",
 			"params": {
 				"id": "LeaveTransactionDetail",
@@ -362,7 +362,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "LeaveTransaction",
 			"params": {
 				"id": "MijnVerlofKopenVerkopen",

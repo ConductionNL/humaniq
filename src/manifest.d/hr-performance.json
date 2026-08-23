@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Review cycle",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "ReviewCycle",
 				"_note": "performance-reviews-mvp (2026-07-13): the orchestration half of the performance-review MVP (ADR-001 Rule 6 — sub-pages under the EXISTING Personeel/EmployeesGroup, no new top-level menu). The 'Cycle' data widget carries every field (name/year/type/status/startDate/endDate — no $ref to exclude, ReviewCycle has no outbound relations). The 'Beoordelingen in deze cyclus' object-list (PerformanceReview.cycleId = @objectId) is the cycle's in-progress roster, rowRoute to PerformanceReviewDetail. lifecycleActions expose exactly openen/sluiten (concept->open->gesloten, hr-performance.json) -- no re-open edge, a closed cycle is history (the Vacancy no-resurrection precedent). Audit history is a sidebar tab. goals-okr (2026-07-15) adds the 'OKR's in deze cyclus' object-list (Objective.cycleId = @objectId) — the review-period tie: an OKR set can optionally be tied to a beoordelingscyclus.",
 				"sidebar": {
@@ -30,7 +30,7 @@
 						"title": "Reviews in this cycle",
 						"icon": "ClipboardAccountOutline",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "PerformanceReview",
 							"filter": {
 								"cycleId": "@objectId"
@@ -64,7 +64,7 @@
 						"title": "OKRs in this cycle",
 						"icon": "BullseyeArrow",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "Objective",
 							"filter": {
 								"cycleId": "@objectId"
@@ -150,7 +150,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "ReviewCycle",
 			"params": {
 				"id": "ReviewCycles",
@@ -180,7 +180,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "PerformanceReview",
 			"params": {
 				"id": "PerformanceReviewDetail",
@@ -238,7 +238,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "PerformanceReview",
 			"params": {
 				"id": "MijnBeoordelingen",

@@ -60,12 +60,11 @@ class MigrateAssetDialectTest extends TestCase {
 	 * A fake IOutput that records what the step told the operator.
 	 *
 	 * @return IOutput An IOutput double exposing `infos` and `warnings` arrays.
-	 *         Named `outputDouble` because PHPUnit\Framework\TestCase::output()
-	 *         is final and cannot be overridden.
+	 *                 Named `outputDouble` because PHPUnit\Framework\TestCase::output()
+	 *                 is final and cannot be overridden.
 	 */
 	private function outputDouble(): IOutput {
 		return new class implements IOutput {
-
 			/**
 			 * @var string[]
 			 */
@@ -212,18 +211,18 @@ class MigrateAssetDialectTest extends TestCase {
 		$migration = $this->createMock(AssetDialectMigrationService::class);
 		$migration->method('migrate')->willReturn([
 			'Asset' => [
-				'inspected'      => 4,
-				'rewritten'      => 3,
+				'inspected' => 4,
+				'rewritten' => 3,
 				'alreadyCurrent' => 1,
-				'skipped'        => 0,
-				'skipReasons'    => [],
+				'skipped' => 0,
+				'skipReasons' => [],
 			],
 			'AssetAssignment' => [
-				'inspected'      => 2,
-				'rewritten'      => 0,
+				'inspected' => 2,
+				'rewritten' => 0,
 				'alreadyCurrent' => 1,
-				'skipped'        => 1,
-				'skipReasons'    => [['id' => 'aa-1', 'reason' => 'conflicting values, refusing to guess']],
+				'skipped' => 1,
+				'skipReasons' => [['id' => 'aa-1', 'reason' => 'conflicting values, refusing to guess']],
 			],
 		]);
 

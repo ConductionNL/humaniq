@@ -37,7 +37,9 @@ class FakeContainer implements ContainerInterface {
 	/**
 	 * @param array<string, mixed> $entries Service map keyed by id.
 	 */
-	public function __construct(private array $entries = []) {
+	public function __construct(
+		private array $entries = [],
+	) {
 
 	}//end __construct()
 
@@ -62,7 +64,7 @@ class FakeContainer implements ContainerInterface {
 	 */
 	public function get(string $id): mixed {
 		if ($this->has($id) === false) {
-			throw new class ('Service not registered in FakeContainer: ' . $id) extends \RuntimeException implements NotFoundExceptionInterface {
+			throw new class('Service not registered in FakeContainer: ' . $id) extends \RuntimeException implements NotFoundExceptionInterface {
 			};
 		}
 

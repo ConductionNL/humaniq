@@ -57,8 +57,8 @@ final class TaperOp extends AbstractOp {
 	 * @param StepContext $ctx The run context.
 	 *
 	 * @return float The tapered result. Never an int: the sole return is
-	 *         `max((float)$floor, (float)$tapered)`, so both arms are already
-	 *         cast to float.
+	 *               `max((float)$floor, (float)$tapered)`, so both arms are already
+	 *               cast to float.
 	 */
 	public function evaluate(array $spec, StepContext $ctx): mixed {
 		$base = $this->num($spec, 'base', $ctx);

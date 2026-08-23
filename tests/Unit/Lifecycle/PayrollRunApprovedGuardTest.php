@@ -79,7 +79,7 @@ class PayrollRunApprovedGuardTest extends TestCase {
 			->willReturn($objectService);
 
 		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturn('hrmq');
+		$appConfig->method('getValueString')->willReturn('humaniq');
 
 		return new PayrollRunApprovedGuard($container, $appConfig);
 	}//end guardWithRun()
@@ -111,7 +111,7 @@ class PayrollRunApprovedGuardTest extends TestCase {
 		$container->method('get')->willReturn($objectService);
 
 		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturn('hrmq');
+		$appConfig->method('getValueString')->willReturn('humaniq');
 
 		return new PayrollRunApprovedGuard($container, $appConfig);
 	}//end guardThatThrows()

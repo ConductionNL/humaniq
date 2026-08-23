@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Asset",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "Asset",
 				"_note": "asset-management-mvp (2026-07-13), field/enum names renamed to English and three vehicle-only fiscal fields added by hrmq-asset-fleet-merge (2026-08-19): a company-owned item with a guarded custody lifecycle (available -> issued -> checkedIn -> available, or available/checkedIn -> writtenOff, terminal -- the Expense precedent). The data widget shows every field including the three fiscal ones (listPrice/fuelType/companyCarTaxCategory) absorbed from the retired Vehicle schema, with hideEmpty so a non-vehicle Asset's detail page does not render them as empty (design.md D3); lifecycleActions expose exactly the four fragment transitions (issue/checkIn/release/writeOff), never invented. An FK-scoped 'Uitgiftes' object-list (AssetAssignment.assetId = @objectId) is the inbound-relation direction (D2) -- who has held this asset, ordered most-recent-first, rowRoute to AssetAssignmentDetail. The Files widget (signed uitgiftebonnen) runs full-width after the domain cards, the ExpenseDetail receipt placement. Audit history is a sidebar tab.",
 				"sidebar": {
@@ -58,7 +58,7 @@
 						"title": "Asset assignments",
 						"icon": "HandshakeOutline",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "AssetAssignment",
 							"filter": {
 								"assetId": "@objectId"
@@ -179,7 +179,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Asset",
 			"params": {
 				"id": "Assets",
@@ -207,7 +207,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "AssetAssignment",
 			"params": {
 				"id": "AssetAssignments",
@@ -232,7 +232,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "AssetAssignment",
 			"params": {
 				"id": "AssetAssignmentDetail",

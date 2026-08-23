@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Timesheet",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "Timesheet",
 				"_note": "HR/labour approval record (urenstaat). hrmq-hours-process-redesign (design.md Decision 8): the Timesheet is now the period AGGREGATE of TimeEntry bookings, so (1) the total-hours KPI stat sums the TRUTH — TimeEntry.hours filtered on timesheetId = @objectId — not the cached Timesheet.hours field; (2) the 'Urenstaat' data widget shows the aggregate facts (period/hours/entryCount/description/billable) with everything but the timesheet-level description read-only (hours/entryCount are server-recomputed aggregates, REQ-TEC-004). description is the ONLY page-editable field: the design's page-level includeFields [description] edit allowlist is expressed through this widget's editable overrides, because CnDetailPage has no page-level includeFields prop — a config key no component reads is a comment, so none is declared; (3) the 'Goedkeuring' panel (status/submittedAt/approvedBy/approvedAt/rejectionReason) is fully read-only — process fields are lifecycle-stamped server-side and inert to client input; (4) the new 'Urenboekingen' object-list lists the TimeEntry bookings (timesheetId = @objectId), rowRoute to TimeEntryDetail — entry mutability is governed server-side by the parent's state (REQ-TEC-005). Related resolves the claiming Employee (employeeId excluded from data widgets). Files keeps approval evidence full-width on the body. NO email/calendar/talk widgets — the Timesheet schema declares no comms linkedTypes; any communication is with the person (Employee), not the record. lifecycleActions expose the schema's own submit/approve/reject/reopen transitions (guarded server-side by NoSelfApprovalGuard, and TimesheetNotEmptyGuard on submit). Audit history stays a sidebar tab as a rarely-scanned surface.",
 				"sidebar": {
@@ -29,7 +29,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "TimeEntry",
 								"metric": "sum",
 								"field": "hours",
@@ -119,7 +119,7 @@
 						"title": "Time entries",
 						"icon": "ClockOutline",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "TimeEntry",
 							"filter": {
 								"timesheetId": "@objectId"
@@ -263,7 +263,7 @@
 			"type": "index",
 			"title": "My hours",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "TimeEntry",
 				"_note": "hrmq-hours-process-redesign (design.md Decision 8): MijnUren is the self-service BOOKING surface and now lists TimeEntry (the individual booking), not Timesheet (the period aggregate). Converted from an indexScaffold pageInstance to a concrete page because the create-form allowlist keys (includeFields/fieldOverrides) are not indexScaffold params, and widening the shared template for one page is worse than an explicit page (the template file's own 80%-fit rule). Add is enabled via actionToggles.showAdd — NEVER the dead allowCreate key (not a CnIndexPage prop; fleet anti-pattern 11). includeFields is the exact self-service allowlist: the employee's own Employee record, userId, administrationId and costCenter are resolved/stamped server-side by TimeEntryStampListener, and hours is derived from start/end/break — none of them may appear on the form (spec: 'The booking form is an allowlist'). fieldOverrides orders billable last (times → break → what → project → billable).",
 				"description": "Log your hours and see your own time entries.",
@@ -301,7 +301,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Timesheet",
 			"params": {
 				"id": "Timesheets",
@@ -335,7 +335,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Timesheet",
 			"params": {
 				"id": "TimesheetApproval",
@@ -373,7 +373,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Timesheet",
 			"params": {
 				"id": "TeamUrengoedkeuring",

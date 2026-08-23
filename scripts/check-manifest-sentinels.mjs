@@ -10,7 +10,7 @@
  * ---------------
  * Measured on the deployed app, 2026-08-19:
  *
- *   GET /api/objects/hrmq/Employee?_limit=20&administrationId=%40workspace.activeAdministrationId%3F
+ *   GET /api/objects/humaniq/Employee?_limit=20&administrationId=%40workspace.activeAdministrationId%3F
  *   -> 200 OK, total: 0
  *
  * The sentinel reached OpenRegister as the literal string. No row carries that

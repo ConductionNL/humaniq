@@ -2,7 +2,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "IntegrationAccount",
 			"params": {
 				"id": "IntegrationAccounts",
@@ -28,7 +28,7 @@
 						"label": "Register integration",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
-						"register": "hrmq",
+						"register": "humaniq",
 						"schema": "IntegrationAccount",
 						"onSuccessRoute": "IntegrationAccountDetail",
 						"successMessage": "Integration registered. Configure the actual RBAC access and the app password in OpenRegister / Nextcloud."
@@ -38,7 +38,7 @@
 		},
 		{
 			"templateRef": "singleDataScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "IntegrationAccount",
 			"params": {
 				"id": "IntegrationAccountDetail",

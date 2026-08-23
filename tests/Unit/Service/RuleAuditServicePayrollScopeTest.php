@@ -109,7 +109,7 @@ class RuleAuditServicePayrollScopeTest extends TestCase {
 		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($objectService);
 
 		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturn('hrmq');
+		$appConfig->method('getValueString')->willReturn('humaniq');
 
 		$logger = $this->createMock(LoggerInterface::class);
 

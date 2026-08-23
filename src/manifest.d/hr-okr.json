@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Objective",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "Objective",
 				"_note": "goals-okr (2026-07-15): the measurable, cross-review sibling of PerformanceReviewDetail (ADR-001 Rule 6 — the primary surface is the EmployeeDetail emp-objectives row / ReviewCycleDetail rc-objectives row; this page is a routed detail, reached from those rows or the deepLink, and is deliberately NOT a menu child, the PerformanceReviewDetail/TimesheetDetail convention). The 'Objective' data widget carries title/ownerType/period/status/uitkomst/progress, excluding employeeId/orgUnitId/cycleId (Related resolves and links all three by name) and userId (the internal @me self-service field, not a display fact). The 'Key results' object-list (KeyResult.objectiveId = @objectId) lists this objective's measurable children, rowRoute to KeyResultDetail. lifecycleActions expose exactly activeren/afsluiten (concept->actief->afgesloten, hr-okr.json) -- no guard, no re-open edge, a closed objective is history (the ReviewCycle no-resurrection precedent). Audit history is a sidebar tab.",
 				"sidebar": {
@@ -45,7 +45,7 @@
 						"title": "Key results",
 						"icon": "TargetVariant",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "KeyResult",
 							"filter": {
 								"objectiveId": "@objectId"
@@ -139,7 +139,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "KeyResult",
 			"params": {
 				"id": "KeyResultDetail",
@@ -158,7 +158,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Objective",
 			"params": {
 				"id": "MijnDoelen",

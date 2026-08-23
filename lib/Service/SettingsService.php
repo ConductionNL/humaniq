@@ -67,20 +67,29 @@ class SettingsService {
 	/**
 	 * The configured register slug, falling back to 'hrmq' when unset.
 	 *
-	 * The 'hrmq' fallback is FROZEN across the `hrmq` -> `humaniq` rename and
-	 * MUST NOT be "finished" later. OpenRegister's
-	 * ImportHandler::autoCreateRegisterIfApplication() resolves the register BY
-	 * SLUG (from `x-openregister.app` in lib/Settings/humaniq_register.json).
-	 * Renaming this would not move the register — it would create a second,
-	 * empty one and orphan every employee, contract, payslip and payroll run
-	 * already stored under the 'hrmq' slug.
+	 * The fallback moved to 'humaniq' with the register slug, and the two must
+	 * agree. OpenRegister's ImportHandler::autoCreateRegisterIfApplication()
+	 * resolves the register BY SLUG (from `x-openregister.app` in
+	 * lib/Settings/humaniq_register.json), and its not-found branch CREATES an
+	 * empty register rather than failing — which is why the earlier note here
+	 * froze this value. What makes it safe to move is `MigrateRegisterSlug`,
+	 * which renames the existing register ROW ahead of the import; the import
+	 * then updates that row instead of forking a second, empty one.
+	 *
+	 * That step also re-points the STORED `register` config value when it still
+	 * says 'hrmq'. Without that, MigrateAppConfigKeys would have copied the old
+	 * app id's value across verbatim and every reader here would go on asking
+	 * for a register nothing answers to — silently, because this method has a
+	 * default and a default turns missing data into wrong behaviour.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/specs/app-identity/spec.md
 	 */
 	public function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');
+		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', 'humaniq');
 		if ($slug === '') {
-			return 'hrmq';
+			return 'humaniq';
 		}
 
 		return $slug;

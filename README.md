@@ -568,14 +568,14 @@ under `openregister`'s generic object routes (verified against the live
 
 | Verb | Path | Action |
 |---|---|---|
-| `GET` | `/api/objects/hrmq/{schema}` | index — list, filterable and paginated |
-| `POST` | `/api/objects/hrmq/{schema}` | create |
-| `GET` | `/api/objects/hrmq/{schema}/{id}` | read one |
-| `PUT` | `/api/objects/hrmq/{schema}/{id}` | replace |
-| `PATCH` | `/api/objects/hrmq/{schema}/{id}` | partial update |
-| `DELETE` | `/api/objects/hrmq/{schema}/{id}` | delete |
+| `GET` | `/api/objects/humaniq/{schema}` | index — list, filterable and paginated |
+| `POST` | `/api/objects/humaniq/{schema}` | create |
+| `GET` | `/api/objects/humaniq/{schema}/{id}` | read one |
+| `PUT` | `/api/objects/humaniq/{schema}/{id}` | replace |
+| `PATCH` | `/api/objects/humaniq/{schema}/{id}` | partial update |
+| `DELETE` | `/api/objects/humaniq/{schema}/{id}` | delete |
 
-For example `GET /api/objects/hrmq/Vacancy` returns a paginated JSON list of
+For example `GET /api/objects/humaniq/Vacancy` returns a paginated JSON list of
 vacancies; `{schema}` is a schema *slug* (`Vacancy`, `OrgUnit`, `Employee`, …).
 The index route accepts OpenRegister's standard filter and pagination query
 parameters. These routes carry OpenRegister's `@NoAdminRequired` /

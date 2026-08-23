@@ -90,7 +90,7 @@
         "objects": [
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "PayrollPaymentBatch",
                     "slug": "paybatch-2026-05-adm-001"
                 },

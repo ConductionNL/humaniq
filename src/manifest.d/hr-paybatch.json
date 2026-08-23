@@ -2,7 +2,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "PayrollPaymentBatch",
 			"params": {
 				"id": "PayrollPaymentBatches",
@@ -30,7 +30,7 @@
 		},
 		{
 			"templateRef": "dualDataScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "PayrollPaymentBatch",
 			"params": {
 				"id": "PayrollPaymentBatchDetail",

@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Compensation cycle",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "CompReviewCycle",
 				"_note": "comp-cycles (2026-07-15): the round-container half of the compensation-review MVP (ADR-001 Rule 6 sub-page under the existing Personeel menu, the ReviewCycleDetail precedent). The 'Cyclus' data widget carries every field (name/period/effectiveDate/status/description — no $ref to exclude). The 'Voorstellen in deze cyclus' object-list (CompAdjustment.cycleId = @objectId) is the round's in-progress roster, rowRoute to CompAdjustmentDetail. lifecycleActions expose exactly sluiten (open->closed, hr-comp.json) -- no reopen edge, a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent); approval/effectuation lives per-adjustment, not here. The 'Aanpassing voorstellen' open-form action opens a plain CompAdjustment create form -- verified: this manifest version has no declarative field-prefill primitive (no existing open-form action in the codebase carries default field values), so cycleId is entered on the created form rather than auto-seeded, a deliberate scope-down from design.md's aspirational 'scoped to the cycle' prose. Audit history is a sidebar tab.",
 				"sidebar": {
@@ -30,7 +30,7 @@
 						"title": "Adjustments in this cycle",
 						"icon": "CashPlus",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "CompAdjustment",
 							"filter": {
 								"cycleId": "@objectId"
@@ -96,7 +96,7 @@
 						"label": "Propose adjustment",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
-						"register": "hrmq",
+						"register": "humaniq",
 						"schema": "CompAdjustment",
 						"onSuccessRoute": "CompAdjustmentDetail",
 						"successMessage": "Compensation adjustment created."
@@ -108,7 +108,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "SalaryBand",
 			"params": {
 				"id": "SalaryBands",
@@ -148,7 +148,7 @@
 		},
 		{
 			"templateRef": "singleDataScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "SalaryBand",
 			"params": {
 				"id": "SalaryBandDetail",
@@ -162,7 +162,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "CompReviewCycle",
 			"params": {
 				"id": "CompReviewCycles",
@@ -188,7 +188,7 @@
 						"label": "Create compensation cycle",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
-						"register": "hrmq",
+						"register": "humaniq",
 						"schema": "CompReviewCycle",
 						"onSuccessRoute": "CompReviewCycleDetail",
 						"successMessage": "Compensation cycle created."
@@ -198,7 +198,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "CompAdjustment",
 			"params": {
 				"id": "CompAdjustmentDetail",

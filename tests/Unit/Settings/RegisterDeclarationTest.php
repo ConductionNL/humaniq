@@ -52,7 +52,7 @@ namespace OCA\Humaniq\Tests\Unit\Settings;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pins the `components.registers.hrmq` declaration against the fragments.
+ * Pins the `components.registers.humaniq` declaration against the fragments.
  *
  * @spec exclude Register provisioning is infrastructure shared by all 55 specs; no single spec owns it.
  */
@@ -105,12 +105,15 @@ class RegisterDeclarationTest extends TestCase {
 			. 'schemas but no register and every manifest page resolves to nothing.'
 		);
 
-		$this->assertArrayHasKey('hrmq', $registers, 'The register must be keyed "hrmq".');
+		$this->assertArrayHasKey('humaniq', $registers, 'The register must be keyed "humaniq".');
 		$this->assertSame(
-			'hrmq',
-			($registers['hrmq']['slug'] ?? null),
-			'The register slug must be "hrmq" — src/manifest.json names it 176 times and '
-			. 'tests/e2e resolves /api/objects/hrmq/<schema> against it.'
+			'humaniq',
+			($registers['humaniq']['slug'] ?? null),
+			'The register slug must be "humaniq" — src/manifest.json names it throughout and '
+			. 'tests/e2e resolves /api/objects/humaniq/<schema> against it. It moved from '
+			. '"hrmq" with the app id; MigrateRegisterSlug renames the existing register row '
+			. 'ahead of the import so the import updates that row instead of forking a second, '
+			. 'empty one.'
 		);
 
 	}//end testRegisterIsDeclared()
@@ -126,7 +129,7 @@ class RegisterDeclarationTest extends TestCase {
 	public function testRegisterVersionTracksInfoVersion(): void {
 		$this->assertSame(
 			($this->config['info']['version'] ?? null),
-			($this->config['components']['registers']['hrmq']['version'] ?? null),
+			($this->config['components']['registers']['humaniq']['version'] ?? null),
 			'The register version must equal info.version. OpenRegister\'s importRegister() skips '
 			. '"as existing version is newer or equal", so a register version frozen at 1.0.0 would '
 			. 'never pick up schemas added by later fragments.'
@@ -146,7 +149,7 @@ class RegisterDeclarationTest extends TestCase {
 	 * @return void
 	 */
 	public function testDeclaredSchemasMatchTheFragments(): void {
-		$declared = ($this->config['components']['registers']['hrmq']['schemas'] ?? []);
+		$declared = ($this->config['components']['registers']['humaniq']['schemas'] ?? []);
 		$this->assertIsArray($declared, 'The register must declare a schemas list.');
 
 		$fragmentSlugs = [];
@@ -178,7 +181,7 @@ class RegisterDeclarationTest extends TestCase {
 			[],
 			array_values(array_diff($fragmentSlugs, $declaredSorted)),
 			'Schemas exist that the hrmq register does not list. They will be created but not '
-			. 'attached to the register, so /api/objects/hrmq/<slug> 404s and their manifest pages '
+			. 'attached to the register, so /api/objects/humaniq/<slug> 404s and their manifest pages '
 			. 'fall back to the default route.'
 		);
 

@@ -64,7 +64,7 @@ class HoursRegisterGatewayTest extends TestCase {
 		$this->store = new FakeObjectStore();
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 
 		$this->gateway = new HoursRegisterGateway(
 			container: new FakeContainer([
@@ -154,7 +154,7 @@ class HoursRegisterGatewayTest extends TestCase {
 	 */
 	private function gatewayWith(object $store): HoursRegisterGateway {
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 
 		return new HoursRegisterGateway(
 			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $store]),
@@ -179,7 +179,7 @@ class HoursRegisterGatewayTest extends TestCase {
 			 * {@inheritDoc}
 			 */
 			public function find(
-				int | string $id,
+				int|string $id,
 				?array $_extend = [],
 				bool $files = false,
 				mixed $register = null,

@@ -72,7 +72,7 @@ class TimesheetAggregationServiceTest extends TestCase {
 		$this->marker = new InternalWriteMarker();
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 
 		$this->service = new TimesheetAggregationService(
 			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $this->store]),
@@ -195,7 +195,7 @@ class TimesheetAggregationServiceTest extends TestCase {
 			 */
 			public array $markerStates = [];
 		};
-		$spy = new class ($this->store, $this->marker, $recorder) extends FakeObjectStore {
+		$spy = new class($this->store, $this->marker, $recorder) extends FakeObjectStore {
 
 			/**
 			 * @param FakeObjectStore $inner The store to mirror state from.
@@ -215,7 +215,7 @@ class TimesheetAggregationServiceTest extends TestCase {
 			 * {@inheritDoc}
 			 */
 			public function saveObject(
-				array | object $object,
+				array|object $object,
 				?array $extend = [],
 				mixed $register = null,
 				mixed $schema = null,
@@ -231,7 +231,7 @@ class TimesheetAggregationServiceTest extends TestCase {
 		};
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$service = new TimesheetAggregationService(
 			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $spy]),
 			marker: $this->marker,
@@ -269,7 +269,7 @@ class TimesheetAggregationServiceTest extends TestCase {
 			 * {@inheritDoc}
 			 */
 			public function find(
-				int | string $id,
+				int|string $id,
 				?array $_extend = [],
 				bool $files = false,
 				mixed $register = null,
@@ -282,7 +282,7 @@ class TimesheetAggregationServiceTest extends TestCase {
 
 		};
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$service = new TimesheetAggregationService(
 			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $store]),
 			marker: $this->marker,
@@ -346,7 +346,7 @@ class TimesheetAggregationServiceTest extends TestCase {
 		$store->seed('Timesheet', 'ts-1', ['status' => 'draft', 'hours' => 0, 'entryCount' => 0]);
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$service = new TimesheetAggregationService(
 			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $store]),
 			marker: $this->marker,

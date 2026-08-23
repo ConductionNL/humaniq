@@ -67,10 +67,10 @@ class AssetsMigrateDialectCommand extends Command {
 
 	/**
 	 * @param InputInterface $input Console input. Unused: this command takes no
-	 *        arguments or options -- the migration is idempotent, so there is
-	 *        nothing to parameterise and nothing a flag would usefully change.
-	 *        The parameter cannot be dropped; Symfony's Command base class
-	 *        fixes the signature.
+	 *                              arguments or options -- the migration is idempotent, so there is
+	 *                              nothing to parameterise and nothing a flag would usefully change.
+	 *                              The parameter cannot be dropped; Symfony's Command base class
+	 *                              fixes the signature.
 	 * @param OutputInterface $output Console output.
 	 *
 	 * @return int

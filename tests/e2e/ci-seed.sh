@@ -309,7 +309,7 @@ with open(f'{app_dir}/lib/Settings/humaniq_register.json', encoding='utf-8') as 
     # key inside it is the OpenRegister slug, which the rename deliberately
     # froze (renaming a slug orphans every stored object). Renaming this
     # lookup is a KeyError that aborts the whole seed.
-    declaration = json.load(fh)['components']['registers']['hrmq']
+    declaration = json.load(fh)['components']['registers']['humaniq']
 
 required = {
     'registers': [declaration['slug']],
@@ -376,15 +376,15 @@ verify "$SCH_BODY" schemas "$SCH_CODE" "$APP_DIR" "$SCH_LIMIT"
 # ── 4. Probe the exact collection shape the specs use ────────────────────────
 # The register existing is still not the same as it being READ/WRITEABLE by the
 # admin session the specs use. `tests/e2e/spec-coverage/core-journeys.spec.ts`
-# builds its URLs as /apps/openregister/api/objects/hrmq/<schema> — and its
+# builds its URLs as /apps/openregister/api/objects/humaniq/<schema> — and its
 # `resolveEmployeeSchema()` throws the "Is the hrmq register installed in
 # OpenRegister?" error that started this whole investigation when none of them
 # answers 200. Probe that shape here and give the failure a name.
 for schema in Employee Timesheet Expense; do
 	code="$(http_get_code /dev/null \
 		-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-		"${BASE}/index.php/apps/openregister/api/objects/hrmq/${schema}?_limit=1")"
-	echo "[ci-seed] objects/hrmq/${schema} probe -> ${code}"
+		"${BASE}/index.php/apps/openregister/api/objects/humaniq/${schema}?_limit=1")"
+	echo "[ci-seed] objects/humaniq/${schema} probe -> ${code}"
 	if [ "$code" != "200" ]; then
 		echo "::error::The hrmq ${schema} collection is not readable (HTTP ${code})."
 		echo "::error::Every spec touching it would fail with a message accusing the selectors."
@@ -413,7 +413,7 @@ done
 # skips it, so a re-run only re-verifies.
 TS_LIST="${WORK}/timesheets.json"
 TS_CODE="$(http_get_code "$TS_LIST" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/openregister/api/objects/hrmq/Timesheet?_limit=200")"
+	"${BASE}/index.php/apps/openregister/api/objects/humaniq/Timesheet?_limit=200")"
 if [ "$TS_CODE" != "200" ]; then
 	echo "::error::Could not list hrmq Timesheets to promote the seeded rows (HTTP ${TS_CODE})."
 	exit 1
@@ -476,7 +476,7 @@ promote() {
 	code="$(curl -sS -o "${WORK}/promote.json" -w '%{http_code}' -X PATCH \
 		-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 		-H 'Content-Type: application/json' -d "${body}" \
-		"${BASE}/index.php/apps/openregister/api/objects/hrmq/Timesheet/${id}" || true)"
+		"${BASE}/index.php/apps/openregister/api/objects/humaniq/Timesheet/${id}" || true)"
 	echo "[ci-seed] ${label} -> HTTP ${code}"
 	case "$code" in
 		2*) return 0 ;;
@@ -528,7 +528,7 @@ promote_chain 140 "timesheet-bakker-2026-05" \
 # (see the active-administration step above for how that difference bites).
 TS_AFTER="${WORK}/timesheets-after.json"
 TS_AFTER_CODE="$(http_get_code "$TS_AFTER" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/openregister/api/objects/hrmq/Timesheet?_limit=200")"
+	"${BASE}/index.php/apps/openregister/api/objects/humaniq/Timesheet?_limit=200")"
 python3 - "$TS_AFTER" "$TS_AFTER_CODE" <<'PY'
 import json
 import sys
@@ -642,7 +642,7 @@ do
 	code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
 		-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 		-H 'Content-Type: application/json' -d "${body}" \
-		"${BASE}/index.php/apps/openregister/api/objects/hrmq/${schema}" || true)"
+		"${BASE}/index.php/apps/openregister/api/objects/humaniq/${schema}" || true)"
 	echo "[ci-seed] seed ${schema} -> ${code}"
 done
 
@@ -753,7 +753,7 @@ if [ "$GUARD_CODE" != "200" ]; then
 	echo "[ci-seed]   - AdministrationAccess rows visible to this caller:"
 	ACC_BODY="${WORK}/access.json"
 	ACC_CODE="$(http_get_code "$ACC_BODY" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-		"${BASE}/index.php/apps/openregister/api/objects/hrmq/AdministrationAccess?_limit=50")"
+		"${BASE}/index.php/apps/openregister/api/objects/humaniq/AdministrationAccess?_limit=50")"
 	echo "[ci-seed]     listing HTTP ${ACC_CODE}"
 	# The app log is the ONLY place the real reason can appear.
 	# `AdministrationService::loadAll()` wraps its ObjectService call in

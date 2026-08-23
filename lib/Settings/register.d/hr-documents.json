@@ -188,7 +188,7 @@
         "objects": [
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "EmploymentContract",
                     "slug": "contract-jansen-permanent"
                 },
@@ -204,7 +204,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "GeneratedDocument",
                     "slug": "gendoc-arbeidsovereenkomst-jansen"
                 },
@@ -219,7 +219,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "GeneratedDocument",
                     "slug": "gendoc-werkgeversverklaring-jansen-skipped"
                 },
@@ -234,7 +234,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Jaaropgaaf",
                     "slug": "jaaropgaaf-jansen-2026"
                 },
@@ -253,7 +253,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "GeneratedDocument",
                     "slug": "gendoc-loonstrook-jansen-2026-05"
                 },

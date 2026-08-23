@@ -33,7 +33,7 @@
         "objects": [
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "DsrRequest",
                     "slug": "dsr-visser-clean-erase"
                 },
@@ -45,7 +45,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "DsrRequest",
                     "slug": "dsr-jansen-retention-guarded"
                 },

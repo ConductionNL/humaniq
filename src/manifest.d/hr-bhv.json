@@ -2,7 +2,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "BhvCertificering",
 			"params": {
 				"id": "BhvCertificeringen",
@@ -31,7 +31,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "BhvCertificering",
 			"params": {
 				"id": "BhvCertificeringDetail",

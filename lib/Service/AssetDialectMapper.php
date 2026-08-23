@@ -55,12 +55,12 @@ class AssetDialectMapper {
 	 * @var array<string, string>
 	 */
 	private const ASSET_CATEGORY_MAP = [
-		'telefoon'    => 'phone',
-		'voertuig'    => 'vehicle',
+		'telefoon' => 'phone',
+		'voertuig' => 'vehicle',
 		'gereedschap' => 'tool',
 		'toegangspas' => 'accessPass',
-		'kleding'     => 'clothing',
-		'overig'      => 'other',
+		'kleding' => 'clothing',
+		'overig' => 'other',
 	];
 
 	/**
@@ -70,8 +70,8 @@ class AssetDialectMapper {
 	 */
 	private const ASSET_STATUS_MAP = [
 		'beschikbaar' => 'available',
-		'uitgegeven'  => 'issued',
-		'ingenomen'   => 'checkedIn',
+		'uitgegeven' => 'issued',
+		'ingenomen' => 'checkedIn',
 		'afgeschreven' => 'writtenOff',
 	];
 
@@ -96,8 +96,8 @@ class AssetDialectMapper {
 	 * @var array<string, string>
 	 */
 	private const ASSET_FIELD_MAP = [
-		'kenteken'      => 'licencePlate',
-		'serienummer'   => 'serialNumber',
+		'kenteken' => 'licencePlate',
+		'serienummer' => 'serialNumber',
 		'aanschafdatum' => 'purchaseDate',
 		'aanschafwaarde' => 'purchaseValue',
 	];
@@ -108,13 +108,11 @@ class AssetDialectMapper {
 	 * @var array<string, string>
 	 */
 	private const ASSIGNMENT_FIELD_MAP = [
-		'uitgifteDatum'     => 'issuedOn',
-		'innameDatum'       => 'returnedOn',
+		'uitgifteDatum' => 'issuedOn',
+		'innameDatum' => 'returnedOn',
 		'uitgifteBonSigned' => 'issueReceiptSigned',
-		'eigenBijdrage'     => 'employeeContribution',
+		'eigenBijdrage' => 'employeeContribution',
 	];
-
-
 
 	/**
 	 * Compute the migrated shape of one `Asset` row, split into a
@@ -200,10 +198,10 @@ class AssetDialectMapper {
 	 * reported so the row is skipped with the offending value named, rather
 	 * than silently written through or silently dropped.
 	 *
-	 * @param mixed                 $value   The stored value.
-	 * @param array<string, string> $map     Legacy value => current value.
-	 * @param string[]              $current The current schema's enum.
-	 * @param string                $label   Property name, for the skip reason.
+	 * @param mixed $value The stored value.
+	 * @param array<string, string> $map Legacy value => current value.
+	 * @param string[] $current The current schema's enum.
+	 * @param string $label Property name, for the skip reason.
 	 *
 	 * @return array{value: string|null, changed: bool, skipReason: string|null}
 	 *
@@ -223,9 +221,9 @@ class AssetDialectMapper {
 		}
 
 		return [
-			'value'      => null,
-			'changed'    => false,
-			'skipReason' => "unrecognised " . $label . " value '" . $value . "'",
+			'value' => null,
+			'changed' => false,
+			'skipReason' => 'unrecognised ' . $label . " value '" . $value . "'",
 		];
 	}//end mapEnumValue()
 
@@ -250,7 +248,7 @@ class AssetDialectMapper {
 		}
 
 		if (isset($row['purchaseValue']) === true && is_numeric($row['purchaseValue']) === true) {
-			$row['purchaseValue'] = (float) $row['purchaseValue'];
+			$row['purchaseValue'] = (float)$row['purchaseValue'];
 		}
 
 		return $row;
@@ -388,7 +386,6 @@ class AssetDialectMapper {
 		}
 
 		return (string)$a === (string)$b;
-
 	}//end valuesEquivalent()
 
 	/**

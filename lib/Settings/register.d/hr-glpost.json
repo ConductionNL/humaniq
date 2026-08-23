@@ -119,7 +119,7 @@
         "objects": [
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "PayrollGLPost",
                     "slug": "glpost-2026-01-adm-001"
                 },

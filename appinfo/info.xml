@@ -123,6 +123,22 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Humaniq\Repair\MigrateAppConfigKeys</step>
             <!-- Copy every per-user preference from the `hrmq` namespace. -->
             <step>OCA\Humaniq\Repair\MigrateUserPreferences</step>
+            <!-- Third leg of the rename, and the one that lives on the
+                 OpenRegister register ROW. The register slug moves too
+                 (`hrmq` -> `humaniq`), together with `x-openregister.app`,
+                 which for a `type: application` configuration IS a register
+                 slug rather than an attribution label. It MUST run before
+                 InitializeRegister: OpenRegister resolves a register by slug
+                 and its not-found branch CREATES a second, empty register
+                 rather than failing, so an import that ran first would fork the
+                 register and leave every stored object behind on the old row,
+                 silently.
+
+                 It moves no data. An object is bound to its register by NUMERIC
+                 id — `_register` in every shard table, and the tables are named
+                 `oc_openregister_table_<registerId>_<schemaId>` — so this is one
+                 column on one row. Idempotent and non-destructive. -->
+            <step>OCA\Humaniq\Repair\MigrateRegisterSlug</step>
             <!-- Import the hrmq register (lib/Settings/humaniq_register.json +
                  register.d/*.json fragments) into OpenRegister. Idempotent;
                  fails soft when OpenRegister is not installed. -->
@@ -178,6 +194,22 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  the other is a version-unchanged skip. -->
             <step>OCA\Humaniq\Repair\MigrateAppConfigKeys</step>
             <step>OCA\Humaniq\Repair\MigrateUserPreferences</step>
+            <!-- Third leg of the rename, and the one that lives on the
+                 OpenRegister register ROW. The register slug moves too
+                 (`hrmq` -> `humaniq`), together with `x-openregister.app`,
+                 which for a `type: application` configuration IS a register
+                 slug rather than an attribution label. It MUST run before
+                 InitializeRegister: OpenRegister resolves a register by slug
+                 and its not-found branch CREATES a second, empty register
+                 rather than failing, so an import that ran first would fork the
+                 register and leave every stored object behind on the old row,
+                 silently.
+
+                 It moves no data. An object is bound to its register by NUMERIC
+                 id — `_register` in every shard table, and the tables are named
+                 `oc_openregister_table_<registerId>_<schemaId>` — so this is one
+                 column on one row. Idempotent and non-destructive. -->
+            <step>OCA\Humaniq\Repair\MigrateRegisterSlug</step>
             <step>OCA\Humaniq\Repair\InitializeRegister</step>
             <!-- hours-process-redesign: <install> is the ONLY hook that runs
                  unconditionally on a fresh install (see above) — without this

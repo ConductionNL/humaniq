@@ -166,7 +166,7 @@ class FakeObjectStore {
 	 * @return ObjectEntity|null The entity, or null.
 	 */
 	public function find(
-		int | string $id,
+		int|string $id,
 		?array $_extend = [],
 		bool $files = false,
 		mixed $register = null,
@@ -198,7 +198,7 @@ class FakeObjectStore {
 	 * @return ObjectEntity The saved entity.
 	 */
 	public function saveObject(
-		array | object $object,
+		array|object $object,
 		?array $extend = [],
 		mixed $register = null,
 		mixed $schema = null,

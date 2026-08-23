@@ -40,12 +40,13 @@ class FakeSchemaMapper {
 	public function find(mixed $id): object {
 		$slug = (string)$id;
 
-		return new class ($slug) {
-
+		return new class($slug) {
 			/**
 			 * @param string $slug The slug to echo.
 			 */
-			public function __construct(private readonly string $slug) {
+			public function __construct(
+				private readonly string $slug,
+			) {
 
 			}//end __construct()
 

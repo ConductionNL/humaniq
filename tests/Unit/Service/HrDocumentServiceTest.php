@@ -393,7 +393,7 @@ class HrDocumentServiceTest extends TestCase {
 		$appManager->method('isInstalled')->willReturn($docudeskInstalled);
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		// objectService() now establishes availability first (ADR-083). A bare
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
@@ -500,8 +500,8 @@ class HrDocumentServiceTest extends TestCase {
 		$this->assertSame('T1', $call['templateId']);
 		$this->assertSame(
 			[
-				['register' => 'hrmq', 'schema' => 'Employee', 'id' => 'emp-1'],
-				['register' => 'hrmq', 'schema' => 'EmploymentContract', 'id' => 'contract-1'],
+				['register' => 'humaniq', 'schema' => 'Employee', 'id' => 'emp-1'],
+				['register' => 'humaniq', 'schema' => 'EmploymentContract', 'id' => 'contract-1'],
 			],
 			$call['dataRefs']
 		);
@@ -526,7 +526,7 @@ class HrDocumentServiceTest extends TestCase {
 
 		$this->assertSame('generated', $result['status']);
 		$this->assertNull($result['contractId']);
-		$this->assertSame([['register' => 'hrmq', 'schema' => 'Employee', 'id' => 'emp-1']], $documentService->calls[0]['dataRefs']);
+		$this->assertSame([['register' => 'humaniq', 'schema' => 'Employee', 'id' => 'emp-1']], $documentService->calls[0]['dataRefs']);
 		$this->assertSame('system', $documentService->calls[0]['options']['userId']);
 
 	}//end testGenerateOmitsContractRefWhenContractIdIsNull()
@@ -831,8 +831,8 @@ class HrDocumentServiceTest extends TestCase {
 		$call = $documentService->calls[0];
 		$this->assertSame(
 			[
-				['register' => 'hrmq', 'schema' => 'Employee', 'id' => 'emp-1'],
-				['register' => 'hrmq', 'schema' => 'Payslip', 'id' => 'payslip-1'],
+				['register' => 'humaniq', 'schema' => 'Employee', 'id' => 'emp-1'],
+				['register' => 'humaniq', 'schema' => 'Payslip', 'id' => 'payslip-1'],
 			],
 			$call['dataRefs']
 		);
@@ -983,8 +983,8 @@ class HrDocumentServiceTest extends TestCase {
 		$call = $documentService->calls[0];
 		$this->assertSame(
 			[
-				['register' => 'hrmq', 'schema' => 'Employee', 'id' => 'emp-1'],
-				['register' => 'hrmq', 'schema' => 'Jaaropgaaf', 'id' => (string)$jaaropgaaf['id']],
+				['register' => 'humaniq', 'schema' => 'Employee', 'id' => 'emp-1'],
+				['register' => 'humaniq', 'schema' => 'Jaaropgaaf', 'id' => (string)$jaaropgaaf['id']],
 			],
 			$call['dataRefs']
 		);

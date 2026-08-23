@@ -262,14 +262,11 @@ class TimesheetProcessStampListener implements IEventListener {
 			case 'rejected>submitted':
 			case '>submitted':
 				return $this->submitStamps();
-
 			case 'submitted>approved':
 			case 'submitted>rejected':
 				return $this->verdictStamps($to, $incoming);
-
 			case 'approved>draft':
 				return $this->clearedProcessFields();
-
 			default:
 				return [];
 		}

@@ -2,7 +2,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Stagiair",
 			"params": {
 				"id": "Stagiairs",
@@ -32,7 +32,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Stagiair",
 			"params": {
 				"id": "StagiairDetail",

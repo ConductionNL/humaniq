@@ -2,7 +2,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Normfunctie",
 			"params": {
 				"id": "Normfuncties",
@@ -39,7 +39,7 @@
 		},
 		{
 			"templateRef": "singleDataScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Normfunctie",
 			"params": {
 				"id": "NormfunctieDetail",

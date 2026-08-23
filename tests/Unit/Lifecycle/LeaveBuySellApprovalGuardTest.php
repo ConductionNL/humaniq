@@ -99,7 +99,7 @@ class LeaveBuySellApprovalGuardTest extends TestCase {
 			->willReturn($objectService);
 
 		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturn('hrmq');
+		$appConfig->method('getValueString')->willReturn('humaniq');
 
 		return new LeaveBuySellApprovalGuard($container, $appConfig);
 	}//end guardWithBalances()

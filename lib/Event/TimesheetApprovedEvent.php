@@ -141,7 +141,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function getEventId(): string {
 		return $this->eventId;
-
 	}//end getEventId()
 
 	/**
@@ -154,7 +153,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function getTimesheetId(): string {
 		return $this->timesheetId;
-
 	}//end getTimesheetId()
 
 	/**
@@ -166,7 +164,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function getEmployeeId(): string {
 		return $this->employeeId;
-
 	}//end getEmployeeId()
 
 	/**
@@ -178,7 +175,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function getPeriod(): string {
 		return $this->period;
-
 	}//end getPeriod()
 
 	/**
@@ -190,7 +186,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function getPeriodGrain(): string {
 		return $this->periodGrain;
-
 	}//end getPeriodGrain()
 
 	/**
@@ -202,7 +197,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function getHours(): float {
 		return $this->hours;
-
 	}//end getHours()
 
 	/**
@@ -214,7 +208,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function getProjectId(): string {
 		return $this->projectId;
-
 	}//end getProjectId()
 
 	/**
@@ -226,7 +219,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function getCostCenter(): string {
 		return $this->costCenter;
-
 	}//end getCostCenter()
 
 	/**
@@ -238,7 +230,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function isBillable(): bool {
 		return $this->billable;
-
 	}//end isBillable()
 
 	/**
@@ -250,7 +241,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function getClientRef(): string {
 		return $this->clientRef;
-
 	}//end getClientRef()
 
 	/**
@@ -262,7 +252,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function getAdministrationId(): string {
 		return $this->administrationId;
-
 	}//end getAdministrationId()
 
 	/**
@@ -274,7 +263,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function getApprovedBy(): string {
 		return $this->approvedBy;
-
 	}//end getApprovedBy()
 
 	/**
@@ -286,7 +274,6 @@ class TimesheetApprovedEvent extends Event {
 	 */
 	public function getApprovedAt(): string {
 		return $this->approvedAt;
-
 	}//end getApprovedAt()
 
 	/**
@@ -315,7 +302,6 @@ class TimesheetApprovedEvent extends Event {
 		}
 
 		return self::GRAIN_UNKNOWN;
-
 	}//end classifyPeriodGrain()
 
 }//end class

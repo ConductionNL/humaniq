@@ -83,7 +83,7 @@ async function gotoRoute(page: Page, route: string): Promise<void> {
 
 const NC_URL = resolveBaseURL()
 const OR_BASE = `${NC_URL}/index.php/apps/openregister/api/objects`
-const REGISTER = 'hrmq'
+const REGISTER = 'humaniq'
 const AUTH = ADMIN_CREDENTIALS
 const HEADERS = { 'OCS-APIRequest': 'true', 'Content-Type': 'application/json' }
 

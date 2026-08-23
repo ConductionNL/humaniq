@@ -274,7 +274,7 @@ class ObligationsServiceTest extends TestCase {
 		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($objectService);
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 
 		$logger = $this->createMock(LoggerInterface::class);
@@ -300,7 +300,6 @@ class ObligationsServiceTest extends TestCase {
 	 */
 	private function fakeObjectService(array $rowsBySchema): object {
 		return new class($rowsBySchema) {
-
 			/**
 			 * @var array<int, string>
 			 */

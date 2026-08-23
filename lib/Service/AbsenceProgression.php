@@ -60,8 +60,8 @@ class AbsenceProgression {
 	/**
 	 * Normalise a case's `absenceProgression` into an ordered step list.
 	 *
-	 * @param array<string, mixed> $case         The SickLeaveCase.
-	 * @param DateTimeImmutable    $firstSickDay The case anchor date.
+	 * @param array<string, mixed> $case The SickLeaveCase.
+	 * @param DateTimeImmutable $firstSickDay The case anchor date.
 	 *
 	 * @return list<array{from: DateTimeImmutable, percentage: float}> Ordered by `from`, ascending.
 	 *
@@ -107,10 +107,10 @@ class AbsenceProgression {
 	 * last runs to the end of the window. Every segment is clipped to the
 	 * window before it counts.
 	 *
-	 * @param list<array{from: DateTimeImmutable, percentage: float}> $steps       Ordered ascending by `from`.
-	 * @param DateTimeImmutable                                       $windowStart First day counted, inclusive.
-	 * @param DateTimeImmutable                                       $windowEnd   Last day counted, inclusive.
-	 * @param float                                                   $fte         The employee's FTE over the period.
+	 * @param list<array{from: DateTimeImmutable, percentage: float}> $steps Ordered ascending by `from`.
+	 * @param DateTimeImmutable $windowStart First day counted, inclusive.
+	 * @param DateTimeImmutable $windowEnd Last day counted, inclusive.
+	 * @param float $fte The employee's FTE over the period.
 	 *
 	 * @return float Day-equivalents, already FTE-weighted.
 	 *
@@ -147,14 +147,14 @@ class AbsenceProgression {
 	 * Inclusive day count between two dates.
 	 *
 	 * @param DateTimeImmutable $from First day, inclusive.
-	 * @param DateTimeImmutable $to   Last day, inclusive.
+	 * @param DateTimeImmutable $to Last day, inclusive.
 	 *
 	 * @return int Number of days, at least 1 when from <= to.
 	 *
 	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	public function inclusiveDays(DateTimeImmutable $from, DateTimeImmutable $to): int {
-		return ((int) $from->diff($to)->days + 1);
+		return ((int)$from->diff($to)->days + 1);
 	}//end inclusiveDays()
 
 	/**
@@ -193,7 +193,7 @@ class AbsenceProgression {
 	 */
 	private function fullAbsenceFrom(DateTimeImmutable $day): array {
 		return [
-			'from'       => $day,
+			'from' => $day,
 			'percentage' => self::FULL_ABSENCE_PERCENTAGE,
 		];
 	}//end fullAbsenceFrom()
@@ -207,7 +207,7 @@ class AbsenceProgression {
 	 * that range is a data-entry error whose nearest honest reading is the
 	 * bound it exceeded.
 	 *
-	 * @param mixed             $entry        One raw progression entry.
+	 * @param mixed $entry One raw progression entry.
 	 * @param DateTimeImmutable $firstSickDay The case anchor date.
 	 *
 	 * @return array{from: DateTimeImmutable, percentage: float}|null Null when the entry is malformed.
@@ -226,8 +226,8 @@ class AbsenceProgression {
 		}
 
 		return [
-			'from'       => ($from < $firstSickDay) ? $firstSickDay : $from,
-			'percentage' => max(0.0, min(100.0, (float) $percentage)),
+			'from' => ($from < $firstSickDay) ? $firstSickDay : $from,
+			'percentage' => max(0.0, min(100.0, (float)$percentage)),
 		];
 	}//end parseStep()
 }//end class
