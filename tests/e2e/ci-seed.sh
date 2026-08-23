@@ -16,7 +16,7 @@
 # ------------------
 # humaniq is a THIN CLIENT: Employee, Timesheet, Expense, PayrollRun, Payslip and
 # 49 other entities are OpenRegister objects, and 176 of src/manifest.json's
-# page configs name `register: "hrmq"`. With that register absent, nothing
+# page configs name `register: "humaniq"`. With that register absent, nothing
 # errors — the SPA boots, every route resolves to nothing, and the router falls
 # back to its default page. Measured on run 30904454063 (job 91976455533):
 # 68 failed / 2 passed, where BOTH "passes" were the default route
@@ -140,12 +140,12 @@ PRE_BODY="${WORK}/pre-registers.json"
 PRE_CODE="$(http_get_code "$PRE_BODY" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	"${BASE}/index.php/apps/openregister/api/registers?_limit=300")"
 NEEDS_IMPORT=1
-if [ "$PRE_CODE" = "200" ] && [ -f "$PRE_BODY" ] && grep -q '"slug":[[:space:]]*"hrmq"' "$PRE_BODY"; then
+if [ "$PRE_CODE" = "200" ] && [ -f "$PRE_BODY" ] && grep -q '"slug":[[:space:]]*"humaniq"' "$PRE_BODY"; then
 	NEEDS_IMPORT=0
-	echo "[ci-seed] BEFORE import: the hrmq register is ALREADY present — 'occ app:enable humaniq' provisioned it."
+	echo "[ci-seed] BEFORE import: the humaniq register is ALREADY present — 'occ app:enable humaniq' provisioned it."
 	echo "[ci-seed] Skipping the HTTP import; the verification below still runs in full."
 else
-	echo "[ci-seed] BEFORE import: the hrmq register is NOT present (registers endpoint HTTP ${PRE_CODE})."
+	echo "[ci-seed] BEFORE import: the humaniq register is NOT present (registers endpoint HTTP ${PRE_CODE})."
 	echo "[ci-seed] The app's own install path did not provision it — see appinfo/info.xml"
 	echo "[ci-seed] <repair-steps><install> and lib/Settings/humaniq_register.json components.registers."
 	echo "[ci-seed] Falling back to an explicit admin HTTP import."
@@ -220,16 +220,16 @@ objects = components.get('objects') or []
 # The register section is the whole reason the previous CI run failed. Refuse to
 # post a configuration that cannot create it rather than letting the import
 # report success over a register that will not exist.
-if 'hrmq' not in registers:
-    print('::error::The merged configuration declares no `hrmq` register '
-          '(components.registers.hrmq). OpenRegister creates registers from that key and '
+if 'humaniq' not in registers:
+    print('::error::The merged configuration declares no `humaniq` register '
+          '(components.registers.humaniq). OpenRegister creates registers from that key and '
           'nowhere else, so importing this would create schemas and no register.')
     sys.exit(1)
 
-declared = registers['hrmq'].get('schemas') or []
+declared = registers['humaniq'].get('schemas') or []
 missing = sorted(set(schemas) - set(declared))
 if missing:
-    print(f'::error::The hrmq register does not list these defined schemas: {missing}')
+    print(f'::error::The humaniq register does not list these defined schemas: {missing}')
     sys.exit(1)
 
 with open(out_path, 'w', encoding='utf-8') as fh:
@@ -258,7 +258,7 @@ CONFIG_VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])
 # session cookie at all.
 if [ "$NEEDS_IMPORT" = "1" ]; then
 	IMPORT_URL="${BASE}/index.php/apps/openregister/api/configurations/import"
-	echo "[ci-seed] POST ${IMPORT_URL} (forced, appId=hrmq, version=${CONFIG_VERSION})"
+	echo "[ci-seed] POST ${IMPORT_URL} (forced, appId=humaniq, version=${CONFIG_VERSION})"
 
 	IMPORT_BODY="${WORK}/import.json"
 	IMPORT_CODE="$(http_get_code "$IMPORT_BODY" \
@@ -267,7 +267,7 @@ if [ "$NEEDS_IMPORT" = "1" ]; then
 		-H 'OCS-APIRequest: true' \
 		-F "file=@${MERGED};type=application/json" \
 		-F 'force=true' \
-		-F 'appId=hrmq' \
+		-F 'appId=humaniq' \
 		-F "version=${CONFIG_VERSION}" \
 		"$IMPORT_URL")"
 	echo "[ci-seed] configurations/import -> HTTP ${IMPORT_CODE}"
@@ -305,7 +305,7 @@ import sys
 path, kind, code, app_dir, limit = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], int(sys.argv[5])
 
 with open(f'{app_dir}/lib/Settings/humaniq_register.json', encoding='utf-8') as fh:
-    # 'hrmq', not 'humaniq': the FILE is named for the app, but the register
+    # 'humaniq', not 'humaniq': the FILE is named for the app, but the register
     # key inside it is the OpenRegister slug, which the rename deliberately
     # froze (renaming a slug orphans every stored object). Renaming this
     # lookup is a KeyError that aborts the whole seed.
@@ -352,7 +352,7 @@ missing = [slug for slug in required if slug.lower() not in slugs]
 
 print(f'[ci-seed] {kind} present ({len(slugs)}): {sorted(s for s in slugs if s)}')
 if missing:
-    print(f'::error::hrmq {kind} missing after import: {missing}')
+    print(f'::error::humaniq {kind} missing after import: {missing}')
     print('::error::Without them every manifest page that names them resolves to nothing and the '
           'router falls back to its default route — which is what 68 failed / 2 passed looked like.')
     sys.exit(1)
@@ -377,7 +377,7 @@ verify "$SCH_BODY" schemas "$SCH_CODE" "$APP_DIR" "$SCH_LIMIT"
 # The register existing is still not the same as it being READ/WRITEABLE by the
 # admin session the specs use. `tests/e2e/spec-coverage/core-journeys.spec.ts`
 # builds its URLs as /apps/openregister/api/objects/humaniq/<schema> — and its
-# `resolveEmployeeSchema()` throws the "Is the hrmq register installed in
+# `resolveEmployeeSchema()` throws the "Is the humaniq register installed in
 # OpenRegister?" error that started this whole investigation when none of them
 # answers 200. Probe that shape here and give the failure a name.
 for schema in Employee Timesheet Expense; do
@@ -386,7 +386,7 @@ for schema in Employee Timesheet Expense; do
 		"${BASE}/index.php/apps/openregister/api/objects/humaniq/${schema}?_limit=1")"
 	echo "[ci-seed] objects/humaniq/${schema} probe -> ${code}"
 	if [ "$code" != "200" ]; then
-		echo "::error::The hrmq ${schema} collection is not readable (HTTP ${code})."
+		echo "::error::The humaniq ${schema} collection is not readable (HTTP ${code})."
 		echo "::error::Every spec touching it would fail with a message accusing the selectors."
 		exit 1
 	fi
@@ -415,7 +415,7 @@ TS_LIST="${WORK}/timesheets.json"
 TS_CODE="$(http_get_code "$TS_LIST" -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	"${BASE}/index.php/apps/openregister/api/objects/humaniq/Timesheet?_limit=200")"
 if [ "$TS_CODE" != "200" ]; then
-	echo "::error::Could not list hrmq Timesheets to promote the seeded rows (HTTP ${TS_CODE})."
+	echo "::error::Could not list humaniq Timesheets to promote the seeded rows (HTTP ${TS_CODE})."
 	exit 1
 fi
 
@@ -826,4 +826,4 @@ if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
 	esac
 fi
 
-echo "[ci-seed] done — hrmq register, schemas and object collections provisioned and verified."
+echo "[ci-seed] done — humaniq register, schemas and object collections provisioned and verified."
