@@ -61,7 +61,7 @@ import { ADMIN_CREDENTIALS, resolveBaseURL } from '../base-url.ts'
 const NC_URL = resolveBaseURL()
 const AUTH = ADMIN_CREDENTIALS
 const OCS_HEADERS = { 'OCS-APIRequest': 'true', 'Content-Type': 'application/json' }
-const OR_OBJECTS = `${NC_URL}/index.php/apps/openregister/api/objects/hrmq`
+const OR_OBJECTS = `${NC_URL}/index.php/apps/openregister/api/objects/humaniq`
 
 // A marker that survives into the created object's title, so the cleanup below
 // can find exactly this run's row and nothing else.
