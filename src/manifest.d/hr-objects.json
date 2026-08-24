@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Employee",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "Employee",
 				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab.",
 				"sidebar": {
@@ -41,7 +41,7 @@
 							"entries": [
 								{
 									"title": "Contracts",
-									"register": "hrmq",
+									"register": "humaniq",
 									"schema": "EmploymentContract",
 									"metric": "count",
 									"filter": {
@@ -63,7 +63,7 @@
 							"entries": [
 								{
 									"title": "Payslips",
-									"register": "hrmq",
+									"register": "humaniq",
 									"schema": "Payslip",
 									"metric": "count",
 									"filter": {
@@ -85,7 +85,7 @@
 							"entries": [
 								{
 									"title": "Pending expenses",
-									"register": "hrmq",
+									"register": "humaniq",
 									"schema": "Expense",
 									"metric": "count",
 									"filter": {
@@ -108,7 +108,7 @@
 							"entries": [
 								{
 									"title": "Hours logged",
-									"register": "hrmq",
+									"register": "humaniq",
 									"schema": "Timesheet",
 									"metric": "sum",
 									"field": "hours",
@@ -145,7 +145,7 @@
 						"title": "Contracts",
 						"icon": "FileSign",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "EmploymentContract",
 							"filter": {
 								"employeeId": "@objectId"
@@ -191,7 +191,7 @@
 						"title": "Timesheets",
 						"icon": "Timeline",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "Timesheet",
 							"filter": {
 								"employeeId": "@objectId"
@@ -229,7 +229,7 @@
 						"title": "Payslips",
 						"icon": "Cash",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "Payslip",
 							"filter": {
 								"employeeId": "@objectId"
@@ -272,7 +272,7 @@
 						"title": "Expenses",
 						"icon": "CashMultiple",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "Expense",
 							"filter": {
 								"employeeId": "@objectId"
@@ -310,7 +310,7 @@
 						"title": "Assignments",
 						"icon": "AccountArrowRightOutline",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "OrgAssignment",
 							"filter": {
 								"employeeId": "@objectId"
@@ -352,7 +352,7 @@
 						"title": "Reviews",
 						"icon": "ClipboardAccountOutline",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "PerformanceReview",
 							"filter": {
 								"employeeId": "@objectId"
@@ -390,7 +390,7 @@
 						"title": "Goals & OKRs",
 						"icon": "BullseyeArrow",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "Objective",
 							"filter": {
 								"employeeId": "@objectId"
@@ -428,7 +428,7 @@
 						"title": "Compensation adjustments",
 						"icon": "CashPlus",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "CompAdjustment",
 							"filter": {
 								"employeeId": "@objectId"
@@ -467,7 +467,7 @@
 						"title": "Buy/sell leave",
 						"icon": "SwapHorizontal",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "LeaveTransaction",
 							"filter": {
 								"employeeId": "@objectId"
@@ -644,7 +644,7 @@
 			"type": "detail",
 			"title": "Payslip",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "Payslip",
 				"_note": "Financial-document archetype (x-schema-org: schema:Invoice), same family as Expense's amount-first design: three headline tiles (gross pay, net pay, Related-to-Employee) lead the page since that is what an employee or approver checks first, followed by the dense data widget carrying the full gross-to-net withholding breakdown (NL loonheffing/zvw/wkr, DE Lohnsteuer/Soli/Kirchensteuer, FR cotisations/PAS, US FICA/Medicare -- the schema is genuinely multi-jurisdiction: only one jurisdiction's fields populate per real record, but which one varies per payslip so a static manifest cannot cherry-pick per-instance; all fields surface via one widget, sized to its true field count and set to 4 columns full-width rather than clipped at 2). ADR-062 round-2: data widget now excludes employeeId (resolved via Related instead of raw uuid) and the height budget was corrected from the round-1 h7 (which clipped ~54 fields behind a scrollbar) to match content. Stat format uses 'number' not 'currency' because Payslip.currency varies per record (EUR/USD) and a widget's format is static. No files/calendar/comms leaves: nothing in the schema models an attachable payslip document or appointment, and Payslip carries no x-openregister-lifecycle so there are no lifecycleActions. Audit history is a sidebar tab. payslip-pdf-docudesk (2026-07-14): page-level action \"Genereer PDF\" mirrors EmploymentContractDetail's \"Genereer arbeidsovereenkomst\" shape -- POST /api/documents/generate with {payslipId: @objectId, documentType: loonstrook}, guarded server-side by DocumentController::authorizePayslip().",
 				"sidebar": {
@@ -667,7 +667,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "Payslip",
 								"metric": "sum",
 								"field": "grossPay",
@@ -692,7 +692,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "Payslip",
 								"metric": "sum",
 								"field": "nettoPay",
@@ -785,7 +785,7 @@
 			"type": "detail",
 			"title": "Payroll run",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "PayrollRun",
 				"_note": "Batch/reconciliation archetype: a PayrollRun is a per-period aggregate of an administration's payslips, so its page leads with the GL-reconciliation totals (totalGross/totalNet/withholdingLiabilityBalance -- exactly the numbers xc-payroll-gl-reconciliation and xc-withholding-liability-clearing check) as stat KPIs, then the full record (period/administrationId/jurisdiction/status/glLiabilityPosted/glExpensePosted/withholdingsClearedToZero plus the engine stamps engineVersion/calculatedAt) in the data widget below. payroll-core-engine (2026-07-14): Payslip NOW carries a real payrollRunId $ref back to PayrollRun (added by payroll-core-schema), so the page gains the FK-scoped Payslips child list (allowCreate:false -- generation via the engine is the only create path, design.md D5) and the page-level api-call action \"(Her)berekenen\" (POST /api/payroll/calculate with {runId: @objectId}, guarded server-side by PayrollController::authorizeRun(), draft-only -- non-draft runs get a 400). Still NO lifecycleActions: `status` is a plain enum (draft/approved/posted/paid) with no `x-openregister-lifecycle` transition map on this schema -- driving lifecycleActions here would invent transition names the backend does not guard; the recalculate action is a page action, not a transition. Audit history is a sidebar tab.",
 				"sidebar": {
@@ -808,7 +808,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "PayrollRun",
 								"metric": "sum",
 								"field": "totalGross",
@@ -833,7 +833,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "PayrollRun",
 								"metric": "sum",
 								"field": "totalNet",
@@ -858,7 +858,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "PayrollRun",
 								"metric": "sum",
 								"field": "withholdingLiabilityBalance",
@@ -884,7 +884,7 @@
 						"title": "Payslips",
 						"icon": "ReceiptTextOutline",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "Payslip",
 							"filter": {
 								"payrollRunId": "@objectId"
@@ -999,7 +999,7 @@
 						"label": "Book retro correction",
 						"type": "open-form",
 						"icon": "CashSync",
-						"register": "hrmq",
+						"register": "humaniq",
 						"schema": "PayrollAdjustment",
 						"onSuccessRoute": "PayrollAdjustmentDetail",
 						"successMessage": "Draft correction created — use Recompute to calculate the delta."
@@ -1013,7 +1013,7 @@
 			"type": "detail",
 			"title": "Wage tax filing",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "LoonaangifteFiling",
 				"_note": "Statutory-deadline archetype: a filing's whole purpose is 'was it filed on time and is proof retained'. loonaangifte-filing-lifecycle (2026-07-12) gave NL filings a real create->review->confirm->send workflow, so the page now leads with a compact status/tijdvakcode/deadline/response widget (fi-status) before the full filing data widget, and exposes the klaarzetten/bevestigen/verzenden/heropenen/corrigeren transitions via lifecycleActions (Timesheet pattern). No stats-block KPI tile is used for Status/Deadline: the vendored app-manifest-v2 schema's stat/stats-block `metric` only supports count/sum aggregation, which cannot echo a non-numeric field (enum/date) of the current object, so fi-status is a `data` widget instead -- schema-valid and functionally equivalent (prominent, top-of-page). No related panel (the schema carries no employeeId/administrationId or any other object-FK -- a filing is an organisation-level record, not scoped to a person). Files is included full-width for the filed submission/deposit proof, justified by the schema's own retainedUntil/furnishedToRecipientDate/filedWithAuthorityDate retention-evidence fields (NL 7yr / DE 6yr / US 4yr retention obligations). No calendar/comms leaves -- deadline is a plain date field, not an appointment/event linkedType. Audit history is a sidebar tab.",
 				"sidebar": {
@@ -1141,7 +1141,7 @@
 			"type": "detail",
 			"title": "Mutation report",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "PayrollMutationReport",
 				"_note": "payroll-mutation-reports (2026-07-14): a PayrollMutationReport is a PURE, read-only diff snapshot -- never recomputed, never written outside PayrollMutationService (design.md D3) -- so the page leads with the accountant's headline (totalWageCostDelta) plus the entered/left/changed counts as stat KPIs (the PayrollRunDetail stat-tile precedent), then the full record (header fromRunId/toRunId/fromPeriod/toPeriod/administrationId/generatedAt, the four component deltas, the four counts, and the embedded per-employee `lines` array) in the pmr-data widget below -- the PayrollGLPostDetail precedent for an embedded array snapshot rendered inside a plain data widget (its own `lines` field, same shape: a system-generated audit-style record, not user-editable). No lifecycleActions: the schema carries no x-openregister-lifecycle -- a report is either regenerated (superseding this one in place, design.md D7) or not; there is no user-facing status transition to guard. No Files/calendar/comms leaves -- not a document or event. Admin/HR only, mirroring the Payroll nav group.",
 				"sidebar": {
@@ -1164,7 +1164,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "PayrollMutationReport",
 								"metric": "sum",
 								"field": "totalWageCostDelta",
@@ -1189,7 +1189,7 @@
 								"decimals": 0
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "PayrollMutationReport",
 								"metric": "sum",
 								"field": "enteredCount",
@@ -1214,7 +1214,7 @@
 								"decimals": 0
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "PayrollMutationReport",
 								"metric": "sum",
 								"field": "leftCount",
@@ -1239,7 +1239,7 @@
 								"decimals": 0
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "PayrollMutationReport",
 								"metric": "sum",
 								"field": "changedCount",
@@ -1327,7 +1327,7 @@
 			"type": "detail",
 			"title": "WKR assessment",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "WkrAssessment",
 				"_note": "wkr-administration (2026-07-15): a WkrAssessment is the persisted computed summary AND reporting record (design.md D1) -- the PayrollMutationReportDetail stat-tile precedent: four headline KPIs (fiscale loonsom, vrije ruimte, vrije-ruimte used, eindheffing due) lead the page since that is the exposure question an accountant checks first, then the full record (status/engineVersion/assessedAt/excess/eindheffingRate) in the wa-data widget below. No lifecycleActions: the schema carries no x-openregister-lifecycle -- an assessment is either (re)computed (upserting in place, design.md D5) or not; there is no user-facing status transition to guard, only the Beoordelen recompute action (backed by PayrollController::wkrAssess(), the mutations()/adjust() no-admin-idor + admin/HR-gate precedent). No Files/calendar/comms leaves -- not a document or event. Admin/HR only, mirroring the Payroll nav group. Audit history is a sidebar tab.",
 				"sidebar": {
@@ -1350,7 +1350,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "WkrAssessment",
 								"metric": "sum",
 								"field": "fiscaleLoonsom",
@@ -1375,7 +1375,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "WkrAssessment",
 								"metric": "sum",
 								"field": "vrijeRuimte",
@@ -1400,7 +1400,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "WkrAssessment",
 								"metric": "sum",
 								"field": "vrijeRuimteUsed",
@@ -1425,7 +1425,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "WkrAssessment",
 								"metric": "sum",
 								"field": "eindheffingDue",
@@ -1527,7 +1527,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Payslip",
 			"params": {
 				"id": "MijnLoonstroken",
@@ -1558,7 +1558,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Employee",
 			"params": {
 				"id": "Employees",
@@ -1586,7 +1586,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "EmploymentContract",
 			"params": {
 				"id": "EmploymentContracts",
@@ -1615,7 +1615,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "EmploymentContract",
 			"params": {
 				"id": "EmploymentContractDetail",
@@ -1651,7 +1651,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Payslip",
 			"params": {
 				"id": "Payslips",
@@ -1679,7 +1679,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "PayrollRun",
 			"params": {
 				"id": "PayrollRuns",
@@ -1710,7 +1710,7 @@
 						"label": "Create payroll run",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
-						"register": "hrmq",
+						"register": "humaniq",
 						"schema": "PayrollRun",
 						"onSuccessRoute": "PayrollRunDetail",
 						"successMessage": "Draft payroll run created. Use (Re)calculate to generate the payslips."
@@ -1720,7 +1720,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "LoonaangifteFiling",
 			"params": {
 				"id": "LoonaangifteFilings",
@@ -1751,7 +1751,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "PayrollMutationReport",
 			"params": {
 				"id": "PayrollMutations",
@@ -1780,7 +1780,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "WkrDeclaration",
 			"params": {
 				"id": "WkrDeclarations",
@@ -1813,7 +1813,7 @@
 						"label": "Register declaration",
 						"type": "open-form",
 						"icon": "PlusCircleOutline",
-						"register": "hrmq",
+						"register": "humaniq",
 						"schema": "WkrDeclaration",
 						"onSuccessRoute": "WkrDeclarationDetail",
 						"successMessage": "WKR declaration registered."
@@ -1823,7 +1823,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "WkrDeclaration",
 			"params": {
 				"id": "WkrDeclarationDetail",
@@ -1841,7 +1841,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "WkrAssessment",
 			"params": {
 				"id": "WkrAssessments",

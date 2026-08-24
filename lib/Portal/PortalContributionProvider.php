@@ -146,7 +146,7 @@ class PortalContributionProvider {
 			'collections' => [
 				[
 					'id' => 'myEmployeeRecord',
-					'register' => 'hrmq',
+					'register' => 'humaniq',
 					'schema' => 'Employee',
 					'scopeField' => 'id',
 					'scopeClaim' => 'employeeId',
@@ -156,7 +156,7 @@ class PortalContributionProvider {
 				],
 				[
 					'id' => 'payslips',
-					'register' => 'hrmq',
+					'register' => 'humaniq',
 					'schema' => 'Payslip',
 					'scopeField' => 'employeeId',
 					'scopeClaim' => 'employeeId',
@@ -166,7 +166,7 @@ class PortalContributionProvider {
 				],
 				[
 					'id' => 'employmentContracts',
-					'register' => 'hrmq',
+					'register' => 'humaniq',
 					'schema' => 'EmploymentContract',
 					'scopeField' => 'employeeId',
 					'scopeClaim' => 'employeeId',
@@ -176,7 +176,7 @@ class PortalContributionProvider {
 				],
 				[
 					'id' => 'timesheets',
-					'register' => 'hrmq',
+					'register' => 'humaniq',
 					'schema' => 'Timesheet',
 					'scopeField' => 'employeeId',
 					'scopeClaim' => 'employeeId',
@@ -186,7 +186,7 @@ class PortalContributionProvider {
 				],
 				[
 					'id' => 'expenses',
-					'register' => 'hrmq',
+					'register' => 'humaniq',
 					'schema' => 'Expense',
 					'scopeField' => 'employeeId',
 					'scopeClaim' => 'employeeId',
@@ -196,7 +196,7 @@ class PortalContributionProvider {
 				],
 				[
 					'id' => 'leaveRequests',
-					'register' => 'hrmq',
+					'register' => 'humaniq',
 					'schema' => 'LeaveRequest',
 					'scopeField' => 'employeeId',
 					'scopeClaim' => 'employeeId',
@@ -210,7 +210,7 @@ class PortalContributionProvider {
 					'id' => 'createTimesheet',
 					'type' => 'create',
 					'label' => 'Log hours',
-					'register' => 'hrmq',
+					'register' => 'humaniq',
 					'schema' => 'Timesheet',
 					'fields' => [
 						'period',
@@ -226,7 +226,7 @@ class PortalContributionProvider {
 					'id' => 'createExpense',
 					'type' => 'create',
 					'label' => 'Submit an expense',
-					'register' => 'hrmq',
+					'register' => 'humaniq',
 					'schema' => 'Expense',
 					'fields' => [
 						'title',
@@ -241,7 +241,7 @@ class PortalContributionProvider {
 					'id' => 'createLeaveRequest',
 					'type' => 'create',
 					'label' => 'Request leave',
-					'register' => 'hrmq',
+					'register' => 'humaniq',
 					'schema' => 'LeaveRequest',
 					'fields' => [
 						'leaveType',
@@ -276,7 +276,7 @@ class PortalContributionProvider {
 			'collections' => [
 				[
 					'id' => 'clientTimesheets',
-					'register' => 'hrmq',
+					'register' => 'humaniq',
 					'schema' => 'Timesheet',
 					'scopeField' => 'clientRef',
 					'scopeClaim' => 'clientId',
@@ -322,7 +322,7 @@ class PortalContributionProvider {
 			'collections' => [
 				[
 					'id' => 'teamTimesheets',
-					'register' => 'hrmq',
+					'register' => 'humaniq',
 					'schema' => 'Timesheet',
 					'scopeField' => 'costCenter',
 					'scopeClaim' => 'costCenter',

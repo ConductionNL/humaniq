@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Sick leave case",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "SickLeaveCase",
 				"_note": "leave-verzuim-mvp (2026-07-12): administrative-only sickness case -- NO medical/diagnosis data exists on this schema or its widgets (REQ-VWP-002). The 'Case' data widget (firstSickDay/recoveredDate/status/wachtdag/loondoorbetalingPercentage) excludes employeeId since Related already resolves and links the sick Employee by name; the 'Poortwachter milestones' widget surfaces all eight Due/Done WVP dates (probleemanalyse/plan van aanpak/UWV 42-wekenmelding/eerstejaarsevaluatie) so the re-integration clock is the page's second headline fact. Files is labeled and described for gespreksverslagen & plan-van-aanpak process documents ONLY -- repeating the no-medical-data warning, matching the schema's own privacy stance. lifecycleActions expose exactly herstellen/heropenen (gemeld<->hersteld) -- no invented edges. Audit history is a sidebar tab.",
 				"sidebar": {
@@ -156,7 +156,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "SickLeaveCase",
 			"params": {
 				"id": "SickLeaveCases",
@@ -183,7 +183,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "SickLeaveCase",
 			"params": {
 				"id": "VerzuimOverzicht",

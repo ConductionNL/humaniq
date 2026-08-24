@@ -177,7 +177,7 @@ class RuleTestDataSeederEmployeeIdTest extends TestCase {
 		$container->method('get')->willReturn($objectService);
 
 		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturn('hrmq');
+		$appConfig->method('getValueString')->willReturn('humaniq');
 
 		$groupManager = $this->createMock(IGroupManager::class);
 		$groupManager->method('get')->willReturn(null);

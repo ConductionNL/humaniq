@@ -72,7 +72,7 @@ const NC_URL = resolveBaseURL()
 const OR_BASE = `${NC_URL}/index.php/apps/openregister/api/objects`
 
 /** hrmq's OpenRegister register slug (manifest config.register). */
-const REGISTER = 'hrmq'
+const REGISTER = 'humaniq'
 
 const AUTH = ADMIN_CREDENTIALS
 

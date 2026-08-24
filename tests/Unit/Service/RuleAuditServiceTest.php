@@ -140,7 +140,7 @@ class RuleAuditServiceTest extends TestCase {
 			->willReturn($objectService);
 
 		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturn('hrmq');
+		$appConfig->method('getValueString')->willReturn('humaniq');
 
 		$logger = $this->createMock(LoggerInterface::class);
 

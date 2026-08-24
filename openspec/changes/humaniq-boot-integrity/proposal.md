@@ -6,7 +6,7 @@ against a trustworthy signal until both are fixed. This is phase 0: restore the 
 surface before changing anything it would be asked to measure.
 
 Live-reproduced today (`localhost:8080`, session `admin`, no administratie switched):
-`GET /apps/openregister/api/objects/hrmq/Employee?_limit=20&_page=1&administrationId=%40workspace.activeAdministrationId%3F`
+`GET /apps/openregister/api/objects/humaniq/Employee?_limit=20&_page=1&administrationId=%40workspace.activeAdministrationId%3F`
 → `200 OK`, `total: 0`. The same register unfiltered → `total: 16`. Every administratie-scoped
 index page carries the same shape of clause (44 occurrences per a manifest-wide count), so this is
 not one broken page — it is the app's primary navigation surface returning empty pages that are

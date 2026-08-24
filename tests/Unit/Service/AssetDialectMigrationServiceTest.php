@@ -76,10 +76,10 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\AssetDialectMigrationService;
+use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use OCP\IAppConfig;
 
 /**
  * Tests for AssetDialectMigrationService.
@@ -112,9 +112,9 @@ class AssetDialectMigrationServiceTest extends TestCase {
 	 * @var array<string, string>
 	 */
 	public const LEGACY_STATUS_MAP = [
-		'beschikbaar'  => 'available',
-		'uitgegeven'   => 'issued',
-		'ingenomen'    => 'checkedIn',
+		'beschikbaar' => 'available',
+		'uitgegeven' => 'issued',
+		'ingenomen' => 'checkedIn',
 		'afgeschreven' => 'writtenOff',
 	];
 
@@ -337,7 +337,7 @@ class AssetDialectMigrationServiceTest extends TestCase {
 		);
 
 		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturn('hrmq');
+		$appConfig->method('getValueString')->willReturn('humaniq');
 
 		$logger = $this->createMock(LoggerInterface::class);
 

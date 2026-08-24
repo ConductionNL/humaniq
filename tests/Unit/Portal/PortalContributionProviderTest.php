@@ -197,7 +197,7 @@ class PortalContributionProviderTest extends TestCase {
 			$this->assertArrayHasKey($collection['id'], $expected);
 			[$schema, $scopeField, $listable] = $expected[$collection['id']];
 
-			$this->assertSame('hrmq', $collection['register'], $collection['id']);
+			$this->assertSame('humaniq', $collection['register'], $collection['id']);
 			$this->assertSame($schema, $collection['schema'], $collection['id']);
 			$this->assertSame($scopeField, $collection['scopeField'], $collection['id']);
 			$this->assertSame('employeeId', $collection['scopeClaim'], $collection['id']);
@@ -274,7 +274,7 @@ class PortalContributionProviderTest extends TestCase {
 			[$schema, $fields] = $expected[$action['id']];
 
 			$this->assertSame('create', $action['type'], $action['id']);
-			$this->assertSame('hrmq', $action['register'], $action['id']);
+			$this->assertSame('humaniq', $action['register'], $action['id']);
 			$this->assertSame($schema, $action['schema'], $action['id']);
 			$this->assertSame($fields, $action['fields'], $action['id']);
 
@@ -303,7 +303,7 @@ class PortalContributionProviderTest extends TestCase {
 
 		$collection = $manifest['collections'][0];
 		$this->assertSame('clientTimesheets', $collection['id']);
-		$this->assertSame('hrmq', $collection['register']);
+		$this->assertSame('humaniq', $collection['register']);
 		$this->assertSame('Timesheet', $collection['schema']);
 		$this->assertSame('clientRef', $collection['scopeField']);
 		$this->assertSame('clientId', $collection['scopeClaim']);

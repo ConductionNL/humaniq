@@ -5,7 +5,7 @@
         "objects": [
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-jansen"
                 },
@@ -25,7 +25,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-devries"
                 },
@@ -43,7 +43,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-bakker"
                 },
@@ -61,7 +61,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-degroot"
                 },
@@ -79,7 +79,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Timesheet",
                     "slug": "timesheet-jansen-2026-05"
                 },
@@ -99,7 +99,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Timesheet",
                     "slug": "timesheet-devries-2026-05"
                 },
@@ -119,7 +119,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Timesheet",
                     "slug": "timesheet-bakker-2026-05"
                 },
@@ -138,7 +138,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "TimeEntry",
                     "slug": "timeentry-jansen-2026-05-04"
                 },
@@ -159,7 +159,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "TimeEntry",
                     "slug": "timeentry-jansen-2026-05-05"
                 },
@@ -179,7 +179,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "TimeEntry",
                     "slug": "timeentry-jansen-2026-05-rest"
                 },
@@ -200,7 +200,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "TimeEntry",
                     "slug": "timeentry-devries-2026-05-04"
                 },
@@ -220,7 +220,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "TimeEntry",
                     "slug": "timeentry-devries-2026-05-rest"
                 },
@@ -239,7 +239,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "TimeEntry",
                     "slug": "timeentry-bakker-2026-05-04"
                 },
@@ -256,7 +256,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "TimeEntry",
                     "slug": "timeentry-bakker-2026-05-rest"
                 },
@@ -274,7 +274,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Expense",
                     "slug": "expense-jansen-hotel"
                 },
@@ -293,7 +293,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Expense",
                     "slug": "expense-devries-train"
                 },
@@ -312,7 +312,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Expense",
                     "slug": "expense-bakker-software"
                 },
@@ -332,7 +332,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Expense",
                     "slug": "expense-devries-mileage"
                 },
@@ -351,7 +351,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "LoonaangifteFiling",
                     "slug": "loonaangifte-2026-04"
                 },
@@ -375,7 +375,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "LoonaangifteFiling",
                     "slug": "loonaangifte-2026-05"
                 },
@@ -398,7 +398,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "LoonaangifteFiling",
                     "slug": "loonaangifte-2026-06"
                 },
@@ -417,7 +417,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "LoonaangifteFiling",
                     "slug": "loonaangifte-2026-03"
                 },
@@ -434,7 +434,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "PayrollRun",
                     "slug": "payrollrun-2026-05"
                 },
@@ -454,7 +454,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "PayrollRun",
                     "slug": "payrollrun-2026-06"
                 },
@@ -474,7 +474,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "PayrollRun",
                     "slug": "payroll-run-2026-01-adm-001"
                 },
@@ -495,7 +495,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Payslip",
                     "slug": "payslip-jansen-2026-05"
                 },
@@ -513,7 +513,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "PensionFiling",
                     "slug": "pensionfiling-2026-05-abp"
                 },
@@ -531,7 +531,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "PensionFiling",
                     "slug": "pensionfiling-2026-06-abp"
                 },
@@ -545,7 +545,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "PensionFiling",
                     "slug": "pensionfiling-2026-05-spw"
                 },
@@ -559,7 +559,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "LeaveRequest",
                     "slug": "leave-jansen-zomer"
                 },
@@ -577,7 +577,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "LeaveRequest",
                     "slug": "leave-jansen-juli"
                 },
@@ -596,7 +596,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "LeaveBalance",
                     "slug": "leavebalance-jansen-2026-holiday"
                 },
@@ -614,7 +614,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "LeaveBalance",
                     "slug": "leavebalance-devries-2026-holiday"
                 },
@@ -630,7 +630,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "LeaveBalance",
                     "slug": "leavebalance-bakker-2026-holiday"
                 },
@@ -646,7 +646,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "SickLeaveCase",
                     "slug": "sickcase-jansen-flu"
                 },
@@ -668,7 +668,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "SickLeaveCase",
                     "slug": "sickcase-devries-week7"
                 },
@@ -685,7 +685,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "SickLeaveCase",
                     "slug": "sickcase-bakker-longterm"
                 },
@@ -704,7 +704,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "SickLeaveCase",
                     "slug": "sickcase-degroot-wvp42"
                 },
@@ -725,7 +725,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-visser"
                 },
@@ -740,7 +740,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Onboarding",
                     "slug": "onboarding-visser"
                 },
@@ -758,7 +758,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Onboarding",
                     "slug": "onboarding-jansen"
                 },
@@ -778,7 +778,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Vacancy",
                     "slug": "vacancy-vue-developer"
                 },
@@ -792,7 +792,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Application",
                     "slug": "application-voorbeeld-nieuw"
                 },
@@ -808,7 +808,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Application",
                     "slug": "application-voorbeeld-afgewezen"
                 },
@@ -826,7 +826,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Application",
                     "slug": "application-voorbeeld-aangenomen"
                 },
@@ -842,7 +842,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Application",
                     "slug": "application-voorbeeld-aanbod"
                 },
@@ -861,7 +861,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "OrgUnit",
                     "slug": "orgunit-directie"
                 },
@@ -873,7 +873,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "OrgUnit",
                     "slug": "orgunit-consultancy"
                 },
@@ -887,7 +887,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "OrgUnit",
                     "slug": "orgunit-backoffice"
                 },
@@ -900,7 +900,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "OrgAssignment",
                     "slug": "orgassignment-jansen-consultancy"
                 },
@@ -912,7 +912,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "OrgAssignment",
                     "slug": "orgassignment-devries-backoffice"
                 },
@@ -924,7 +924,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "OrgAssignment",
                     "slug": "orgassignment-bakker-consultancy"
                 },
@@ -937,7 +937,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "AttendanceRecord",
                     "slug": "attendance-jansen-0709"
                 },
@@ -954,7 +954,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "AttendanceRecord",
                     "slug": "attendance-devries-0708"
                 },
@@ -970,7 +970,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "AttendanceRecord",
                     "slug": "attendance-devries-0709"
                 },
@@ -986,7 +986,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "AttendanceRecord",
                     "slug": "attendance-bakker-0710"
                 },
@@ -1002,7 +1002,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-de-boer"
                 },
@@ -1019,7 +1019,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Offboarding",
                     "slug": "offboarding-jansen"
                 },
@@ -1038,7 +1038,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Offboarding",
                     "slug": "offboarding-de-boer"
                 },
@@ -1057,7 +1057,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Asset",
                     "slug": "asset-laptop-latitude",
                     "version": "1.1.0"
@@ -1073,7 +1073,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Asset",
                     "slug": "asset-telefoon-fairphone",
                     "version": "1.1.0"
@@ -1087,7 +1087,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Asset",
                     "slug": "asset-bus-transit",
                     "version": "1.1.0"
@@ -1107,7 +1107,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Asset",
                     "slug": "asset-bus-incomplete-fiscal"
                 },
@@ -1123,7 +1123,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "AssetAssignment",
                     "slug": "assetassignment-visser-bus"
                 },
@@ -1138,7 +1138,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "AssetAssignment",
                     "slug": "assetassignment-jansen-telefoon"
                 },
@@ -1152,7 +1152,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "ReviewCycle",
                     "slug": "review-cycle-2026"
                 },
@@ -1166,7 +1166,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "PerformanceReview",
                     "slug": "review-jansen-2026"
                 },
@@ -1197,7 +1197,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "PerformanceReview",
                     "slug": "review-visser-2026"
                 },
@@ -1217,7 +1217,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Objective",
                     "slug": "objective-jansen-klanttevredenheid"
                 },
@@ -1234,7 +1234,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "KeyResult",
                     "slug": "keyresult-jansen-nps"
                 },
@@ -1250,7 +1250,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "KeyResult",
                     "slug": "keyresult-jansen-klantbezoeken"
                 },
@@ -1266,7 +1266,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "KeyResult",
                     "slug": "keyresult-jansen-nps-dashboard"
                 },
@@ -1282,7 +1282,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "EmploymentContract",
                     "slug": "contract-devries-tijdelijk"
                 },
@@ -1305,7 +1305,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "EmploymentContract",
                     "slug": "contract-jansen-vast"
                 },
@@ -1328,7 +1328,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "EmploymentContract",
                     "slug": "contract-visser-bbl"
                 },
@@ -1353,7 +1353,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-uitzend-abu"
                 },
@@ -1372,7 +1372,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "EmploymentContract",
                     "slug": "contract-uitzend-abu-fase-a"
                 },
@@ -1399,7 +1399,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Stagiair",
                     "slug": "stagiair-devries"
                 },
@@ -1418,7 +1418,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Stagiair",
                     "slug": "stagiair-bakker"
                 },
@@ -1437,7 +1437,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "EmploymentContract",
                     "slug": "contract-uitzend-abu-beding-fase-b"
                 },
@@ -1464,7 +1464,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-001"
                 },
@@ -1477,7 +1477,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-002"
                 },
@@ -1490,7 +1490,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-003"
                 },
@@ -1503,7 +1503,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-004"
                 },
@@ -1516,7 +1516,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-005"
                 },
@@ -1529,7 +1529,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "EmploymentContract",
                     "slug": "contract-hr21-devries-schaal-match"
                 },
@@ -1553,7 +1553,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "EmploymentContract",
                     "slug": "contract-hr21-jansen-schaal-mismatch"
                 },
@@ -1577,7 +1577,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "SalaryBand",
                     "slug": "salaryband-a"
                 },
@@ -1595,7 +1595,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "SalaryBand",
                     "slug": "salaryband-b"
                 },
@@ -1613,7 +1613,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "CompReviewCycle",
                     "slug": "compcycle-2026"
                 },
@@ -1625,7 +1625,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "CompAdjustment",
                     "slug": "compadjustment-jansen-2026"
                 },
@@ -1644,7 +1644,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Administration",
                     "slug": "example-adm-001"
                 },
@@ -1658,7 +1658,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Administration",
                     "slug": "example-adm-002"
                 },
@@ -1670,7 +1670,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Administration",
                     "slug": "example-adm-004"
                 },
@@ -1684,7 +1684,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-devries-dga"
                 },
@@ -1704,7 +1704,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "AdministrationAccess",
                     "slug": "example-admaccess-admin-adm004"
                 },
@@ -1714,7 +1714,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Administration",
                     "slug": "example-adm-005"
                 },
@@ -1727,7 +1727,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "AdministrationAccess",
                     "slug": "example-admaccess-admin-adm005"
                 },
@@ -1737,7 +1737,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "AdministrationAccess",
                     "slug": "example-admaccess-admin-adm001"
                 },
@@ -1747,7 +1747,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "AdministrationAccess",
                     "slug": "example-admaccess-admin-adm002"
                 },
@@ -1757,7 +1757,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "AdministrationAccess",
                     "slug": "example-admaccess-hr-adm001"
                 },
@@ -1768,7 +1768,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "example-employee-adm002"
                 },
@@ -1785,7 +1785,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-ambtenaar-genormaliseerd"
                 },
@@ -1806,7 +1806,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-ambtenaar-politie"
                 },
@@ -1827,7 +1827,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-ambtenaar-eed-ontbreekt"
                 },
@@ -1848,7 +1848,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Timesheet",
                     "slug": "example-timesheet-adm002-2026-05"
                 },
@@ -1866,7 +1866,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Payslip",
                     "slug": "example-payslip-adm002-2026-05"
                 },
@@ -1884,7 +1884,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "BhvCertificering",
                     "slug": "bhv-jansen-basis"
                 },
@@ -1898,7 +1898,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Administration",
                     "slug": "example-adm-003"
                 },
@@ -1912,7 +1912,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "BhvCertificering",
                     "slug": "bhv-visser-ehbo"
                 },
@@ -1926,7 +1926,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "AdministrationAccess",
                     "slug": "example-admaccess-admin-adm003"
                 },
@@ -1936,7 +1936,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "PayrollRun",
                     "slug": "example-payrollrun-adm003-2026-06"
                 },
@@ -1957,7 +1957,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-wnt-schoenmaker"
                 },
@@ -1976,7 +1976,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-wnt-dijkstra"
                 },
@@ -1995,7 +1995,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "Employee",
                     "slug": "employee-wnt-molenaar"
                 },
@@ -2014,7 +2014,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "WntDisclosure",
                     "slug": "wnt-disclosure-schoenmaker-2026"
                 },
@@ -2027,7 +2027,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "WntDisclosure",
                     "slug": "wnt-disclosure-dijkstra-2026"
                 },
@@ -2040,7 +2040,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "WntDisclosure",
                     "slug": "wnt-disclosure-molenaar-2026"
                 },
@@ -2053,7 +2053,7 @@
             },
             {
                 "@self": {
-                    "register": "hrmq",
+                    "register": "humaniq",
                     "schema": "IntegrationAccount",
                     "slug": "integration-payrollpartner"
                 },

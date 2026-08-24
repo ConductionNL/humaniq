@@ -71,17 +71,17 @@ class AbsenceRateServiceTest extends TestCase {
 	/**
 	 * A full-time contract running the whole period.
 	 *
-	 * @param string $employeeId  The employee.
-	 * @param float  $hoursPerWeek Contracted hours.
+	 * @param string $employeeId The employee.
+	 * @param float $hoursPerWeek Contracted hours.
 	 *
 	 * @return array<string, mixed> The contract.
 	 */
 	private function contract(string $employeeId, float $hoursPerWeek = 40.0): array {
 		return [
-			'employeeId'   => $employeeId,
+			'employeeId' => $employeeId,
 			'hoursPerWeek' => $hoursPerWeek,
-			'startDate'    => '2025-01-01',
-			'endDate'      => null,
+			'startDate' => '2025-01-01',
+			'endDate' => null,
 		];
 	}//end contract()
 
@@ -101,9 +101,9 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [
 				[
-					'employeeId'   => 'emp-1',
+					'employeeId' => 'emp-1',
 					'firstSickDay' => '2025-12-01',
-					'status'       => 'gemeld',
+					'status' => 'gemeld',
 				],
 			],
 			contracts: [$this->contract('emp-1')],
@@ -135,9 +135,9 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [
 				[
-					'employeeId'         => 'emp-1',
-					'firstSickDay'       => '2025-12-01',
-					'status'             => 'gemeld',
+					'employeeId' => 'emp-1',
+					'firstSickDay' => '2025-12-01',
+					'status' => 'gemeld',
 					'absenceProgression' => [
 						['effectiveFrom' => '2025-12-01', 'absencePercentage' => 100],
 						['effectiveFrom' => '2026-01-16', 'absencePercentage' => 40],
@@ -168,9 +168,9 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [
 				[
-					'employeeId'         => 'emp-1',
-					'firstSickDay'       => '2026-01-01',
-					'status'             => 'gemeld',
+					'employeeId' => 'emp-1',
+					'firstSickDay' => '2026-01-01',
+					'status' => 'gemeld',
 					'absenceProgression' => [
 						['effectiveFrom' => '2026-01-21', 'absencePercentage' => 50],
 					],
@@ -202,9 +202,9 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [
 				[
-					'employeeId'   => 'emp-part',
+					'employeeId' => 'emp-part',
 					'firstSickDay' => '2025-11-01',
-					'status'       => 'gemeld',
+					'status' => 'gemeld',
 				],
 			],
 			contracts: [
@@ -231,10 +231,10 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [
 				[
-					'employeeId'    => 'emp-1',
-					'firstSickDay'  => '2026-01-05',
+					'employeeId' => 'emp-1',
+					'firstSickDay' => '2026-01-05',
 					'recoveredDate' => '2026-01-14',
-					'status'        => 'hersteld',
+					'status' => 'hersteld',
 				],
 			],
 			contracts: [$this->contract('emp-1')],
@@ -259,10 +259,10 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [
 				[
-					'employeeId'    => 'emp-1',
-					'firstSickDay'  => '2026-01-01',
+					'employeeId' => 'emp-1',
+					'firstSickDay' => '2026-01-01',
 					'recoveredDate' => '2026-01-10',
-					'status'        => 'gemeld',
+					'status' => 'gemeld',
 				],
 			],
 			contracts: [$this->contract('emp-1')],
@@ -284,10 +284,10 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [
 				[
-					'employeeId'    => 'emp-1',
-					'firstSickDay'  => '2025-03-01',
+					'employeeId' => 'emp-1',
+					'firstSickDay' => '2025-03-01',
 					'recoveredDate' => '2025-03-20',
-					'status'        => 'hersteld',
+					'status' => 'hersteld',
 				],
 			],
 			contracts: [$this->contract('emp-1')],
@@ -314,9 +314,9 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [
 				[
-					'employeeId'   => 'emp-ghost',
+					'employeeId' => 'emp-ghost',
 					'firstSickDay' => '2026-01-01',
-					'status'       => 'gemeld',
+					'status' => 'gemeld',
 				],
 			],
 			contracts: [$this->contract('emp-1')],
@@ -365,10 +365,10 @@ class AbsenceRateServiceTest extends TestCase {
 			cases: [],
 			contracts: [
 				[
-					'employeeId'   => 'emp-new',
+					'employeeId' => 'emp-new',
 					'hoursPerWeek' => 40.0,
-					'startDate'    => '2026-01-17',
-					'endDate'      => null,
+					'startDate' => '2026-01-17',
+					'endDate' => null,
 				],
 			],
 			periodStart: $start,
@@ -391,9 +391,9 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [
 				[
-					'employeeId'   => 'emp-1',
+					'employeeId' => 'emp-1',
 					'firstSickDay' => '2025-11-01',
-					'status'       => 'gemeld',
+					'status' => 'gemeld',
 				],
 			],
 			contracts: [$this->contract('emp-1', 36.0)],
@@ -421,9 +421,9 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [
 				[
-					'employeeId'         => 'emp-1',
-					'firstSickDay'       => '2026-01-01',
-					'status'             => 'gemeld',
+					'employeeId' => 'emp-1',
+					'firstSickDay' => '2026-01-01',
+					'status' => 'gemeld',
 					'absenceProgression' => [
 						['effectiveFrom' => 'not-a-date', 'absencePercentage' => 50],
 						['absencePercentage' => 20],
@@ -450,9 +450,9 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [
 				[
-					'employeeId'         => 'emp-1',
-					'firstSickDay'       => '2026-01-01',
-					'status'             => 'gemeld',
+					'employeeId' => 'emp-1',
+					'firstSickDay' => '2026-01-01',
+					'status' => 'gemeld',
 					'absenceProgression' => [
 						['effectiveFrom' => '2026-01-21', 'absencePercentage' => 25],
 						['effectiveFrom' => '2026-01-01', 'absencePercentage' => 100],
@@ -482,9 +482,9 @@ class AbsenceRateServiceTest extends TestCase {
 		$result = $this->service->absenceRate(
 			cases: [
 				[
-					'employeeId'         => 'emp-1',
-					'firstSickDay'       => '2026-01-01',
-					'status'             => 'gemeld',
+					'employeeId' => 'emp-1',
+					'firstSickDay' => '2026-01-01',
+					'status' => 'gemeld',
 					'absenceProgression' => [
 						['effectiveFrom' => '2026-01-01', 'absencePercentage' => 100],
 						['effectiveFrom' => '2026-01-11', 'absencePercentage' => 0],

@@ -2,7 +2,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "GeneratedDocument",
 			"params": {
 				"id": "GeneratedDocuments",
@@ -27,7 +27,7 @@
 		},
 		{
 			"templateRef": "dualDataScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "GeneratedDocument",
 			"params": {
 				"id": "GeneratedDocumentDetail",
@@ -68,7 +68,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Jaaropgaaf",
 			"params": {
 				"id": "Jaaropgaven",
@@ -93,7 +93,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Jaaropgaaf",
 			"params": {
 				"id": "JaaropgaafDetail",

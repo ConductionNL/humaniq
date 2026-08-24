@@ -56,7 +56,7 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 	 *
 	 * @var string
 	 */
-	private const REGISTER = 'hrmq';
+	private const REGISTER = 'humaniq';
 
 	/**
 	 * Schema slug the probe object lives in.
@@ -212,14 +212,14 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 			_rbac: false,
 			_validation: false
 		);
-		$uuid = (string) $saved->getUuid();
+		$uuid = (string)$saved->getUuid();
 		$this->assertNotSame('', $uuid, 'Probe object did not save.');
 		$this->createdUuids[] = $uuid;
 
 		$persisted = $this->readBack($uuid);
 		$this->assertSame(
 			self::CREATE_MUTATED,
-			(string) ($persisted['description'] ?? ''),
+			(string)($persisted['description'] ?? ''),
 			'ObjectCreatingEvent setModifiedData() did NOT propagate into the persisted object — Decision 4 fallback required.'
 		);
 
@@ -255,7 +255,7 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 		$persisted = $this->readBack($uuid);
 		$this->assertSame(
 			self::UPDATE_MUTATED,
-			(string) ($persisted['description'] ?? ''),
+			(string)($persisted['description'] ?? ''),
 			'ObjectUpdatingEvent setModifiedData() did NOT propagate into the persisted object — Decision 4 fallback required.'
 		);
 
@@ -280,10 +280,10 @@ class OpenRegisterPreSaveMutationContractTest extends TestCase {
 		$persisted = $this->readBack($uuid);
 		$this->assertSame(
 			'v1-probe-control',
-			(string) ($persisted['description'] ?? ''),
+			(string)($persisted['description'] ?? ''),
 			'Control write was mutated although no hook matched — the mutation evidence is contaminated.'
 		);
-		$this->assertStringNotContainsString('MUTATED', (string) ($persisted['description'] ?? ''));
+		$this->assertStringNotContainsString('MUTATED', (string)($persisted['description'] ?? ''));
 	}//end testPreSaveMutationPersistsAndControlWriteDoesNot()
 
 	/**

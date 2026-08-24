@@ -111,7 +111,7 @@ class MigrateHoursProcessTest extends TestCase {
 			 */
 			public array $markerStates = [];
 		};
-		$this->spy = new class ($this->store, $this->marker, $this->recorder) extends FakeObjectStore {
+		$this->spy = new class($this->store, $this->marker, $this->recorder) extends FakeObjectStore {
 
 			/**
 			 * @param FakeObjectStore $inner The store to mirror state from.
@@ -131,7 +131,7 @@ class MigrateHoursProcessTest extends TestCase {
 			 * {@inheritDoc}
 			 */
 			public function saveObject(
-				array | object $object,
+				array|object $object,
 				?array $extend = [],
 				mixed $register = null,
 				mixed $schema = null,
@@ -182,7 +182,7 @@ class MigrateHoursProcessTest extends TestCase {
 		]);
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 
 		$container = new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $this->spy]);
 		$this->container = $container;
@@ -229,7 +229,7 @@ class MigrateHoursProcessTest extends TestCase {
 	 */
 	private function repairWith(object $store): MigrateHoursProcess {
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		$container = new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $store]);
 
 		return new MigrateHoursProcess(

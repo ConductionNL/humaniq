@@ -14,8 +14,8 @@
     "paths": {},
     "components": {
         "registers": {
-            "hrmq": {
-                "slug": "hrmq",
+            "humaniq": {
+                "slug": "humaniq",
                 "title": "Humaniq Register",
                 "description": "Humaniq — open-source HR & payroll administration for Dutch SMBs. Holds every HR, verzuim, verlof, roostering, ATS, performance and payroll object the app reads and writes.",
                 "version": "0.17.0",

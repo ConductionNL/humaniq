@@ -84,7 +84,7 @@ class TimesheetAggregateListenerTest extends TestCase {
 		$this->store->seed('Timesheet', 'ts-b', ['status' => 'draft', 'hours' => 0, 'entryCount' => 0]);
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 
 		$aggregation = new TimesheetAggregationService(
 			container: new FakeContainer(['OCA\OpenRegister\Service\ObjectService' => $this->store]),
@@ -231,7 +231,7 @@ class TimesheetAggregateListenerTest extends TestCase {
 	 */
 	public function testRecomputeFailureNeverBreaksTheSavePath(): void {
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 
 		$aggregation = $this->createMock(TimesheetAggregationService::class);
 		$aggregation->method('recomputeForTimesheet')->willThrowException(new \RuntimeException('register down'));

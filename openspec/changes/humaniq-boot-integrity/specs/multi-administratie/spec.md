@@ -18,7 +18,7 @@ API.
 active administratie IS set (initial state `activeAdministrationId` = `"ADM-001"`, corroborated by
 `AdministrationController::context`) hitting `/employees` sent
 `administrationId=%40workspace.activeAdministrationId%3F` — the literal, unresolved token — to
-`GET /api/objects/hrmq/Employee`, got `total: 0`, and rendered "No items found" for data that
+`GET /api/objects/humaniq/Employee`, got `total: 0`, and rendered "No items found" for data that
 exists (`total: 10` for that administratie; `total: 16` unfiltered). Root cause, verified: not this
 requirement's design, and not a defect in the code as currently written in either `App.vue` or
 `@conduction/nextcloud-vue`'s resolver — the deployed frontend bundle was never rebuilt after

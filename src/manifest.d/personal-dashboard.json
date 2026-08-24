@@ -23,7 +23,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "TimeEntry",
 								"metric": "sum",
 								"field": "hours",
@@ -50,7 +50,7 @@
 							"caption": "pending",
 							"icon": "ReceiptOutline",
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "Expense",
 								"metric": "count",
 								"filter": {
@@ -74,7 +74,7 @@
 							"caption": "awaiting your approval",
 							"icon": "CheckDecagramOutline",
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "Timesheet",
 								"metric": "count",
 								"filter": {
@@ -93,7 +93,7 @@
 						"type": "object-table",
 						"title": "My timesheets",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "Timesheet",
 							"filter": {
 								"userId": "@me",
@@ -121,7 +121,7 @@
 						"type": "object-table",
 						"title": "My leave balance",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "LeaveBalance",
 							"filter": {
 								"userId": "@me",
@@ -147,7 +147,7 @@
 						"type": "object-table",
 						"title": "My recent payslips",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "Payslip",
 							"filter": {
 								"userId": "@me",

@@ -122,17 +122,17 @@ class AssetDialectMigrationService {
 	 * dialect to the new one. Idempotent; safe to call repeatedly.
 	 *
 	 * @return array<string, array<string, mixed>> Per-schema report: schema => {
-	 *     inspected: int, rewritten: int, alreadyCurrent: int, skipped: int,
-	 *     skipReasons: array<int, array{id: string, reason: string}>
-	 * }. `rewritten` and `skipped` are NOT mutually exclusive for a row: a
-	 * row can have its category/fields rewritten AND have its status
-	 * skipped-with-reason on the same run (Asset.status, see class docblock).
+	 *                                             inspected: int, rewritten: int, alreadyCurrent: int, skipped: int,
+	 *                                             skipReasons: array<int, array{id: string, reason: string}>
+	 *                                             }. `rewritten` and `skipped` are NOT mutually exclusive for a row: a
+	 *                                             row can have its category/fields rewritten AND have its status
+	 *                                             skipped-with-reason on the same run (Asset.status, see class docblock).
 	 *
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	public function migrate(): array {
 		return [
-			'Asset'           => $this->migrateAssets(),
+			'Asset' => $this->migrateAssets(),
 			'AssetAssignment' => $this->migrateAssignments(),
 		];
 
@@ -169,7 +169,6 @@ class AssetDialectMigrationService {
 		}//end foreach
 
 		return $report;
-
 	}//end migrateAssets()
 
 	/**
@@ -194,8 +193,8 @@ class AssetDialectMigrationService {
 	 * writer of Asset while it was off, and which a fatal between toggle and
 	 * restore would have left off permanently and silently.
 	 *
-	 * @param string               $id     The object uuid.
-	 * @param array<string, mixed> $row    The row as read.
+	 * @param string $id The object uuid.
+	 * @param array<string, mixed> $row The row as read.
 	 * @param array<string, mixed> $mapped The mapper's result for that row.
 	 * @param array<string, mixed> $report The report, mutated in place.
 	 *
@@ -284,7 +283,6 @@ class AssetDialectMigrationService {
 		}//end foreach
 
 		return $report;
-
 	}//end migrateAssignments()
 
 	/**
@@ -315,9 +313,7 @@ class AssetDialectMigrationService {
 	private function stripSelf(array $row): array {
 		unset($row['@self']);
 		return $row;
-
 	}//end stripSelf()
-
 
 	/**
 	 * @param array<string, mixed> $row An object row.
@@ -328,7 +324,6 @@ class AssetDialectMigrationService {
 	 */
 	private function idOf(array $row): string {
 		return (string)($row['id'] ?? $row['@self']['id'] ?? '');
-
 	}//end idOf()
 
 	/**
@@ -366,7 +361,6 @@ class AssetDialectMigrationService {
 		}
 
 		return $out;
-
 	}//end loadAll()
 
 	/**
@@ -387,7 +381,6 @@ class AssetDialectMigrationService {
 		}
 
 		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
 	}//end objectService()
 
 	/**
@@ -401,9 +394,8 @@ class AssetDialectMigrationService {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-asset-fleet-merge/specs/asset-management/spec.md#REQ-AST-008
 	 */
 	private function register(): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'humaniq');
 		return $register === '' ? 'hrmq' : $register;
-
 	}//end register()
 
 }//end class

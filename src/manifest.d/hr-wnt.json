@@ -2,7 +2,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "WntDisclosure",
 			"params": {
 				"id": "WntDisclosures",
@@ -30,7 +30,7 @@
 		},
 		{
 			"templateRef": "dualDataScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "WntDisclosure",
 			"params": {
 				"id": "WntDisclosureDetail",

@@ -224,7 +224,7 @@ final class LeaveBuySellApprovalGuard implements LifecycleGuardInterface {
 	 * payroll run already stored under the 'hrmq' slug.
 	 */
 	private function register(): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'hrmq');
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'humaniq');
 		return $register === '' ? 'hrmq' : $register;
 	}//end register()
 

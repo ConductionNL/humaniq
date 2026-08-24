@@ -110,7 +110,7 @@ class TimesheetProcessStampListenerTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 
 		$this->listener = new TimesheetProcessStampListener(
 			gateway: new HoursRegisterGateway(

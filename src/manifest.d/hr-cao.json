@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Collective agreement",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "Cao",
 				"allowCreate": false,
 				"_note": "cao-library (2026-07-14): read-only reference detail for one CAO (derived projection of lib/Standards/cao/{caoId}.json). The 'CAO' data widget surfaces the identity + verification flags (caoId/name/sector/version/effectiveDate/payScalesVerified/leaveEntitlementVerified/source); the 'Loonschalen & verlof' widget surfaces the actual scales/allowances/leave/working-time maps -- the reference facts a maintainer checks a contract against. No lifecycleActions (Cao has no x-openregister-lifecycle), no create/edit affordances (corpus-authored). Audit history is a sidebar tab.",
@@ -76,7 +76,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "Cao",
 			"params": {
 				"id": "Caos",

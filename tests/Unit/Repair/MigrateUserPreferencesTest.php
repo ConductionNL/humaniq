@@ -75,7 +75,6 @@ class MigrateUserPreferencesTest extends TestCase {
 	 */
 	private function outputDouble(): IOutput {
 		return new class implements IOutput {
-
 			/**
 			 * @var string[]
 			 */
@@ -121,7 +120,7 @@ class MigrateUserPreferencesTest extends TestCase {
 			}//end startProgress()
 
 			/**
-			 * @param int    $step        The step reached.
+			 * @param int $step The step reached.
 			 * @param string $description The step description.
 			 *
 			 * @return void
@@ -163,10 +162,10 @@ class MigrateUserPreferencesTest extends TestCase {
 	/**
 	 * An IConfig double backed by a two-namespace per-user in-memory store.
 	 *
-	 * @param array<string, string> $old      uid => value under `hrmq`.
-	 * @param array<string, string> $new      uid => value under `humaniq`.
-	 * @param string[]              $writes   Receives "uid=value" for each write.
-	 * @param string|null           $throwsOn uid whose write throws, or null.
+	 * @param array<string, string> $old uid => value under `hrmq`.
+	 * @param array<string, string> $new uid => value under `humaniq`.
+	 * @param string[] $writes Receives "uid=value" for each write.
+	 * @param string|null $throwsOn uid whose write throws, or null.
 	 *
 	 * @return IConfig The double.
 	 */

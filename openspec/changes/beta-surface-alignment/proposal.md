@@ -106,7 +106,7 @@ consistency.
 
 ### Still misaligned / needs a decision
 
-- **No `docs/` Docusaurus site** (`hrmq.conduction.nl` would 404). Assessed against
+- **No `docs/` Docusaurus site** (`humaniq.conduction.nl` would 404). Assessed against
   `journeydoc-init`: that skill scaffolds a full 8-artifact tutorial site + opens a PR, which is
   out of proportion for a local, no-push alignment pass and duplicates work the app owner should
   decide to invest in deliberately (domain wiring, first tutorial story, sidebar). Flagging rather

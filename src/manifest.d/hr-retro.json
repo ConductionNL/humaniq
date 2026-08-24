@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Retro correction",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "PayrollAdjustment",
 				"_note": "retro-adjustments (2026-07-15): a PayrollAdjustment is a DELTA against a sealed original -- pa-delta leads top-left as the stat KPI an accountant reviews (the net nabetaling/terugvordering amount actually settling into the current run), pa-related sits top-right to resolve the four $ref fields (employeeId, originalPayrollRunId, originalPayslipId, settlementPayrollRunId) at matching height, and pa-data runs full-width below with the remaining record fields (excluding those four $refs, already resolved by Related). No lifecycleActions: status is a plain draft/applied enum with no x-openregister-lifecycle map (the PayrollRunDetail precedent -- design.md D8); the page-level 'Herrekenen' api-call is the only action, guarded server-side by PayrollController::adjust() (404 unresolvable/unauthorized, 400 already-applied). Audit history is a sidebar tab.",
 				"sidebar": {
@@ -29,7 +29,7 @@
 								"decimals": 2
 							},
 							"source": {
-								"register": "hrmq",
+								"register": "humaniq",
 								"schema": "PayrollAdjustment",
 								"metric": "sum",
 								"field": "deltaNet",
@@ -113,7 +113,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "PayrollAdjustment",
 			"params": {
 				"id": "PayrollAdjustments",

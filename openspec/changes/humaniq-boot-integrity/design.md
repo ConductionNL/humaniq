@@ -58,7 +58,7 @@ further token handling — whatever the filter map contains at that point is wha
 
 3. **Live reproduction, today, against `localhost:8080`:** navigated to `/apps/humaniq/employees` as
    `admin`. Network capture shows
-   `GET /apps/openregister/api/objects/hrmq/Employee?_limit=20&_page=1&administrationId=%40workspace.activeAdministrationId%3F`
+   `GET /apps/openregister/api/objects/humaniq/Employee?_limit=20&_page=1&administrationId=%40workspace.activeAdministrationId%3F`
    → `200`, response body `{"total":0,...,"query":{"administrationId":"@workspace.activeAdministrationId?",...}}`.
    An unfiltered call to the same endpoint (`_limit=5&_page=1`, no `administrationId`) returns
    `total: 16`.

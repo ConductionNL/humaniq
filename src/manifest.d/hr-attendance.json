@@ -2,7 +2,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "AttendanceRecord",
 			"params": {
 				"id": "MijnAanwezigheid",
@@ -28,7 +28,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "AttendanceRecord",
 			"params": {
 				"id": "AttendanceRecords",
@@ -58,7 +58,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "AttendanceRecord",
 			"params": {
 				"id": "AttendanceRecordDetail",

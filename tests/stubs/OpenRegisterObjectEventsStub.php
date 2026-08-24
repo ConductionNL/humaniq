@@ -197,7 +197,9 @@ namespace OCA\OpenRegister\Event {
 			/**
 			 * @param ObjectEntity $object The entity being created.
 			 */
-			public function __construct(private readonly ObjectEntity $object) {
+			public function __construct(
+				private readonly ObjectEntity $object,
+			) {
 				parent::__construct();
 			}//end __construct()
 
@@ -250,7 +252,9 @@ namespace OCA\OpenRegister\Event {
 			/**
 			 * @param ObjectEntity $object The entity being deleted.
 			 */
-			public function __construct(private readonly ObjectEntity $object) {
+			public function __construct(
+				private readonly ObjectEntity $object,
+			) {
 				parent::__construct();
 			}//end __construct()
 
@@ -271,7 +275,9 @@ namespace OCA\OpenRegister\Event {
 			/**
 			 * @param ObjectEntity $object The created entity.
 			 */
-			public function __construct(private readonly ObjectEntity $object) {
+			public function __construct(
+				private readonly ObjectEntity $object,
+			) {
 				parent::__construct();
 			}//end __construct()
 
@@ -292,7 +298,9 @@ namespace OCA\OpenRegister\Event {
 			/**
 			 * @param ObjectEntity $object The deleted entity.
 			 */
-			public function __construct(private readonly ObjectEntity $object) {
+			public function __construct(
+				private readonly ObjectEntity $object,
+			) {
 				parent::__construct();
 			}//end __construct()
 

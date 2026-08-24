@@ -6,7 +6,7 @@
 			"type": "detail",
 			"title": "Organisational unit",
 			"config": {
-				"register": "hrmq",
+				"register": "humaniq",
 				"schema": "OrgUnit",
 				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab.",
 				"sidebar": {
@@ -43,7 +43,7 @@
 						"title": "Child units",
 						"icon": "SitemapOutline",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "OrgUnit",
 							"filter": {
 								"parentUnitId": "@objectId"
@@ -85,7 +85,7 @@
 						"title": "Assignments",
 						"icon": "AccountArrowRightOutline",
 						"content": {
-							"register": "hrmq",
+							"register": "humaniq",
 							"schema": "OrgAssignment",
 							"filter": {
 								"orgUnitId": "@objectId"
@@ -162,7 +162,7 @@
 	"pageInstances": [
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "OrgUnit",
 			"params": {
 				"id": "OrgUnits",
@@ -191,7 +191,7 @@
 		},
 		{
 			"templateRef": "indexScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "OrgAssignment",
 			"params": {
 				"id": "OrgAssignments",
@@ -219,7 +219,7 @@
 		},
 		{
 			"templateRef": "simpleDetailScaffold",
-			"register": "hrmq",
+			"register": "humaniq",
 			"schema": "OrgAssignment",
 			"params": {
 				"id": "OrgAssignmentDetail",

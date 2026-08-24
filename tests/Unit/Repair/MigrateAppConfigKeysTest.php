@@ -66,7 +66,6 @@ class MigrateAppConfigKeysTest extends TestCase {
 	 */
 	private function outputDouble(): IOutput {
 		return new class implements IOutput {
-
 			/**
 			 * @var string[]
 			 */
@@ -112,7 +111,7 @@ class MigrateAppConfigKeysTest extends TestCase {
 			}//end startProgress()
 
 			/**
-			 * @param int    $step        The step reached.
+			 * @param int $step The step reached.
 			 * @param string $description The step description.
 			 *
 			 * @return void
@@ -132,10 +131,10 @@ class MigrateAppConfigKeysTest extends TestCase {
 	/**
 	 * An IAppConfig double backed by a two-namespace in-memory store.
 	 *
-	 * @param array<string, string> $old      Values stored under `hrmq`.
-	 * @param array<string, string> $new      Values stored under `humaniq`.
-	 * @param string[]              $writes   Receives "key=value" for each write.
-	 * @param string|null           $throwsOn Key whose write throws, or null.
+	 * @param array<string, string> $old Values stored under `hrmq`.
+	 * @param array<string, string> $new Values stored under `humaniq`.
+	 * @param string[] $writes Receives "key=value" for each write.
+	 * @param string|null $throwsOn Key whose write throws, or null.
 	 *
 	 * @return IAppConfig The double.
 	 */
@@ -201,6 +200,11 @@ class MigrateAppConfigKeysTest extends TestCase {
 
 		(new MigrateAppConfigKeys(
 			$this->appConfig(
+				// `register` deliberately still holds the OLD slug here. This step
+				// copies a namespace VERBATIM — re-pointing the value is
+				// MigrateRegisterSlug's job, and it runs right after. A fixture
+				// that already said `humaniq` would be asserting a carry-over
+				// this step does not perform.
 				['register' => 'hrmq', 'leave_accrual_enabled' => 'yes'],
 				[],
 				$writes

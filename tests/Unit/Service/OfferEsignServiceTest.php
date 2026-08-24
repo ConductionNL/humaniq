@@ -558,7 +558,7 @@ class OfferEsignServiceTest extends TestCase {
 		$appManager->method('isInstalled')->willReturn($docudeskInstalled);
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		// objectService() now establishes availability first (ADR-083). A bare
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
@@ -694,8 +694,8 @@ class OfferEsignServiceTest extends TestCase {
 
 		$this->assertSame(
 			[
-				['register' => 'hrmq', 'schema' => 'Application', 'id' => 'app-1'],
-				['register' => 'hrmq', 'schema' => 'Vacancy', 'id' => 'vac-1'],
+				['register' => 'humaniq', 'schema' => 'Application', 'id' => 'app-1'],
+				['register' => 'humaniq', 'schema' => 'Vacancy', 'id' => 'vac-1'],
 			],
 			$call['dataRefs']
 		);
@@ -779,7 +779,7 @@ class OfferEsignServiceTest extends TestCase {
 		$this->assertSame('hrmq', $data['sourceApp']);
 		$this->assertSame('Application', $data['subjectSchema']);
 		$this->assertSame('app-1', $data['subjectId']);
-		$this->assertSame('hrmq', $data['subjectRegister'] ?? null, 'subjectRegister carries the hrmq register slug.');
+		$this->assertSame('humaniq', $data['subjectRegister'] ?? null, 'subjectRegister carries the humaniq register slug.');
 		$this->assertSame('app-1', $data['correlationId']);
 
 	}//end testProvenanceFieldsCorrelateBackToHumaniq()

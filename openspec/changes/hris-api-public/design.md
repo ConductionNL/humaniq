@@ -60,7 +60,7 @@ streaming; SCIM provisioning; a custom API-key/scope/rate-limit system;
 
 Every REQ-001-style scenario in the draft ("an external system calls `GET /employees` with a
 Bearer token and receives a paginated, RBAC-filtered response") is already true today, verbatim in
-substance, against `GET /api/objects/hrmq/Employee` with Basic Auth and an app password (Context).
+substance, against `GET /api/objects/humaniq/Employee` with Basic Auth and an app password (Context).
 Writing humaniq code to reproduce that would be pure duplication. What humaniq genuinely lacks is
 **visibility**: today, if an NC administrator grants a payroll-partner's integration account RBAC
 read access to `Payslip`, nothing in humaniq records that this happened, why, or when it was last
@@ -125,7 +125,7 @@ demonstrates the catalog shape and the recommended-subset guidance in practice (
 schemas are in `humaniq-mcp-adoption`'s own six-schema allow-list).
 
 Dev-container verification gate: after seed import, the `IntegrationAccounts` index page shows the
-one seeded record; `GET /api/objects/hrmq/Vacancy` (with an admin session, proving the endpoint is
+one seeded record; `GET /api/objects/humaniq/Vacancy` (with an admin session, proving the endpoint is
 live) returns a normal paginated response — confirming the documented API contract matches the
 actually-running one, not merely the design's description of it.
 

@@ -110,18 +110,17 @@ class AbsenceRateService {
 
 	}//end __construct()
 
-
 	/**
 	 * Compute the verzuimpercentage over a closed period.
 	 *
-	 * @param array<array<string, mixed>> $cases              SickLeaveCase objects (plain arrays), any status.
-	 * @param array<array<string, mixed>> $contracts          EmploymentContract objects (plain arrays).
-	 * @param DateTimeImmutable           $periodStart        First day of the period, inclusive.
-	 * @param DateTimeImmutable           $periodEnd          Last day of the period, inclusive.
-	 * @param float                       $fullTimeHoursWeek  Hours per week a 1.0 FTE works.
+	 * @param array<array<string, mixed>> $cases SickLeaveCase objects (plain arrays), any status.
+	 * @param array<array<string, mixed>> $contracts EmploymentContract objects (plain arrays).
+	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
+	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
+	 * @param float $fullTimeHoursWeek Hours per week a 1.0 FTE works.
 	 *
 	 * @return array{absentDayEquivalents: float, availableDayEquivalents: float, percentage: float|null, casesWithoutContract: int}
-	 *         `percentage` is null when availability is zero -- see the class docblock.
+	 *                                                                                                                               `percentage` is null when availability is zero -- see the class docblock.
 	 *
 	 * @spec openspec/changes/absence-rate-partial-recovery/specs/absence-rate/spec.md#REQ-ABSRATE-001
 	 */
@@ -175,10 +174,10 @@ class AbsenceRateService {
 		}
 
 		return [
-			'absentDayEquivalents'    => round(num: $absent, precision: 4),
+			'absentDayEquivalents' => round(num: $absent, precision: 4),
 			'availableDayEquivalents' => round(num: $available, precision: 4),
-			'percentage'              => $percentage,
-			'casesWithoutContract'    => $unmeasured,
+			'percentage' => $percentage,
+			'casesWithoutContract' => $unmeasured,
 		];
 	}//end absenceRate()
 
@@ -191,10 +190,10 @@ class AbsenceRateService {
 	 * (`firstSickDay` .. `recoveredDate`, or the period end while the case is
 	 * still open).
 	 *
-	 * @param array<string, mixed> $case        The SickLeaveCase.
-	 * @param DateTimeImmutable    $periodStart First day of the period, inclusive.
-	 * @param DateTimeImmutable    $periodEnd   Last day of the period, inclusive.
-	 * @param float                $fte         The employee's FTE over the period.
+	 * @param array<string, mixed> $case The SickLeaveCase.
+	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
+	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
+	 * @param float $fte The employee's FTE over the period.
 	 *
 	 * @return float Day-equivalents, already FTE-weighted.
 	 *
@@ -240,10 +239,10 @@ class AbsenceRateService {
 	 * again, and a stale `recoveredDate` left on a `gemeld` case must not
 	 * truncate it -- the lifecycle status is the authority, not the date field.
 	 *
-	 * @param array<string, mixed> $case         The SickLeaveCase.
-	 * @param DateTimeImmutable    $firstSickDay The case anchor date.
-	 * @param DateTimeImmutable    $periodStart  First day of the period, inclusive.
-	 * @param DateTimeImmutable    $periodEnd    Last day of the period, inclusive.
+	 * @param array<string, mixed> $case The SickLeaveCase.
+	 * @param DateTimeImmutable $firstSickDay The case anchor date.
+	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
+	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}|null Clipped window, or null when the case does not overlap the period at all.
 	 *
@@ -270,16 +269,13 @@ class AbsenceRateService {
 		return [$windowStart, $windowEnd];
 	}//end caseWindow()
 
-
-
-
 	/**
 	 * Available day-equivalents one contract contributes to a period.
 	 *
-	 * @param array<string, mixed> $contract          The EmploymentContract.
-	 * @param DateTimeImmutable    $periodStart       First day of the period, inclusive.
-	 * @param DateTimeImmutable    $periodEnd         Last day of the period, inclusive.
-	 * @param float                $fullTimeHoursWeek Hours per week a 1.0 FTE works.
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
+	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
+	 * @param float $fullTimeHoursWeek Hours per week a 1.0 FTE works.
 	 *
 	 * @return float Day-equivalents.
 	 *
@@ -315,10 +311,10 @@ class AbsenceRateService {
 	 * which is also how the denominator counts them -- so numerator and
 	 * denominator stay on the same basis even where the contract data is odd.
 	 *
-	 * @param array<array<string, mixed>> $contracts         The EmploymentContracts.
-	 * @param DateTimeImmutable           $periodStart       First day of the period, inclusive.
-	 * @param DateTimeImmutable           $periodEnd         Last day of the period, inclusive.
-	 * @param float                       $fullTimeHoursWeek Hours per week a 1.0 FTE works.
+	 * @param array<array<string, mixed>> $contracts The EmploymentContracts.
+	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
+	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
+	 * @param float $fullTimeHoursWeek Hours per week a 1.0 FTE works.
 	 *
 	 * @return array<string, float> Employee id to FTE, only for employees with a contract overlapping the period.
 	 *
@@ -357,8 +353,8 @@ class AbsenceRateService {
 	/**
 	 * The FTE a contract represents.
 	 *
-	 * @param array<string, mixed> $contract          The EmploymentContract.
-	 * @param float                $fullTimeHoursWeek Hours per week a 1.0 FTE works.
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param float $fullTimeHoursWeek Hours per week a 1.0 FTE works.
 	 *
 	 * @return float FTE, or 0.0 when hoursPerWeek is absent or unusable.
 	 *
@@ -370,10 +366,8 @@ class AbsenceRateService {
 			return 0.0;
 		}
 
-		return max(0.0, ((float) $hours / $fullTimeHoursWeek));
+		return max(0.0, ((float)$hours / $fullTimeHoursWeek));
 	}//end contractFte()
-
-
 
 	/**
 	 * Narrow a raw value to a non-empty string.

@@ -25,9 +25,10 @@ const BRAND_THEME = require.resolve('@conduction/docusaurus-preset/theme');
 const config = createConfig({
   title: 'Humaniq',
   tagline: 'Open-source Dutch HR & payroll administration for Nextcloud',
-  /* Docs subdomain deliberately still `hrmq.conduction.nl` — the DNS move
-     to a humaniq subdomain happens separately from the app rename. */
-  url: 'https://hrmq.conduction.nl',
+  /* The DNS move happened on 2026-08-23: `humaniq.conduction.nl` is now a
+     custom domain on the SAME `hrmq-docs` worker that serves
+     `hrmq.conduction.nl`, so both hosts answer and neither goes dark. */
+  url: 'https://humaniq.conduction.nl',
   baseUrl: '/',
 
   organizationName: 'Conduction',

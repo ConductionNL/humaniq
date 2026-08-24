@@ -22,7 +22,7 @@ humaniq SHALL document OpenRegister's existing `/api/objects/{register}/{schema}
 
 #### Scenario: The documented endpoint matches the live one
 - **GIVEN** the README's "Public HRIS API" section
-- **WHEN** `GET /api/objects/hrmq/Vacancy` is called with a valid authenticated Nextcloud session or app password
+- **WHEN** `GET /api/objects/humaniq/Vacancy` is called with a valid authenticated Nextcloud session or app password
 - **THEN** it returns a paginated JSON response, exactly as documented, served entirely by OpenRegister's `ObjectsController` with no humaniq code in the request path
 
 ### Requirement: External integrator authentication SHALL use standard Nextcloud app passwords; no custom credential system SHALL be built (REQ-HRIS-002)
@@ -51,7 +51,7 @@ humaniq's documentation SHALL describe Nextcloud app passwords (Settings › Per
 #### Scenario: The catalog does not gate the underlying API
 - **GIVEN** an `IntegrationAccount` with `status: ingetrokken` (revoked) and `grantedSchemas: ["Vacancy"]`
 - **WHEN** the associated Nextcloud account's app password is still active and RBAC-granted at the OpenRegister level
-- **THEN** `GET /api/objects/hrmq/Vacancy` still succeeds for that account — the `IntegrationAccount` record alone changes nothing about actual access; revoking access requires revoking the app password and/or the RBAC grant, a fact the schema's description states
+- **THEN** `GET /api/objects/humaniq/Vacancy` still succeeds for that account — the `IntegrationAccount` record alone changes nothing about actual access; revoking access requires revoking the app password and/or the RBAC grant, a fact the schema's description states
 
 ### Requirement: Recommended external-access defaults SHALL reuse humaniq-mcp-adoption's AVG-grounded schema classification, not a new analysis (REQ-HRIS-004)
 

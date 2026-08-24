@@ -228,7 +228,7 @@ class ExpenseControllerTest extends TestCase {
 		$receiptExtractionService = $this->createMock(ReceiptExtractionService::class);
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		// createMock() answers a bool method with false, so this has to be
 		// stated even for the available case (ADR-083 guard).
 		$settings->method('isOpenRegisterAvailable')->willReturn($openRegisterAvailable);

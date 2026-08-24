@@ -85,7 +85,7 @@ class AvgDsrServiceTest extends TestCase {
 		);
 
 		$guarded = $this->fakeGuardedService(
-			erased: [['uuid' => 'contract-eligible-uuid', 'register' => 'hrmq', 'schema' => 'EmploymentContract']],
+			erased: [['uuid' => 'contract-eligible-uuid', 'register' => 'humaniq', 'schema' => 'EmploymentContract']],
 			held: [['uuid' => 'payslip-retained-uuid', 'reason' => 'legal-hold']],
 			failed: []
 		);
@@ -120,7 +120,7 @@ class AvgDsrServiceTest extends TestCase {
 		);
 
 		$guarded = $this->fakeGuardedService(
-			erased: [['uuid' => 'eligible-uuid', 'register' => 'hrmq', 'schema' => 'EmploymentContract']],
+			erased: [['uuid' => 'eligible-uuid', 'register' => 'humaniq', 'schema' => 'EmploymentContract']],
 			held: [],
 			failed: []
 		);
@@ -175,7 +175,7 @@ class AvgDsrServiceTest extends TestCase {
 			]
 		);
 		$guarded = $this->fakeGuardedService(
-			erased: [['uuid' => 'eligible-uuid', 'register' => 'hrmq', 'schema' => 'EmploymentContract']],
+			erased: [['uuid' => 'eligible-uuid', 'register' => 'humaniq', 'schema' => 'EmploymentContract']],
 			held: [['uuid' => 'retained-uuid', 'reason' => 'legal-hold']],
 			failed: []
 		);
@@ -292,7 +292,7 @@ class AvgDsrServiceTest extends TestCase {
 			]
 		);
 		$guarded = $this->fakeGuardedService(
-			erased: [['uuid' => 'eligible-uuid', 'register' => 'hrmq', 'schema' => 'EmploymentContract']],
+			erased: [['uuid' => 'eligible-uuid', 'register' => 'humaniq', 'schema' => 'EmploymentContract']],
 			held: [],
 			failed: []
 		);
@@ -347,7 +347,7 @@ class AvgDsrServiceTest extends TestCase {
 		);
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		// objectService() now establishes availability first (ADR-083). A bare
 		// createMock() answers a bool method with false, so without this the
 		// guard trips and the test fails on a missing app, not on its subject.
@@ -374,7 +374,7 @@ class AvgDsrServiceTest extends TestCase {
 	 *
 	 * @return object
 	 */
-	private function fakeEntity(array $data, string $uuid, string $schema, string $register = 'hrmq'): object {
+	private function fakeEntity(array $data, string $uuid, string $schema, string $register = 'humaniq'): object {
 		return new class($data, $uuid, $schema, $register) {
 			/**
 			 * @param array<string, mixed> $data Object data.

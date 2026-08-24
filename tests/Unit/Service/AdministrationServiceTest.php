@@ -311,7 +311,7 @@ class AdministrationServiceTest extends TestCase {
 		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($objectService);
 
 		$settings = $this->createMock(SettingsService::class);
-		$settings->method('getRegisterSlug')->willReturn('hrmq');
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
 		// objectService() now establishes availability before reaching for
 		// OpenRegister (ADR-083). A bare createMock() answers a bool method
 		// with false, so without this the guard trips and every test that
