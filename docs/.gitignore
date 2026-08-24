@@ -1,4 +1,11 @@
 /node_modules
 /build
 /.docusaurus
-package-lock.json
+
+# package-lock.json IS COMMITTED, deliberately. It used to be ignored on this
+# line, and that made the docs unbuildable in CI the moment a workflow was
+# wired to them: the build runs `npm run ci` -> `npm ci --legacy-peer-deps`,
+# and `npm ci` REFUSES to run without a lockfile. Worse, the ignore was silent
+# — `git add docs/package-lock.json` skipped the file without a word, so the
+# gap was invisible locally where node_modules already existed. Every other
+# app in the fleet commits this file.

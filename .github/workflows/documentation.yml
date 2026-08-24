@@ -1,0 +1,68 @@
+name: Documentation
+
+# humaniq had NO documentation workflow at all. `docs/` has existed and built
+# for months, `hrmq.conduction.nl` and `humaniq.conduction.nl` both answer 200,
+# and nothing published either of them: the live site is a stale build titled
+# "HRMQ" while docs/docusaurus.config.js has said `title: 'Humaniq'` since the
+# app-id rename. Docs that exist plus a host that answers is not a published
+# site — something has to carry the bytes to the edge, and here nothing did.
+
+on:
+  # `development` is where the work lands. Seven fleet repos pointed this
+  # trigger at a `documentation` branch that exists but nobody updates
+  # (larpinq's was 594 commits behind), so their docs workflow was green and
+  # idle for months. Do not repeat that here.
+  push:
+    branches: [development]
+  pull_request:
+    branches: [development]
+  # Lets a docs republish be forced without an unrelated code push — the only
+  # way to re-run the deploy after a Cloudflare-side change.
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    # Permission CEILING for the called documentation workflow, not a grant.
+    # The callee has three jobs and this block is their UNION:
+    #   build  contents: read
+    #   deploy contents: write   (peaceiris/actions-gh-pages pushes to gh-pages)
+    #   image  contents: read, packages: write  (buildx push to GHCR)
+    #
+    # `packages: write` is load-bearing at RUNTIME: the callee's `build-image`
+    # input defaults to true, so the `image` job really does push to GHCR.
+    # It would be required even with that job disabled, because GitHub
+    # validates the callee's DECLARED job permissions against this ceiling
+    # before dispatch — including for jobs an `if:` will skip — so a too-low
+    # ceiling makes the whole call fail to start rather than run with less.
+    permissions:
+      contents: write
+      packages: write
+    # The REUSABLE workflow, not a bespoke copy. Since ConductionNL/.github#555
+    # it is the only shape that publishes to the Cloudflare Worker that
+    # actually serves this site AND then verifies the LIVE host's <title>
+    # against the freshly built one. A bespoke workflow here would be a
+    # hand-maintained copy of that logic, and the fleet has already paid for
+    # that once: the pre-#555 workflow wrote gh-pages, printed "Deployment
+    # completed", and left every docs site on a May/June build for months.
+    uses: ConductionNL/.github/.github/workflows/documentation.yml@main
+    with:
+      # The canonical host, matching docs/docusaurus.config.js `url:` and
+      # docs/static/CNAME. Also the host the callee's live-site verification
+      # fetches after deploying.
+      cname: humaniq.conduction.nl
+
+      # EVERY host this site answers on, listed in FULL. wrangler reconciles
+      # the worker's triggers against what it is given, so a hostname omitted
+      # here is REMOVED from the worker — which takes that host down. Both
+      # were attached as custom domains on 2026-08-23 and both serve 200.
+      docs-hosts: hrmq.conduction.nl,humaniq.conduction.nl
+
+      # STAYS `hrmq-docs`, and this is a settled answer rather than a
+      # deferral. Both custom domains live on THIS worker. The callee would
+      # otherwise derive the name from `cname` — `humaniq-docs` — which does
+      # not exist: deploying it would CREATE a second worker while both
+      # custom domains keep routing to the old one. Every deploy green,
+      # reaching nobody, with the live-site check the only thing that would
+      # notice. Renaming the worker is a Cloudflare-side move, not a rename
+      # we can perform from this file.
+      worker-name: hrmq-docs
