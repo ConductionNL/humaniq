@@ -45,6 +45,16 @@ jobs:
     # that once: the pre-#555 workflow wrote gh-pages, printed "Deployment
     # completed", and left every docs site on a May/June build for months.
     uses: ConductionNL/.github/.github/workflows/documentation.yml@main
+    # A called workflow receives NO secrets from its caller unless they are
+    # passed explicitly or inherited — `with:` carries inputs, never secrets,
+    # and the `permissions:` block above governs the TOKEN, not the secrets.
+    # Without this line `secrets.CF_API_TOKEN` is EMPTY inside the callee, so
+    # its "Publish to the Cloudflare Worker" step skips itself on its own
+    # guard and the run finishes GREEN having written only gh-pages, which
+    # nothing serves. The live site never changes and no check goes red to
+    # say so — the exact failure mode the pinned inputs below guard against,
+    # arriving one layer earlier.
+    secrets: inherit
     with:
       # The canonical host, matching docs/docusaurus.config.js `url:` and
       # docs/static/CNAME. Also the host the callee's live-site verification
