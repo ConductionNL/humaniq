@@ -139,6 +139,38 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  `oc_openregister_table_<registerId>_<schemaId>` — so this is one
                  column on one row. Idempotent and non-destructive. -->
             <step>OCA\Humaniq\Repair\MigrateRegisterSlug</step>
+            <!-- SIBLING OF MigrateRegisterSlug, AND NEITHER COVERS THE OTHER.
+                 OpenRegister resolves the two halves of a configuration by
+                 DIFFERENT keys: a REGISTER by slug alone
+                 (RegisterMapper::find), a SCHEMA by the PAIR
+                 (SchemaMapper::findByApplicationAndSlug(slug, application)).
+                 This app now passes `appId: Application::APP_ID` = `humaniq`,
+                 while every schema it already owns still carries
+                 `application = hrmq` — so the pair matches nothing, and
+                 ImportHandler's not-found branch is not an error path, it is
+                 the "create a new one" path. The import below would build a
+                 SECOND, EMPTY schema set under the new application id while
+                 every stored object stayed bound to the old rows. Nothing
+                 errors; the app renders empty collections.
+
+                 MUST run before InitializeRegister, for the same reason
+                 MigrateRegisterSlug does — the import is the thing that forks.
+
+                 Measured on a live install: 2 schemas still under `hrmq`, and
+                 zero of their slugs collide with a twin under `humaniq`, so
+                 both move.
+
+                 Where a slug DOES already have a twin under the new
+                 application id it refuses rather than merges: two rows sharing
+                 (application, slug) means findByApplicationAndSlug(), which
+                 caps at one row, silently picks one and the other's objects
+                 become unreachable. That is a decision about data, not a
+                 migration.
+
+                 Never deletes a schema, and never throws — it runs under
+                 <install>, where an escaping exception aborts the install and
+                 the app never enables. -->
+            <step>OCA\Humaniq\Repair\MigrateSchemaApplicationId</step>
             <!-- Import the hrmq register (lib/Settings/humaniq_register.json +
                  register.d/*.json fragments) into OpenRegister. Idempotent;
                  fails soft when OpenRegister is not installed. -->
@@ -210,6 +242,38 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  `oc_openregister_table_<registerId>_<schemaId>` — so this is one
                  column on one row. Idempotent and non-destructive. -->
             <step>OCA\Humaniq\Repair\MigrateRegisterSlug</step>
+            <!-- SIBLING OF MigrateRegisterSlug, AND NEITHER COVERS THE OTHER.
+                 OpenRegister resolves the two halves of a configuration by
+                 DIFFERENT keys: a REGISTER by slug alone
+                 (RegisterMapper::find), a SCHEMA by the PAIR
+                 (SchemaMapper::findByApplicationAndSlug(slug, application)).
+                 This app now passes `appId: Application::APP_ID` = `humaniq`,
+                 while every schema it already owns still carries
+                 `application = hrmq` — so the pair matches nothing, and
+                 ImportHandler's not-found branch is not an error path, it is
+                 the "create a new one" path. The import below would build a
+                 SECOND, EMPTY schema set under the new application id while
+                 every stored object stayed bound to the old rows. Nothing
+                 errors; the app renders empty collections.
+
+                 MUST run before InitializeRegister, for the same reason
+                 MigrateRegisterSlug does — the import is the thing that forks.
+
+                 Measured on a live install: 2 schemas still under `hrmq`, and
+                 zero of their slugs collide with a twin under `humaniq`, so
+                 both move.
+
+                 Where a slug DOES already have a twin under the new
+                 application id it refuses rather than merges: two rows sharing
+                 (application, slug) means findByApplicationAndSlug(), which
+                 caps at one row, silently picks one and the other's objects
+                 become unreachable. That is a decision about data, not a
+                 migration.
+
+                 Never deletes a schema, and never throws — it runs under
+                 <install>, where an escaping exception aborts the install and
+                 the app never enables. -->
+            <step>OCA\Humaniq\Repair\MigrateSchemaApplicationId</step>
             <step>OCA\Humaniq\Repair\InitializeRegister</step>
             <!-- hours-process-redesign: <install> is the ONLY hook that runs
                  unconditionally on a fresh install (see above) — without this
