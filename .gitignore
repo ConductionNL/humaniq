@@ -40,3 +40,9 @@ task-audit.json
 /tests/e2e/.last-cj-run.txt
 /playwright-report/
 /test-results/
+
+# Agent/test scratch and tool caches — generated, never source.
+# Added by the 2026-08-25 fleet hygiene sweep (ADR-100 Decision 2).
+.stale/
+/.e2e-state/
+.phpunit.result.cache
