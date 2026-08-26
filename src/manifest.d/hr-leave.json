@@ -257,7 +257,7 @@
 					"managerUserId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Submitted leave requests from your team awaiting approval or rejection (mss-team-scope) — based on the managerUserId link maintained by HR/back office.",
+				"description": "Leave requests from your team waiting for your decision. Your team is who reports to you according to the records HR maintains.",
 				"defaultFilters": {
 					"status": "submitted"
 				}

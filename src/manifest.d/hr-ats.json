@@ -318,7 +318,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Application pipeline (recruiting-ats-basic): new -> screening -> interview -> offer -> hired/rejected. The status filter is the MVP pipeline surface -- every stage is a filter value; a kanban board is an nc-vue widget follow-up (design D7)."
+				"description": "Applications as they move from new, through screening, interview and offer, to hired or rejected. Filter by status to see one stage at a time."
 			}
 		},
 		{

@@ -917,7 +917,7 @@
 							"viewAllQuery": {
 								"payrollRunId": "@objectId"
 							},
-							"emptyText": "No payslips yet — run (Re)calculate",
+							"emptyText": "No payslips yet. Run (Re)calculate to create them.",
 							"allowCreate": false
 						}
 					}
@@ -1775,7 +1775,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Run-to-run payroll mutation reports: per period who joined and left and the total wage-cost change (payroll-mutation-reports). Admin/HR only -- generated through the \"Mutation report\" action on a payroll run or through occ humaniq:payroll:mutations --persist."
+				"description": "What changed between two payroll runs: who joined, who left, and how the total wage cost moved. HR and administrators only. Create one with the \"Mutation report\" action on a payroll run."
 			}
 		},
 		{

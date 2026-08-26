@@ -25,7 +25,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Emergency response certifications per employee: role, validity and organisational unit. No numeric coverage standard -- the Working Conditions Act (art. 15) requires an RI&E-based, qualitative assessment.",
+				"description": "Emergency response certifications per employee: role, validity and organisational unit. There is no fixed number to hit. The Working Conditions Act (art. 15) asks for a judgement based on your risk assessment.",
 				"note": "bhv-organisatie (2026-07-17): coverage VISIBILITY, not a coverage formula (REQ-BHV-003/-004, design.md D2) -- this index lists who is currently certified, filterable/groupable by orgUnitId and rol, so HR/a safety officer can judge adequacy against their own RI&E. No red/green adequacy indicator, no computed ratio anywhere on this page."
 			}
 		},

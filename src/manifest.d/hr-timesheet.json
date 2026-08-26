@@ -359,7 +359,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Submitted timesheets awaiting approval or rejection — open a timesheet to approve or reject it.",
+				"description": "Submitted timesheets waiting for a decision. Open one to approve or reject it.",
 				"defaultFilters": {
 					"status": "submitted"
 				},
@@ -398,7 +398,7 @@
 					"managerUserId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Submitted timesheets from your team awaiting approval or rejection (mss-team-scope) — based on the managerUserId link derived from the organisational structure.",
+				"description": "Timesheets from your team waiting for your decision. Your team is who reports to you in the organisational structure.",
 				"defaultFilters": {
 					"status": "submitted"
 				},
