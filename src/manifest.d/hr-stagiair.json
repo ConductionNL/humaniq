@@ -27,7 +27,7 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Interns (HBO/WO/MBO-BOL, without employment) on an internship agreement -- explicitly not employees and no payroll input (stagiair-bbl-admin). BBL students are not listed here: they hold a work-study employment contract and appear as contracts of type 'bbl' on the Contracts page."
+				"description": "Interns (HBO, WO and MBO-BOL) on an internship agreement. They are not employees and do not feed into payroll. BBL students are not listed here: they hold a work-study employment contract and appear as contracts of type 'bbl' on the Contracts page."
 			}
 		},
 		{

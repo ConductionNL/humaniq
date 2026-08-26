@@ -227,7 +227,7 @@
 				"filters": [
 					"status"
 				],
-				"description": "Court/bailiff-ordered wage garnishments: the floor-clamped periodic deduction on net pay -- never below the protected earnings floor -- folded into the running payroll run after settlement and leave buy/sell. Admin/HR-only; activate, mark settled and withdraw through the grown actions, never a bare lifecycle transition button.",
+				"description": "Wage garnishments ordered by a court or bailiff. The deduction is taken from net pay and never reduces it below the protected earnings floor. It is applied late in the payroll run, after settlement and any leave bought or sold. HR and administrators only: use the activate, settle and withdraw actions to change a garnishment.",
 				"actions": [
 					{
 						"id": "create-loonbeslag",

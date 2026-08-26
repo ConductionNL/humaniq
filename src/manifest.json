@@ -544,7 +544,7 @@
 			"type": "dashboard",
 			"title": "My customary wage",
 			"config": {
-				"description": "See whether your salary as a DGA meets the customary wage standard -- without an accountant or occ tool.",
+				"description": "See whether your salary as a DGA meets the customary wage standard, without needing an accountant.",
 				"_note": "single-person-modes (REQ-SPM-006/D5): a self-service surface for the EXISTING nl-gebruikelijkloon-norm verdict for the caller's own DGA Employee. The whole menu entry is visibleIf-gated on administrationMode: dga_single_person (D2/D3). The warning banner is bound to the read-only, stateless GET /apps/humaniq/api/payroll/dga-status endpoint (PayrollController::dgaStatus, which REUSES NlDgaChecks' predicate -- zero new tax logic, zero new persistence): visibleWhen {endpoint, field: met, op: eq, value: false} renders it only when the caller's own annualised loon is below norm AND unjustified. The endpoint takes no per-object parameter (it always means 'my own record', D5.1), so the visibleWhen.endpoint non-templated same-origin path applies cleanly -- no object id to interpolate, the documented fallback (a custom widget) is not needed. Fail-safe: the banner stays hidden on a 404 (no Employee, or Employee not a DGA -- both collapse to the same status, D5.1) or any fetch failure, so a non-DGA caller who somehow reaches this route sees no alert. The info banner is always visible and explains the page. Both widgets are built-in `banner` (CnBannerWidget) -- no custom component, no single-widget-dashboard anti-pattern.",
 				"widgets": [
 					{

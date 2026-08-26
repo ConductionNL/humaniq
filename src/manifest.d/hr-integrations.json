@@ -21,7 +21,7 @@
 				"filters": [
 					"status"
 				],
-				"description": "Governance/audit catalogue of external systems that have been granted access to humaniq through OpenRegister's public REST API (/api/objects/{register}/{schema}, authenticated with a Nextcloud app password). This overview RECORDS which external system has access, for what, and when that access was last reviewed — it does NOT grant or enforce that access (the real RBAC grant lives in OpenRegister, outside humaniq; hris-api-public design.md D2). Administrator-only surface.",
+				"description": "A record of which external systems have access to this app's data, what they use it for, and when that access was last reviewed. This page documents access. It does not grant or revoke it: the actual permissions live in OpenRegister. Administrators only.",
 				"actions": [
 					{
 						"id": "create-integration-account",

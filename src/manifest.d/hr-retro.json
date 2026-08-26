@@ -135,7 +135,7 @@
 					"status",
 					"settlementLine"
 				],
-				"description": "Retroactive (TWK) corrections on sealed payslips -- every row is a calculated delta, never a change to the original payslip (retro-adjustments)."
+				"description": "Retroactive (TWK) corrections to payslips that are already final. Each row is a calculated difference. The original payslip is never altered."
 			}
 		}
 	]

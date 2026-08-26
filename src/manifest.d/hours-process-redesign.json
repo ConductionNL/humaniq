@@ -9,7 +9,7 @@
 				"register": "humaniq",
 				"schema": "TimeEntry",
 				"_note": "hrmq-hours-process-redesign (design.md Decision 8, ADR-037 per-change fragment): the HR booking index over TimeEntry. A concrete page rather than an indexScaffold instance because the create-form allowlist keys (includeFields) are not template params. Add is enabled via actionToggles.showAdd — NEVER the dead allowCreate key. The includeFields allowlist is the self-service set PLUS employeeId: HR may book on behalf of an employee, so the picker is the one extra field; userId/administrationId/costCenter/hours stay server-stamped/derived (TimeEntryStampListener) and the process fields live on the parent Timesheet, never here.",
-				"description": "All time entries within the administration — HR can also log hours on behalf of an employee here.",
+				"description": "All time entries in this administration. HR can also log hours on behalf of an employee here.",
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
@@ -144,7 +144,7 @@
 					"userId": "@me",
 					"administrationId": "@workspace.activeAdministrationId?"
 				},
-				"description": "Your own timesheets per period (read-only) — open a timesheet to submit it.",
+				"description": "Your own timesheets per period. Open one to submit it.",
 				"actionToggles": {
 					"showAdd": false,
 					"showEditAction": false,
