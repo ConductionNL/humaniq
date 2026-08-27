@@ -32,7 +32,7 @@
     "extends @nextcloud/browserslist-config"
   ],
   "dependencies": {
-    "@babel/core": "^7.29.0",
+    "@babel/core": "^8.0.1",
     "@babel/preset-env": "^7.29.5",
     "@conduction/nextcloud-vue": "^2.19.0",
     "@nextcloud/auth": "^2.5.0",
