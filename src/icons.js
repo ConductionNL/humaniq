@@ -102,6 +102,7 @@ import SchoolOutline from 'vue-material-design-icons/SchoolOutline.vue'
 import ShieldAccountOutline from 'vue-material-design-icons/ShieldAccountOutline.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
+import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import SitemapOutline from 'vue-material-design-icons/SitemapOutline.vue'
 import StarCheckOutline from 'vue-material-design-icons/StarCheckOutline.vue'
 import SwapHorizontal from 'vue-material-design-icons/SwapHorizontal.vue'
@@ -205,6 +206,7 @@ export default {
 	ShieldAccountOutline,
 	ShieldCheckOutline,
 	ShieldLockOutline,
+	Sitemap,
 	SitemapOutline,
 	StarCheckOutline,
 	SwapHorizontal,
