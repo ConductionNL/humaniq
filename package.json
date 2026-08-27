@@ -49,7 +49,7 @@
     "dompurify": "^3.4.14",
     "gridstack": "^12.6.0",
     "marked": "^18.0.10",
-    "node-polyfill-webpack-plugin": "4.0.0",
+    "node-polyfill-webpack-plugin": "4.1.0",
     "pinia": "^3.0.4",
     "terser-webpack-plugin": "^5.6.1",
     "vue": "^3.5.13",
