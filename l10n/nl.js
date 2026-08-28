@@ -1,6 +1,11 @@
 OC.L10N.register(
     "humaniq",
     {
+        "Welcome": "Welkom",
+        "A short setup to get this app ready. Nothing here is required; you can close it and come back later.": "Een korte installatie om deze app klaar te zetten. Niets hiervan is verplicht; je kunt dit sluiten en later terugkomen.",
+        "Demo data (optional)": "Demovoorbeelddata (optioneel)",
+        "Load a small example dataset so the lists, detail pages and dashboards show a working product straight away. The data is obviously sample data, it is safe to run more than once, and it can be removed afterwards. Skip this on a production install.": "Laad een kleine voorbeeldset zodat de lijsten, detailpagina's en dashboards meteen een werkend product laten zien. De data is duidelijk voorbeelddata, veilig om meerdere keren uit te voeren en achteraf te verwijderen. Sla dit over op een productie-installatie.",
+        "All set": "Klaar",
         "(Re)calculate": "(Her)berekenen",
         "(Re)calculating the payroll run failed.": "(Her)berekenen van de loonrun is mislukt.",
         "30%-ruling applied rate": "Toegepast 30%-percentage",
