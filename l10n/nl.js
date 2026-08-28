@@ -1,6 +1,13 @@
 OC.L10N.register(
     "humaniq",
     {
+        "Getting started": "Aan de slag",
+        "Welcome to Humaniq": "Welkom bij Humaniq",
+        "A short tour of the main screens. It takes under a minute, and you can close it at any point and pick it up again from the help menu.": "Een korte rondleiding langs de belangrijkste schermen. Het duurt minder dan een minuut en je kunt op elk moment stoppen en later verder gaan via het helpmenu.",
+        "Open Dashboard from the menu.": "Open Dashboard via het menu.",
+        "Click Dashboard in the menu": "Klik op Dashboard in het menu",
+        "Flows automate the repetitive parts of this app. Have a look — you do not have to build one now.": "Flows automatiseren het repeterende werk in deze app. Kijk gerust rond — je hoeft er nu geen te maken.",
+        "Open Flows from the menu": "Open Flows via het menu",
         "(Re)calculate": "(Her)berekenen",
         "(Re)calculating the payroll run failed.": "(Her)berekenen van de loonrun is mislukt.",
         "30%-ruling applied rate": "Toegepast 30%-percentage",
