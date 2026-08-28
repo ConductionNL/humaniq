@@ -1,5 +1,46 @@
 {
 	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+		"walkthrough": {
+			"enabled": true,
+			"version": 1,
+			"completionConfigKey": "walkthrough_completed_version",
+			"tours": [
+				{
+					"id": "humaniq:getting-started",
+					"title": "Getting started",
+					"trigger": "first-visit",
+					"steps": [
+						{
+							"id": "welcome",
+							"placement": "center",
+							"title": "Welcome to Humaniq",
+							"body": "A short tour of the main screens. It takes under a minute, and you can close it at any point and pick it up again from the help menu.",
+							"target": {
+								"kind": "page",
+								"ref": "Dashboard"
+							},
+							"advanceOn": {
+								"type": "manual"
+							}
+						},
+						{
+							"id": "go-dashboard",
+							"placement": "right",
+							"body": "Open Dashboard from the menu.",
+							"task": "Click Dashboard in the menu",
+							"target": {
+								"kind": "nav-item",
+								"ref": "Dashboard"
+							},
+							"advanceOn": {
+								"type": "route-match",
+								"route": "Dashboard"
+							}
+						}
+					]
+				}
+			]
+		},
 	"version": "1.0.0",
 	"dependencies": [
 		"openregister"
