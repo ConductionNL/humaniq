@@ -13,6 +13,9 @@ declare(strict_types=1);
 return [
     'routes' => [
         // SPA shell — boots the Vue manifest renderer.
+        // First-time setup wizard (ADR-042) - the standard CnSetupWizard contract.
+        ['name' => 'setup#status',    'url' => '/api/setup/status',            'verb' => 'GET'],
+        ['name' => 'setup#runAction', 'url' => '/api/setup/action/{actionId}', 'verb' => 'POST', 'requirements' => ['actionId' => '[a-z0-9\\-]+']],
         ['name' => 'page#index',    'url' => '/',             'verb' => 'GET'],
         // ADR-024 §4 — manifest endpoint (bundled blob).
         ['name' => 'page#manifest', 'url' => '/api/manifest', 'verb' => 'GET'],
