@@ -1859,11 +1859,11 @@ OC.L10N.register(
         "vs. prior period": "vs. prior period",
         "Flows": "Flows",
         "Flow": "Flow",
-    "Welcome": "Welcome",
-    "A short setup to get this app ready. Nothing here is required; you can close it and come back later.": "A short setup to get this app ready. Nothing here is required; you can close it and come back later.",
-    "Demo data (optional)": "Demo data (optional)",
-    "Load a small example dataset so the lists, detail pages and dashboards show a working product straight away. The data is obviously sample data, it is safe to run more than once, and it can be removed afterwards. Skip this on a production install.": "Load a small example dataset so the lists, detail pages and dashboards show a working product straight away. The data is obviously sample data, it is safe to run more than once, and it can be removed afterwards. Skip this on a production install.",
-    "All set": "All set"
+        "Welcome": "Welcome",
+        "A short setup to get this app ready. Nothing here is required; you can close it and come back later.": "A short setup to get this app ready. Nothing here is required; you can close it and come back later.",
+        "Demo data (optional)": "Demo data (optional)",
+        "Load a small example dataset so the lists, detail pages and dashboards show a working product straight away. The data is obviously sample data, it is safe to run more than once, and it can be removed afterwards. Skip this on a production install.": "Load a small example dataset so the lists, detail pages and dashboards show a working product straight away. The data is obviously sample data, it is safe to run more than once, and it can be removed afterwards. Skip this on a production install.",
+        "All set": "All set"
     },
     "nplurals=2; plural=(n != 1);"
 )
