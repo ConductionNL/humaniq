@@ -29,7 +29,6 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
@@ -93,9 +92,19 @@ class SetupController extends Controller {
 	 *
 	 * @return JSONResponse The status document.
 	 *
+	 * @auth admin-only This app registers no admin settings class, so there
+	 *       is nothing to authorize against. Nextcloud's SecurityMiddleware
+	 *       already requires an admin session for a method that does not opt
+	 *       out, and this method does not opt out — so there is no attribute
+	 *       to add and this tag is the declaration. Deliberately NOT the
+	 *       authorized-admin-setting attribute (named here without its
+	 *       bracket form on purpose: gate-5 decides whether a routed method
+	 *       declares a posture by grepping for that form, so writing it in a
+	 *       comment would silently read as a real declaration), which would
+	 *       additionally admit delegated settings admins.
+	 *
 	 * @spec exclude Setup status document; ADR-042 contract, no per-app behavioural spec.
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function status(): JSONResponse {
 		$demoDecided = $this->appConfig->getValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, '') !== '';
 
@@ -120,9 +129,19 @@ class SetupController extends Controller {
 	 *
 	 * @return JSONResponse `{ success, message }`.
 	 *
+	 * @auth admin-only This app registers no admin settings class, so there
+	 *       is nothing to authorize against. Nextcloud's SecurityMiddleware
+	 *       already requires an admin session for a method that does not opt
+	 *       out, and this method does not opt out — so there is no attribute
+	 *       to add and this tag is the declaration. Deliberately NOT the
+	 *       authorized-admin-setting attribute (named here without its
+	 *       bracket form on purpose: gate-5 decides whether a routed method
+	 *       declares a posture by grepping for that form, so writing it in a
+	 *       comment would silently read as a real declaration), which would
+	 *       additionally admit delegated settings admins.
+	 *
 	 * @spec exclude Setup action dispatch; ADR-042 contract, no per-app behavioural spec.
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function runAction(string $actionId): JSONResponse {
 		if ($actionId === 'install-demo-data') {
 			return $this->installDemoData();
