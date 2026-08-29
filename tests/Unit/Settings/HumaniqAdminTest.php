@@ -41,9 +41,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Settings;
 
+use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Controller\SetupController;
 use OCA\Humaniq\Settings\HumaniqAdmin;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
+use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Settings\IDelegatedSettings;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -106,6 +108,29 @@ class HumaniqAdminTest extends TestCase {
 	 */
 	public function testMarkerDefersItsName(): void {
 		$this->assertNull((new HumaniqAdmin())->getName());
+	}
+
+	/**
+	 * The inherited ISettings surface answers for this app, not another.
+	 *
+	 * `HumaniqAdmin` implements the full `ISettings` surface rather than
+	 * subclassing an existing panel, so these three methods are its own code
+	 * and would otherwise ship unexercised. They are cheap to get wrong in a
+	 * way nothing else notices: a section id naming a different app silently
+	 * files the panel under that app's settings page, and the attribute would
+	 * still resolve.
+	 *
+	 * @return void
+	 */
+	public function testMarkerDeclaresThisAppsSettingsSurface(): void {
+		$marker = new HumaniqAdmin();
+
+		$this->assertSame(Application::APP_ID, $marker->getSection());
+		$this->assertSame(50, $marker->getPriority());
+
+		$form = $marker->getForm();
+		$this->assertInstanceOf(TemplateResponse::class, $form);
+		$this->assertSame(Application::APP_ID, $form->getApp());
 	}
 
 	/**
