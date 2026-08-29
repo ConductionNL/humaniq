@@ -1,13 +1,11 @@
 OC.L10N.register(
     "humaniq",
     {
-        "Getting started": "Aan de slag",
-        "Welcome to Humaniq": "Welkom bij Humaniq",
-        "A short tour of the main screens. It takes under a minute, and you can close it at any point and pick it up again from the help menu.": "Een korte rondleiding langs de belangrijkste schermen. Het duurt minder dan een minuut en je kunt op elk moment stoppen en later verder gaan via het helpmenu.",
-        "Open Dashboard from the menu.": "Open Dashboard via het menu.",
-        "Click Dashboard in the menu": "Klik op Dashboard in het menu",
-        "Flows automate the repetitive parts of this app. Have a look, though you do not have to build one now.": "Flows automatiseren het repeterende werk in deze app. Kijk gerust rond, je hoeft er nu geen te maken.",
-        "Open Flows from the menu": "Open Flows via het menu",
+        "Welcome": "Welkom",
+        "A short setup to get this app ready. Nothing here is required; you can close it and come back later.": "Een korte installatie om deze app klaar te zetten. Niets hiervan is verplicht; je kunt dit sluiten en later terugkomen.",
+        "Demo data (optional)": "Demovoorbeelddata (optioneel)",
+        "Load a small example dataset so the lists, detail pages and dashboards show a working product straight away. The data is obviously sample data, it is safe to run more than once, and it can be removed afterwards. Skip this on a production install.": "Laad een kleine voorbeeldset zodat de lijsten, detailpagina's en dashboards meteen een werkend product laten zien. De data is duidelijk voorbeelddata, veilig om meerdere keren uit te voeren en achteraf te verwijderen. Sla dit over op een productie-installatie.",
+        "All set": "Klaar",
         "(Re)calculate": "(Her)berekenen",
         "(Re)calculating the payroll run failed.": "(Her)berekenen van de loonrun is mislukt.",
         "30%-ruling applied rate": "Toegepast 30%-percentage",
@@ -1865,7 +1863,14 @@ OC.L10N.register(
         "total garnishment": "totaal beslag",
         "vs. prior period": "t.o.v. vorige periode",
         "Flows": "Flows",
-        "Flow": "Flow"
+        "Flow": "Flow",
+        "Getting started": "Aan de slag",
+        "Welcome to Humaniq": "Welkom bij Humaniq",
+        "A short tour of the main screens. It takes under a minute, and you can close it at any point and pick it up again from the help menu.": "Een korte rondleiding langs de belangrijkste schermen. Het duurt minder dan een minuut en je kunt op elk moment stoppen en later verder gaan via het helpmenu.",
+        "Open Dashboard from the menu.": "Open Dashboard via het menu.",
+        "Click Dashboard in the menu": "Klik op Dashboard in het menu",
+        "Flows automate the repetitive parts of this app. Have a look, though you do not have to build one now.": "Flows automatiseren het repeterende werk in deze app. Kijk gerust rond, je hoeft er nu geen te maken.",
+        "Open Flows from the menu": "Open Flows via het menu"
     },
     "nplurals=2; plural=(n != 1);"
 )
