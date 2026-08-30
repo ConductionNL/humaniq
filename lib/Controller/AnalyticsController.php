@@ -45,6 +45,7 @@ use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\AdministrationService;
 use OCA\Humaniq\Service\AnalyticsService;
 use OCA\Humaniq\Service\ObligationsService;
+use OCA\Humaniq\Service\SeriesLatest;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -84,6 +85,7 @@ class AnalyticsController extends Controller {
 		private readonly AnalyticsService $analyticsService,
 		private readonly ObligationsService $obligationsService,
 		private readonly AdministrationService $administrationService,
+		private readonly SeriesLatest $seriesLatest,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
@@ -118,7 +120,17 @@ class AnalyticsController extends Controller {
 		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
 
 		try {
-			return new JSONResponse($this->analyticsService->getTrends($metric, $period, $administrationId));
+			$trends = $this->analyticsService->getTrends($metric, $period, $administrationId);
+
+			// The Dashboard's KPI tiles read a headline number from this same
+			// response rather than from an endpoint of their own, so a tile can
+			// never disagree with the chart drawn underneath it. Composed here
+			// because the envelope is the controller's, and because folding it
+			// into AnalyticsService took that class past phpmd's complexity
+			// ceiling and then its coupling one.
+			$trends['latest'] = $this->seriesLatest->fromSeries($trends['series']);
+
+			return new JSONResponse($trends);
 		} catch (InvalidArgumentException $e) {
 			// Map the (static) service exception text onto a controller-owned
 			// static label so the response envelope never carries through any
