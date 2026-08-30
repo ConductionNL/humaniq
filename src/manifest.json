@@ -1,704 +1,619 @@
 {
-  "$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
-  "setup": {
-    "version": 1,
-    "completionConfigKey": "setup_completed_version",
-    "steps": [
-      {
-        "id": "welcome",
-        "type": "info",
-        "title": "Welcome",
-        "body": "A short setup to get this app ready. Nothing here is required; you can close it and come back later."
-      },
-      {
-        "id": "demo-data",
-        "type": "run-action",
-        "action": "install-demo-data",
-        "title": "Demo data (optional)",
-        "required": false,
-        "body": "Load a small example dataset so the lists, detail pages and dashboards show a working product straight away. The data is obviously sample data, it is safe to run more than once, and it can be removed afterwards. Skip this on a production install."
-      },
-      {
-        "id": "done",
-        "type": "summary",
-        "title": "All set"
-      }
-    ]
-  },
-  "version": "1.0.0",
-  "dependencies": [
-    "openregister"
-  ],
-  "deepLinks": [
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Timesheet",
-      "urlTemplate": "/apps/humaniq/timesheets/{uuid}",
-      "displayName": "Timesheet"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Expense",
-      "urlTemplate": "/apps/humaniq/expenses/{uuid}",
-      "displayName": "Expense"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Employee",
-      "urlTemplate": "/apps/humaniq/employees/{uuid}",
-      "displayName": "Employee"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "EmploymentContract",
-      "urlTemplate": "/apps/humaniq/contracts/{uuid}",
-      "displayName": "Employment Contract"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Payslip",
-      "urlTemplate": "/apps/humaniq/payslips/{uuid}",
-      "displayName": "Payslip"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "PayrollRun",
-      "urlTemplate": "/apps/humaniq/payroll-runs/{uuid}",
-      "displayName": "Payroll Run"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "PayrollMutationReport",
-      "urlTemplate": "/apps/humaniq/payroll-mutations/{uuid}",
-      "displayName": "Payroll Mutation Report"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "LoonaangifteFiling",
-      "urlTemplate": "/apps/humaniq/filings/{uuid}",
-      "displayName": "Wage Tax Filing"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "PensionFiling",
-      "urlTemplate": "/apps/humaniq/pension-filings/{uuid}",
-      "displayName": "Pension Filing"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "PayrollGLPost",
-      "urlTemplate": "/apps/humaniq/gl-posts/{uuid}",
-      "displayName": "Payroll GL Post"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "PayrollPaymentBatch",
-      "urlTemplate": "/apps/humaniq/payment-batches/{uuid}",
-      "displayName": "Payroll Payment Batch"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "LeaveRequest",
-      "urlTemplate": "/apps/humaniq/leave-requests/{uuid}",
-      "displayName": "Leave Request"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "LeaveBalance",
-      "urlTemplate": "/apps/humaniq/leave-balances/{uuid}",
-      "displayName": "Leave Balance"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "SickLeaveCase",
-      "urlTemplate": "/apps/humaniq/sick-leave/{uuid}",
-      "displayName": "Sick Leave Case"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Onboarding",
-      "urlTemplate": "/apps/humaniq/onboardings/{uuid}",
-      "displayName": "Onboarding"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Stagiair",
-      "urlTemplate": "/apps/humaniq/stagiairs/{uuid}",
-      "displayName": "Stagiair"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Vacancy",
-      "urlTemplate": "/apps/humaniq/vacancies/{uuid}",
-      "displayName": "Vacancy"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Application",
-      "urlTemplate": "/apps/humaniq/applications/{uuid}",
-      "displayName": "Application"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "OrgUnit",
-      "urlTemplate": "/apps/humaniq/org-units/{uuid}",
-      "displayName": "Organisational Unit"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "OrgAssignment",
-      "urlTemplate": "/apps/humaniq/org-assignments/{uuid}",
-      "displayName": "Organisational Assignment"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "AttendanceRecord",
-      "urlTemplate": "/apps/humaniq/attendance/{uuid}",
-      "displayName": "Attendance Record"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Asset",
-      "urlTemplate": "/apps/humaniq/assets/{uuid}",
-      "displayName": "Asset"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "AssetAssignment",
-      "urlTemplate": "/apps/humaniq/asset-assignments/{uuid}",
-      "displayName": "Asset Assignment"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "ReviewCycle",
-      "urlTemplate": "/apps/humaniq/review-cycles/{uuid}",
-      "displayName": "Review Cycle"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "PerformanceReview",
-      "urlTemplate": "/apps/humaniq/reviews/{uuid}",
-      "displayName": "Performance Review"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Shift",
-      "urlTemplate": "/apps/humaniq/shifts/{uuid}",
-      "displayName": "Shift"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Roster",
-      "urlTemplate": "/apps/humaniq/rosters/{uuid}",
-      "displayName": "Roster"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "RosterAssignment",
-      "urlTemplate": "/apps/humaniq/roster-assignments/{uuid}",
-      "displayName": "Roster Assignment"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Objective",
-      "urlTemplate": "/apps/humaniq/objectives/{uuid}",
-      "displayName": "Objective"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "KeyResult",
-      "urlTemplate": "/apps/humaniq/key-results/{uuid}",
-      "displayName": "Key Result"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "SalaryBand",
-      "urlTemplate": "/apps/humaniq/salary-bands/{uuid}",
-      "displayName": "Salary Band"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "CompReviewCycle",
-      "urlTemplate": "/apps/humaniq/comp-review-cycles/{uuid}",
-      "displayName": "Compensation Review Cycle"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "CompAdjustment",
-      "urlTemplate": "/apps/humaniq/comp-adjustments/{uuid}",
-      "displayName": "Compensation Adjustment"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "LeaveTransaction",
-      "urlTemplate": "/apps/humaniq/leave-transactions/{uuid}",
-      "displayName": "Leave Transaction"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "WkrDeclaration",
-      "urlTemplate": "/apps/humaniq/wkr-declarations/{uuid}",
-      "displayName": "WKR Declaration"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "WkrAssessment",
-      "urlTemplate": "/apps/humaniq/wkr-assessments/{uuid}",
-      "displayName": "WKR Assessment"
-    },
-    {
-      "registerSlug": "humaniq",
-      "schemaSlug": "Loonbeslag",
-      "urlTemplate": "/apps/humaniq/loonbeslagen/{uuid}",
-      "displayName": "Loonbeslag"
-    }
-  ],
-  "runtime": {
-    "user": {
-      "administrationMode": "standard"
-    }
-  },
-  "menu": [
-    {
-      "id": "Dashboard",
-      "label": "Dashboard",
-      "icon": "ViewDashboardOutline",
-      "order": 10,
-      "route": "Dashboard"
-    },
-    {
-      "id": "MijnHrGroup",
-      "label": "My HR",
-      "icon": "Account",
-      "order": 20
-    },
-    {
-      "id": "EmployeesGroup",
-      "label": "People",
-      "icon": "AccountMultipleOutline",
-      "order": 90
-    },
-    {
-      "id": "VerlofVerzuimGroup",
-      "label": "Leave & absence",
-      "icon": "CalendarWeekendOutline",
-      "order": 105
-    },
-    {
-      "id": "ExpensesGroup",
-      "label": "Expenses & assets",
-      "icon": "ReceiptOutline",
-      "order": 110
-    },
-    {
-      "id": "PayrollGroup",
-      "label": "Payroll",
-      "icon": "CashSync",
-      "order": 120,
-      "visibleIf": {
-        "user.administrationMode": {
-          "notIn": [
-            "eenmanszaak_no_payroll"
-          ]
-        }
-      }
-    },
-    {
-      "id": "PlanningGroup",
-      "label": "Scheduling",
-      "icon": "CalendarMonthOutline",
-      "order": 107,
-      "visibleIf": {
-        "user.administrationMode": {
-          "eq": "standard"
-        }
-      }
-    },
-    {
-      "id": "ConfiguratieGroup",
-      "label": "Configuration",
-      "icon": "CogOutline",
-      "section": "settings",
-      "order": 200
-    },
-    {
-      "id": "FlowsMenu",
-      "label": "Flows",
-      "icon": "Sitemap",
-      "route": "Flows",
-      "section": "settings",
-      "order": 96
-    }
-  ],
-  "pages": [
-    {
-      "id": "Dashboard",
-      "route": "/dashboard",
-      "type": "dashboard",
-      "title": "Dashboard",
-      "config": {
-        "description": "Six steering indicators: five trends, and one list of obligations that carry a deadline.",
-        "_note": "humaniq-dashboard-steering-indicators replaces the prior 15-widget queue-depth Dashboard (12 stat tiles + 3 object-table lists) with 6 steering indicators. Billable ratio and Headcount & turnover bind via dataSource (raw GraphQL, no new backend endpoint, unguarded — the same exposure every Employees/Timesheets index page already has today); the filter/tenant-scoping token grammar (`@workspace.activeAdministrationId?`) does NOT apply to the raw-GraphQL dataSource form (`useDataSource.js`'s `queryAndVars` passes `graphql.query`/`graphql.variables` through unresolved — confirmed by reading the composable, both in the sibling source tree and the installed dist), so these two widgets are UNSCOPED across administrations rather than carrying the (broken, per brief §6) sentinel token — no worse than today's index-page exposure, but not literally what design.md D4 describes either. Both are also single-series, not the two-named-series design.md's D1 table describes: `useDataSource`'s raw-GraphQL `selectors` map performs one dot-path pluck per output key (`selectByPath` in `useGraphQL.js`) with no mechanism to assemble two differently-aliased root fields into one `[{name,data}]` series array — verified against the installed dist, not just the source tree. Absence rate / Payroll cost per period / Approval lead time bind via `endpointSource` to the new guarded `AnalyticsController::trends()` (REQ-DSI-004/006/007); Obligations binds via `endpointSource` to `AnalyticsController::obligations()` (REQ-DSI-008/009). All three trend `endpointSource` widgets go through the local `chart` widgetKey override (`registry.js` → `src/widgets/TrendChartWidget.vue`), which does its OWN null-safe series mapping rather than delegating to CnChartWidget's native `endpointSource` prop — that prop's own `Number(value) || 0` mapping (`CnChartWidget.vue`'s `endpointChartData`, confirmed in the installed dist) silently turns a `null` bucket into `0`, which is exactly the 'measurement that never ran reads as a good result' failure REQ-DSI-004's null-not-zero contract exists to prevent. The `chart` widgetKey is ALSO overridden for a second, independent reason: CnChartWidget (registered in the library's dashboard-widget catalog) was built to be embedded inside CnDashboardPage's own per-widget template, which supplies the title bar externally — it has no `title` prop and does not self-wrap in CnWidgetWrapper, and `CnWidgetGrid` (the only renderer humaniq's pages use, since every page has a `slot:\"body\"` widget) mounts it bare. `TrendChartWidget.vue` bridges both gaps — the SAME `effectiveRegistry`-wins-over-catalog mechanism `registry.js` already uses for `stat`, and the same bridge-a-mismatched-library-component pattern already used for `actions`/`lifecycle-actions`. The Obligations `object-table` widget uses CnWidgetObjectTable's REAL flat prop names directly (`endpointSource`/`columns`/`emptyText`, siblings of `title` under `props`) rather than nesting them under a `content` key the way the removed 'Aflopende contracten'/'Aflopende BHV-certificaten' widgets did — CnWidgetObjectTable declares no `content` prop (confirmed in both the source tree and the installed dist), so that nested shape would not have reached the component; a per-row route to each obligation's own detail page (SickLeaveCaseDetail/EmploymentContractDetail/BhvCertificeringDetail, varying by row TYPE) is not wired: CnWidgetObjectTable's `rowRoute` is a single STATIC route-name string for the whole table, not a per-row dynamic selector, so the endpoint's own per-row `route` field is carried in the response but not yet clickable from this widget.",
-        "widgets": [
-          {
-            "id": "chart",
-            "type": "chart",
-            "title": "Billable ratio",
-            "_note": "REQ-DSI-002. Bound to the GUARDED, register-scoped AnalyticsController::trends() endpoint, not to a raw-GraphQL dataSource. The dataSource form resolved a type by NAME across every register on the instance: measured live, the sibling Headcount widget's `Employee` root field resolved to schema 5050 in an unrelated register (the GraphQL type is named `Employee5050Connection`), NOT humaniq's Employee (1080) -- `startDate` answered 'not a declared property' while `employeeNumber` cheerfully returned three rows belonging to another app. It also could not carry an administrationId filter at all (useDataSource passes graphql.query through without resolving @workspace.* tokens), so it was unscoped across tenants. The endpoint is scoped by register AND by the caller's authorized administration, and emits null (never 0) for a period with no registered hours.",
-            "content": {
-              "type": "line",
-              "height": "100%",
-              "valueFormat": "percent",
-              "endpointSource": {
-                "url": "/apps/humaniq/api/analytics/trends",
-                "params": {
-                  "metric": "billable-ratio"
-                },
-                "responsePath": "series"
-              },
-              "labelsPath": "date",
-              "seriesFields": [
-                {
-                  "name": "Billable ratio",
-                  "path": "value"
-                }
-              ],
-              "emptyLabel": "No hours registered yet"
-            }
-          },
-          {
-            "id": "chart-2",
-            "type": "chart",
-            "title": "Absence rate",
-            "content": {
-              "type": "line",
-              "height": "100%",
-              "valueFormat": "percent",
-              "endpointSource": {
-                "url": "/apps/humaniq/api/analytics/trends",
-                "params": {
-                  "metric": "absence-rate"
-                },
-                "responsePath": "series"
-              },
-              "labelsPath": "date",
-              "seriesFields": [
-                {
-                  "name": "Absence rate",
-                  "path": "value"
-                }
-              ],
-              "emptyLabel": "No absence data yet"
-            }
-          },
-          {
-            "id": "chart-3",
-            "type": "chart",
-            "title": "Headcount and turnover",
-            "_note": "REQ-DSI-003. Bound to the GUARDED, register-scoped AnalyticsController::trends() endpoint. This is the widget that EXPOSED the cross-register resolution defect described on Billable ratio above: its raw-GraphQL `Employee` root field resolved to schema 5050 in another register, so `groupBy: {field: \"startDate\"}` returned `field \"startDate\" is not a declared property of the schema` and the widget threw `e.map is not a function` into the console on every Dashboard load. Now three honest series -- headcount at period END, starters and leavers WITHIN the period -- instead of the single starters series the dataSource form could produce (useGraphQL's selectors do one dot-path pluck per output key and cannot assemble two aliased root fields into one series array).",
-            "content": {
-              "type": "bar",
-              "height": "100%",
-              "endpointSource": {
-                "url": "/apps/humaniq/api/analytics/trends",
-                "params": {
-                  "metric": "headcount"
-                },
-                "responsePath": "series"
-              },
-              "labelsPath": "date",
-              "seriesFields": [
-                {
-                  "name": "Headcount",
-                  "path": "headcount"
-                },
-                {
-                  "name": "Starters",
-                  "path": "starters"
-                },
-                {
-                  "name": "Leavers",
-                  "path": "leavers"
-                }
-              ],
-              "emptyLabel": "No employees with a start date yet"
-            }
-          },
-          {
-            "id": "chart-4",
-            "type": "chart",
-            "title": "Payroll cost per period",
-            "content": {
-              "type": "bar",
-              "height": "100%",
-              "valueFormat": {
-                "name": "currency",
-                "currency": "EUR",
-                "decimals": 0
-              },
-              "endpointSource": {
-                "url": "/apps/humaniq/api/analytics/trends",
-                "params": {
-                  "metric": "payroll-cost"
-                },
-                "responsePath": "series"
-              },
-              "labelsPath": "date",
-              "seriesFields": [
-                {
-                  "name": "Payroll cost",
-                  "path": "value"
-                }
-              ],
-              "emptyLabel": "No completed payroll runs yet"
-            }
-          },
-          {
-            "id": "chart-5",
-            "type": "chart",
-            "title": "Approval lead time",
-            "content": {
-              "type": "line",
-              "height": "100%",
-              "endpointSource": {
-                "url": "/apps/humaniq/api/analytics/trends",
-                "params": {
-                  "metric": "approval-lead-time"
-                },
-                "responsePath": "series"
-              },
-              "labelsPath": "date",
-              "seriesFields": [
-                {
-                  "name": "Median (days)",
-                  "path": "median"
-                },
-                {
-                  "name": "P90 (days)",
-                  "path": "p90"
-                }
-              ],
-              "emptyLabel": "No approved requests yet"
-            }
-          },
-          {
-            "id": "object-table",
-            "type": "object-table",
-            "title": "Open obligations",
-            "_note": "REQ-DSI-008/009. Merges due-and-not-done WVP milestones (SickLeaveCase), expiring temporary contracts (EmploymentContract, unchanged hr-signals 60-day window), and expiring BHV certificates (BhvCertificering, unchanged bhv-organisatie 90-day window) into one list sorted by nearest dueDate, each row carrying a best-effort mandatory-violation badge. Replaces 'Mijn recente uren' / 'Aflopende contracten' / 'Aflopende BHV-certificaten' (mijn-hr-self-service REQ-MHS-005 removed; hr-signals REQ-SIG-005 and bhv-organisatie REQ-BHV-005 modified -- their signals now surface here instead of a dedicated widget). Flat props (endpointSource/columns/emptyText as siblings of title), NOT nested under a content key -- CnWidgetObjectTable declares no content prop (verified against both the nextcloud-vue source tree and the installed dist); no per-row route: CnWidgetObjectTable's rowRoute is a single static route-name string for the whole table, not a per-row dynamic selector, so the endpoint's own per-row route field (which varies by row type) is not yet clickable from here.",
-            "content": {
-              "endpointSource": {
-                "url": "/apps/humaniq/api/analytics/obligations",
-                "responsePath": "obligations"
-              },
-              "columns": [
-                {
-                  "key": "type",
-                  "cellClass": "cn-cell--muted"
-                },
-                {
-                  "key": "subject",
-                  "cellClass": "cn-cell--strong"
-                },
-                {
-                  "key": "dueDate"
-                },
-                {
-                  "key": "violations"
-                }
-              ],
-              "emptyText": "No open obligations"
-            }
-          }
-        ],
-        "layout": [
-          {
-            "id": 1,
-            "widgetId": "chart",
-            "gridX": 0,
-            "gridY": 0,
-            "gridWidth": 4,
-            "gridHeight": 4
-          },
-          {
-            "id": 2,
-            "widgetId": "chart-2",
-            "gridX": 4,
-            "gridY": 0,
-            "gridWidth": 4,
-            "gridHeight": 4
-          },
-          {
-            "id": 3,
-            "widgetId": "chart-3",
-            "gridX": 8,
-            "gridY": 0,
-            "gridWidth": 4,
-            "gridHeight": 4
-          },
-          {
-            "id": 4,
-            "widgetId": "chart-4",
-            "gridX": 0,
-            "gridY": 4,
-            "gridWidth": 6,
-            "gridHeight": 4
-          },
-          {
-            "id": 5,
-            "widgetId": "chart-5",
-            "gridX": 6,
-            "gridY": 4,
-            "gridWidth": 6,
-            "gridHeight": 4
-          },
-          {
-            "id": 6,
-            "widgetId": "object-table",
-            "gridX": 0,
-            "gridY": 8,
-            "gridWidth": 12,
-            "gridHeight": 5
-          }
-        ]
-      }
-    },
-    {
-      "id": "ProformaPayslip",
-      "route": "/payroll/proforma",
-      "type": "custom",
-      "title": "Simulate payslip",
-      "component": "ProformaPayslip",
-      "_note": "proforma-payslip design.md D6: manifest v2 has no declarative primitive for a persist-nothing interactive compute-form. open-form is bound to a register/schema and PERSISTS the created object -- exactly what a pro-forma simulation must not do. api-call only interpolates fixed/@token params against a form-less trigger and surfaces a toast + page refresh -- it cannot gather a bespoke set of hypothetical inputs (bruto, tabel, geboortedatum, deeltijdfactor, bijzondere beloning, periode) nor render the returned JSON breakdown. So this page is a host-app SFC (ProformaPayslip.vue, registered in src/registry.js) that renders the input form and calls POST /api/payroll/proforma directly, showing the full gross-to-net breakdown. No register/schema is referenced and no object is ever created -- the stable, test-covered contract is the endpoint (PayrollController::proforma) + the humaniq:payroll:proforma occ command."
-    },
-    {
-      "id": "MijnGebruikelijkLoon",
-      "route": "/mijn/gebruikelijk-loon",
-      "type": "dashboard",
-      "title": "My customary wage",
-      "config": {
-        "description": "See whether your salary as a DGA meets the customary wage standard, without needing an accountant.",
-        "_note": "single-person-modes (REQ-SPM-006/D5): a self-service surface for the EXISTING nl-gebruikelijkloon-norm verdict for the caller's own DGA Employee. The whole menu entry is visibleIf-gated on administrationMode: dga_single_person (D2/D3). The warning banner is bound to the read-only, stateless GET /apps/humaniq/api/payroll/dga-status endpoint (PayrollController::dgaStatus, which REUSES NlDgaChecks' predicate -- zero new tax logic, zero new persistence): visibleWhen {endpoint, field: met, op: eq, value: false} renders it only when the caller's own annualised loon is below norm AND unjustified. The endpoint takes no per-object parameter (it always means 'my own record', D5.1), so the visibleWhen.endpoint non-templated same-origin path applies cleanly -- no object id to interpolate, the documented fallback (a custom widget) is not needed. Fail-safe: the banner stays hidden on a 404 (no Employee, or Employee not a DGA -- both collapse to the same status, D5.1) or any fetch failure, so a non-DGA caller who somehow reaches this route sees no alert. The info banner is always visible and explains the page. Both widgets are built-in `banner` (CnBannerWidget) -- no custom component, no single-widget-dashboard anti-pattern.",
-        "widgets": [
-          {
-            "id": "banner",
-            "type": "banner",
-            "content": {
-              "variant": "info",
-              "text": "As a director-major shareholder (DGA) you must pay yourself at least the customary wage. If your salary is below it without a recorded justification, you will see a warning below."
-            }
-          },
-          {
-            "id": "banner-2",
-            "type": "banner",
-            "content": {
-              "variant": "warning",
-              "text": "Your salary is below the customary wage standard and no justification has been recorded. Raise your monthly salary or record a justification on your employee record.",
-              "visibleWhen": {
-                "endpoint": "/apps/humaniq/api/payroll/dga-status",
-                "field": "met",
-                "op": "eq",
-                "value": false
-              }
-            }
-          }
-        ],
-        "layout": [
-          {
-            "id": 1,
-            "widgetId": "banner",
-            "gridX": 0,
-            "gridY": 0,
-            "gridWidth": 12,
-            "gridHeight": 2
-          },
-          {
-            "id": 2,
-            "widgetId": "banner-2",
-            "gridX": 0,
-            "gridY": 2,
-            "gridWidth": 12,
-            "gridHeight": 2
-          }
-        ]
-      }
-    },
-    {
-      "id": "Flows",
-      "route": "/flows",
-      "type": "index",
-      "title": "Flows",
-      "config": {
-        "entitySource": "flows",
-        "app": "humaniq"
-      },
-      "_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. An ordinary index over the named `flows` source (config.entitySource) rather than the deprecated `flows` page type, reading OpenRegister's one native flow store (ADR-065), scoped to this app by config.app."
-    },
-    {
-      "id": "FlowDetail",
-      "route": "/flows/:id",
-      "type": "flow",
-      "title": "Flow",
-      "config": {
-        "app": "humaniq"
-      },
-      "_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar so the canvas keeps full width."
-    }
-  ],
-  "walkthrough": {
-    "enabled": true,
-    "version": 1,
-    "completionConfigKey": "walkthrough_completed_version",
-    "tours": [
-      {
-        "id": "humaniq:getting-started",
-        "title": "Getting started",
-        "trigger": "first-visit",
-        "steps": [
-          {
-            "id": "welcome",
-            "placement": "center",
-            "title": "Welcome to Humaniq",
-            "body": "A short tour of the main screens. It takes under a minute, and you can close it at any point and pick it up again from the help menu.",
-            "target": {
-              "kind": "page",
-              "ref": "Dashboard"
-            },
-            "advanceOn": {
-              "type": "manual"
-            }
-          },
-          {
-            "id": "go-dashboard",
-            "placement": "right",
-            "body": "Open Dashboard from the menu.",
-            "task": "Click Dashboard in the menu",
-            "target": {
-              "kind": "nav-item",
-              "ref": "Dashboard"
-            },
-            "advanceOn": {
-              "type": "route-match",
-              "route": "Dashboard"
-            }
-          },
-          {
-            "id": "go-flows",
-            "placement": "right",
-            "body": "Flows automate the repetitive parts of this app. Have a look, though you do not have to build one now.",
-            "task": "Open Flows from the menu",
-            "target": {
-              "kind": "nav-item",
-              "ref": "Flows"
-            },
-            "advanceOn": {
-              "type": "route-match",
-              "route": "Flows"
-            },
-            "allowManualNext": true
-          }
-        ]
-      }
-    ]
-  }
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"version": "1.0.0",
+	"dependencies": [
+		"openregister"
+	],
+	"deepLinks": [
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Timesheet",
+			"urlTemplate": "/apps/humaniq/timesheets/{uuid}",
+			"displayName": "Timesheet"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Expense",
+			"urlTemplate": "/apps/humaniq/expenses/{uuid}",
+			"displayName": "Expense"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Employee",
+			"urlTemplate": "/apps/humaniq/employees/{uuid}",
+			"displayName": "Employee"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "EmploymentContract",
+			"urlTemplate": "/apps/humaniq/contracts/{uuid}",
+			"displayName": "Employment Contract"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Payslip",
+			"urlTemplate": "/apps/humaniq/payslips/{uuid}",
+			"displayName": "Payslip"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "PayrollRun",
+			"urlTemplate": "/apps/humaniq/payroll-runs/{uuid}",
+			"displayName": "Payroll Run"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "PayrollMutationReport",
+			"urlTemplate": "/apps/humaniq/payroll-mutations/{uuid}",
+			"displayName": "Payroll Mutation Report"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "LoonaangifteFiling",
+			"urlTemplate": "/apps/humaniq/filings/{uuid}",
+			"displayName": "Wage Tax Filing"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "PensionFiling",
+			"urlTemplate": "/apps/humaniq/pension-filings/{uuid}",
+			"displayName": "Pension Filing"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "PayrollGLPost",
+			"urlTemplate": "/apps/humaniq/gl-posts/{uuid}",
+			"displayName": "Payroll GL Post"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "PayrollPaymentBatch",
+			"urlTemplate": "/apps/humaniq/payment-batches/{uuid}",
+			"displayName": "Payroll Payment Batch"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "LeaveRequest",
+			"urlTemplate": "/apps/humaniq/leave-requests/{uuid}",
+			"displayName": "Leave Request"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "LeaveBalance",
+			"urlTemplate": "/apps/humaniq/leave-balances/{uuid}",
+			"displayName": "Leave Balance"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "SickLeaveCase",
+			"urlTemplate": "/apps/humaniq/sick-leave/{uuid}",
+			"displayName": "Sick Leave Case"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Onboarding",
+			"urlTemplate": "/apps/humaniq/onboardings/{uuid}",
+			"displayName": "Onboarding"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Stagiair",
+			"urlTemplate": "/apps/humaniq/stagiairs/{uuid}",
+			"displayName": "Stagiair"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Vacancy",
+			"urlTemplate": "/apps/humaniq/vacancies/{uuid}",
+			"displayName": "Vacancy"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Application",
+			"urlTemplate": "/apps/humaniq/applications/{uuid}",
+			"displayName": "Application"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "OrgUnit",
+			"urlTemplate": "/apps/humaniq/org-units/{uuid}",
+			"displayName": "Organisational Unit"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "OrgAssignment",
+			"urlTemplate": "/apps/humaniq/org-assignments/{uuid}",
+			"displayName": "Organisational Assignment"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "AttendanceRecord",
+			"urlTemplate": "/apps/humaniq/attendance/{uuid}",
+			"displayName": "Attendance Record"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Asset",
+			"urlTemplate": "/apps/humaniq/assets/{uuid}",
+			"displayName": "Asset"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "AssetAssignment",
+			"urlTemplate": "/apps/humaniq/asset-assignments/{uuid}",
+			"displayName": "Asset Assignment"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "ReviewCycle",
+			"urlTemplate": "/apps/humaniq/review-cycles/{uuid}",
+			"displayName": "Review Cycle"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "PerformanceReview",
+			"urlTemplate": "/apps/humaniq/reviews/{uuid}",
+			"displayName": "Performance Review"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Shift",
+			"urlTemplate": "/apps/humaniq/shifts/{uuid}",
+			"displayName": "Shift"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Roster",
+			"urlTemplate": "/apps/humaniq/rosters/{uuid}",
+			"displayName": "Roster"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "RosterAssignment",
+			"urlTemplate": "/apps/humaniq/roster-assignments/{uuid}",
+			"displayName": "Roster Assignment"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Objective",
+			"urlTemplate": "/apps/humaniq/objectives/{uuid}",
+			"displayName": "Objective"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "KeyResult",
+			"urlTemplate": "/apps/humaniq/key-results/{uuid}",
+			"displayName": "Key Result"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "SalaryBand",
+			"urlTemplate": "/apps/humaniq/salary-bands/{uuid}",
+			"displayName": "Salary Band"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "CompReviewCycle",
+			"urlTemplate": "/apps/humaniq/comp-review-cycles/{uuid}",
+			"displayName": "Compensation Review Cycle"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "CompAdjustment",
+			"urlTemplate": "/apps/humaniq/comp-adjustments/{uuid}",
+			"displayName": "Compensation Adjustment"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "LeaveTransaction",
+			"urlTemplate": "/apps/humaniq/leave-transactions/{uuid}",
+			"displayName": "Leave Transaction"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "WkrDeclaration",
+			"urlTemplate": "/apps/humaniq/wkr-declarations/{uuid}",
+			"displayName": "WKR Declaration"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "WkrAssessment",
+			"urlTemplate": "/apps/humaniq/wkr-assessments/{uuid}",
+			"displayName": "WKR Assessment"
+		},
+		{
+			"registerSlug": "humaniq",
+			"schemaSlug": "Loonbeslag",
+			"urlTemplate": "/apps/humaniq/loonbeslagen/{uuid}",
+			"displayName": "Loonbeslag"
+		}
+	],
+	"runtime": {
+		"user": {
+			"administrationMode": "standard"
+		}
+	},
+	"menu": [
+		{
+			"id": "Dashboard",
+			"label": "Dashboard",
+			"icon": "ViewDashboardOutline",
+			"order": 10,
+			"route": "Dashboard"
+		},
+		{
+			"id": "MijnHrGroup",
+			"label": "My HR",
+			"icon": "Account",
+			"order": 20
+		},
+		{
+			"id": "EmployeesGroup",
+			"label": "People",
+			"icon": "AccountMultipleOutline",
+			"order": 90
+		},
+		{
+			"id": "VerlofVerzuimGroup",
+			"label": "Leave & absence",
+			"icon": "CalendarWeekendOutline",
+			"order": 105
+		},
+		{
+			"id": "ExpensesGroup",
+			"label": "Expenses & assets",
+			"icon": "ReceiptOutline",
+			"order": 110
+		},
+		{
+			"id": "PayrollGroup",
+			"label": "Payroll",
+			"icon": "CashSync",
+			"order": 120,
+			"visibleIf": {
+				"user.administrationMode": {
+					"notIn": [
+						"eenmanszaak_no_payroll"
+					]
+				}
+			}
+		},
+		{
+			"id": "PlanningGroup",
+			"label": "Scheduling",
+			"icon": "CalendarMonthOutline",
+			"order": 107,
+			"visibleIf": {
+				"user.administrationMode": {
+					"eq": "standard"
+				}
+			}
+		},
+		{
+			"id": "ConfiguratieGroup",
+			"label": "Configuration",
+			"icon": "CogOutline",
+			"section": "settings",
+			"order": 200
+		},
+		{
+			"id": "FlowsMenu",
+			"label": "Flows",
+			"icon": "Sitemap",
+			"route": "Flows",
+			"section": "settings",
+			"order": 96
+		}
+	],
+	"pages": [
+		{
+			"id": "Dashboard",
+			"route": "/dashboard",
+			"type": "dashboard",
+			"title": "Dashboard",
+			"config": {
+				"description": "Six steering indicators: five trends, and one list of obligations that carry a deadline.",
+				"_note": "humaniq-dashboard-steering-indicators replaces the prior 15-widget queue-depth Dashboard (12 stat tiles + 3 object-table lists) with 6 steering indicators. Billable ratio and Headcount & turnover bind via dataSource (raw GraphQL, no new backend endpoint, unguarded — the same exposure every Employees/Timesheets index page already has today); the filter/tenant-scoping token grammar (`@workspace.activeAdministrationId?`) does NOT apply to the raw-GraphQL dataSource form (`useDataSource.js`'s `queryAndVars` passes `graphql.query`/`graphql.variables` through unresolved — confirmed by reading the composable, both in the sibling source tree and the installed dist), so these two widgets are UNSCOPED across administrations rather than carrying the (broken, per brief §6) sentinel token — no worse than today's index-page exposure, but not literally what design.md D4 describes either. Both are also single-series, not the two-named-series design.md's D1 table describes: `useDataSource`'s raw-GraphQL `selectors` map performs one dot-path pluck per output key (`selectByPath` in `useGraphQL.js`) with no mechanism to assemble two differently-aliased root fields into one `[{name,data}]` series array — verified against the installed dist, not just the source tree. Absence rate / Payroll cost per period / Approval lead time bind via `endpointSource` to the new guarded `AnalyticsController::trends()` (REQ-DSI-004/006/007); Obligations binds via `endpointSource` to `AnalyticsController::obligations()` (REQ-DSI-008/009). All three trend `endpointSource` widgets go through the local `chart` widgetKey override (`registry.js` → `src/widgets/TrendChartWidget.vue`), which does its OWN null-safe series mapping rather than delegating to CnChartWidget's native `endpointSource` prop — that prop's own `Number(value) || 0` mapping (`CnChartWidget.vue`'s `endpointChartData`, confirmed in the installed dist) silently turns a `null` bucket into `0`, which is exactly the 'measurement that never ran reads as a good result' failure REQ-DSI-004's null-not-zero contract exists to prevent. The `chart` widgetKey is ALSO overridden for a second, independent reason: CnChartWidget (registered in the library's dashboard-widget catalog) was built to be embedded inside CnDashboardPage's own per-widget template, which supplies the title bar externally — it has no `title` prop and does not self-wrap in CnWidgetWrapper, and `CnWidgetGrid` (the only renderer humaniq's pages use, since every page has a `slot:\"body\"` widget) mounts it bare. `TrendChartWidget.vue` bridges both gaps — the SAME `effectiveRegistry`-wins-over-catalog mechanism `registry.js` already uses for `stat`, and the same bridge-a-mismatched-library-component pattern already used for `actions`/`lifecycle-actions`. The Obligations `object-table` widget uses CnWidgetObjectTable's REAL flat prop names directly (`endpointSource`/`columns`/`emptyText`, siblings of `title` under `props`) rather than nesting them under a `content` key the way the removed 'Aflopende contracten'/'Aflopende BHV-certificaten' widgets did — CnWidgetObjectTable declares no `content` prop (confirmed in both the source tree and the installed dist), so that nested shape would not have reached the component; a per-row route to each obligation's own detail page (SickLeaveCaseDetail/EmploymentContractDetail/BhvCertificeringDetail, varying by row TYPE) is not wired: CnWidgetObjectTable's `rowRoute` is a single STATIC route-name string for the whole table, not a per-row dynamic selector, so the endpoint's own per-row `route` field is carried in the response but not yet clickable from this widget.",
+				"widgets": [
+					{
+						"id": "chart",
+						"type": "chart",
+						"title": "Billable ratio",
+						"_note": "REQ-DSI-002. Bound to the GUARDED, register-scoped AnalyticsController::trends() endpoint, not to a raw-GraphQL dataSource. The dataSource form resolved a type by NAME across every register on the instance: measured live, the sibling Headcount widget's `Employee` root field resolved to schema 5050 in an unrelated register (the GraphQL type is named `Employee5050Connection`), NOT humaniq's Employee (1080) -- `startDate` answered 'not a declared property' while `employeeNumber` cheerfully returned three rows belonging to another app. It also could not carry an administrationId filter at all (useDataSource passes graphql.query through without resolving @workspace.* tokens), so it was unscoped across tenants. The endpoint is scoped by register AND by the caller's authorized administration, and emits null (never 0) for a period with no registered hours.",
+						"content": {
+							"type": "line",
+							"height": "100%",
+							"valueFormat": "percent",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/trends",
+								"params": {
+									"metric": "billable-ratio"
+								},
+								"responsePath": "series"
+							},
+							"labelsPath": "date",
+							"seriesFields": [
+								{
+									"name": "Billable ratio",
+									"path": "value"
+								}
+							],
+							"emptyLabel": "No hours registered yet"
+						}
+					},
+					{
+						"id": "chart-2",
+						"type": "chart",
+						"title": "Absence rate",
+						"content": {
+							"type": "line",
+							"height": "100%",
+							"valueFormat": "percent",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/trends",
+								"params": {
+									"metric": "absence-rate"
+								},
+								"responsePath": "series"
+							},
+							"labelsPath": "date",
+							"seriesFields": [
+								{
+									"name": "Absence rate",
+									"path": "value"
+								}
+							],
+							"emptyLabel": "No absence data yet"
+						}
+					},
+					{
+						"id": "chart-3",
+						"type": "chart",
+						"title": "Headcount and turnover",
+						"_note": "REQ-DSI-003. Bound to the GUARDED, register-scoped AnalyticsController::trends() endpoint. This is the widget that EXPOSED the cross-register resolution defect described on Billable ratio above: its raw-GraphQL `Employee` root field resolved to schema 5050 in another register, so `groupBy: {field: \"startDate\"}` returned `field \"startDate\" is not a declared property of the schema` and the widget threw `e.map is not a function` into the console on every Dashboard load. Now three honest series -- headcount at period END, starters and leavers WITHIN the period -- instead of the single starters series the dataSource form could produce (useGraphQL's selectors do one dot-path pluck per output key and cannot assemble two aliased root fields into one series array).",
+						"content": {
+							"type": "bar",
+							"height": "100%",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/trends",
+								"params": {
+									"metric": "headcount"
+								},
+								"responsePath": "series"
+							},
+							"labelsPath": "date",
+							"seriesFields": [
+								{
+									"name": "Headcount",
+									"path": "headcount"
+								},
+								{
+									"name": "Starters",
+									"path": "starters"
+								},
+								{
+									"name": "Leavers",
+									"path": "leavers"
+								}
+							],
+							"emptyLabel": "No employees with a start date yet"
+						}
+					},
+					{
+						"id": "chart-4",
+						"type": "chart",
+						"title": "Payroll cost per period",
+						"content": {
+							"type": "bar",
+							"height": "100%",
+							"valueFormat": {
+								"name": "currency",
+								"currency": "EUR",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/trends",
+								"params": {
+									"metric": "payroll-cost"
+								},
+								"responsePath": "series"
+							},
+							"labelsPath": "date",
+							"seriesFields": [
+								{
+									"name": "Payroll cost",
+									"path": "value"
+								}
+							],
+							"emptyLabel": "No completed payroll runs yet"
+						}
+					},
+					{
+						"id": "chart-5",
+						"type": "chart",
+						"title": "Approval lead time",
+						"content": {
+							"type": "line",
+							"height": "100%",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/trends",
+								"params": {
+									"metric": "approval-lead-time"
+								},
+								"responsePath": "series"
+							},
+							"labelsPath": "date",
+							"seriesFields": [
+								{
+									"name": "Median (days)",
+									"path": "median"
+								},
+								{
+									"name": "P90 (days)",
+									"path": "p90"
+								}
+							],
+							"emptyLabel": "No approved requests yet"
+						}
+					},
+					{
+						"id": "object-table",
+						"type": "object-table",
+						"title": "Open obligations",
+						"_note": "REQ-DSI-008/009. Merges due-and-not-done WVP milestones (SickLeaveCase), expiring temporary contracts (EmploymentContract, unchanged hr-signals 60-day window), and expiring BHV certificates (BhvCertificering, unchanged bhv-organisatie 90-day window) into one list sorted by nearest dueDate, each row carrying a best-effort mandatory-violation badge. Replaces 'Mijn recente uren' / 'Aflopende contracten' / 'Aflopende BHV-certificaten' (mijn-hr-self-service REQ-MHS-005 removed; hr-signals REQ-SIG-005 and bhv-organisatie REQ-BHV-005 modified -- their signals now surface here instead of a dedicated widget). Flat props (endpointSource/columns/emptyText as siblings of title), NOT nested under a content key -- CnWidgetObjectTable declares no content prop (verified against both the nextcloud-vue source tree and the installed dist); no per-row route: CnWidgetObjectTable's rowRoute is a single static route-name string for the whole table, not a per-row dynamic selector, so the endpoint's own per-row route field (which varies by row type) is not yet clickable from here.",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/obligations",
+								"responsePath": "obligations"
+							},
+							"columns": [
+								{
+									"key": "type",
+									"cellClass": "cn-cell--muted"
+								},
+								{
+									"key": "subject",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "dueDate"
+								},
+								{
+									"key": "violations"
+								}
+							],
+							"emptyText": "No open obligations"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "chart",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 4
+					},
+					{
+						"id": 2,
+						"widgetId": "chart-2",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 4
+					},
+					{
+						"id": 3,
+						"widgetId": "chart-3",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 4
+					},
+					{
+						"id": 4,
+						"widgetId": "chart-4",
+						"gridX": 0,
+						"gridY": 4,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 5,
+						"widgetId": "chart-5",
+						"gridX": 6,
+						"gridY": 4,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 6,
+						"widgetId": "object-table",
+						"gridX": 0,
+						"gridY": 8,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				]
+			}
+		},
+		{
+			"id": "ProformaPayslip",
+			"route": "/payroll/proforma",
+			"type": "custom",
+			"title": "Simulate payslip",
+			"component": "ProformaPayslip",
+			"_note": "proforma-payslip design.md D6: manifest v2 has no declarative primitive for a persist-nothing interactive compute-form. open-form is bound to a register/schema and PERSISTS the created object -- exactly what a pro-forma simulation must not do. api-call only interpolates fixed/@token params against a form-less trigger and surfaces a toast + page refresh -- it cannot gather a bespoke set of hypothetical inputs (bruto, tabel, geboortedatum, deeltijdfactor, bijzondere beloning, periode) nor render the returned JSON breakdown. So this page is a host-app SFC (ProformaPayslip.vue, registered in src/registry.js) that renders the input form and calls POST /api/payroll/proforma directly, showing the full gross-to-net breakdown. No register/schema is referenced and no object is ever created -- the stable, test-covered contract is the endpoint (PayrollController::proforma) + the humaniq:payroll:proforma occ command."
+		},
+		{
+			"id": "MijnGebruikelijkLoon",
+			"route": "/mijn/gebruikelijk-loon",
+			"type": "dashboard",
+			"title": "My customary wage",
+			"config": {
+				"description": "See whether your salary as a DGA meets the customary wage standard, without needing an accountant.",
+				"_note": "single-person-modes (REQ-SPM-006/D5): a self-service surface for the EXISTING nl-gebruikelijkloon-norm verdict for the caller's own DGA Employee. The whole menu entry is visibleIf-gated on administrationMode: dga_single_person (D2/D3). The warning banner is bound to the read-only, stateless GET /apps/humaniq/api/payroll/dga-status endpoint (PayrollController::dgaStatus, which REUSES NlDgaChecks' predicate -- zero new tax logic, zero new persistence): visibleWhen {endpoint, field: met, op: eq, value: false} renders it only when the caller's own annualised loon is below norm AND unjustified. The endpoint takes no per-object parameter (it always means 'my own record', D5.1), so the visibleWhen.endpoint non-templated same-origin path applies cleanly -- no object id to interpolate, the documented fallback (a custom widget) is not needed. Fail-safe: the banner stays hidden on a 404 (no Employee, or Employee not a DGA -- both collapse to the same status, D5.1) or any fetch failure, so a non-DGA caller who somehow reaches this route sees no alert. The info banner is always visible and explains the page. Both widgets are built-in `banner` (CnBannerWidget) -- no custom component, no single-widget-dashboard anti-pattern.",
+				"widgets": [
+					{
+						"id": "banner",
+						"type": "banner",
+						"content": {
+							"variant": "info",
+							"text": "As a director-major shareholder (DGA) you must pay yourself at least the customary wage. If your salary is below it without a recorded justification, you will see a warning below."
+						}
+					},
+					{
+						"id": "banner-2",
+						"type": "banner",
+						"content": {
+							"variant": "warning",
+							"text": "Your salary is below the customary wage standard and no justification has been recorded. Raise your monthly salary or record a justification on your employee record.",
+							"visibleWhen": {
+								"endpoint": "/apps/humaniq/api/payroll/dga-status",
+								"field": "met",
+								"op": "eq",
+								"value": false
+							}
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "banner",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 2
+					},
+					{
+						"id": 2,
+						"widgetId": "banner-2",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 2
+					}
+				]
+			}
+		},
+		{
+			"id": "Flows",
+			"route": "/flows",
+			"type": "flows",
+			"title": "Flows",
+			"config": { "app": "humaniq" },
+			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. Rendered by the shared CnFlowsPage page type over OpenRegister's one native flow store (ADR-065), scoped to this app."
+		},
+		{
+			"id": "FlowDetail",
+			"route": "/flows/:id",
+			"type": "flow-detail",
+			"title": "Flow",
+			"config": { "app": "humaniq" },
+			"sidebarComponent": "FlowDetailSidebar",
+			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors pipelinq#1490."
+		}
+	]
 }
