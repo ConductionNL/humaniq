@@ -316,6 +316,82 @@
 				"_note": "humaniq-dashboard-steering-indicators replaces the prior 15-widget queue-depth Dashboard (12 stat tiles + 3 object-table lists) with 6 steering indicators. Billable ratio and Headcount & turnover bind via dataSource (raw GraphQL, no new backend endpoint, unguarded — the same exposure every Employees/Timesheets index page already has today); the filter/tenant-scoping token grammar (`@workspace.activeAdministrationId?`) does NOT apply to the raw-GraphQL dataSource form (`useDataSource.js`'s `queryAndVars` passes `graphql.query`/`graphql.variables` through unresolved — confirmed by reading the composable, both in the sibling source tree and the installed dist), so these two widgets are UNSCOPED across administrations rather than carrying the (broken, per brief §6) sentinel token — no worse than today's index-page exposure, but not literally what design.md D4 describes either. Both are also single-series, not the two-named-series design.md's D1 table describes: `useDataSource`'s raw-GraphQL `selectors` map performs one dot-path pluck per output key (`selectByPath` in `useGraphQL.js`) with no mechanism to assemble two differently-aliased root fields into one `[{name,data}]` series array — verified against the installed dist, not just the source tree. Absence rate / Payroll cost per period / Approval lead time bind via `endpointSource` to the new guarded `AnalyticsController::trends()` (REQ-DSI-004/006/007); Obligations binds via `endpointSource` to `AnalyticsController::obligations()` (REQ-DSI-008/009). All three trend `endpointSource` widgets go through the local `chart` widgetKey override (`registry.js` → `src/widgets/TrendChartWidget.vue`), which does its OWN null-safe series mapping rather than delegating to CnChartWidget's native `endpointSource` prop — that prop's own `Number(value) || 0` mapping (`CnChartWidget.vue`'s `endpointChartData`, confirmed in the installed dist) silently turns a `null` bucket into `0`, which is exactly the 'measurement that never ran reads as a good result' failure REQ-DSI-004's null-not-zero contract exists to prevent. The `chart` widgetKey is ALSO overridden for a second, independent reason: CnChartWidget (registered in the library's dashboard-widget catalog) was built to be embedded inside CnDashboardPage's own per-widget template, which supplies the title bar externally — it has no `title` prop and does not self-wrap in CnWidgetWrapper, and `CnWidgetGrid` (the only renderer humaniq's pages use, since every page has a `slot:\"body\"` widget) mounts it bare. `TrendChartWidget.vue` bridges both gaps — the SAME `effectiveRegistry`-wins-over-catalog mechanism `registry.js` already uses for `stat`, and the same bridge-a-mismatched-library-component pattern already used for `actions`/`lifecycle-actions`. The Obligations `object-table` widget uses CnWidgetObjectTable's REAL flat prop names directly (`endpointSource`/`columns`/`emptyText`, siblings of `title` under `props`) rather than nesting them under a `content` key the way the removed 'Aflopende contracten'/'Aflopende BHV-certificaten' widgets did — CnWidgetObjectTable declares no `content` prop (confirmed in both the source tree and the installed dist), so that nested shape would not have reached the component; a per-row route to each obligation's own detail page (SickLeaveCaseDetail/EmploymentContractDetail/BhvCertificeringDetail, varying by row TYPE) is not wired: CnWidgetObjectTable's `rowRoute` is a single STATIC route-name string for the whole table, not a per-row dynamic selector, so the endpoint's own per-row `route` field is carried in the response but not yet clickable from this widget.",
 				"widgets": [
 					{
+						"id": "kpi-absence-rate",
+						"type": "delta",
+						"title": "Absence rate",
+						"_note": "humaniq-dashboard-kpi-row. A STEERING rate, not a queue depth: the 12 queue-depth stat tiles this dashboard used to carry were removed by 2026-08-20-hrmq-dashboard-steering-indicators because a count of waiting work is not something a reader can move, and ten of the twelve read 0 live. These three read the headline of a trend the dashboard already charts, from the SAME guarded, tenant-scoped AnalyticsController::trends() endpoint via its `latest` block, so the KPI row adds no API surface and cannot disagree with the chart beneath it. `latest.value` is null (rendered as a dash, never 0) when no measurement ran in the period.",
+						"content": {
+							"label": "Absence rate",
+							"icon": "AlertCircleOutline",
+							"layout": "horizontal",
+							"flat": true,
+							"format": {
+								"style": "percent",
+								"decimals": 1
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/trends",
+								"params": {
+									"metric": "absence-rate"
+								}
+							},
+							"valueField": "latest.value",
+							"previousField": "latest.previous",
+							"goodDirection": "down"
+						}
+					},
+					{
+						"id": "kpi-billable-ratio",
+						"type": "delta",
+						"title": "Billable ratio",
+						"_note": "humaniq-dashboard-kpi-row. A STEERING rate, not a queue depth: the 12 queue-depth stat tiles this dashboard used to carry were removed by 2026-08-20-hrmq-dashboard-steering-indicators because a count of waiting work is not something a reader can move, and ten of the twelve read 0 live. These three read the headline of a trend the dashboard already charts, from the SAME guarded, tenant-scoped AnalyticsController::trends() endpoint via its `latest` block, so the KPI row adds no API surface and cannot disagree with the chart beneath it. `latest.value` is null (rendered as a dash, never 0) when no measurement ran in the period.",
+						"content": {
+							"label": "Billable ratio",
+							"icon": "Percent",
+							"layout": "horizontal",
+							"flat": true,
+							"format": {
+								"style": "percent",
+								"decimals": 1
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/trends",
+								"params": {
+									"metric": "billable-ratio"
+								}
+							},
+							"valueField": "latest.value",
+							"previousField": "latest.previous",
+							"goodDirection": "up"
+						}
+					},
+					{
+						"id": "kpi-payroll-cost",
+						"type": "delta",
+						"title": "Payroll cost",
+						"_note": "humaniq-dashboard-kpi-row. A STEERING rate, not a queue depth: the 12 queue-depth stat tiles this dashboard used to carry were removed by 2026-08-20-hrmq-dashboard-steering-indicators because a count of waiting work is not something a reader can move, and ten of the twelve read 0 live. These three read the headline of a trend the dashboard already charts, from the SAME guarded, tenant-scoped AnalyticsController::trends() endpoint via its `latest` block, so the KPI row adds no API surface and cannot disagree with the chart beneath it. `latest.value` is null (rendered as a dash, never 0) when no measurement ran in the period.",
+						"content": {
+							"label": "Payroll cost",
+							"icon": "CashMultiple",
+							"layout": "horizontal",
+							"flat": true,
+							"format": {
+								"style": "currency",
+								"currency": "EUR",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/trends",
+								"params": {
+									"metric": "payroll-cost"
+								}
+							},
+							"valueField": "latest.value",
+							"previousField": "latest.previous",
+							"goodDirection": "down"
+						}
+					},
+					{
 						"id": "chart",
 						"type": "chart",
 						"title": "Billable ratio",
@@ -488,10 +564,37 @@
 				],
 				"layout": [
 					{
+						"id": 7,
+						"widgetId": "kpi-absence-rate",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 8,
+						"widgetId": "kpi-billable-ratio",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": 9,
+						"widgetId": "kpi-payroll-cost",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
 						"id": 1,
 						"widgetId": "chart",
 						"gridX": 0,
-						"gridY": 0,
+						"gridY": 2,
 						"gridWidth": 4,
 						"gridHeight": 4
 					},
@@ -499,7 +602,7 @@
 						"id": 2,
 						"widgetId": "chart-2",
 						"gridX": 4,
-						"gridY": 0,
+						"gridY": 2,
 						"gridWidth": 4,
 						"gridHeight": 4
 					},
@@ -507,7 +610,7 @@
 						"id": 3,
 						"widgetId": "chart-3",
 						"gridX": 8,
-						"gridY": 0,
+						"gridY": 2,
 						"gridWidth": 4,
 						"gridHeight": 4
 					},
@@ -515,7 +618,7 @@
 						"id": 4,
 						"widgetId": "chart-4",
 						"gridX": 0,
-						"gridY": 4,
+						"gridY": 6,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -523,7 +626,7 @@
 						"id": 5,
 						"widgetId": "chart-5",
 						"gridX": 6,
-						"gridY": 4,
+						"gridY": 6,
 						"gridWidth": 6,
 						"gridHeight": 4
 					},
@@ -531,7 +634,7 @@
 						"id": 6,
 						"widgetId": "object-table",
 						"gridX": 0,
-						"gridY": 8,
+						"gridY": 10,
 						"gridWidth": 12,
 						"gridHeight": 5
 					}
@@ -603,7 +706,9 @@
 			"route": "/flows",
 			"type": "flows",
 			"title": "Flows",
-			"config": { "app": "humaniq" },
+			"config": {
+				"app": "humaniq"
+			},
 			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. Rendered by the shared CnFlowsPage page type over OpenRegister's one native flow store (ADR-065), scoped to this app."
 		},
 		{
@@ -611,7 +716,9 @@
 			"route": "/flows/:id",
 			"type": "flow-detail",
 			"title": "Flow",
-			"config": { "app": "humaniq" },
+			"config": {
+				"app": "humaniq"
+			},
 			"sidebarComponent": "FlowDetailSidebar",
 			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors pipelinq#1490."
 		}

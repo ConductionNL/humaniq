@@ -100,7 +100,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  */
 
-import { CnActionButtons, CnStatWidget } from '@conduction/nextcloud-vue'
+import { CnActionButtons, CnDeltaWidget, CnStatWidget } from '@conduction/nextcloud-vue'
 import AdministrationSwitcher from './views/AdministrationSwitcher.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
@@ -133,6 +133,16 @@ export default {
 		allowedSlots: ['body', 'sidebar'],
 		propsSchema: null,
 		_note: 'Explicit override for the library\'s CnStatWidget — see the module docblock above. Manifest widgets already pass the exact { title, icon, content } shape CnStatWidget expects, so no wrapper is needed.',
+	},
+	delta: {
+		kind: 'widget',
+		component: CnDeltaWidget,
+		defaultSize: { w: 4, h: 2 },
+		minSize: { w: 2, h: 2 },
+		maxSize: { w: 12, h: 4 },
+		allowedSlots: ['body', 'sidebar'],
+		propsSchema: null,
+		_note: 'Explicit override for the library\'s CnDeltaWidget, for exactly the reason `stat` needs one — see the module docblock above. CnDeltaWidget self-registers its key through the same bare side-effect import that gets tree-shaken out of Humaniq\'s bundle, so without this entry every `type:"delta"` placement resolves to nothing and renders blank. Manifest widgets already pass the { title, icon, content } shape it expects, so no wrapper is needed.',
 	},
 	chart: {
 		kind: 'widget',
