@@ -4,7 +4,7 @@
         "schemas": {
             "Asset": {
                 "slug": "Asset",
-                "icon": "PackageVariantClosed",
+                "icon": "DesktopTowerMonitor",
                 "version": "0.4.0",
                 "title": "Asset",
                 "description": "A company-owned item issued to employees (laptop, phone, vehicle, tool, accessPass, clothing, other): identity fields (serialNumber, licencePlate for vehicles), acquisition fields, and a guarded custody state machine (asset-management-mvp). A vehicle Asset additionally carries the fiscal facts (listPrice, fuelType, companyCarTaxCategory) the monthly bijtelling privegebruik auto calculation needs (hrmq-asset-fleet-merge, absorbed from the retired Vehicle schema) -- required exactly when category is vehicle, enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet (a schema-level conditional cannot express this: Schema::getSchemaObject() never emits allOf/if/then to the validator, design.md D2). No AssetHistoryEntry: OpenRegister's object audit trail already records every mutation.",

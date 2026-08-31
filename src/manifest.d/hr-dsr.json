@@ -47,7 +47,7 @@
 						"id": "dsr-export",
 						"label": "Export",
 						"type": "api-call",
-						"icon": "DownloadOutline",
+						"icon": "DatabaseExportOutline",
 						"url": "/api/dsr/export",
 						"method": "POST",
 						"params": {

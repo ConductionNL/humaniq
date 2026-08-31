@@ -68,6 +68,7 @@ import CogOutline from 'vue-material-design-icons/CogOutline.vue'
 import CogPlayOutline from 'vue-material-design-icons/CogPlayOutline.vue'
 import CreditCardOutline from 'vue-material-design-icons/CreditCardOutline.vue'
 import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
+import DatabaseExportOutline from 'vue-material-design-icons/DatabaseExportOutline.vue'
 import DeleteAlertOutline from 'vue-material-design-icons/DeleteAlertOutline.vue'
 import DesktopTowerMonitor from 'vue-material-design-icons/DesktopTowerMonitor.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
@@ -174,6 +175,7 @@ export default {
 	CogPlayOutline,
 	CreditCardOutline,
 	CurrencyEur,
+	DatabaseExportOutline,
 	DeleteAlertOutline,
 	DesktopTowerMonitor,
 	Domain,

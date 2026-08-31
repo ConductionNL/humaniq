@@ -334,7 +334,7 @@
       },
       "Asset": {
         "slug": "Asset",
-        "icon": "PackageVariantClosed",
+        "icon": "DesktopTowerMonitor",
         "version": "0.4.0",
         "title": "Asset",
         "description": "A company-owned item issued to employees (laptop, phone, vehicle, tool, accessPass, clothing, other): identity fields (serialNumber, licencePlate for vehicles), acquisition fields, and a guarded custody state machine (asset-management-mvp). A vehicle Asset additionally carries the fiscal facts (listPrice, fuelType, companyCarTaxCategory) the monthly bijtelling privegebruik auto calculation needs (hrmq-asset-fleet-merge, absorbed from the retired Vehicle schema) -- required exactly when category is vehicle, enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet (a schema-level conditional cannot express this: Schema::getSchemaObject() never emits allOf/if/then to the validator, design.md D2). No AssetHistoryEntry: OpenRegister's object audit trail already records every mutation.",
@@ -1710,7 +1710,7 @@
           "startDate"
         ],
         "slug": "Employee",
-        "icon": "AccountOutline",
+        "icon": "AccountTieOutline",
         "version": "0.8.0",
         "title": "Employee",
         "description": "A natural person employed by the organisation. Carries the identity, payroll, and wage-tax attributes the payroll/wage-tax compliance checks read (BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting, minimum-wage basis).",
@@ -1986,7 +1986,7 @@
       },
       "Expense": {
         "slug": "Expense",
-        "icon": "Receipt",
+        "icon": "ReceiptOutline",
         "version": "0.6.0",
         "title": "Expense",
         "description": "An employee expense-reimbursement claim (onkostendeclaratie / declaratie). An employee submits a claim (amount, category, date, receipt), a manager approves or rejects it, and once approved the amount is reimbursed to the employee. The submit → approve → reimburse lifecycle is owned here in humaniq, the HR/labour app — re-homing the Expenses feature that previously lived in pipelinq. The pipelinq-specific Shillinq accounts-payable sync coupling is intentionally NOT ported: reimbursement here is the HR-side claim workflow; any downstream AP/GL posting is a separate integration concern that OpenConnector/shillinq own.",
@@ -7292,7 +7292,7 @@
       },
       "Vacancy": {
         "slug": "Vacancy",
-        "icon": "BriefcaseSearchOutline",
+        "icon": "AccountBoxOutline",
         "version": "0.2.0",
         "title": "Vacancy",
         "description": "A job vacancy (vacature) published by the employer. Models the ADR-001 menu-6 'Onboarding & ATS' recruiting surface (recruiting-ats-basic): a declarative concept -> gepubliceerd -> gesloten publish lifecycle, no external multiposting (werk.nl/LinkedIn is an OpenConnector follow-up) and no public career page (portaliq per ADR-046). Applications reference this Vacancy via Application.vacancyId.",
