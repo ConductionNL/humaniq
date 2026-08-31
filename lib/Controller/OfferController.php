@@ -164,7 +164,7 @@ class OfferController extends Controller {
 			$application = $this->objectService()->find(
 				id: $applicationId,
 				register: $this->settingsService->getRegisterSlug(),
-				schema: 'Application'
+				schema: 'job-application'
 			);
 		} catch (\Throwable $e) {
 			$this->logger->info('OfferController: application ' . $applicationId . ' kon niet worden opgehaald: ' . $e->getMessage());

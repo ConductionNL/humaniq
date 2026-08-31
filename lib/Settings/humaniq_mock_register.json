@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "humaniq demo data",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it."
   },
   "x-openregister": {
@@ -132,7 +132,7 @@
         }
       },
       "Application": {
-        "slug": "Application",
+        "slug": "job-application",
         "icon": "FileAccountOutline",
         "version": "0.3.0",
         "title": "Application",
@@ -2482,7 +2482,7 @@
           "applicationId": {
             "type": "string",
             "format": "uuid",
-            "$ref": "Application",
+            "$ref": "job-application",
             "title": "Application",
             "description": "The application this interview belongs to.",
             "x-notes": "UUID reference to the Application this interview round belongs to."
@@ -7717,7 +7717,7 @@
       {
         "@self": {
           "register": "humaniq",
-          "schema": "Application",
+          "schema": "job-application",
           "slug": "application-application-1-1"
         },
         "vacancyId": "00000000-0000-4000-8000-000000000000",
@@ -7738,7 +7738,7 @@
       {
         "@self": {
           "register": "humaniq",
-          "schema": "Application",
+          "schema": "job-application",
           "slug": "application-application-2-2"
         },
         "vacancyId": "00000000-0000-4000-8000-000000000001",
@@ -7759,7 +7759,7 @@
       {
         "@self": {
           "register": "humaniq",
-          "schema": "Application",
+          "schema": "job-application",
           "slug": "application-application-3-3"
         },
         "vacancyId": "00000000-0000-4000-8000-000000000002",
