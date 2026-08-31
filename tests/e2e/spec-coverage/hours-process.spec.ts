@@ -269,9 +269,21 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 		const dialog = appDialog(page)
 		await expect(dialog, 'create dialog must open').toBeVisible({ timeout: 10_000 })
 
+		// Match the label allowing its required marker. CnFormDialog renders a
+		// required field's label as ONE text node — `"Start *"`, not "Start"
+		// beside a separate asterisk — so `getByText('Start', { exact: true })`
+		// matches nothing and the test fails on a form that is entirely correct.
+		//
+		// 🔴 It matters MORE for the forbidden list below. There an exact match
+		// that cannot see "Employee *" reports toHaveCount(0) and PASSES, so a
+		// forbidden field leaking onto the form as REQUIRED would be invisible
+		// to the very assertion written to catch it.
+		const fieldLabel = (label: string) =>
+			dialog.getByText(new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\*?$`))
+
 		// Expected: the six allowlisted fields, by their schema titles.
 		for (const label of ['Start', 'End', 'Break (minutes)', 'Description', 'Project', 'Billable']) {
-			await expect(dialog.getByText(label, { exact: true }).first(), `field "${label}" must be on the form`)
+			await expect(fieldLabel(label).first(), `field "${label}" must be on the form`)
 				.toBeVisible({ timeout: 5_000 })
 		}
 		// Exactly six fields — not six-plus-something.
@@ -293,7 +305,7 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 			'Allocation key', 
 'Domain object',
 		]) {
-			await expect(dialog.getByText(label, { exact: true }), `field "${label}" must NOT be on the form`)
+			await expect(fieldLabel(label), `field "${label}" must NOT be on the form`)
 				.toHaveCount(0)
 		}
 		// Dismiss via the Cancel button — the affordance the dialog actually

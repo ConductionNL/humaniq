@@ -33,6 +33,7 @@ use OCA\Humaniq\Controller\AnalyticsController;
 use OCA\Humaniq\Service\AdministrationService;
 use OCA\Humaniq\Service\AnalyticsService;
 use OCA\Humaniq\Service\ObligationsService;
+use OCA\Humaniq\Service\SeriesLatest;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
 use OCP\IUser;
@@ -107,9 +108,14 @@ class AnalyticsControllerTest extends TestCase {
 		$administrationService->method('getActiveAdministrationId')->with('hr-devries')->willReturn('ADM-001');
 		$administrationService->method('getActiveAdministrationRole')->with('hr-devries')->willReturn('hr');
 
-		$expected = ['metric' => 'absence-rate', 'period' => 'quarter', 'series' => [['date' => '2026-08', 'value' => 12.5]]];
+		$trends = ['metric' => 'absence-rate', 'period' => 'quarter', 'series' => [['date' => '2026-08', 'value' => 12.5]]];
 		$analyticsService = $this->createMock(AnalyticsService::class);
-		$analyticsService->method('getTrends')->with('absence-rate', 'quarter', 'ADM-001')->willReturn($expected);
+		$analyticsService->method('getTrends')->with('absence-rate', 'quarter', 'ADM-001')->willReturn($trends);
+
+		// The service's series, plus the `latest` block the controller composes
+		// for the Dashboard's KPI tiles — they read their headline from this
+		// same response so a tile cannot disagree with the chart beneath it.
+		$expected = ($trends + ['latest' => ['date' => '2026-08', 'value' => 12.5, 'previous' => null]]);
 
 		$controller = $this->buildController(
 			$analyticsService,
@@ -202,6 +208,7 @@ class AnalyticsControllerTest extends TestCase {
 			$analyticsService,
 			$this->createMock(ObligationsService::class),
 			$administrationService,
+			new SeriesLatest(),
 			$userSession,
 			$logger
 		);
@@ -292,7 +299,7 @@ class AnalyticsControllerTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return new AnalyticsController($request, $analyticsService, $obligationsService, $administrationService, $userSession, $logger);
+		return new AnalyticsController($request, $analyticsService, $obligationsService, $administrationService, new SeriesLatest(), $userSession, $logger);
 	}//end buildController()
 
 }//end class

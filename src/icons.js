@@ -25,6 +25,7 @@ import AccountOutline from 'vue-material-design-icons/AccountOutline.vue'
 import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
 import AccountTieOutline from 'vue-material-design-icons/AccountTieOutline.vue'
+import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
 import BankTransfer from 'vue-material-design-icons/BankTransfer.vue'
 import BookEditOutline from 'vue-material-design-icons/BookEditOutline.vue'
@@ -90,6 +91,7 @@ import Magnify from 'vue-material-design-icons/Magnify.vue'
 import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
 import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
+import Percent from 'vue-material-design-icons/Percent.vue'
 import PercentOutline from 'vue-material-design-icons/PercentOutline.vue'
 import PiggyBankOutline from 'vue-material-design-icons/PiggyBankOutline.vue'
 import PlusCircleOutline from 'vue-material-design-icons/PlusCircleOutline.vue'
@@ -129,6 +131,7 @@ export default {
 	AccountPlus,
 	AccountPlusOutline,
 	AccountTieOutline,
+	AlertCircleOutline,
 	AlertOutline,
 	BankTransfer,
 	BookEditOutline,
@@ -194,6 +197,7 @@ export default {
 	OfficeBuildingOutline,
 	PackageVariantClosed,
 	PencilOutline,
+	Percent,
 	PercentOutline,
 	PiggyBankOutline,
 	PlusCircleOutline,
