@@ -91,7 +91,7 @@
                     }
                 }
             },
-            "Application": {
+            "job-application": {
                 "slug": "job-application",
                 "icon": "FileAccountOutline",
                 "version": "0.3.0",
