@@ -126,7 +126,7 @@ class OfferEsignService {
 	/**
 	 * @var string
 	 */
-	private const APPLICATION_SCHEMA = 'Application';
+	private const APPLICATION_SCHEMA = 'job-application';
 
 	/**
 	 * The ONLY Application.status value `requestSignature()` proceeds from

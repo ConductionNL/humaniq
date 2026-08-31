@@ -44,7 +44,7 @@ class OfferApplicationRepository {
 	/**
 	 * @var string
 	 */
-	private const APPLICATION_SCHEMA = 'Application';
+	private const APPLICATION_SCHEMA = 'job-application';
 
 	/**
 	 * Max rows loaded for the sync-all backlog scan.
