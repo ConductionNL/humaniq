@@ -70,7 +70,7 @@ final class NlAtsChecks implements CheckProvider {
 	 */
 	public static function checks(): array {
 		return [
-			'Application' => [
+			'job-application' => [
 				// AVG art. 5 lid 1 sub e; AP richtlijn sollicitatiegegevens — the
 				// retention clock derivation must be correct on a rejected application.
 				'nl-ats-retentie-derivatie' => static fn (array $o): bool => self::derivatieSatisfied($o),

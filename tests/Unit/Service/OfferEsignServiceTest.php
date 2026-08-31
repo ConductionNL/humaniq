@@ -631,7 +631,7 @@ class OfferEsignServiceTest extends TestCase {
 	 */
 	public function testWrongStageRejected(): void {
 		$documentService = $this->fakeDocumentService();
-		[$service] = $this->service(['Application' => [$this->application(['status' => 'gesprek'])]], documentService: $documentService);
+		[$service] = $this->service(['job-application' => [$this->application(['status' => 'gesprek'])]], documentService: $documentService);
 
 		$result = $service->requestSignature('app-1');
 
@@ -646,14 +646,14 @@ class OfferEsignServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testDocudeskAbsentDegradesGracefully(): void {
-		[$service, $fake] = $this->service(['Application' => [$this->application()]], docudeskInstalled: false);
+		[$service, $fake] = $this->service(['job-application' => [$this->application()]], docudeskInstalled: false);
 
 		$result = $service->requestSignature('app-1');
 
 		$this->assertSame('skipped-no-docudesk', $result['status']);
 		$this->assertNull($result['offerLetterFileId']);
 
-		$saves = $this->savedFor($fake, 'Application');
+		$saves = $this->savedFor($fake, 'job-application');
 		$final = end($saves);
 		$this->assertSame('skipped-no-docudesk', $final['offerSigningStatus']);
 		$this->assertNull($final['offerLetterFileId']);
@@ -666,7 +666,7 @@ class OfferEsignServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testRepeatedSkipIsStable(): void {
-		[$service] = $this->service(['Application' => [$this->application()]], docudeskInstalled: false);
+		[$service] = $this->service(['job-application' => [$this->application()]], docudeskInstalled: false);
 
 		$first = $service->requestSignature('app-1');
 		$second = $service->requestSignature('app-1');
@@ -685,7 +685,7 @@ class OfferEsignServiceTest extends TestCase {
 	 */
 	public function testDataRefsAssemblyCarriesNoEmployeeRefAndNoPiiInAdHocData(): void {
 		$documentService = $this->fakeDocumentService();
-		[$service] = $this->service(['Application' => [$this->application()]], documentService: $documentService);
+		[$service] = $this->service(['job-application' => [$this->application()]], documentService: $documentService);
 
 		$service->requestSignature('app-1', 'admin');
 
@@ -694,7 +694,7 @@ class OfferEsignServiceTest extends TestCase {
 
 		$this->assertSame(
 			[
-				['register' => 'humaniq', 'schema' => 'Application', 'id' => 'app-1'],
+				['register' => 'humaniq', 'schema' => 'job-application', 'id' => 'app-1'],
 				['register' => 'humaniq', 'schema' => 'Vacancy', 'id' => 'vac-1'],
 			],
 			$call['dataRefs']
@@ -718,7 +718,7 @@ class OfferEsignServiceTest extends TestCase {
 	 */
 	public function testSuccessfulGenerationStoresRealNextcloudFileId(): void {
 		[$service, $fake] = $this->service(
-			['Application' => [$this->application()]],
+			['job-application' => [$this->application()]],
 			fileService: $this->fakeFileService(fileId: 777)
 		);
 
@@ -727,7 +727,7 @@ class OfferEsignServiceTest extends TestCase {
 		$this->assertSame(777, $result['offerLetterFileId']);
 		$this->assertIsInt($result['offerLetterFileId']);
 
-		$saves = $this->savedFor($fake, 'Application');
+		$saves = $this->savedFor($fake, 'job-application');
 		$withFile = null;
 		foreach ($saves as $save) {
 			if (($save['offerLetterFileId'] ?? null) === 777) {
@@ -746,7 +746,7 @@ class OfferEsignServiceTest extends TestCase {
 	 */
 	public function testRealSignersPayloadNotSignerIds(): void {
 		$signingService = $this->fakeSigningService();
-		[$service] = $this->service(['Application' => [$this->application()]], signingService: $signingService);
+		[$service] = $this->service(['job-application' => [$this->application()]], signingService: $signingService);
 
 		$service->requestSignature('app-1');
 
@@ -771,13 +771,13 @@ class OfferEsignServiceTest extends TestCase {
 	 */
 	public function testProvenanceFieldsCorrelateBackToHumaniq(): void {
 		$signingService = $this->fakeSigningService();
-		[$service] = $this->service(['Application' => [$this->application()]], signingService: $signingService);
+		[$service] = $this->service(['job-application' => [$this->application()]], signingService: $signingService);
 
 		$service->requestSignature('app-1');
 
 		$data = $signingService->createCalls[0];
 		$this->assertSame('hrmq', $data['sourceApp']);
-		$this->assertSame('Application', $data['subjectSchema']);
+		$this->assertSame('job-application', $data['subjectSchema']);
 		$this->assertSame('app-1', $data['subjectId']);
 		$this->assertSame('humaniq', $data['subjectRegister'] ?? null, 'subjectRegister carries the humaniq register slug.');
 		$this->assertSame('app-1', $data['correlationId']);
@@ -792,7 +792,7 @@ class OfferEsignServiceTest extends TestCase {
 	 */
 	public function testCliSessionGapSurfacesAsFailedOutcomeNeverUncaughtException(): void {
 		[$service] = $this->service(
-			['Application' => [$this->application()]],
+			['job-application' => [$this->application()]],
 			signingService: $this->fakeSigningService(createThrows: true)
 		);
 
@@ -818,7 +818,7 @@ class OfferEsignServiceTest extends TestCase {
 	public function testNoNextcloudUserForCandidateFailsCleanlyWithoutCallingDocudesk(): void {
 		$signingService = $this->fakeSigningService();
 		[$service, $fake] = $this->service(
-			['Application' => [$this->application()]],
+			['job-application' => [$this->application()]],
 			signingService: $signingService,
 			userManager: $this->fakeUserManager([])
 		);
@@ -831,7 +831,7 @@ class OfferEsignServiceTest extends TestCase {
 		$this->assertSame('failed', $result['offerSigningStatus']);
 		$this->assertCount(0, $signingService->createCalls, 'createRequest() is never reached when the candidate cannot be resolved to a Nextcloud user.');
 
-		$saves = $this->savedFor($fake, 'Application');
+		$saves = $this->savedFor($fake, 'job-application');
 		$final = end($saves);
 		$this->assertSame('failed', $final['offerSigningStatus']);
 
@@ -857,7 +857,7 @@ class OfferEsignServiceTest extends TestCase {
 			]
 		);
 		[$service, $fake] = $this->service(
-			['Application' => [$this->application()]],
+			['job-application' => [$this->application()]],
 			signingService: $signingService,
 			fileService: $this->fakeFileService(fileId: 42)
 		);
@@ -868,7 +868,7 @@ class OfferEsignServiceTest extends TestCase {
 		$this->assertSame('req-orphan', $result['offerSigningRequestId'], 'The recovered orphan id is persisted onto the Application -- reachable, not stranded.');
 		$this->assertStringContainsString('req-orphan', $result['message']);
 
-		$saves = $this->savedFor($fake, 'Application');
+		$saves = $this->savedFor($fake, 'job-application');
 		$final = end($saves);
 		$this->assertSame('req-orphan', $final['offerSigningRequestId']);
 		$this->assertSame('failed', $final['offerSigningStatus']);
@@ -888,7 +888,7 @@ class OfferEsignServiceTest extends TestCase {
 	public function testOrphanedSigningRequestNotGuessedWhenNoMatch(): void {
 		$signingService = $this->fakeSigningService(createThrows: true, listRequestsResult: []);
 		[$service, $fake] = $this->service(
-			['Application' => [$this->application()]],
+			['job-application' => [$this->application()]],
 			signingService: $signingService,
 			fileService: $this->fakeFileService(fileId: 42)
 		);
@@ -899,7 +899,7 @@ class OfferEsignServiceTest extends TestCase {
 		$this->assertNull($result['offerSigningRequestId']);
 		$this->assertStringContainsString('correlationId="app-1"', $result['message'], 'The failure message documents how to find it manually.');
 
-		$saves = $this->savedFor($fake, 'Application');
+		$saves = $this->savedFor($fake, 'job-application');
 		$final = end($saves);
 		$this->assertNull($final['offerSigningRequestId'] ?? null);
 		$this->assertSame('failed', $final['offerSigningStatus']);
@@ -913,7 +913,7 @@ class OfferEsignServiceTest extends TestCase {
 	 */
 	public function testSuccessfulRequestPersistsIdAndStatus(): void {
 		[$service, $fake] = $this->service(
-			['Application' => [$this->application()]],
+			['job-application' => [$this->application()]],
 			signingService: $this->fakeSigningService(createResponse: ['id' => 'req-123', 'status' => 'PENDING'])
 		);
 
@@ -923,7 +923,7 @@ class OfferEsignServiceTest extends TestCase {
 		$this->assertSame('req-123', $result['offerSigningRequestId']);
 		$this->assertSame('PENDING', $result['offerSigningStatus']);
 
-		$saves = $this->savedFor($fake, 'Application');
+		$saves = $this->savedFor($fake, 'job-application');
 		$final = end($saves);
 		$this->assertSame('req-123', $final['offerSigningRequestId']);
 		$this->assertSame('PENDING', $final['offerSigningStatus']);
@@ -940,7 +940,7 @@ class OfferEsignServiceTest extends TestCase {
 		$signingService = $this->fakeSigningService(createResponse: ['id' => 'req-new', 'status' => 'PENDING']);
 		[$service] = $this->service(
 			[
-				'Application' => [
+				'job-application' => [
 					$this->application(['offerSigningStatus' => 'PENDING', 'offerSigningRequestId' => 'req-old']),
 				],
 			],
@@ -965,7 +965,7 @@ class OfferEsignServiceTest extends TestCase {
 		$signingService = $this->fakeSigningService();
 		[$service] = $this->service(
 			[
-				'Application' => [
+				'job-application' => [
 					$this->application(
 						[
 							'offerSigningStatus' => 'COMPLETED',
@@ -999,7 +999,7 @@ class OfferEsignServiceTest extends TestCase {
 		$signingService = $this->fakeSigningService(createResponse: ['id' => 'req-2', 'status' => 'PENDING']);
 		[$service] = $this->service(
 			[
-				'Application' => [
+				'job-application' => [
 					$this->application(['offerSigningStatus' => 'DECLINED', 'offerSigningRequestId' => 'req-1']),
 				],
 			],
@@ -1024,11 +1024,11 @@ class OfferEsignServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testPartialWritesNeverNullApplicationStatusOrOtherFields(): void {
-		[$service, $fake] = $this->service(['Application' => [$this->application()]]);
+		[$service, $fake] = $this->service(['job-application' => [$this->application()]]);
 
 		$service->requestSignature('app-1');
 
-		$saves = $this->savedFor($fake, 'Application');
+		$saves = $this->savedFor($fake, 'job-application');
 		$this->assertNotEmpty($saves);
 
 		foreach ($saves as $i => $save) {
@@ -1051,7 +1051,7 @@ class OfferEsignServiceTest extends TestCase {
 		);
 		[$service, $fake] = $this->service(
 			[
-				'Application' => [
+				'job-application' => [
 					$this->application(['offerSigningStatus' => 'IN_PROGRESS', 'offerSigningRequestId' => 'req-1']),
 				],
 			],
@@ -1064,7 +1064,7 @@ class OfferEsignServiceTest extends TestCase {
 		$this->assertSame('synced', $results[0]['status']);
 		$this->assertSame('COMPLETED', $results[0]['offerSigningStatus']);
 
-		$saves = $this->savedFor($fake, 'Application');
+		$saves = $this->savedFor($fake, 'job-application');
 		$final = end($saves);
 		$this->assertSame('COMPLETED', $final['offerSigningStatus']);
 		// The no-auto-hire boundary (REQ-OFFR-006): Application.status stays
@@ -1089,7 +1089,7 @@ class OfferEsignServiceTest extends TestCase {
 		);
 		[$service, $fake] = $this->service(
 			[
-				'Application' => [
+				'job-application' => [
 					$this->application(['id' => 'app-pending', 'offerSigningStatus' => 'PENDING', 'offerSigningRequestId' => 'req-active']),
 					$this->application(['id' => 'app-completed', 'offerSigningStatus' => 'COMPLETED', 'offerSigningRequestId' => 'req-completed']),
 					$this->application(['id' => 'app-none', 'offerSigningStatus' => null, 'offerSigningRequestId' => null]),
@@ -1103,7 +1103,7 @@ class OfferEsignServiceTest extends TestCase {
 		$this->assertCount(1, $results, 'Only the PENDING/IN_PROGRESS Application is polled by default.');
 		$this->assertSame('app-pending', $results[0]['applicationId']);
 
-		$saves = $this->savedFor($fake, 'Application');
+		$saves = $this->savedFor($fake, 'job-application');
 		$this->assertCount(1, $saves, 'Only the polled Application is written.');
 
 	}//end testSyncSignatureStatusDefaultScopeOnlyTargetsActiveRequests()
@@ -1117,7 +1117,7 @@ class OfferEsignServiceTest extends TestCase {
 	public function testSyncGetRequestNotFoundLeavesFieldsUnchanged(): void {
 		[$service, $fake] = $this->service(
 			[
-				'Application' => [
+				'job-application' => [
 					$this->application(['offerSigningStatus' => 'PENDING', 'offerSigningRequestId' => 'req-ghost']),
 				],
 			],

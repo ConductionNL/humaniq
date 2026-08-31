@@ -50,7 +50,7 @@ class NlAtsChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->checks = NlAtsChecks::checks()['Application'];
+		$this->checks = NlAtsChecks::checks()['job-application'];
 
 	}//end setUp()
 
