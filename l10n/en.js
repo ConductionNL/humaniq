@@ -870,6 +870,7 @@ OC.L10N.register(
         "Payroll GL posts": "Payroll GL posts",
         "Payroll Mutation Report": "Payroll Mutation Report",
         "Payroll Run": "Payroll Run",
+        "Payroll cost": "Payroll cost",
         "Payroll cost per period": "Payroll cost per period",
         "Payroll payment batch": "Payroll payment batch",
         "Payroll run": "Payroll run",

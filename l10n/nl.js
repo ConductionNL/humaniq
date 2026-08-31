@@ -870,6 +870,7 @@ OC.L10N.register(
         "Payroll GL posts": "Loonjournaalposten",
         "Payroll Mutation Report": "Mutatieoverzicht salaris",
         "Payroll Run": "Salarisrun",
+        "Payroll cost": "Loonkosten",
         "Payroll cost per period": "Loonkosten per periode",
         "Payroll payment batch": "Betaalbatch salaris",
         "Payroll run": "Loonrun",
