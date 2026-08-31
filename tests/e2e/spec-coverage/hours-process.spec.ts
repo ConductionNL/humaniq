@@ -270,8 +270,17 @@ test.describe('hours process — booking, aggregation, approval lifecycle', () =
 		await expect(dialog, 'create dialog must open').toBeVisible({ timeout: 10_000 })
 
 		// Expected: the six allowlisted fields, by their schema titles.
+		//
+		// Asserted on the CONTROL's accessible name, not on the label's text
+		// node. A required field renders its label as `Start *`, so
+		// getByText('Start', { exact: true }) matches nothing, and the
+		// neighbouring description runs into the next label in the same node
+		// (`When the work started. End *`). Both are presentation details that
+		// say nothing about whether the field is on the form. getByLabel binds
+		// to the input itself, which is what this scenario is actually about,
+		// and it holds across textbox, spinbutton and switch alike.
 		for (const label of ['Start', 'End', 'Break (minutes)', 'Description', 'Project', 'Billable']) {
-			await expect(dialog.getByText(label, { exact: true }).first(), `field "${label}" must be on the form`)
+			await expect(dialog.getByLabel(label, { exact: true }).first(), `field "${label}" must be on the form`)
 				.toBeVisible({ timeout: 5_000 })
 		}
 		// Exactly six fields — not six-plus-something.
