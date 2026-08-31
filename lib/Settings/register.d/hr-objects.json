@@ -4,7 +4,7 @@
         "schemas": {
             "Employee": {
                 "slug": "Employee",
-                "icon": "AccountOutline",
+                "icon": "AccountTieOutline",
                 "version": "0.8.0",
                 "title": "Employee",
                 "description": "A natural person employed by the organisation. Carries the identity, payroll, and wage-tax attributes the payroll/wage-tax compliance checks read (BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting, minimum-wage basis).",

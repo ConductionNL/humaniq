@@ -4,7 +4,7 @@
         "schemas": {
             "Vacancy": {
                 "slug": "Vacancy",
-                "icon": "BriefcaseSearchOutline",
+                "icon": "AccountBoxOutline",
                 "version": "0.2.0",
                 "title": "Vacancy",
                 "description": "A job vacancy (vacature) published by the employer. Models the ADR-001 menu-6 'Onboarding & ATS' recruiting surface (recruiting-ats-basic): a declarative concept -> gepubliceerd -> gesloten publish lifecycle, no external multiposting (werk.nl/LinkedIn is an OpenConnector follow-up) and no public career page (portaliq per ADR-046). Applications reference this Vacancy via Application.vacancyId.",
