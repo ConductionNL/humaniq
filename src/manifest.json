@@ -347,7 +347,7 @@
 						"_note": "humaniq-dashboard-kpi-row. A STEERING rate, not a queue depth: the 12 queue-depth stat tiles this dashboard used to carry were removed by 2026-08-20-hrmq-dashboard-steering-indicators because a count of waiting work is not something a reader can move, and ten of the twelve read 0 live. These three read the headline of a trend the dashboard already charts, from the SAME guarded, tenant-scoped AnalyticsController::trends() endpoint via its `latest` block, so the KPI row adds no API surface and cannot disagree with the chart beneath it. `latest.value` is null (rendered as a dash, never 0) when no measurement ran in the period.",
 						"content": {
 							"label": "Billable ratio",
-							"icon": "Percent",
+							"icon": "PercentOutline",
 							"layout": "horizontal",
 							"flat": true,
 							"format": {

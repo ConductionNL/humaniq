@@ -25,6 +25,7 @@ import AccountOutline from 'vue-material-design-icons/AccountOutline.vue'
 import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
 import AccountTieOutline from 'vue-material-design-icons/AccountTieOutline.vue'
+import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
 import BankTransfer from 'vue-material-design-icons/BankTransfer.vue'
 import BookEditOutline from 'vue-material-design-icons/BookEditOutline.vue'
@@ -129,6 +130,7 @@ export default {
 	AccountPlus,
 	AccountPlusOutline,
 	AccountTieOutline,
+	AlertCircleOutline,
 	AlertOutline,
 	BankTransfer,
 	BookEditOutline,
