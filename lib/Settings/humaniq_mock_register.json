@@ -6954,14 +6954,14 @@
             "nullable": true,
             "title": "Domain object reference",
             "description": "The external case or dossier this booking was worked on, when hours are logged from another application.",
-            "x-notes": "Optional UUID of the external domain object — a procest case, a decidesk dossier, anything outside humaniq (ADR-081 decision 5). Plain string, not a $ref relation, because the target schema does not exist in humaniq (ADR-062 rule 7 — the same reasoning as projectId and clientRef). Distinct from projectId: a case is not a project, and conflating them would make the resulting cost allocation ambiguous about what it is costing."
+            "x-notes": "Optional UUID of the external domain object — a dossiq case, a decidiq dossier, anything outside humaniq (ADR-107 decision 6, renumbered from ADR-081). Plain string, not a $ref relation, because the target schema does not exist in humaniq (ADR-062 rule 7 — the same reasoning as projectId and clientRef). Distinct from projectId: a case is not a project, and conflating them would make the resulting cost allocation ambiguous about what it is costing."
           },
           "domainObjectType": {
             "type": "string",
             "nullable": true,
             "title": "Domain object type",
             "description": "Which app and record type the reference points at.",
-            "x-notes": "Format `<app>:<schema>` — e.g. `procest:case` (ADR-081 decision 5). Without it a bare UUID is unresolvable: humaniq cannot ask 'which app owns this?' and neither can the receiving bookkeeping app. Set together with domainObjectRef or not at all."
+            "x-notes": "Format `<app>:<schema>` — e.g. `dossiq:case` (ADR-107 decision 6, renumbered from ADR-081). The app id is the `<id>` in that app's appinfo/info.xml, so this literal moves when an app is renamed and NOT before: procest became dossiq and decidesk became decidiq. Nothing writes this field yet, which is the only reason correcting the example is free; once hours are booked the literal is frozen in stored data. Without it a bare UUID is unresolvable: humaniq cannot ask 'which app owns this?' and neither can the receiving bookkeeping app. Set together with domainObjectRef or not at all."
           },
           "allocationKey": {
             "type": "string",
