@@ -39,7 +39,7 @@
  */
 
 /** Nextcloud instances this suite must never touch. */
-const FORBIDDEN_HOSTS = ['localhost:8080', '127.0.0.1:8080']
+const FORBIDDEN_HOSTS = ["localhost:8080", "127.0.0.1:8080"];
 
 /**
  * Is this process running inside a GitHub Actions runner?
@@ -64,7 +64,7 @@ const FORBIDDEN_HOSTS = ['localhost:8080', '127.0.0.1:8080']
  * @return True when running on a GitHub Actions runner.
  */
 function isGitHubActionsRunner(): boolean {
-	return process.env.GITHUB_ACTIONS === 'true'
+	return process.env.GITHUB_ACTIONS === "true";
 }
 
 /**
@@ -73,32 +73,38 @@ function isGitHubActionsRunner(): boolean {
  * @return The normalised base URL, without a trailing slash.
  */
 export function resolveBaseURL(): string {
-	const raw = process.env.PLAYWRIGHT_BASE_URL || process.env.NEXTCLOUD_URL || process.env.BASE_URL
+	const raw =
+		process.env.PLAYWRIGHT_BASE_URL ||
+		process.env.NEXTCLOUD_URL ||
+		process.env.BASE_URL;
 
 	if (!raw) {
 		throw new Error(
-			'PLAYWRIGHT_BASE_URL / NEXTCLOUD_URL / BASE_URL is not set. This suite deliberately has no default: '
-			+ 'the old `|| http://localhost:8080` fallback pointed writes at the SHARED dev '
-			+ 'instance. Provision an isolated instance and pass it explicitly, e.g. '
-			+ 'PLAYWRIGHT_BASE_URL=http://localhost:8091 npm run test:e2e',
-		)
+			"PLAYWRIGHT_BASE_URL / NEXTCLOUD_URL / BASE_URL is not set. This suite deliberately has no default: " +
+				"the old `|| http://localhost:8080` fallback pointed writes at the SHARED dev " +
+				"instance. Provision an isolated instance and pass it explicitly, e.g. " +
+				"PLAYWRIGHT_BASE_URL=http://localhost:8091 npm run test:e2e",
+		);
 	}
 
-	const normalised = raw.replace(/\/+$/, '')
+	const normalised = raw.replace(/\/+$/, "");
 
-	if (!isGitHubActionsRunner() && FORBIDDEN_HOSTS.some((host) => normalised.includes(host))) {
+	if (
+		!isGitHubActionsRunner() &&
+		FORBIDDEN_HOSTS.some((host) => normalised.includes(host))
+	) {
 		throw new Error(
-			`Refusing to run against ${normalised} — that is the SHARED dev container. `
-			+ 'These specs create and delete OpenRegister objects; run them against a '
-			+ 'disposable instance instead (see spin-up-e2e-instance.sh).',
-		)
+			`Refusing to run against ${normalised} — that is the SHARED dev container. ` +
+				"These specs create and delete OpenRegister objects; run them against a " +
+				"disposable instance instead (see spin-up-e2e-instance.sh).",
+		);
 	}
 
-	return normalised
+	return normalised;
 }
 
 /** Admin credentials for the instance under test. */
 export const ADMIN_CREDENTIALS = {
-	username: process.env.NC_ADMIN_USER || 'admin',
-	password: process.env.NC_ADMIN_PASS || 'admin',
-}
+	username: process.env.NC_ADMIN_USER || "admin",
+	password: process.env.NC_ADMIN_PASS || "admin",
+};

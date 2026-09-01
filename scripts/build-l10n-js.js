@@ -44,16 +44,16 @@
 //   0 — every .js written (or already current, under --check)
 //   1 — a catalogue is malformed, or --check found a stale .js
 
-'use strict'
+"use strict";
 
-const fs = require('fs')
-const path = require('path')
+const fs = require("fs");
+const path = require("path");
 
-const REPO_ROOT = path.resolve(__dirname, '..')
+const REPO_ROOT = path.resolve(__dirname, "..");
 
 /** Fallback when a catalogue declares no pluralForm — see the header note. */
-const DEFAULT_PLURAL_FORM = 'nplurals=2; plural=(n != 1);'
-const L10N_DIR = path.join(REPO_ROOT, 'l10n')
+const DEFAULT_PLURAL_FORM = "nplurals=2; plural=(n != 1);";
+const L10N_DIR = path.join(REPO_ROOT, "l10n");
 
 /**
  * The app id the browser catalogue must register under. Read from
@@ -65,13 +65,16 @@ const L10N_DIR = path.join(REPO_ROOT, 'l10n')
  * @return {string} the <id> declared in appinfo/info.xml
  */
 function appId() {
-	const xml = fs.readFileSync(path.join(REPO_ROOT, 'appinfo', 'info.xml'), 'utf8')
-	const match = xml.match(/<id>([^<]+)<\/id>/)
+	const xml = fs.readFileSync(
+		path.join(REPO_ROOT, "appinfo", "info.xml"),
+		"utf8",
+	);
+	const match = xml.match(/<id>([^<]+)<\/id>/);
 	if (match === null) {
-		console.error('appinfo/info.xml declares no <id>')
-		process.exit(1)
+		console.error("appinfo/info.xml declares no <id>");
+		process.exit(1);
 	}
-	return match[1].trim()
+	return match[1].trim();
 }
 
 /**
@@ -88,23 +91,26 @@ function renderJs(id, translations, pluralForm) {
 			(key) =>
 				`        ${JSON.stringify(key)}: ${JSON.stringify(translations[key])}`,
 		)
-		.join(',\n')
+		.join(",\n");
 	return [
-		'OC.L10N.register(',
+		"OC.L10N.register(",
 		`    ${JSON.stringify(id)},`,
-		'    {',
+		"    {",
 		body,
-		'    },',
+		"    },",
 		`    ${JSON.stringify(pluralForm)}`,
-		')',
-		'',
-	].join('\n')
+		")",
+		"",
+	].join("\n");
 }
 
+/**
+ *
+ */
 function main() {
-	const check = process.argv.includes('--check')
-	const id = appId()
-	const stale = []
+	const check = process.argv.includes("--check");
+	const id = appId();
+	const stale = [];
 
 	const locales = fs
 		.readdirSync(L10N_DIR)
@@ -112,61 +118,65 @@ function main() {
 		// sits here so prettier ignores it, and without this guard it was read as
 		// a locale named `.schema-l10n-baseline` and failed for having no
 		// `translations` key.
-		.filter((f) => f.endsWith('.json') && !f.startsWith('.'))
+		.filter((f) => f.endsWith(".json") && !f.startsWith("."))
 		.map((f) => f.slice(0, -5))
-		.sort()
+		.sort();
 	if (locales.length === 0) {
-		console.error('l10n/ holds no <locale>.json catalogue to generate from')
-		process.exit(1)
+		console.error(
+			"l10n/ holds no <locale>.json catalogue to generate from",
+		);
+		process.exit(1);
 	}
 
 	for (const locale of locales) {
-		const jsonFile = path.join(L10N_DIR, `${locale}.json`)
-		const jsFile = path.join(L10N_DIR, `${locale}.js`)
+		const jsonFile = path.join(L10N_DIR, `${locale}.json`);
+		const jsFile = path.join(L10N_DIR, `${locale}.js`);
 
-		let doc
+		let doc;
 		try {
-			doc = JSON.parse(fs.readFileSync(jsonFile, 'utf8'))
+			doc = JSON.parse(fs.readFileSync(jsonFile, "utf8"));
 		} catch (error) {
-			console.error(`l10n/${locale}.json does not parse: ${error.message}`)
-			process.exit(1)
+			console.error(
+				`l10n/${locale}.json does not parse: ${error.message}`,
+			);
+			process.exit(1);
 		}
 		if (doc.translations === undefined) {
-			console.error(`l10n/${locale}.json is missing "translations"`)
-			process.exit(1)
+			console.error(`l10n/${locale}.json is missing "translations"`);
+			process.exit(1);
 		}
 
 		const rendered = renderJs(
 			id,
 			doc.translations,
 			doc.pluralForm || DEFAULT_PLURAL_FORM,
-		)
+		);
 		const current = fs.existsSync(jsFile)
-			? fs.readFileSync(jsFile, 'utf8')
-			: null
+			? fs.readFileSync(jsFile, "utf8")
+			: null;
 
 		if (current === rendered) {
 			console.log(
 				`  ✓ l10n/${locale}.js up to date (${Object.keys(doc.translations).length} keys)`,
-			)
-			continue
+			);
+			continue;
 		}
 		if (check) {
-			stale.push(`l10n/${locale}.js`)
-			continue
+			stale.push(`l10n/${locale}.js`);
+			continue;
 		}
-		fs.writeFileSync(jsFile, rendered)
+		fs.writeFileSync(jsFile, rendered);
 		console.log(
 			`  ✎ l10n/${locale}.js written (${Object.keys(doc.translations).length} keys)`,
-		)
+		);
 	}
 
 	if (stale.length > 0) {
-		console.error('')
-		console.error(`Stale browser catalogue: ${stale.join(', ')}`)
-		console.error('Run `npm run l10n:build` and commit the result.')
-		process.exit(1)
+		console.error("");
+		console.error(`Stale browser catalogue: ${stale.join(", ")}`);
+		console.error("Run `npm run l10n:build` and commit the result.");
+		process.exit(1);
 	}
 }
 
-main()
+main();

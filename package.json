@@ -11,7 +11,7 @@
     "postbuild": "node -e \"require('fs').writeFileSync('js/.build-stamp', new Date().toISOString()+'\\n')\"",
     "dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
     "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
-    "lint": "eslint src",
+    "lint": "eslint src tests scripts",
     "lint-fix": "npm run lint -- --fix",
     "stylelint": "stylelint \"src/**/*.{vue,scss,css}\"",
     "stylelint-fix": "stylelint src/**/*.vue src/**/*.scss src/**/*.css --fix",

@@ -1,3 +1,5 @@
+import type { Page } from "@playwright/test";
+
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,12 +36,12 @@
  *
  * @spec exclude ADR-042/ADR-111 setup contract; no per-app behavioural spec.
  */
-import { test, expect, type Page } from '@playwright/test'
-import * as path from 'path'
+import { expect, test } from "@playwright/test";
+import * as path from "path";
 
-const STORAGE_STATE = path.resolve(__dirname, '../.auth/admin.json')
+const STORAGE_STATE = path.resolve(__dirname, "../.auth/admin.json");
 
-const BASE = '/apps/humaniq'
+const BASE = "/apps/humaniq";
 
 /** One authenticated JSON call issued from inside the logged-in admin page. */
 async function api(
@@ -52,47 +54,52 @@ async function api(
 			const res = await fetch(apiPath, {
 				method,
 				headers: {
-					'Content-Type': 'application/json',
-					// eslint-disable-next-line no-undef
-					requesttoken: (window as any).OC?.requestToken || '',
-					'OCS-APIREQUEST': 'true',
+					"Content-Type": "application/json",
+
+					requesttoken: (window as any).OC?.requestToken || "",
+					"OCS-APIREQUEST": "true",
 				},
-			})
-			let json: any = null
+			});
+			let json: any;
 			try {
-				json = await res.json()
+				json = await res.json();
 			} catch {
-				json = null
+				json = null;
 			}
-			return { status: res.status, json }
+			return { status: res.status, json };
 		},
 		{ method, apiPath },
-	)
+	);
 }
 
-test.describe.configure({ mode: 'serial' })
+test.describe.configure({ mode: "serial" });
 
-test.describe('ADR-111 demo data', () => {
+test.describe("ADR-111 demo data", () => {
 	// The setup contract lives behind the admin middleware, so these calls need
 	// the real logged-in session `globalSetup` captured — not the suite's
 	// default Basic-auth header, which does not produce an `OC.requestToken`.
-	test.use({ storageState: STORAGE_STATE })
+	test.use({ storageState: STORAGE_STATE });
 
 	test.beforeEach(async ({ page }) => {
-		await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' })
-		await page.waitForFunction(() => (window as any).OC?.requestToken, null, {
-			timeout: 15000,
-		})
-	})
+		await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+		await page.waitForFunction(
+			() => (window as any).OC?.requestToken,
+			null,
+			{
+				timeout: 15000,
+			},
+		);
+	});
 
-	test('setup status reports the demo-data step, so the wizard can offer it', async ({
+	test("setup status reports the demo-data step, so the wizard can offer it", async ({
 		page,
 	}) => {
-		const res = await api(page, 'GET', `${BASE}/api/setup/status`)
+		const res = await api(page, "GET", `${BASE}/api/setup/status`);
 
-		expect(res.status, 'setup/status must answer an authenticated admin').toBe(
-			200,
-		)
+		expect(
+			res.status,
+			"setup/status must answer an authenticated admin",
+		).toBe(200);
 
 		// A step the endpoint never MENTIONS resolves to `done: false` forever —
 		// no operator action can clear it, and CnAppRoot then covers the app with
@@ -100,11 +107,11 @@ test.describe('ADR-111 demo data', () => {
 		// not "not done".
 		expect(
 			Object.keys(res.json?.steps ?? {}),
-			'setup/status must report a demo-data step',
-		).toContain('demo-data')
-	})
+			"setup/status must report a demo-data step",
+		).toContain("demo-data");
+	});
 
-	test('installing the demo data reports HOW MUCH landed, not just success', async ({
+	test("installing the demo data reports HOW MUCH landed, not just success", async ({
 		page,
 	}) => {
 		// 🔴 A REAL IMPORT, NOT A STUB. Measured on this fleet: the install arm
@@ -112,35 +119,37 @@ test.describe('ADR-111 demo data', () => {
 		// default on one run. The operation is legitimately slow, and the
 		// assertion is worth its cost: it is the only check that the install
 		// WROTE something.
-		test.slow()
+		test.slow();
 
 		const res = await api(
 			page,
-			'POST',
+			"POST",
 			`${BASE}/api/setup/action/install-demo-data`,
-		)
+		);
 
-		expect(res.status, 'the action must pass the admin middleware').toBe(200)
+		expect(res.status, "the action must pass the admin middleware").toBe(
+			200,
+		);
 		expect(
 			res.json?.success,
 			`install failed: ${JSON.stringify(res.json)}`,
-		).toBe(true)
+		).toBe(true);
 
 		// 🔴 THE COUNTS ARE THE ASSERTION. "Demo data installed" with no numbers
 		// is indistinguishable from an import that wrote nothing — the exact
 		// defect this programme shipped and had to fix. A message carrying a
 		// positive object count is the only evidence the data reached the
 		// instance.
-		const message = String(res.json?.message ?? '')
-		const numbers = (message.match(/\d+/g) ?? []).map(Number)
+		const message = String(res.json?.message ?? "");
+		const numbers = (message.match(/\d+/g) ?? []).map(Number);
 
 		expect(
 			numbers.some((n) => n > 0),
 			`the install message must name a non-zero object count; got: "${message}"`,
-		).toBe(true)
-	})
+		).toBe(true);
+	});
 
-	test('re-installing is safe, because the step promises it is', async ({
+	test("re-installing is safe, because the step promises it is", async ({
 		page,
 	}) => {
 		// The step body tells the operator it is "safe to run more than once".
@@ -148,14 +157,14 @@ test.describe('ADR-111 demo data', () => {
 		// than erroring or reporting failure on a second pass.
 		const again = await api(
 			page,
-			'POST',
+			"POST",
 			`${BASE}/api/setup/action/install-demo-data`,
-		)
+		);
 
-		expect(again.status).toBe(200)
+		expect(again.status).toBe(200);
 		expect(
 			again.json?.success,
 			`a second install must not fail: ${JSON.stringify(again.json)}`,
-		).toBe(true)
-	})
-})
+		).toBe(true);
+	});
+});

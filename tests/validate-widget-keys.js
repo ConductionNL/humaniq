@@ -96,17 +96,17 @@
 //       itself could not run to completion (fails CLOSED — an inconclusive
 //       build/execution is NEVER reported as a pass).
 
-'use strict'
+"use strict";
 
-const babelParser = require('@babel/parser')
-const fs = require('fs')
-const path = require('path')
-const traverse = require('@babel/traverse').default
+const babelParser = require("@babel/parser");
+const fs = require("fs");
+const path = require("path");
+const traverse = require("@babel/traverse").default;
 
-const REPO_ROOT = path.resolve(__dirname, '..')
-const MANIFEST_PATH = path.join(REPO_ROOT, 'src', 'manifest.json')
-const REGISTRY_PATH = path.join(REPO_ROOT, 'src', 'registry.js')
-const WEBPACK_CONFIG_PATH = path.join(REPO_ROOT, 'webpack.config.js')
+const REPO_ROOT = path.resolve(__dirname, "..");
+const MANIFEST_PATH = path.join(REPO_ROOT, "src", "manifest.json");
+const REGISTRY_PATH = path.join(REPO_ROOT, "src", "registry.js");
+const WEBPACK_CONFIG_PATH = path.join(REPO_ROOT, "webpack.config.js");
 
 // ---------------------------------------------------------------------------
 // Step 1 — collect every widgetKey used anywhere in the manifest, with enough
@@ -122,23 +122,24 @@ const WEBPACK_CONFIG_PATH = path.join(REPO_ROOT, 'webpack.config.js')
  * @return {Map<string, string[]>} widgetKey → list of location strings.
  */
 function collectManifestWidgetKeys(manifest) {
-	const usages = new Map()
+	const usages = new Map();
 
 	function record(key, location) {
-		if (!usages.has(key)) usages.set(key, [])
-		usages.get(key).push(location)
+		if (!usages.has(key)) usages.set(key, []);
+		usages.get(key).push(location);
 	}
 
 	function walk(node, pageLabel) {
 		if (Array.isArray(node)) {
-			for (const item of node) walk(item, pageLabel)
-			return
+			for (const item of node) walk(item, pageLabel);
+			return;
 		}
-		if (!node || typeof node !== 'object') return
+		if (!node || typeof node !== "object") return;
 
-		if (typeof node.widgetKey === 'string' && node.widgetKey.length > 0) {
-			const slot = typeof node.slot === 'string' ? node.slot : '(no slot)'
-			record(node.widgetKey, `${pageLabel} / slot:${slot}`)
+		if (typeof node.widgetKey === "string" && node.widgetKey.length > 0) {
+			const slot =
+				typeof node.slot === "string" ? node.slot : "(no slot)";
+			record(node.widgetKey, `${pageLabel} / slot:${slot}`);
 		}
 
 		// A widget def under `config.widgets[]` names its component with `type`,
@@ -154,25 +155,36 @@ function collectManifestWidgetKeys(manifest) {
 		// action verb into a phantom widget.
 		if (Array.isArray(node.widgets)) {
 			for (const def of node.widgets) {
-				if (def && typeof def === 'object'
-					&& typeof def.type === 'string' && def.type.length > 0) {
-					const label = typeof node.id === 'string' ? `page:${node.id}` : pageLabel
-					record(def.type, `${label} / config.widgets:${def.id ?? '(no id)'}`)
+				if (
+					def &&
+					typeof def === "object" &&
+					typeof def.type === "string" &&
+					def.type.length > 0
+				) {
+					const label =
+						typeof node.id === "string"
+							? `page:${node.id}`
+							: pageLabel;
+					record(
+						def.type,
+						`${label} / config.widgets:${def.id ?? "(no id)"}`,
+					);
 				}
 			}
 		}
 
-		const nextLabel = typeof node.id === 'string' && typeof node.route === 'string'
-			? `page:${node.id}`
-			: pageLabel
+		const nextLabel =
+			typeof node.id === "string" && typeof node.route === "string"
+				? `page:${node.id}`
+				: pageLabel;
 
 		for (const value of Object.values(node)) {
-			walk(value, nextLabel)
+			walk(value, nextLabel);
 		}
 	}
 
-	walk(manifest.pages, '(top-level)')
-	return usages
+	walk(manifest.pages, "(top-level)");
+	return usages;
 }
 
 // ---------------------------------------------------------------------------
@@ -198,48 +210,55 @@ function collectManifestWidgetKeys(manifest) {
  * @return {Set<string>} the object literal's own top-level keys.
  */
 function parseObjectLiteralKeys(filePath, opts = {}) {
-	const source = fs.readFileSync(filePath, 'utf8')
+	const source = fs.readFileSync(filePath, "utf8");
 	const ast = babelParser.parse(source, {
-		sourceType: 'module',
+		sourceType: "module",
 		plugins: [],
-	})
+	});
 
-	let objectExpr = null
+	let objectExpr = null;
 
 	traverse(ast, {
 		ExportDefaultDeclaration(nodePath) {
-			if (!opts.varName && nodePath.node.declaration.type === 'ObjectExpression') {
-				objectExpr = nodePath.node.declaration
+			if (
+				!opts.varName &&
+				nodePath.node.declaration.type === "ObjectExpression"
+			) {
+				objectExpr = nodePath.node.declaration;
 			}
 		},
 		VariableDeclarator(nodePath) {
 			if (
-				opts.varName
-				&& nodePath.node.id.type === 'Identifier'
-				&& nodePath.node.id.name === opts.varName
-				&& nodePath.node.init
-				&& nodePath.node.init.type === 'ObjectExpression'
+				opts.varName &&
+				nodePath.node.id.type === "Identifier" &&
+				nodePath.node.id.name === opts.varName &&
+				nodePath.node.init &&
+				nodePath.node.init.type === "ObjectExpression"
 			) {
-				objectExpr = nodePath.node.init
+				objectExpr = nodePath.node.init;
 			}
 		},
-	})
+	});
 
 	if (!objectExpr) {
-		const what = opts.varName ? `const ${opts.varName} = {...}` : 'a default-exported object literal'
-		throw new Error(`[validate-widget-keys] could not find ${what} in ${filePath}`)
+		const what = opts.varName
+			? `const ${opts.varName} = {...}`
+			: "a default-exported object literal";
+		throw new Error(
+			`[validate-widget-keys] could not find ${what} in ${filePath}`,
+		);
 	}
 
-	const keys = new Set()
+	const keys = new Set();
 	for (const prop of objectExpr.properties) {
-		if (prop.type !== 'ObjectProperty') continue
-		if (prop.key.type === 'StringLiteral') {
-			keys.add(prop.key.value)
-		} else if (prop.key.type === 'Identifier' && !prop.computed) {
-			keys.add(prop.key.name)
+		if (prop.type !== "ObjectProperty") continue;
+		if (prop.key.type === "StringLiteral") {
+			keys.add(prop.key.value);
+		} else if (prop.key.type === "Identifier" && !prop.computed) {
+			keys.add(prop.key.name);
 		}
 	}
-	return keys
+	return keys;
 }
 
 /**
@@ -250,8 +269,11 @@ function parseObjectLiteralKeys(filePath, opts = {}) {
  * @return {string} absolute path to the package root.
  */
 function resolveNcVuePackageDir() {
-	const pkgJsonPath = require.resolve('@conduction/nextcloud-vue/package.json', { paths: [REPO_ROOT] })
-	return path.dirname(pkgJsonPath)
+	const pkgJsonPath = require.resolve(
+		"@conduction/nextcloud-vue/package.json",
+		{ paths: [REPO_ROOT] },
+	);
+	return path.dirname(pkgJsonPath);
 }
 
 // ---------------------------------------------------------------------------
@@ -319,7 +341,7 @@ function resolveNcVuePackageDir() {
 //     gate reports that finding truthfully (both layers agree the key
 //     resolves) rather than fabricate a failure to match history.
 
-const PROBE_KEYS_MAX_BUILD_MS = 180000
+const PROBE_KEYS_MAX_BUILD_MS = 180000;
 
 /**
  * Build a throwaway probe bundle and execute it, returning which of
@@ -330,17 +352,22 @@ const PROBE_KEYS_MAX_BUILD_MS = 180000
  * @param {string} ncVuePkgDir absolute path to the installed nc-vue package.
  * @return {Promise<Record<string, boolean>>} key → resolved.
  */
-async function layer3CheckDashboardCatalogAgainstRealBuild(candidateKeys, ncVuePkgDir) {
+async function layer3CheckDashboardCatalogAgainstRealBuild(
+	candidateKeys,
+	ncVuePkgDir,
+) {
 	const registerDashboardWidgetsPath = path.join(
-		ncVuePkgDir, 
-'dist', 
-'esm', 
-'components', 
-'CnWidgetGrid', 
-'registerDashboardWidgets.js',
-	)
+		ncVuePkgDir,
+		"dist",
+		"esm",
+		"components",
+		"CnWidgetGrid",
+		"registerDashboardWidgets.js",
+	);
 	if (!fs.existsSync(registerDashboardWidgetsPath)) {
-		throw new Error(`[validate-widget-keys] expected built nc-vue file missing: ${registerDashboardWidgetsPath}`)
+		throw new Error(
+			`[validate-widget-keys] expected built nc-vue file missing: ${registerDashboardWidgetsPath}`,
+		);
 	}
 
 	// The probe entry MUST live inside the repo tree (not os.tmpdir()):
@@ -355,28 +382,28 @@ async function layer3CheckDashboardCatalogAgainstRealBuild(candidateKeys, ncVueP
 	// errors for @nextcloud/l10n / @nextcloud/router during development of
 	// this gate). Keeping the entry inside REPO_ROOT preserves the exact
 	// resolution behaviour of a real build.
-	const tmpDir = fs.mkdtempSync(path.join(REPO_ROOT, '.widget-probe-tmp-'))
+	const tmpDir = fs.mkdtempSync(path.join(REPO_ROOT, ".widget-probe-tmp-"));
 	try {
-		const entryPath = path.join(tmpDir, 'probe-entry.js')
+		const entryPath = path.join(tmpDir, "probe-entry.js");
 		const entrySource = [
-			'// Auto-generated by tests/validate-widget-keys.js — not part of the app.',
+			"// Auto-generated by tests/validate-widget-keys.js — not part of the app.",
 			`import ${JSON.stringify(registerDashboardWidgetsPath)}`,
-			'import { getWidgetTypeEntry } from \'@conduction/nextcloud-vue\'',
+			"import { getWidgetTypeEntry } from '@conduction/nextcloud-vue'",
 			`const PROBE_KEYS = ${JSON.stringify(candidateKeys)}`,
-			'const result = {}',
-			'for (const k of PROBE_KEYS) {',
-			'\tconst entry = getWidgetTypeEntry(k)',
-			'\tresult[k] = !!(entry && entry.renderer)',
-			'}',
-			'globalThis.__WIDGET_PROBE_RESULT__ = result',
-			'',
-		].join('\n')
-		fs.writeFileSync(entryPath, entrySource, 'utf8')
+			"const result = {}",
+			"for (const k of PROBE_KEYS) {",
+			"\tconst entry = getWidgetTypeEntry(k)",
+			"\tresult[k] = !!(entry && entry.renderer)",
+			"}",
+			"globalThis.__WIDGET_PROBE_RESULT__ = result",
+			"",
+		].join("\n");
+		fs.writeFileSync(entryPath, entrySource, "utf8");
 
-		const outFile = await buildProbeBundle(entryPath, tmpDir)
-		return executeProbeBundle(outFile)
+		const outFile = await buildProbeBundle(entryPath, tmpDir);
+		return executeProbeBundle(outFile);
 	} finally {
-		fs.rmSync(tmpDir, { recursive: true, force: true })
+		fs.rmSync(tmpDir, { recursive: true, force: true });
 	}
 }
 
@@ -395,29 +422,31 @@ async function layer3CheckDashboardCatalogAgainstRealBuild(candidateKeys, ncVueP
  */
 function buildProbeBundle(entryPath, outDir) {
 	return new Promise((resolve, reject) => {
-		process.env.NODE_ENV = 'production'
-		process.env.USE_LOCAL_LIB = 'false'
+		process.env.NODE_ENV = "production";
+		process.env.USE_LOCAL_LIB = "false";
 
 		// Fresh require every run — this script is always invoked as its own
 		// `node tests/validate-widget-keys.js` process, so there is no stale
 		// module cache to worry about, but delete it anyway for safety if this
 		// function is ever called twice on the same process.
-		delete require.cache[require.resolve(WEBPACK_CONFIG_PATH)]
-		const webpackConfig = require(WEBPACK_CONFIG_PATH)
-		const webpack = require('webpack')
+		delete require.cache[require.resolve(WEBPACK_CONFIG_PATH)];
+		const webpackConfig = require(WEBPACK_CONFIG_PATH);
+		const webpack = require("webpack");
 
-		webpackConfig.entry = { probe: { import: entryPath, filename: 'probe.js' } }
+		webpackConfig.entry = {
+			probe: { import: entryPath, filename: "probe.js" },
+		};
 		webpackConfig.output = {
 			...webpackConfig.output,
 			path: outDir,
-			filename: 'probe.js',
+			filename: "probe.js",
 			// A literal publicPath (rather than 'auto') avoids the runtime
 			// needing `document.currentScript` at all when we execute the
 			// bundle under Node — one less thing the jsdom shim has to fake.
-			publicPath: '/',
-		}
-		webpackConfig.devtool = false
-		webpackConfig.stats = 'errors-only'
+			publicPath: "/",
+		};
+		webpackConfig.devtool = false;
+		webpackConfig.stats = "errors-only";
 		// Keep everything in ONE emitted file — this probe never actually
 		// navigates to a lazy-loaded chunk, so vendor/runtime splitting only
 		// adds files we'd have to stitch back together to execute.
@@ -425,27 +454,31 @@ function buildProbeBundle(entryPath, outDir) {
 			...webpackConfig.optimization,
 			splitChunks: false,
 			runtimeChunk: false,
-		}
+		};
 
-		const compiler = webpack(webpackConfig)
+		const compiler = webpack(webpackConfig);
 		const timer = setTimeout(() => {
-			reject(new Error('[validate-widget-keys] probe build timed out'))
-		}, PROBE_KEYS_MAX_BUILD_MS)
+			reject(new Error("[validate-widget-keys] probe build timed out"));
+		}, PROBE_KEYS_MAX_BUILD_MS);
 
 		compiler.run((err, stats) => {
-			clearTimeout(timer)
-			compiler.close(() => {})
+			clearTimeout(timer);
+			compiler.close(() => {});
 			if (err) {
-				reject(err)
-				return
+				reject(err);
+				return;
 			}
 			if (stats.hasErrors()) {
-				reject(new Error(`[validate-widget-keys] probe build failed:\n${stats.toString('errors-only')}`))
-				return
+				reject(
+					new Error(
+						`[validate-widget-keys] probe build failed:\n${stats.toString("errors-only")}`,
+					),
+				);
+				return;
 			}
-			resolve(path.join(outDir, 'probe.js'))
-		})
-	})
+			resolve(path.join(outDir, "probe.js"));
+		});
+	});
 }
 
 /**
@@ -464,13 +497,15 @@ function buildProbeBundle(entryPath, outDir) {
  * @return {Record<string, boolean>} the probe's reported key → resolved map.
  */
 function executeProbeBundle(bundlePath) {
-	 
-	const { JSDOM } = require('jsdom')
-	const dom = new JSDOM('<!doctype html><html><body><div id="content"></div></body></html>', {
-		url: 'http://localhost/apps/humaniq/',
-		runScripts: 'outside-only',
-		pretendToBeVisual: true,
-	})
+	const { JSDOM } = require("jsdom");
+	const dom = new JSDOM(
+		'<!doctype html><html><body><div id="content"></div></body></html>',
+		{
+			url: "http://localhost/apps/humaniq/",
+			runScripts: "outside-only",
+			pretendToBeVisual: true,
+		},
+	);
 
 	// Plain assignment first (matches Node's own global shape most closely);
 	// only fall back to defineProperty for the handful of keys Node itself
@@ -482,42 +517,52 @@ function executeProbeBundle(bundlePath) {
 	// exceeded" when copied that way; plain assignment (skipping on error)
 	// does not have that problem and is what an actual empirical spike of
 	// this technique validated end-to-end.
-	const { window } = dom
+	const { window } = dom;
 	for (const key of Object.getOwnPropertyNames(window)) {
-		if (key in global) continue
+		if (key in global) continue;
 		try {
-			global[key] = window[key]
+			global[key] = window[key];
 		} catch (_) {
 			try {
-				Object.defineProperty(global, key, { value: window[key], configurable: true, writable: true, enumerable: true })
+				Object.defineProperty(global, key, {
+					value: window[key],
+					configurable: true,
+					writable: true,
+					enumerable: true,
+				});
 			} catch {
 				// A handful of jsdom window getters throw when accessed detached
 				// from a real browsing context (e.g. `frameElement`) — skip those.
 			}
 		}
 	}
-	global.window = window
-	global.document = window.document
-	global.self = window
+	global.window = window;
+	global.document = window.document;
+	global.self = window;
 
 	// require() (not a <script> tag) loads the bundle, so jsdom never sets
 	// document.currentScript itself — only needed if some future change
 	// reintroduces publicPath:'auto' for the probe; harmless to define anyway.
-	Object.defineProperty(window.document, 'currentScript', {
+	Object.defineProperty(window.document, "currentScript", {
 		get() {
-			return { src: 'http://localhost/apps/humaniq/js/probe.js', tagName: 'SCRIPT' }
+			return {
+				src: "http://localhost/apps/humaniq/js/probe.js",
+				tagName: "SCRIPT",
+			};
 		},
 		configurable: true,
-	})
+	});
 
-	delete require.cache[bundlePath]
-	require(bundlePath)
+	delete require.cache[bundlePath];
+	require(bundlePath);
 
-	const result = globalThis.__WIDGET_PROBE_RESULT__
-	if (!result || typeof result !== 'object') {
-		throw new Error('[validate-widget-keys] probe bundle executed but reported no result — treating as inconclusive (fail-closed).')
+	const result = globalThis.__WIDGET_PROBE_RESULT__;
+	if (!result || typeof result !== "object") {
+		throw new Error(
+			"[validate-widget-keys] probe bundle executed but reported no result — treating as inconclusive (fail-closed).",
+		);
 	}
-	return result
+	return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -526,8 +571,10 @@ function executeProbeBundle(bundlePath) {
 
 async function main() {
 	if (!fs.existsSync(MANIFEST_PATH)) {
-		console.error(`[validate-widget-keys] manifest not found: ${MANIFEST_PATH}`)
-		process.exit(1)
+		console.error(
+			`[validate-widget-keys] manifest not found: ${MANIFEST_PATH}`,
+		);
+		process.exit(1);
 	}
 	// Collect widgetKeys from the EFFECTIVE manifest (base + manifest.d
 	// fragments + expanded page templates), not the base shell alone. Since
@@ -535,81 +582,118 @@ async function main() {
 	// it alone silently narrowed this gate from 9 distinct widget keys to 3
 	// and turned a red baseline green — the exact silent-coverage-loss defect
 	// tests/validate-manifest.js was fixed for. Same shared merge path.
-	 
-	const { buildEffectiveManifest } = require('./verify-manifest-parity.js')
-	const manifest = buildEffectiveManifest()
-	const usages = collectManifestWidgetKeys(manifest)
-	const allKeys = [...usages.keys()].sort()
-	console.log(`[validate-widget-keys] effective manifest (base + manifest.d + templates): ${(manifest.pages || []).length} pages`)
-	console.log(`[validate-widget-keys] distinct widgetKeys used: ${allKeys.length} (${allKeys.join(', ')})`)
+
+	const { buildEffectiveManifest } = require("./verify-manifest-parity.js");
+	const manifest = buildEffectiveManifest();
+	const usages = collectManifestWidgetKeys(manifest);
+	const allKeys = [...usages.keys()].sort();
+	console.log(
+		`[validate-widget-keys] effective manifest (base + manifest.d + templates): ${(manifest.pages || []).length} pages`,
+	);
+	console.log(
+		`[validate-widget-keys] distinct widgetKeys used: ${allKeys.length} (${allKeys.join(", ")})`,
+	);
 
 	// Layer 1
-	const registryKeys = parseObjectLiteralKeys(REGISTRY_PATH)
-	console.log(`[validate-widget-keys] layer 1 (src/registry.js consumer override): ${[...registryKeys].sort().join(', ') || '(none)'}`)
+	const registryKeys = parseObjectLiteralKeys(REGISTRY_PATH);
+	console.log(
+		`[validate-widget-keys] layer 1 (src/registry.js consumer override): ${[...registryKeys].sort().join(", ") || "(none)"}`,
+	);
 
 	// Layer 2
-	const ncVuePkgDir = resolveNcVuePackageDir()
-	const builtInWidgetsPath = path.join(ncVuePkgDir, 'dist', 'esm', 'components', 'CnWidgetGrid', 'builtInWidgets.js')
-	const builtInWidgetsKeys = parseObjectLiteralKeys(builtInWidgetsPath, { varName: 'BUILT_IN_WIDGETS' })
-	console.log(`[validate-widget-keys] layer 2 (nc-vue BUILT_IN_WIDGETS, static object — always safe): ${[...builtInWidgetsKeys].sort().join(', ')}`)
+	const ncVuePkgDir = resolveNcVuePackageDir();
+	const builtInWidgetsPath = path.join(
+		ncVuePkgDir,
+		"dist",
+		"esm",
+		"components",
+		"CnWidgetGrid",
+		"builtInWidgets.js",
+	);
+	const builtInWidgetsKeys = parseObjectLiteralKeys(builtInWidgetsPath, {
+		varName: "BUILT_IN_WIDGETS",
+	});
+	console.log(
+		`[validate-widget-keys] layer 2 (nc-vue BUILT_IN_WIDGETS, static object — always safe): ${[...builtInWidgetsKeys].sort().join(", ")}`,
+	);
 
-	const resolvedBy = new Map() // key -> layer name
+	const resolvedBy = new Map(); // key -> layer name
 	for (const key of allKeys) {
-		if (registryKeys.has(key)) resolvedBy.set(key, 'layer1:registry.js')
-		else if (builtInWidgetsKeys.has(key)) resolvedBy.set(key, 'layer2:BUILT_IN_WIDGETS')
+		if (registryKeys.has(key)) resolvedBy.set(key, "layer1:registry.js");
+		else if (builtInWidgetsKeys.has(key))
+			resolvedBy.set(key, "layer2:BUILT_IN_WIDGETS");
 	}
 
-	const layer3Candidates = allKeys.filter((key) => !resolvedBy.has(key))
+	const layer3Candidates = allKeys.filter((key) => !resolvedBy.has(key));
 
-	let layer3Result
+	let layer3Result;
 	if (layer3Candidates.length > 0) {
-		console.log(`[validate-widget-keys] layer 3 candidates needing a real build check: ${layer3Candidates.join(', ')}`)
-		console.log('[validate-widget-keys] building throwaway probe bundle against the REAL installed @conduction/nextcloud-vue (USE_LOCAL_LIB=false, NODE_ENV=production)…')
+		console.log(
+			`[validate-widget-keys] layer 3 candidates needing a real build check: ${layer3Candidates.join(", ")}`,
+		);
+		console.log(
+			"[validate-widget-keys] building throwaway probe bundle against the REAL installed @conduction/nextcloud-vue (USE_LOCAL_LIB=false, NODE_ENV=production)…",
+		);
 		try {
-			layer3Result = await layer3CheckDashboardCatalogAgainstRealBuild(layer3Candidates, ncVuePkgDir)
+			layer3Result = await layer3CheckDashboardCatalogAgainstRealBuild(
+				layer3Candidates,
+				ncVuePkgDir,
+			);
 		} catch (err) {
 			// Fail CLOSED: an inconclusive build/execution is never a pass.
-			console.error('[validate-widget-keys] layer 3 check could not complete — treating all pending keys as UNRESOLVED.')
-			console.error(err.stack || err.message)
-			layer3Result = Object.fromEntries(layer3Candidates.map((k) => [k, false]))
+			console.error(
+				"[validate-widget-keys] layer 3 check could not complete — treating all pending keys as UNRESOLVED.",
+			);
+			console.error(err.stack || err.message);
+			layer3Result = Object.fromEntries(
+				layer3Candidates.map((k) => [k, false]),
+			);
 		}
 		for (const key of layer3Candidates) {
-			if (layer3Result[key]) resolvedBy.set(key, 'layer3:dashboardWidgetRegistry (built bundle, verified)')
+			if (layer3Result[key])
+				resolvedBy.set(
+					key,
+					"layer3:dashboardWidgetRegistry (built bundle, verified)",
+				);
 		}
 	}
 
-	console.log('')
-	console.log('[validate-widget-keys] resolution summary:')
-	const unresolved = []
+	console.log("");
+	console.log("[validate-widget-keys] resolution summary:");
+	const unresolved = [];
 	for (const key of allKeys) {
-		const layer = resolvedBy.get(key)
+		const layer = resolvedBy.get(key);
 		if (layer) {
-			console.log(`  ✓ "${key}" → ${layer}`)
+			console.log(`  ✓ "${key}" → ${layer}`);
 		} else {
-			console.log(`  ✗ "${key}" → UNRESOLVED`)
-			unresolved.push(key)
+			console.log(`  ✗ "${key}" → UNRESOLVED`);
+			unresolved.push(key);
 		}
 	}
 
 	if (unresolved.length > 0) {
-		console.error('')
-		console.error('[validate-widget-keys] FAIL — the following widgetKey(s) do not resolve to any component:')
+		console.error("");
+		console.error(
+			"[validate-widget-keys] FAIL — the following widgetKey(s) do not resolve to any component:",
+		);
 		for (const key of unresolved) {
-			console.error(`  - "${key}" used at:`)
+			console.error(`  - "${key}" used at:`);
 			for (const loc of usages.get(key)) {
-				console.error(`      ${loc}`)
+				console.error(`      ${loc}`);
 			}
 		}
-		process.exit(1)
+		process.exit(1);
 	}
 
-	console.log('')
-	console.log(`[validate-widget-keys] PASS — all ${allKeys.length} widgetKey(s) resolve.`)
-	process.exit(0)
+	console.log("");
+	console.log(
+		`[validate-widget-keys] PASS — all ${allKeys.length} widgetKey(s) resolve.`,
+	);
+	process.exit(0);
 }
 
 main().catch((err) => {
-	console.error('[validate-widget-keys] unexpected failure:')
-	console.error(err.stack || err.message)
-	process.exit(1)
-})
+	console.error("[validate-widget-keys] unexpected failure:");
+	console.error(err.stack || err.message);
+	process.exit(1);
+});
