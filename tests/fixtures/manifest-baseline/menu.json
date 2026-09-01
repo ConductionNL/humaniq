@@ -1,509 +1,517 @@
 [
-  {
-    "icon": "ViewDashboardOutline",
-    "id": "Dashboard",
-    "label": "Dashboard",
-    "order": 10,
-    "route": "Dashboard"
-  },
-  {
-    "children": [
-      {
-        "icon": "ClockCheckOutline",
-        "id": "MijnUren",
-        "label": "My hours",
-        "route": "MijnUren"
-      },
-      {
-        "icon": "CalendarClockOutline",
-        "id": "MijnUrenstaten",
-        "label": "My timesheets",
-        "route": "MijnUrenstaten"
-      },
-      {
-        "icon": "ReceiptOutline",
-        "id": "MijnDeclaraties",
-        "label": "My expenses",
-        "route": "MijnDeclaraties"
-      },
-      {
-        "icon": "CalendarWeekendOutline",
-        "id": "MijnVerlof",
-        "label": "My leave",
-        "route": "MijnVerlof"
-      },
-      {
-        "icon": "ReceiptTextOutline",
-        "id": "MijnLoonstroken",
-        "label": "My payslips",
-        "route": "MijnLoonstroken"
-      },
-      {
-        "icon": "ClockOutline",
-        "id": "MijnAanwezigheid",
-        "label": "My attendance",
-        "route": "MijnAanwezigheid"
-      },
-      {
-        "icon": "StarCheckOutline",
-        "id": "MijnBeoordelingen",
-        "label": "My reviews",
-        "route": "MijnBeoordelingen"
-      },
-      {
-        "icon": "BullseyeArrow",
-        "id": "MijnDoelen",
-        "label": "My goals",
-        "route": "MijnDoelen"
-      },
-      {
-        "icon": "CalendarWeekendOutline",
-        "id": "MijnVerlofKopenVerkopen",
-        "label": "Buy/sell leave",
-        "route": "MijnVerlofKopenVerkopen"
-      },
-      {
-        "icon": "ScaleBalance",
-        "id": "MijnGebruikelijkLoon",
-        "label": "My customary wage",
-        "route": "MijnGebruikelijkLoon",
-        "visibleIf": {
-          "user.administrationMode": {
-            "eq": "dga_single_person"
-          }
-        }
-      }
-    ],
-    "icon": "Account",
-    "id": "MijnHrGroup",
-    "label": "My HR",
-    "order": 20,
-    "route": "MijnHr"
-  },
-  {
-    "children": [
-      {
-        "icon": "AccountTieOutline",
-        "id": "Employees",
-        "label": "Employees",
-        "route": "Employees"
-      },
-      {
-        "icon": "FileSign",
-        "id": "EmploymentContracts",
-        "label": "Contracts",
-        "route": "EmploymentContracts"
-      },
-      {
-        "icon": "SchoolOutline",
-        "id": "Stagiairs",
-        "label": "Interns",
-        "route": "Stagiairs"
-      },
-      {
-        "icon": "FileDocumentMultipleOutline",
-        "id": "Caos",
-        "label": "Collective agreements",
-        "route": "Caos"
-      },
-      {
-        "icon": "BriefcaseOutline",
-        "id": "Normfuncties",
-        "label": "Job framework",
-        "route": "Normfuncties"
-      },
-      {
-        "icon": "CurrencyEur",
-        "id": "SalaryBands",
-        "label": "Salary bands",
-        "route": "SalaryBands"
-      },
-      {
-        "icon": "CalendarRange",
-        "id": "CompReviewCycles",
-        "label": "Compensation cycles",
-        "route": "CompReviewCycles"
-      },
-      {
-        "icon": "OfficeBuildingOutline",
-        "id": "OrgUnits",
-        "label": "Organisational units",
-        "route": "OrgUnits",
-        "visibleIf": {
-          "user.administrationMode": {
-            "eq": "standard"
-          }
-        }
-      },
-      {
-        "icon": "AccountArrowRightOutline",
-        "id": "OrgAssignments",
-        "label": "Placements",
-        "route": "OrgAssignments",
-        "visibleIf": {
-          "user.administrationMode": {
-            "eq": "standard"
-          }
-        }
-      },
-      {
-        "icon": "FileDocumentMultipleOutline",
-        "id": "GeneratedDocuments",
-        "label": "Generated documents",
-        "route": "GeneratedDocuments"
-      },
-      {
-        "icon": "CalendarSyncOutline",
-        "id": "ReviewCycles",
-        "label": "Review cycles",
-        "route": "ReviewCycles"
-      },
-      {
-        "icon": "AccountPlusOutline",
-        "id": "Onboardings",
-        "label": "Onboardings",
-        "route": "Onboardings"
-      },
-      {
-        "icon": "AccountBoxOutline",
-        "id": "Vacancies",
-        "label": "Vacancies",
-        "route": "Vacancies"
-      },
-      {
-        "icon": "FileAccountOutline",
-        "id": "Applications",
-        "label": "Applications",
-        "route": "Applications"
-      },
-      {
-        "icon": "CalendarAccountOutline",
-        "id": "Interviews",
-        "label": "Interviews",
-        "route": "Interviews"
-      },
-      {
-        "icon": "AccountMinusOutline",
-        "id": "Offboardings",
-        "label": "Offboardings",
-        "route": "Offboardings"
-      }
-    ],
-    "icon": "AccountMultipleOutline",
-    "id": "EmployeesGroup",
-    "label": "People",
-    "order": 90
-  },
-  {
-    "children": [
-      {
-        "icon": "ClockPlusOutline",
-        "id": "TimeEntries",
-        "label": "Time entries",
-        "route": "TimeEntries"
-      },
-      {
-        "icon": "ClockCheckOutline",
-        "id": "Timesheets",
-        "label": "Timesheets",
-        "route": "Timesheets"
-      },
-      {
-        "icon": "CheckDecagramOutline",
-        "id": "TimesheetApproval",
-        "label": "Timesheet approval",
-        "route": "TimesheetApproval",
-        "visibleIf": {
-          "user.administrationMode": {
-            "eq": "standard"
-          }
-        }
-      },
-      {
-        "icon": "CheckDecagramOutline",
-        "id": "TeamUrengoedkeuring",
-        "label": "Team timesheet approval",
-        "route": "TeamUrengoedkeuring",
-        "visibleIf": {
-          "user.administrationMode": {
-            "eq": "standard"
-          }
-        }
-      },
-      {
-        "icon": "CalendarWeekendOutline",
-        "id": "LeaveRequests",
-        "label": "Leave requests",
-        "route": "LeaveRequests"
-      },
-      {
-        "icon": "CheckDecagramOutline",
-        "id": "LeaveApproval",
-        "label": "Leave approval",
-        "route": "LeaveApproval",
-        "visibleIf": {
-          "user.administrationMode": {
-            "eq": "standard"
-          }
-        }
-      },
-      {
-        "icon": "CheckDecagramOutline",
-        "id": "TeamVerlofgoedkeuring",
-        "label": "Team leave approval",
-        "route": "TeamVerlofgoedkeuring",
-        "visibleIf": {
-          "user.administrationMode": {
-            "eq": "standard"
-          }
-        }
-      },
-      {
-        "icon": "CalendarWeekendOutline",
-        "id": "LeaveBalances",
-        "label": "Leave balances",
-        "route": "LeaveBalances"
-      },
-      {
-        "icon": "EmoticonSickOutline",
-        "id": "SickLeaveCases",
-        "label": "Sick leave cases",
-        "route": "SickLeaveCases"
-      },
-      {
-        "icon": "ClipboardPulseOutline",
-        "id": "VerzuimOverzicht",
-        "label": "Absence overview",
-        "route": "VerzuimOverzicht"
-      },
-      {
-        "icon": "ClockOutline",
-        "id": "AttendanceRecords",
-        "label": "Attendance",
-        "route": "AttendanceRecords"
-      },
-      {
-        "icon": "ShieldCheckOutline",
-        "id": "BhvCertificeringen",
-        "label": "Emergency response certifications",
-        "route": "BhvCertificeringen"
-      }
-    ],
-    "icon": "CalendarWeekendOutline",
-    "id": "VerlofVerzuimGroup",
-    "label": "Leave & absence",
-    "order": 105
-  },
-  {
-    "children": [
-      {
-        "icon": "ReceiptOutline",
-        "id": "Expenses",
-        "label": "Expenses",
-        "route": "Expenses"
-      },
-      {
-        "icon": "CheckDecagramOutline",
-        "id": "ExpenseApproval",
-        "label": "Expense approval",
-        "route": "ExpenseApproval",
-        "visibleIf": {
-          "user.administrationMode": {
-            "eq": "standard"
-          }
-        }
-      },
-      {
-        "icon": "CheckDecagramOutline",
-        "id": "TeamDeclaratiegoedkeuring",
-        "label": "Team expense approval",
-        "route": "TeamDeclaratiegoedkeuring",
-        "visibleIf": {
-          "user.administrationMode": {
-            "eq": "standard"
-          }
-        }
-      },
-      {
-        "icon": "DesktopTowerMonitor",
-        "id": "Assets",
-        "label": "Assets",
-        "route": "Assets"
-      },
-      {
-        "icon": "HandshakeOutline",
-        "id": "AssetAssignments",
-        "label": "Asset assignments",
-        "route": "AssetAssignments"
-      }
-    ],
-    "icon": "ReceiptOutline",
-    "id": "ExpensesGroup",
-    "label": "Expenses & assets",
-    "order": 110
-  },
-  {
-    "children": [
-      {
-        "icon": "ReceiptTextOutline",
-        "id": "Payslips",
-        "label": "Payslips",
-        "route": "Payslips"
-      },
-      {
-        "icon": "FileCertificateOutline",
-        "id": "Jaaropgaven",
-        "label": "Annual statements",
-        "route": "Jaaropgaven"
-      },
-      {
-        "icon": "CogPlayOutline",
-        "id": "PayrollRuns",
-        "label": "Payroll runs",
-        "route": "PayrollRuns"
-      },
-      {
-        "icon": "FileSendOutline",
-        "id": "LoonaangifteFilings",
-        "label": "Wage tax filings",
-        "route": "LoonaangifteFilings"
-      },
-      {
-        "icon": "PiggyBankOutline",
-        "id": "PensionFilings",
-        "label": "Pension filings",
-        "route": "PensionFilings"
-      },
-      {
-        "icon": "ScaleBalance",
-        "id": "WntDisclosures",
-        "label": "WNT disclosures",
-        "route": "WntDisclosures"
-      },
-      {
-        "icon": "SwapHorizontal",
-        "id": "PayrollMutations",
-        "label": "Mutation reports",
-        "route": "PayrollMutations"
-      },
-      {
-        "icon": "CashSync",
-        "id": "PayrollAdjustments",
-        "label": "Retro corrections",
-        "route": "PayrollAdjustments"
-      },
-      {
-        "icon": "BookEditOutline",
-        "id": "PayrollGLPosts",
-        "label": "Payroll GL posts",
-        "route": "PayrollGLPosts"
-      },
-      {
-        "icon": "CreditCardOutline",
-        "id": "PayrollPaymentBatches",
-        "label": "Payment batches",
-        "route": "PayrollPaymentBatches"
-      },
-      {
-        "icon": "GiftOutline",
-        "id": "WkrDeclarations",
-        "label": "WKR declarations",
-        "route": "WkrDeclarations"
-      },
-      {
-        "icon": "CalculatorVariantOutline",
-        "id": "WkrAssessments",
-        "label": "WKR assessments",
-        "route": "WkrAssessments"
-      },
-      {
-        "icon": "Gavel",
-        "id": "Loonbeslagen",
-        "label": "Wage garnishments",
-        "route": "Loonbeslagen"
-      },
-      {
-        "icon": "Magnify",
-        "id": "DsrRequests",
-        "label": "Data subject requests",
-        "route": "DsrRequests"
-      },
-      {
-        "icon": "Calculator",
-        "id": "ProformaPayslipMenu",
-        "label": "Simulate payslip",
-        "route": "ProformaPayslip",
-        "visibleIf": {
-          "user.administrationMode": {
-            "notIn": [
-              "eenmanszaak_no_payroll"
-            ]
-          }
-        }
-      }
-    ],
-    "icon": "CashSync",
-    "id": "PayrollGroup",
-    "label": "Payroll",
-    "order": 120,
-    "visibleIf": {
-      "user.administrationMode": {
-        "notIn": [
-          "eenmanszaak_no_payroll"
-        ]
-      }
-    }
-  },
-  {
-    "children": [
-      {
-        "icon": "TableClock",
-        "id": "Rosters",
-        "label": "Rosters",
-        "route": "Rosters"
-      },
-      {
-        "icon": "TableClock",
-        "id": "RosterAssignments",
-        "label": "Roster assignments",
-        "route": "RosterAssignments"
-      },
-      {
-        "icon": "TimelineClockOutline",
-        "id": "Shifts",
-        "label": "Shifts",
-        "route": "Shifts"
-      }
-    ],
-    "icon": "CalendarMonthOutline",
-    "id": "PlanningGroup",
-    "label": "Scheduling",
-    "order": 107,
-    "visibleIf": {
-      "user.administrationMode": {
-        "eq": "standard"
-      }
-    }
-  },
-  {
-    "children": [
-      {
-        "icon": "OfficeBuildingOutline",
-        "id": "Administraties",
-        "label": "Administrations",
-        "route": "Administraties"
-      },
-      {
-        "icon": "PowerPlugOutline",
-        "id": "Integraties",
-        "label": "Integrations",
-        "route": "IntegrationAccounts"
-      }
-    ],
-    "icon": "CogOutline",
-    "id": "ConfiguratieGroup",
-    "label": "Configuration",
-    "order": 200,
-    "section": "settings"
-  }
+	{
+		"id": "Dashboard",
+		"label": "Dashboard",
+		"icon": "ViewDashboardOutline",
+		"order": 10,
+		"route": "Dashboard"
+	},
+	{
+		"id": "MijnHrGroup",
+		"label": "My HR",
+		"icon": "Account",
+		"order": 20,
+		"children": [
+			{
+				"id": "MijnUren",
+				"label": "My hours",
+				"icon": "ClockCheckOutline",
+				"route": "MijnUren"
+			},
+			{
+				"id": "MijnUrenstaten",
+				"label": "My timesheets",
+				"icon": "CalendarClockOutline",
+				"route": "MijnUrenstaten"
+			},
+			{
+				"id": "MijnDeclaraties",
+				"label": "My expenses",
+				"icon": "ReceiptOutline",
+				"route": "MijnDeclaraties"
+			},
+			{
+				"id": "MijnVerlof",
+				"label": "My leave",
+				"icon": "CalendarWeekendOutline",
+				"route": "MijnVerlof"
+			},
+			{
+				"id": "MijnLoonstroken",
+				"label": "My payslips",
+				"icon": "ReceiptTextOutline",
+				"route": "MijnLoonstroken"
+			},
+			{
+				"id": "MijnAanwezigheid",
+				"label": "My attendance",
+				"icon": "ClockOutline",
+				"route": "MijnAanwezigheid"
+			},
+			{
+				"id": "MijnBeoordelingen",
+				"label": "My reviews",
+				"icon": "StarCheckOutline",
+				"route": "MijnBeoordelingen"
+			},
+			{
+				"id": "MijnDoelen",
+				"label": "My goals",
+				"icon": "BullseyeArrow",
+				"route": "MijnDoelen"
+			},
+			{
+				"id": "MijnVerlofKopenVerkopen",
+				"label": "Buy/sell leave",
+				"icon": "CalendarWeekendOutline",
+				"route": "MijnVerlofKopenVerkopen"
+			},
+			{
+				"id": "MijnGebruikelijkLoon",
+				"label": "My customary wage",
+				"icon": "ScaleBalance",
+				"route": "MijnGebruikelijkLoon",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "dga_single_person"
+					}
+				}
+			}
+		],
+		"route": "MijnHr"
+	},
+	{
+		"id": "EmployeesGroup",
+		"label": "People",
+		"icon": "AccountMultipleOutline",
+		"order": 90,
+		"children": [
+			{
+				"id": "Employees",
+				"label": "Employees",
+				"icon": "AccountTieOutline",
+				"route": "Employees"
+			},
+			{
+				"id": "EmploymentContracts",
+				"label": "Contracts",
+				"icon": "FileSign",
+				"route": "EmploymentContracts"
+			},
+			{
+				"id": "Stagiairs",
+				"label": "Interns",
+				"icon": "SchoolOutline",
+				"route": "Stagiairs"
+			},
+			{
+				"id": "Caos",
+				"label": "Collective agreements",
+				"icon": "FileDocumentMultipleOutline",
+				"route": "Caos"
+			},
+			{
+				"id": "Normfuncties",
+				"label": "Job framework",
+				"icon": "BriefcaseOutline",
+				"route": "Normfuncties"
+			},
+			{
+				"id": "SalaryBands",
+				"label": "Salary bands",
+				"icon": "CurrencyEur",
+				"route": "SalaryBands"
+			},
+			{
+				"id": "CompReviewCycles",
+				"label": "Compensation cycles",
+				"icon": "CalendarRange",
+				"route": "CompReviewCycles"
+			},
+			{
+				"id": "OrgUnits",
+				"label": "Organisational units",
+				"icon": "OfficeBuildingOutline",
+				"route": "OrgUnits",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "standard"
+					}
+				}
+			},
+			{
+				"id": "OrgAssignments",
+				"label": "Placements",
+				"icon": "AccountArrowRightOutline",
+				"route": "OrgAssignments",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "standard"
+					}
+				}
+			},
+			{
+				"id": "GeneratedDocuments",
+				"label": "Generated documents",
+				"icon": "FileDocumentMultipleOutline",
+				"route": "GeneratedDocuments"
+			},
+			{
+				"id": "ReviewCycles",
+				"label": "Review cycles",
+				"icon": "CalendarSyncOutline",
+				"route": "ReviewCycles"
+			},
+			{
+				"id": "Onboardings",
+				"label": "Onboardings",
+				"icon": "AccountPlusOutline",
+				"route": "Onboardings"
+			},
+			{
+				"id": "Vacancies",
+				"label": "Vacancies",
+				"icon": "AccountBoxOutline",
+				"route": "Vacancies"
+			},
+			{
+				"id": "Applications",
+				"label": "Applications",
+				"icon": "FileAccountOutline",
+				"route": "Applications"
+			},
+			{
+				"id": "Interviews",
+				"label": "Interviews",
+				"icon": "CalendarAccountOutline",
+				"route": "Interviews"
+			},
+			{
+				"id": "Offboardings",
+				"label": "Offboardings",
+				"icon": "AccountMinusOutline",
+				"route": "Offboardings"
+			}
+		]
+	},
+	{
+		"id": "VerlofVerzuimGroup",
+		"label": "Leave & absence",
+		"icon": "CalendarWeekendOutline",
+		"order": 105,
+		"children": [
+			{
+				"id": "TimeEntries",
+				"label": "Time entries",
+				"icon": "ClockPlusOutline",
+				"route": "TimeEntries"
+			},
+			{
+				"id": "Timesheets",
+				"label": "Timesheets",
+				"icon": "ClockCheckOutline",
+				"route": "Timesheets"
+			},
+			{
+				"id": "TimesheetApproval",
+				"label": "Timesheet approval",
+				"icon": "CheckDecagramOutline",
+				"route": "TimesheetApproval",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "standard"
+					}
+				}
+			},
+			{
+				"id": "TeamUrengoedkeuring",
+				"label": "Team timesheet approval",
+				"icon": "CheckDecagramOutline",
+				"route": "TeamUrengoedkeuring",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "standard"
+					}
+				}
+			},
+			{
+				"id": "LeaveRequests",
+				"label": "Leave requests",
+				"icon": "CalendarWeekendOutline",
+				"route": "LeaveRequests"
+			},
+			{
+				"id": "LeaveApproval",
+				"label": "Leave approval",
+				"icon": "CheckDecagramOutline",
+				"route": "LeaveApproval",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "standard"
+					}
+				}
+			},
+			{
+				"id": "TeamVerlofgoedkeuring",
+				"label": "Team leave approval",
+				"icon": "CheckDecagramOutline",
+				"route": "TeamVerlofgoedkeuring",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "standard"
+					}
+				}
+			},
+			{
+				"id": "LeaveBalances",
+				"label": "Leave balances",
+				"icon": "CalendarWeekendOutline",
+				"route": "LeaveBalances"
+			},
+			{
+				"id": "SickLeaveCases",
+				"label": "Sick leave cases",
+				"icon": "EmoticonSickOutline",
+				"route": "SickLeaveCases"
+			},
+			{
+				"id": "VerzuimOverzicht",
+				"label": "Absence overview",
+				"icon": "ClipboardPulseOutline",
+				"route": "VerzuimOverzicht"
+			},
+			{
+				"id": "AttendanceRecords",
+				"label": "Attendance",
+				"icon": "ClockOutline",
+				"route": "AttendanceRecords"
+			},
+			{
+				"id": "BhvCertificeringen",
+				"label": "Emergency response certifications",
+				"icon": "ShieldCheckOutline",
+				"route": "BhvCertificeringen"
+			}
+		]
+	},
+	{
+		"id": "ExpensesGroup",
+		"label": "Expenses & assets",
+		"icon": "ReceiptOutline",
+		"order": 110,
+		"children": [
+			{
+				"id": "Expenses",
+				"label": "Expenses",
+				"icon": "ReceiptOutline",
+				"route": "Expenses"
+			},
+			{
+				"id": "ExpenseApproval",
+				"label": "Expense approval",
+				"icon": "CheckDecagramOutline",
+				"route": "ExpenseApproval",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "standard"
+					}
+				}
+			},
+			{
+				"id": "TeamDeclaratiegoedkeuring",
+				"label": "Team expense approval",
+				"icon": "CheckDecagramOutline",
+				"route": "TeamDeclaratiegoedkeuring",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "standard"
+					}
+				}
+			},
+			{
+				"id": "Assets",
+				"label": "Assets",
+				"icon": "DesktopTowerMonitor",
+				"route": "Assets"
+			},
+			{
+				"id": "AssetAssignments",
+				"label": "Asset assignments",
+				"icon": "HandshakeOutline",
+				"route": "AssetAssignments"
+			}
+		]
+	},
+	{
+		"id": "PayrollGroup",
+		"label": "Payroll",
+		"icon": "CashSync",
+		"order": 120,
+		"visibleIf": {
+			"user.administrationMode": {
+				"notIn": [
+					"eenmanszaak_no_payroll"
+				]
+			}
+		},
+		"children": [
+			{
+				"id": "Payslips",
+				"label": "Payslips",
+				"icon": "ReceiptTextOutline",
+				"route": "Payslips"
+			},
+			{
+				"id": "Jaaropgaven",
+				"label": "Annual statements",
+				"icon": "FileCertificateOutline",
+				"route": "Jaaropgaven"
+			},
+			{
+				"id": "PayrollRuns",
+				"label": "Payroll runs",
+				"icon": "CogPlayOutline",
+				"route": "PayrollRuns"
+			},
+			{
+				"id": "LoonaangifteFilings",
+				"label": "Wage tax filings",
+				"icon": "FileSendOutline",
+				"route": "LoonaangifteFilings"
+			},
+			{
+				"id": "PensionFilings",
+				"label": "Pension filings",
+				"icon": "PiggyBankOutline",
+				"route": "PensionFilings"
+			},
+			{
+				"id": "WntDisclosures",
+				"label": "WNT disclosures",
+				"icon": "ScaleBalance",
+				"route": "WntDisclosures"
+			},
+			{
+				"id": "PayrollMutations",
+				"label": "Mutation reports",
+				"icon": "SwapHorizontal",
+				"route": "PayrollMutations"
+			},
+			{
+				"id": "PayrollAdjustments",
+				"label": "Retro corrections",
+				"icon": "CashSync",
+				"route": "PayrollAdjustments"
+			},
+			{
+				"id": "PayrollGLPosts",
+				"label": "Payroll GL posts",
+				"icon": "BookEditOutline",
+				"route": "PayrollGLPosts"
+			},
+			{
+				"id": "PayrollPaymentBatches",
+				"label": "Payment batches",
+				"icon": "CreditCardOutline",
+				"route": "PayrollPaymentBatches"
+			},
+			{
+				"id": "WkrDeclarations",
+				"label": "WKR declarations",
+				"icon": "GiftOutline",
+				"route": "WkrDeclarations"
+			},
+			{
+				"id": "WkrAssessments",
+				"label": "WKR assessments",
+				"icon": "CalculatorVariantOutline",
+				"route": "WkrAssessments"
+			},
+			{
+				"id": "Loonbeslagen",
+				"label": "Wage garnishments",
+				"icon": "Gavel",
+				"route": "Loonbeslagen"
+			},
+			{
+				"id": "DsrRequests",
+				"label": "Data subject requests",
+				"icon": "Magnify",
+				"route": "DsrRequests"
+			},
+			{
+				"id": "ProformaPayslipMenu",
+				"label": "Simulate payslip",
+				"icon": "Calculator",
+				"route": "ProformaPayslip",
+				"visibleIf": {
+					"user.administrationMode": {
+						"notIn": [
+							"eenmanszaak_no_payroll"
+						]
+					}
+				}
+			}
+		]
+	},
+	{
+		"id": "PlanningGroup",
+		"label": "Scheduling",
+		"icon": "CalendarMonthOutline",
+		"order": 107,
+		"visibleIf": {
+			"user.administrationMode": {
+				"eq": "standard"
+			}
+		},
+		"children": [
+			{
+				"id": "Rosters",
+				"label": "Rosters",
+				"icon": "TableClock",
+				"route": "Rosters"
+			},
+			{
+				"id": "RosterAssignments",
+				"label": "Roster assignments",
+				"icon": "TableClock",
+				"route": "RosterAssignments"
+			},
+			{
+				"id": "Shifts",
+				"label": "Shifts",
+				"icon": "TimelineClockOutline",
+				"route": "Shifts"
+			}
+		]
+	},
+	{
+		"id": "ConfiguratieGroup",
+		"label": "Configuration",
+		"icon": "CogOutline",
+		"section": "settings",
+		"order": 200,
+		"children": [
+			{
+				"id": "Administraties",
+				"label": "Administrations",
+				"icon": "OfficeBuildingOutline",
+				"route": "Administraties"
+			},
+			{
+				"id": "Integraties",
+				"label": "Integrations",
+				"icon": "PowerPlugOutline",
+				"route": "IntegrationAccounts"
+			}
+		]
+	},
+	{
+		"id": "FlowsMenu",
+		"label": "Flows",
+		"icon": "Sitemap",
+		"route": "Flows",
+		"section": "settings",
+		"order": 96
+	}
 ]

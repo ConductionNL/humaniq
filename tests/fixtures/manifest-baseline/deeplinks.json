@@ -1,224 +1,224 @@
 [
-  {
-    "displayName": "Timesheet",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Timesheet",
-    "urlTemplate": "/apps/humaniq/timesheets/{uuid}"
-  },
-  {
-    "displayName": "Expense",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Expense",
-    "urlTemplate": "/apps/humaniq/expenses/{uuid}"
-  },
-  {
-    "displayName": "Employee",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Employee",
-    "urlTemplate": "/apps/humaniq/employees/{uuid}"
-  },
-  {
-    "displayName": "Employment Contract",
-    "registerSlug": "humaniq",
-    "schemaSlug": "EmploymentContract",
-    "urlTemplate": "/apps/humaniq/contracts/{uuid}"
-  },
-  {
-    "displayName": "Payslip",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Payslip",
-    "urlTemplate": "/apps/humaniq/payslips/{uuid}"
-  },
-  {
-    "displayName": "Payroll Run",
-    "registerSlug": "humaniq",
-    "schemaSlug": "PayrollRun",
-    "urlTemplate": "/apps/humaniq/payroll-runs/{uuid}"
-  },
-  {
-    "displayName": "Payroll Mutation Report",
-    "registerSlug": "humaniq",
-    "schemaSlug": "PayrollMutationReport",
-    "urlTemplate": "/apps/humaniq/payroll-mutations/{uuid}"
-  },
-  {
-    "displayName": "Wage Tax Filing",
-    "registerSlug": "humaniq",
-    "schemaSlug": "LoonaangifteFiling",
-    "urlTemplate": "/apps/humaniq/filings/{uuid}"
-  },
-  {
-    "displayName": "Pension Filing",
-    "registerSlug": "humaniq",
-    "schemaSlug": "PensionFiling",
-    "urlTemplate": "/apps/humaniq/pension-filings/{uuid}"
-  },
-  {
-    "displayName": "Payroll GL Post",
-    "registerSlug": "humaniq",
-    "schemaSlug": "PayrollGLPost",
-    "urlTemplate": "/apps/humaniq/gl-posts/{uuid}"
-  },
-  {
-    "displayName": "Payroll Payment Batch",
-    "registerSlug": "humaniq",
-    "schemaSlug": "PayrollPaymentBatch",
-    "urlTemplate": "/apps/humaniq/payment-batches/{uuid}"
-  },
-  {
-    "displayName": "Leave Request",
-    "registerSlug": "humaniq",
-    "schemaSlug": "LeaveRequest",
-    "urlTemplate": "/apps/humaniq/leave-requests/{uuid}"
-  },
-  {
-    "displayName": "Leave Balance",
-    "registerSlug": "humaniq",
-    "schemaSlug": "LeaveBalance",
-    "urlTemplate": "/apps/humaniq/leave-balances/{uuid}"
-  },
-  {
-    "displayName": "Sick Leave Case",
-    "registerSlug": "humaniq",
-    "schemaSlug": "SickLeaveCase",
-    "urlTemplate": "/apps/humaniq/sick-leave/{uuid}"
-  },
-  {
-    "displayName": "Onboarding",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Onboarding",
-    "urlTemplate": "/apps/humaniq/onboardings/{uuid}"
-  },
-  {
-    "displayName": "Stagiair",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Stagiair",
-    "urlTemplate": "/apps/humaniq/stagiairs/{uuid}"
-  },
-  {
-    "displayName": "Vacancy",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Vacancy",
-    "urlTemplate": "/apps/humaniq/vacancies/{uuid}"
-  },
-  {
-    "displayName": "Application",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Application",
-    "urlTemplate": "/apps/humaniq/applications/{uuid}"
-  },
-  {
-    "displayName": "Organisational Unit",
-    "registerSlug": "humaniq",
-    "schemaSlug": "OrgUnit",
-    "urlTemplate": "/apps/humaniq/org-units/{uuid}"
-  },
-  {
-    "displayName": "Organisational Assignment",
-    "registerSlug": "humaniq",
-    "schemaSlug": "OrgAssignment",
-    "urlTemplate": "/apps/humaniq/org-assignments/{uuid}"
-  },
-  {
-    "displayName": "Attendance Record",
-    "registerSlug": "humaniq",
-    "schemaSlug": "AttendanceRecord",
-    "urlTemplate": "/apps/humaniq/attendance/{uuid}"
-  },
-  {
-    "displayName": "Asset",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Asset",
-    "urlTemplate": "/apps/humaniq/assets/{uuid}"
-  },
-  {
-    "displayName": "Asset Assignment",
-    "registerSlug": "humaniq",
-    "schemaSlug": "AssetAssignment",
-    "urlTemplate": "/apps/humaniq/asset-assignments/{uuid}"
-  },
-  {
-    "displayName": "Review Cycle",
-    "registerSlug": "humaniq",
-    "schemaSlug": "ReviewCycle",
-    "urlTemplate": "/apps/humaniq/review-cycles/{uuid}"
-  },
-  {
-    "displayName": "Performance Review",
-    "registerSlug": "humaniq",
-    "schemaSlug": "PerformanceReview",
-    "urlTemplate": "/apps/humaniq/reviews/{uuid}"
-  },
-  {
-    "displayName": "Shift",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Shift",
-    "urlTemplate": "/apps/humaniq/shifts/{uuid}"
-  },
-  {
-    "displayName": "Roster",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Roster",
-    "urlTemplate": "/apps/humaniq/rosters/{uuid}"
-  },
-  {
-    "displayName": "Roster Assignment",
-    "registerSlug": "humaniq",
-    "schemaSlug": "RosterAssignment",
-    "urlTemplate": "/apps/humaniq/roster-assignments/{uuid}"
-  },
-  {
-    "displayName": "Objective",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Objective",
-    "urlTemplate": "/apps/humaniq/objectives/{uuid}"
-  },
-  {
-    "displayName": "Key Result",
-    "registerSlug": "humaniq",
-    "schemaSlug": "KeyResult",
-    "urlTemplate": "/apps/humaniq/key-results/{uuid}"
-  },
-  {
-    "displayName": "Salary Band",
-    "registerSlug": "humaniq",
-    "schemaSlug": "SalaryBand",
-    "urlTemplate": "/apps/humaniq/salary-bands/{uuid}"
-  },
-  {
-    "displayName": "Compensation Review Cycle",
-    "registerSlug": "humaniq",
-    "schemaSlug": "CompReviewCycle",
-    "urlTemplate": "/apps/humaniq/comp-review-cycles/{uuid}"
-  },
-  {
-    "displayName": "Compensation Adjustment",
-    "registerSlug": "humaniq",
-    "schemaSlug": "CompAdjustment",
-    "urlTemplate": "/apps/humaniq/comp-adjustments/{uuid}"
-  },
-  {
-    "displayName": "Leave Transaction",
-    "registerSlug": "humaniq",
-    "schemaSlug": "LeaveTransaction",
-    "urlTemplate": "/apps/humaniq/leave-transactions/{uuid}"
-  },
-  {
-    "displayName": "WKR Declaration",
-    "registerSlug": "humaniq",
-    "schemaSlug": "WkrDeclaration",
-    "urlTemplate": "/apps/humaniq/wkr-declarations/{uuid}"
-  },
-  {
-    "displayName": "WKR Assessment",
-    "registerSlug": "humaniq",
-    "schemaSlug": "WkrAssessment",
-    "urlTemplate": "/apps/humaniq/wkr-assessments/{uuid}"
-  },
-  {
-    "displayName": "Loonbeslag",
-    "registerSlug": "humaniq",
-    "schemaSlug": "Loonbeslag",
-    "urlTemplate": "/apps/humaniq/loonbeslagen/{uuid}"
-  }
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "Timesheet",
+		"urlTemplate": "/apps/humaniq/timesheets/{uuid}",
+		"displayName": "Timesheet"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "Expense",
+		"urlTemplate": "/apps/humaniq/expenses/{uuid}",
+		"displayName": "Expense"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "Employee",
+		"urlTemplate": "/apps/humaniq/employees/{uuid}",
+		"displayName": "Employee"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "EmploymentContract",
+		"urlTemplate": "/apps/humaniq/contracts/{uuid}",
+		"displayName": "Employment Contract"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "Payslip",
+		"urlTemplate": "/apps/humaniq/payslips/{uuid}",
+		"displayName": "Payslip"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "PayrollRun",
+		"urlTemplate": "/apps/humaniq/payroll-runs/{uuid}",
+		"displayName": "Payroll Run"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "PayrollMutationReport",
+		"urlTemplate": "/apps/humaniq/payroll-mutations/{uuid}",
+		"displayName": "Payroll Mutation Report"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "LoonaangifteFiling",
+		"urlTemplate": "/apps/humaniq/filings/{uuid}",
+		"displayName": "Wage Tax Filing"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "PensionFiling",
+		"urlTemplate": "/apps/humaniq/pension-filings/{uuid}",
+		"displayName": "Pension Filing"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "PayrollGLPost",
+		"urlTemplate": "/apps/humaniq/gl-posts/{uuid}",
+		"displayName": "Payroll GL Post"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "PayrollPaymentBatch",
+		"urlTemplate": "/apps/humaniq/payment-batches/{uuid}",
+		"displayName": "Payroll Payment Batch"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "LeaveRequest",
+		"urlTemplate": "/apps/humaniq/leave-requests/{uuid}",
+		"displayName": "Leave Request"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "LeaveBalance",
+		"urlTemplate": "/apps/humaniq/leave-balances/{uuid}",
+		"displayName": "Leave Balance"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "SickLeaveCase",
+		"urlTemplate": "/apps/humaniq/sick-leave/{uuid}",
+		"displayName": "Sick Leave Case"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "Onboarding",
+		"urlTemplate": "/apps/humaniq/onboardings/{uuid}",
+		"displayName": "Onboarding"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "Stagiair",
+		"urlTemplate": "/apps/humaniq/stagiairs/{uuid}",
+		"displayName": "Stagiair"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "Vacancy",
+		"urlTemplate": "/apps/humaniq/vacancies/{uuid}",
+		"displayName": "Vacancy"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "job-application",
+		"urlTemplate": "/apps/humaniq/applications/{uuid}",
+		"displayName": "Application"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "OrgUnit",
+		"urlTemplate": "/apps/humaniq/org-units/{uuid}",
+		"displayName": "Organisational Unit"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "OrgAssignment",
+		"urlTemplate": "/apps/humaniq/org-assignments/{uuid}",
+		"displayName": "Organisational Assignment"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "AttendanceRecord",
+		"urlTemplate": "/apps/humaniq/attendance/{uuid}",
+		"displayName": "Attendance Record"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "Asset",
+		"urlTemplate": "/apps/humaniq/assets/{uuid}",
+		"displayName": "Asset"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "AssetAssignment",
+		"urlTemplate": "/apps/humaniq/asset-assignments/{uuid}",
+		"displayName": "Asset Assignment"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "ReviewCycle",
+		"urlTemplate": "/apps/humaniq/review-cycles/{uuid}",
+		"displayName": "Review Cycle"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "PerformanceReview",
+		"urlTemplate": "/apps/humaniq/reviews/{uuid}",
+		"displayName": "Performance Review"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "Shift",
+		"urlTemplate": "/apps/humaniq/shifts/{uuid}",
+		"displayName": "Shift"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "Roster",
+		"urlTemplate": "/apps/humaniq/rosters/{uuid}",
+		"displayName": "Roster"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "RosterAssignment",
+		"urlTemplate": "/apps/humaniq/roster-assignments/{uuid}",
+		"displayName": "Roster Assignment"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "Objective",
+		"urlTemplate": "/apps/humaniq/objectives/{uuid}",
+		"displayName": "Objective"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "KeyResult",
+		"urlTemplate": "/apps/humaniq/key-results/{uuid}",
+		"displayName": "Key Result"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "SalaryBand",
+		"urlTemplate": "/apps/humaniq/salary-bands/{uuid}",
+		"displayName": "Salary Band"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "CompReviewCycle",
+		"urlTemplate": "/apps/humaniq/comp-review-cycles/{uuid}",
+		"displayName": "Compensation Review Cycle"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "CompAdjustment",
+		"urlTemplate": "/apps/humaniq/comp-adjustments/{uuid}",
+		"displayName": "Compensation Adjustment"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "LeaveTransaction",
+		"urlTemplate": "/apps/humaniq/leave-transactions/{uuid}",
+		"displayName": "Leave Transaction"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "WkrDeclaration",
+		"urlTemplate": "/apps/humaniq/wkr-declarations/{uuid}",
+		"displayName": "WKR Declaration"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "WkrAssessment",
+		"urlTemplate": "/apps/humaniq/wkr-assessments/{uuid}",
+		"displayName": "WKR Assessment"
+	},
+	{
+		"registerSlug": "humaniq",
+		"schemaSlug": "Loonbeslag",
+		"urlTemplate": "/apps/humaniq/loonbeslagen/{uuid}",
+		"displayName": "Loonbeslag"
+	}
 ]

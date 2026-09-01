@@ -165,7 +165,7 @@ jobs:
       # renders the English source inside an otherwise translated form, silently.
       # The fleet had 30,459 such strings, so this records the current count and
       # fails only when it GROWS — burning it down stays an ordinary PR.
-      frontend-checks: '["check:manifest", "check:widget-keys", "check:seed-refs", "check:l10n", "check:l10n-js", "check:schema-l10n"]'
+      frontend-checks: '["check:manifest", "check:manifest-parity", "check:widget-keys", "check:seed-refs", "check:l10n", "check:l10n-js", "check:schema-l10n"]'
 
       # ── E2E browser tests ────────────────────────────────────────────────
       # tests/e2e has existed and been maintained for a while — a parametrised
