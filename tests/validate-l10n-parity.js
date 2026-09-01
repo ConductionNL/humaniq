@@ -82,13 +82,13 @@
 //   0 — catalogues are complete and the manifest is English-keyed
 //   1 — at least one gap, identity break, or surviving Dutch literal
 
-'use strict'
+"use strict";
 
-const fs = require('fs')
-const path = require('path')
-const vm = require('vm')
+const fs = require("fs");
+const path = require("path");
+const vm = require("vm");
 
-const REPO_ROOT = path.resolve(__dirname, '..')
+const REPO_ROOT = path.resolve(__dirname, "..");
 
 /*
  * The app id, read from appinfo/info.xml rather than hardcoded.
@@ -102,64 +102,101 @@ const REPO_ROOT = path.resolve(__dirname, '..')
  * passes. Deriving the id means the next rename cannot reintroduce that.
  */
 const APP_ID = (() => {
-	const info = fs.readFileSync(path.join(REPO_ROOT, 'appinfo', 'info.xml'), 'utf8')
-	const m = info.match(/<id>([^<]+)<\/id>/)
+	const info = fs.readFileSync(
+		path.join(REPO_ROOT, "appinfo", "info.xml"),
+		"utf8",
+	);
+	const m = info.match(/<id>([^<]+)<\/id>/);
 	if (!m) {
-		throw new Error('validate-l10n-parity: could not read <id> from appinfo/info.xml')
+		throw new Error(
+			"validate-l10n-parity: could not read <id> from appinfo/info.xml",
+		);
 	}
-	return m[1].trim()
-})()
+	return m[1].trim();
+})();
 
-const L10N_DIR = path.join(REPO_ROOT, 'l10n')
-const BASE_MANIFEST = path.join(REPO_ROOT, 'src', 'manifest.json')
-const FRAGMENT_DIR = path.join(REPO_ROOT, 'src', 'manifest.d')
-const SRC_DIR = path.join(REPO_ROOT, 'src')
-const SCHEMA_DIR = path.join(REPO_ROOT, 'lib', 'Settings', 'register.d')
+const L10N_DIR = path.join(REPO_ROOT, "l10n");
+const BASE_MANIFEST = path.join(REPO_ROOT, "src", "manifest.json");
+const FRAGMENT_DIR = path.join(REPO_ROOT, "src", "manifest.d");
+const SRC_DIR = path.join(REPO_ROOT, "src");
+const SCHEMA_DIR = path.join(REPO_ROOT, "lib", "Settings", "register.d");
 
 // The manifest properties that carry text a user reads. Everything else in a
 // manifest node is an id, a route, a field name or a schema slug.
 const DISPLAY_KEYS = [
-	'label',
-	'title',
-	'description',
-	'successMessage',
-	'errorMessage',
-	'dataTitle',
-	'relatedTitle',
-	'statusTitle',
-	'caption',
-	'emptyText',
-	'text',
-]
+	"label",
+	"title",
+	"description",
+	"successMessage",
+	"errorMessage",
+	"dataTitle",
+	"relatedTitle",
+	"statusTitle",
+	"caption",
+	"emptyText",
+	"text",
+];
 
 // `{{title}}` / `{{dataTitle}}` etc. in 00-templates.json are pageTemplate
 // placeholders — expandPageTemplates substitutes the concrete page's own text
 // before the renderer ever sees them, so they are never translated.
-const PLACEHOLDER_RE = /^\{\{[^{}]+\}\}$/
+const PLACEHOLDER_RE = /^\{\{[^{}]+\}\}$/;
 
 // Dutch function words. None of these is an English word, so a hit means
 // Dutch PROSE survived the conversion to English source keys. Statutory Dutch
 // nouns (WNT, WKR, loonheffing, Cao Gemeenten) are intentionally absent from
 // this list — they are proper nouns and stay.
 const DUTCH_FUNCTION_WORDS = [
-	'aan', 'als', 'bij', 'dat', 'de', 'deze', 'die', 'door', 'een', 'eigen',
-	'geen', 'het', 'hier', 'je', 'jouw', 'kan', 'kunnen', 'met', 'naar',
-	'niet', 'nog', 'ook', 'onder', 'op', 'te', 'uit', 'van', 'voor', 'waar',
-	'wordt', 'worden', 'zijn', 'zonder',
-]
-const DUTCH_RE = new RegExp('(^|[^\\p{L}])(' + DUTCH_FUNCTION_WORDS.join('|') + ')([^\\p{L}]|$)', 'iu')
+	"aan",
+	"als",
+	"bij",
+	"dat",
+	"de",
+	"deze",
+	"die",
+	"door",
+	"een",
+	"eigen",
+	"geen",
+	"het",
+	"hier",
+	"je",
+	"jouw",
+	"kan",
+	"kunnen",
+	"met",
+	"naar",
+	"niet",
+	"nog",
+	"ook",
+	"onder",
+	"op",
+	"te",
+	"uit",
+	"van",
+	"voor",
+	"waar",
+	"wordt",
+	"worden",
+	"zijn",
+	"zonder",
+];
+const DUTCH_RE = new RegExp(
+	"(^|[^\\p{L}])(" + DUTCH_FUNCTION_WORDS.join("|") + ")([^\\p{L}]|$)",
+	"iu",
+);
 
 function loadJson(file) {
-	return JSON.parse(fs.readFileSync(file, 'utf8'))
+	return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
 function manifestFiles() {
 	const fragments = fs
 		.readdirSync(FRAGMENT_DIR)
-		.filter((f) => f.endsWith('.json'))
+		.filter((f) => f.endsWith(".json"))
 		.sort()
-		.map((f) => path.join(FRAGMENT_DIR, f))
-	return [BASE_MANIFEST, ...fragments]
+		.map((f) => path.join(FRAGMENT_DIR, f));
+	return [BASE_MANIFEST, ...fragments];
 }
 
 /**
@@ -172,19 +209,20 @@ function manifestFiles() {
  */
 function collectDisplayStrings(node, file, sink) {
 	if (Array.isArray(node)) {
-		for (const item of node) collectDisplayStrings(item, file, sink)
-		return
+		for (const item of node) collectDisplayStrings(item, file, sink);
+		return;
 	}
-	if (node === null || typeof node !== 'object') return
+	if (node === null || typeof node !== "object") return;
 	for (const [key, value] of Object.entries(node)) {
-		if (typeof value === 'string') {
-			if (DISPLAY_KEYS.includes(key) === false) continue
-			if (PLACEHOLDER_RE.test(value)) continue
-			if (sink.has(value) === false) sink.set(value, [])
-			const where = `${path.relative(REPO_ROOT, file)}:${key}`
-			if (sink.get(value).includes(where) === false) sink.get(value).push(where)
+		if (typeof value === "string") {
+			if (DISPLAY_KEYS.includes(key) === false) continue;
+			if (PLACEHOLDER_RE.test(value)) continue;
+			if (sink.has(value) === false) sink.set(value, []);
+			const where = `${path.relative(REPO_ROOT, file)}:${key}`;
+			if (sink.get(value).includes(where) === false)
+				sink.get(value).push(where);
 		} else {
-			collectDisplayStrings(value, file, sink)
+			collectDisplayStrings(value, file, sink);
 		}
 	}
 }
@@ -198,20 +236,24 @@ function collectDisplayStrings(node, file, sink) {
  */
 function collectTranslateKeys(dir, sink) {
 	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-		const full = path.join(dir, entry.name)
+		const full = path.join(dir, entry.name);
 		if (entry.isDirectory()) {
-			collectTranslateKeys(full, sink)
-			continue
+			collectTranslateKeys(full, sink);
+			continue;
 		}
-		if (/\.(vue|js|ts)$/.test(entry.name) === false) continue
-		const source = fs.readFileSync(full, 'utf8')
-		const re = new RegExp(`\\bt\\(\\s*'${APP_ID}'\\s*,\\s*'((?:[^'\\\\]|\\\\.)*)'`, 'g')
-		let match
+		if (/\.(vue|js|ts)$/.test(entry.name) === false) continue;
+		const source = fs.readFileSync(full, "utf8");
+		const re = new RegExp(
+			`\\bt\\(\\s*'${APP_ID}'\\s*,\\s*'((?:[^'\\\\]|\\\\.)*)'`,
+			"g",
+		);
+		let match;
 		while ((match = re.exec(source)) !== null) {
-			const key = match[1].replace(/\\'/g, "'").replace(/\\\\/g, '\\')
-			if (sink.has(key) === false) sink.set(key, [])
-			const where = path.relative(REPO_ROOT, full)
-			if (sink.get(key).includes(where) === false) sink.get(key).push(where)
+			const key = match[1].replace(/\\'/g, "'").replace(/\\\\/g, "\\");
+			if (sink.has(key) === false) sink.set(key, []);
+			const where = path.relative(REPO_ROOT, full);
+			if (sink.get(key).includes(where) === false)
+				sink.get(key).push(where);
 		}
 	}
 }
@@ -226,9 +268,9 @@ function collectTranslateKeys(dir, sink) {
 function schemaFiles() {
 	return fs
 		.readdirSync(SCHEMA_DIR)
-		.filter((f) => f.endsWith('.json'))
+		.filter((f) => f.endsWith(".json"))
 		.sort()
-		.map((f) => path.join(SCHEMA_DIR, f))
+		.map((f) => path.join(SCHEMA_DIR, f));
 }
 
 /**
@@ -254,149 +296,199 @@ function schemaFiles() {
  */
 function collectSchemaStrings(node, file, sink) {
 	if (Array.isArray(node)) {
-		for (const item of node) collectSchemaStrings(item, file, sink)
-		return
+		for (const item of node) collectSchemaStrings(item, file, sink);
+		return;
 	}
-	if (node === null || typeof node !== 'object') return
+	if (node === null || typeof node !== "object") return;
 
-	const where = path.relative(REPO_ROOT, file)
+	const where = path.relative(REPO_ROOT, file);
 	const remember = (value, what) => {
-		if (typeof value !== 'string' || value.trim() === '') return
-		if (sink.has(value) === false) sink.set(value, [])
-		const label = `${where}:${what}`
-		if (sink.get(value).includes(label) === false) sink.get(value).push(label)
-	}
+		if (typeof value !== "string" || value.trim() === "") return;
+		if (sink.has(value) === false) sink.set(value, []);
+		const label = `${where}:${what}`;
+		if (sink.get(value).includes(label) === false)
+			sink.get(value).push(label);
+	};
 
-	if (node.properties !== null && typeof node.properties === 'object' && Array.isArray(node.properties) === false) {
-		remember(node.title, 'schema title')
+	if (
+		node.properties !== null &&
+		typeof node.properties === "object" &&
+		Array.isArray(node.properties) === false
+	) {
+		remember(node.title, "schema title");
 		for (const [key, prop] of Object.entries(node.properties)) {
-			if (prop === null || typeof prop !== 'object') continue
-			remember(prop.title, `${key}.title`)
-			remember(prop.description, `${key}.description`)
+			if (prop === null || typeof prop !== "object") continue;
+			remember(prop.title, `${key}.title`);
+			remember(prop.description, `${key}.description`);
 			for (const source of [prop, prop.items]) {
-				if (source === null || typeof source !== 'object') continue
-				const labels = source['x-enum-labels']
-				if (labels === null || typeof labels !== 'object') continue
-				for (const label of Object.values(labels)) remember(label, `${key}.x-enum-labels`)
+				if (source === null || typeof source !== "object") continue;
+				const labels = source["x-enum-labels"];
+				if (labels === null || typeof labels !== "object") continue;
+				for (const label of Object.values(labels))
+					remember(label, `${key}.x-enum-labels`);
 			}
 		}
 	}
 
-	for (const value of Object.values(node)) collectSchemaStrings(value, file, sink)
+	for (const value of Object.values(node))
+		collectSchemaStrings(value, file, sink);
 }
 
 function main() {
-	const failures = []
+	const failures = [];
 
 	// --- 1. catalogues exist and have core's shape -------------------------
-	const catalogues = {}
-	for (const locale of ['en', 'nl']) {
-		const file = path.join(L10N_DIR, `${locale}.json`)
+	const catalogues = {};
+	for (const locale of ["en", "nl"]) {
+		const file = path.join(L10N_DIR, `${locale}.json`);
 		if (fs.existsSync(file) === false) {
-			failures.push(`l10n/${locale}.json is missing — ADR-007 requires both en and nl in every app with a UI.`)
-			continue
+			failures.push(
+				`l10n/${locale}.json is missing — ADR-007 requires both en and nl in every app with a UI.`,
+			);
+			continue;
 		}
-		let doc
+		let doc;
 		try {
-			doc = loadJson(file)
+			doc = loadJson(file);
 		} catch (error) {
-			failures.push(`l10n/${locale}.json does not parse as JSON: ${error.message}`)
-			continue
+			failures.push(
+				`l10n/${locale}.json does not parse as JSON: ${error.message}`,
+			);
+			continue;
 		}
-		if (doc.translations === null || typeof doc.translations !== 'object' || Array.isArray(doc.translations)) {
-			failures.push(`l10n/${locale}.json has no "translations" object — @nextcloud/l10n cannot read it.`)
-			continue
+		if (
+			doc.translations === null ||
+			typeof doc.translations !== "object" ||
+			Array.isArray(doc.translations)
+		) {
+			failures.push(
+				`l10n/${locale}.json has no "translations" object — @nextcloud/l10n cannot read it.`,
+			);
+			continue;
 		}
-		if (typeof doc.pluralForm !== 'string' || doc.pluralForm.length === 0) {
-			failures.push(`l10n/${locale}.json has no "pluralForm" string (Nextcloud core catalogue shape).`)
+		if (typeof doc.pluralForm !== "string" || doc.pluralForm.length === 0) {
+			failures.push(
+				`l10n/${locale}.json has no "pluralForm" string (Nextcloud core catalogue shape).`,
+			);
 		}
-		catalogues[locale] = doc.translations
-		checkJsCatalogue(locale, doc.translations, failures)
+		catalogues[locale] = doc.translations;
+		checkJsCatalogue(locale, doc.translations, failures);
 	}
 
 	if (failures.length > 0) {
-		report(failures, 0, 0, 0)
-		return
+		report(failures, 0, 0, 0);
+		return;
 	}
 
-	const en = catalogues.en
-	const nl = catalogues.nl
-	const enKeys = Object.keys(en)
-	const nlKeys = Object.keys(nl)
+	const en = catalogues.en;
+	const nl = catalogues.nl;
+	const enKeys = Object.keys(en);
+	const nlKeys = Object.keys(nl);
 
 	// --- 2. identical key sets, zero gaps ----------------------------------
-	const missingInNl = enKeys.filter((k) => Object.hasOwn(nl, k) === false)
-	const missingInEn = nlKeys.filter((k) => Object.hasOwn(en, k) === false)
-	for (const key of missingInNl) failures.push(`key present in en.json but MISSING from nl.json: ${JSON.stringify(key)}`)
-	for (const key of missingInEn) failures.push(`key present in nl.json but MISSING from en.json: ${JSON.stringify(key)}`)
+	const missingInNl = enKeys.filter((k) => Object.hasOwn(nl, k) === false);
+	const missingInEn = nlKeys.filter((k) => Object.hasOwn(en, k) === false);
+	for (const key of missingInNl)
+		failures.push(
+			`key present in en.json but MISSING from nl.json: ${JSON.stringify(key)}`,
+		);
+	for (const key of missingInEn)
+		failures.push(
+			`key present in nl.json but MISSING from en.json: ${JSON.stringify(key)}`,
+		);
 
 	// --- 3. en.json is identity-mapped -------------------------------------
 	for (const key of enKeys) {
 		if (en[key] !== key) {
-			failures.push(`en.json is not identity-mapped: ${JSON.stringify(key)} -> ${JSON.stringify(en[key])}`)
+			failures.push(
+				`en.json is not identity-mapped: ${JSON.stringify(key)} -> ${JSON.stringify(en[key])}`,
+			);
 		}
 	}
 
 	// --- 4. every nl value is a non-empty string ---------------------------
 	for (const key of nlKeys) {
-		if (typeof nl[key] !== 'string' || nl[key].trim() === '') {
-			failures.push(`nl.json has an empty translation for ${JSON.stringify(key)} — it would render as blank, not as a fallback.`)
+		if (typeof nl[key] !== "string" || nl[key].trim() === "") {
+			failures.push(
+				`nl.json has an empty translation for ${JSON.stringify(key)} — it would render as blank, not as a fallback.`,
+			);
 		}
 	}
 
 	// --- 5. every manifest display string is a key -------------------------
-	const manifestStrings = new Map()
+	const manifestStrings = new Map();
 	for (const file of manifestFiles()) {
-		collectDisplayStrings(loadJson(file), file, manifestStrings)
+		collectDisplayStrings(loadJson(file), file, manifestStrings);
 	}
 	for (const [value, where] of manifestStrings) {
 		if (Object.hasOwn(en, value) === false) {
-			failures.push(`manifest string has no en.json key: ${JSON.stringify(value)} (${where.join(', ')})`)
+			failures.push(
+				`manifest string has no en.json key: ${JSON.stringify(value)} (${where.join(", ")})`,
+			);
 		}
 		if (Object.hasOwn(nl, value) === false) {
-			failures.push(`manifest string has no nl.json key: ${JSON.stringify(value)} (${where.join(', ')})`)
+			failures.push(
+				`manifest string has no nl.json key: ${JSON.stringify(value)} (${where.join(", ")})`,
+			);
 		}
 	}
 
 	// --- 6. every t('hrmq', …) key is a key --------------------------------
-	const translateKeys = new Map()
-	collectTranslateKeys(SRC_DIR, translateKeys)
+	const translateKeys = new Map();
+	collectTranslateKeys(SRC_DIR, translateKeys);
 	for (const [key, where] of translateKeys) {
 		if (Object.hasOwn(en, key) === false) {
-			failures.push(`t('${APP_ID}', …) key has no en.json entry: ${JSON.stringify(key)} (${where.join(', ')})`)
+			failures.push(
+				`t('${APP_ID}', …) key has no en.json entry: ${JSON.stringify(key)} (${where.join(", ")})`,
+			);
 		}
 		if (Object.hasOwn(nl, key) === false) {
-			failures.push(`t('${APP_ID}', …) key has no nl.json entry: ${JSON.stringify(key)} (${where.join(', ')})`)
+			failures.push(
+				`t('${APP_ID}', …) key has no nl.json entry: ${JSON.stringify(key)} (${where.join(", ")})`,
+			);
 		}
 	}
 
 	// --- 7. no Dutch literals left in the manifest surface -----------------
 	for (const [value, where] of manifestStrings) {
 		if (DUTCH_RE.test(value)) {
-			failures.push(`Dutch literal still used as a source key: ${JSON.stringify(value)} (${where.join(', ')})`
-				+ ' — the manifest string IS the translation key; write it in English and put the Dutch in l10n/nl.json.')
+			failures.push(
+				`Dutch literal still used as a source key: ${JSON.stringify(value)} (${where.join(", ")})` +
+					" — the manifest string IS the translation key; write it in English and put the Dutch in l10n/nl.json.",
+			);
 		}
 	}
 
 	// --- 8. every schema-derived display string is a key -------------------
-	const schemaStrings = new Map()
+	const schemaStrings = new Map();
 	for (const file of schemaFiles()) {
-		collectSchemaStrings(loadJson(file), file, schemaStrings)
+		collectSchemaStrings(loadJson(file), file, schemaStrings);
 	}
 	for (const [value, where] of schemaStrings) {
 		if (Object.hasOwn(en, value) === false) {
-			failures.push(`schema string has no en.json key: ${JSON.stringify(value)} (${where.join(', ')})`)
+			failures.push(
+				`schema string has no en.json key: ${JSON.stringify(value)} (${where.join(", ")})`,
+			);
 		}
 		if (Object.hasOwn(nl, value) === false) {
-			failures.push(`schema string has no nl.json key: ${JSON.stringify(value)} (${where.join(', ')})`)
+			failures.push(
+				`schema string has no nl.json key: ${JSON.stringify(value)} (${where.join(", ")})`,
+			);
 		}
 		if (DUTCH_RE.test(value)) {
-			failures.push(`Dutch literal still used as a source key: ${JSON.stringify(value)} (${where.join(', ')})`
-				+ ' — a schema title IS the translation key; write it in English and put the Dutch in l10n/nl.json.')
+			failures.push(
+				`Dutch literal still used as a source key: ${JSON.stringify(value)} (${where.join(", ")})` +
+					" — a schema title IS the translation key; write it in English and put the Dutch in l10n/nl.json.",
+			);
 		}
 	}
 
-	report(failures, enKeys.length, manifestStrings.size + schemaStrings.size, translateKeys.size)
+	report(
+		failures,
+		enKeys.length,
+		manifestStrings.size + schemaStrings.size,
+		translateKeys.size,
+	);
 }
 
 /**
@@ -414,45 +506,61 @@ function main() {
  * @param {string[]} failures - collected failure messages
  */
 function checkJsCatalogue(locale, translations, failures) {
-	const jsPath = path.join(L10N_DIR, `${locale}.js`)
+	const jsPath = path.join(L10N_DIR, `${locale}.js`);
 	if (fs.existsSync(jsPath) === false) {
-		failures.push(`l10n/${locale}.js is missing — the JSON catalogue is server-side only;`
-			+ ' the browser loads the OC.L10N.register() JS file, so translations would never render.')
-		return
+		failures.push(
+			`l10n/${locale}.js is missing — the JSON catalogue is server-side only;` +
+				" the browser loads the OC.L10N.register() JS file, so translations would never render.",
+		);
+		return;
 	}
 
-	let registered = null
-	const sandbox = { OC: { L10N: { register: (app, pairs) => { registered = { app, pairs } } } } }
+	let registered = null;
+	const sandbox = {
+		OC: {
+			L10N: {
+				register: (app, pairs) => {
+					registered = { app, pairs };
+				},
+			},
+		},
+	};
 	try {
-		vm.runInNewContext(fs.readFileSync(jsPath, 'utf8'), sandbox)
+		vm.runInNewContext(fs.readFileSync(jsPath, "utf8"), sandbox);
 	} catch (error) {
-		failures.push(`l10n/${locale}.js does not execute: ${error.message}`)
-		return
+		failures.push(`l10n/${locale}.js does not execute: ${error.message}`);
+		return;
 	}
 
 	if (registered === null) {
-		failures.push(`l10n/${locale}.js did not call OC.L10N.register().`)
-		return
+		failures.push(`l10n/${locale}.js did not call OC.L10N.register().`);
+		return;
 	}
 
 	if (registered.app !== APP_ID) {
-		failures.push(`l10n/${locale}.js registers app "${registered.app}", expected "${APP_ID}".`)
+		failures.push(
+			`l10n/${locale}.js registers app "${registered.app}", expected "${APP_ID}".`,
+		);
 	}
 
-	const jsKeys = Object.keys(registered.pairs).sort()
-	const jsonKeys = Object.keys(translations).sort()
-	if (jsKeys.join('\u0000') !== jsonKeys.join('\u0000')) {
-		const onlyJson = jsonKeys.filter((k) => jsKeys.includes(k) === false)
-		const onlyJs = jsKeys.filter((k) => jsonKeys.includes(k) === false)
-		failures.push(`l10n/${locale}.js and l10n/${locale}.json have drifted:`
-			+ ` ${onlyJson.length} key(s) only in JSON, ${onlyJs.length} only in JS.`)
-		return
+	const jsKeys = Object.keys(registered.pairs).sort();
+	const jsonKeys = Object.keys(translations).sort();
+	if (jsKeys.join("\u0000") !== jsonKeys.join("\u0000")) {
+		const onlyJson = jsonKeys.filter((k) => jsKeys.includes(k) === false);
+		const onlyJs = jsKeys.filter((k) => jsonKeys.includes(k) === false);
+		failures.push(
+			`l10n/${locale}.js and l10n/${locale}.json have drifted:` +
+				` ${onlyJson.length} key(s) only in JSON, ${onlyJs.length} only in JS.`,
+		);
+		return;
 	}
 
 	for (const key of jsonKeys) {
 		if (registered.pairs[key] !== translations[key]) {
-			failures.push(`l10n/${locale}: "${key}" differs between the JS and JSON catalogues.`)
-			return
+			failures.push(
+				`l10n/${locale}: "${key}" differs between the JS and JSON catalogues.`,
+			);
+			return;
 		}
 	}
 }
@@ -466,19 +574,25 @@ function checkJsCatalogue(locale, translations, failures) {
  * @param {number} translateCount - distinct t('hrmq', …) keys
  */
 function report(failures, keyCount, manifestCount, translateCount) {
-	console.log(`[validate-l10n-parity] ${keyCount} keys per catalogue (en/nl),`
-		+ ` ${manifestCount} distinct manifest + schema strings, ${translateCount} t('${APP_ID}', …) keys.`)
+	console.log(
+		`[validate-l10n-parity] ${keyCount} keys per catalogue (en/nl),` +
+			` ${manifestCount} distinct manifest + schema strings, ${translateCount} t('${APP_ID}', …) keys.`,
+	);
 
 	if (failures.length > 0) {
-		console.error('')
-		console.error(`[validate-l10n-parity] FAIL — ${failures.length} problem(s):`)
-		for (const failure of failures) console.error(`  - ${failure}`)
-		process.exit(1)
+		console.error("");
+		console.error(
+			`[validate-l10n-parity] FAIL — ${failures.length} problem(s):`,
+		);
+		for (const failure of failures) console.error(`  - ${failure}`);
+		process.exit(1);
 	}
 
-	console.log('[validate-l10n-parity] PASS — en/nl key sets are identical, en is identity-mapped,'
-		+ ' every manifest and t() string is covered, and no Dutch literal survives as a source key.')
-	process.exit(0)
+	console.log(
+		"[validate-l10n-parity] PASS — en/nl key sets are identical, en is identity-mapped," +
+			" every manifest and t() string is covered, and no Dutch literal survives as a source key.",
+	);
+	process.exit(0);
 }
 
-main()
+main();

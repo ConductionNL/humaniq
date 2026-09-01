@@ -37,25 +37,27 @@
  *   openconnector/tests/e2e/regression/manifest-pages.spec.ts
  */
 
-import { test, expect, type Page, type ConsoleMessage } from '@playwright/test'
-import * as fs from 'fs'
-import * as path from 'path'
+import type { ConsoleMessage, Page } from "@playwright/test";
+
+import { expect, test } from "@playwright/test";
+import * as fs from "fs";
+import * as path from "path";
 
 /* --------------------------------------------------------------------- *
  *  Manifest loading (+ optional manifest.d fragments)
  * --------------------------------------------------------------------- */
 
 interface ManifestPage {
-	id: string
-	route: string
-	type: string
-	title?: string
-	config?: { register?: string, schema?: string }
+	id: string;
+	route: string;
+	type: string;
+	title?: string;
+	config?: { register?: string; schema?: string };
 }
 
 interface Manifest {
-	pages: ManifestPage[]
-	menu: unknown[]
+	pages: ManifestPage[];
+	menu: unknown[];
 }
 
 /**
@@ -65,24 +67,31 @@ interface Manifest {
  * this spec correct the day it does).
  */
 function loadManifest(): Manifest {
-	const srcDir = path.resolve(__dirname, '..', '..', '..', 'src')
-	const manifest = JSON.parse(fs.readFileSync(path.join(srcDir, 'manifest.json'), 'utf-8')) as Manifest
-	const fragmentsDir = path.join(srcDir, 'manifest.d')
+	const srcDir = path.resolve(__dirname, "..", "..", "..", "src");
+	const manifest = JSON.parse(
+		fs.readFileSync(path.join(srcDir, "manifest.json"), "utf-8"),
+	) as Manifest;
+	const fragmentsDir = path.join(srcDir, "manifest.d");
 	if (fs.existsSync(fragmentsDir)) {
-		for (const file of fs.readdirSync(fragmentsDir).filter((f) => f.endsWith('.json')).sort()) {
-			const fragment = JSON.parse(fs.readFileSync(path.join(fragmentsDir, file), 'utf-8')) as Partial<Manifest>
+		for (const file of fs
+			.readdirSync(fragmentsDir)
+			.filter((f) => f.endsWith(".json"))
+			.sort()) {
+			const fragment = JSON.parse(
+				fs.readFileSync(path.join(fragmentsDir, file), "utf-8"),
+			) as Partial<Manifest>;
 			if (Array.isArray(fragment.pages)) {
-				manifest.pages.push(...fragment.pages)
+				manifest.pages.push(...fragment.pages);
 			}
 			if (Array.isArray(fragment.menu)) {
-				manifest.menu.push(...(fragment.menu as unknown[]))
+				manifest.menu.push(...(fragment.menu as unknown[]));
 			}
 		}
 	}
-	return manifest
+	return manifest;
 }
 
-const MANIFEST = loadManifest()
+const MANIFEST = loadManifest();
 
 /* --------------------------------------------------------------------- *
  *  Detail-page quarantine — WITH AN EXPIRY DATE
@@ -109,24 +118,33 @@ const MANIFEST = loadManifest()
  */
 const NC_VUE_VERSION: string = (() => {
 	try {
-		const pkg = path.resolve(__dirname, '..', '..', '..', 'node_modules', '@conduction', 'nextcloud-vue', 'package.json')
-		return JSON.parse(fs.readFileSync(pkg, 'utf-8')).version as string
+		const pkg = path.resolve(
+			__dirname,
+			"..",
+			"..",
+			"..",
+			"node_modules",
+			"@conduction",
+			"nextcloud-vue",
+			"package.json",
+		);
+		return JSON.parse(fs.readFileSync(pkg, "utf-8")).version as string;
 	} catch {
-		return 'unknown'
+		return "unknown";
 	}
-})()
+})();
 
 /** The one version known to carry the CnDetailPage ref defect. */
-const DETAIL_BROKEN_IN = '2.2.0-vue3.2'
+const DETAIL_BROKEN_IN = "2.2.0-vue3.2";
 
 /** True while the installed library is the known-broken one. */
-const DETAIL_QUARANTINED = NC_VUE_VERSION === DETAIL_BROKEN_IN
+const DETAIL_QUARANTINED = NC_VUE_VERSION === DETAIL_BROKEN_IN;
 
 /** All pages whose route needs no path parameter — smoke-testable as-is. */
-const SMOKE_PAGES = MANIFEST.pages.filter((p) => !p.route.includes(':'))
+const SMOKE_PAGES = MANIFEST.pages.filter((p) => !p.route.includes(":"));
 
 /** Parameterised (detail) pages — excluded here, counted for the sanity test. */
-const PARAM_PAGES = MANIFEST.pages.filter((p) => p.route.includes(':'))
+const PARAM_PAGES = MANIFEST.pages.filter((p) => p.route.includes(":"));
 
 /* --------------------------------------------------------------------- *
  *  App root resolution
@@ -156,25 +174,30 @@ const PARAM_PAGES = MANIFEST.pages.filter((p) => p.route.includes(':'))
 // so the base cannot drift from the router's. Serving the shell is still
 // verified — via the navigation below — but it is no longer what SELECTS the
 // base.
-let _root: string | null = null
+let _root: string | null = null;
 async function rootUrl(page: Page): Promise<string> {
-	if (_root) return _root
+	if (_root) return _root;
 	// `/index.php/apps/humaniq/` is reachable on every install shape (the front
 	// controller is always addressable explicitly), so it is a safe place to
 	// stand while asking the page which base the router actually uses.
-	await page.goto('/index.php/apps/humaniq/', { waitUntil: 'domcontentloaded' })
-	const resolved = await page.evaluate(
-		() => (window as unknown as { OC?: { generateUrl?: (_p: string) => string } }).OC?.generateUrl?.('/apps/humaniq'),
-	)
+	await page.goto("/index.php/apps/humaniq/", {
+		waitUntil: "domcontentloaded",
+	});
+	const resolved = await page.evaluate(() =>
+		(
+			window as unknown as {
+				OC?: { generateUrl?: (_p: string) => string };
+			}
+		).OC?.generateUrl?.("/apps/humaniq"),);
 	if (!resolved) {
 		throw new Error(
-			'OC.generateUrl is not available on the humaniq page, so the router base cannot be '
-			+ 'resolved. The Nextcloud core bundle did not load — every route assertion below '
-			+ 'would be measuring the wrong URL.',
-		)
+			"OC.generateUrl is not available on the humaniq page, so the router base cannot be " +
+				"resolved. The Nextcloud core bundle did not load — every route assertion below " +
+				"would be measuring the wrong URL.",
+		);
 	}
-	_root = resolved.replace(/\/+$/, '')
-	return _root
+	_root = resolved.replace(/\/+$/, "");
+	return _root;
 }
 
 /* --------------------------------------------------------------------- *
@@ -201,38 +224,45 @@ const IGNORED_CONSOLE_PATTERNS: RegExp[] = [
 	// mid-run it serves the 404 HTML page, tripping a MIME-type refusal.
 	/Refused to apply style/i,
 	/is not a supported stylesheet MIME type/i,
-]
+];
 
 function attachConsoleSpy(page: Page): { errors: string[] } {
-	const errors: string[] = []
-	page.on('console', (msg: ConsoleMessage) => {
-		const text = msg.text()
+	const errors: string[] = [];
+	page.on("console", (msg: ConsoleMessage) => {
+		const text = msg.text();
 		if (IGNORED_CONSOLE_PATTERNS.some((rx) => rx.test(text))) {
-			return
+			return;
 		}
-		if (msg.type() === 'error') {
-			errors.push(text.slice(0, 300))
+		if (msg.type() === "error") {
+			errors.push(text.slice(0, 300));
 		}
-	})
-	page.on('pageerror', (err) => {
-		errors.push(`pageerror: ${err.message}`)
-	})
-	return { errors }
+	});
+	page.on("pageerror", (err) => {
+		errors.push(`pageerror: ${err.message}`);
+	});
+	return { errors };
 }
 
 /* --------------------------------------------------------------------- *
  *  Parametrized smoke tests
  * --------------------------------------------------------------------- */
 
-test.describe('manifest pages — schema-driven render', () => {
-
-	test('manifest sanity: page partition covers every declared page', () => {
+test.describe("manifest pages — schema-driven render", () => {
+	test("manifest sanity: page partition covers every declared page", () => {
 		// If this fails the manifest changed shape and the smoke loop below
 		// is silently under-covering — fail loudly instead.
-		expect(MANIFEST.pages.length, 'manifest declares pages').toBeGreaterThan(0)
-		expect(SMOKE_PAGES.length + PARAM_PAGES.length).toBe(MANIFEST.pages.length)
-		expect(SMOKE_PAGES.length, 'non-parameterised pages to smoke').toBeGreaterThan(0)
-	})
+		expect(
+			MANIFEST.pages.length,
+			"manifest declares pages",
+		).toBeGreaterThan(0);
+		expect(SMOKE_PAGES.length + PARAM_PAGES.length).toBe(
+			MANIFEST.pages.length,
+		);
+		expect(
+			SMOKE_PAGES.length,
+			"non-parameterised pages to smoke",
+		).toBeGreaterThan(0);
+	});
 
 	/* ------------------------------------------------------------------ *
 	 *  Detail pages
@@ -254,7 +284,7 @@ test.describe('manifest pages — schema-driven render', () => {
 	/** Detail pages whose route parameter we know how to resolve. */
 	const ALL_DETAIL_PAGES = PARAM_PAGES.filter(
 		(p) => p.config?.register && p.config?.schema && /:id\b/.test(p.route),
-	)
+	);
 
 	/**
 	 * One page per distinct widget-key signature.
@@ -276,7 +306,7 @@ test.describe('manifest pages — schema-driven render', () => {
 	 * The collapse is LOGGED below, not silent: a reader must be able to see
 	 * which pages were represented by which, rather than believing all 47 ran.
 	 */
-	const detailBySignature = new Map<string, ManifestPage[]>()
+	const detailBySignature = new Map<string, ManifestPage[]>();
 	for (const pg of ALL_DETAIL_PAGES) {
 		// Read BOTH spellings. Detail pages declare their body widgets as
 		// `config.widgets[].type` (hrmq#112 — that is the shape CnDetailPage
@@ -288,32 +318,40 @@ test.describe('manifest pages — schema-driven render', () => {
 		// coverage from 21 render paths to 1 while the tally still read as a
 		// pass. Same defect as the one caught in tests/validate-widget-keys.js —
 		// when a field moves, every reader of the old name stops covering.
-		const typed = pg.config?.widgets as Array<{ type?: string }> | undefined
-		const legacy = (pg as { widgets?: Array<{ widgetKey?: string }> }).widgets
+		const typed = pg.config?.widgets as
+			Array<{ type?: string }> | undefined;
+		const legacy = (pg as { widgets?: Array<{ widgetKey?: string }> })
+			.widgets;
 		const keys = [
-			...(typed ?? []).map((w) => w.type ?? ''),
-			...(legacy ?? []).map((w) => w.widgetKey ?? ''),
+			...(typed ?? []).map((w) => w.type ?? ""),
+			...(legacy ?? []).map((w) => w.widgetKey ?? ""),
 			// The header surfaces are their own render paths (CnLifecycleActions
 			// / CnActionButtons), so a page carrying them is not equivalent to
 			// one that does not.
-			...(pg.config?.lifecycleActions ? ['@lifecycleActions'] : []),
-			...((pg.config?.headerActions as unknown[] | undefined)?.length ? ['@headerActions'] : []),
-		].filter((k) => k !== '')
-		const signature = [...new Set(keys)].sort().join(',')
-		const bucket = detailBySignature.get(signature)
+			...(pg.config?.lifecycleActions ? ["@lifecycleActions"] : []),
+			...((pg.config?.headerActions as unknown[] | undefined)?.length
+				? ["@headerActions"]
+				: []),
+		].filter((k) => k !== "");
+		const signature = [...new Set(keys)].sort().join(",");
+		const bucket = detailBySignature.get(signature);
 		if (bucket) {
-			bucket.push(pg)
+			bucket.push(pg);
 		} else {
-			detailBySignature.set(signature, [pg])
+			detailBySignature.set(signature, [pg]);
 		}
 	}
-	const RESOLVABLE_DETAIL_PAGES = [...detailBySignature.values()].map((group) => group[0])
+	const RESOLVABLE_DETAIL_PAGES = [...detailBySignature.values()].map(
+		(group) => group[0],
+	);
 
 	/** How many detail pages actually got visited, for the coverage control. */
-	const detailOutcome = { visited: 0, skipped: 0 }
+	const detailOutcome = { visited: 0, skipped: 0 };
 
 	for (const pg of RESOLVABLE_DETAIL_PAGES) {
-		test(`[${pg.type}] ${pg.id} mounts at ${pg.route}`, async ({ page }) => {
+		test(`[${pg.type}] ${pg.id} mounts at ${pg.route}`, async ({
+			page,
+		}) => {
 			// Quarantined while the installed library carries the CnDetailPage
 			// ref defect — see NC_VUE_VERSION above. Not a judgement that these
 			// pages work: they demonstrably do NOT, and that is the point of
@@ -322,70 +360,99 @@ test.describe('manifest pages — schema-driven render', () => {
 			// its globalTimeout so it reports no tally at all.
 			test.fixme(
 				DETAIL_QUARANTINED,
-				`@conduction/nextcloud-vue@${NC_VUE_VERSION}: CnDetailPage renders blank in production `
-				+ '(nextcloud-vue#705 / hrmq#112). Auto-enables when the dependency moves.',
-			)
+				`@conduction/nextcloud-vue@${NC_VUE_VERSION}: CnDetailPage renders blank in production ` +
+					"(nextcloud-vue#705 / hrmq#112). Auto-enables when the dependency moves.",
+			);
 
-			const { errors } = attachConsoleSpy(page)
-			const register = pg.config!.register!
-			const schema = pg.config!.schema!
+			const { errors } = attachConsoleSpy(page);
+			const register = pg.config!.register!;
+			const schema = pg.config!.schema!;
 
 			// Resolve a real object id. `page.request` inherits the
 			// authenticated storageState, so this is the same session the
 			// browser navigation will use.
 			const res = await page.request.get(
 				`/index.php/apps/openregister/api/objects/${register}/${schema}?_limit=1`,
-				{ headers: { 'OCS-APIRequest': 'true' } },
-			)
-			expect(res.ok(), `${pg.id}: listing ${register}/${schema} failed with HTTP ${res.status()}`).toBe(true)
-			const body = await res.json()
-			const rows = (body.results ?? []) as Array<{ id?: string }>
-			const total = body.total ?? rows.length
+				{ headers: { "OCS-APIRequest": "true" } },
+			);
+			expect(
+				res.ok(),
+				`${pg.id}: listing ${register}/${schema} failed with HTTP ${res.status()}`,
+			).toBe(true);
+			const body = await res.json();
+			const rows = (body.results ?? []) as Array<{ id?: string }>;
+			const total = body.total ?? rows.length;
 
 			if (rows.length === 0 || !rows[0]?.id) {
-				detailOutcome.skipped++
+				detailOutcome.skipped++;
 				// The reason states the measured total. A skip whose reason is
 				// untrue is an invisible pass.
-				test.skip(true, `${pg.id}: ${register}/${schema} has total=${total} — no object to open`)
-				return
+				test.skip(
+					true,
+					`${pg.id}: ${register}/${schema} has total=${total} — no object to open`,
+				);
+				return;
 			}
 
-			const url = `${await rootUrl(page)}${pg.route.replace(/:id\b/, rows[0].id!)}`
-			await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 })
+			const url = `${await rootUrl(page)}${pg.route.replace(/:id\b/, rows[0].id!)}`;
+			await page.goto(url, {
+				waitUntil: "domcontentloaded",
+				timeout: 30_000,
+			});
 
-			await expect(page.locator('#app-content, [data-cy=app-content], .app-content').first()).toBeVisible({ timeout: 15_000 })
+			await expect(
+				page
+					.locator(
+						"#app-content, [data-cy=app-content], .app-content",
+					)
+					.first(),
+			).toBeVisible({ timeout: 15_000 });
 
 			// Same content assertion the index pages carry. This is the one
 			// that catches a blank detail pane: the shell mounts either way,
 			// so `#app-content` being visible proves nothing on its own.
-			const rendered = await page.locator('#app-content, .app-content').first().innerHTML()
-			expect(rendered.length, `${pg.id} (${pg.route}) rendered no content inside app-content`).toBeGreaterThan(100)
+			const rendered = await page
+				.locator("#app-content, .app-content")
+				.first()
+				.innerHTML();
+			expect(
+				rendered.length,
+				`${pg.id} (${pg.route}) rendered no content inside app-content`,
+			).toBeGreaterThan(100);
 
-			expect(errors, `${pg.id} (${pg.route}) emitted console errors: ${errors.join(' | ')}`).toEqual([])
-			detailOutcome.visited++
-		})
+			expect(
+				errors,
+				`${pg.id} (${pg.route}) emitted console errors: ${errors.join(" | ")}`,
+			).toEqual([]);
+			detailOutcome.visited++;
+		});
 	}
 
-	test('detail coverage: every widget-key signature is represented, and the collapse is visible', () => {
+	test("detail coverage: every widget-key signature is represented, and the collapse is visible", () => {
 		// Say out loud what this suite does NOT open. A bounded run that stays
 		// quiet about its bound reads exactly like an exhaustive one.
-		const lines: string[] = []
+		const lines: string[] = [];
 		for (const [signature, group] of detailBySignature) {
 			if (group.length > 1) {
-				lines.push(`  [${signature}] ${group[0].id} represents ${group.length - 1} other page(s): `
-					+ group.slice(1).map((p) => p.id).join(', '))
+				lines.push(
+					`  [${signature}] ${group[0].id} represents ${group.length - 1} other page(s): ` +
+						group
+							.slice(1)
+							.map((p) => p.id)
+							.join(", "),
+				);
 			}
 		}
-		// eslint-disable-next-line no-console
+
 		console.log(
-			`[detail coverage] ${ALL_DETAIL_PAGES.length} detail pages -> `
-			+ `${RESOLVABLE_DETAIL_PAGES.length} distinct widget-key signatures opened.\n`
-			+ (lines.join('\n') || '  (no page represents another)'),
-		)
+			`[detail coverage] ${ALL_DETAIL_PAGES.length} detail pages -> ` +
+				`${RESOLVABLE_DETAIL_PAGES.length} distinct widget-key signatures opened.\n` +
+				(lines.join("\n") || "  (no page represents another)"),
+		);
 		expect(
 			RESOLVABLE_DETAIL_PAGES.length,
-			'every signature must contribute exactly one opened page',
-		).toBe(detailBySignature.size)
+			"every signature must contribute exactly one opened page",
+		).toBe(detailBySignature.size);
 
 		// A detail page with NO widget keys means the signature reader is
 		// looking at the wrong field — every such page collapses into one empty
@@ -393,67 +460,76 @@ test.describe('manifest pages — schema-driven render', () => {
 		// tally still reads green. That is exactly what happened when the body
 		// widgets moved from `widgets[].widgetKey` to `config.widgets[].type`.
 		const unsigned = ALL_DETAIL_PAGES.filter((p) => {
-			const typed = (p.config?.widgets as unknown[] | undefined)?.length ?? 0
-			const legacy = ((p as { widgets?: unknown[] }).widgets)?.length ?? 0
-			return typed + legacy === 0
-		})
+			const typed =
+				(p.config?.widgets as unknown[] | undefined)?.length ?? 0;
+			const legacy = (p as { widgets?: unknown[] }).widgets?.length ?? 0;
+			return typed + legacy === 0;
+		});
 		expect(
 			unsigned.map((p) => p.id),
-			'detail page(s) contributed NO widget keys — the signature reader is reading a field the manifest no longer uses',
-		).toEqual([])
+			"detail page(s) contributed NO widget keys — the signature reader is reading a field the manifest no longer uses",
+		).toEqual([]);
 
 		// Guard the collapse ratio too: one bucket for many pages is the
 		// signature of a broken reader, not of genuinely identical pages.
 		expect(
 			detailBySignature.size,
 			`${ALL_DETAIL_PAGES.length} detail pages collapsed to ${detailBySignature.size} signature(s) — implausibly few`,
-		).toBeGreaterThan(5)
-	})
+		).toBeGreaterThan(5);
+	});
 
-	test('detail coverage: the quarantine is declared, or a page was actually opened', () => {
+	test("detail coverage: the quarantine is declared, or a page was actually opened", () => {
 		if (DETAIL_QUARANTINED) {
 			// Loud, and states the version it is pinned to. A quarantine that
 			// nobody can see is indistinguishable from coverage.
-			// eslint-disable-next-line no-console
+
 			console.log(
-				`[detail coverage] QUARANTINED against @conduction/nextcloud-vue@${NC_VUE_VERSION}: `
-				+ `${RESOLVABLE_DETAIL_PAGES.length} detail signature(s) NOT opened `
-				+ '(nextcloud-vue#705 / hrmq#112). These re-enable automatically when the dependency moves.',
-			)
-			expect(NC_VUE_VERSION, 'quarantine is pinned to one known-broken version').toBe(DETAIL_BROKEN_IN)
-			return
+				`[detail coverage] QUARANTINED against @conduction/nextcloud-vue@${NC_VUE_VERSION}: ` +
+					`${RESOLVABLE_DETAIL_PAGES.length} detail signature(s) NOT opened ` +
+					"(nextcloud-vue#705 / hrmq#112). These re-enable automatically when the dependency moves.",
+			);
+			expect(
+				NC_VUE_VERSION,
+				"quarantine is pinned to one known-broken version",
+			).toBe(DETAIL_BROKEN_IN);
+			return;
 		}
 
 		// Not quarantined: the original control applies — see below.
 		expect(
 			detailOutcome.visited,
-			`every detail page skipped (${detailOutcome.skipped} skipped of ${RESOLVABLE_DETAIL_PAGES.length}) — `
-			+ 'the register has no objects, so this run proves nothing about detail rendering',
-		).toBeGreaterThan(0)
-	})
+			`every detail page skipped (${detailOutcome.skipped} skipped of ${RESOLVABLE_DETAIL_PAGES.length}) — ` +
+				"the register has no objects, so this run proves nothing about detail rendering",
+		).toBeGreaterThan(0);
+	});
 
-	test('detail coverage: at least one detail page was actually opened', () => {
-		test.skip(DETAIL_QUARANTINED, `detail pages quarantined against @conduction/nextcloud-vue@${NC_VUE_VERSION} (nextcloud-vue#705)`)
+	test("detail coverage: at least one detail page was actually opened", () => {
+		test.skip(
+			DETAIL_QUARANTINED,
+			`detail pages quarantined against @conduction/nextcloud-vue@${NC_VUE_VERSION} (nextcloud-vue#705)`,
+		);
 		// The anti-greenwash control. Without it, an instance with an empty
 		// register would skip every detail test and the suite would report all
 		// green having opened nothing — the precise failure mode that let #112
 		// live. Runs last (declaration order) so the counters are populated.
 		expect(
 			RESOLVABLE_DETAIL_PAGES.length,
-			'no detail page had a resolvable register/schema — the manifest shape changed',
-		).toBeGreaterThan(0)
+			"no detail page had a resolvable register/schema — the manifest shape changed",
+		).toBeGreaterThan(0);
 		expect(
 			detailOutcome.visited,
-			`every detail page skipped (${detailOutcome.skipped} skipped of ${RESOLVABLE_DETAIL_PAGES.length}) — `
-			+ 'the register has no objects, so this run proves nothing about detail rendering',
-		).toBeGreaterThan(0)
-	})
+			`every detail page skipped (${detailOutcome.skipped} skipped of ${RESOLVABLE_DETAIL_PAGES.length}) — ` +
+				"the register has no objects, so this run proves nothing about detail rendering",
+		).toBeGreaterThan(0);
+	});
 
 	for (const pg of SMOKE_PAGES) {
-		test(`[${pg.type}] ${pg.id} mounts at ${pg.route}`, async ({ page }) => {
-			const { errors } = attachConsoleSpy(page)
+		test(`[${pg.type}] ${pg.id} mounts at ${pg.route}`, async ({
+			page,
+		}) => {
+			const { errors } = attachConsoleSpy(page);
 
-			const root = await rootUrl(page)
+			const root = await rootUrl(page);
 			// The in-app router runs in HISTORY mode (`mode: 'history'`,
 			// src/main.js:83) — unlike openconnector's hash router. The route
 			// must therefore be PATH-form (`/apps/humaniq/timesheets`); a
@@ -464,25 +540,45 @@ test.describe('manifest pages — schema-driven render', () => {
 			// "Mijn uren" Timesheet index). Use `domcontentloaded` rather
 			// than `networkidle` — NC's notification poll keeps the network
 			// busy indefinitely.
-			await page.goto(`${root}${pg.route}`, { waitUntil: 'domcontentloaded', timeout: 30_000 })
+			await page.goto(`${root}${pg.route}`, {
+				waitUntil: "domcontentloaded",
+				timeout: 30_000,
+			});
 
 			// The Nextcloud SPA shell mounts inside #app-content.
-			await expect(page.locator('#app-content, [data-cy=app-content], .app-content').first()).toBeVisible({ timeout: 15_000 })
+			await expect(
+				page
+					.locator(
+						"#app-content, [data-cy=app-content], .app-content",
+					)
+					.first(),
+			).toBeVisible({ timeout: 15_000 });
 
 			// Route identity: the router must still be ON the requested route.
 			// A redirect back to the default page (the greenwash mode above)
 			// changes the pathname and must fail the smoke test.
-			expect(new URL(page.url()).pathname, `${pg.id} was redirected away from ${pg.route}`).toContain(pg.route)
+			expect(
+				new URL(page.url()).pathname,
+				`${pg.id} was redirected away from ${pg.route}`,
+			).toContain(pg.route);
 
 			// CnAppRoot should have resolved the route to *some* page component
 			// (CnIndexPage, CnDashboardPage, …). Verify that anything rendered
 			// inside the app-content area beyond the loading spinner.
-			const renderedContent = await page.locator('#app-content, .app-content').first().innerHTML()
-			expect(renderedContent.length, `${pg.id} (${pg.route}) rendered no content inside app-content`).toBeGreaterThan(100)
+			const renderedContent = await page
+				.locator("#app-content, .app-content")
+				.first()
+				.innerHTML();
+			expect(
+				renderedContent.length,
+				`${pg.id} (${pg.route}) rendered no content inside app-content`,
+			).toBeGreaterThan(100);
 
 			// No fatal console errors during initial mount.
-			expect(errors, `${pg.id} (${pg.route}) emitted console errors: ${errors.join(' | ')}`).toEqual([])
-		})
+			expect(
+				errors,
+				`${pg.id} (${pg.route}) emitted console errors: ${errors.join(" | ")}`,
+			).toEqual([]);
+		});
 	}
-
-})
+});

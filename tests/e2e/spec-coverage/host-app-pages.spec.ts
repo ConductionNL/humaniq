@@ -27,7 +27,9 @@
  * that passed.
  */
 
-import { expect, test, type Page } from '@playwright/test'
+import type { Page } from "@playwright/test";
+
+import { expect, test } from "@playwright/test";
 
 /**
  * The app's base path, resolved the way the APP resolves it — via
@@ -45,26 +47,30 @@ import { expect, test, type Page } from '@playwright/test'
  * Nextcloud from `php -S` with no mod_rewrite, so that is the router's real
  * history base on the instance these specs run against.
  */
-let cachedBase: string | null = null
+let cachedBase: string | null = null;
 async function appBase(page: Page): Promise<string> {
 	if (cachedBase) {
-		return cachedBase
+		return cachedBase;
 	}
 
-	await page.goto('/index.php/apps/humaniq/', { waitUntil: 'domcontentloaded' })
-	const resolved = await page.evaluate(
-		() => (window as unknown as { OC?: { generateUrl?: (_path: string) => string } })
-			.OC?.generateUrl?.('/apps/humaniq'),
-	)
+	await page.goto("/index.php/apps/humaniq/", {
+		waitUntil: "domcontentloaded",
+	});
+	const resolved = await page.evaluate(() =>
+		(
+			window as unknown as {
+				OC?: { generateUrl?: (_path: string) => string };
+			}
+		).OC?.generateUrl?.("/apps/humaniq"),);
 	if (!resolved) {
 		throw new Error(
-			'OC.generateUrl is not available on the humaniq page, so the router base cannot '
-			+ 'be resolved — every route assertion below would be measuring the wrong URL.',
-		)
+			"OC.generateUrl is not available on the humaniq page, so the router base cannot " +
+				"be resolved — every route assertion below would be measuring the wrong URL.",
+		);
 	}
-	cachedBase = resolved.replace(/\/+$/, '')
+	cachedBase = resolved.replace(/\/+$/, "");
 
-	return cachedBase
+	return cachedBase;
 }
 
 /**
@@ -76,19 +82,22 @@ async function appBase(page: Page): Promise<string> {
  * @return {Promise<void>}
  */
 async function gotoRoute(page: Page, route: string): Promise<void> {
-	const base = await appBase(page)
-	await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' })
-	await expect(page.locator('#app-content, .app-content').first())
-		.toBeVisible({ timeout: 15_000 })
-	expect(new URL(page.url()).pathname, `router must stay on ${route}`)
-		.toContain(route)
+	const base = await appBase(page);
+	await page.goto(`${base}${route}`, { waitUntil: "domcontentloaded" });
+	await expect(
+		page.locator("#app-content, .app-content").first(),
+	).toBeVisible({ timeout: 15_000 });
+	expect(
+		new URL(page.url()).pathname,
+		`router must stay on ${route}`,
+	).toContain(route);
 }
 
-test.describe('host-app SFC pages', () => {
-	test('ProformaPayslip renders its own compute form', async ({ page }) => {
-		await gotoRoute(page, '/payroll/proforma')
+test.describe("host-app SFC pages", () => {
+	test("ProformaPayslip renders its own compute form", async ({ page }) => {
+		await gotoRoute(page, "/payroll/proforma");
 
-		const content = page.locator('#app-content, .app-content').first()
+		const content = page.locator("#app-content, .app-content").first();
 
 		// Its own heading, not the shell's. A catch-all fallthrough renders the
 		// default route, which is visible and non-empty and would satisfy a
@@ -102,35 +111,37 @@ test.describe('host-app SFC pages', () => {
 		// happens to boot in, which is not what this test is about.
 		await expect(content).toContainText(
 			/Simuleer loonstrook|Simulate payslip|Proforma/i,
-		)
+		);
 
 		// The page's REASON to exist is that it gathers inputs and computes.
 		// A mounted-but-inert component still renders its heading, so assert
 		// the interactive surface: at least one field to type a gross amount
 		// into, and a control to submit it.
-		await expect(content.locator('input, select').first())
-			.toBeVisible({ timeout: 15_000 })
-		await expect(content.locator('button').first())
-			.toBeVisible({ timeout: 15_000 })
-	})
+		await expect(content.locator("input, select").first()).toBeVisible({
+			timeout: 15_000,
+		});
+		await expect(content.locator("button").first()).toBeVisible({
+			timeout: 15_000,
+		});
+	});
 
-	test('AdministrationSwitcher renders the administratie surface', async ({
+	test("AdministrationSwitcher renders the administratie surface", async ({
 		page,
 	}) => {
-		await gotoRoute(page, '/configuratie/administraties')
+		await gotoRoute(page, "/configuratie/administraties");
 
-		const content = page.locator('#app-content, .app-content').first()
+		const content = page.locator("#app-content, .app-content").first();
 
 		// "Administratie" (nl) or "Administration" (en) — see the note on the
 		// previous test. `Administrations` does NOT contain `Administratie`,
 		// which is exactly how the first version of this assertion failed
 		// against a correctly-rendering page.
-		await expect(content).toContainText(/Administratie|Administration/i)
+		await expect(content).toContainText(/Administratie|Administration/i);
 
 		// Either a list of accessible administraties or an explicit empty
 		// state — never a blank shell. On a freshly seeded CI instance the
 		// seeds create two Administration rows, but this assertion does not
 		// depend on that: it refuses only the blank case.
-		await expect(content).not.toHaveText(/^\s*$/)
-	})
-})
+		await expect(content).not.toHaveText(/^\s*$/);
+	});
+});

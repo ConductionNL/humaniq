@@ -70,17 +70,23 @@
 //   0 — every seed reference is importable
 //   1 — at least one reference would be dropped or dangles
 
-'use strict'
+"use strict";
 
-const fs = require('fs')
-const path = require('path')
+const fs = require("fs");
+const path = require("path");
 
-const REPO_ROOT = path.resolve(__dirname, '..')
-const BASE_REGISTER = path.join(REPO_ROOT, 'lib', 'Settings', 'humaniq_register.json')
-const FRAGMENT_DIR = path.join(REPO_ROOT, 'lib', 'Settings', 'register.d')
+const REPO_ROOT = path.resolve(__dirname, "..");
+const BASE_REGISTER = path.join(
+	REPO_ROOT,
+	"lib",
+	"Settings",
+	"humaniq_register.json",
+);
+const FRAGMENT_DIR = path.join(REPO_ROOT, "lib", "Settings", "register.d");
 
-const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
-const REF_PREFIX = '@ref:'
+const UUID_RE =
+	/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+const REF_PREFIX = "@ref:";
 
 // Seed references whose TARGET OBJECT DOES NOT EXIST anywhere in the seed set.
 //
@@ -99,10 +105,14 @@ const REF_PREFIX = '@ref:'
 // to the entry, and delete it as soon as the target lands.
 //
 // Format: '<referring object slug>.<property> -> <missing target slug>'
-const KNOWN_UNRESOLVED = []
+const KNOWN_UNRESOLVED = [];
 
 function isPlainObject(value) {
-	return value !== null && typeof value === 'object' && Array.isArray(value) === false
+	return (
+		value !== null &&
+		typeof value === "object" &&
+		Array.isArray(value) === false
+	);
 }
 
 /**
@@ -117,125 +127,161 @@ function deepMerge(base, overlay) {
 		   onto Object.prototype and corrupts every later object in the
 		   process - including the seed objects this script then validates,
 		   which would make its verdict meaningless. */
-		if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
-			continue
+		if (
+			key === "__proto__" ||
+			key === "constructor" ||
+			key === "prototype"
+		) {
+			continue;
 		}
-		const current = base[key]
+		const current = base[key];
 		if (Array.isArray(value) && Array.isArray(current)) {
-			base[key] = current.concat(value)
+			base[key] = current.concat(value);
 		} else if (isPlainObject(value) && isPlainObject(current)) {
-			deepMerge(current, value)
+			deepMerge(current, value);
 		} else {
-			base[key] = value
+			base[key] = value;
 		}
 	}
-	return base
+	return base;
 }
 
 function loadJson(file) {
-	return JSON.parse(fs.readFileSync(file, 'utf8'))
+	return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
 /** Build the effective register document the way SettingsService does. */
 function buildEffectiveRegister() {
-	const config = loadJson(BASE_REGISTER)
-	const fragments = fs.readdirSync(FRAGMENT_DIR).filter((f) => f.endsWith('.json')).sort()
+	const config = loadJson(BASE_REGISTER);
+	const fragments = fs
+		.readdirSync(FRAGMENT_DIR)
+		.filter((f) => f.endsWith(".json"))
+		.sort();
 	// Remember which fragment each seed object came from, for readable output.
-	const sourceBySlug = new Map()
+	const sourceBySlug = new Map();
 	for (const fragment of fragments) {
-		const data = loadJson(path.join(FRAGMENT_DIR, fragment))
-		for (const object of (data.components && data.components.objects) || []) {
-			const slug = object['@self'] && object['@self'].slug
-			if (slug) sourceBySlug.set(slug, fragment)
+		const data = loadJson(path.join(FRAGMENT_DIR, fragment));
+		for (const object of (data.components && data.components.objects) ||
+			[]) {
+			const slug = object["@self"] && object["@self"].slug;
+			if (slug) sourceBySlug.set(slug, fragment);
 		}
-		deepMerge(config, data)
+		deepMerge(config, data);
 	}
-	return { config, sourceBySlug, fragments }
+	return { config, sourceBySlug, fragments };
 }
 
 /** The `$ref` target of a property declaration, or null when it is not a relation. */
 function relationTarget(property) {
-	if (isPlainObject(property) === false) return null
-	if (typeof property.$ref === 'string') return property.$ref
-	if (isPlainObject(property.items) && typeof property.items.$ref === 'string') return property.items.$ref
-	return null
+	if (isPlainObject(property) === false) return null;
+	if (typeof property.$ref === "string") return property.$ref;
+	if (
+		isPlainObject(property.items) &&
+		typeof property.items.$ref === "string"
+	)
+		return property.items.$ref;
+	return null;
 }
 
 function main() {
-	const { config, sourceBySlug, fragments } = buildEffectiveRegister()
-	const schemas = (config.components && config.components.schemas) || {}
-	const objects = (config.components && config.components.objects) || []
+	const { config, sourceBySlug, fragments } = buildEffectiveRegister();
+	const schemas = (config.components && config.components.schemas) || {};
+	const objects = (config.components && config.components.objects) || [];
 
 	// Top-level `objects` is imported but NEVER token-resolved by
 	// ImportHandler, so seed placed there can only ever hold real uuids.
 	if (Array.isArray(config.objects) && config.objects.length > 0) {
-		console.error('[validate-seed-refs] FAIL — seed objects found at the top-level `objects` key.')
-		console.error('  ImportHandler::resolveSeedReferenceTokens() only scans components.objects;')
-		console.error('  @ref: tokens placed here are never resolved. Move them under components.objects.')
-		process.exit(1)
+		console.error(
+			"[validate-seed-refs] FAIL — seed objects found at the top-level `objects` key.",
+		);
+		console.error(
+			"  ImportHandler::resolveSeedReferenceTokens() only scans components.objects;",
+		);
+		console.error(
+			"  @ref: tokens placed here are never resolved. Move them under components.objects.",
+		);
+		process.exit(1);
 	}
 
 	// Slug -> the objects carrying it. More than one makes a bare @ref ambiguous.
-	const bySlug = new Map()
+	const bySlug = new Map();
 	for (const object of objects) {
-		const self = object['@self'] || {}
-		if (!self.slug) continue
-		if (bySlug.has(self.slug) === false) bySlug.set(self.slug, [])
-		bySlug.get(self.slug).push(self.schema)
+		const self = object["@self"] || {};
+		if (!self.slug) continue;
+		if (bySlug.has(self.slug) === false) bySlug.set(self.slug, []);
+		bySlug.get(self.slug).push(self.schema);
 	}
 
-	const failures = []
-	const unresolvedSeen = new Set()
-	let ok = 0
-	let checked = 0
+	const failures = [];
+	const unresolvedSeen = new Set();
+	let ok = 0;
+	let checked = 0;
 
 	for (const object of objects) {
-		const self = object['@self'] || {}
-		const schema = schemas[self.schema]
-		if (isPlainObject(schema) === false) continue
-		const properties = schema.properties || {}
-		const where = `${sourceBySlug.get(self.slug) || '?'}  ${self.schema}/${self.slug}`
+		const self = object["@self"] || {};
+		const schema = schemas[self.schema];
+		if (isPlainObject(schema) === false) continue;
+		const properties = schema.properties || {};
+		const where = `${sourceBySlug.get(self.slug) || "?"}  ${self.schema}/${self.slug}`;
 
 		for (const [name, raw] of Object.entries(object)) {
-			if (name.startsWith('@')) continue
-			if (relationTarget(properties[name]) === null) continue
+			if (name.startsWith("@")) continue;
+			if (relationTarget(properties[name]) === null) continue;
 
 			for (const value of Array.isArray(raw) ? raw : [raw]) {
-				if (typeof value !== 'string' || value === '') continue
-				checked++
+				if (typeof value !== "string" || value === "") continue;
+				checked++;
 
-				if (UUID_RE.test(value)) { ok++; continue }
+				if (UUID_RE.test(value)) {
+					ok++;
+					continue;
+				}
 
 				if (value.startsWith(REF_PREFIX)) {
-					const reference = value.slice(REF_PREFIX.length)
-					const colon = reference.indexOf(':')
-					const slug = colon === -1 ? reference : reference.slice(colon + 1)
-					const qualifier = colon === -1 ? null : reference.slice(0, colon)
-					const targets = bySlug.get(slug) || []
+					const reference = value.slice(REF_PREFIX.length);
+					const colon = reference.indexOf(":");
+					const slug =
+						colon === -1 ? reference : reference.slice(colon + 1);
+					const qualifier =
+						colon === -1 ? null : reference.slice(0, colon);
+					const targets = bySlug.get(slug) || [];
 					if (targets.length === 0) {
-						failures.push(`${where}\n      ${name}: "${value}" — DANGLING: no seed object has slug "${slug}".`)
+						failures.push(
+							`${where}\n      ${name}: "${value}" — DANGLING: no seed object has slug "${slug}".`,
+						);
 					} else if (qualifier === null && targets.length > 1) {
-						failures.push(`${where}\n      ${name}: "${value}" — AMBIGUOUS: slug "${slug}" exists on ${targets.join(', ')}.`
-							+ ` ImportHandler leaves this unresolved; use "@ref:<Schema>:${slug}".`)
-					} else if (qualifier !== null && targets.includes(qualifier) === false) {
-						failures.push(`${where}\n      ${name}: "${value}" — no "${qualifier}" object has slug "${slug}" (found on ${targets.join(', ')}).`)
+						failures.push(
+							`${where}\n      ${name}: "${value}" — AMBIGUOUS: slug "${slug}" exists on ${targets.join(", ")}.` +
+								` ImportHandler leaves this unresolved; use "@ref:<Schema>:${slug}".`,
+						);
+					} else if (
+						qualifier !== null &&
+						targets.includes(qualifier) === false
+					) {
+						failures.push(
+							`${where}\n      ${name}: "${value}" — no "${qualifier}" object has slug "${slug}" (found on ${targets.join(", ")}).`,
+						);
 					} else {
-						ok++
+						ok++;
 					}
-					continue
+					continue;
 				}
 
 				// A bare, non-uuid value on a relation property.
-				const key = `${self.slug}.${name} -> ${value}`
+				const key = `${self.slug}.${name} -> ${value}`;
 				if (bySlug.has(value)) {
-					failures.push(`${where}\n      ${name}: "${value}" — BARE SLUG on a $ref property.`
-						+ ` "${value}" is a seeded object; write it as "@ref:${value}" or it fails validation and the object is dropped.`)
+					failures.push(
+						`${where}\n      ${name}: "${value}" — BARE SLUG on a $ref property.` +
+							` "${value}" is a seeded object; write it as "@ref:${value}" or it fails validation and the object is dropped.`,
+					);
 				} else if (KNOWN_UNRESOLVED.includes(key)) {
-					unresolvedSeen.add(key)
-					ok++
+					unresolvedSeen.add(key);
+					ok++;
 				} else {
-					failures.push(`${where}\n      ${name}: "${value}" — bare value on a $ref property and no seed object has that slug.`
-						+ ' Author the target and use "@ref:", or add it to KNOWN_UNRESOLVED with a reason.')
+					failures.push(
+						`${where}\n      ${name}: "${value}" — bare value on a $ref property and no seed object has that slug.` +
+							' Author the target and use "@ref:", or add it to KNOWN_UNRESOLVED with a reason.',
+					);
 				}
 			}
 		}
@@ -243,29 +289,41 @@ function main() {
 
 	// A stale allowlist entry is a failure of its own: it means the reference
 	// was fixed or removed and the exemption was left behind.
-	const stale = KNOWN_UNRESOLVED.filter((entry) => unresolvedSeen.has(entry) === false)
+	const stale = KNOWN_UNRESOLVED.filter(
+		(entry) => unresolvedSeen.has(entry) === false,
+	);
 
-	console.log(`[validate-seed-refs] ${fragments.length} fragments, ${objects.length} seed objects,`
-		+ ` ${checked} relation values checked.`)
-	console.log(`[validate-seed-refs] ${KNOWN_UNRESOLVED.length} known-unresolved references allowlisted`
-		+ ' (missing target objects — see KNOWN_UNRESOLVED).')
+	console.log(
+		`[validate-seed-refs] ${fragments.length} fragments, ${objects.length} seed objects,` +
+			` ${checked} relation values checked.`,
+	);
+	console.log(
+		`[validate-seed-refs] ${KNOWN_UNRESOLVED.length} known-unresolved references allowlisted` +
+			" (missing target objects — see KNOWN_UNRESOLVED).",
+	);
 
 	if (failures.length > 0 || stale.length > 0) {
-		console.error('')
+		console.error("");
 		if (failures.length > 0) {
-			console.error(`[validate-seed-refs] FAIL — ${failures.length} seed reference(s) will not import:`)
-			for (const failure of failures) console.error(`  - ${failure}`)
+			console.error(
+				`[validate-seed-refs] FAIL — ${failures.length} seed reference(s) will not import:`,
+			);
+			for (const failure of failures) console.error(`  - ${failure}`);
 		}
 		if (stale.length > 0) {
-			console.error('')
-			console.error(`[validate-seed-refs] FAIL — ${stale.length} stale KNOWN_UNRESOLVED entr(ies); delete them:`)
-			for (const entry of stale) console.error(`  - ${entry}`)
+			console.error("");
+			console.error(
+				`[validate-seed-refs] FAIL — ${stale.length} stale KNOWN_UNRESOLVED entr(ies); delete them:`,
+			);
+			for (const entry of stale) console.error(`  - ${entry}`);
 		}
-		process.exit(1)
+		process.exit(1);
 	}
 
-	console.log(`[validate-seed-refs] PASS — all ${ok} seed relation values are importable.`)
-	process.exit(0)
+	console.log(
+		`[validate-seed-refs] PASS — all ${ok} seed relation values are importable.`,
+	);
+	process.exit(0);
 }
 
-main()
+main();

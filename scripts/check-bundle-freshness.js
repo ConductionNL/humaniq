@@ -34,12 +34,12 @@
  * a check that cannot see its subject must say so, not guess.
  */
 
-const { execFileSync } = require('child_process')
-const fs = require('fs')
-const path = require('path')
+const { execFileSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
 
-const REPO_ROOT = path.resolve(__dirname, '..')
-const BUNDLE = path.join(REPO_ROOT, 'js', 'humaniq-main.js')
+const REPO_ROOT = path.resolve(__dirname, "..");
+const BUNDLE = path.join(REPO_ROOT, "js", "humaniq-main.js");
 
 /**
  * A stamp written by `postbuild` on EVERY successful build.
@@ -54,7 +54,7 @@ const BUNDLE = path.join(REPO_ROOT, 'js', 'humaniq-main.js')
  * A check that cries wolf is a check people stop reading, so the signal is a
  * stamp the build writes unconditionally.
  */
-const STAMP = path.join(REPO_ROOT, 'js', '.build-stamp')
+const STAMP = path.join(REPO_ROOT, "js", ".build-stamp");
 
 /**
  * Last commit time touching a path, as a Date.
@@ -70,54 +70,80 @@ function lastCommitTime(rel) {
 		   being parsed. JSON.stringify quoting happened to hold here, but it
 		   is quoting for JSON, not for a shell - the two only coincide by
 		   luck. `--` still separates the pathspec from the options. */
-		const out = execFileSync('git', ['-C', REPO_ROOT, 'log', '-1', '--format=%cI', '--', rel], {
-			encoding: 'utf8',
-			stdio: ['ignore', 'pipe', 'ignore'],
-		}).trim()
-		return out ? new Date(out) : null
+		const out = execFileSync(
+			"git",
+			["-C", REPO_ROOT, "log", "-1", "--format=%cI", "--", rel],
+			{
+				encoding: "utf8",
+				stdio: ["ignore", "pipe", "ignore"],
+			},
+		).trim();
+		return out ? new Date(out) : null;
 	} catch {
-		return null
+		return null;
 	}
 }
 
 if (!fs.existsSync(BUNDLE)) {
-	console.error('[check-bundle-freshness] FAIL — js/humaniq-main.js does not exist. Run `npm run build`.')
-	process.exit(1)
+	console.error(
+		"[check-bundle-freshness] FAIL — js/humaniq-main.js does not exist. Run `npm run build`.",
+	);
+	process.exit(1);
 }
 
 // Prefer the stamp; fall back to the bundle's mtime for a tree built before
 // `postbuild` existed, and say which was used.
-let builtAt
+let builtAt;
 if (fs.existsSync(STAMP)) {
-	const raw = fs.readFileSync(STAMP, 'utf8').trim()
-	const parsed = new Date(raw)
-	builtAt = isNaN(parsed.getTime()) ? fs.statSync(STAMP).mtime : parsed
+	const raw = fs.readFileSync(STAMP, "utf8").trim();
+	const parsed = new Date(raw);
+	builtAt = isNaN(parsed.getTime()) ? fs.statSync(STAMP).mtime : parsed;
 } else {
-	console.log('[check-bundle-freshness] no js/.build-stamp — falling back to the bundle mtime,')
-	console.log('  which under webpack compareBeforeEmit can be older than the last build.')
-	builtAt = fs.statSync(BUNDLE).mtime
+	console.log(
+		"[check-bundle-freshness] no js/.build-stamp — falling back to the bundle mtime,",
+	);
+	console.log(
+		"  which under webpack compareBeforeEmit can be older than the last build.",
+	);
+	builtAt = fs.statSync(BUNDLE).mtime;
 }
-const srcCommittedAt = lastCommitTime('src')
+const srcCommittedAt = lastCommitTime("src");
 
 if (srcCommittedAt === null) {
-	console.log('[check-bundle-freshness] UNKNOWN — no git history available (git-less deploy?).')
-	console.log('  Cannot compare the bundle against its source. Reporting rather than guessing.')
-	process.exit(0)
+	console.log(
+		"[check-bundle-freshness] UNKNOWN — no git history available (git-less deploy?).",
+	);
+	console.log(
+		"  Cannot compare the bundle against its source. Reporting rather than guessing.",
+	);
+	process.exit(0);
 }
 
-console.log(`[check-bundle-freshness] bundle built:      ${builtAt.toISOString()}`)
-console.log(`[check-bundle-freshness] src last committed: ${srcCommittedAt.toISOString()}`)
+console.log(
+	`[check-bundle-freshness] bundle built:      ${builtAt.toISOString()}`,
+);
+console.log(
+	`[check-bundle-freshness] src last committed: ${srcCommittedAt.toISOString()}`,
+);
 
 // Uncommitted local edits to src/ are normal mid-work and are NOT a failure —
 // the developer has not claimed to have built them yet. What this catches is a
 // bundle older than source that is already committed, which is the state that
 // gets pushed, deployed, and believed.
 if (builtAt < srcCommittedAt) {
-	const days = ((srcCommittedAt - builtAt) / 86400000).toFixed(1)
-	console.error(`[check-bundle-freshness] FAIL — the bundle predates committed src/ by ${days} day(s).`)
-	console.error('  What ships is not what the source says. Run `npm run build`.')
-	console.error('  This is the exact shape of the 2026-08-19 incident: source correct, app broken.')
-	process.exit(1)
+	const days = ((srcCommittedAt - builtAt) / 86400000).toFixed(1);
+	console.error(
+		`[check-bundle-freshness] FAIL — the bundle predates committed src/ by ${days} day(s).`,
+	);
+	console.error(
+		"  What ships is not what the source says. Run `npm run build`.",
+	);
+	console.error(
+		"  This is the exact shape of the 2026-08-19 incident: source correct, app broken.",
+	);
+	process.exit(1);
 }
 
-console.log('[check-bundle-freshness] PASS — the bundle is at least as new as committed src/.')
+console.log(
+	"[check-bundle-freshness] PASS — the bundle is at least as new as committed src/.",
+);

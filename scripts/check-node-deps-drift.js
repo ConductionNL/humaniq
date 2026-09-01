@@ -30,10 +30,10 @@
  * so a reader can act without re-deriving them.
  */
 
-const fs = require('fs')
-const path = require('path')
+const fs = require("fs");
+const path = require("path");
 
-const REPO_ROOT = path.resolve(__dirname, '..')
+const REPO_ROOT = path.resolve(__dirname, "..");
 
 /**
  * Packages whose drift has actually bitten, or would bite silently.
@@ -47,8 +47,8 @@ const WATCHED = [
 	// Compiled into the shipped bundle. humaniq is manifest-driven, so nearly all
 	// of its rendering behaviour comes from this package — a wrong version
 	// here is a wrong application, not a wrong dependency.
-	'@conduction/nextcloud-vue',
-]
+	"@conduction/nextcloud-vue",
+];
 
 /**
  * Read the version a package resolves to in package-lock.json.
@@ -58,8 +58,8 @@ const WATCHED = [
  * @return {string|null} The locked version, or null when absent.
  */
 function lockedVersion(lock, name) {
-	const entry = (lock.packages || {})[`node_modules/${name}`]
-	return (entry && entry.version) || null
+	const entry = (lock.packages || {})[`node_modules/${name}`];
+	return (entry && entry.version) || null;
 }
 
 /**
@@ -69,54 +69,68 @@ function lockedVersion(lock, name) {
  * @return {string|null} The installed version, or null when not installed.
  */
 function installedVersion(name) {
-	const pkgPath = path.join(REPO_ROOT, 'node_modules', name, 'package.json')
+	const pkgPath = path.join(REPO_ROOT, "node_modules", name, "package.json");
 	if (!fs.existsSync(pkgPath)) {
-		return null
+		return null;
 	}
 	try {
-		return JSON.parse(fs.readFileSync(pkgPath, 'utf8')).version || null
+		return JSON.parse(fs.readFileSync(pkgPath, "utf8")).version || null;
 	} catch {
-		return null
+		return null;
 	}
 }
 
-const lockPath = path.join(REPO_ROOT, 'package-lock.json')
+const lockPath = path.join(REPO_ROOT, "package-lock.json");
 if (!fs.existsSync(lockPath)) {
-	console.error('[check-node-deps-drift] FAIL — package-lock.json not found; nothing to check against.')
-	process.exit(1)
+	console.error(
+		"[check-node-deps-drift] FAIL — package-lock.json not found; nothing to check against.",
+	);
+	process.exit(1);
 }
 
-const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'))
-const findings = []
+const lock = JSON.parse(fs.readFileSync(lockPath, "utf8"));
+const findings = [];
 
 for (const name of WATCHED) {
-	const locked = lockedVersion(lock, name)
-	const installed = installedVersion(name)
+	const locked = lockedVersion(lock, name);
+	const installed = installedVersion(name);
 
 	if (locked === null) {
-		findings.push(`${name}: not present in package-lock.json — it is watched here but not a declared dependency.`)
-		continue
+		findings.push(
+			`${name}: not present in package-lock.json — it is watched here but not a declared dependency.`,
+		);
+		continue;
 	}
 	if (installed === null) {
-		findings.push(`${name}: locked ${locked}, NOT INSTALLED.`)
-		continue
+		findings.push(`${name}: locked ${locked}, NOT INSTALLED.`);
+		continue;
 	}
 	if (installed !== locked) {
-		findings.push(`${name}: locked ${locked}, installed ${installed}.`)
-		continue
+		findings.push(`${name}: locked ${locked}, installed ${installed}.`);
+		continue;
 	}
 
-	console.log(`[check-node-deps-drift] ${name}: ${installed} (matches lockfile)`)
+	console.log(
+		`[check-node-deps-drift] ${name}: ${installed} (matches lockfile)`,
+	);
 }
 
 if (findings.length > 0) {
-	console.error('[check-node-deps-drift] FAIL — node_modules does not match package-lock.json:')
+	console.error(
+		"[check-node-deps-drift] FAIL — node_modules does not match package-lock.json:",
+	);
 	for (const f of findings) {
-		console.error(`  ${f}`)
+		console.error(`  ${f}`);
 	}
-	console.error('  Run `npm ci` (not `npm install` — only ci reconciles the tree to the lockfile).')
-	console.error('  Anything built before you do is compiled against the version above, not the declared one.')
-	process.exit(1)
+	console.error(
+		"  Run `npm ci` (not `npm install` — only ci reconciles the tree to the lockfile).",
+	);
+	console.error(
+		"  Anything built before you do is compiled against the version above, not the declared one.",
+	);
+	process.exit(1);
 }
 
-console.log(`[check-node-deps-drift] PASS — ${WATCHED.length} watched package(s) match the lockfile.`)
+console.log(
+	`[check-node-deps-drift] PASS — ${WATCHED.length} watched package(s) match the lockfile.`,
+);

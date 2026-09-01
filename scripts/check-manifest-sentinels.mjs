@@ -40,19 +40,22 @@
  * "the sentinels are fine" is exactly the mistake it is documenting.
  */
 
-import fs from 'node:fs'
-import path from 'node:path'
-import process from 'node:process'
-import { fileURLToPath } from 'node:url'
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
+import { fileURLToPath } from "node:url";
 // CJS module; its default export carries buildEffectiveManifest (base +
 // src/manifest.d/*.json fragments + page-template expansion). Since
 // humaniq-manifest-fragment-pipeline the base manifest.json holds only 3 shell
 // pages — scanning it alone would silently narrow this check from 40+
 // @workspace.*? clauses to ~0 and report an empty PASS.
-import parityHarness from '../tests/verify-manifest-parity.js'
+import parityHarness from "../tests/verify-manifest-parity.js";
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const OPTIONAL_SENTINEL = /^@workspace\..+\?$/
+const REPO_ROOT = path.resolve(
+	path.dirname(fileURLToPath(import.meta.url)),
+	"..",
+);
+const OPTIONAL_SENTINEL = /^@workspace\..+\?$/;
 
 /**
  * Load the installed library's own token resolver.
@@ -65,94 +68,130 @@ const OPTIONAL_SENTINEL = /^@workspace\..+\?$/
  * @return {Promise<{resolve: (filter: object, ctx: object) => object}|null>} The resolver, or null when unavailable.
  */
 async function loadResolver() {
-	const file = path.join(REPO_ROOT, 'node_modules', '@conduction', 'nextcloud-vue', 'src', 'utils', 'resolveFilterTokens.js')
+	const file = path.join(
+		REPO_ROOT,
+		"node_modules",
+		"@conduction",
+		"nextcloud-vue",
+		"src",
+		"utils",
+		"resolveFilterTokens.js",
+	);
 	if (!fs.existsSync(file)) {
-		return null
+		return null;
 	}
 	try {
-		const mod = await import(`file://${file}`)
-		const resolveTokens = mod.resolveFilterTokens
-		const dropOptional = mod.dropOptionalUnresolved
-		if (typeof resolveTokens !== 'function' || typeof dropOptional !== 'function') {
-			return null
+		const mod = await import(`file://${file}`);
+		const resolveTokens = mod.resolveFilterTokens;
+		const dropOptional = mod.dropOptionalUnresolved;
+		if (
+			typeof resolveTokens !== "function" ||
+			typeof dropOptional !== "function"
+		) {
+			return null;
 		}
 		// The same composition CnIndexPage's useSelfFetchList applies:
 		// resolve, then drop whatever stayed an optional sentinel.
-		return { resolve: (filter, ctx) => dropOptional(resolveTokens(filter, ctx)) }
+		return {
+			resolve: (filter, ctx) => dropOptional(resolveTokens(filter, ctx)),
+		};
 	} catch {
-		return null
+		return null;
 	}
 }
 
-const manifest = parityHarness.buildEffectiveManifest()
-const clauses = []
+const manifest = parityHarness.buildEffectiveManifest();
+const clauses = [];
 
 for (const page of manifest.pages || []) {
-	const filters = [['config.filter', page.config && page.config.filter]]
-	for (const [idx, qf] of Object.entries((page.config && page.config.quickFilters) || {})) {
-		filters.push([`config.quickFilters[${idx}].filter`, qf && qf.filter])
+	const filters = [["config.filter", page.config && page.config.filter]];
+	for (const [idx, qf] of Object.entries(
+		(page.config && page.config.quickFilters) || {},
+	)) {
+		filters.push([`config.quickFilters[${idx}].filter`, qf && qf.filter]);
 	}
 	for (const [where, filter] of filters) {
-		if (!filter || typeof filter !== 'object') {
-			continue
+		if (!filter || typeof filter !== "object") {
+			continue;
 		}
 		for (const [key, value] of Object.entries(filter)) {
-			if (typeof value === 'string' && OPTIONAL_SENTINEL.test(value)) {
-				clauses.push({ page: page.id, where, key, value })
+			if (typeof value === "string" && OPTIONAL_SENTINEL.test(value)) {
+				clauses.push({ page: page.id, where, key, value });
 			}
 		}
 	}
 }
 
-console.log(`[check-manifest-sentinels] found ${clauses.length} optional @workspace.*? clause(s)`)
+console.log(
+	`[check-manifest-sentinels] found ${clauses.length} optional @workspace.*? clause(s)`,
+);
 
 if (clauses.length === 0) {
-	console.log('[check-manifest-sentinels] PASS — nothing to check.')
-	process.exit(0)
+	console.log("[check-manifest-sentinels] PASS — nothing to check.");
+	process.exit(0);
 }
 
-const resolver = await loadResolver()
-const failures = []
+const resolver = await loadResolver();
+const failures = [];
 
 if (resolver === null) {
 	// Structural fallback. It is strictly weaker than driving the real
 	// resolver, and says so rather than reporting a pass it did not earn.
-	console.warn('[check-manifest-sentinels] WARN — could not load the installed resolver;')
-	console.warn('  falling back to a structural check (grammar only, not behaviour).')
+	console.warn(
+		"[check-manifest-sentinels] WARN — could not load the installed resolver;",
+	);
+	console.warn(
+		"  falling back to a structural check (grammar only, not behaviour).",
+	);
 	for (const c of clauses) {
-		if (!c.value.startsWith('@workspace.') || !c.value.endsWith('?')) {
-			failures.push(c)
+		if (!c.value.startsWith("@workspace.") || !c.value.endsWith("?")) {
+			failures.push(c);
 		}
 	}
 } else {
 	for (const c of clauses) {
-		let out
+		let out;
 		try {
-			out = resolver.resolve({ [c.key]: c.value }, {}, {})
+			out = resolver.resolve({ [c.key]: c.value }, {}, {});
 		} catch (e) {
-			failures.push({ ...c, note: `resolver threw: ${e.message}` })
-			continue
+			failures.push({ ...c, note: `resolver threw: ${e.message}` });
+			continue;
 		}
 		// With an EMPTY context the optional clause must be gone entirely.
 		// Present-but-literal is the shipped defect; present-but-resolved is
 		// impossible from an empty context and would mean the resolver
 		// invented a value.
 		if (out && Object.hasOwn(out, c.key)) {
-			failures.push({ ...c, note: `key survived as ${JSON.stringify(out[c.key])}` })
+			failures.push({
+				...c,
+				note: `key survived as ${JSON.stringify(out[c.key])}`,
+			});
 		}
 	}
 }
 
 if (failures.length > 0) {
-	console.error(`[check-manifest-sentinels] FAIL — ${failures.length} of ${clauses.length} clause(s) do not drop:`)
+	console.error(
+		`[check-manifest-sentinels] FAIL — ${failures.length} of ${clauses.length} clause(s) do not drop:`,
+	);
 	for (const f of failures) {
-		console.error(`  ${f.page} ${f.where}.${f.key} = ${f.value}${f.note ? ` — ${f.note}` : ''}`)
+		console.error(
+			`  ${f.page} ${f.where}.${f.key} = ${f.value}${f.note ? ` — ${f.note}` : ""}`,
+		);
 	}
-	console.error('  An unresolved sentinel reaches OpenRegister literally and matches nothing:')
-	console.error('  HTTP 200, total 0 — indistinguishable from "no data yet".')
-	process.exit(1)
+	console.error(
+		"  An unresolved sentinel reaches OpenRegister literally and matches nothing:",
+	);
+	console.error(
+		'  HTTP 200, total 0 — indistinguishable from "no data yet".',
+	);
+	process.exit(1);
 }
 
-console.log(`[check-manifest-sentinels] PASS — all ${clauses.length} clause(s) drop against an empty context.`)
-console.log('  NOTE: this reads SOURCE. A stale compiled bundle can still ship the defect —')
-console.log('  that is what check-bundle-freshness.js is for.')
+console.log(
+	`[check-manifest-sentinels] PASS — all ${clauses.length} clause(s) drop against an empty context.`,
+);
+console.log(
+	"  NOTE: this reads SOURCE. A stale compiled bundle can still ship the defect —",
+);
+console.log("  that is what check-bundle-freshness.js is for.");
