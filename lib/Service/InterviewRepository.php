@@ -55,7 +55,7 @@ class InterviewRepository {
 	/**
 	 * @var string
 	 */
-	private const APPLICATION_SCHEMA = 'Application';
+	private const APPLICATION_SCHEMA = 'job-application';
 
 	/**
 	 * @var string

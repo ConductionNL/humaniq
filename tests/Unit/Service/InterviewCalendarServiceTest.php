@@ -637,7 +637,7 @@ class InterviewCalendarServiceTest extends TestCase {
 		[$service, $backend, $objects] = $this->service(
 			[
 				'Interview' => [$this->scheduledInterview()],
-				'Application' => [$this->application()],
+				'job-application' => [$this->application()],
 				'Vacancy' => [$this->vacancy()],
 			]
 		);
@@ -682,7 +682,7 @@ class InterviewCalendarServiceTest extends TestCase {
 	public function testSecondConsecutiveSyncIsANoOp(): void {
 		$rows = [
 			'Interview' => [$this->scheduledInterview()],
-			'Application' => [$this->application()],
+			'job-application' => [$this->application()],
 			'Vacancy' => [$this->vacancy()],
 		];
 		[$service, $backend, $objects] = $this->service($rows);
@@ -713,7 +713,7 @@ class InterviewCalendarServiceTest extends TestCase {
 	public function testReschedulingUpdatesTheSameEventNeverDuplicates(): void {
 		$rows = [
 			'Interview' => [$this->scheduledInterview()],
-			'Application' => [$this->application()],
+			'job-application' => [$this->application()],
 			'Vacancy' => [$this->vacancy()],
 		];
 		[$service, $backend, $objects] = $this->service($rows);
@@ -753,7 +753,7 @@ class InterviewCalendarServiceTest extends TestCase {
 	public function testCancellingRemovesTheEvent(): void {
 		$rows = [
 			'Interview' => [$this->scheduledInterview()],
-			'Application' => [$this->application()],
+			'job-application' => [$this->application()],
 			'Vacancy' => [$this->vacancy()],
 		];
 		[$service, $backend, $objects] = $this->service($rows);
@@ -802,7 +802,7 @@ class InterviewCalendarServiceTest extends TestCase {
 	public function testCompletingLeavesTheEventInPlace(): void {
 		$rows = [
 			'Interview' => [$this->scheduledInterview()],
-			'Application' => [$this->application()],
+			'job-application' => [$this->application()],
 			'Vacancy' => [$this->vacancy()],
 		];
 		[$service, $backend, $objects] = $this->service($rows);
@@ -863,7 +863,7 @@ class InterviewCalendarServiceTest extends TestCase {
 		[$service, $backend] = $this->service(
 			[
 				'Interview' => [$this->scheduledInterview()],
-				'Application' => [$this->application()],
+				'job-application' => [$this->application()],
 				'Vacancy' => [$this->vacancy()],
 			]
 		);
@@ -890,7 +890,7 @@ class InterviewCalendarServiceTest extends TestCase {
 		[$service, $backend] = $this->service(
 			[
 				'Interview' => [$this->scheduledInterview(['interviewers' => 'Els Bakker, Jan Smit'])],
-				'Application' => [$this->application()],
+				'job-application' => [$this->application()],
 				'Vacancy' => [$this->vacancy()],
 			]
 		);
@@ -929,7 +929,7 @@ class InterviewCalendarServiceTest extends TestCase {
 				$this->scheduledInterview(['id' => 'intv-march', 'scheduledStart' => '2026-03-20T09:00:00+00:00', 'scheduledEnd' => '2026-03-20T10:00:00+00:00']),
 				$this->scheduledInterview(['id' => 'intv-august', 'scheduledStart' => '2026-08-03T10:00:00+00:00', 'scheduledEnd' => '2026-08-03T11:00:00+00:00']),
 			],
-			'Application' => [$this->application()],
+			'job-application' => [$this->application()],
 			'Vacancy' => [$this->vacancy()],
 		];
 
@@ -966,7 +966,7 @@ class InterviewCalendarServiceTest extends TestCase {
 		[$service, ] = $this->service(
 			[
 				'Interview' => [$this->scheduledInterview()],
-				'Application' => [$this->application()],
+				'job-application' => [$this->application()],
 				'Vacancy' => [$this->vacancy()],
 			],
 			backendOverride: $backend
@@ -1020,7 +1020,7 @@ class InterviewCalendarServiceTest extends TestCase {
 		[$service, $backend] = $this->service(
 			[
 				'Interview' => [$this->scheduledInterview()],
-				'Application' => [$this->application()],
+				'job-application' => [$this->application()],
 				'Vacancy' => [$this->vacancy()],
 			]
 		);

@@ -3,7 +3,7 @@
     "info": {
         "title": "Humaniq Register",
         "description": "Register containing all schemas for the Humaniq application.",
-        "version": "0.17.0"
+        "version": "0.18.0"
     },
     "x-openregister": {
         "type": "application",
@@ -18,11 +18,11 @@
                 "slug": "humaniq",
                 "title": "Humaniq Register",
                 "description": "Humaniq — open-source HR & payroll administration for Dutch SMBs. Holds every HR, verzuim, verlof, roostering, ATS, performance and payroll object the app reads and writes.",
-                "version": "0.17.0",
+                "version": "0.18.0",
                 "schemas": [
                     "Administration",
                     "AdministrationAccess",
-                    "Application",
+                    "job-application",
                     "Asset",
                     "AssetAssignment",
                     "AttendanceRecord",

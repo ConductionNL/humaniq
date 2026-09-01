@@ -91,8 +91,8 @@
                     }
                 }
             },
-            "Application": {
-                "slug": "Application",
+            "job-application": {
+                "slug": "job-application",
                 "icon": "FileAccountOutline",
                 "version": "0.3.0",
                 "title": "Application",
@@ -308,7 +308,7 @@
                     "applicationId": {
                         "type": "string",
                         "format": "uuid",
-                        "$ref": "Application",
+                        "$ref": "job-application",
                         "title": "Application",
                         "description": "The application this interview belongs to.", "x-notes": "UUID reference to the Application this interview round belongs to."
                     },

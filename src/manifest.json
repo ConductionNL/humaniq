@@ -109,7 +109,7 @@
 		},
 		{
 			"registerSlug": "humaniq",
-			"schemaSlug": "Application",
+			"schemaSlug": "job-application",
 			"urlTemplate": "/apps/humaniq/applications/{uuid}",
 			"displayName": "Application"
 		},

@@ -799,15 +799,18 @@ class RuleAuditServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testSeededOffboardingJansenLastWorkingDayInTheFutureDoesNotFlagTheOpenTelefoonUitgifte(): void {
-		// The real offboarding-jansen seed (hr-seed.json): eindafrekening_gereed,
-		// lastWorkingDay 2026-08-31 -- in the future relative to the audit
-		// run date, so the open jansen/telefoon uitgifte from
-		// seededAssetRows() must NOT be flagged by nl-asset-inname-bij-offboarding
-		// even though a (non-vacuous) Offboarding index entry now resolves for
-		// employee-jansen.
+		// The real offboarding-jansen seed (hr-seed.json): eindafrekening_gereed
+		// with a lastWorkingDay still AHEAD of the audit run date, so the open
+		// jansen/telefoon uitgifte from seededAssetRows() must NOT be flagged by
+		// nl-asset-inname-bij-offboarding even though a (non-vacuous) Offboarding
+		// index entry now resolves for employee-jansen.
+		//
+		// The date is RELATIVE. It was hard-coded to 2026-08-31, which stopped
+		// being in the future on 2026-09-01 and turned this into a green test
+		// that fails on a calendar date rather than on a code change.
 		$rows = $this->seededAssetRows();
 		$rows['Offboarding'] = [
-			['id' => 'offboarding-jansen', 'employeeId' => 'employee-jansen', 'lastWorkingDay' => '2026-08-31', 'reason' => 'opzegging-werkgever', 'status' => 'eindafrekening_gereed'],
+			['id' => 'offboarding-jansen', 'employeeId' => 'employee-jansen', 'lastWorkingDay' => $this->stagiairDateOffset(30), 'reason' => 'opzegging-werkgever', 'status' => 'eindafrekening_gereed'],
 		];
 
 		$service = $this->serviceWithRows($rows);
