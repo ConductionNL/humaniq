@@ -17,6 +17,7 @@
     "stylelint-fix": "stylelint src/**/*.vue src/**/*.scss src/**/*.css --fix",
     "check:schema-l10n": "node scripts/check-schema-l10n.js",
     "check:manifest": "node tests/validate-manifest.js",
+    "check:manifest-parity": "node tests/verify-manifest-parity.js",
     "check:widget-keys": "node tests/validate-widget-keys.js",
     "check:seed-refs": "node tests/validate-seed-refs.js",
     "check:l10n": "node tests/validate-l10n-parity.js",

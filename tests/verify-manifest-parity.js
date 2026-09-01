@@ -2,12 +2,22 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
-// verify-manifest-parity.js — proves the humaniq-manifest-fragment-pipeline
-// no-functionality-loss invariant: the effective manifest computed from the
+// verify-manifest-parity.js — the effective manifest computed from the
 // fragment pipeline (base + src/manifest.d/*.json + the REAL shared
 // buildManifest() from @conduction/nextcloud-vue, including pageTemplates/
-// pageInstances expansion) is observably identical to the pre-split monolith
-// captured in tests/fixtures/manifest-baseline/.
+// pageInstances expansion) is observably identical to the snapshot in
+// tests/fixtures/manifest-baseline/.
+//
+// The baseline STARTED as the pre-split monolith, to prove the
+// humaniq-manifest-fragment-pipeline change lost no functionality. That is
+// long since shipped, and the baseline drifted 19 diffs behind the manifest
+// while nothing ran this check. It is now a DRIFT GUARD: the fixtures track
+// the current manifest and this check runs in CI, so an unintended change to
+// a page, a menu entry or a route is a failure rather than a discovery
+// months later.
+//
+// A legitimate manifest change updates the fixtures: `node
+// tests/verify-manifest-parity.js --update`, in the same commit.
 //
 // Checks (spec: openspec/changes/humaniq-manifest-fragment-pipeline):
 //   1. (id, route) pair SET equality against the baseline pages dump.
@@ -118,9 +128,37 @@ function resolveRouteName(manifest, routePath) {
 	return router.resolve(routePath).name
 }
 
+/**
+ * Rewrite the baseline fixtures from the current effective manifest.
+ *
+ * The baseline is a SNAPSHOT, and a snapshot that can only be produced by
+ * hand is a snapshot that stops being produced. Regenerating is therefore a
+ * supported operation (`--update`), so the next legitimate manifest change
+ * updates the fixtures the same way every time instead of by whatever the
+ * author improvised.
+ *
+ * @param {object} effective The effective manifest.
+ * @return {void}
+ */
+function writeBaseline(effective) {
+	const pages = effective.pages.map((p) => ({ id: p.id, route: p.route }))
+	fs.writeFileSync(path.join(FIXTURE_DIR, 'pages.json'), JSON.stringify(pages, null, '\t') + '\n')
+	fs.writeFileSync(path.join(FIXTURE_DIR, 'menu.json'), JSON.stringify(effective.menu, null, '\t') + '\n')
+	fs.writeFileSync(path.join(FIXTURE_DIR, 'manifest-canonical.json'), JSON.stringify(canonical(effective), null, '\t') + '\n')
+	if (Array.isArray(effective.deepLinks)) {
+		fs.writeFileSync(path.join(FIXTURE_DIR, 'deeplinks.json'), JSON.stringify(effective.deepLinks, null, '\t') + '\n')
+	}
+	console.log(`[parity] baseline rewritten: ${pages.length} pages, ${effective.menu.length} menu roots`)
+}
+
 function main() {
 	const failures = []
 	const effective = buildEffectiveManifest()
+
+	if (process.argv.includes('--update')) {
+		writeBaseline(effective)
+		process.exit(0)
+	}
 
 	// --- Check 1: (id, route) pair set equality -----------------------------
 	const baselinePairs = JSON.parse(fs.readFileSync(path.join(FIXTURE_DIR, 'pages.json'), 'utf8'))
@@ -204,7 +242,7 @@ function main() {
 		for (const f of failures) console.error(`  - ${f}`)
 		process.exit(1)
 	}
-	console.log(`\n[parity] PASS — effective manifest is observably identical to the pre-split baseline (${effective.pages.length} pages, ${countNavigable(effective.menu)} navigable menu entries).`)
+	console.log(`\n[parity] PASS — effective manifest matches the baseline (${effective.pages.length} pages, ${countNavigable(effective.menu)} navigable menu entries).`)
 	process.exit(0)
 }
 
