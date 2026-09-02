@@ -102,3 +102,17 @@ if (class_exists('OCA\\OpenRegister\\Event\\ObjectCreatingEvent') === false
 ) {
 	require __DIR__ . '/stubs/OpenRegisterObjectEventsStub.php';
 }
+
+// Same rule, different classes: table-declared compliance checks delegate
+// matching to OpenRegister's shared decision-table evaluator
+// (lib/Standards/TableCheckEvaluator.php). These are VERBATIM copies of OR's
+// pure lib/Service/Dmn classes (openregister@d1594ccd, flow-decision-tables;
+// only the OR-repo @spec anchors are rewritten to provenance notes), so the
+// standalone suite exercises the REAL evaluation semantics instead of a
+// hand-scripted fake that could only agree with its author. Loaded ONLY when
+// the real classes are absent — on a live instance OpenRegister always wins.
+if (class_exists('OCA\\OpenRegister\\Service\\Dmn\\DecisionTableEvaluator') === false) {
+	require __DIR__ . '/stubs/OpenRegisterDmn/DecisionEvaluationException.php';
+	require __DIR__ . '/stubs/OpenRegisterDmn/UnaryTestEvaluator.php';
+	require __DIR__ . '/stubs/OpenRegisterDmn/DecisionTableEvaluator.php';
+}

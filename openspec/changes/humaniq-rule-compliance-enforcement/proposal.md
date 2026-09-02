@@ -46,10 +46,11 @@ reference — `hydra-gate-stub-scan` territory) and a real product gap: "complia
 - **Design decision required** (see `design.md`): whether humaniq should (a) add a minimal
   `x-openregister-lifecycle` to the compliance-checked schemas purely to give
   `LifecycleGuardInterface` a hook point for a real `RuleComplianceGuard`, or (b) stay
-  audit-only and rely on the CI/ops-facing exit code from this change, or (c) request a
-  schema-declarative "pre-save validation" extension point from OpenRegister (a gap in today's
-  `x-openregister-*` vocabulary — no existing extension runs arbitrary predicates on every
-  create/update outside a lifecycle transition).
+  audit-only and rely on the CI/ops-facing exit code from this change, or (c) build write-time
+  enforcement on OpenRegister's shared decision-table capability (openregister#3329) — the
+  evaluation substrate humaniq already consumes via `rules-onto-or-decision-tables`'
+  `ProvidesTables` seam — where the only remaining OR-side ask is a schema-declarative "pre-save
+  validation" hook point, never a second evaluator (see the re-scoped `design.md`).
 - No change to the existing `hasMandatory()` predicate logic — it is correct, just unused; this
   change gives it a real caller (the exit-code path) and documents the remaining gap honestly
   rather than leaving a misleading claim in the code.

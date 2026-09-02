@@ -31,5 +31,12 @@
 
 - [ ] 4.1 File a cross-cutting note (fleet-level, in the parent review's report — not a hydra ADR
       authored by this change) proposing OpenRegister investigate a schema-declarative "pre-save
-      validation" extension (`design.md` Option C), since more than one Conduction app will hit
-      this same "audit exists but nothing blocks the write" gap as compliance-heavy schemas grow.
+      validation" **hook point** (`design.md` Option C). The evaluation substrate itself now
+      exists — OpenRegister's shared decision-table capability (openregister#3329), consumed by
+      humaniq via the `ProvidesTables` seam from `rules-onto-or-decision-tables` — so the ask is
+      only the hook, never a second evaluator.
+- [ ] 4.2 Any enforcement implementation that follows honours the standing constraint recorded in
+      `design.md`: build on `RuleEngine` (which already delegates tabular matching to
+      OpenRegister's `Dmn\DecisionTableEvaluator`) or on `openregister.decision-table` flow
+      steps; author new tabular rules as decision tables via `ProvidesTables`; introduce no new
+      in-app matching, hit-policy or cell-grammar machinery.

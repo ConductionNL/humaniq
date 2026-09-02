@@ -90,6 +90,14 @@ final class RuleEngine {
 			}
 		}
 
+		// Table-declared checks (ProvidesTables) join the same registry wrapped
+		// as predicates, so evaluate() and every consumer are unaffected by a
+		// check's representation; matching is OpenRegister's shared
+		// decision-table evaluator's job (rules-onto-or-decision-tables).
+		foreach (TableCheckRegistry::checks(self::providers()) as $objectType => $ruleChecks) {
+			$merged[$objectType] = array_merge(($merged[$objectType] ?? []), $ruleChecks);
+		}
+
 		return $merged;
 	}//end checks()
 
