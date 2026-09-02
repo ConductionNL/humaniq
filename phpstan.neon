@@ -24,6 +24,13 @@ parameters:
         # which only exists at runtime once OpenRegister is installed alongside
         # humaniq. PHPStan cannot baseline "implements unknown interface" errors —
         # exclusion is required, not preferred.
+        # Same rule, different interface: the payroll flow nodes implement
+        # OCA\OpenRegister\Service\Flow\IFlowNode (payroll-run-as-a-flow).
+        - lib/Flow/PayrollFlowNodeBase.php
+        - lib/Flow/PayrollCalculateNode.php
+        - lib/Flow/PayrollApproveNode.php
+        - lib/Flow/PayrollGlPostNode.php
+        - lib/Flow/PayrollNetPayNode.php
         - lib/Lifecycle/CompEffectiveDateGuard.php
         - lib/Lifecycle/LeaveBuySellApprovalGuard.php
         - lib/Lifecycle/LeaveSettlementPeriodGuard.php

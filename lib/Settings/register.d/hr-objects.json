@@ -187,7 +187,59 @@
             "PayrollRun": {
                 "slug": "PayrollRun",
                 "icon": "CogPlayOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
+                "configuration": {
+                    "x-openregister-flows": [
+                        {
+                            "name": "Loonrun",
+                            "app": "humaniq",
+                            "description": "Runs one wage period's payroll from calculation to payment preparation (payroll-run-as-a-flow). The draft run and payslips are calculated, a reviewer approves or rejects, and an approved run is posted to the ledger and prepared for payment. A rejected run stays draft; recalculate and run the flow again. The flow arrives disabled per the engine's adoption contract: enable it deliberately, re-point the review step's candidate group to your payroll reviewers, and for a monthly cadence add an openregister.trigger-schedule node with an explicit runAs service account (design.md D5).",
+                            "trigger": "manual",
+                            "executionMode": "async",
+                            "limits": {"maxTransitions": 50},
+                            "nodes": [
+                                {"id": "start", "type": "openregister.trigger-manual", "config": {}},
+                                {"id": "calculate", "type": "humaniq.payroll-calculate", "config": {"recalculate": true}},
+                                {
+                                    "id": "review",
+                                    "type": "openregister.user-task",
+                                    "config": {
+                                        "title": "Loonrun {{ payroll.period }} beoordelen",
+                                        "description": "Controleer de conceptloonrun en de loonstroken voor periode {{ payroll.period }}. Keur goed om de run te boeken en de betaalbatch klaar te zetten. Wijs af om de run als concept te laten staan.",
+                                        "performerType": "group",
+                                        "candidateGroups": ["admin"],
+                                        "outcomes": ["approved", "rejected"],
+                                        "outcomeKey": "review"
+                                    }
+                                },
+                                {
+                                    "id": "gate",
+                                    "type": "openregister.switch",
+                                    "config": {},
+                                    "exits": [
+                                        {"id": "approved", "condition": {"==": [{"var": "review.outcome"}, "approved"]}},
+                                        {"id": "not-approved"}
+                                    ]
+                                },
+                                {"id": "approve", "type": "humaniq.payroll-approve", "config": {}},
+                                {"id": "glpost", "type": "humaniq.payroll-glpost", "config": {}},
+                                {"id": "netpay", "type": "humaniq.payroll-netpay", "config": {}},
+                                {"id": "end", "type": "openregister.end", "config": {}},
+                                {"id": "end-rejected", "type": "openregister.end", "config": {}}
+                            ],
+                            "edges": [
+                                {"id": "e-start", "from": "start", "to": "calculate"},
+                                {"id": "e-calculated", "from": "calculate", "to": "review"},
+                                {"id": "e-reviewed", "from": "review", "to": "gate"},
+                                {"id": "e-approved", "from": "gate", "fromExit": "approved", "to": "approve"},
+                                {"id": "e-not-approved", "from": "gate", "fromExit": "not-approved", "to": "end-rejected"},
+                                {"id": "e-commit", "from": "approve", "to": "glpost"},
+                                {"id": "e-posted", "from": "glpost", "to": "netpay"},
+                                {"id": "e-paid", "from": "netpay", "to": "end"}
+                            ]
+                        }
+                    ]
+                },
                 "title": "Payroll Run",
                 "description": "A per-period payroll batch that aggregates the payslips of one administration. Carries the period totals the payroll-to-GL reconciliation and liability-clearing controls read.",
                 "type": "object",

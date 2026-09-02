@@ -323,6 +323,20 @@ class Application extends App implements IBootstrap {
 			);
 		}
 
+		// payroll-run-as-a-flow (REQ-PRF-001): contribute the four payroll
+		// orchestration nodes to OpenRegister's flow catalogue. Registered
+		// here in boot() — never register() — for the same autoloader-ordering
+		// reason registerFilteredObjectListener() documents: during register()
+		// OpenRegister's classes are only autoloadable to apps that register
+		// after it, so the class_exists() guard would silently resolve false
+		// purely because of this app's position in the enabled-app list.
+		if (class_exists(\OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent::class) === true) {
+			$dispatcher->addServiceListener(
+				\OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent::class,
+				\OCA\Humaniq\Flow\HumaniqFlowNodeListener::class
+			);
+		}
+
 		// Time-entry capture (time-entry-capture): on a Timesheet crossing into
 		// `approved`, emit the `nl.conduction.hrmq.timeentry.approved` CloudEvent so a
 		// finance app (shillinq) can consume the approved hours for invoice-from-time /
