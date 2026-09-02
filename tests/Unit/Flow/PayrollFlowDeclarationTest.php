@@ -258,4 +258,294 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 		}
 	}//end testNoSelfScopingShips()
 
+	/**
+	 * The gate condition, EVALUATED against an engine-shaped item: only an
+	 * approved review takes the approved exit (REQ-PRF-007).
+	 *
+	 * v1 shipped `{"var": "review.outcome"}` and every approval took the
+	 * rejected exit, because the engine places the outcome bag INSIDE the
+	 * item's record — under `json.<outcomeKey>` — and hands conditions the
+	 * record under the `json` key of the data document. A string assertion
+	 * on the condition would rot; this routes.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	public function testGateConditionRoutesOnlyAnApprovedReviewDownTheApprovedExit(): void {
+		$outcomeKey = $this->declaredOutcomeKey();
+		$condition = $this->approvedExitCondition();
+
+		$this->assertTrue(
+			(bool)$this->evaluateCondition($condition, $this->conditionData($this->engineShapedItem($outcomeKey, 'approved'))),
+			'An approved review must satisfy the approved-exit condition — the v1 keypath sent every approval to end-rejected'
+		);
+
+		$this->assertFalse(
+			(bool)$this->evaluateCondition($condition, $this->conditionData($this->engineShapedItem($outcomeKey, 'rejected'))),
+			'A rejected review must not satisfy the approved-exit condition'
+		);
+
+		$this->assertFalse(
+			(bool)$this->evaluateCondition($condition, $this->conditionData(['json' => []])),
+			'An item that never met the user task must not route as approved'
+		);
+	}//end testGateConditionRoutesOnlyAnApprovedReviewDownTheApprovedExit()
+
+	/**
+	 * Every condition keypath that references a user task's outcome reads it
+	 * under `json.`, and at least one does at all — so the guard cannot pass
+	 * vacuously (REQ-PRF-007).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	public function testOutcomeConditionsReadTheRecordKeypath(): void {
+		$outcomeKeys = [];
+		foreach (($this->declaration()['nodes'] ?? []) as $node) {
+			if ((string)($node['type'] ?? '') !== 'openregister.user-task') {
+				continue;
+			}
+
+			$key = trim((string)(($node['config'] ?? [])['outcomeKey'] ?? ''));
+			$this->assertNotSame('', $key, 'A user-task node must declare an outcomeKey');
+			$outcomeKeys[] = $key;
+		}
+
+		$this->assertNotSame([], $outcomeKeys, 'The flow must carry a user task, or this guard asserts nothing');
+
+		$paths = $this->conditionVarPaths();
+		$this->assertNotSame([], $paths, 'The flow must carry a conditioned exit, or this guard asserts nothing');
+
+		$readsAnOutcome = false;
+		foreach ($paths as $path) {
+			foreach ($outcomeKeys as $key) {
+				$this->assertFalse(
+					$path === $key || str_starts_with($path, $key . '.') === true,
+					'Condition keypath "' . $path . '" reads the outcome bag beside the record. UserTaskNode::placeOutcome() writes it INTO the record, so the path must start with "json.' . $key . '"'
+				);
+
+				if ($path === ('json.' . $key) || str_starts_with($path, 'json.' . $key . '.') === true) {
+					$readsAnOutcome = true;
+				}
+			}
+		}
+
+		$this->assertTrue($readsAnOutcome, 'No condition reads a user-task outcome at all — the keypath guard would be vacuous');
+	}//end testOutcomeConditionsReadTheRecordKeypath()
+
+	/**
+	 * The declared `review` node's outcomeKey.
+	 *
+	 * @return string The key the engine parks the outcome bag under.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	private function declaredOutcomeKey(): string {
+		foreach (($this->declaration()['nodes'] ?? []) as $node) {
+			if ((string)($node['type'] ?? '') === 'openregister.user-task') {
+				$key = trim((string)(($node['config'] ?? [])['outcomeKey'] ?? ''));
+				$this->assertNotSame('', $key, 'The review node must declare an outcomeKey');
+
+				return $key;
+			}
+		}
+
+		$this->fail('The declaration carries no openregister.user-task node');
+	}//end declaredOutcomeKey()
+
+	/**
+	 * The condition on the gate's `approved` exit.
+	 *
+	 * @return array<string, mixed> The JSONLogic expression.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	private function approvedExitCondition(): array {
+		foreach (($this->declaration()['nodes'] ?? []) as $node) {
+			foreach ((array)($node['exits'] ?? []) as $exit) {
+				if ((string)($exit['id'] ?? '') === 'approved') {
+					$condition = ($exit['condition'] ?? null);
+					$this->assertIsArray($condition, 'The approved exit must carry a condition');
+
+					return $condition;
+				}
+			}
+		}
+
+		$this->fail('The declaration carries no approved exit');
+	}//end approvedExitCondition()
+
+	/**
+	 * Every `var` keypath referenced by any exit condition.
+	 *
+	 * @return array<int, string> The keypaths.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	private function conditionVarPaths(): array {
+		$paths = [];
+		foreach (($this->declaration()['nodes'] ?? []) as $node) {
+			foreach ((array)($node['exits'] ?? []) as $exit) {
+				$this->collectVarPaths(($exit['condition'] ?? null), $paths);
+			}
+		}
+
+		return $paths;
+	}//end conditionVarPaths()
+
+	/**
+	 * Collect `var` keypaths from one JSONLogic expression, recursively.
+	 *
+	 * @param mixed $logic The expression.
+	 * @param array<int, string> $paths Collector, appended to in place.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	private function collectVarPaths(mixed $logic, array &$paths): void {
+		if (is_array($logic) === false) {
+			return;
+		}
+
+		foreach ($logic as $operator => $arguments) {
+			if ($operator === 'var') {
+				$paths[] = (is_array($arguments) === true) ? (string)($arguments[0] ?? '') : (string)$arguments;
+				continue;
+			}
+
+			foreach ((array)$arguments as $argument) {
+				$this->collectVarPaths($argument, $paths);
+			}
+		}
+	}//end collectVarPaths()
+
+	/**
+	 * An item as the engine hands it to the gate after the review resolves.
+	 *
+	 * Modelled from OpenRegister on development, not from memory or from the
+	 * caller: `UserTaskNode::placeOutcome()` does `json[$outcomeKey] = $bag`
+	 * on the item, and the bag's keys are `FlowTaskBridge::outcomeBagFor()`'s
+	 * (taskUuid, state, decided, outcome, rejected, comment, result,
+	 * completedBy, completedAt, performerType, assignee, onBehalfOf,
+	 * mandate). A bag invented from the condition's own expectations would
+	 * be the fake-agrees-with-caller trap.
+	 *
+	 * @param string $outcomeKey Where the node's config parks the bag.
+	 * @param string $outcome The recorded decision.
+	 *
+	 * @return array<string, mixed> The engine-shaped item.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	private function engineShapedItem(string $outcomeKey, string $outcome): array {
+		return [
+			'json' => [
+				$outcomeKey => [
+					'taskUuid' => '00000000-0000-4000-8000-000000000001',
+					'state' => 'completed',
+					'decided' => true,
+					'outcome' => $outcome,
+					'rejected' => ($outcome === 'rejected'),
+					'comment' => null,
+					'result' => null,
+					'completedBy' => 'reviewer',
+					'completedAt' => '2026-09-02T12:00:00+00:00',
+					'performerType' => 'group',
+					'assignee' => null,
+					'onBehalfOf' => null,
+					'mandate' => null,
+				],
+			],
+		];
+	}//end engineShapedItem()
+
+	/**
+	 * The data document a condition is evaluated against — the shape of
+	 * OpenRegister's `FlowExpression::dataFor()`: the item's record under
+	 * `json`, binaries under `binary`, plus run metadata. Which is exactly
+	 * why a bare `review.outcome` resolves to nothing.
+	 *
+	 * @param array<string, mixed> $item The engine-shaped item.
+	 *
+	 * @return array<string, mixed> The data document.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	private function conditionData(array $item): array {
+		return [
+			'json' => (array)($item['json'] ?? []),
+			'binary' => [],
+			'itemIndex' => 0,
+			'itemCount' => 1,
+			'context' => [],
+			'subject' => [],
+		];
+	}//end conditionData()
+
+	/**
+	 * A minimal JSONLogic evaluator covering exactly the operators the
+	 * shipped conditions use, with the engine's semantics: a `var` walks the
+	 * dot path and yields null when any segment is missing, `==` is loose
+	 * (jwadhams JsonLogic), and null never satisfies a condition. Any other
+	 * operator fails the test rather than guessing at its semantics.
+	 *
+	 * @param mixed $logic The JSONLogic expression.
+	 * @param array<string, mixed> $data The data document.
+	 *
+	 * @return mixed The evaluation result.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	private function evaluateCondition(mixed $logic, array $data): mixed {
+		if (is_array($logic) === false) {
+			return $logic;
+		}
+
+		$operator = array_key_first($logic);
+		$arguments = $logic[$operator];
+
+		if ($operator === 'var') {
+			$path = (is_array($arguments) === true) ? (string)($arguments[0] ?? '') : (string)$arguments;
+
+			return $this->lookupPath($path, $data);
+		}
+
+		if ($operator === '==') {
+			$left = $this->evaluateCondition(($arguments[0] ?? null), $data);
+			$right = $this->evaluateCondition(($arguments[1] ?? null), $data);
+
+			// JSONLogic's == is loose equality, deliberately.
+			return ($left == $right);
+		}
+
+		$this->fail('The shipped condition uses operator "' . (string)$operator . '", which this evaluator does not model. Extend it from openregister FlowExpression.');
+	}//end evaluateCondition()
+
+	/**
+	 * Walk a dot-separated keypath into the data document; null when any
+	 * segment is missing, matching JsonLogic's `var`.
+	 *
+	 * @param string $path The keypath.
+	 * @param array<string, mixed> $data The data document.
+	 *
+	 * @return mixed The value, or null.
+	 *
+	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	private function lookupPath(string $path, array $data): mixed {
+		$value = $data;
+		foreach (explode('.', $path) as $segment) {
+			if (is_array($value) === false || array_key_exists($segment, $value) === false) {
+				return null;
+			}
+
+			$value = $value[$segment];
+		}
+
+		return $value;
+	}//end lookupPath()
+
 }//end class

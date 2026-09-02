@@ -94,7 +94,7 @@ services' `failed` outcome SHALL throw.
 
 humaniq SHALL declare one flow named `Loonrun` in `x-openregister-flows` on the `PayrollRun`
 schema: manual trigger, calculate, the review user task, an `openregister.switch` gate whose
-`approved` exit is conditioned on `review.outcome` with an unconditioned else, then approve,
+`approved` exit is conditioned on `json.review.outcome` with an unconditioned else, then approve,
 glpost, netpay and end nodes. Every declared `humaniq.*` node type SHALL be a type the
 listener registers, every edge endpoint SHALL resolve to a declared node, every `fromExit`
 SHALL name a declared exit on its source node, and the conditioned gate SHALL carry an
@@ -123,3 +123,54 @@ The humaniq flow nodes SHALL NOT resolve or impersonate an acting identity thems
 - **THEN** none references `runAs`, `runAsSystem` or `IFlowSelfScopedNode`
 
 @e2e exclude structural constraint on backend classes; asserted by a unit test scanning the node sources
+
+### Requirement: gate conditions read a user task's outcome under the item's record (REQ-PRF-007)
+
+`UserTaskNode::placeOutcome()` writes the outcome bag INTO the item's record — under
+`json.<outcomeKey>` — and the engine's `FlowExpression::dataFor()` hands a condition the record
+under the `json` key of its data document. A condition reading `{"var": "review.outcome"}`
+therefore resolves to null, null is false, and every approval takes the rejected exit — the
+exact defect the v1 declaration shipped (rig-reproduced twice: approve → end-rejected on v1,
+approve → glpost → netpay → end on the corrected v2). Every shipped gate condition that
+references a user task's outcome SHALL read it through the `json.`-prefixed keypath, and the
+declaration test SHALL evaluate the shipped condition against an engine-shaped item — outcome
+bag under `json.<outcomeKey>`, modelled from OpenRegister's `UserTaskNode` and
+`FlowTaskBridge::outcomeBagFor()` — so a keypath regression fails as a routing assertion, not
+as a string comparison that rots.
+
+Instances that imported the v1 declaration keep the broken graph in their PUBLISHED flow
+version: a schema re-import updates the flow's editable head in place but never republishes.
+humaniq SHALL therefore ship an idempotent repair step that finds the shipped flow by its
+import identity — (`app`, `name`, trigger schema), the `SchemaFlowImportListener` upsert key —
+and republishes the corrected head, ONLY when the published graph still equals the v1
+declaration (gate keypath defect included). A published graph that differs was modified or
+republished by a person; the step SHALL leave it alone and say so, and it SHALL also leave a
+flow with an open draft head alone rather than publishing somebody's unfinished edit.
+
+#### Scenario: an approved review takes the approved exit
+
+- **GIVEN** the shipped gate condition and an item shaped as the engine hands it to the gate
+  (outcome bag under `json.review`)
+- **WHEN** the condition is evaluated with `outcome: "approved"`, with `outcome: "rejected"`,
+  and against an item that never met the user task
+- **THEN** only the approved outcome satisfies the condition
+
+@e2e exclude condition-evaluation pin against the engine's documented data-document shape; unit-level (the REQ-PRF-005 precedent), rig-verified end to end on HQ#291
+
+#### Scenario: the published v1 graph is republished, a modified one is left alone
+
+- **GIVEN** an instance whose Loonrun flow was imported from the v1 declaration
+- **WHEN** the repair step runs
+- **THEN** an unmodified published v1 graph is republished with the corrected gate keypath,
+  a modified published graph is reported and left untouched, and a second run changes nothing
+
+@e2e exclude repair step over OpenRegister's flow store; exercised against the pure graph helpers in unit tests, needs an OR instance for the store round trip
+
+#### Scenario: no user-task outcome is read beside the record
+
+- **GIVEN** every condition in the shipped declaration
+- **WHEN** the declaration test collects their `var` keypaths
+- **THEN** every keypath referencing a user task's `outcomeKey` starts with `json.`, and at
+  least one condition reads an outcome at all, so the guard cannot pass vacuously
+
+@e2e exclude structural pin on the shipped register fragment; unit-level (the REQ-PRF-005 precedent)
