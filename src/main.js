@@ -14,6 +14,7 @@ import { createApp, h, markRaw } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import appIcons from './icons.js'
+import { registerHoursLeaf } from './integrations/registerHoursLeaf.js'
 import bundledManifest from './manifest.json'
 import menuLayout from './menu-layout.json'
 import pinia from './pinia.js'
@@ -72,6 +73,12 @@ import './assets/app.css'
 // Without the icon registration every manifest `icon` name fails the CnIcon
 // registry lookup and falls back to a help-circle.
 registerIcons(appIcons)
+
+// Contribute humaniq's hours leaf to OpenRegister's integration registry, so a
+// consuming app (dossiq) can PLACE it rather than query humaniq's register from
+// its own manifest. Installs a load-order-safe stub when OpenRegister's bundle
+// has not initialised yet.
+registerHoursLeaf()
 try {
 	registerTranslations()
 } catch (e) {

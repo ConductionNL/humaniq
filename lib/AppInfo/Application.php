@@ -36,6 +36,7 @@ use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
+use OCA\Humaniq\Listener\RegisterHoursLeafListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
 use OCA\Humaniq\Listener\TimesheetApprovalListener;
@@ -307,6 +308,20 @@ class Application extends App implements IBootstrap {
 	 */
 	public function boot(IBootContext $context): void {
 		$dispatcher = $context->getServerContainer()->get(IEventDispatcher::class);
+
+		// The SERVER half of the `humaniq-hours` leaf (ADR-066). Its client half
+		// is src/integrations/registerHoursLeaf.js, bound by the shared id.
+		// Registering only the client half renders the surface but leaves it
+		// invisible to every server-side consumer — an orphan registration
+		// gate-24 R2 refuses. Registered by class name so the leaf is contributed
+		// whenever OpenRegister asks, and skipped (with a warning) when
+		// OpenRegister is absent and the event never fires.
+		if (class_exists(\OCA\OpenRegister\Event\RegisterLeafProvidersEvent::class) === true) {
+			$dispatcher->addServiceListener(
+				\OCA\OpenRegister\Event\RegisterLeafProvidersEvent::class,
+				RegisterHoursLeafListener::class
+			);
+		}
 
 		// Time-entry capture (time-entry-capture): on a Timesheet crossing into
 		// `approved`, emit the `nl.conduction.hrmq.timeentry.approved` CloudEvent so a

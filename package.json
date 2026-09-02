@@ -19,6 +19,7 @@
     "check:manifest": "node tests/validate-manifest.js",
     "check:manifest-parity": "node tests/verify-manifest-parity.js",
     "check:widget-keys": "node tests/validate-widget-keys.js",
+    "check:leaf-parity": "bash scripts/check-integration-parity.sh",
     "check:seed-refs": "node tests/validate-seed-refs.js",
     "check:l10n": "node tests/validate-l10n-parity.js",
     "l10n:build": "node scripts/build-l10n-js.js",
