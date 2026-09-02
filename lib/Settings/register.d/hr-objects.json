@@ -187,7 +187,7 @@
             "PayrollRun": {
                 "slug": "PayrollRun",
                 "icon": "CogPlayOutline",
-                "version": "0.3.0",
+                "version": "0.3.1",
                 "configuration": {
                     "x-openregister-flows": [
                         {
@@ -217,7 +217,7 @@
                                     "type": "openregister.switch",
                                     "config": {},
                                     "exits": [
-                                        {"id": "approved", "condition": {"==": [{"var": "review.outcome"}, "approved"]}},
+                                        {"id": "approved", "condition": {"==": [{"var": "json.review.outcome"}, "approved"]}},
                                         {"id": "not-approved"}
                                     ]
                                 },

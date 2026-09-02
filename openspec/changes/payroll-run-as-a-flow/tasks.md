@@ -48,11 +48,30 @@
 - [x] 5.6 Full unit suite green; analyzers (phpcs, psalm, phpstan, phpmd per subdir)
       individually green on the diff.
 
-## 6. Staged follow-ups (deliberately unchecked — design.md D7)
+## 6. The v1 gate keypath defect (design.md D8, REQ-PRF-007)
 
-- [ ] 6.1 Pay-date wait: land a pay-date field on the administration surface, then an
+- [x] 6.1 Correct the shipped gate condition to `{"var": "json.review.outcome"}` in
+      `lib/Settings/register.d/hr-objects.json` and bump the PayrollRun schema version so the
+      re-import is unambiguous (the importer also re-imports on content hash alone).
+- [x] 6.2 Harden `PayrollFlowDeclarationTest`: evaluate the shipped condition against an
+      engine-shaped item (outcome bag under `json.<outcomeKey>`, modelled from OR's
+      `UserTaskNode::placeOutcome()` + `FlowTaskBridge::outcomeBagFor()` on development) and
+      assert only an approved outcome takes the approved exit; plus the keypath-prefix sweep
+      over every condition, with a vacuity guard.
+- [x] 6.3 Sweep every shipped register fragment and the change's own runnable JSON for the
+      un-prefixed `{"var": "<outcomeKey>."} ` class — one hit (the Loonrun gate), no siblings.
+- [x] 6.4 `RepublishLoonrunFlow` repair step + `LoonrunFlowRepairService`: republish the
+      corrected head over an UNMODIFIED published v1 graph, leave modified graphs and open
+      drafts alone, idempotent, registered post-migration and install after
+      `InitializeRegister` (design.md D8 records the exact semantics).
+- [x] 6.5 Record the rig's flow-PUT-ignores-`owner` observation as an OR follow-up question
+      (design.md D9), not a humaniq fix.
+
+## 7. Staged follow-ups (deliberately unchecked — design.md D7)
+
+- [ ] 7.1 Pay-date wait: land a pay-date field on the administration surface, then an
       `openregister.wait` (or run-scoped FlowTimer) between approve and glpost.
-- [ ] 6.2 Schedule adoption recipe on the admin/docs surface (`openregister.trigger-schedule`
+- [ ] 7.2 Schedule adoption recipe on the admin/docs surface (`openregister.trigger-schedule`
       + explicit `runAs`), plus oversight registration if the scheduled flow qualifies.
-- [ ] 6.3 Once adopted flows carry approval everywhere, guard the raw `status` edit so the
+- [ ] 7.3 Once adopted flows carry approval everywhere, guard the raw `status` edit so the
       recorded decision is the only approver.

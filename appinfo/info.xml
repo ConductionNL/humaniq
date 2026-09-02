@@ -198,6 +198,16 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  create nothing); one summary line per run; fails soft when
                  OpenRegister is not installed. -->
             <step>OCA\Humaniq\Repair\MigrateHoursProcess</step>
+            <!-- payroll-run-as-a-flow (design.md D8): the v1 Loonrun gate read
+                 review.outcome where the engine writes json.review.outcome, so
+                 every approval took the rejected exit. The schema re-import
+                 corrects the flow's editable HEAD but never republishes, so an
+                 instance that imported v1 keeps the broken published version.
+                 Runs AFTER InitializeRegister (the re-import) and republishes
+                 the corrected head, only when the published graph is the
+                 unmodified v1 import; open drafts and edited graphs are
+                 reported and left alone. Idempotent; fails soft. -->
+            <step>OCA\Humaniq\Repair\RepublishLoonrunFlow</step>
         </post-migration>
         <install>
             <!-- SAME steps as post-migration, and that duplication is the point.
@@ -281,6 +291,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  never migrate them. Runs AFTER InitializeRegister; on fresh
                  installs it finds the seed rows and behaves identically. -->
             <step>OCA\Humaniq\Repair\MigrateHoursProcess</step>
+            <!-- payroll-run-as-a-flow (design.md D8): on a fresh install the
+                 flow imports already corrected and freshly published, so this
+                 reports a no-op — it exists here for the rename path, where
+                 enabling the new app id IS the fresh install that upgrades an
+                 instance whose flow store still carries the v1 publish. -->
+            <step>OCA\Humaniq\Repair\RepublishLoonrunFlow</step>
         </install>
     </repair-steps>
 

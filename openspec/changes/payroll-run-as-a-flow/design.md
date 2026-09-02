@@ -79,7 +79,7 @@ trigger-manual → calculate → review (user-task) ─approved→ approve → g
   re-points the candidate group in the flow editor; `admin` is the only group every Nextcloud
   ships.
 - Branching lives on the `review` node's `exits`: one exit conditioned
-  `{"==": [{"var": "review.outcome"}, "approved"]}`, one unconditioned else — the builder
+  `{"==": [{"var": "json.review.outcome"}, "approved"]}`, one unconditioned else — the builder
   refuses a conditioned node without an else, and the else path must NOT approve anything, so
   it ends the run with the PayrollRun still `draft` (recalculate and re-run is the retry).
 - Edges bind to the exits via `fromExit` (the FlowTokenRouter contract).
@@ -132,3 +132,48 @@ it never fires at import time).
 3. **Retire the manual approve edit**: once adopted flows carry the approval everywhere, guard
    the raw `status` edit behind the same decision trail (a lifecycle map or guard), so the flow
    is the only approver. Not before: today the raw edit IS the production path.
+
+## D8. The v1 gate keypath defect, and the republish repair
+
+**The defect.** v1 shipped the gate condition as `{"var": "review.outcome"}`. The engine's
+`UserTaskNode::placeOutcome()` writes the outcome bag INTO the item's record — `json[$key] =
+$bag` — precisely so the steps that follow can route per item, and `FlowExpression::dataFor()`
+hands a condition its data document as `{json, binary, itemIndex, itemCount, context, subject}`.
+So the shipped path resolved to null, `isTrue()` reads null as false, and EVERY review — approved
+or rejected — took the unconditioned `not-approved` exit to `end-rejected`. Rig-reproduced twice
+on HQ#291; with the keypath corrected to `json.review.outcome` the full chain ran green
+(approve → glpost → netpay → end). A silent no-op, not an error: an author's unevaluable
+condition fails their branch by design, which is right at run time and exactly why the
+declaration test now EVALUATES the shipped condition against the engine-shaped item instead of
+string-matching it (REQ-PRF-007).
+
+**Why a repair step at all.** `SchemaFlowImportListener::upsert()` re-imports in place, keyed on
+(`app`, `name`, trigger schema) — but it only publishes version 1 of a FRESH import. On an
+instance that already imported v1, the schema re-import corrects the flow's editable head and
+the broken PUBLISHED version keeps backing every run. `RepublishLoonrunFlow`
+(post-migration + install, after `InitializeRegister` so the head is already corrected) finds
+the flow by that same identity and republishes, with these semantics:
+
+- **Only an unmodified v1 publish is touched.** The published graph must deep-equal the shipped
+  declaration with the gate keypath rewritten BACK to the v1 form (derived from the shipped
+  JSON at run time, so the comparison cannot drift from the file). Anything else means a person
+  edited or republished the flow: the step reports it and leaves it alone — their graph, their
+  gate, and the corrected head is one publish away in the builder.
+- **An open draft head is never published over.** `FlowVersionService::publish()` publishes the
+  HEAD; if the head sits in `draft`, somebody is mid-edit and publishing would ship their
+  unfinished work as a side effect of an upgrade. Report and leave.
+- **Idempotent.** After the republish (or on an instance that never imported, never published,
+  or already reads the corrected keypath) every subsequent run is a reported no-op.
+- **Enablement and ownership are untouched**, the same rule the import listener follows: the
+  repair changes which graph WOULD run, never whether or as whom it may run.
+
+## D9. Rig observation: flow PUT ignores `owner` (OR follow-up question, not fixed here)
+
+While proving the fix, the rig updated the flow over OpenRegister's flow PUT and included an
+`owner` — and the stored flow kept `owner: null`, silently. That is defensible (an owner is an
+adoption act, not an update field) but it collides with how the adoption contract is worded:
+ownerless flows cannot dispatch, and the API that looks like the way to set an owner drops it
+without a word, so an adopting admin scripting the contract gets a flow that imports, publishes,
+enables — and never runs. Question for OpenRegister, not a humaniq fix: either the PUT should
+accept `owner` (making adoption scriptable), or it should refuse it loudly and a dedicated
+adopt endpoint should exist. Raised as an OR follow-up rather than patched around here.
