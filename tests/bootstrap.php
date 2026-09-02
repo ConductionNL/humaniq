@@ -103,6 +103,17 @@ if (class_exists('OCA\\OpenRegister\\Event\\ObjectCreatingEvent') === false
 	require __DIR__ . '/stubs/OpenRegisterObjectEventsStub.php';
 }
 
+// Same rule, different classes: the payroll flow nodes (lib/Flow/) implement
+// OpenRegister's IFlowNode and their listener consumes RegisterFlowNodesEvent
+// (payroll-run-as-a-flow design.md D6). IFlowNode is a method-for-method
+// mirror of openregister@246222d; the registry/event pair mirrors the REAL
+// registration API so the listener test can observe what registered. Loaded
+// ONLY when the real interface is absent — on a live instance OpenRegister
+// always wins.
+if (interface_exists('OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === false) {
+	require __DIR__ . '/stubs/OpenRegisterFlowStub.php';
+}
+
 // Same rule, different classes: table-declared compliance checks delegate
 // matching to OpenRegister's shared decision-table evaluator
 // (lib/Standards/TableCheckEvaluator.php). These are VERBATIM copies of OR's
