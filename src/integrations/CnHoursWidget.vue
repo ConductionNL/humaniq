@@ -115,6 +115,8 @@ export default {
 		 * not read" is the defect this whole leaf exists to remove.
 		 *
 		 * @return {string} The total, or '—'.
+		 *
+		 * @spec openspec/changes/hours-leaf-for-any-object/specs/hours-leaf/spec.md#requirement-an-unreadable-total-is-not-rendered-as-a-number
 		 */
 		displayHours() {
 			if (this.error !== '' || (this.loading && this.entries.length === 0)) {
@@ -133,6 +135,8 @@ export default {
 		 * host tells the leaf how much room it has, and the leaf decides.
 		 *
 		 * @return {object[]} The entries to render.
+		 *
+		 * @spec openspec/changes/hours-leaf-for-any-object/specs/hours-leaf/spec.md#requirement-humaniq-supplies-the-hours-surface-for-any-object
 		 */
 		visibleEntries() {
 			const compact = ['user-dashboard', 'app-dashboard'].includes(this.surface)
@@ -143,6 +147,8 @@ export default {
 		 * The `<app>:<schema>` literal humaniq stores for the host object.
 		 *
 		 * @return {string} e.g. `dossiq:case`.
+		 *
+		 * @spec openspec/changes/hours-leaf-for-any-object/specs/hours-leaf/spec.md#requirement-humaniq-supplies-the-hours-surface-for-any-object
 		 */
 		domainObjectType() {
 			return this.register && this.schema ? `${this.register}:${this.schema}` : ''
@@ -160,6 +166,8 @@ export default {
 		 * Read this object's time entries from OpenRegister.
 		 *
 		 * @return {Promise<void>} Resolves when the list has settled.
+		 *
+		 * @spec openspec/changes/hours-leaf-for-any-object/specs/hours-leaf/spec.md#requirement-an-unreadable-total-is-not-rendered-as-a-number
 		 */
 		async load() {
 			if (this.objectId === '' || this.domainObjectType === '') {
@@ -189,6 +197,8 @@ export default {
 		 * Open humaniq's hour-booking form, seeded with this object.
 		 *
 		 * @return {void}
+		 *
+		 * @spec openspec/changes/hours-leaf-for-any-object/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
 		 */
 		openLogHours() {
 			const url = generateUrl('/apps/humaniq/timesheets?domainObjectType={type}&domainObjectRef={ref}', {
@@ -202,6 +212,8 @@ export default {
 		 * Start or stop a running timer against this object.
 		 *
 		 * @return {Promise<void>} Resolves when the entry has been written.
+		 *
+		 * @spec openspec/changes/hours-leaf-for-any-object/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
 		 */
 		async toggleTimer() {
 			try {
@@ -225,6 +237,8 @@ export default {
 		 *
 		 * @param {number} value The hours.
 		 * @return {string} The formatted figure.
+		 *
+		 * @spec openspec/changes/hours-leaf-for-any-object/specs/hours-leaf/spec.md#requirement-an-unreadable-total-is-not-rendered-as-a-number
 		 */
 		formatHours(value) {
 			const n = Number(value) || 0
@@ -236,6 +250,8 @@ export default {
 		 *
 		 * @param {string} value ISO timestamp.
 		 * @return {string} The formatted date, or ''.
+		 *
+		 * @spec openspec/changes/hours-leaf-for-any-object/specs/hours-leaf/spec.md#requirement-humaniq-supplies-the-hours-surface-for-any-object
 		 */
 		formatDate(value) {
 			if (!value) {

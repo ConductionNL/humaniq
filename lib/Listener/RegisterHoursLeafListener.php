@@ -143,6 +143,8 @@ class RegisterHoursLeafListener implements IEventListener {
 	 * @param Event $event The dispatched event.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/hours-leaf-for-any-object/specs/hours-leaf/spec.md#requirement-both-halves-of-the-leaf-agree
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof RegisterLeafProvidersEvent === false) {
