@@ -41,7 +41,7 @@ namespace OCA\Humaniq\Tests\Unit\BackgroundJob;
 
 use OCA\Humaniq\BackgroundJob\LeaveAccrualJob;
 use OCA\Humaniq\Service\SettingsService;
-use OCA\Humaniq\Standards\Checks\NlLeaveChecks;
+use OCA\Humaniq\Standards\RuleEngine;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -304,10 +304,18 @@ class LeaveAccrualJobTest extends TestCase {
 		$job->runAccrual();
 		$balance = $fake->saved[0]['object'];
 
-		$checks = NlLeaveChecks::checks()['LeaveBalance'];
-		$this->assertTrue(($checks['nl-verlof-wettelijk-minimum'])($balance), 'provisioned balance violates nl-verlof-wettelijk-minimum');
-		$this->assertTrue(($checks['nl-verlof-vervaltermijn'])($balance), 'provisioned balance violates nl-verlof-vervaltermijn');
-		$this->assertTrue(($checks['nl-verlof-saldo-niet-negatief'])($balance), 'provisioned balance violates nl-verlof-saldo-niet-negatief');
+		// Through the full engine path — since rules-onto-or-decision-tables
+		// the leave rules are table-declared and matched by OpenRegister's
+		// shared decision-table evaluator, so the raw-closure registry no
+		// longer exists to probe directly.
+		$violated = [];
+		foreach (RuleEngine::evaluate('LeaveBalance', $balance, ['jurisdiction' => 'NL']) as $violation) {
+			$violated[] = $violation->ruleId;
+		}
+
+		$this->assertNotContains('nl-verlof-wettelijk-minimum', $violated, 'provisioned balance violates nl-verlof-wettelijk-minimum');
+		$this->assertNotContains('nl-verlof-vervaltermijn', $violated, 'provisioned balance violates nl-verlof-vervaltermijn');
+		$this->assertNotContains('nl-verlof-saldo-niet-negatief', $violated, 'provisioned balance violates nl-verlof-saldo-niet-negatief');
 
 	}//end testProvisionedBalancePassesMandatoryVerlofRules()
 

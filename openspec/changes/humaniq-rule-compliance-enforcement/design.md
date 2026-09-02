@@ -50,21 +50,42 @@ present). Catches drift on a cadence (CI run, cron) rather than at the point of 
 - Con: violations are caught after the fact, not blocked at the point of entry — a user can still
   save a non-compliant `Payslip` and it stays non-compliant until the next audit run.
 
-### Option C — Request a schema-declarative "pre-save validation" extension from OpenRegister
+### Option C — Build write-time enforcement on OpenRegister's shared decision-table capability
 
-Propose a new `x-openregister-validation` (or similar) schema extension that runs arbitrary
-predicates on every create/update regardless of lifecycle state, consumed the same way
-`x-openregister-lifecycle`'s `requires:` is consumed today. This is the ADR-022/031-aligned path
-(consume a declarative OR abstraction rather than hand-roll it) but requires OR-side work outside
-humaniq's control and timeline.
+*(Re-scoped by `rules-onto-or-decision-tables`: when this option was first written the OR-side
+substrate did not exist; it now partially does.)* OpenRegister ships the shared decision-table
+capability (openregister#3329): the `openregister.decision-table` flow node atop the pure
+`lib/Service/Dmn/DecisionTableEvaluator`, which humaniq already consumes for table-declared
+compliance checks through `lib/Standards/TableCheckEvaluator.php` (the `ProvidesTables` seam).
+Two build-on paths, in preference order:
+
+1. Model enforcement as an OpenRegister **flow** carrying inline decision tables
+   (`openregister.decision-table` steps), so the rule matching, its pinning and its audit trail
+   are all the shared engine's.
+2. Where write-time blocking needs humaniq's full corpus semantics (jurisdiction scoping,
+   severity policy), a future `RuleComplianceGuard` calls `RuleEngine::evaluate()` +
+   `hasMandatory()` — and `RuleEngine` already delegates tabular matching to the shared
+   evaluator, so the guard inherits the consolidation for free.
+
+What may still need an OR-side ask is only the *hook* (a schema-declarative pre-save validation
+extension point); the *evaluation* substrate exists and MUST be reused.
 
 - Pro: the architecturally "correct" answer — write-time enforcement without contorting humaniq's
-  schemas into a fake lifecycle.
-- Con: not humaniq's to build; needs an OR-side proposal + timeline humaniq doesn't control.
+  schemas into a fake lifecycle, and without a second rule engine.
+- Con: the pre-save hook point (as opposed to the evaluator) is still not humaniq's to build.
 
-**Recommendation**: ship Option B now (this change). File Option C as a cross-cutting OR-abstraction
-request (see the parent review's cross-cutting candidates) rather than hand-rolling Option A's
-lifecycle-as-plumbing workaround, which ADR-022 would flag as a parallel mechanism next audit.
+**Recommendation**: ship Option B now (this change). Pursue Option C on the shared decision-table
+substrate rather than hand-rolling Option A's lifecycle-as-plumbing workaround, which ADR-022
+would flag as a parallel mechanism next audit.
+
+### Standing constraint (rules-onto-or-decision-tables)
+
+Whatever enforcement option is eventually built: rule *evaluation* is the shared OpenRegister
+engine's job. New machine-checkable rules whose shape is tabular (thresholds, enumerations,
+boolean gates over derived values) SHOULD be authored as decision tables via the `ProvidesTables`
+capability; enforcement work MUST NOT introduce new in-app matching, hit-policy or cell-grammar
+machinery. Only domain semantics (payroll arithmetic, statutory derivations, decidability) stay
+humaniq-side, in `derive` callables or non-tabular predicates.
 
 ## Risks / Trade-offs
 

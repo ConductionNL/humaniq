@@ -3,15 +3,21 @@
 /**
  * Unit tests for the NL statutory-leave (verlofsaldo) checks.
  *
- * Pins the four leave predicates on LeaveBalance: statutory minimum (4x
+ * Pins the four leave rules on LeaveBalance: statutory minimum (4x
  * contractual weekly hours, vacuous pass when the contractHoursPerWeek
  * snapshot is null), non-negative balance (used hours never exceed the total
  * entitlement), the 1-July-following-year vervaltermijn (leave-verzuim-mvp),
  * and the leave-buy-sell audit-time backstop (bovenwettelijkHours never
- * negative) -- the last one driven through the REAL
- * `RuleEngine::evaluate('LeaveBalance', ...)` too (not just the raw
- * callable), so the auto-discovery + rule-index wiring is exercised
- * end-to-end.
+ * negative).
+ *
+ * Since rules-onto-or-decision-tables these rules are table-declared
+ * (ProvidesTables) and matched by OpenRegister's shared decision-table
+ * evaluator, so EVERY scenario here drives the full registry path —
+ * `RuleEngine::evaluate('LeaveBalance', ...)` through TableCheckEvaluator into
+ * the shared Dmn evaluator (the vendored verbatim copy in standalone runs) —
+ * rather than raw closures. A scenario passes when the rule contributes no
+ * violation and fails when it does, which also pins the fail-closed path: an
+ * evaluator error reads as a violation, never a silent pass.
  *
  * @category Test
  * @package  OCA\Humaniq\Tests\Unit\Standards\Checks
@@ -47,7 +53,9 @@ use PHPUnit\Framework\TestCase;
 class NlLeaveChecksTest extends TestCase {
 
 	/**
-	 * The registered LeaveBalance predicates, keyed by rule id.
+	 * Per rule id: a pass/fail probe over a LeaveBalance that runs the FULL
+	 * engine path (RuleEngine::evaluate -> table registry -> shared Dmn
+	 * evaluator) and answers true when the rule contributes no violation.
 	 *
 	 * @var array<string, callable>
 	 */
@@ -57,7 +65,19 @@ class NlLeaveChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->checks = NlLeaveChecks::checks()['LeaveBalance'];
+		$this->checks = [];
+		foreach (array_keys(NlLeaveChecks::tables()['LeaveBalance']) as $ruleId) {
+			$this->checks[$ruleId] = static function (array $balance) use ($ruleId): bool {
+				$violations = RuleEngine::evaluate('LeaveBalance', $balance, ['jurisdiction' => 'NL']);
+				foreach ($violations as $violation) {
+					if ($violation->ruleId === $ruleId) {
+						return false;
+					}
+				}
+
+				return true;
+			};
+		}
 
 	}//end setUp()
 
@@ -186,15 +206,21 @@ class NlLeaveChecksTest extends TestCase {
 	 * @return void
 	 */
 	public function testAllFourRuleIdsAreRegistered(): void {
-		$this->assertArrayHasKey('nl-verlof-wettelijk-minimum', $this->checks);
-		$this->assertArrayHasKey('nl-verlof-saldo-niet-negatief', $this->checks);
-		$this->assertArrayHasKey('nl-verlof-vervaltermijn', $this->checks);
-		$this->assertArrayHasKey('nl-verlof-bovenwettelijk-niet-negatief', $this->checks);
+		// Through the ENGINE's registry (not the provider's own declaration):
+		// the table-declared checks must be merged in so every consumer of
+		// evaluate() still enforces them after the representation change.
+		RuleEngine::reset();
+		$this->assertContains('LeaveBalance', RuleEngine::supportedTypes());
+		$checked = RuleEngine::checkedRuleIds();
+		$this->assertContains('nl-verlof-wettelijk-minimum', $checked);
+		$this->assertContains('nl-verlof-saldo-niet-negatief', $checked);
+		$this->assertContains('nl-verlof-vervaltermijn', $checked);
+		$this->assertContains('nl-verlof-bovenwettelijk-niet-negatief', $checked);
 
 	}//end testAllFourRuleIdsAreRegistered()
 
 	/**
-	 * leave-buy-sell REQ-BUYSELL-003 (raw predicate): a negative
+	 * leave-buy-sell REQ-BUYSELL-003 (engine path): a negative
 	 * bovenwettelijkHours violates the backstop.
 	 *
 	 * @return void
@@ -206,7 +232,7 @@ class NlLeaveChecksTest extends TestCase {
 	}//end testBovenwettelijkNietNegatiefViolatedWhenNegative()
 
 	/**
-	 * leave-buy-sell REQ-BUYSELL-003 (raw predicate): zero or positive
+	 * leave-buy-sell REQ-BUYSELL-003 (engine path): zero or positive
 	 * bovenwettelijkHours satisfies the backstop.
 	 *
 	 * @return void
