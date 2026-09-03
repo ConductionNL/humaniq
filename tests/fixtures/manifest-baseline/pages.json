@@ -20,6 +20,22 @@
 		"route": "/flows/:id"
 	},
 	{
+		"id": "Reports",
+		"route": "/reports"
+	},
+	{
+		"id": "WorkforceReport",
+		"route": "/reports/workforce"
+	},
+	{
+		"id": "AbsenceReport",
+		"route": "/reports/absence"
+	},
+	{
+		"id": "PerformanceReport",
+		"route": "/reports/performance"
+	},
+	{
 		"id": "FeaturesRoadmap",
 		"route": "/features-roadmap"
 	},
