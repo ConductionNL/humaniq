@@ -1,6 +1,8 @@
 OC.L10N.register(
     "humaniq",
     {
+        "Features & roadmap": "Functies en roadmap",
+        "Documentation": "Documentatie",
         "(Re)calculate": "(Her)berekenen",
         "(Re)calculating the payroll run failed.": "(Her)berekenen van de loonrun is mislukt.",
         "30%-ruling applied rate": "Toegepast 30%-percentage",

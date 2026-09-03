@@ -29,6 +29,7 @@ import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue
 import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
 import BankTransfer from 'vue-material-design-icons/BankTransfer.vue'
 import BookEditOutline from 'vue-material-design-icons/BookEditOutline.vue'
+import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import BriefcaseOutline from 'vue-material-design-icons/BriefcaseOutline.vue'
 import BriefcaseSearchOutline from 'vue-material-design-icons/BriefcaseSearchOutline.vue'
 import BullseyeArrow from 'vue-material-design-icons/BullseyeArrow.vue'
@@ -89,6 +90,7 @@ import GiftOutline from 'vue-material-design-icons/GiftOutline.vue'
 import HandshakeOutline from 'vue-material-design-icons/HandshakeOutline.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
+import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
 import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
@@ -136,6 +138,7 @@ export default {
 	AlertOutline,
 	BankTransfer,
 	BookEditOutline,
+	BookOpenVariantOutline,
 	BriefcaseOutline,
 	BriefcaseSearchOutline,
 	BullseyeArrow,
@@ -196,6 +199,7 @@ export default {
 	HandshakeOutline,
 	LinkVariant,
 	Magnify,
+	MapMarkerPath,
 	OfficeBuildingOutline,
 	PackageVariantClosed,
 	PencilOutline,
