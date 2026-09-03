@@ -54,6 +54,7 @@ import CashPlus from 'vue-material-design-icons/CashPlus.vue'
 import CashRemove from 'vue-material-design-icons/CashRemove.vue'
 import CashSync from 'vue-material-design-icons/CashSync.vue'
 import ChartBar from 'vue-material-design-icons/ChartBar.vue'
+import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import CheckDecagramOutline from 'vue-material-design-icons/CheckDecagramOutline.vue'
 import ClipboardAccountOutline from 'vue-material-design-icons/ClipboardAccountOutline.vue'
@@ -163,6 +164,7 @@ export default {
 	CashRemove,
 	CashSync,
 	ChartBar,
+	ChartBoxOutline,
 	CheckCircleOutline,
 	CheckDecagramOutline,
 	ClipboardAccountOutline,
