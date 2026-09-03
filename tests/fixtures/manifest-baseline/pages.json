@@ -20,6 +20,10 @@
 		"route": "/flows/:id"
 	},
 	{
+		"id": "FeaturesRoadmap",
+		"route": "/features-roadmap"
+	},
+	{
 		"id": "TimeEntries",
 		"route": "/time-entries"
 	},

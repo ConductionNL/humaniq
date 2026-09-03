@@ -742,6 +742,22 @@
 			"order": 96,
 			"route": "Flows",
 			"section": "settings"
+		},
+		{
+			"href": "https://humaniq.conduction.nl",
+			"icon": "BookOpenVariantOutline",
+			"id": "Documentation",
+			"label": "Documentation",
+			"order": 90,
+			"section": "footer"
+		},
+		{
+			"icon": "MapMarkerPath",
+			"id": "FeaturesRoadmapMenu",
+			"label": "Features & roadmap",
+			"order": 100,
+			"route": "FeaturesRoadmap",
+			"section": "footer"
 		}
 	],
 	"pageTemplates": [
@@ -1609,6 +1625,16 @@
 			"sidebarComponent": "FlowDetailSidebar",
 			"title": "Flow",
 			"type": "flow-detail"
+		},
+		{
+			"_note": "ADR-018 / ADR-114 Decision 5. Rendered by the shared CnFeaturesAndRoadmapView, which reads the committed docs/features.json and OpenRegister's GitHub proxy. No per-app customisation of the view itself.",
+			"config": {
+				"documentationUrl": "https://humaniq.conduction.nl"
+			},
+			"id": "FeaturesRoadmap",
+			"route": "/features-roadmap",
+			"title": "Features & roadmap",
+			"type": "roadmap"
 		},
 		{
 			"config": {

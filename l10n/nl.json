@@ -1878,7 +1878,9 @@
         "this year": "dit jaar",
         "to reimburse": "uit te betalen",
         "total garnishment": "totaal beslag",
-        "vs. prior period": "t.o.v. vorige periode"
+        "vs. prior period": "t.o.v. vorige periode",
+        "Documentation": "Documentatie",
+        "Features & roadmap": "Functies en roadmap"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

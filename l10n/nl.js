@@ -1879,7 +1879,9 @@ OC.L10N.register(
         "this year": "dit jaar",
         "to reimburse": "uit te betalen",
         "total garnishment": "totaal beslag",
-        "vs. prior period": "t.o.v. vorige periode"
+        "vs. prior period": "t.o.v. vorige periode",
+        "Documentation": "Documentatie",
+        "Features & roadmap": "Functies en roadmap"
     },
     "nplurals=2; plural=(n != 1);"
 )

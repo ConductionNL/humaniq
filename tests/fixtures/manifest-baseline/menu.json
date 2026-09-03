@@ -513,5 +513,21 @@
 		"route": "Flows",
 		"section": "settings",
 		"order": 96
+	},
+	{
+		"id": "Documentation",
+		"label": "Documentation",
+		"icon": "BookOpenVariantOutline",
+		"href": "https://humaniq.conduction.nl",
+		"section": "footer",
+		"order": 90
+	},
+	{
+		"id": "FeaturesRoadmapMenu",
+		"label": "Features & roadmap",
+		"icon": "MapMarkerPath",
+		"route": "FeaturesRoadmap",
+		"section": "footer",
+		"order": 100
 	}
 ]
