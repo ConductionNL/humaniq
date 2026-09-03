@@ -208,7 +208,7 @@
                 "icon": "TextRecognition",
                 "version": "0.1.0",
                 "title": "Receipt extraction",
-                "description": "The humaniq-side record of one receipt-OCR extraction attempt against an Expense (receipt-ocr, REQ-RCPT-001): the raw extracted values and confidence docudesk's FinancialExtractionService returned, and which Expense fields this attempt actually wrote (appliedFields) -- the provenance trail a reviewer reads to see a value was machine-suggested rather than hand-entered. humaniq performs no OCR/extraction of its own; docudesk owns that surface entirely.",
+                "description": "The humaniq-side record of one receipt-OCR extraction attempt against an Expense (receipt-ocr): the raw extracted values and confidence docudesk's FinancialExtractionService returned, and which Expense fields this attempt actually wrote (appliedFields). It is the provenance trail a reviewer reads to see that a value was machine-suggested rather than hand-entered. humaniq performs no OCR or extraction of its own; docudesk owns that surface entirely.",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [
