@@ -7,7 +7,7 @@
                 "icon": "BookEditOutline",
                 "version": "0.2.0",
                 "title": "Payroll GL post",
-                "description": "The humaniq-side record of one attempt to post an approved PayrollRun's balanced loonjournaalpost into shillinq's JournalEntry register (payroll-glpost-shillinq). humaniq owns no bookkeeping machinery: this schema is a log of the handoff -- what was sent, when, and the outcome -- never the journal itself, which stays a shillinq JournalEntry created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays approved so a later `occ humaniq:glpost:run` invocation can supersede them (design.md D6). At most one PayrollGLPost per run may be `pending`/`posted` at a time -- enforced by PayrollGLPostService and audited by the nl-glpost-idempotent-per-run corpus rule.",
+                "description": "The humaniq-side record of one attempt to post an approved PayrollRun's balanced loonjournaalpost into shillinq's JournalEntry register (payroll-glpost-shillinq). Humaniq owns no bookkeeping machinery: this schema is a log of the handoff. What was sent, when, and the outcome. Never the journal itself, which stays a shillinq JournalEntry created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays approved so a later `occ humaniq:glpost:run` invocation can supersede them (design.md D6). At most one PayrollGLPost per run may be `pending`/`posted` at a time. Enforced by PayrollGLPostService and audited by the nl-glpost-idempotent-per-run corpus rule.",
                 "type": "object",
                 "x-schema-org": "schema:AccountingTransaction",
                 "required": [
@@ -101,7 +101,7 @@
                                 "description": {
                                     "type": "string",
                                     "title": "Description",
-                                    "description": "A label for this line as it is sent to the bookkeeping system, for example \"Loonkosten bruto\". Optional — the account number is what the ledger keys on.", "x-notes": "Free-text label for the line as sent to shillinq, e.g. \"Loonkosten bruto\". Optional; the account number is what the ledger keys on.",
+                                    "description": "A label for this line as it is sent to the bookkeeping system, for example \"Loonkosten bruto\". Optional: the account number is what the ledger keys on.", "x-notes": "Free-text label for the line as sent to shillinq, e.g. \"Loonkosten bruto\". Optional; the account number is what the ledger keys on.",
                                     "nullable": true
                                 }
                             }

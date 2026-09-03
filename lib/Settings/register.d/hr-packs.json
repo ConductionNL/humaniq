@@ -5,7 +5,7 @@
       "JurisdictionPack": {
         "slug": "JurisdictionPack",
         "title": "Jurisdiction pack",
-        "description": "An UPLOADED jurisdiction pack (jurisdiction-packs design.md D7). Bundled packs — including NL — live in code under lib/Standards/packs/ and are NEVER imported as objects; this schema is the second home, for packs an admin uploads. Both homes are resolved by the same (jurisdiction, taxYear) key, and bundled wins by default: a pack stored here may only claim a key a bundled pack already owns when an admin explicitly activated it as a recorded override. Activation is recorded on THIS object, never read from the author-supplied document.",
+        "description": "An UPLOADED jurisdiction pack (jurisdiction-packs design.md D7). Bundled packs: including NL. Live in code under lib/Standards/packs/ and are NEVER imported as objects; this schema is the second home, for packs an admin uploads. Both homes are resolved by the same (jurisdiction, taxYear) key, and bundled wins by default: a pack stored here may only claim a key a bundled pack already owns when an admin explicitly activated it as a recorded override. Activation is recorded on THIS object, never read from the author-supplied document.",
         "type": "object",
         "required": ["packId", "jurisdiction", "taxYear", "packVersion", "dslVersion", "tables", "document"],
         "properties": {
@@ -17,12 +17,12 @@
           "jurisdiction": {
             "type": "string",
             "title": "Jurisdiction",
-            "description": "Which country this pack is for. Always stated here — never read from the pack's name.", "x-notes": "The pack's DECLARED ISO 3166-1 alpha-2 jurisdiction — never parsed from the pack id. Half of the resolver key."
+            "description": "Which country this pack is for. Always stated here: never read from the pack's name.", "x-notes": "The pack's DECLARED ISO 3166-1 alpha-2 jurisdiction — never parsed from the pack id. Half of the resolver key."
           },
           "taxYear": {
             "type": "integer",
             "title": "Tax year",
-            "description": "The pack's DECLARED tax year — never parsed from the pack id. The other half of the resolver key."
+            "description": "The pack's DECLARED tax year: never parsed from the pack id. The other half of the resolver key."
           },
           "packVersion": {
             "type": "string",
@@ -60,7 +60,7 @@
           "document": {
             "type": "string",
             "title": "Pack document",
-            "description": "The pack's full contents as uploaded. Data only — a pack can never contain code.", "x-notes": "The pack's full JSON document, as uploaded. Data only: the DSL has no loops, no recursion and no IO, and a pack can never carry code, a class path or a callable — it names an allow-listed handler or it is rejected."
+            "description": "The pack's full contents as uploaded. Data only: a pack can never contain code.", "x-notes": "The pack's full JSON document, as uploaded. Data only: the DSL has no loops, no recursion and no IO, and a pack can never carry code, a class path or a callable — it names an allow-listed handler or it is rejected."
           }
         }
       }

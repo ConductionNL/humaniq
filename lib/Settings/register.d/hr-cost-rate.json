@@ -9,14 +9,14 @@
                         "nullable": true,
                         "minimum": 0,
                         "title": "Hourly cost rate override (cents)",
-                        "description": "Employer cost per hour in cents, set by hand instead of the figure derived from payroll. Leave empty — the normal case — to use the derived value.",
+                        "description": "Employer cost per hour in cents, set by hand instead of the figure derived from payroll. Leave empty: the normal case. To use the derived value.",
                         "x-notes": "ADR-081 decision 4. This is an EMPLOYER COST, not a wage: it is not comparable to EmploymentContract.hourlyWage, which is the employee's gross hourly wage and is never used as a cost rate. Integer cents, never a float, so a rate multiplied by logged hours cannot drift (the ActivityCostAllocationSplitter convention)."
                     },
                     "hourlyCostRateOverrideReason": {
                         "type": "string",
                         "nullable": true,
                         "title": "Hourly cost rate override reason",
-                        "description": "Why the derived cost was replaced. Required whenever you set an override — an override with no reason is indistinguishable from a typo six months later.",
+                        "description": "Why the derived cost was replaced. Required whenever you set an override: an override with no reason is indistinguishable from a typo six months later.",
                         "x-notes": "ADR-081 decision 4. This number reaches a statutory IV3 submission through Shillinq. Free text: the derivation cannot be told 'this employee is seconded and billed at the partner rate', so the reason is the only place that survives."
                     },
                     "hourlyCostRateOverrideBy": {
@@ -38,7 +38,7 @@
                         "type": "array",
                         "nullable": true,
                         "title": "Hourly cost additions",
-                        "description": "Employer costs per hour on top of the wage — overhead, equipment, workplace, tooling. Each entry is named and sourced, so a cost figure can be explained line by line.",
+                        "description": "Employer costs per hour on top of the wage: overhead, equipment, workplace, tooling. Each entry is named and sourced, so a cost figure can be explained line by line.",
                         "x-notes": "ADR-081 decision 4. The hourly cost is `wageCost + sum(additions)`; there is exactly ONE rate, never a normal one and an overtime one. Line-by-line explicability is what an audit asks for, and a new cost factor is data rather than a schema migration. Shillinq is expected to calculate the overhead and equipment additions, because it holds the ledger those pools live in.",
                         "items": {
                             "type": "object",
@@ -53,13 +53,13 @@
                                     "type": "integer",
                                     "nullable": true,
                                     "title": "Fixed amount per hour (cents)",
-                                    "description": "A fixed amount added per hour, in cents — the right shape for a cost that does not scale with pay: rent, a workplace, a laptop, management fees. Use this or a percentage of the wage, never both.", "x-notes": "A FIXED amount added per hour, in CENTS — the right shape for a cost that does not scale with the wage: rent, a workplace, a laptop, management fees. Integer so that rate x hours cannot accumulate IEEE-754 drift across a quarter of allocations. Set this OR percentageOfWage, never both."
+                                    "description": "A fixed amount added per hour, in cents: the right shape for a cost that does not scale with pay: rent, a workplace, a laptop, management fees. Use this or a percentage of the wage, never both.", "x-notes": "A FIXED amount added per hour, in CENTS — the right shape for a cost that does not scale with the wage: rent, a workplace, a laptop, management fees. Integer so that rate x hours cannot accumulate IEEE-754 drift across a quarter of allocations. Set this OR percentageOfWage, never both."
                                 },
                                 "percentageOfWage": {
                                     "type": "number",
                                     "nullable": true,
                                     "title": "Percentage of the wage base",
-                                    "description": "An amount per hour as a percentage of the wage — the right shape for a cost that does scale with pay, such as an overtime surcharge. It is worked out over the wage only, never over the running total. Use this or a fixed amount, never both.", "x-notes": "A RELATIVE amount, as a percentage of the wage base — the right shape for a cost that genuinely scales with pay, such as an overtime surcharge. Applied to the WAGE BASE ONLY, never to the running total: compounding one addition onto another would make the result depend on the order they happen to be listed in. Set this OR centsPerHour, never both."
+                                    "description": "An amount per hour as a percentage of the wage: the right shape for a cost that does scale with pay, such as an overtime surcharge. It is worked out over the wage only, never over the running total. Use this or a fixed amount, never both.", "x-notes": "A RELATIVE amount, as a percentage of the wage base — the right shape for a cost that genuinely scales with pay, such as an overtime surcharge. Applied to the WAGE BASE ONLY, never to the running total: compounding one addition onto another would make the result depend on the order they happen to be listed in. Set this OR centsPerHour, never both."
                                 },
                                 "source": {
                                     "type": "string",
@@ -81,7 +81,7 @@
                 "icon": "CashPlus",
                 "version": "0.1.0",
                 "title": "Cost Addition Policy",
-                "description": "An employer cost that applies per worked hour on top of the wage — overhead, workplace, equipment, management fees — scoped to everyone under a given collective labour agreement, to a single contract, or to the whole organisation. The most specific scope wins per cost factor: contract beats CLA beats organisation.",
+                "description": "An employer cost that applies per worked hour on top of the wage: overhead, workplace, equipment, management fees. Scoped to everyone under a given collective labour agreement, to a single contract, or to the whole organisation. The most specific scope wins per cost factor: contract beats CLA beats organisation.",
                 "x-notes": "ADR-081 decision 4. Deliberately NOT part of the CLA corpus: a collective labour agreement does not state what an employer's overhead is, and that corpus holds only figures transcribed from published CLA texts with a source citation. Scoping BY a CLA is a convenient way to select a group of employees ('everyone under the ICK CLA carries EUR 25/h for rent and management'), not a claim that the CLA says so.",
                 "type": "object",
                 "required": ["key", "scope", "basis"],
@@ -114,13 +114,13 @@
                         "type": "integer",
                         "nullable": true,
                         "title": "Fixed amount per hour (cents)",
-                        "description": "A fixed amount added per hour, in cents — the right shape for a cost that does not scale with pay: rent, a workplace, a laptop, management fees. Use this or a percentage of the wage, never both.", "x-notes": "A FIXED per-hour amount in CENTS. The shape most employer overheads actually have — rent and management fees do not scale with an individual's salary. Set this OR percentageOfWage, never both."
+                        "description": "A fixed amount added per hour, in cents: the right shape for a cost that does not scale with pay: rent, a workplace, a laptop, management fees. Use this or a percentage of the wage, never both.", "x-notes": "A FIXED per-hour amount in CENTS. The shape most employer overheads actually have — rent and management fees do not scale with an individual's salary. Set this OR percentageOfWage, never both."
                     },
                     "percentageOfWage": {
                         "type": "number",
                         "nullable": true,
                         "title": "Percentage of the wage base",
-                        "description": "An amount per hour as a percentage of the wage — the right shape for a cost that does scale with pay, such as an overtime surcharge. Use this or a fixed amount, never both.", "x-notes": "A RELATIVE per-hour amount, as a percentage of the wage base. Applied to the wage base only, never compounded onto other additions. Set this OR centsPerHour, never both."
+                        "description": "An amount per hour as a percentage of the wage: the right shape for a cost that does scale with pay, such as an overtime surcharge. Use this or a fixed amount, never both.", "x-notes": "A RELATIVE per-hour amount, as a percentage of the wage base. Applied to the wage base only, never compounded onto other additions. Set this OR centsPerHour, never both."
                     },
                     "basis": {
                         "type": "string",
@@ -138,7 +138,7 @@
                         "format": "date",
                         "nullable": true,
                         "title": "Effective from",
-                        "description": "First date this applies. Leave empty if it has always applied — costing last year's hours at this year's overhead would quietly restate history.", "x-notes": "First date this policy applies. Null means it has always applied. Overheads are re-budgeted; costing last year's hours at this year's overhead would silently restate history."
+                        "description": "First date this applies. Leave empty if it has always applied: costing last year's hours at this year's overhead would quietly restate history.", "x-notes": "First date this policy applies. Null means it has always applied. Overheads are re-budgeted; costing last year's hours at this year's overhead would silently restate history."
                     },
                     "effectiveTo": {
                         "type": "string",
@@ -161,7 +161,7 @@
                         "type": "object",
                         "nullable": true,
                         "title": "Overtime surcharge percentages (contract override)",
-                        "description": "Overtime surcharges for this contract, instead of what the collective agreement says. Leave empty — the normal case — to follow the agreement. These are the surcharge, not the total: 50 means 150% of the normal hourly wage. Setting this replaces the agreement's overtime terms in full.", "x-notes": "Per-category overwerktoeslag for THIS contract, overriding whatever the CAO says. Null — the normal case — means the CAO's own overtime article applies, resolved through CaoRegistry. Terms are company-wide by default and individual only by exception, so the absence of a value here is the meaningful state, not an unfinished one. Percentages are the SURCHARGE, not the total: 50 means 150% of the normal hourly wage is paid for that hour. When set, the override wins IN FULL rather than merging per category — a partial merge would silently combine two documents' terms and produce a set of rules that exists in neither.",
+                        "description": "Overtime surcharges for this contract, instead of what the collective agreement says. Leave empty: the normal case. To follow the agreement. These are the surcharge, not the total: 50 means 150% of the normal hourly wage. Setting this replaces the agreement's overtime terms in full.", "x-notes": "Per-category overwerktoeslag for THIS contract, overriding whatever the CAO says. Null — the normal case — means the CAO's own overtime article applies, resolved through CaoRegistry. Terms are company-wide by default and individual only by exception, so the absence of a value here is the meaningful state, not an unfinished one. Percentages are the SURCHARGE, not the total: 50 means 150% of the normal hourly wage is paid for that hour. When set, the override wins IN FULL rather than merging per category — a partial merge would silently combine two documents' terms and produce a set of rules that exists in neither.",
                         "properties": {
                             "doordeweeks": {"type": "number", "nullable": true, "title": "Weekday", "description": "Surcharge percentage for overtime on an ordinary weekday."},
                             "zaterdag": {"type": "number", "nullable": true, "title": "Saturday", "description": "Surcharge percentage for overtime on a Saturday."},

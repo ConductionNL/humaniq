@@ -7,7 +7,7 @@
                 "icon": "BriefcaseOutline",
                 "version": "0.1.0",
                 "title": "Reference job",
-                "description": "A read-only reference row from the HR21 (VNG-owned municipal functiewaarderingssysteem) normfunctie library, mapping one standard job function to a Cao Gemeenten schaal. Seeded illustrative subset only (allowCreate:false) -- NOT a claimed-complete ~150-function library; the exact HR21 normfunctie catalog was not independently verified from a primary VNG source (proposal.md 'Honesty about verification'). caoSchaal lives in the same key space cao-gemeenten.payScales uses, but this schema does not itself invent or store any schaal figures -- it only records which schaal a normfunctie maps to. An EmploymentContract links to a Normfunctie via normfunctieId, HR-set, never derived.",
+                "description": "A read-only reference row from the HR21 (VNG-owned municipal functiewaarderingssysteem) normfunctie library, mapping one standard job function to a Cao Gemeenten schaal. Seeded illustrative subset only (allowCreate:false). NOT a claimed-complete ~150-function library; the exact HR21 normfunctie catalog was not independently verified from a primary VNG source (proposal.md 'Honesty about verification'). CaoSchaal lives in the same key space cao-gemeenten.payScales uses, but this schema does not itself invent or store any schaal figures. It only records which schaal a normfunctie maps to. An EmploymentContract links to a Normfunctie via normfunctieId, HR-set, never derived.",
                 "type": "object",
                 "x-schema-org": "schema:Occupation",
                 "required": [

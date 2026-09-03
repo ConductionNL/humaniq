@@ -26,7 +26,7 @@
                     "title": {
                         "type": "string",
                         "title": "Title",
-                        "description": "The band's name, for example 'Schaal A — Junior'.", "x-notes": "Human-readable name of the band (e.g. \"Schaal A — Junior\")."
+                        "description": "The band's name, for example 'Schaal A: Junior'.", "x-notes": "Human-readable name of the band (e.g. \"Schaal A — Junior\")."
                     },
                     "grade": {
                         "type": "string",
@@ -88,7 +88,7 @@
                 "icon": "CalendarRange",
                 "version": "0.1.0",
                 "title": "Compensation review cycle",
-                "description": "A periodic compensation-review round (comp-cycles) grouping the per-employee CompAdjustment proposals raised during it. A light open/closed container only — approval happens per adjustment (CompAdjustment carries the draft→proposed→approved→effective lifecycle), so a cycle MAY close while still holding adjustments in any state.",
+                "description": "A periodic compensation-review round (comp-cycles) grouping the per-employee CompAdjustment proposals raised during it. A light open/closed container only: approval happens per adjustment (CompAdjustment carries the draft→proposed→approved→effective lifecycle), so a cycle MAY close while still holding adjustments in any state.",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [
@@ -110,7 +110,7 @@
                                     "open"
                                 ],
                                 "to": "closed",
-                                "description": "Close the review round. A closed cycle may still hold adjustments in any state (approval/effectuation is per-adjustment, not per-cycle); closing does not force-effectuate anything. No reopen edge — a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent)."
+                                "description": "Close the review round. A closed cycle may still hold adjustments in any state (approval/effectuation is per-adjustment, not per-cycle); closing does not force-effectuate anything. No reopen edge: a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent)."
                             }
                         }
                     }

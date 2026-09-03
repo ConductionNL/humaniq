@@ -7,7 +7,7 @@
                 "icon": "TimelineClockOutline",
                 "version": "0.1.0",
                 "title": "Shift",
-                "description": "A reusable shift definition (klok-vorm template): a name, wall-clock startTime/endTime, a break duration and an optional org-unit scope. Shifts are authored once and reused across many RosterAssignments — the schema carries no dated instance data of its own. A shift whose endTime is not after its startTime denotes a night shift crossing midnight (the AttendanceRecord night-shift convention): an assignment referencing it composes a plannedEnd on the following calendar day (rostering MVP, design D1/D2).",
+                "description": "A reusable shift definition (klok-vorm template): a name, wall-clock startTime/endTime, a break duration and an optional org-unit scope. Shifts are authored once and reused across many RosterAssignments: the schema carries no dated instance data of its own. A shift whose endTime is not after its startTime denotes a night shift crossing midnight (the AttendanceRecord night-shift convention): an assignment referencing it composes a plannedEnd on the following calendar day (rostering MVP, design D1/D2).",
                 "type": "object",
                 "required": [
                     "name",
@@ -28,7 +28,7 @@
                 "icon": "CalendarMonthOutline",
                 "version": "0.1.0",
                 "title": "Roster",
-                "description": "The publishable header for one planning period + scope: the unit of publication for a set of RosterAssignments. Publishing (status concept -> gepubliceerd) freezes the plan and makes it the team's roster; intrekken returns it to concept for edits, with the change visible in the audit trail. A Roster carries no hours of its own — it groups its RosterAssignments (rostering MVP, design D1/D3).",
+                "description": "The publishable header for one planning period + scope: the unit of publication for a set of RosterAssignments. Publishing (status concept -> gepubliceerd) freezes the plan and makes it the team's roster; intrekken returns it to concept for edits, with the change visible in the audit trail. A Roster carries no hours of its own: it groups its RosterAssignments (rostering MVP, design D1/D3).",
                 "type": "object",
                 "required": [
                     "period",
@@ -65,7 +65,7 @@
                 "icon": "AccountClockOutline",
                 "version": "0.1.0",
                 "title": "Roster assignment",
-                "description": "One employee on one shift on one date within a Roster. Carries the projected planned-clock fields plannedStart/plannedEnd/plannedBreakMinutes, composed from the assignment's date and the referenced Shift's startTime/endTime/breakMinutes at write time (never a live Shift join — design D2), so the Arbeidstijdenwet cross-check (NlRosterChecks) is decidable from the assignment alone, exactly as AttendanceRecord's raw clockIn/clockOut/breakMinutes decide the realised-day checks. A published plan stays stable against a later Shift edit: the projected fields are re-derived only when the assignment itself is re-written. No approval status of its own — the plan's only lifecycle lives on the Roster header.",
+                "description": "One employee on one shift on one date within a Roster. Carries the projected planned-clock fields plannedStart/plannedEnd/plannedBreakMinutes, composed from the assignment's date and the referenced Shift's startTime/endTime/breakMinutes at write time (never a live Shift join: design D2), so the Arbeidstijdenwet cross-check (NlRosterChecks) is decidable from the assignment alone, exactly as AttendanceRecord's raw clockIn/clockOut/breakMinutes decide the realised-day checks. A published plan stays stable against a later Shift edit: the projected fields are re-derived only when the assignment itself is re-written. No approval status of its own. The plan's only lifecycle lives on the Roster header.",
                 "type": "object",
                 "required": [
                     "rosterId",

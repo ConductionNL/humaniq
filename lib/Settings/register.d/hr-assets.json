@@ -7,7 +7,7 @@
                 "icon": "DesktopTowerMonitor",
                 "version": "0.4.0",
                 "title": "Asset",
-                "description": "A company-owned item issued to employees (laptop, phone, vehicle, tool, accessPass, clothing, other): identity fields (serialNumber, licencePlate for vehicles), acquisition fields, and a guarded custody state machine (asset-management-mvp). A vehicle Asset additionally carries the fiscal facts (listPrice, fuelType, companyCarTaxCategory) the monthly bijtelling privegebruik auto calculation needs (hrmq-asset-fleet-merge, absorbed from the retired Vehicle schema) -- required exactly when category is vehicle, enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet (a schema-level conditional cannot express this: Schema::getSchemaObject() never emits allOf/if/then to the validator, design.md D2). No AssetHistoryEntry: OpenRegister's object audit trail already records every mutation.",
+                "description": "A company-owned item issued to employees (laptop, phone, vehicle, tool, accessPass, clothing, other): identity fields (serialNumber, licencePlate for vehicles), acquisition fields, and a guarded custody state machine (asset-management-mvp). A vehicle Asset additionally carries the fiscal facts (listPrice, fuelType, companyCarTaxCategory) the monthly bijtelling privegebruik auto calculation needs (hrmq-asset-fleet-merge, absorbed from the retired Vehicle schema): required exactly when category is vehicle, enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet (a schema-level conditional cannot express this: Schema::getSchemaObject() never emits allOf/if/then to the validator, design.md D2). No AssetHistoryEntry: OpenRegister's object audit trail already records every mutation.",
                 "type": "object",
                 "x-schema-org": "schema:IndividualProduct",
                 "required": [
@@ -35,7 +35,7 @@
                                     "issued"
                                 ],
                                 "to": "checkedIn",
-                                "description": "The asset is returned and awaiting check. Deliberately the only exit from issued -- an issued asset must be checked in (or its loss recorded here) before it can be written off."
+                                "description": "The asset is returned and awaiting check. Deliberately the only exit from issued: an issued asset must be checked in (or its loss recorded here) before it can be written off."
                             },
                             "release": {
                                 "from": [
@@ -130,7 +130,7 @@
                         "type": "number",
                         "nullable": true,
                         "title": "List price",
-                        "description": "The catalogue value in euros — the basis for the monthly company-car addition. Only for a vehicle.", "x-notes": "The fiscal catalog value in EUR -- the base the monthly bijtelling percentage is applied against (hrmq-asset-fleet-merge, absorbed from the retired Vehicle.cataloguswaarde). Meaningful only for category vehicle; null on every other category. Its completeness when category is vehicle is enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet, not by a schema-level required (design.md D2)."
+                        "description": "The catalogue value in euros: the basis for the monthly company-car addition. Only for a vehicle.", "x-notes": "The fiscal catalog value in EUR -- the base the monthly bijtelling percentage is applied against (hrmq-asset-fleet-merge, absorbed from the retired Vehicle.cataloguswaarde). Meaningful only for category vehicle; null on every other category. Its completeness when category is vehicle is enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet, not by a schema-level required (design.md D2)."
                     },
                     "fuelType": {
                         "type": "string",
@@ -165,7 +165,7 @@
                 "icon": "HandshakeOutline",
                 "version": "0.3.0",
                 "title": "Asset assignment",
-                "description": "An effective-dated custody assignment of one Asset to one Employee (the OrgAssignment pattern, hr-org.json): issuedOn required, returnedOn nullable = the asset is still out. For a vehicle Asset this is also the private-use holding period the bijtelling calculation resolves (hrmq-asset-fleet-merge, absorbed from the retired CarAssignment schema) -- employeeContribution is the employee's own monthly contribution for private use, meaningless (and harmlessly defaulted to 0) on a non-vehicle assignment. No x-openregister-lifecycle: a plain effective-dated record, no workflow. Consistency (coherent dates, the asset in status issued while the assignment is open) is enforced by nl-asset-assignment-consistency (lib/Standards/rules/labour.json / lib/Standards/Checks/NlAssetChecks.php), not by a write-time guard.",
+                "description": "An effective-dated custody assignment of one Asset to one Employee (the OrgAssignment pattern, hr-org.json): issuedOn required, returnedOn nullable = the asset is still out. For a vehicle Asset this is also the private-use holding period the bijtelling calculation resolves (hrmq-asset-fleet-merge, absorbed from the retired CarAssignment schema): employeeContribution is the employee's own monthly contribution for private use, meaningless (and harmlessly defaulted to 0) on a non-vehicle assignment. No x-openregister-lifecycle: a plain effective-dated record, no workflow. Consistency (coherent dates, the asset in status issued while the assignment is open) is enforced by nl-asset-assignment-consistency (lib/Standards/rules/labour.json / lib/Standards/Checks/NlAssetChecks.php), not by a write-time guard.",
                 "type": "object",
                 "x-schema-org": "schema:OwnershipInfo",
                 "required": [
@@ -211,7 +211,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Notes",
-                        "description": "Anything worth noting — the condition when it was handed out or returned.", "x-notes": "Free-form notes (condition at handout/return)."
+                        "description": "Anything worth noting: the condition when it was handed out or returned.", "x-notes": "Free-form notes (condition at handout/return)."
                     },
                     "administrationId": {
                         "type": "string",

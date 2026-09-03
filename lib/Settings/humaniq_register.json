@@ -9,7 +9,7 @@
         "type": "application",
         "app": "humaniq",
         "openregister": "^v0.2.10",
-        "description": "Humaniq — open-source HR & payroll administration for Dutch SMBs."
+        "description": "Humaniq: open-source HR & payroll administration for Dutch SMBs."
     },
     "paths": {},
     "components": {
@@ -17,7 +17,7 @@
             "humaniq": {
                 "slug": "humaniq",
                 "title": "Humaniq Register",
-                "description": "Humaniq — open-source HR & payroll administration for Dutch SMBs. Holds every HR, verzuim, verlof, roostering, ATS, performance and payroll object the app reads and writes.",
+                "description": "Humaniq: open-source HR & payroll administration for Dutch SMBs. Holds every HR, verzuim, verlof, roostering, ATS, performance and payroll object the app reads and writes.",
                 "version": "0.18.0",
                 "schemas": [
                     "Administration",

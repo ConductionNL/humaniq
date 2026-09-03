@@ -49,7 +49,7 @@
                         "type": "string",
                         "format": "date",
                         "title": "First sick day",
-                        "description": "The first day of this sickness period (dag 1 ziek) — the anchor date every WVP milestone Due date is derived from (+6/8/42/52 weeks)."
+                        "description": "The first day of this sickness period (dag 1 ziek): the anchor date every WVP milestone Due date is derived from (+6/8/42/52 weeks)."
                     },
                     "recoveredDate": {
                         "type": "string",
@@ -127,7 +127,7 @@
                         "format": "date",
                         "nullable": true,
                         "title": "UWV 42-week notification done",
-                        "description": "When the 42-week notification was filed with the UWV. Recorded here only — this app does not send it.", "x-notes": "Date the 42-wekenmelding was actually filed with UWV. Recorded here only — this app does not transmit it (no UWV wire integration)."
+                        "description": "When the 42-week notification was filed with the UWV. Recorded here only: this app does not send it.", "x-notes": "Date the 42-wekenmelding was actually filed with UWV. Recorded here only — this app does not transmit it (no UWV wire integration)."
                     },
                     "eerstejaarsevaluatieDue": {
                         "type": "string",
@@ -165,7 +165,7 @@
                                     "minimum": 0,
                                     "maximum": 100,
                                     "title": "Absence percentage",
-                                    "description": "How much of the contracted hours the employee is absent from that date on. 100 means not working at all, 40 means working 60% of the hours. Entering 0 records a full return to work, but it does not close the case — the recovery date does that.", "x-notes": "Percentage of contracted hours the employee is absent from effectiveFrom onward. 100 = not working at all, 40 = working 60% of contracted hours. 0 records a full resumption, but it is NOT what closes the case: recoveredDate and the gemeld/hersteld lifecycle stay the single authority on that, and the calculation clips at recoveredDate regardless of what this array says."
+                                    "description": "How much of the contracted hours the employee is absent from that date on. 100 means not working at all, 40 means working 60% of the hours. Entering 0 records a full return to work, but it does not close the case: the recovery date does that.", "x-notes": "Percentage of contracted hours the employee is absent from effectiveFrom onward. 100 = not working at all, 40 = working 60% of contracted hours. 0 records a full resumption, but it is NOT what closes the case: recoveredDate and the gemeld/hersteld lifecycle stay the single authority on that, and the calculation clips at recoveredDate regardless of what this array says."
                                 }
                             }
                         }
