@@ -523,6 +523,14 @@
 		"order": 90
 	},
 	{
+		"id": "ReportsMenu",
+		"label": "Reports",
+		"icon": "ChartBoxOutline",
+		"route": "Reports",
+		"section": "footer",
+		"order": 95
+	},
+	{
 		"id": "FeaturesRoadmapMenu",
 		"label": "Features & roadmap",
 		"icon": "MapMarkerPath",

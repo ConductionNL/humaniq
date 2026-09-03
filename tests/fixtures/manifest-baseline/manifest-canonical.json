@@ -752,6 +752,14 @@
 			"section": "footer"
 		},
 		{
+			"icon": "ChartBoxOutline",
+			"id": "ReportsMenu",
+			"label": "Reports",
+			"order": 95,
+			"route": "Reports",
+			"section": "footer"
+		},
+		{
 			"icon": "MapMarkerPath",
 			"id": "FeaturesRoadmapMenu",
 			"label": "Features & roadmap",
@@ -1625,6 +1633,723 @@
 			"sidebarComponent": "FlowDetailSidebar",
 			"title": "Flow",
 			"type": "flow-detail"
+		},
+		{
+			"_note": "ADR-112 / ADR-114 Decision 3. Three declarative type:dashboard pages over humaniq's own register — no bespoke component and no per-app controller. ⚠️ Read the SCHEMAS FROM lib/Settings/register.d/*.json, not from humaniq_mock_register.json: the mock declares the same 54 slugs, and a mock import duplicates every one of them, so reading slugs there is reading the wrong register. Slugs here equal their keys (PascalCase, no overrides).",
+			"config": {
+				"cards": [
+					{
+						"category": "people",
+						"description": "Who is employed, and on what kind of contract.",
+						"icon": "AccountGroupOutline",
+						"id": "WorkforceReport",
+						"label": "Workforce",
+						"route": "WorkforceReport"
+					},
+					{
+						"category": "wellbeing",
+						"description": "What leave was asked for, what was granted, and who is off sick.",
+						"icon": "CalendarWeekendOutline",
+						"id": "AbsenceReport",
+						"label": "Leave and absence",
+						"route": "AbsenceReport"
+					},
+					{
+						"category": "wellbeing",
+						"description": "Where review cycles stand, and how conversations landed.",
+						"icon": "BullseyeArrow",
+						"id": "PerformanceReport",
+						"label": "Performance",
+						"route": "PerformanceReport"
+					}
+				],
+				"categories": {
+					"people": "People",
+					"wellbeing": "Time away and performance"
+				},
+				"description": "Pick a report to open it."
+			},
+			"id": "Reports",
+			"route": "/reports",
+			"title": "Reports",
+			"type": "reports"
+		},
+		{
+			"_note": "Headcount is a plain row count. It deliberately does NOT try to exclude leavers: endDate is a date and scalar equality is the only filter OpenRegister's aggregation endpoint can evaluate, so 'employees whose endDate has not passed' cannot be expressed here. A number that silently means something else is worse than a number that means exactly what it says.",
+			"config": {
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 0,
+						"id": "1",
+						"showTitle": false,
+						"widgetId": "hr-employees"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 4,
+						"gridY": 0,
+						"id": "2",
+						"showTitle": false,
+						"widgetId": "hr-permanent"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": "3",
+						"showTitle": false,
+						"widgetId": "hr-temporary"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 2,
+						"id": "4",
+						"showTitle": true,
+						"widgetId": "hr-by-contract"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 2,
+						"id": "5",
+						"showTitle": true,
+						"widgetId": "hr-by-tax-table"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 6,
+						"id": "6",
+						"showTitle": true,
+						"widgetId": "hr-recent"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "AccountGroupOutline",
+							"label": "Employee records",
+							"route": {
+								"name": "Employees"
+							},
+							"source": {
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "Employee"
+							}
+						},
+						"id": "hr-employees",
+						"title": "Employee records",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "BriefcaseOutline",
+							"label": "Permanent contracts",
+							"route": {
+								"name": "EmploymentContracts"
+							},
+							"source": {
+								"filter": {
+									"type": "permanent"
+								},
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "EmploymentContract"
+							}
+						},
+						"id": "hr-permanent",
+						"title": "Permanent contracts",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "CalendarClockOutline",
+							"label": "Temporary contracts",
+							"route": {
+								"name": "EmploymentContracts"
+							},
+							"source": {
+								"filter": {
+									"type": "temporary"
+								},
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "EmploymentContract"
+							}
+						},
+						"id": "hr-temporary",
+						"title": "Temporary contracts",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"chartKind": "donut",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "type",
+									"metric": "count"
+								},
+								"register": "humaniq",
+								"schema": "EmploymentContract"
+							},
+							"emptyLabel": "No contracts yet",
+							"legendPosition": "bottom"
+						},
+						"id": "hr-by-contract",
+						"title": "By contract type",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"chartKind": "donut",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "taxTableColor",
+									"metric": "count"
+								},
+								"register": "humaniq",
+								"schema": "Employee"
+							},
+							"emptyLabel": "No employees yet",
+							"legendPosition": "bottom"
+						},
+						"id": "hr-by-tax-table",
+						"title": "By tax table",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "startDate",
+									"label": "Start date"
+								},
+								{
+									"key": "lastName",
+									"label": "Name"
+								},
+								{
+									"key": "employeeNumber",
+									"label": "Number"
+								}
+							],
+							"emptyText": "No employees yet",
+							"filter": {},
+							"hideHeader": true,
+							"limit": 8,
+							"register": "humaniq",
+							"schema": "Employee",
+							"sort": {
+								"dir": "desc",
+								"field": "startDate"
+							},
+							"viewAllLabel": "View all employees",
+							"viewAllRoute": {
+								"name": "Employees"
+							}
+						},
+						"id": "hr-recent",
+						"title": "Most recently started",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "WorkforceReport",
+			"route": "/reports/workforce",
+			"title": "Workforce",
+			"type": "dashboard"
+		},
+		{
+			"_note": "LeaveRequest and SickLeaveCase share a page because the reader's question is who is away, which neither answers alone. SickLeaveCase.status is Dutch (gemeld/hersteld) while LeaveRequest.status is English; scalar equality does not fold language any more than it folds case.",
+			"config": {
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 0,
+						"id": "1",
+						"showTitle": false,
+						"widgetId": "leave-submitted"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 4,
+						"gridY": 0,
+						"id": "2",
+						"showTitle": false,
+						"widgetId": "leave-approved"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": "3",
+						"showTitle": false,
+						"widgetId": "sick-open"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 2,
+						"id": "4",
+						"showTitle": true,
+						"widgetId": "leave-by-status"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 4,
+						"gridX": 4,
+						"gridY": 2,
+						"id": "5",
+						"showTitle": true,
+						"widgetId": "leave-by-type"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 2,
+						"id": "6",
+						"showTitle": true,
+						"widgetId": "sick-by-status"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 6,
+						"id": "7",
+						"showTitle": true,
+						"widgetId": "leave-recent"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "CalendarClockOutline",
+							"label": "Awaiting a decision",
+							"route": {
+								"name": "LeaveRequests"
+							},
+							"source": {
+								"filter": {
+									"status": "submitted"
+								},
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "LeaveRequest"
+							}
+						},
+						"id": "leave-submitted",
+						"title": "Awaiting a decision",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "CheckCircleOutline",
+							"label": "Approved",
+							"route": {
+								"name": "LeaveRequests"
+							},
+							"source": {
+								"filter": {
+									"status": "approved"
+								},
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "LeaveRequest"
+							}
+						},
+						"id": "leave-approved",
+						"title": "Approved",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "AlertCircleOutline",
+							"label": "Currently reported sick",
+							"route": {
+								"name": "SickLeaveCases"
+							},
+							"source": {
+								"filter": {
+									"status": "gemeld"
+								},
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "SickLeaveCase"
+							}
+						},
+						"id": "sick-open",
+						"title": "Currently reported sick",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"chartKind": "donut",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "status",
+									"metric": "count"
+								},
+								"register": "humaniq",
+								"schema": "LeaveRequest"
+							},
+							"emptyLabel": "No leave requests yet",
+							"legendPosition": "bottom"
+						},
+						"id": "leave-by-status",
+						"title": "Requests by status",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"chartKind": "donut",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "leaveType",
+									"metric": "count"
+								},
+								"register": "humaniq",
+								"schema": "LeaveRequest"
+							},
+							"emptyLabel": "No leave requests yet",
+							"legendPosition": "bottom"
+						},
+						"id": "leave-by-type",
+						"title": "Requests by kind of leave",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"chartKind": "donut",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "status",
+									"metric": "count"
+								},
+								"register": "humaniq",
+								"schema": "SickLeaveCase"
+							},
+							"emptyLabel": "No sick leave reported",
+							"legendPosition": "bottom"
+						},
+						"id": "sick-by-status",
+						"title": "Sick cases by status",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "startDate",
+									"label": "From"
+								},
+								{
+									"key": "leaveType",
+									"label": "Kind"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"emptyText": "No leave requests yet",
+							"filter": {},
+							"hideHeader": true,
+							"limit": 8,
+							"register": "humaniq",
+							"schema": "LeaveRequest",
+							"sort": {
+								"dir": "desc",
+								"field": "startDate"
+							},
+							"viewAllLabel": "View all leave requests",
+							"viewAllRoute": {
+								"name": "LeaveRequests"
+							}
+						},
+						"id": "leave-recent",
+						"title": "Most recent requests",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "AbsenceReport",
+			"route": "/reports/absence",
+			"title": "Leave and absence",
+			"type": "dashboard"
+		},
+		{
+			"_note": "Ratings are grouped, never filtered to a 'good' bucket. Which ratings count as good is a policy question this page has no standing to answer, so it shows the distribution and lets the reader judge.",
+			"config": {
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 0,
+						"id": "1",
+						"showTitle": false,
+						"widgetId": "perf-cycles-open"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 4,
+						"gridY": 0,
+						"id": "2",
+						"showTitle": false,
+						"widgetId": "perf-submitted"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": "3",
+						"showTitle": false,
+						"widgetId": "perf-settled"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 2,
+						"id": "4",
+						"showTitle": true,
+						"widgetId": "perf-by-status"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 4,
+						"gridX": 4,
+						"gridY": 2,
+						"id": "5",
+						"showTitle": true,
+						"widgetId": "perf-by-rating"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 2,
+						"id": "6",
+						"showTitle": true,
+						"widgetId": "perf-cycles-by-type"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 6,
+						"id": "7",
+						"showTitle": true,
+						"widgetId": "perf-recent-cycles"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "CalendarRange",
+							"label": "Open review cycles",
+							"route": {
+								"name": "ReviewCycles"
+							},
+							"source": {
+								"filter": {
+									"status": "open"
+								},
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "ReviewCycle"
+							}
+						},
+						"id": "perf-cycles-open",
+						"title": "Open review cycles",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "BookEditOutline",
+							"label": "Reviews submitted",
+							"route": {
+								"name": "ReviewCycles"
+							},
+							"source": {
+								"filter": {
+									"status": "ingediend"
+								},
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "PerformanceReview"
+							}
+						},
+						"id": "perf-submitted",
+						"title": "Reviews submitted",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"format": {
+								"decimals": 0,
+								"style": "decimal"
+							},
+							"icon": "CheckCircleOutline",
+							"label": "Reviews settled",
+							"route": {
+								"name": "ReviewCycles"
+							},
+							"source": {
+								"filter": {
+									"status": "vastgesteld"
+								},
+								"metric": "count",
+								"register": "humaniq",
+								"schema": "PerformanceReview"
+							}
+						},
+						"id": "perf-settled",
+						"title": "Reviews settled",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"chartKind": "donut",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "status",
+									"metric": "count"
+								},
+								"register": "humaniq",
+								"schema": "PerformanceReview"
+							},
+							"emptyLabel": "No reviews yet",
+							"legendPosition": "bottom"
+						},
+						"id": "perf-by-status",
+						"title": "Reviews by status",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"chartKind": "donut",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "rating",
+									"metric": "count"
+								},
+								"register": "humaniq",
+								"schema": "PerformanceReview"
+							},
+							"emptyLabel": "No reviews yet",
+							"legendPosition": "bottom"
+						},
+						"id": "perf-by-rating",
+						"title": "How ratings are spread",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"chartKind": "donut",
+							"dataSource": {
+								"aggregate": {
+									"groupBy": "type",
+									"metric": "count"
+								},
+								"register": "humaniq",
+								"schema": "ReviewCycle"
+							},
+							"emptyLabel": "No review cycles yet",
+							"legendPosition": "bottom"
+						},
+						"id": "perf-cycles-by-type",
+						"title": "Cycles by kind",
+						"type": "chart"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "type",
+									"label": "Kind"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"emptyText": "No review cycles yet",
+							"filter": {},
+							"hideHeader": true,
+							"limit": 8,
+							"register": "humaniq",
+							"schema": "ReviewCycle",
+							"sort": {
+								"dir": "desc",
+								"field": "created"
+							},
+							"viewAllLabel": "View all review cycles",
+							"viewAllRoute": {
+								"name": "ReviewCycles"
+							}
+						},
+						"id": "perf-recent-cycles",
+						"title": "Most recent cycles",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "PerformanceReport",
+			"route": "/reports/performance",
+			"title": "Performance",
+			"type": "dashboard"
 		},
 		{
 			"_note": "ADR-018 / ADR-114 Decision 5. Rendered by the shared CnFeaturesAndRoadmapView, which reads the committed docs/features.json and OpenRegister's GitHub proxy. No per-app customisation of the view itself.",
