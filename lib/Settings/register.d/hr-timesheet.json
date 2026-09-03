@@ -222,14 +222,14 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Project",
-                        "description": "The project all hours this period were worked on — filled in only when every booking names the same project.",
+                        "description": "The project all hours this period were worked on: filled in only when every booking names the same project.",
                         "x-notes": "Denormalized aggregate for the approved-time-entry event contract (REQ-TEC-003): the single shared value when all entries agree, else null (emitted as ''). Plain string, not a $ref — no Project schema in humaniq (ADR-062 rule 7). Server-recomputed; client input inert."
                     },
                     "costCenter": {
                         "type": "string",
                         "nullable": true,
                         "title": "Cost centre",
-                        "description": "The cost centre all hours this period count against — filled in only when every booking shares one.",
+                        "description": "The cost centre all hours this period count against: filled in only when every booking shares one.",
                         "x-notes": "Denormalized aggregate for the event contract, same homogeneous-or-null rule as projectId. Per-booking truth lives on TimeEntry.costCenter (derived from the org structure). Plain string, not a $ref — no CostCenter schema in humaniq."
                     },
                     "billable": {
@@ -259,7 +259,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Manager",
-                        "description": "The team manager who reviews this timesheet — kept up to date automatically from the organisation structure.",
+                        "description": "The team manager who reviews this timesheet: kept up to date automatically from the organisation structure.",
                         "x-notes": "Denormalized Nextcloud user id cache (mss-team-scope) — plain string, never a $ref. Assignment truth lives ONLY on the org structure (active OrgAssignment -> OrgUnit.managerId -> manager Employee's nextcloudUserId); this cache exists solely because the manifest filter grammar cannot join across schemas for the TeamUrengoedkeuring @me filter. Stamped by TimesheetProcessStampListener via the shared OrgResolutionService — the same code path the nl-mss-manager-consistency audit evaluates, so stamp and audit cannot disagree. Client input is inert."
                     },
                     "status": {

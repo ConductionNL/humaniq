@@ -7,7 +7,7 @@
                 "icon": "BankTransfer",
                 "version": "0.2.0",
                 "title": "Payroll payment batch",
-                "description": "The humaniq-side record of one attempt to hand a payable PayrollRun's net-pay off to shillinq as a draft SEPA PaymentRun (payroll-sepa-netpay-shillinq). humaniq owns no SEPA/bank-file machinery: this schema is a log of the handoff -- what was sent, when, and the outcome -- never the payment batch itself, which stays a shillinq PaymentRun created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays payable so a later `occ humaniq:netpay:run` invocation can supersede them (design.md D6). At most one PayrollPaymentBatch per run may be `pending`/`created` at a time -- enforced by PayrollNetPayService. `created` means the draft PaymentRun was klaargezet in shillinq -- NOT paid: money only moves after shillinq's controller approves and exports it (design.md D4).",
+                "description": "The humaniq-side record of one attempt to hand a payable PayrollRun's net-pay off to shillinq as a draft SEPA PaymentRun (payroll-sepa-netpay-shillinq). Humaniq owns no SEPA/bank-file machinery: this schema is a log of the handoff. What was sent, when, and the outcome. Never the payment batch itself, which stays a shillinq PaymentRun created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays payable so a later `occ humaniq:netpay:run` invocation can supersede them (design.md D6). At most one PayrollPaymentBatch per run may be `pending`/`created` at a time. Enforced by PayrollNetPayService. `created` means the draft PaymentRun was klaargezet in shillinq. NOT paid: money only moves after shillinq's controller approves and exports it (design.md D4).",
                 "type": "object",
                 "x-schema-org": "schema:PaymentService",
                 "required": [
@@ -39,7 +39,7 @@
                         ],
                         "default": "pending",
                         "title": "Status",
-                        "description": "How this attempt ended. 'Created' means a draft payment run was delivered — not that anyone has been paid yet.", "x-notes": "Outcome of this net-pay attempt. `created` = draft PaymentRun delivered to shillinq (klaargezet, NOT paid). `failed`/`skipped-no-shillinq` are superseded by a retry; the run stays payable."
+                        "description": "How this attempt ended. 'Created' means a draft payment run was delivered: not that anyone has been paid yet.", "x-notes": "Outcome of this net-pay attempt. `created` = draft PaymentRun delivered to shillinq (klaargezet, NOT paid). `failed`/`skipped-no-shillinq` are superseded by a retry; the run stays payable."
                     },
                     "shillinqPaymentRunRef": {
                         "type": "string",
@@ -69,7 +69,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Error message",
-                        "description": "Why the batch failed or was skipped — for a failure, every payslip's own error, such as a missing bank account.", "x-notes": "Failure/skip diagnostic; on `failed` carries every line's per-payslip error concatenated (e.g. missing IBAN, shillinq unavailable, stale attempt superseded)."
+                        "description": "Why the batch failed or was skipped: for a failure, every payslip's own error, such as a missing bank account.", "x-notes": "Failure/skip diagnostic; on `failed` carries every line's per-payslip error concatenated (e.g. missing IBAN, shillinq unavailable, stale attempt superseded)."
                     },
                     "createdAt": {
                         "type": "string",

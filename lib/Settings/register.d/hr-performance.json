@@ -36,7 +36,7 @@
                                     "open"
                                 ],
                                 "to": "gesloten",
-                                "description": "Close the cycle. A closed cycle is history and is not reopened (the Vacancy no-resurrection precedent) -- a correction means starting a new cycle."
+                                "description": "Close the cycle. A closed cycle is history and is not reopened (the Vacancy no-resurrection precedent): a correction means starting a new cycle."
                             }
                         }
                     }
@@ -102,7 +102,7 @@
                 "icon": "ClipboardAccountOutline",
                 "version": "0.2.0",
                 "title": "Performance Review",
-                "description": "A single employee's beoordelingsdossier for one review cycle: rating, sterktes/ontwikkelpunten/afspraken and goals, on a concept -> ingediend -> besproken -> vastgesteld lifecycle with a heropenen correction edge. Under BW 7:669 lid 3 sub d a documented, vastgestelde beoordeling with a rating and concrete afspraken is the precondition for any underperformance dismissal -- this object is that dossier. Goals are recorded INSIDE the review (no separate Goal entity, design D2): they freeze with the dossier under one lifecycle, one audit trail and one retention context.",
+                "description": "A single employee's beoordelingsdossier for one review cycle: rating, sterktes/ontwikkelpunten/afspraken and goals, on a concept -> ingediend -> besproken -> vastgesteld lifecycle with a heropenen correction edge. Under BW 7:669 lid 3 sub d a documented, vastgestelde beoordeling with a rating and concrete afspraken is the precondition for any underperformance dismissal. This object is that dossier. Goals are recorded INSIDE the review (no separate Goal entity, design D2): they freeze with the dossier under one lifecycle, one audit trail and one retention context.",
                 "type": "object",
                 "x-schema-org": "schema:Review",
                 "required": [
@@ -136,7 +136,7 @@
                                 ],
                                 "to": "vastgesteld",
                                 "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
-                                "description": "The beoordeling is vastgesteld. NoSelfApprovalGuard denies the transition when the acting user equals employeeId -- the employee under review may not vaststellen their own beoordeling. vastgesteldDoor is stamped on the carrying write."
+                                "description": "The beoordeling is vastgesteld. NoSelfApprovalGuard denies the transition when the acting user equals employeeId: the employee under review may not vaststellen their own beoordeling. VastgesteldDoor is stamped on the carrying write."
                             },
                             "heropenen": {
                                 "from": [
@@ -154,7 +154,7 @@
                         "format": "uuid",
                         "$ref": "Employee",
                         "title": "Employee",
-                        "description": "The employee under review. Drives the self-approval guard on vaststellen -- the acting user may not equal this employee."
+                        "description": "The employee under review. Drives the self-approval guard on vaststellen: the acting user may not equal this employee."
                     },
                     "cycleId": {
                         "type": "string",

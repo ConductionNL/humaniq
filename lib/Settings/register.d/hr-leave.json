@@ -89,7 +89,7 @@
                         "nullable": true,
                         "minimum": 0,
                         "title": "Hours",
-                        "description": "Optional total number of leave hours requested — for partial-day leave or when the leave balance is administered in hours rather than days."
+                        "description": "Optional total number of leave hours requested: for partial-day leave or when the leave balance is administered in hours rather than days."
                     },
                     "reason": {
                         "type": "string",
@@ -163,7 +163,7 @@
                 "icon": "ScaleBalance",
                 "version": "0.3.0",
                 "title": "Leave balance",
-                "description": "Per-employee, per-year, per-leave-type entitlement and usage ledger (verlofsaldo): the statutory plus bovenwettelijk hours granted for a year, the hours used, and a declaratively calculated remaining balance (x-openregister-calculations). Read by the nl-verlof-wettelijk-minimum / nl-verlof-saldo-niet-negatief / nl-verlof-vervaltermijn rule checks (lib/Standards/rules/labour.json, leave-verzuim-mvp). usedHours is not yet auto-posted from approved LeaveRequests — that cross-object write hook is a declared follow-up; this MVP records and audits the balance.",
+                "description": "Per-employee, per-year, per-leave-type entitlement and usage ledger (verlofsaldo): the statutory plus bovenwettelijk hours granted for a year, the hours used, and a declaratively calculated remaining balance (x-openregister-calculations). Read by the nl-verlof-wettelijk-minimum / nl-verlof-saldo-niet-negatief / nl-verlof-vervaltermijn rule checks (lib/Standards/rules/labour.json, leave-verzuim-mvp). UsedHours is not yet auto-posted from approved LeaveRequests: that cross-object write hook is a declared follow-up; this MVP records and audits the balance.",
                 "type": "object",
                 "required": [
                     "employeeId",
@@ -247,7 +247,7 @@
                         "format": "date",
                         "nullable": true,
                         "title": "Expiry date",
-                        "description": "When this year's statutory leave hours lapse — 1 July of the following year.", "x-notes": "Date the statutory leave hours of this year lapse — 1 July of the following year (BW art. 7:640a). Checked by nl-verlof-vervaltermijn."
+                        "description": "When this year's statutory leave hours lapse: 1 July of the following year.", "x-notes": "Date the statutory leave hours of this year lapse — 1 July of the following year (BW art. 7:640a). Checked by nl-verlof-vervaltermijn."
                     },
                     "lastAccruedPeriod": {
                         "type": "string",
@@ -275,7 +275,7 @@
                 "icon": "SwapHorizontal",
                 "version": "0.1.0",
                 "title": "Leave transaction",
-                "description": "An employee request to buy or sell leave hours (IKB-style flexibility, individueel keuzebudget): a declarative draft -> submitted -> approved/rejected -> settled lifecycle (leave-buy-sell), guarded by the reused NoSelfApprovalGuard for separation of duties. A sell may only ever draw down bovenwettelijkHours on the matching LeaveBalance -- never entitledHours/usedHours, so it can never threaten the nl-verlof-wettelijk-minimum statutory floor. Settlement (LeaveBuySellSettlementService) writes the balance exactly once and stamps settledAmount, which PayrollRunService.generate() folds into the current run's Payslip.leaveBuySell as an already-computed payroll input, never an engine recompute.",
+                "description": "An employee request to buy or sell leave hours (IKB-style flexibility, individueel keuzebudget): a declarative draft -> submitted -> approved/rejected -> settled lifecycle (leave-buy-sell), guarded by the reused NoSelfApprovalGuard for separation of duties. A sell may only ever draw down bovenwettelijkHours on the matching LeaveBalance: never entitledHours/usedHours, so it can never threaten the nl-verlof-wettelijk-minimum statutory floor. Settlement (LeaveBuySellSettlementService) writes the balance exactly once and stamps settledAmount, which PayrollRunService.generate() folds into the current run's Payslip.leaveBuySell as an already-computed payroll input, never an engine recompute.",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [
@@ -317,7 +317,7 @@
                                 ],
                                 "to": "rejected",
                                 "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
-                                "description": "A manager rejects the submitted transaction (with a rejectionReason). Only the separation-of-duties check applies -- the statutory check is irrelevant to a rejection."
+                                "description": "A manager rejects the submitted transaction (with a rejectionReason). Only the separation-of-duties check applies: the statutory check is irrelevant to a rejection."
                             },
                             "settle": {
                                 "from": [
@@ -396,7 +396,7 @@
                         "$ref": "PayrollRun",
                         "nullable": true,
                         "title": "Settlement payroll run",
-                        "description": "The payroll run for that period, recorded at settlement. Best effort — it never blocks settling.", "x-notes": "The PayrollRun of settlementPeriod, stamped once this transaction is settled (the retro-adjustments PayrollAdjustment.settlementPayrollRunId convention). Not required to exist -- best-effort, never blocks settlement."
+                        "description": "The payroll run for that period, recorded at settlement. Best effort: it never blocks settling.", "x-notes": "The PayrollRun of settlementPeriod, stamped once this transaction is settled (the retro-adjustments PayrollAdjustment.settlementPayrollRunId convention). Not required to exist -- best-effort, never blocks settlement."
                     },
                     "status": {
                         "type": "string",

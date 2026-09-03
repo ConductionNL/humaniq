@@ -7,7 +7,7 @@
                 "icon": "FileDocumentOutline",
                 "version": "0.2.0",
                 "title": "Generated document",
-                "description": "The humaniq-side record of one attempt to render a standard HR document (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift, loonstrook, jaaropgaaf) via docudesk's template/rendering engine and store the returned PDF (humaniq-docudesk-documents, extended by payslip-pdf-docudesk). humaniq owns no template or PDF machinery of its own (design.md D1): this schema is a log of the handoff -- which template, for whom, the outcome, and where the file landed -- never the rendering itself. `skipped-no-docudesk` and `failed` are retryable outcomes: a later `occ humaniq:documents:generate` invocation (or the EmploymentContractDetail/PayslipDetail page action) can supersede them (design.md D6). At most one GeneratedDocument per idempotency key may be `pending`/`generated` at a time: the four letter types key on (contractId|employeeId, documentType), loonstrook keys on (payslipId, documentType), jaaropgaaf keys on (jaaropgaafId, documentType) -- enforced by HrDocumentService and audited by the nl-contract-schriftelijk / nl-loonstrook-verplicht corpus rules.",
+                "description": "The humaniq-side record of one attempt to render a standard HR document (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift, loonstrook, jaaropgaaf) via docudesk's template/rendering engine and store the returned PDF (humaniq-docudesk-documents, extended by payslip-pdf-docudesk). Humaniq owns no template or PDF machinery of its own (design.md D1): this schema is a log of the handoff. Which template, for whom, the outcome, and where the file landed. Never the rendering itself. `skipped-no-docudesk` and `failed` are retryable outcomes: a later `occ humaniq:documents:generate` invocation (or the EmploymentContractDetail/PayslipDetail page action) can supersede them (design.md D6). At most one GeneratedDocument per idempotency key may be `pending`/`generated` at a time: the four letter types key on (contractId|employeeId, documentType), loonstrook keys on (payslipId, documentType), jaaropgaaf keys on (jaaropgaafId, documentType). Enforced by HrDocumentService and audited by the nl-contract-schriftelijk / nl-loonstrook-verplicht corpus rules.",
                 "type": "object",
                 "x-schema-org": "schema:DigitalDocument",
                 "required": [
@@ -106,7 +106,7 @@
                 "icon": "FileCertificateOutline",
                 "version": "0.1.0",
                 "title": "Annual statement",
-                "description": "The per-employee-per-year annual-statement aggregate (payslip-pdf-docudesk design.md D2): totals derived exclusively from the employee's Payslips for the given year -- never fabricated, never containing figures no Payslip field carries. Created and updated exclusively by HrDocumentService's aggregation step, upserted per (employeeId, year): re-aggregating refreshes an existing object's totals and `aggregatedAt` rather than creating a duplicate. Carries no status/lifecycle -- render state lives on the GeneratedDocument that renders it (D1).",
+                "description": "The per-employee-per-year annual-statement aggregate (payslip-pdf-docudesk design.md D2): totals derived exclusively from the employee's Payslips for the given year. Never fabricated, never containing figures no Payslip field carries. Created and updated exclusively by HrDocumentService's aggregation step, upserted per (employeeId, year): re-aggregating refreshes an existing object's totals and `aggregatedAt` rather than creating a duplicate. Carries no status/lifecycle. Render state lives on the GeneratedDocument that renders it (D1).",
                 "type": "object",
                 "x-schema-org": "schema:Report",
                 "required": [
@@ -131,7 +131,7 @@
                     "totalGrossPay": {
                         "type": "number",
                         "title": "Total gross pay",
-                        "description": "Total gross pay over the year — the 'loon' line on the annual statement.", "x-notes": "Sum of Payslip.grossPay across the year's payslips (the jaaropgaaf 'loon' column)."
+                        "description": "Total gross pay over the year: the 'loon' line on the annual statement.", "x-notes": "Sum of Payslip.grossPay across the year's payslips (the jaaropgaaf 'loon' column)."
                     },
                     "totalLoonheffing": {
                         "type": "number",
@@ -156,7 +156,7 @@
                     "totalVakantiegeldReserved": {
                         "type": "number",
                         "title": "Total vakantiegeld reserved",
-                        "description": "Total holiday allowance set aside over the year — what was reserved, not what was paid out.", "x-notes": "Sum of Payslip.vakantiegeldReserved across the year's payslips -- the reservation, not the payout."
+                        "description": "Total holiday allowance set aside over the year: what was reserved, not what was paid out.", "x-notes": "Sum of Payslip.vakantiegeldReserved across the year's payslips -- the reservation, not the payout."
                     },
                     "payPeriodCount": {
                         "type": "integer",
@@ -167,7 +167,7 @@
                         "type": "number",
                         "nullable": true,
                         "title": "Employment tax credit applied",
-                        "description": "The employment tax credit applied over the year. Stays empty until payroll records it — better empty than a made-up zero.", "x-notes": "Statutory jaaropgaaf line for the applied arbeidskorting -- stays null because no Payslip field carries arbeidskorting today (a payroll-core follow-up); never a fabricated 0.00 presented as fact."
+                        "description": "The employment tax credit applied over the year. Stays empty until payroll records it: better empty than a made-up zero.", "x-notes": "Statutory jaaropgaaf line for the applied arbeidskorting -- stays null because no Payslip field carries arbeidskorting today (a payroll-core follow-up); never a fabricated 0.00 presented as fact."
                     },
                     "loonheffingennummer": {
                         "type": "string",
@@ -180,7 +180,7 @@
                         "format": "date-time",
                         "nullable": true,
                         "title": "Aggregated at",
-                        "description": "When the aggregation last ran -- refreshed on every upsert."
+                        "description": "When the aggregation last ran: refreshed on every upsert."
                     }
                 }
             }

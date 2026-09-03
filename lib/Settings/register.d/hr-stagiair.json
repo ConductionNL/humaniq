@@ -7,7 +7,7 @@
                 "icon": "SchoolOutline",
                 "version": "0.1.0",
                 "title": "Intern",
-                "description": "A person on a stageovereenkomst (HBO/WO/MBO-BOL, zonder dienstverband), tracked by humaniq but explicitly NOT an Employee, NOT payroll-engine input, and NOT CAO-scoped (stagiair-bbl-admin design.md D1). A stagiair has no arbeidsovereenkomst and, in the ordinary case, no loonheffing on the stagevergoeding, so it is modelled structurally separate from Employee/EmploymentContract: no payroll schema (PayrollRun, Payslip, PayrollMutationReport) references Stagiair and PayrollCalculator never reads it, so a stagiair can never reach the loon path by accident. A BBL-leerling is NOT a Stagiair -- it has a real leerarbeidsovereenkomst and is an EmploymentContract with type: bbl (design.md D1). Governed by a plain three-transition declarative x-openregister-lifecycle (aangemeld -> lopend -> afgerond/gestopt), no guard needed.",
+                "description": "A person on a stageovereenkomst (HBO/WO/MBO-BOL, zonder dienstverband), tracked by humaniq but explicitly NOT an Employee, NOT payroll-engine input, and NOT CAO-scoped (stagiair-bbl-admin design.md D1). A stagiair has no arbeidsovereenkomst and, in the ordinary case, no loonheffing on the stagevergoeding, so it is modelled structurally separate from Employee/EmploymentContract: no payroll schema (PayrollRun, Payslip, PayrollMutationReport) references Stagiair and PayrollCalculator never reads it, so a stagiair can never reach the loon path by accident. A BBL-leerling is NOT a Stagiair: it has a real leerarbeidsovereenkomst and is an EmploymentContract with type: bbl (design.md D1). Governed by a plain three-transition declarative x-openregister-lifecycle (aangemeld -> lopend -> afgerond/gestopt), no guard needed.",
                 "type": "object",
                 "x-schema-org": "schema:Person",
                 "required": [
@@ -75,7 +75,7 @@
                     "stagetype": {
                         "type": "string",
                         "title": "Placement type",
-                        "description": "The kind of placement. For information only — it has no effect on pay or compliance.", "x-notes": "Kind of stage. 'snuffelstage' (orientation), 'meeloopstage' (work-shadowing), or 'afstudeerstage' (graduation placement). Informational; carries no payroll or compliance meaning.",
+                        "description": "The kind of placement. For information only: it has no effect on pay or compliance.", "x-notes": "Kind of stage. 'snuffelstage' (orientation), 'meeloopstage' (work-shadowing), or 'afstudeerstage' (graduation placement). Informational; carries no payroll or compliance meaning.",
                         "x-enum-labels": {"snuffelstage": "Orientation placement", "meeloopstage": "Work-shadowing placement", "afstudeerstage": "Graduation placement"},
                         "enum": [
                             "snuffelstage",

@@ -7,7 +7,7 @@
                 "icon": "SitemapOutline",
                 "version": "0.2.0",
                 "title": "Organisational unit",
-                "description": "A node in the organisational hierarchy (afdeling / team / kostenplaats): a department, team or cost-center with an optional parent unit (self-referencing, forming the tree), an optional cost-center code, and an optional manager. humaniq's first organisational model (org-chart-basic) — manager self-service derives a team scope from the OrgAssignments placed here, and finance apps (shillinq, expense routing) resolve cost-center owners via costCenter/managerId. No x-openregister-lifecycle: a plain record toggled active/inactive, not a workflow.",
+                "description": "A node in the organisational hierarchy (afdeling / team / kostenplaats): a department, team or cost-center with an optional parent unit (self-referencing, forming the tree), an optional cost-center code, and an optional manager. Humaniq's first organisational model (org-chart-basic): manager self-service derives a team scope from the OrgAssignments placed here, and finance apps (shillinq, expense routing) resolve cost-center owners via costCenter/managerId. No x-openregister-lifecycle: a plain record toggled active/inactive, not a workflow.",
                 "type": "object",
                 "x-schema-org": "schema:Organization",
                 "required": [
@@ -29,7 +29,7 @@
                 "icon": "AccountArrowRightOutline",
                 "version": "0.2.0",
                 "title": "Organisational assignment",
-                "description": "An effective-dated placement of one employee in one OrgUnit (a functie/role within that unit, from startDate until an optional endDate — null while the placement is current). No x-openregister-lifecycle: a plain effective-dated record, no workflow. Consistency (coherent dates, active unit) is enforced by nl-org-assignment-consistency (lib/Standards/rules/labour.json / lib/Standards/Checks/NlOrgChecks.php), not by a write-time guard.",
+                "description": "An effective-dated placement of one employee in one OrgUnit (a functie/role within that unit, from startDate until an optional endDate: null while the placement is current). No x-openregister-lifecycle: a plain effective-dated record, no workflow. Consistency (coherent dates, active unit) is enforced by nl-org-assignment-consistency (lib/Standards/rules/labour.json / lib/Standards/Checks/NlOrgChecks.php), not by a write-time guard.",
                 "type": "object",
                 "x-schema-org": "schema:EmployeeRole",
                 "required": [

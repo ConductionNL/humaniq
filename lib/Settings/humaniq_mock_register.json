@@ -8,7 +8,7 @@
   "x-openregister": {
     "type": "mock",
     "app": "humaniq",
-    "description": "Demo data for humaniq. NOT installed automatically — a mock register is imported on demand, from the setup walkthrough or `occ openregister:descriptors:list --app=humaniq --import=<slug>`."
+    "description": "Demo data for humaniq. NOT installed automatically: a mock register is imported on demand, from the setup walkthrough or `occ openregister:descriptors:list --app=humaniq --import=<slug>`."
   },
   "paths": {},
   "components": {
@@ -17,7 +17,7 @@
         "slug": "humaniq",
         "title": "Humaniq Register (demo)",
         "version": "0.17.0",
-        "description": "Demo data for Humaniq Register. Generated from the register's own schemas — see hydra-gates/scripts/lib/generate_mock_register.py."
+        "description": "Demo data for Humaniq Register. Generated from the register's own schemas: see hydra-gates/scripts/lib/generate_mock_register.py."
       }
     },
     "schemas": {
@@ -26,7 +26,7 @@
         "icon": "Domain",
         "version": "1.1.0",
         "title": "Administration",
-        "description": "multi-administratie (design.md D2): the accountant multi-client tenant catalog -- ONE row per client administratie. This is the switcher's source list and the topbar/Dashboard indicator's label source; child HR/payroll objects do NOT $ref this schema (ADR-062 rule 7 -- they carry a plain-string copy of `administrationId` instead, D1). `administrationId` is the stable business key already used fleet-wide as a plain string on the payroll aggregates (PayrollRun/PayrollMutationReport/PayrollGLPost/PayrollPaymentBatch); this schema is where that key finally becomes a real, addressable catalog entry.",
+        "description": "multi-administratie (design.md D2): the accountant multi-client tenant catalog. ONE row per client administratie. This is the switcher's source list and the topbar/Dashboard indicator's label source; child HR/payroll objects do NOT $ref this schema (ADR-062 rule 7. They carry a plain-string copy of `administrationId` instead, D1). `administrationId` is the stable business key already used fleet-wide as a plain string on the payroll aggregates (PayrollRun/PayrollMutationReport/PayrollGLPost/PayrollPaymentBatch); this schema is where that key finally becomes a real, addressable catalog entry.",
         "required": [
           "administrationId",
           "name"
@@ -94,7 +94,7 @@
         "icon": "AccountKeyOutline",
         "version": "1.0.0",
         "title": "Administration access",
-        "description": "multi-administratie (design.md D2/D7): the accountant multi-client access model -- ONE membership row binding a Nextcloud user to an administratie with a role. An accountant user carries MANY rows (their whole client book); a single-company HR/employee user carries one. This is the closed set `AdministrationController::setActive` resolves the caller against (D4) and the switcher may offer (D5) -- a user can never activate an administratie with no row here. A plain declarative OpenRegister object (ADR-001 data-layer: domain data lives in the register), deliberately NOT a Nextcloud group -- an accountant's client book is app data, not an instance-admin concern.",
+        "description": "multi-administratie (design.md D2/D7): the accountant multi-client access model. ONE membership row binding a Nextcloud user to an administratie with a role. An accountant user carries MANY rows (their whole client book); a single-company HR/employee user carries one. This is the closed set `AdministrationController::setActive` resolves the caller against (D4) and the switcher may offer (D5). A user can never activate an administratie with no row here. A plain declarative OpenRegister object (ADR-001 data-layer: domain data lives in the register), deliberately NOT a Nextcloud group. An accountant's client book is app data, not an instance-admin concern.",
         "required": [
           "userId",
           "administrationId",
@@ -136,7 +136,7 @@
         "icon": "FileAccountOutline",
         "version": "0.3.0",
         "title": "Application",
-        "description": "A candidate's application (sollicitatie) against a Vacancy. Candidate PII (name/email/phone/CV/motivation) lives DIRECTLY on this object — there is deliberately no separate Candidate entity in the MVP (AVG data-minimisation, design D2): one object carries one retention clock (retentionExpiryDate) and one deletion (deleting the Application deletes the candidate's data atomically). The declarative pipeline lifecycle runs nieuw -> screening -> gesprek -> aanbod -> aangenomen, with afwijzen reachable from every active stage. Rejecting an application stamps rejectedDate and derives retentionExpiryDate per the Autoriteit Persoonsgegevens sollicitatie-richtlijn (4 weeks, or 1 year with explicit talentPoolOptIn consent) — enforced by the nl-ats-retentie-derivatie and nl-ats-retentie-verlopen checks (lib/Standards/Checks/NlAtsChecks.php, lib/Standards/rules/privacy.json). aannemen documents a MANUAL onboarding hand-off (creating the Employee from this data is a manual follow-up action in the MVP — no cross-object write hook).",
+        "description": "A candidate's application (sollicitatie) against a Vacancy. Candidate PII (name/email/phone/CV/motivation) lives DIRECTLY on this object: there is deliberately no separate Candidate entity in the MVP (AVG data-minimisation, design D2): one object carries one retention clock (retentionExpiryDate) and one deletion (deleting the Application deletes the candidate's data atomically). The declarative pipeline lifecycle runs nieuw -> screening -> gesprek -> aanbod -> aangenomen, with afwijzen reachable from every active stage. Rejecting an application stamps rejectedDate and derives retentionExpiryDate per the Autoriteit Persoonsgegevens sollicitatie-richtlijn (4 weeks, or 1 year with explicit talentPoolOptIn consent). Enforced by the nl-ats-retentie-derivatie and nl-ats-retentie-verlopen checks (lib/Standards/Checks/NlAtsChecks.php, lib/Standards/rules/privacy.json). Aannemen documents a MANUAL onboarding hand-off (creating the Employee from this data is a manual follow-up action in the MVP. No cross-object write hook).",
         "type": "object",
         "x-schema-org": "schema:JobApplication",
         "required": [
@@ -180,7 +180,7 @@
                   "aanbod"
                 ],
                 "to": "aangenomen",
-                "description": "The candidate is hired. Terminal. Onboarding hand-off is a MANUAL follow-up action in the MVP — HR creates the Employee/Onboarding case by hand from this application's data (the same deferral class as leave-balance auto-posting); no cross-object write hook fires here."
+                "description": "The candidate is hired. Terminal. Onboarding hand-off is a MANUAL follow-up action in the MVP: HR creates the Employee/Onboarding case by hand from this application's data (the same deferral class as leave-balance auto-posting); no cross-object write hook fires here."
               },
               "afwijzen": {
                 "from": [
@@ -207,7 +207,7 @@
           "candidateName": {
             "type": "string",
             "title": "Candidate name",
-            "description": "The candidate's full name. Their personal data lives only on this record — deleting it deletes the data.",
+            "description": "The candidate's full name. Their personal data lives only on this record: deleting it deletes the data.",
             "x-notes": "Full name of the candidate. Candidate PII lives on this object only (design D2) — deleting the Application deletes this data."
           },
           "email": {
@@ -307,7 +307,7 @@
             "type": "string",
             "nullable": true,
             "title": "Offer signing status",
-            "description": "Where signing the offer letter has got to. Separate from the application status — a signed offer does not move the pipeline on its own.",
+            "description": "Where signing the offer letter has got to. Separate from the application status: a signed offer does not move the pipeline on its own.",
             "x-notes": "offer-esign (0.3.0): the offer letter's e-signature lifecycle state. The first six values are verbatim docudesk SigningService::STATUS_TRANSITIONS states (PENDING/IN_PROGRESS/COMPLETED/DECLINED/CANCELLED/EXPIRED); skipped-no-docudesk and failed are this leaf's own duck-typed/failure outcomes. Null means no offer-esign attempt has been made yet. Orthogonal to Application.status -- observing COMPLETED here never advances the pipeline status (REQ-OFFR-006).",
             "x-enum-labels": {
               "PENDING": "Pending",
@@ -337,7 +337,7 @@
         "icon": "DesktopTowerMonitor",
         "version": "0.4.0",
         "title": "Asset",
-        "description": "A company-owned item issued to employees (laptop, phone, vehicle, tool, accessPass, clothing, other): identity fields (serialNumber, licencePlate for vehicles), acquisition fields, and a guarded custody state machine (asset-management-mvp). A vehicle Asset additionally carries the fiscal facts (listPrice, fuelType, companyCarTaxCategory) the monthly bijtelling privegebruik auto calculation needs (hrmq-asset-fleet-merge, absorbed from the retired Vehicle schema) -- required exactly when category is vehicle, enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet (a schema-level conditional cannot express this: Schema::getSchemaObject() never emits allOf/if/then to the validator, design.md D2). No AssetHistoryEntry: OpenRegister's object audit trail already records every mutation.",
+        "description": "A company-owned item issued to employees (laptop, phone, vehicle, tool, accessPass, clothing, other): identity fields (serialNumber, licencePlate for vehicles), acquisition fields, and a guarded custody state machine (asset-management-mvp). A vehicle Asset additionally carries the fiscal facts (listPrice, fuelType, companyCarTaxCategory) the monthly bijtelling privegebruik auto calculation needs (hrmq-asset-fleet-merge, absorbed from the retired Vehicle schema): required exactly when category is vehicle, enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet (a schema-level conditional cannot express this: Schema::getSchemaObject() never emits allOf/if/then to the validator, design.md D2). No AssetHistoryEntry: OpenRegister's object audit trail already records every mutation.",
         "type": "object",
         "x-schema-org": "schema:IndividualProduct",
         "required": [
@@ -365,7 +365,7 @@
                   "issued"
                 ],
                 "to": "checkedIn",
-                "description": "The asset is returned and awaiting check. Deliberately the only exit from issued -- an issued asset must be checked in (or its loss recorded here) before it can be written off."
+                "description": "The asset is returned and awaiting check. Deliberately the only exit from issued: an issued asset must be checked in (or its loss recorded here) before it can be written off."
               },
               "release": {
                 "from": [
@@ -479,7 +479,7 @@
             "type": "number",
             "nullable": true,
             "title": "List price",
-            "description": "The catalogue value in euros — the basis for the monthly company-car addition. Only for a vehicle.",
+            "description": "The catalogue value in euros: the basis for the monthly company-car addition. Only for a vehicle.",
             "x-notes": "The fiscal catalog value in EUR -- the base the monthly bijtelling percentage is applied against (hrmq-asset-fleet-merge, absorbed from the retired Vehicle.cataloguswaarde). Meaningful only for category vehicle; null on every other category. Its completeness when category is vehicle is enforced by the corpus rule nl-asset-voertuig-fiscale-velden-compleet, not by a schema-level required (design.md D2)."
           },
           "fuelType": {
@@ -527,7 +527,7 @@
         "icon": "HandshakeOutline",
         "version": "0.3.0",
         "title": "Asset assignment",
-        "description": "An effective-dated custody assignment of one Asset to one Employee (the OrgAssignment pattern, hr-org.json): issuedOn required, returnedOn nullable = the asset is still out. For a vehicle Asset this is also the private-use holding period the bijtelling calculation resolves (hrmq-asset-fleet-merge, absorbed from the retired CarAssignment schema) -- employeeContribution is the employee's own monthly contribution for private use, meaningless (and harmlessly defaulted to 0) on a non-vehicle assignment. No x-openregister-lifecycle: a plain effective-dated record, no workflow. Consistency (coherent dates, the asset in status issued while the assignment is open) is enforced by nl-asset-assignment-consistency (lib/Standards/rules/labour.json / lib/Standards/Checks/NlAssetChecks.php), not by a write-time guard.",
+        "description": "An effective-dated custody assignment of one Asset to one Employee (the OrgAssignment pattern, hr-org.json): issuedOn required, returnedOn nullable = the asset is still out. For a vehicle Asset this is also the private-use holding period the bijtelling calculation resolves (hrmq-asset-fleet-merge, absorbed from the retired CarAssignment schema): employeeContribution is the employee's own monthly contribution for private use, meaningless (and harmlessly defaulted to 0) on a non-vehicle assignment. No x-openregister-lifecycle: a plain effective-dated record, no workflow. Consistency (coherent dates, the asset in status issued while the assignment is open) is enforced by nl-asset-assignment-consistency (lib/Standards/rules/labour.json / lib/Standards/Checks/NlAssetChecks.php), not by a write-time guard.",
         "type": "object",
         "x-schema-org": "schema:OwnershipInfo",
         "required": [
@@ -577,7 +577,7 @@
             "type": "string",
             "nullable": true,
             "title": "Notes",
-            "description": "Anything worth noting — the condition when it was handed out or returned.",
+            "description": "Anything worth noting: the condition when it was handed out or returned.",
             "x-notes": "Free-form notes (condition at handout/return)."
           },
           "administrationId": {
@@ -601,7 +601,7 @@
         "icon": "ClockOutline",
         "version": "0.2.0",
         "title": "Attendance record",
-        "description": "One clock day per employee (klokregistratie): raw clockIn/clockOut timestamps, a break duration, and the working day they belong to. Feeds the three Arbeidstijdenwet checks (nl-arbeidstijdenwet, lib/Standards/rules/labour.json) via NlAttendanceChecks and the RuleAuditService attendance context. AttendanceRecord is raw clock data; Timesheet (hr-timesheet.json) remains the per-period approved-hours record — aggregating attendance into a timesheet is a documented follow-up (time-attendance-mvp design D5), not automated here. No approval states on this schema; the open<->gesloten lifecycle only tracks whether the day is still being clocked or is complete.",
+        "description": "One clock day per employee (klokregistratie): raw clockIn/clockOut timestamps, a break duration, and the working day they belong to. Feeds the three Arbeidstijdenwet checks (nl-arbeidstijdenwet, lib/Standards/rules/labour.json) via NlAttendanceChecks and the RuleAuditService attendance context. AttendanceRecord is raw clock data; Timesheet (hr-timesheet.json) remains the per-period approved-hours record: aggregating attendance into a timesheet is a documented follow-up (time-attendance-mvp design D5), not automated here. No approval states on this schema; the open<->gesloten lifecycle only tracks whether the day is still being clocked or is complete.",
         "type": "object",
         "required": [
           "employeeId",
@@ -620,7 +620,7 @@
                   "open"
                 ],
                 "to": "gesloten",
-                "description": "The employee closes the day once clocked out. The carrying write supplies clockOut and workedHours (writer-maintained, not a declarative calculation — see workedHours description)."
+                "description": "The employee closes the day once clocked out. The carrying write supplies clockOut and workedHours (writer-maintained, not a declarative calculation: see workedHours description)."
               },
               "heropenen": {
                 "from": [
@@ -694,7 +694,7 @@
               "anders": "Other"
             },
             "title": "Location",
-            "description": "Where the day was worked. Plain metadata — no GPS/geofence tracking (deferred, own AVG/consent spec)."
+            "description": "Where the day was worked. Plain metadata: no GPS/geofence tracking (deferred, own AVG/consent spec)."
           },
           "userId": {
             "type": "string",
@@ -732,7 +732,7 @@
         "icon": "ShieldCheckOutline",
         "version": "0.1.0",
         "title": "BHV certification",
-        "description": "A bedrijfshulpverlening (BHV) related certification held by one employee: a plain dated fact (certificate obtained, certificate valid until), not a workflow. A renewal after a herhalingscursus is recorded as a NEW BhvCertificering object with a later certificaatBehaaldOp/certificaatGeldigTot pair -- the original record is left unmodified (bhv-organisatie design.md D4). No x-openregister-lifecycle. Certificate-expiry signalling reuses the existing hr-signals mechanism (nl-bhv-certificaat-verloopt, lib/Standards/Checks/NlSignalChecks.php) rather than a new alerting mechanism, and this schema/its pages assert NO numeric BHV-coverage ratio -- Arbeidsomstandighedenwet art. 15 sets a qualitative, RI&E-driven adequacy standard, not a fixed number (bhv-organisatie proposal.md Why).",
+        "description": "A bedrijfshulpverlening (BHV) related certification held by one employee: a plain dated fact (certificate obtained, certificate valid until), not a workflow. A renewal after a herhalingscursus is recorded as a NEW BhvCertificering object with a later certificaatBehaaldOp/certificaatGeldigTot pair: the original record is left unmodified (bhv-organisatie design.md D4). No x-openregister-lifecycle. Certificate-expiry signalling reuses the existing hr-signals mechanism (nl-bhv-certificaat-verloopt, lib/Standards/Checks/NlSignalChecks.php) rather than a new alerting mechanism, and this schema/its pages assert NO numeric BHV-coverage ratio. Arbeidsomstandighedenwet art. 15 sets a qualitative, RI&E-driven adequacy standard, not a fixed number (bhv-organisatie proposal.md Why).",
         "type": "object",
         "x-schema-org": "schema:EducationalOccupationalCredential",
         "required": [
@@ -1066,7 +1066,7 @@
         "icon": "CalendarRange",
         "version": "0.1.0",
         "title": "Compensation review cycle",
-        "description": "A periodic compensation-review round (comp-cycles) grouping the per-employee CompAdjustment proposals raised during it. A light open/closed container only — approval happens per adjustment (CompAdjustment carries the draft→proposed→approved→effective lifecycle), so a cycle MAY close while still holding adjustments in any state.",
+        "description": "A periodic compensation-review round (comp-cycles) grouping the per-employee CompAdjustment proposals raised during it. A light open/closed container only: approval happens per adjustment (CompAdjustment carries the draft→proposed→approved→effective lifecycle), so a cycle MAY close while still holding adjustments in any state.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "required": [
@@ -1088,7 +1088,7 @@
                   "open"
                 ],
                 "to": "closed",
-                "description": "Close the review round. A closed cycle may still hold adjustments in any state (approval/effectuation is per-adjustment, not per-cycle); closing does not force-effectuate anything. No reopen edge — a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent)."
+                "description": "Close the review round. A closed cycle may still hold adjustments in any state (approval/effectuation is per-adjustment, not per-cycle); closing does not force-effectuate anything. No reopen edge: a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent)."
               }
             }
           }
@@ -1142,7 +1142,7 @@
         "icon": "CashPlus",
         "version": "0.1.0",
         "title": "Cost Addition Policy",
-        "description": "An employer cost that applies per worked hour on top of the wage — overhead, workplace, equipment, management fees — scoped to everyone under a given collective labour agreement, to a single contract, or to the whole organisation. The most specific scope wins per cost factor: contract beats CLA beats organisation.",
+        "description": "An employer cost that applies per worked hour on top of the wage: overhead, workplace, equipment, management fees. Scoped to everyone under a given collective labour agreement, to a single contract, or to the whole organisation. The most specific scope wins per cost factor: contract beats CLA beats organisation.",
         "x-notes": "ADR-081 decision 4. Deliberately NOT part of the CLA corpus: a collective labour agreement does not state what an employer's overhead is, and that corpus holds only figures transcribed from published CLA texts with a source citation. Scoping BY a CLA is a convenient way to select a group of employees ('everyone under the ICK CLA carries EUR 25/h for rent and management'), not a claim that the CLA says so.",
         "type": "object",
         "required": [
@@ -1191,14 +1191,14 @@
             "type": "integer",
             "nullable": true,
             "title": "Fixed amount per hour (cents)",
-            "description": "A fixed amount added per hour, in cents — the right shape for a cost that does not scale with pay: rent, a workplace, a laptop, management fees. Use this or a percentage of the wage, never both.",
+            "description": "A fixed amount added per hour, in cents: the right shape for a cost that does not scale with pay: rent, a workplace, a laptop, management fees. Use this or a percentage of the wage, never both.",
             "x-notes": "A FIXED per-hour amount in CENTS. The shape most employer overheads actually have — rent and management fees do not scale with an individual's salary. Set this OR percentageOfWage, never both."
           },
           "percentageOfWage": {
             "type": "number",
             "nullable": true,
             "title": "Percentage of the wage base",
-            "description": "An amount per hour as a percentage of the wage — the right shape for a cost that does scale with pay, such as an overtime surcharge. Use this or a fixed amount, never both.",
+            "description": "An amount per hour as a percentage of the wage: the right shape for a cost that does scale with pay, such as an overtime surcharge. Use this or a fixed amount, never both.",
             "x-notes": "A RELATIVE per-hour amount, as a percentage of the wage base. Applied to the wage base only, never compounded onto other additions. Set this OR centsPerHour, never both."
           },
           "basis": {
@@ -1219,7 +1219,7 @@
             "format": "date",
             "nullable": true,
             "title": "Effective from",
-            "description": "First date this applies. Leave empty if it has always applied — costing last year's hours at this year's overhead would quietly restate history.",
+            "description": "First date this applies. Leave empty if it has always applied: costing last year's hours at this year's overhead would quietly restate history.",
             "x-notes": "First date this policy applies. Null means it has always applied. Overheads are re-budgeted; costing last year's hours at this year's overhead would silently restate history."
           },
           "effectiveTo": {
@@ -1243,7 +1243,7 @@
         "icon": "ShieldAccountOutline",
         "version": "0.2.0",
         "title": "Data subject request",
-        "description": "One AVG (GDPR) data-subject-rights request lifecycle record (avg-dsr design.md D7, revised hrmq#99): the requesting subject (employeeId $ref Employee -- the ONLY persisted subject-identifying field, design.md D1 -- the raw bsn value AvgDsrService resolves to call OpenRegister's guarded Gdpr\\DataSubjectRequestService is never written here), the right invoked, and the statutory deadline (receivedDate + 1 calendar month, AVG art. 12 lid 3, no extension in this MVP). status is a plain enum, deliberately no x-openregister-lifecycle map (design.md D3/D5): every transition requires a caller-role (admin) check plus, for verwijdering, OpenRegister's own legal-hold/immutable-archival-status guard -- none of which a lifecycle guard's (object, action, userId) contract can express, so AvgDsrService/AvgDsrController/the occ humaniq:avg:* commands own every transition instead. retainedObjectRefs never carries a raw PII value -- only the uuid/reason refs OpenRegister's guarded erase() returns for a held object (hrmq#99).",
+        "description": "One AVG (GDPR) data-subject-rights request lifecycle record (avg-dsr design.md D7, revised hrmq#99): the requesting subject (employeeId $ref Employee. The ONLY persisted subject-identifying field, design.md D1. The raw bsn value AvgDsrService resolves to call OpenRegister's guarded Gdpr\\DataSubjectRequestService is never written here), the right invoked, and the statutory deadline (receivedDate + 1 calendar month, AVG art. 12 lid 3, no extension in this MVP). Status is a plain enum, deliberately no x-openregister-lifecycle map (design.md D3/D5): every transition requires a caller-role (admin) check plus, for verwijdering, OpenRegister's own legal-hold/immutable-archival-status guard. None of which a lifecycle guard's (object, action, userId) contract can express, so AvgDsrService/AvgDsrController/the occ humaniq:avg:* commands own every transition instead. RetainedObjectRefs never carries a raw PII value. Only the uuid/reason refs OpenRegister's guarded erase() returns for a held object (hrmq#99).",
         "type": "object",
         "x-schema-org": "schema:Action",
         "required": [
@@ -1307,7 +1307,7 @@
             "title": "Deadline date",
             "type": "string",
             "format": "date",
-            "description": "One calendar month after the request came in — the deadline the law sets for answering it.",
+            "description": "One calendar month after the request came in: the deadline the law sets for answering it.",
             "x-notes": "receivedDate + 1 calendar month (AVG art. 12 lid 3); no multi-month extension in this MVP (named fast-follow)."
           },
           "handledBy": {
@@ -1329,7 +1329,7 @@
             "title": "Outcome summary",
             "type": "string",
             "nullable": true,
-            "description": "What was done, in plain words. Never contains the personal data itself — only counts and field names.",
+            "description": "What was done, in plain words. Never contains the personal data itself: only counts and field names.",
             "x-notes": "Human-readable outcome -- export confirmation, or erase's erased/retained/failed counts, or rectify's changed field NAMES only, never before/after PII values (design.md D6)."
           },
           "retainedObjectRefs": {
@@ -1355,14 +1355,14 @@
             "nullable": true,
             "minimum": 0,
             "title": "Hourly cost rate override (cents)",
-            "description": "Employer cost per hour in cents, set by hand instead of the figure derived from payroll. Leave empty — the normal case — to use the derived value.",
+            "description": "Employer cost per hour in cents, set by hand instead of the figure derived from payroll. Leave empty: the normal case. To use the derived value.",
             "x-notes": "ADR-081 decision 4. This is an EMPLOYER COST, not a wage: it is not comparable to EmploymentContract.hourlyWage, which is the employee's gross hourly wage and is never used as a cost rate. Integer cents, never a float, so a rate multiplied by logged hours cannot drift (the ActivityCostAllocationSplitter convention)."
           },
           "hourlyCostRateOverrideReason": {
             "type": "string",
             "nullable": true,
             "title": "Hourly cost rate override reason",
-            "description": "Why the derived cost was replaced. Required whenever you set an override — an override with no reason is indistinguishable from a typo six months later.",
+            "description": "Why the derived cost was replaced. Required whenever you set an override: an override with no reason is indistinguishable from a typo six months later.",
             "x-notes": "ADR-081 decision 4. This number reaches a statutory IV3 submission through Shillinq. Free text: the derivation cannot be told 'this employee is seconded and billed at the partner rate', so the reason is the only place that survives."
           },
           "hourlyCostRateOverrideBy": {
@@ -1384,7 +1384,7 @@
             "type": "array",
             "nullable": true,
             "title": "Hourly cost additions",
-            "description": "Employer costs per hour on top of the wage — overhead, equipment, workplace, tooling. Each entry is named and sourced, so a cost figure can be explained line by line.",
+            "description": "Employer costs per hour on top of the wage: overhead, equipment, workplace, tooling. Each entry is named and sourced, so a cost figure can be explained line by line.",
             "x-notes": "ADR-081 decision 4. The hourly cost is `wageCost + sum(additions)`; there is exactly ONE rate, never a normal one and an overtime one. Line-by-line explicability is what an audit asks for, and a new cost factor is data rather than a schema migration. Shillinq is expected to calculate the overhead and equipment additions, because it holds the ledger those pools live in.",
             "items": {
               "type": "object",
@@ -1399,14 +1399,14 @@
                   "type": "integer",
                   "nullable": true,
                   "title": "Fixed amount per hour (cents)",
-                  "description": "A fixed amount added per hour, in cents — the right shape for a cost that does not scale with pay: rent, a workplace, a laptop, management fees. Use this or a percentage of the wage, never both.",
+                  "description": "A fixed amount added per hour, in cents: the right shape for a cost that does not scale with pay: rent, a workplace, a laptop, management fees. Use this or a percentage of the wage, never both.",
                   "x-notes": "A FIXED amount added per hour, in CENTS — the right shape for a cost that does not scale with the wage: rent, a workplace, a laptop, management fees. Integer so that rate x hours cannot accumulate IEEE-754 drift across a quarter of allocations. Set this OR percentageOfWage, never both."
                 },
                 "percentageOfWage": {
                   "type": "number",
                   "nullable": true,
                   "title": "Percentage of the wage base",
-                  "description": "An amount per hour as a percentage of the wage — the right shape for a cost that does scale with pay, such as an overtime surcharge. It is worked out over the wage only, never over the running total. Use this or a fixed amount, never both.",
+                  "description": "An amount per hour as a percentage of the wage: the right shape for a cost that does scale with pay, such as an overtime surcharge. It is worked out over the wage only, never over the running total. Use this or a fixed amount, never both.",
                   "x-notes": "A RELATIVE amount, as a percentage of the wage base — the right shape for a cost that genuinely scales with pay, such as an overtime surcharge. Applied to the WAGE BASE ONLY, never to the running total: compounding one addition onto another would make the result depend on the order they happen to be listed in. Set this OR centsPerHour, never both."
                 },
                 "source": {
@@ -1497,7 +1497,7 @@
             "type": "string",
             "format": "date",
             "nullable": true,
-            "description": "How long the copy of the ID must be kept — at least five years after the year employment ends.",
+            "description": "How long the copy of the ID must be kept: at least five years after the year employment ends.",
             "x-notes": "Date until which the ID-document copy is retained — at least 5 years after the year employment ends (nl-id-bewaarplicht-5jaar)."
           },
           "loonheffingenVerklaringOnFile": {
@@ -1549,7 +1549,7 @@
             "type": "string",
             "format": "date",
             "nullable": true,
-            "description": "EU: when the A1 certificate expires — at most 24 months after the posting starts.",
+            "description": "EU: when the A1 certificate expires. At most 24 months after the posting starts.",
             "x-notes": "EU: A1 certificate expiry — max 24 months after posting start (eu-a1-posted-worker)."
           },
           "postedWorker": {
@@ -1597,7 +1597,7 @@
             "type": "boolean",
             "default": false,
             "title": "30%-ruling reduced salary norm applies",
-            "description": "The lower salary threshold applies — under 30 with a qualifying master's: €36,497 in 2026 instead of €48,013.",
+            "description": "The lower salary threshold applies: under 30 with a qualifying master's: €36,497 in 2026 instead of €48,013.",
             "x-notes": "NL: whether the under-30-with-qualifying-master's reduced salary norm (€36.497 in 2026, versus the €48.013 general norm) applies to this employee. Gates which norm nl-30-regeling-salarisnorm compares the annualised salary against (30-procent-regeling)."
           },
           "nextcloudUserId": {
@@ -1723,7 +1723,7 @@
             "type": "object",
             "nullable": true,
             "title": "Overtime surcharge percentages (contract override)",
-            "description": "Overtime surcharges for this contract, instead of what the collective agreement says. Leave empty — the normal case — to follow the agreement. These are the surcharge, not the total: 50 means 150% of the normal hourly wage. Setting this replaces the agreement's overtime terms in full.",
+            "description": "Overtime surcharges for this contract, instead of what the collective agreement says. Leave empty: the normal case. To follow the agreement. These are the surcharge, not the total: 50 means 150% of the normal hourly wage. Setting this replaces the agreement's overtime terms in full.",
             "x-notes": "Per-category overwerktoeslag for THIS contract, overriding whatever the CAO says. Null — the normal case — means the CAO's own overtime article applies, resolved through CaoRegistry. Terms are company-wide by default and individual only by exception, so the absence of a value here is the meaningful state, not an unfinished one. Percentages are the SURCHARGE, not the total: 50 means 150% of the normal hourly wage is paid for that hour. When set, the override wins IN FULL rather than merging per category — a partial merge would silently combine two documents' terms and produce a set of rules that exists in neither.",
             "properties": {
               "doordeweeks": {
@@ -1989,7 +1989,7 @@
         "icon": "ReceiptOutline",
         "version": "0.6.0",
         "title": "Expense",
-        "description": "An employee expense-reimbursement claim (onkostendeclaratie / declaratie). An employee submits a claim (amount, category, date, receipt), a manager approves or rejects it, and once approved the amount is reimbursed to the employee. The submit → approve → reimburse lifecycle is owned here in humaniq, the HR/labour app — re-homing the Expenses feature that previously lived in pipelinq. The pipelinq-specific Shillinq accounts-payable sync coupling is intentionally NOT ported: reimbursement here is the HR-side claim workflow; any downstream AP/GL posting is a separate integration concern that OpenConnector/shillinq own.",
+        "description": "An employee expense-reimbursement claim (onkostendeclaratie / declaratie). An employee submits a claim (amount, category, date, receipt), a manager approves or rejects it, and once approved the amount is reimbursed to the employee. The submit → approve → reimburse lifecycle is owned here in humaniq, the HR/labour app: re-homing the Expenses feature that previously lived in pipelinq. The pipelinq-specific Shillinq accounts-payable sync coupling is intentionally NOT ported: reimbursement here is the HR-side claim workflow; any downstream AP/GL posting is a separate integration concern that OpenConnector/shillinq own.",
         "type": "object",
         "x-schema-org": "schema:Invoice",
         "required": [
@@ -2242,7 +2242,7 @@
         "icon": "FileDocumentOutline",
         "version": "0.2.0",
         "title": "Generated document",
-        "description": "The humaniq-side record of one attempt to render a standard HR document (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift, loonstrook, jaaropgaaf) via docudesk's template/rendering engine and store the returned PDF (humaniq-docudesk-documents, extended by payslip-pdf-docudesk). humaniq owns no template or PDF machinery of its own (design.md D1): this schema is a log of the handoff -- which template, for whom, the outcome, and where the file landed -- never the rendering itself. `skipped-no-docudesk` and `failed` are retryable outcomes: a later `occ humaniq:documents:generate` invocation (or the EmploymentContractDetail/PayslipDetail page action) can supersede them (design.md D6). At most one GeneratedDocument per idempotency key may be `pending`/`generated` at a time: the four letter types key on (contractId|employeeId, documentType), loonstrook keys on (payslipId, documentType), jaaropgaaf keys on (jaaropgaafId, documentType) -- enforced by HrDocumentService and audited by the nl-contract-schriftelijk / nl-loonstrook-verplicht corpus rules.",
+        "description": "The humaniq-side record of one attempt to render a standard HR document (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift, loonstrook, jaaropgaaf) via docudesk's template/rendering engine and store the returned PDF (humaniq-docudesk-documents, extended by payslip-pdf-docudesk). Humaniq owns no template or PDF machinery of its own (design.md D1): this schema is a log of the handoff. Which template, for whom, the outcome, and where the file landed. Never the rendering itself. `skipped-no-docudesk` and `failed` are retryable outcomes: a later `occ humaniq:documents:generate` invocation (or the EmploymentContractDetail/PayslipDetail page action) can supersede them (design.md D6). At most one GeneratedDocument per idempotency key may be `pending`/`generated` at a time: the four letter types key on (contractId|employeeId, documentType), loonstrook keys on (payslipId, documentType), jaaropgaaf keys on (jaaropgaafId, documentType). Enforced by HrDocumentService and audited by the nl-contract-schriftelijk / nl-loonstrook-verplicht corpus rules.",
         "type": "object",
         "x-schema-org": "schema:DigitalDocument",
         "required": [
@@ -2363,7 +2363,7 @@
         "icon": "PowerPlugOutline",
         "version": "0.1.0",
         "title": "Integration account",
-        "description": "A governance/audit record cataloguing an external system that has been granted access to humaniq's data through OpenRegister's public REST surface (GET/POST/PUT/PATCH/DELETE /api/objects/{register}/{schema}, authenticated with a Nextcloud app password). This schema is deliberately NOT an authorization mechanism: it records WHICH external systems have been granted HRIS access, for WHAT purpose, and WHEN that access was last reviewed, so HR/security have a single place to answer that question for the REST surface — the same governance discipline humaniq-mcp-adoption established for the LLM tool surface. The actual access grant lives entirely in OpenRegister's own RBAC configuration and the Nextcloud app password, outside this schema and outside any humaniq file (hris-api-public design.md D1/D2). No x-openregister-lifecycle: a plain audit record whose status is toggled actief/ingetrokken by an admin, not a guarded workflow.",
+        "description": "A governance/audit record cataloguing an external system that has been granted access to humaniq's data through OpenRegister's public REST surface (GET/POST/PUT/PATCH/DELETE /api/objects/{register}/{schema}, authenticated with a Nextcloud app password). This schema is deliberately NOT an authorization mechanism: it records WHICH external systems have been granted HRIS access, for WHAT purpose, and WHEN that access was last reviewed, so HR/security have a single place to answer that question for the REST surface. The same governance discipline humaniq-mcp-adoption established for the LLM tool surface. The actual access grant lives entirely in OpenRegister's own RBAC configuration and the Nextcloud app password, outside this schema and outside any humaniq file (hris-api-public design.md D1/D2). No x-openregister-lifecycle: a plain audit record whose status is toggled actief/ingetrokken by an admin, not a guarded workflow.",
         "type": "object",
         "x-schema-org": "schema:SoftwareApplication",
         "required": [
@@ -2376,7 +2376,7 @@
           "name": {
             "type": "string",
             "title": "Name",
-            "description": "The external system's name (e.g. \"Voorbeeld Payroll Partner BV\") — the human-readable identity of the integration this record catalogues."
+            "description": "The external system's name (e.g. \"Voorbeeld Payroll Partner BV\"): the human-readable identity of the integration this record catalogues."
           },
           "purpose": {
             "type": "string",
@@ -2387,7 +2387,7 @@
           "nextcloudUserId": {
             "type": "string",
             "title": "Nextcloud user id",
-            "description": "The account the integration signs in with — normally a service account, not a real employee.",
+            "description": "The account the integration signs in with: normally a service account, not a real employee.",
             "x-notes": "The dedicated Nextcloud account (typically a service account, not a real employee) whose app password this integration authenticates with. A plain string per the approvedBy/reviewedBy convention (ADR-062 rule 7), never a $ref — the app password itself is issued and revoked through Nextcloud's own Settings › Personal › Security › App passwords, never by humaniq."
           },
           "grantedSchemas": {
@@ -2396,7 +2396,7 @@
               "type": "string"
             },
             "title": "Granted schemas",
-            "description": "Which record types this integration is meant to reach. A record of intent only: it does not grant or enforce access — the real permissions live in OpenRegister's RBAC settings.",
+            "description": "Which record types this integration is meant to reach. A record of intent only: it does not grant or enforce access. The real permissions live in OpenRegister's RBAC settings.",
             "x-notes": "Informational, audit-only list of the humaniq schema slugs (e.g. \"Vacancy\", \"OrgUnit\") this integration is INTENDED to read or write. This field does NOT grant or enforce access — it is purely a record of intent. The actual, enforced access grant is configured through OpenRegister's RBAC mechanism (per-user/per-group ACLs on a register or schema), outside this schema and outside any humaniq file; revoking access requires revoking the RBAC grant and/or the Nextcloud app password, never editing this list. Because it is not synchronised with the real RBAC configuration, it can drift from it (hris-api-public design.md D2 / Risks)."
           },
           "status": {
@@ -2466,14 +2466,14 @@
                   "scheduled"
                 ],
                 "to": "completed",
-                "description": "The interview round has taken place. Terminal — the calendar event is kept as history and is no longer touched by the sync (design.md D4)."
+                "description": "The interview round has taken place. Terminal: the calendar event is kept as history and is no longer touched by the sync (design.md D4)."
               },
               "annuleren": {
                 "from": [
                   "scheduled"
                 ],
                 "to": "cancelled",
-                "description": "The interview round is cancelled. Terminal — the next sync removes the calendar event (design.md D4); the Interview object itself is retained, not deleted."
+                "description": "The interview round is cancelled. Terminal: the next sync removes the calendar event (design.md D4); the Interview object itself is retained, not deleted."
               }
             }
           }
@@ -2552,7 +2552,7 @@
             "type": "string",
             "nullable": true,
             "title": "Calendar event UID",
-            "description": "Links this interview to its calendar item. Managed automatically — do not edit.",
+            "description": "Links this interview to its calendar item. Managed automatically: do not edit.",
             "x-notes": "System-managed, never user-editable. Set by InterviewCalendarService on first successful sync (deterministic value hrmq-interview-{uuid}) and used on every later sync to look up and diff the existing calendar event, so a no-op resync writes nothing (design.md D3). Null means this Interview has never reached the calendar."
           }
         }
@@ -2562,7 +2562,7 @@
         "icon": "FileCertificateOutline",
         "version": "0.1.0",
         "title": "Annual statement",
-        "description": "The per-employee-per-year annual-statement aggregate (payslip-pdf-docudesk design.md D2): totals derived exclusively from the employee's Payslips for the given year -- never fabricated, never containing figures no Payslip field carries. Created and updated exclusively by HrDocumentService's aggregation step, upserted per (employeeId, year): re-aggregating refreshes an existing object's totals and `aggregatedAt` rather than creating a duplicate. Carries no status/lifecycle -- render state lives on the GeneratedDocument that renders it (D1).",
+        "description": "The per-employee-per-year annual-statement aggregate (payslip-pdf-docudesk design.md D2): totals derived exclusively from the employee's Payslips for the given year. Never fabricated, never containing figures no Payslip field carries. Created and updated exclusively by HrDocumentService's aggregation step, upserted per (employeeId, year): re-aggregating refreshes an existing object's totals and `aggregatedAt` rather than creating a duplicate. Carries no status/lifecycle. Render state lives on the GeneratedDocument that renders it (D1).",
         "type": "object",
         "x-schema-org": "schema:Report",
         "required": [
@@ -2588,7 +2588,7 @@
           "totalGrossPay": {
             "type": "number",
             "title": "Total gross pay",
-            "description": "Total gross pay over the year — the 'loon' line on the annual statement.",
+            "description": "Total gross pay over the year: the 'loon' line on the annual statement.",
             "x-notes": "Sum of Payslip.grossPay across the year's payslips (the jaaropgaaf 'loon' column)."
           },
           "totalLoonheffing": {
@@ -2618,7 +2618,7 @@
           "totalVakantiegeldReserved": {
             "type": "number",
             "title": "Total vakantiegeld reserved",
-            "description": "Total holiday allowance set aside over the year — what was reserved, not what was paid out.",
+            "description": "Total holiday allowance set aside over the year: what was reserved, not what was paid out.",
             "x-notes": "Sum of Payslip.vakantiegeldReserved across the year's payslips -- the reservation, not the payout."
           },
           "payPeriodCount": {
@@ -2630,7 +2630,7 @@
             "type": "number",
             "nullable": true,
             "title": "Employment tax credit applied",
-            "description": "The employment tax credit applied over the year. Stays empty until payroll records it — better empty than a made-up zero.",
+            "description": "The employment tax credit applied over the year. Stays empty until payroll records it: better empty than a made-up zero.",
             "x-notes": "Statutory jaaropgaaf line for the applied arbeidskorting -- stays null because no Payslip field carries arbeidskorting today (a payroll-core follow-up); never a fabricated 0.00 presented as fact."
           },
           "loonheffingennummer": {
@@ -2645,14 +2645,14 @@
             "format": "date-time",
             "nullable": true,
             "title": "Aggregated at",
-            "description": "When the aggregation last ran -- refreshed on every upsert."
+            "description": "When the aggregation last ran: refreshed on every upsert."
           }
         }
       },
       "JurisdictionPack": {
         "slug": "JurisdictionPack",
         "title": "Jurisdiction pack",
-        "description": "An UPLOADED jurisdiction pack (jurisdiction-packs design.md D7). Bundled packs — including NL — live in code under lib/Standards/packs/ and are NEVER imported as objects; this schema is the second home, for packs an admin uploads. Both homes are resolved by the same (jurisdiction, taxYear) key, and bundled wins by default: a pack stored here may only claim a key a bundled pack already owns when an admin explicitly activated it as a recorded override. Activation is recorded on THIS object, never read from the author-supplied document.",
+        "description": "An UPLOADED jurisdiction pack (jurisdiction-packs design.md D7). Bundled packs: including NL. Live in code under lib/Standards/packs/ and are NEVER imported as objects; this schema is the second home, for packs an admin uploads. Both homes are resolved by the same (jurisdiction, taxYear) key, and bundled wins by default: a pack stored here may only claim a key a bundled pack already owns when an admin explicitly activated it as a recorded override. Activation is recorded on THIS object, never read from the author-supplied document.",
         "type": "object",
         "required": [
           "packId",
@@ -2672,13 +2672,13 @@
           "jurisdiction": {
             "type": "string",
             "title": "Jurisdiction",
-            "description": "Which country this pack is for. Always stated here — never read from the pack's name.",
+            "description": "Which country this pack is for. Always stated here: never read from the pack's name.",
             "x-notes": "The pack's DECLARED ISO 3166-1 alpha-2 jurisdiction — never parsed from the pack id. Half of the resolver key."
           },
           "taxYear": {
             "type": "integer",
             "title": "Tax year",
-            "description": "The pack's DECLARED tax year — never parsed from the pack id. The other half of the resolver key."
+            "description": "The pack's DECLARED tax year: never parsed from the pack id. The other half of the resolver key."
           },
           "packVersion": {
             "type": "string",
@@ -2720,7 +2720,7 @@
           "document": {
             "type": "string",
             "title": "Pack document",
-            "description": "The pack's full contents as uploaded. Data only — a pack can never contain code.",
+            "description": "The pack's full contents as uploaded. Data only: a pack can never contain code.",
             "x-notes": "The pack's full JSON document, as uploaded. Data only: the DSL has no loops, no recursion and no IO, and a pack can never carry code, a class path or a callable — it names an allow-listed handler or it is rejected."
           }
         }
@@ -2744,7 +2744,7 @@
             "format": "uuid",
             "$ref": "Objective",
             "title": "Objective",
-            "description": "The objective this key result belongs to. Required — a key result on its own has no meaning.",
+            "description": "The objective this key result belongs to. Required: a key result on its own has no meaning.",
             "x-notes": "Reference to the parent Objective this Key Result belongs to. Required: a KeyResult without an objectiveId is meaningless and is rejected by validation."
           },
           "title": {
@@ -2828,7 +2828,7 @@
         "icon": "ScaleBalance",
         "version": "0.3.0",
         "title": "Leave balance",
-        "description": "Per-employee, per-year, per-leave-type entitlement and usage ledger (verlofsaldo): the statutory plus bovenwettelijk hours granted for a year, the hours used, and a declaratively calculated remaining balance (x-openregister-calculations). Read by the nl-verlof-wettelijk-minimum / nl-verlof-saldo-niet-negatief / nl-verlof-vervaltermijn rule checks (lib/Standards/rules/labour.json, leave-verzuim-mvp). usedHours is not yet auto-posted from approved LeaveRequests — that cross-object write hook is a declared follow-up; this MVP records and audits the balance.",
+        "description": "Per-employee, per-year, per-leave-type entitlement and usage ledger (verlofsaldo): the statutory plus bovenwettelijk hours granted for a year, the hours used, and a declaratively calculated remaining balance (x-openregister-calculations). Read by the nl-verlof-wettelijk-minimum / nl-verlof-saldo-niet-negatief / nl-verlof-vervaltermijn rule checks (lib/Standards/rules/labour.json, leave-verzuim-mvp). UsedHours is not yet auto-posted from approved LeaveRequests: that cross-object write hook is a declared follow-up; this MVP records and audits the balance.",
         "type": "object",
         "required": [
           "employeeId",
@@ -2930,7 +2930,7 @@
             "format": "date",
             "nullable": true,
             "title": "Expiry date",
-            "description": "When this year's statutory leave hours lapse — 1 July of the following year.",
+            "description": "When this year's statutory leave hours lapse: 1 July of the following year.",
             "x-notes": "Date the statutory leave hours of this year lapse — 1 July of the following year (BW art. 7:640a). Checked by nl-verlof-vervaltermijn."
           },
           "lastAccruedPeriod": {
@@ -3054,7 +3054,7 @@
             "nullable": true,
             "minimum": 0,
             "title": "Hours",
-            "description": "Optional total number of leave hours requested — for partial-day leave or when the leave balance is administered in hours rather than days."
+            "description": "Optional total number of leave hours requested: for partial-day leave or when the leave balance is administered in hours rather than days."
           },
           "reason": {
             "type": "string",
@@ -3139,7 +3139,7 @@
         "icon": "SwapHorizontal",
         "version": "0.1.0",
         "title": "Leave transaction",
-        "description": "An employee request to buy or sell leave hours (IKB-style flexibility, individueel keuzebudget): a declarative draft -> submitted -> approved/rejected -> settled lifecycle (leave-buy-sell), guarded by the reused NoSelfApprovalGuard for separation of duties. A sell may only ever draw down bovenwettelijkHours on the matching LeaveBalance -- never entitledHours/usedHours, so it can never threaten the nl-verlof-wettelijk-minimum statutory floor. Settlement (LeaveBuySellSettlementService) writes the balance exactly once and stamps settledAmount, which PayrollRunService.generate() folds into the current run's Payslip.leaveBuySell as an already-computed payroll input, never an engine recompute.",
+        "description": "An employee request to buy or sell leave hours (IKB-style flexibility, individueel keuzebudget): a declarative draft -> submitted -> approved/rejected -> settled lifecycle (leave-buy-sell), guarded by the reused NoSelfApprovalGuard for separation of duties. A sell may only ever draw down bovenwettelijkHours on the matching LeaveBalance: never entitledHours/usedHours, so it can never threaten the nl-verlof-wettelijk-minimum statutory floor. Settlement (LeaveBuySellSettlementService) writes the balance exactly once and stamps settledAmount, which PayrollRunService.generate() folds into the current run's Payslip.leaveBuySell as an already-computed payroll input, never an engine recompute.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "required": [
@@ -3181,7 +3181,7 @@
                 ],
                 "to": "rejected",
                 "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
-                "description": "A manager rejects the submitted transaction (with a rejectionReason). Only the separation-of-duties check applies -- the statutory check is irrelevant to a rejection."
+                "description": "A manager rejects the submitted transaction (with a rejectionReason). Only the separation-of-duties check applies: the statutory check is irrelevant to a rejection."
               },
               "settle": {
                 "from": [
@@ -3277,7 +3277,7 @@
             "$ref": "PayrollRun",
             "nullable": true,
             "title": "Settlement payroll run",
-            "description": "The payroll run for that period, recorded at settlement. Best effort — it never blocks settling.",
+            "description": "The payroll run for that period, recorded at settlement. Best effort: it never blocks settling.",
             "x-notes": "The PayrollRun of settlementPeriod, stamped once this transaction is settled (the retro-adjustments PayrollAdjustment.settlementPayrollRunId convention). Not required to exist -- best-effort, never blocks settlement."
           },
           "status": {
@@ -3398,7 +3398,7 @@
                   "verzonden"
                 ],
                 "to": "concept",
-                "description": "A sent filing can be superseded by a correction (NL allows correcties binnen het tijdvak). The usual route is a NEW filing object for the same period; this transition's reset-to-concept semantics are a simplified placeholder — full correctie-berichten (VL/IB-correcties) are a future spec."
+                "description": "A sent filing can be superseded by a correction (NL allows correcties binnen het tijdvak). The usual route is a NEW filing object for the same period; this transition's reset-to-concept semantics are a simplified placeholder: full correctie-berichten (VL/IB-correcties) are a future spec."
               }
             }
           }
@@ -3458,7 +3458,7 @@
             "type": "string",
             "format": "date",
             "nullable": true,
-            "description": "Date the filing was submitted electronically — must be on or before the deadline."
+            "description": "Date the filing was submitted electronically: must be on or before the deadline."
           },
           "paidDate": {
             "title": "Paid date",
@@ -3516,7 +3516,7 @@
             "title": "Event signal days",
             "type": "number",
             "nullable": true,
-            "description": "France: working days taken to transmit an event notification — five at most.",
+            "description": "France: working days taken to transmit an event notification. Five at most.",
             "x-notes": "FR: working days taken to transmit an event signalement — must be ≤5 (fr-dsn-evenementielle)."
           },
           "furnishedToRecipientDate": {
@@ -3580,7 +3580,7 @@
             "type": "string",
             "nullable": true,
             "title": "Filing number",
-            "description": "The reference the tax authority uses for this filing — your payroll tax number plus the period code.",
+            "description": "The reference the tax authority uses for this filing: your payroll tax number plus the period code.",
             "x-notes": "Loonheffingennummer + tijdvakcode composite identifier the Belastingdienst uses to key this filing."
           },
           "betalingskenmerk": {
@@ -3634,7 +3634,7 @@
         "icon": "Gavel",
         "version": "0.1.0",
         "title": "Wage garnishment",
-        "description": "A court/deurwaarder-ordered wage garnishment (derdenbeslag): an ongoing order spanning many periods until the claim is satisfied or the order is withdrawn -- a fundamentally different lifecycle from a PayrollAdjustment's one-shot correction (design.md D1). PayrollRunService folds the floor-clamped periodic deduction into Payslip.nettoPay as a fourth current-run post-tax component (loonbeslag), never re-invoking PayrollCalculator. beslagvrijeVoet is a required, HR-entered stored input for the MVP -- computing it per the Wet vereenvoudiging beslagvrije voet is a named fast-follow (design.md D7). status is a plain enum, deliberately no x-openregister-lifecycle map (design.md D5): the sensitive activate/settle/withdraw transitions require a caller-role (admin/HR) check a lifecycle guard's (object, action, userId) contract cannot express, so LoonbeslagController owns every transition instead.",
+        "description": "A court/deurwaarder-ordered wage garnishment (derdenbeslag): an ongoing order spanning many periods until the claim is satisfied or the order is withdrawn. A fundamentally different lifecycle from a PayrollAdjustment's one-shot correction (design.md D1). PayrollRunService folds the floor-clamped periodic deduction into Payslip.nettoPay as a fourth current-run post-tax component (loonbeslag), never re-invoking PayrollCalculator. BeslagvrijeVoet is a required, HR-entered stored input for the MVP. Computing it per the Wet vereenvoudiging beslagvrije voet is a named fast-follow (design.md D7). Status is a plain enum, deliberately no x-openregister-lifecycle map (design.md D5): the sensitive activate/settle/withdraw transitions require a caller-role (admin/HR) check a lifecycle guard's (object, action, userId) contract cannot express, so LoonbeslagController owns every transition instead.",
         "type": "object",
         "x-schema-org": "schema:MonetaryAmount",
         "required": [
@@ -3663,7 +3663,7 @@
           "dossierRef": {
             "title": "Dossier ref",
             "type": "string",
-            "description": "The deurwaarder's dossier/case reference -- the human key an HR user matches against the court order."
+            "description": "The deurwaarder's dossier/case reference: the human key an HR user matches against the court order."
           },
           "totalClaim": {
             "title": "Total claim",
@@ -3682,7 +3682,7 @@
             "title": "Protected earnings floor",
             "type": "number",
             "minimum": 0,
-            "description": "The minimum the employee must keep. Take this figure from the order — the bailiff is required to state it.",
+            "description": "The minimum the employee must keep. Take this figure from the order: the bailiff is required to state it.",
             "x-notes": "The protected minimum, euro -- a stored HR-entered input for the MVP, trusted as the authoritative figure the deurwaarder is legally required to state on the order (design.md D7). Computing it from income/household composition per the Wet vereenvoudiging beslagvrije voet is a named fast-follow, not implemented here."
           },
           "status": {
@@ -3774,7 +3774,7 @@
         "icon": "BriefcaseOutline",
         "version": "0.1.0",
         "title": "Reference job",
-        "description": "A read-only reference row from the HR21 (VNG-owned municipal functiewaarderingssysteem) normfunctie library, mapping one standard job function to a Cao Gemeenten schaal. Seeded illustrative subset only (allowCreate:false) -- NOT a claimed-complete ~150-function library; the exact HR21 normfunctie catalog was not independently verified from a primary VNG source (proposal.md 'Honesty about verification'). caoSchaal lives in the same key space cao-gemeenten.payScales uses, but this schema does not itself invent or store any schaal figures -- it only records which schaal a normfunctie maps to. An EmploymentContract links to a Normfunctie via normfunctieId, HR-set, never derived.",
+        "description": "A read-only reference row from the HR21 (VNG-owned municipal functiewaarderingssysteem) normfunctie library, mapping one standard job function to a Cao Gemeenten schaal. Seeded illustrative subset only (allowCreate:false). NOT a claimed-complete ~150-function library; the exact HR21 normfunctie catalog was not independently verified from a primary VNG source (proposal.md 'Honesty about verification'). CaoSchaal lives in the same key space cao-gemeenten.payScales uses, but this schema does not itself invent or store any schaal figures. It only records which schaal a normfunctie maps to. An EmploymentContract links to a Normfunctie via normfunctieId, HR-set, never derived.",
         "type": "object",
         "x-schema-org": "schema:Occupation",
         "required": [
@@ -3855,7 +3855,7 @@
                   "actief"
                 ],
                 "to": "afgesloten",
-                "description": "Close the objective. uitkomst is stamped on this carrying write. A closed objective is history and is not reopened (the ReviewCycle no-resurrection precedent) -- a correction means a new objective. No guard: authorization on who may close is owned by humaniq-rule-compliance-enforcement, not this change."
+                "description": "Close the objective. Uitkomst is stamped on this carrying write. A closed objective is history and is not reopened (the ReviewCycle no-resurrection precedent): a correction means a new objective. No guard: authorization on who may close is owned by humaniq-rule-compliance-enforcement, not this change."
               }
             }
           }
@@ -3969,7 +3969,7 @@
         "icon": "AccountMinus",
         "version": "0.1.0",
         "title": "Offboarding case",
-        "description": "A deterministic offboarding case (one per departure): the concrete gates for a leaving employee — exit interview held, assets returned, access revoked — and the statutory eindafrekening components (verlofsaldo paid out, vakantiegeld settled, transitievergoeding recorded, getuigschrift provided) as checklist boolean/date fields, governed by a simplified five-state declarative lifecycle (offboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/offboarding-wizard draft's 17-state machine and 7 entity schemas: no OffboardingStep/Eindafrekening/EquipmentReturn/ExitInterview/Getuigschrift/RetentionTimer side entities, no eindafrekening computation engine, no UWV WW-melding/pensioenfonds/ZVW submissions, no AVG retention timers, no per-item asset tracking (the parallel asset-management-mvp owns asset data — loose coupling only, design.md D6). The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOffboardingChecks.php), NOT by write-time guard classes — guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2).",
+        "description": "A deterministic offboarding case (one per departure): the concrete gates for a leaving employee. Exit interview held, assets returned, access revoked. And the statutory eindafrekening components (verlofsaldo paid out, vakantiegeld settled, transitievergoeding recorded, getuigschrift provided) as checklist boolean/date fields, governed by a simplified five-state declarative lifecycle (offboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/offboarding-wizard draft's 17-state machine and 7 entity schemas: no OffboardingStep/Eindafrekening/EquipmentReturn/ExitInterview/Getuigschrift/RetentionTimer side entities, no eindafrekening computation engine, no UWV WW-melding/pensioenfonds/ZVW submissions, no AVG retention timers, no per-item asset tracking (the parallel asset-management-mvp owns asset data. Loose coupling only, design.md D6). The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOffboardingChecks.php), NOT by write-time guard classes. Guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2).",
         "type": "object",
         "x-schema-org": "schema:Action",
         "required": [
@@ -3999,7 +3999,7 @@
                   "afronding_gepland"
                 ],
                 "to": "eindafrekening_gereed",
-                "description": "The eindafrekening is ready. Checklist gate: verlofsaldoUitbetaald = true when an open leave balance remains (BW 7:641), vakantiegeldAfgerekend = true, transitievergoedingBedrag recorded for dismissal-initiated reasons (BW 7:673) (enforced by audit rule, not a write-time guard — see humaniq-rule-compliance-enforcement)."
+                "description": "The eindafrekening is ready. Checklist gate: verlofsaldoUitbetaald = true when an open leave balance remains (BW 7:641), vakantiegeldAfgerekend = true, transitievergoedingBedrag recorded for dismissal-initiated reasons (BW 7:673) (enforced by audit rule, not a write-time guard. See humaniq-rule-compliance-enforcement)."
               },
               "afronden": {
                 "from": [
@@ -4091,14 +4091,14 @@
             "type": "boolean",
             "default": false,
             "title": "Assets returned",
-            "description": "Company property has been handed back. Records the outcome only — individual items are tracked separately.",
+            "description": "Company property has been handed back. Records the outcome only: individual items are tracked separately.",
             "x-notes": "Whether company property was returned. Records the outcome only — per-item tracking is the parallel asset-management-mvp's domain (design.md D6)."
           },
           "toegangIngetrokken": {
             "type": "boolean",
             "default": false,
             "title": "Access revoked",
-            "description": "Whether Nextcloud/IT access has been revoked. Records the outcome only — OCS automation is a non-goal."
+            "description": "Whether Nextcloud/IT access has been revoked. Records the outcome only: OCS automation is a non-goal."
           },
           "verlofsaldoUitbetaald": {
             "type": "boolean",
@@ -4141,7 +4141,7 @@
         "icon": "AccountPlus",
         "version": "0.2.0",
         "title": "Onboarding case",
-        "description": "A deterministic onboarding case (one per hire): the concrete legal gates for a new employee's first week — contract signed, WID identity check, BSN/IBAN validated, IT provisioned, pensioen aangemeld — as checklist boolean/date fields, governed by a simplified six-state declarative lifecycle (onboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/onboarding-wizard draft's 13-state machine and 15-step wizard stepper: no OnboardingStep/WIDCheck/BSNValidatie/Reminder side entities, no wizard stepper UI (follow-up nc-vue widget, design.md D6), no BSN elfproef/IBAN modulus-97 validation services, no IT auto-provisioning, no reminder/escalation engine. The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOnboardingChecks.php), NOT by write-time guard classes — guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2).",
+        "description": "A deterministic onboarding case (one per hire): the concrete legal gates for a new employee's first week. Contract signed, WID identity check, BSN/IBAN validated, IT provisioned, pensioen aangemeld. As checklist boolean/date fields, governed by a simplified six-state declarative lifecycle (onboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/onboarding-wizard draft's 13-state machine and 15-step wizard stepper: no OnboardingStep/WIDCheck/BSNValidatie/Reminder side entities, no wizard stepper UI (follow-up nc-vue widget, design.md D6), no BSN elfproef/IBAN modulus-97 validation services, no IT auto-provisioning, no reminder/escalation engine. The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOnboardingChecks.php), NOT by write-time guard classes. Guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2).",
         "type": "object",
         "x-schema-org": "schema:Action",
         "required": [
@@ -4163,7 +4163,7 @@
                   "aangenomen"
                 ],
                 "to": "contract_getekend",
-                "description": "The employment contract has been signed. Checklist gate: contractSigned = true (enforced by audit rule, not a write-time guard — see humaniq-rule-compliance-enforcement)."
+                "description": "The employment contract has been signed. Checklist gate: contractSigned = true (enforced by audit rule, not a write-time guard. See humaniq-rule-compliance-enforcement)."
               },
               "gegevens_valideren": {
                 "from": [
@@ -4281,19 +4281,19 @@
             "type": "boolean",
             "default": false,
             "title": "BSN validated",
-            "description": "Whether the BSN was checked. Records the outcome only — elfproef modulus-11 automation is a non-goal."
+            "description": "Whether the BSN was checked. Records the outcome only: elfproef modulus-11 automation is a non-goal."
           },
           "ibanVerified": {
             "type": "boolean",
             "default": false,
             "title": "IBAN verified",
-            "description": "Whether the IBAN was verified. Records the outcome only — modulus-97 automation is a non-goal."
+            "description": "Whether the IBAN was verified. Records the outcome only: modulus-97 automation is a non-goal."
           },
           "itProvisioned": {
             "type": "boolean",
             "default": false,
             "title": "IT provisioned",
-            "description": "Whether the Nextcloud/IT account was provisioned for the hire. Records the outcome only — OCS auto-provisioning is a non-goal."
+            "description": "Whether the Nextcloud/IT account was provisioned for the hire. Records the outcome only: OCS auto-provisioning is a non-goal."
           },
           "pensioenAangemeld": {
             "type": "boolean",
@@ -4322,7 +4322,7 @@
         "icon": "AccountArrowRightOutline",
         "version": "0.2.0",
         "title": "Organisational assignment",
-        "description": "An effective-dated placement of one employee in one OrgUnit (a functie/role within that unit, from startDate until an optional endDate — null while the placement is current). No x-openregister-lifecycle: a plain effective-dated record, no workflow. Consistency (coherent dates, active unit) is enforced by nl-org-assignment-consistency (lib/Standards/rules/labour.json / lib/Standards/Checks/NlOrgChecks.php), not by a write-time guard.",
+        "description": "An effective-dated placement of one employee in one OrgUnit (a functie/role within that unit, from startDate until an optional endDate: null while the placement is current). No x-openregister-lifecycle: a plain effective-dated record, no workflow. Consistency (coherent dates, active unit) is enforced by nl-org-assignment-consistency (lib/Standards/rules/labour.json / lib/Standards/Checks/NlOrgChecks.php), not by a write-time guard.",
         "type": "object",
         "x-schema-org": "schema:EmployeeRole",
         "required": [
@@ -4382,7 +4382,7 @@
         "icon": "SitemapOutline",
         "version": "0.2.0",
         "title": "Organisational unit",
-        "description": "A node in the organisational hierarchy (afdeling / team / kostenplaats): a department, team or cost-center with an optional parent unit (self-referencing, forming the tree), an optional cost-center code, and an optional manager. humaniq's first organisational model (org-chart-basic) — manager self-service derives a team scope from the OrgAssignments placed here, and finance apps (shillinq, expense routing) resolve cost-center owners via costCenter/managerId. No x-openregister-lifecycle: a plain record toggled active/inactive, not a workflow.",
+        "description": "A node in the organisational hierarchy (afdeling / team / kostenplaats): a department, team or cost-center with an optional parent unit (self-referencing, forming the tree), an optional cost-center code, and an optional manager. Humaniq's first organisational model (org-chart-basic): manager self-service derives a team scope from the OrgAssignments placed here, and finance apps (shillinq, expense routing) resolve cost-center owners via costCenter/managerId. No x-openregister-lifecycle: a plain record toggled active/inactive, not a workflow.",
         "type": "object",
         "x-schema-org": "schema:Organization",
         "required": [
@@ -4457,7 +4457,7 @@
         "icon": "CashSync",
         "version": "0.1.0",
         "title": "Payroll Adjustment",
-        "description": "A terugwerkende kracht (TWK) correction for a SEALED prior-period payslip, modeled as a DELTA -- never a mutation of the original Payslip/PayrollRun (retro-adjustments design.md D1). RetroAdjustmentService recomputes the original period against ITS OWN tax year (same-tax-year MVP -- design.md D2) with the corrected input, diffs recomputed minus stored into the delta* fields, and -- once applied -- the delta is settled as a nabetaling/terugvordering component of the CURRENT run's payslip (Payslip.retroAdjustment), never by reopening the sealed original. Idempotently keyed on (originalPeriod, employeeId, correctionRef) -- re-running the same correction updates this same object in place.",
+        "description": "A terugwerkende kracht (TWK) correction for a SEALED prior-period payslip, modeled as a DELTA: never a mutation of the original Payslip/PayrollRun (retro-adjustments design.md D1). RetroAdjustmentService recomputes the original period against ITS OWN tax year (same-tax-year MVP. Design.md D2) with the corrected input, diffs recomputed minus stored into the delta* fields, and. Once applied. The delta is settled as a nabetaling/terugvordering component of the CURRENT run's payslip (Payslip.retroAdjustment), never by reopening the sealed original. Idempotently keyed on (originalPeriod, employeeId, correctionRef). Re-running the same correction updates this same object in place.",
         "type": "object",
         "x-schema-org": "schema:MonetaryAmount",
         "required": [
@@ -4569,7 +4569,7 @@
             "title": "Engine version",
             "type": "string",
             "nullable": true,
-            "description": "Which tax-year tables the recalculation used — always the corrected period's year. Empty until it has been calculated.",
+            "description": "Which tax-year tables the recalculation used: always the corrected period's year. Empty until it has been calculated.",
             "x-notes": "The versioned tax-year table (e.g. nl-2026) the recompute used -- always derived from originalPeriod's year, never the current year (nl-retro-adjustment-consistency; same-tax-year MVP -- design.md D2). Null until first computed."
           },
           "settlementPeriod": {
@@ -4630,7 +4630,7 @@
         "icon": "BookEditOutline",
         "version": "0.2.0",
         "title": "Payroll GL post",
-        "description": "The humaniq-side record of one attempt to post an approved PayrollRun's balanced loonjournaalpost into shillinq's JournalEntry register (payroll-glpost-shillinq). humaniq owns no bookkeeping machinery: this schema is a log of the handoff -- what was sent, when, and the outcome -- never the journal itself, which stays a shillinq JournalEntry created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays approved so a later `occ humaniq:glpost:run` invocation can supersede them (design.md D6). At most one PayrollGLPost per run may be `pending`/`posted` at a time -- enforced by PayrollGLPostService and audited by the nl-glpost-idempotent-per-run corpus rule.",
+        "description": "The humaniq-side record of one attempt to post an approved PayrollRun's balanced loonjournaalpost into shillinq's JournalEntry register (payroll-glpost-shillinq). Humaniq owns no bookkeeping machinery: this schema is a log of the handoff. What was sent, when, and the outcome. Never the journal itself, which stays a shillinq JournalEntry created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays approved so a later `occ humaniq:glpost:run` invocation can supersede them (design.md D6). At most one PayrollGLPost per run may be `pending`/`posted` at a time. Enforced by PayrollGLPostService and audited by the nl-glpost-idempotent-per-run corpus rule.",
         "type": "object",
         "x-schema-org": "schema:AccountingTransaction",
         "required": [
@@ -4741,7 +4741,7 @@
                 "description": {
                   "type": "string",
                   "title": "Description",
-                  "description": "A label for this line as it is sent to the bookkeeping system, for example \"Loonkosten bruto\". Optional — the account number is what the ledger keys on.",
+                  "description": "A label for this line as it is sent to the bookkeeping system, for example \"Loonkosten bruto\". Optional: the account number is what the ledger keys on.",
                   "x-notes": "Free-text label for the line as sent to shillinq, e.g. \"Loonkosten bruto\". Optional; the account number is what the ledger keys on.",
                   "nullable": true
                 }
@@ -4762,7 +4762,7 @@
         "icon": "SwapHorizontal",
         "version": "0.1.0",
         "title": "Payroll Mutation Report",
-        "description": "The persisted per-run payroll diff an accountant reviews before approving a run (payroll-mutation-reports): who joined/left and each shared employee's per-component cents delta between two PayrollRuns, plus the run-level roll-up totals. Produced ONLY by PayrollMutationService — a pure, read-only subtraction over the two runs' already-persisted Payslips, never a recomputation. Idempotently keyed on (fromRunId, toRunId): regenerating the same pair upserts this record in place.",
+        "description": "The persisted per-run payroll diff an accountant reviews before approving a run (payroll-mutation-reports): who joined/left and each shared employee's per-component cents delta between two PayrollRuns, plus the run-level roll-up totals. Produced ONLY by PayrollMutationService: a pure, read-only subtraction over the two runs' already-persisted Payslips, never a recomputation. Idempotently keyed on (fromRunId, toRunId): regenerating the same pair upserts this record in place.",
         "type": "object",
         "x-schema-org": "schema:Report",
         "required": [
@@ -4861,7 +4861,7 @@
           "totalWageCostDelta": {
             "title": "Total wage cost delta",
             "type": "number",
-            "description": "The total change in wage costs between the two runs — gross pay plus employer charges.",
+            "description": "The total change in wage costs between the two runs: gross pay plus employer charges.",
             "x-notes": "grossDelta + employerCostDelta — the accountant's headline total wage-cost change."
           },
           "lines": {
@@ -4952,7 +4952,7 @@
                 "employerCostBefore": {
                   "title": "Employer cost before",
                   "type": "number",
-                  "description": "Total employer cost in the earlier run, in cents — gross plus employer-borne premiums."
+                  "description": "Total employer cost in the earlier run, in cents: gross plus employer-borne premiums."
                 },
                 "employerCostAfter": {
                   "title": "Employer cost after",
@@ -4975,7 +4975,7 @@
         "icon": "BankTransfer",
         "version": "0.2.0",
         "title": "Payroll payment batch",
-        "description": "The humaniq-side record of one attempt to hand a payable PayrollRun's net-pay off to shillinq as a draft SEPA PaymentRun (payroll-sepa-netpay-shillinq). humaniq owns no SEPA/bank-file machinery: this schema is a log of the handoff -- what was sent, when, and the outcome -- never the payment batch itself, which stays a shillinq PaymentRun created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays payable so a later `occ humaniq:netpay:run` invocation can supersede them (design.md D6). At most one PayrollPaymentBatch per run may be `pending`/`created` at a time -- enforced by PayrollNetPayService. `created` means the draft PaymentRun was klaargezet in shillinq -- NOT paid: money only moves after shillinq's controller approves and exports it (design.md D4).",
+        "description": "The humaniq-side record of one attempt to hand a payable PayrollRun's net-pay off to shillinq as a draft SEPA PaymentRun (payroll-sepa-netpay-shillinq). Humaniq owns no SEPA/bank-file machinery: this schema is a log of the handoff. What was sent, when, and the outcome. Never the payment batch itself, which stays a shillinq PaymentRun created via OpenRegister's ObjectService (same instance, never HTTP). `skipped-no-shillinq` and `failed` are retryable outcomes: the referenced PayrollRun stays payable so a later `occ humaniq:netpay:run` invocation can supersede them (design.md D6). At most one PayrollPaymentBatch per run may be `pending`/`created` at a time. Enforced by PayrollNetPayService. `created` means the draft PaymentRun was klaargezet in shillinq. NOT paid: money only moves after shillinq's controller approves and exports it (design.md D4).",
         "type": "object",
         "x-schema-org": "schema:PaymentService",
         "required": [
@@ -5013,7 +5013,7 @@
             ],
             "default": "pending",
             "title": "Status",
-            "description": "How this attempt ended. 'Created' means a draft payment run was delivered — not that anyone has been paid yet.",
+            "description": "How this attempt ended. 'Created' means a draft payment run was delivered: not that anyone has been paid yet.",
             "x-notes": "Outcome of this net-pay attempt. `created` = draft PaymentRun delivered to shillinq (klaargezet, NOT paid). `failed`/`skipped-no-shillinq` are superseded by a retry; the run stays payable."
           },
           "shillinqPaymentRunRef": {
@@ -5047,7 +5047,7 @@
             "type": "string",
             "nullable": true,
             "title": "Error message",
-            "description": "Why the batch failed or was skipped — for a failure, every payslip's own error, such as a missing bank account.",
+            "description": "Why the batch failed or was skipped: for a failure, every payslip's own error, such as a missing bank account.",
             "x-notes": "Failure/skip diagnostic; on `failed` carries every line's per-payslip error concatenated (e.g. missing IBAN, shillinq unavailable, stale attempt superseded)."
           },
           "createdAt": {
@@ -5316,13 +5316,13 @@
           "vakantiegeldReserved": {
             "title": "Vakantiegeld reserved",
             "type": "number",
-            "description": "Holiday allowance set aside this period — at least 8% of the gross pay.",
+            "description": "Holiday allowance set aside this period: at least 8% of the gross pay.",
             "x-notes": "Vakantiebijslag reserved this period — at least 8% of gross (nl-vakantiebijslag-8procent)."
           },
           "vakantiegeldRate": {
             "title": "Holiday allowance rate",
             "type": "number",
-            "description": "The holiday allowance percentage applied — at least 8.",
+            "description": "The holiday allowance percentage applied: at least 8.",
             "x-notes": "Applied vakantiebijslag rate percentage — at least 8 (nl-vakantiebijslag-8procent)."
           },
           "wkrUsed": {
@@ -5393,7 +5393,7 @@
           "solidaritaetszuschlag": {
             "title": "Solidaritaetszuschlag",
             "type": "number",
-            "description": "Germany: solidarity surcharge — 5.5% of the wage tax above the exemption limit.",
+            "description": "Germany: solidarity surcharge. 5.5% of the wage tax above the exemption limit.",
             "x-notes": "DE: Solidaritätszuschlag of 5,5% of the Lohnsteuer above the Freigrenze (de-solidaritaetszuschlag)."
           },
           "solzApplicable": {
@@ -5423,31 +5423,31 @@
           "rvEmployeeRate": {
             "title": "Rv employee rate",
             "type": "number",
-            "description": "Germany: the employee's pension insurance rate — 9.3% for 2026.",
+            "description": "Germany: the employee's pension insurance rate. 9.3% for 2026.",
             "x-notes": "DE: pension-insurance (RV) employee rate — 9,3% for 2026 (de-rv-beitragssatz-2026)."
           },
           "rvEmployerRate": {
             "title": "Rv employer rate",
             "type": "number",
-            "description": "Germany: the employer's pension insurance rate — 9.3% for 2026.",
+            "description": "Germany: the employer's pension insurance rate. 9.3% for 2026.",
             "x-notes": "DE: pension-insurance (RV) employer rate — 9,3% for 2026 (de-rv-beitragssatz-2026)."
           },
           "kvBaseRate": {
             "title": "Kv base rate",
             "type": "number",
-            "description": "Germany: the general health insurance base rate — 14.6% for 2026.",
+            "description": "Germany: the general health insurance base rate. 14.6% for 2026.",
             "x-notes": "DE: general health-insurance base rate — 14,6% for 2026 (de-kv-beitragssatz-2026)."
           },
           "avRate": {
             "title": "Av rate",
             "type": "number",
-            "description": "Germany: the total unemployment insurance rate — 2.6% for 2026.",
+            "description": "Germany: the total unemployment insurance rate. 2.6% for 2026.",
             "x-notes": "DE: unemployment-insurance total rate — 2,6% for 2026 (de-av-beitragssatz-2026)."
           },
           "pvBaseRate": {
             "title": "Pv base rate",
             "type": "number",
-            "description": "Germany: the long-term care insurance base rate — 3.6% for 2026.",
+            "description": "Germany: the long-term care insurance base rate. 3.6% for 2026.",
             "x-notes": "DE: long-term-care-insurance base rate — 3,6% for 2026 (de-pv-beitragssatz-2026)."
           },
           "svContributionBase": {
@@ -5465,7 +5465,7 @@
           "ficaSsRate": {
             "title": "Fica ss rate",
             "type": "number",
-            "description": "United States: the employee's Social Security rate — 6.2%.",
+            "description": "United States: the employee's Social Security rate. 6.2%.",
             "x-notes": "US: employee Social Security (OASDI) rate — 6,2% (us-fica-social-security)."
           },
           "ficaSsWageBaseApplied": {
@@ -5477,7 +5477,7 @@
           "medicareRate": {
             "title": "Medicare rate",
             "type": "number",
-            "description": "United States: the employee's Medicare rate — 1.45%.",
+            "description": "United States: the employee's Medicare rate. 1.45%.",
             "x-notes": "US: employee Medicare rate — 1,45% (us-fica-medicare)."
           },
           "additionalMedicareApplied": {
@@ -5546,7 +5546,7 @@
             "type": "string",
             "format": "date",
             "nullable": true,
-            "description": "How long this payslip copy must be kept — five years in France, four to seven in the United States.",
+            "description": "How long this payslip copy must be kept: five years in France, four to seven in the United States.",
             "x-notes": "Date until which the payslip duplicate is retained — 5 years FR (fr-bulletin-conservation) / 4-year IRC + 3-year FLSA US."
           },
           "arbeidskorting": {
@@ -5592,7 +5592,7 @@
             "title": "Sick pay reference wage",
             "type": "number",
             "nullable": true,
-            "description": "The wage the sick-pay calculation was based on — the employee's full gross monthly salary. Empty on a normal payslip.",
+            "description": "The wage the sick-pay calculation was based on: the employee's full gross monthly salary. Empty on a normal payslip.",
             "x-notes": "NL: the reference wage (W) the sick-pay calculation was run against — the employee's full grossMonthlySalary. Null on a normal payslip (sick-pay-calc)."
           },
           "sickPayPercentage": {
@@ -5620,7 +5620,7 @@
             "title": "Retro adjustment",
             "type": "number",
             "nullable": true,
-            "description": "Backdated corrections settled in this period — a positive amount is paid out, a negative one is reclaimed. Included in the net pay.",
+            "description": "Backdated corrections settled in this period: a positive amount is paid out, a negative one is reclaimed. Included in the net pay.",
             "x-notes": "Summed net TWK (terugwerkende kracht) retro-adjustment delta settled into THIS payslip's period -- a nabetaling (positive) or terugvordering (negative) rolled up from every applied PayrollAdjustment whose settlementPeriod equals this payslip's period (retro-adjustments). Included in nettoPay. Null when no adjustment settles this period; the sealed historical payslip this delta was diffed against is never touched."
           },
           "leaveBuySell": {
@@ -5683,7 +5683,7 @@
         "icon": "PiggyBankOutline",
         "version": "0.2.0",
         "title": "Pension filing",
-        "description": "A UPA (Uniforme Pensioenaangifte) delivery to one sector pension fund for one wage period, reporting an approved PayrollRun (pension-filing-upa-mvp). The APG-administered funds are gated on the referenced payroll run being approved before the filing can progress past review — the verified Loket.nl/APG gating rule — via a declarative create->review->confirm->send lifecycle (concept -> gecontroleerd -> bevestigd -> verzonden) mirroring the loonaangifte filing flow.",
+        "description": "A UPA (Uniforme Pensioenaangifte) delivery to one sector pension fund for one wage period, reporting an approved PayrollRun (pension-filing-upa-mvp). The APG-administered funds are gated on the referenced payroll run being approved before the filing can progress past review: the verified Loket.nl/APG gating rule. Via a declarative create->review->confirm->send lifecycle (concept -> gecontroleerd -> bevestigd -> verzonden) mirroring the loonaangifte filing flow.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "required": [
@@ -5705,7 +5705,7 @@
                 ],
                 "to": "gecontroleerd",
                 "requires": "OCA\\Humaniq\\Lifecycle\\PayrollRunApprovedGuard",
-                "description": "Marks the filing as reviewed. PayrollRunApprovedGuard denies the transition unless the referenced PayrollRun's status is approved, posted or paid — an HR admin may still prepare a concept filing while the run is in review, but cannot progress it further until the run is approved."
+                "description": "Marks the filing as reviewed. PayrollRunApprovedGuard denies the transition unless the referenced PayrollRun's status is approved, posted or paid: an HR admin may still prepare a concept filing while the run is in review, but cannot progress it further until the run is approved."
               },
               "bevestigen": {
                 "from": [
@@ -5785,7 +5785,7 @@
             "type": "string",
             "format": "date",
             "title": "Deadline",
-            "description": "The fund's own deadline for this filing. Enter it yourself — unlike the tax filing, there is no single formula across funds.",
+            "description": "The fund's own deadline for this filing. Enter it yourself: unlike the tax filing, there is no single formula across funds.",
             "x-notes": "The fund's aanleverschema/uitvoeringsreglement deadline for this delivery. Authoritative input — unlike the loonaangifte, there is no single statutory derivation formula across funds, so this is not derived."
           },
           "status": {
@@ -5828,7 +5828,7 @@
             "type": "string",
             "nullable": true,
             "title": "Response message",
-            "description": "What the fund wrote back — a confirmation, or the reason for rejection.",
+            "description": "What the fund wrote back: a confirmation, or the reason for rejection.",
             "x-notes": "Free-text response message from the fund/APG (acceptance note or rejection reason)."
           },
           "submittedDate": {
@@ -5860,7 +5860,7 @@
         "icon": "ClipboardAccountOutline",
         "version": "0.2.0",
         "title": "Performance Review",
-        "description": "A single employee's beoordelingsdossier for one review cycle: rating, sterktes/ontwikkelpunten/afspraken and goals, on a concept -> ingediend -> besproken -> vastgesteld lifecycle with a heropenen correction edge. Under BW 7:669 lid 3 sub d a documented, vastgestelde beoordeling with a rating and concrete afspraken is the precondition for any underperformance dismissal -- this object is that dossier. Goals are recorded INSIDE the review (no separate Goal entity, design D2): they freeze with the dossier under one lifecycle, one audit trail and one retention context.",
+        "description": "A single employee's beoordelingsdossier for one review cycle: rating, sterktes/ontwikkelpunten/afspraken and goals, on a concept -> ingediend -> besproken -> vastgesteld lifecycle with a heropenen correction edge. Under BW 7:669 lid 3 sub d a documented, vastgestelde beoordeling with a rating and concrete afspraken is the precondition for any underperformance dismissal. This object is that dossier. Goals are recorded INSIDE the review (no separate Goal entity, design D2): they freeze with the dossier under one lifecycle, one audit trail and one retention context.",
         "type": "object",
         "x-schema-org": "schema:Review",
         "required": [
@@ -5894,7 +5894,7 @@
                 ],
                 "to": "vastgesteld",
                 "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
-                "description": "The beoordeling is vastgesteld. NoSelfApprovalGuard denies the transition when the acting user equals employeeId -- the employee under review may not vaststellen their own beoordeling. vastgesteldDoor is stamped on the carrying write."
+                "description": "The beoordeling is vastgesteld. NoSelfApprovalGuard denies the transition when the acting user equals employeeId: the employee under review may not vaststellen their own beoordeling. VastgesteldDoor is stamped on the carrying write."
               },
               "heropenen": {
                 "from": [
@@ -5912,7 +5912,7 @@
             "format": "uuid",
             "$ref": "Employee",
             "title": "Employee",
-            "description": "The employee under review. Drives the self-approval guard on vaststellen -- the acting user may not equal this employee."
+            "description": "The employee under review. Drives the self-approval guard on vaststellen: the acting user may not equal this employee."
           },
           "cycleId": {
             "type": "string",
@@ -6075,7 +6075,7 @@
         "icon": "TextRecognition",
         "version": "0.1.0",
         "title": "Receipt extraction",
-        "description": "The humaniq-side record of one receipt-OCR extraction attempt against an Expense (receipt-ocr, REQ-RCPT-001): the raw extracted values and confidence docudesk's FinancialExtractionService returned, and which Expense fields this attempt actually wrote (appliedFields) -- the provenance trail a reviewer reads to see a value was machine-suggested rather than hand-entered. humaniq performs no OCR/extraction of its own; docudesk owns that surface entirely.",
+        "description": "The humaniq-side record of one receipt-OCR extraction attempt against an Expense (receipt-ocr): the raw extracted values and confidence docudesk's FinancialExtractionService returned, and which Expense fields this attempt actually wrote (appliedFields). It is the provenance trail a reviewer reads to see that a value was machine-suggested rather than hand-entered. humaniq performs no OCR or extraction of its own; docudesk owns that surface entirely.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "required": [
@@ -6211,7 +6211,7 @@
                   "open"
                 ],
                 "to": "gesloten",
-                "description": "Close the cycle. A closed cycle is history and is not reopened (the Vacancy no-resurrection precedent) -- a correction means starting a new cycle."
+                "description": "Close the cycle. A closed cycle is history and is not reopened (the Vacancy no-resurrection precedent): a correction means starting a new cycle."
               }
             }
           }
@@ -6287,7 +6287,7 @@
         "icon": "CalendarMonthOutline",
         "version": "0.1.0",
         "title": "Roster",
-        "description": "The publishable header for one planning period + scope: the unit of publication for a set of RosterAssignments. Publishing (status concept -> gepubliceerd) freezes the plan and makes it the team's roster; intrekken returns it to concept for edits, with the change visible in the audit trail. A Roster carries no hours of its own — it groups its RosterAssignments (rostering MVP, design D1/D3).",
+        "description": "The publishable header for one planning period + scope: the unit of publication for a set of RosterAssignments. Publishing (status concept -> gepubliceerd) freezes the plan and makes it the team's roster; intrekken returns it to concept for edits, with the change visible in the audit trail. A Roster carries no hours of its own: it groups its RosterAssignments (rostering MVP, design D1/D3).",
         "type": "object",
         "required": [
           "period",
@@ -6360,7 +6360,7 @@
         "icon": "AccountClockOutline",
         "version": "0.1.0",
         "title": "Roster assignment",
-        "description": "One employee on one shift on one date within a Roster. Carries the projected planned-clock fields plannedStart/plannedEnd/plannedBreakMinutes, composed from the assignment's date and the referenced Shift's startTime/endTime/breakMinutes at write time (never a live Shift join — design D2), so the Arbeidstijdenwet cross-check (NlRosterChecks) is decidable from the assignment alone, exactly as AttendanceRecord's raw clockIn/clockOut/breakMinutes decide the realised-day checks. A published plan stays stable against a later Shift edit: the projected fields are re-derived only when the assignment itself is re-written. No approval status of its own — the plan's only lifecycle lives on the Roster header.",
+        "description": "One employee on one shift on one date within a Roster. Carries the projected planned-clock fields plannedStart/plannedEnd/plannedBreakMinutes, composed from the assignment's date and the referenced Shift's startTime/endTime/breakMinutes at write time (never a live Shift join: design D2), so the Arbeidstijdenwet cross-check (NlRosterChecks) is decidable from the assignment alone, exactly as AttendanceRecord's raw clockIn/clockOut/breakMinutes decide the realised-day checks. A published plan stays stable against a later Shift edit: the projected fields are re-derived only when the assignment itself is re-written. No approval status of its own. The plan's only lifecycle lives on the Roster header.",
         "type": "object",
         "required": [
           "rosterId",
@@ -6458,7 +6458,7 @@
           "title": {
             "type": "string",
             "title": "Title",
-            "description": "The band's name, for example 'Schaal A — Junior'.",
+            "description": "The band's name, for example 'Schaal A: Junior'.",
             "x-notes": "Human-readable name of the band (e.g. \"Schaal A — Junior\")."
           },
           "grade": {
@@ -6526,7 +6526,7 @@
         "icon": "TimelineClockOutline",
         "version": "0.1.0",
         "title": "Shift",
-        "description": "A reusable shift definition (klok-vorm template): a name, wall-clock startTime/endTime, a break duration and an optional org-unit scope. Shifts are authored once and reused across many RosterAssignments — the schema carries no dated instance data of its own. A shift whose endTime is not after its startTime denotes a night shift crossing midnight (the AttendanceRecord night-shift convention): an assignment referencing it composes a plannedEnd on the following calendar day (rostering MVP, design D1/D2).",
+        "description": "A reusable shift definition (klok-vorm template): a name, wall-clock startTime/endTime, a break duration and an optional org-unit scope. Shifts are authored once and reused across many RosterAssignments: the schema carries no dated instance data of its own. A shift whose endTime is not after its startTime denotes a night shift crossing midnight (the AttendanceRecord night-shift convention): an assignment referencing it composes a plannedEnd on the following calendar day (rostering MVP, design D1/D2).",
         "type": "object",
         "required": [
           "name",
@@ -6582,7 +6582,7 @@
         "icon": "EmoticonSickOutline",
         "version": "0.4.0",
         "title": "Sick leave case",
-        "description": "An administrative sickness case (ziekmelding) tracking the Wet verbetering poortwachter (WVP) re-integration process and statutory loondoorbetaling — NEVER medical data. Per the AVG and the Autoriteit Persoonsgegevens beleidsregels \"De zieke werknemer\", an employer may record that and how long an employee is sick and the re-integration process facts, but never the nature or cause of the illness: this schema declares no diagnosis, symptom, cause, or medical-note field of any kind (leave-verzuim-mvp REQ-VWP-002). The gemeld<->hersteld lifecycle is fully declarative per ADR-031; a relapse within 4 weeks of recovery reopens the same case rather than starting a new one (samengesteld ziektegeval, BW 7:629 lid 10). The four WVP milestone Due dates (probleemanalyse week 6, plan van aanpak week 8, UWV 42-wekenmelding week 42, eerstejaarsevaluatie week 52) are derived from firstSickDay but stored, not computed on the fly — the loonaangifte-filing-lifecycle deadline precedent — so the dossier shows the clock actually worked against and a UWV-granted deferral stays editable; derivation correctness is enforced by the nl-wvp-milestone-derivation rule check (lib/Standards/rules/labour.json), not recomputed away.",
+        "description": "An administrative sickness case (ziekmelding) tracking the Wet verbetering poortwachter (WVP) re-integration process and statutory loondoorbetaling. It never holds medical data. Per the AVG and the Autoriteit Persoonsgegevens beleidsregels \"De zieke werknemer\", an employer may record that an employee is sick, how long, and the re-integration process facts, but never the nature or cause of the illness: this schema declares no diagnosis, symptom, cause, or medical-note field of any kind (leave-verzuim-mvp). The gemeld<->hersteld lifecycle is fully declarative; a relapse within 4 weeks of recovery reopens the same case rather than starting a new one (samengesteld ziektegeval, BW 7:629 lid 10). The four WVP milestone due dates (probleemanalyse week 6, plan van aanpak week 8, UWV 42-wekenmelding week 42, eerstejaarsevaluatie week 52) are derived from firstSickDay but stored rather than computed on the fly, following the loonaangifte-filing-lifecycle deadline precedent, so the dossier shows the clock actually worked against and a UWV-granted deferral stays editable. Derivation correctness is enforced by the nl-wvp-milestone-derivation rule check (lib/Standards/rules/labour.json), not recomputed away.",
         "type": "object",
         "required": [
           "employeeId",
@@ -6625,7 +6625,7 @@
             "type": "string",
             "format": "date",
             "title": "First sick day",
-            "description": "The first day of this sickness period (dag 1 ziek) — the anchor date every WVP milestone Due date is derived from (+6/8/42/52 weeks)."
+            "description": "The first day of this sickness period (dag 1 ziek): the anchor date every WVP milestone Due date is derived from (+6/8/42/52 weeks)."
           },
           "recoveredDate": {
             "type": "string",
@@ -6714,7 +6714,7 @@
             "format": "date",
             "nullable": true,
             "title": "UWV 42-week notification done",
-            "description": "When the 42-week notification was filed with the UWV. Recorded here only — this app does not send it.",
+            "description": "When the 42-week notification was filed with the UWV. Recorded here only: this app does not send it.",
             "x-notes": "Date the 42-wekenmelding was actually filed with UWV. Recorded here only — this app does not transmit it (no UWV wire integration)."
           },
           "eerstejaarsevaluatieDue": {
@@ -6756,7 +6756,7 @@
                   "minimum": 0,
                   "maximum": 100,
                   "title": "Absence percentage",
-                  "description": "How much of the contracted hours the employee is absent from that date on. 100 means not working at all, 40 means working 60% of the hours. Entering 0 records a full return to work, but it does not close the case — the recovery date does that.",
+                  "description": "How much of the contracted hours the employee is absent from that date on. 100 means not working at all, 40 means working 60% of the hours. Entering 0 records a full return to work, but it does not close the case: the recovery date does that.",
                   "x-notes": "Percentage of contracted hours the employee is absent from effectiveFrom onward. 100 = not working at all, 40 = working 60% of contracted hours. 0 records a full resumption, but it is NOT what closes the case: recoveredDate and the gemeld/hersteld lifecycle stay the single authority on that, and the calculation clips at recoveredDate regardless of what this array says."
                 }
               }
@@ -6786,7 +6786,7 @@
         "icon": "SchoolOutline",
         "version": "0.1.0",
         "title": "Intern",
-        "description": "A person on a stageovereenkomst (HBO/WO/MBO-BOL, zonder dienstverband), tracked by humaniq but explicitly NOT an Employee, NOT payroll-engine input, and NOT CAO-scoped (stagiair-bbl-admin design.md D1). A stagiair has no arbeidsovereenkomst and, in the ordinary case, no loonheffing on the stagevergoeding, so it is modelled structurally separate from Employee/EmploymentContract: no payroll schema (PayrollRun, Payslip, PayrollMutationReport) references Stagiair and PayrollCalculator never reads it, so a stagiair can never reach the loon path by accident. A BBL-leerling is NOT a Stagiair -- it has a real leerarbeidsovereenkomst and is an EmploymentContract with type: bbl (design.md D1). Governed by a plain three-transition declarative x-openregister-lifecycle (aangemeld -> lopend -> afgerond/gestopt), no guard needed.",
+        "description": "A person on a stageovereenkomst (HBO/WO/MBO-BOL, zonder dienstverband), tracked by humaniq but explicitly NOT an Employee, NOT payroll-engine input, and NOT CAO-scoped (stagiair-bbl-admin design.md D1). A stagiair has no arbeidsovereenkomst and, in the ordinary case, no loonheffing on the stagevergoeding, so it is modelled structurally separate from Employee/EmploymentContract: no payroll schema (PayrollRun, Payslip, PayrollMutationReport) references Stagiair and PayrollCalculator never reads it, so a stagiair can never reach the loon path by accident. A BBL-leerling is NOT a Stagiair: it has a real leerarbeidsovereenkomst and is an EmploymentContract with type: bbl (design.md D1). Governed by a plain three-transition declarative x-openregister-lifecycle (aangemeld -> lopend -> afgerond/gestopt), no guard needed.",
         "type": "object",
         "x-schema-org": "schema:Person",
         "required": [
@@ -6859,7 +6859,7 @@
           "stagetype": {
             "type": "string",
             "title": "Placement type",
-            "description": "The kind of placement. For information only — it has no effect on pay or compliance.",
+            "description": "The kind of placement. For information only: it has no effect on pay or compliance.",
             "x-notes": "Kind of stage. 'snuffelstage' (orientation), 'meeloopstage' (work-shadowing), or 'afstudeerstage' (graduation placement). Informational; carries no payroll or compliance meaning.",
             "x-enum-labels": {
               "snuffelstage": "Orientation placement",
@@ -7191,14 +7191,14 @@
             "type": "string",
             "nullable": true,
             "title": "Project",
-            "description": "The project all hours this period were worked on — filled in only when every booking names the same project.",
+            "description": "The project all hours this period were worked on: filled in only when every booking names the same project.",
             "x-notes": "Denormalized aggregate for the approved-time-entry event contract (REQ-TEC-003): the single shared value when all entries agree, else null (emitted as ''). Plain string, not a $ref — no Project schema in humaniq (ADR-062 rule 7). Server-recomputed; client input inert."
           },
           "costCenter": {
             "type": "string",
             "nullable": true,
             "title": "Cost centre",
-            "description": "The cost centre all hours this period count against — filled in only when every booking shares one.",
+            "description": "The cost centre all hours this period count against: filled in only when every booking shares one.",
             "x-notes": "Denormalized aggregate for the event contract, same homogeneous-or-null rule as projectId. Per-booking truth lives on TimeEntry.costCenter (derived from the org structure). Plain string, not a $ref — no CostCenter schema in humaniq."
           },
           "billable": {
@@ -7228,7 +7228,7 @@
             "type": "string",
             "nullable": true,
             "title": "Manager",
-            "description": "The team manager who reviews this timesheet — kept up to date automatically from the organisation structure.",
+            "description": "The team manager who reviews this timesheet: kept up to date automatically from the organisation structure.",
             "x-notes": "Denormalized Nextcloud user id cache (mss-team-scope) — plain string, never a $ref. Assignment truth lives ONLY on the org structure (active OrgAssignment -> OrgUnit.managerId -> manager Employee's nextcloudUserId); this cache exists solely because the manifest filter grammar cannot join across schemas for the TeamUrengoedkeuring @me filter. Stamped by TimesheetProcessStampListener via the shared OrgResolutionService — the same code path the nl-mss-manager-consistency audit evaluates, so stamp and audit cannot disagree. Client input is inert."
           },
           "status": {
@@ -7315,14 +7315,14 @@
                   "concept"
                 ],
                 "to": "gepubliceerd",
-                "description": "The vacancy is published (inside humaniq only — no external channel wiring in the MVP). publishedDate is stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern)."
+                "description": "The vacancy is published (inside humaniq only: no external channel wiring in the MVP). PublishedDate is stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern)."
               },
               "sluiten": {
                 "from": [
                   "gepubliceerd"
                 ],
                 "to": "gesloten",
-                "description": "The vacancy is closed. Terminal — no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected."
+                "description": "The vacancy is closed. Terminal: no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected."
               }
             }
           }
@@ -7377,7 +7377,7 @@
             "format": "date",
             "nullable": true,
             "title": "Closing date",
-            "description": "The application deadline. For information only — it does not close the vacancy by itself.",
+            "description": "The application deadline. For information only: it does not close the vacancy by itself.",
             "x-notes": "Application deadline. Informational only in the MVP — it does not drive the sluiten transition."
           },
           "administrationId": {
@@ -7394,7 +7394,7 @@
         "icon": "CalculatorVariantOutline",
         "version": "0.1.0",
         "title": "WKR Assessment",
-        "description": "The per-(administrationId, year) computed vrije-ruimte/eindheffing summary AND the reporting record (wkr-administration, the PayrollMutationReport precedent): produced ONLY by WkrService::assess(), rolling the cross-object fiscale loonsom (Σ Payslip.grossPay) and the administration's WkrDeclarations into the available vrije ruimte, the used amount, the excess and the 80% eindheffing exposure. Idempotently keyed on (administrationId, year): recomputing upserts this record in place, never duplicates. Persisting the assessment as a real object (rather than a transient calculation) is what makes nl-wkr-eindheffing-exposure RuleEngine-reachable -- the standing audit loads every WkrAssessment and checks it automatically.",
+        "description": "The per-(administrationId, year) computed vrije-ruimte/eindheffing summary AND the reporting record (wkr-administration, the PayrollMutationReport precedent): produced ONLY by WkrService::assess(), rolling the cross-object fiscale loonsom (Σ Payslip.grossPay) and the administration's WkrDeclarations into the available vrije ruimte, the used amount, the excess and the 80% eindheffing exposure. Idempotently keyed on (administrationId, year): recomputing upserts this record in place, never duplicates. Persisting the assessment as a real object (rather than a transient calculation) is what makes nl-wkr-eindheffing-exposure RuleEngine-reachable: the standing audit loads every WkrAssessment and checks it automatically.",
         "type": "object",
         "required": [
           "administrationId",
@@ -7450,7 +7450,7 @@
             "title": "Final levy rate",
             "type": "number",
             "nullable": true,
-            "description": "The final levy rate applied to the excess — 80. Empty when there is no excess.",
+            "description": "The final levy rate applied to the excess: 80. Empty when there is no excess.",
             "x-notes": "The eindheffing rate (80, from the `wkr` table group) applied to the excess; null when excess is 0 (nl-wkr-eindheffing-exposure)."
           },
           "eindheffingDue": {
@@ -7511,7 +7511,7 @@
           "year": {
             "title": "Year",
             "type": "integer",
-            "description": "The tax year this counts towards — the work-related costs budget is a whole-year budget.",
+            "description": "The tax year this counts towards: the work-related costs budget is a whole-year budget.",
             "x-notes": "Fiscal year this declaration counts toward -- the vrije ruimte is a whole-year budget (wkr-administration REQ-WKR-001)."
           },
           "date": {
@@ -7570,7 +7570,7 @@
         "icon": "ScaleBalance",
         "version": "0.1.0",
         "title": "WNT disclosure",
-        "description": "The annual WNT-verantwoording for one topfunctionaris for one calendar year (Wet normering topinkomens, BWBR0032249). One row per (topfunctionaris, year) carrying the hand-entered total WNT-bezoldiging for that year and a two-state concept -> gepubliceerd publication lifecycle. The set of a year's WntDisclosure rows IS that year's WNT-verantwoording -- there is no separate aggregate report schema (wnt-disclosure design.md D2). totalCompensation is hand-entered by finance; this app computes and aggregates nothing (design.md D3).",
+        "description": "The annual WNT-verantwoording for one topfunctionaris for one calendar year (Wet normering topinkomens, BWBR0032249). One row per (topfunctionaris, year) carrying the hand-entered total WNT-bezoldiging for that year and a two-state concept -> gepubliceerd publication lifecycle. The set of a year's WntDisclosure rows IS that year's WNT-verantwoording: there is no separate aggregate report schema (wnt-disclosure design.md D2). TotalCompensation is hand-entered by finance; this app computes and aggregates nothing (design.md D3).",
         "type": "object",
         "x-schema-org": "schema:Report",
         "required": [
@@ -7590,7 +7590,7 @@
                   "concept"
                 ],
                 "to": "gepubliceerd",
-                "description": "Publishes the disclosure as part of the year's WNT-verantwoording. No guard -- publication is a plain per-row status transition (wnt-disclosure design.md D2)."
+                "description": "Publishes the disclosure as part of the year's WNT-verantwoording. No guard: publication is a plain per-row status transition (wnt-disclosure design.md D2)."
               }
             }
           }

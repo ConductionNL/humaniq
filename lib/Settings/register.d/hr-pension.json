@@ -7,7 +7,7 @@
                 "icon": "PiggyBankOutline",
                 "version": "0.2.0",
                 "title": "Pension filing",
-                "description": "A UPA (Uniforme Pensioenaangifte) delivery to one sector pension fund for one wage period, reporting an approved PayrollRun (pension-filing-upa-mvp). The APG-administered funds are gated on the referenced payroll run being approved before the filing can progress past review — the verified Loket.nl/APG gating rule — via a declarative create->review->confirm->send lifecycle (concept -> gecontroleerd -> bevestigd -> verzonden) mirroring the loonaangifte filing flow.",
+                "description": "A UPA (Uniforme Pensioenaangifte) delivery to one sector pension fund for one wage period, reporting an approved PayrollRun (pension-filing-upa-mvp). The APG-administered funds are gated on the referenced payroll run being approved before the filing can progress past review: the verified Loket.nl/APG gating rule. Via a declarative create->review->confirm->send lifecycle (concept -> gecontroleerd -> bevestigd -> verzonden) mirroring the loonaangifte filing flow.",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [
@@ -29,7 +29,7 @@
                                 ],
                                 "to": "gecontroleerd",
                                 "requires": "OCA\\Humaniq\\Lifecycle\\PayrollRunApprovedGuard",
-                                "description": "Marks the filing as reviewed. PayrollRunApprovedGuard denies the transition unless the referenced PayrollRun's status is approved, posted or paid — an HR admin may still prepare a concept filing while the run is in review, but cannot progress it further until the run is approved."
+                                "description": "Marks the filing as reviewed. PayrollRunApprovedGuard denies the transition unless the referenced PayrollRun's status is approved, posted or paid: an HR admin may still prepare a concept filing while the run is in review, but cannot progress it further until the run is approved."
                             },
                             "bevestigen": {
                                 "from": [
@@ -100,7 +100,7 @@
                         "type": "string",
                         "format": "date",
                         "title": "Deadline",
-                        "description": "The fund's own deadline for this filing. Enter it yourself — unlike the tax filing, there is no single formula across funds.", "x-notes": "The fund's aanleverschema/uitvoeringsreglement deadline for this delivery. Authoritative input — unlike the loonaangifte, there is no single statutory derivation formula across funds, so this is not derived."
+                        "description": "The fund's own deadline for this filing. Enter it yourself: unlike the tax filing, there is no single formula across funds.", "x-notes": "The fund's aanleverschema/uitvoeringsreglement deadline for this delivery. Authoritative input — unlike the loonaangifte, there is no single statutory derivation formula across funds, so this is not derived."
                     },
                     "status": {
                         "type": "string",
@@ -131,7 +131,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Response message",
-                        "description": "What the fund wrote back — a confirmation, or the reason for rejection.", "x-notes": "Free-text response message from the fund/APG (acceptance note or rejection reason)."
+                        "description": "What the fund wrote back: a confirmation, or the reason for rejection.", "x-notes": "Free-text response message from the fund/APG (acceptance note or rejection reason)."
                     },
                     "submittedDate": {
                         "type": "string",

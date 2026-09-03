@@ -27,14 +27,14 @@
                                     "concept"
                                 ],
                                 "to": "gepubliceerd",
-                                "description": "The vacancy is published (inside humaniq only — no external channel wiring in the MVP). publishedDate is stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern)."
+                                "description": "The vacancy is published (inside humaniq only: no external channel wiring in the MVP). PublishedDate is stamped on the carrying write (the Timesheet approvedAt/approvedBy pattern)."
                             },
                             "sluiten": {
                                 "from": [
                                     "gepubliceerd"
                                 ],
                                 "to": "gesloten",
-                                "description": "The vacancy is closed. Terminal — no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected."
+                                "description": "The vacancy is closed. Terminal: no re-open and no publish-from-closed edge; a closed vacancy is re-created, not resurrected."
                             }
                         }
                     }
@@ -81,7 +81,7 @@
                         "format": "date",
                         "nullable": true,
                         "title": "Closing date",
-                        "description": "The application deadline. For information only — it does not close the vacancy by itself.", "x-notes": "Application deadline. Informational only in the MVP — it does not drive the sluiten transition."
+                        "description": "The application deadline. For information only: it does not close the vacancy by itself.", "x-notes": "Application deadline. Informational only in the MVP — it does not drive the sluiten transition."
                     },
                     "administrationId": {
                         "type": "string",
@@ -96,7 +96,7 @@
                 "icon": "FileAccountOutline",
                 "version": "0.3.0",
                 "title": "Application",
-                "description": "A candidate's application (sollicitatie) against a Vacancy. Candidate PII (name/email/phone/CV/motivation) lives DIRECTLY on this object — there is deliberately no separate Candidate entity in the MVP (AVG data-minimisation, design D2): one object carries one retention clock (retentionExpiryDate) and one deletion (deleting the Application deletes the candidate's data atomically). The declarative pipeline lifecycle runs nieuw -> screening -> gesprek -> aanbod -> aangenomen, with afwijzen reachable from every active stage. Rejecting an application stamps rejectedDate and derives retentionExpiryDate per the Autoriteit Persoonsgegevens sollicitatie-richtlijn (4 weeks, or 1 year with explicit talentPoolOptIn consent) — enforced by the nl-ats-retentie-derivatie and nl-ats-retentie-verlopen checks (lib/Standards/Checks/NlAtsChecks.php, lib/Standards/rules/privacy.json). aannemen documents a MANUAL onboarding hand-off (creating the Employee from this data is a manual follow-up action in the MVP — no cross-object write hook).",
+                "description": "A candidate's application (sollicitatie) against a Vacancy. Candidate PII (name/email/phone/CV/motivation) lives DIRECTLY on this object: there is deliberately no separate Candidate entity in the MVP (AVG data-minimisation, design D2): one object carries one retention clock (retentionExpiryDate) and one deletion (deleting the Application deletes the candidate's data atomically). The declarative pipeline lifecycle runs nieuw -> screening -> gesprek -> aanbod -> aangenomen, with afwijzen reachable from every active stage. Rejecting an application stamps rejectedDate and derives retentionExpiryDate per the Autoriteit Persoonsgegevens sollicitatie-richtlijn (4 weeks, or 1 year with explicit talentPoolOptIn consent). Enforced by the nl-ats-retentie-derivatie and nl-ats-retentie-verlopen checks (lib/Standards/Checks/NlAtsChecks.php, lib/Standards/rules/privacy.json). Aannemen documents a MANUAL onboarding hand-off (creating the Employee from this data is a manual follow-up action in the MVP. No cross-object write hook).",
                 "type": "object",
                 "x-schema-org": "schema:JobApplication",
                 "required": [
@@ -140,7 +140,7 @@
                                     "aanbod"
                                 ],
                                 "to": "aangenomen",
-                                "description": "The candidate is hired. Terminal. Onboarding hand-off is a MANUAL follow-up action in the MVP — HR creates the Employee/Onboarding case by hand from this application's data (the same deferral class as leave-balance auto-posting); no cross-object write hook fires here."
+                                "description": "The candidate is hired. Terminal. Onboarding hand-off is a MANUAL follow-up action in the MVP: HR creates the Employee/Onboarding case by hand from this application's data (the same deferral class as leave-balance auto-posting); no cross-object write hook fires here."
                             },
                             "afwijzen": {
                                 "from": [
@@ -166,7 +166,7 @@
                     "candidateName": {
                         "type": "string",
                         "title": "Candidate name",
-                        "description": "The candidate's full name. Their personal data lives only on this record — deleting it deletes the data.", "x-notes": "Full name of the candidate. Candidate PII lives on this object only (design D2) — deleting the Application deletes this data."
+                        "description": "The candidate's full name. Their personal data lives only on this record: deleting it deletes the data.", "x-notes": "Full name of the candidate. Candidate PII lives on this object only (design D2) — deleting the Application deletes this data."
                     },
                     "email": {
                         "type": "string",
@@ -249,7 +249,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Offer signing status",
-                        "description": "Where signing the offer letter has got to. Separate from the application status — a signed offer does not move the pipeline on its own.", "x-notes": "offer-esign (0.3.0): the offer letter's e-signature lifecycle state. The first six values are verbatim docudesk SigningService::STATUS_TRANSITIONS states (PENDING/IN_PROGRESS/COMPLETED/DECLINED/CANCELLED/EXPIRED); skipped-no-docudesk and failed are this leaf's own duck-typed/failure outcomes. Null means no offer-esign attempt has been made yet. Orthogonal to Application.status -- observing COMPLETED here never advances the pipeline status (REQ-OFFR-006).",
+                        "description": "Where signing the offer letter has got to. Separate from the application status: a signed offer does not move the pipeline on its own.", "x-notes": "offer-esign (0.3.0): the offer letter's e-signature lifecycle state. The first six values are verbatim docudesk SigningService::STATUS_TRANSITIONS states (PENDING/IN_PROGRESS/COMPLETED/DECLINED/CANCELLED/EXPIRED); skipped-no-docudesk and failed are this leaf's own duck-typed/failure outcomes. Null means no offer-esign attempt has been made yet. Orthogonal to Application.status -- observing COMPLETED here never advances the pipeline status (REQ-OFFR-006).",
                         "x-enum-labels": {"PENDING": "Pending", "IN_PROGRESS": "In progress", "COMPLETED": "Completed", "DECLINED": "Declined", "CANCELLED": "Cancelled", "EXPIRED": "Expired", "skipped-no-docudesk": "Skipped (no document app)", "failed": "Failed"},
                         "enum": [
                             "PENDING",
@@ -292,14 +292,14 @@
                                     "scheduled"
                                 ],
                                 "to": "completed",
-                                "description": "The interview round has taken place. Terminal — the calendar event is kept as history and is no longer touched by the sync (design.md D4)."
+                                "description": "The interview round has taken place. Terminal: the calendar event is kept as history and is no longer touched by the sync (design.md D4)."
                             },
                             "annuleren": {
                                 "from": [
                                     "scheduled"
                                 ],
                                 "to": "cancelled",
-                                "description": "The interview round is cancelled. Terminal — the next sync removes the calendar event (design.md D4); the Interview object itself is retained, not deleted."
+                                "description": "The interview round is cancelled. Terminal: the next sync removes the calendar event (design.md D4); the Interview object itself is retained, not deleted."
                             }
                         }
                     }
@@ -364,7 +364,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Calendar event UID",
-                        "description": "Links this interview to its calendar item. Managed automatically — do not edit.", "x-notes": "System-managed, never user-editable. Set by InterviewCalendarService on first successful sync (deterministic value hrmq-interview-{uuid}) and used on every later sync to look up and diff the existing calendar event, so a no-op resync writes nothing (design.md D3). Null means this Interview has never reached the calendar."
+                        "description": "Links this interview to its calendar item. Managed automatically: do not edit.", "x-notes": "System-managed, never user-editable. Set by InterviewCalendarService on first successful sync (deterministic value hrmq-interview-{uuid}) and used on every later sync to look up and diff the existing calendar event, so a no-op resync writes nothing (design.md D3). Null means this Interview has never reached the calendar."
                     }
                 }
             }
