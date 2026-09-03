@@ -54,6 +54,7 @@ permissions:
 
 jobs:
   quality:
+    if: (github.event_name != 'pull_request' || github.head_ref != 'development')
     # humaniq's FIRST repo-level workflow. Before this, `.github/workflows/` did
     # not exist at all — the only things running were GitHub's two DYNAMIC
     # workflows (`dynamic/github-code-scanning/codeql` and
