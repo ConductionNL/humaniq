@@ -1879,7 +1879,9 @@ OC.L10N.register(
         "this year": "this year",
         "to reimburse": "to reimburse",
         "total garnishment": "total garnishment",
-        "vs. prior period": "vs. prior period"
+        "vs. prior period": "vs. prior period",
+        "Documentation": "Documentation",
+        "Features & roadmap": "Features & roadmap"
     },
     "nplurals=2; plural=(n != 1);"
 )

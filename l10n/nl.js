@@ -1,8 +1,6 @@
 OC.L10N.register(
     "humaniq",
     {
-        "Features & roadmap": "Functies en roadmap",
-        "Documentation": "Documentatie",
         "(Re)calculate": "(Her)berekenen",
         "(Re)calculating the payroll run failed.": "(Her)berekenen van de loonrun is mislukt.",
         "30%-ruling applied rate": "Toegepast 30%-percentage",
@@ -1881,7 +1879,9 @@ OC.L10N.register(
         "this year": "dit jaar",
         "to reimburse": "uit te betalen",
         "total garnishment": "totaal beslag",
-        "vs. prior period": "t.o.v. vorige periode"
+        "vs. prior period": "t.o.v. vorige periode",
+        "Documentation": "Documentatie",
+        "Features & roadmap": "Functies en roadmap"
     },
     "nplurals=2; plural=(n != 1);"
 )
