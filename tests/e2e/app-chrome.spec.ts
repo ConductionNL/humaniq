@@ -77,9 +77,7 @@ test.describe("app chrome (ADR-114)", () => {
 			.map((t) => t.trim())
 			.filter(Boolean);
 
-		const seen = texts.filter((t) =>
-			/Documentation|Store|Reports|roadmap/i.test(t),
-		);
+		const seen = texts.filter((t) => /Documentation|Store|Reports|roadmap/i.test(t));
 		expect(seen.length).toBe(4);
 		expect(seen[0]).toMatch(/Documentation/i);
 		expect(seen[1]).toMatch(/Store/i);

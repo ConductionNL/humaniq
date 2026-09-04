@@ -1,5 +1,9 @@
 [
 	{
+		"id": "Store",
+		"route": "/store"
+	},
+	{
 		"id": "Dashboard",
 		"route": "/dashboard"
 	},
