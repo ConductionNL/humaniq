@@ -36,6 +36,7 @@ use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
+use OCA\Humaniq\Listener\LeaveApprovalListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
@@ -361,6 +362,27 @@ class Application extends App implements IBootstrap {
 			schemas: [TimeEntryEventService::TIMESHEET_SLUG]
 		);
 
+		$this->registerHoursListeners($dispatcher);
+
+		$this->registerLeaveListeners($dispatcher);
+
+	}//end boot()
+
+	/**
+	 * Register the hours-process listeners (hours-process-redesign).
+	 *
+	 * Decisions 5, 4 and 3 in one place: pre-save stamping and the mutability
+	 * guard for TimeEntry writes, pre-save process-field inertness and
+	 * lifecycle-edge stamping for Timesheet writes, and the post-save aggregate
+	 * recompute of the parent Timesheet.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude composition root — registers three listeners each citing its own decision in the adjacent comment
+	 */
+	private function registerHoursListeners(IEventDispatcher $dispatcher): void {
 		// hours-process-redesign Decision 5 + 3: pre-save stamping + mutability
 		// guard for TimeEntry writes (employeeId/userId/administrationId/
 		// costCenter stamps, hours derivation, timesheet find-or-create, and
@@ -404,6 +426,42 @@ class Application extends App implements IBootstrap {
 			);
 		}
 
-	}//end boot()
+	}//end registerHoursListeners()
+
+
+	/**
+	 * Register the leave-balance projection listeners.
+	 *
+	 * leave-approval-posts-to-the-balance: post-save recompute of
+	 * `LeaveBalance.usedHours` from the approved LeaveRequests behind it. Before
+	 * this, usedHours had no writer at all. LeaveAccrualJob seeds it to 0.0 on
+	 * create and LeaveBuySellSettlementService writes only bovenwettelijkHours,
+	 * so the calculated `remainingHours` reported the full entitlement forever
+	 * and three labour rule checks could never fire (REQ-LEAVE-POST-001).
+	 *
+	 * Registered on EVERY leaverequest create and update rather than the
+	 * approval edge alone: the projection is a recompute, so leaving `approved`
+	 * has to restate the balance just as entering it does. Reacts only to
+	 * leaverequest events and writes only LeaveBalance objects, so there is no
+	 * cycle.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/leave-approval-posts-to-the-balance/specs/leave-management/spec.md#REQ-LEAVE-POST-001
+	 */
+	private function registerLeaveListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: LeaveApprovalListener::class,
+				registers: null,
+				schemas: [LeaveApprovalListener::LEAVEREQUEST_SLUG]
+			);
+		}
+
+	}//end registerLeaveListeners()
 
 }//end class
