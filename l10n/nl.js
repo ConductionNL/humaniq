@@ -1914,7 +1914,9 @@ OC.L10N.register(
         "No review cycles yet": "Nog geen gesprekscycli",
         "Who is employed, and on what kind of contract.": "Wie er in dienst is, en op wat voor contract.",
         "What leave was asked for, what was granted, and who is off sick.": "Welk verlof is aangevraagd, wat is toegekend, en wie er ziek gemeld is.",
-        "Where review cycles stand, and how conversations landed.": "Waar de gesprekscycli staan, en hoe de gesprekken zijn uitgepakt."
+        "Where review cycles stand, and how conversations landed.": "Waar de gesprekscycli staan, en hoe de gesprekken zijn uitgepakt.",
+        "Store": "Store",
+        "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding.": "Installeer registers, schema's en flows die andere organisaties hebben gepubliceerd."
     },
     "nplurals=2; plural=(n != 1);"
 )
