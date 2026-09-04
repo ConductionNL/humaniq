@@ -1913,7 +1913,9 @@
         "No review cycles yet": "No review cycles yet",
         "Who is employed, and on what kind of contract.": "Who is employed, and on what kind of contract.",
         "What leave was asked for, what was granted, and who is off sick.": "What leave was asked for, what was granted, and who is off sick.",
-        "Where review cycles stand, and how conversations landed.": "Where review cycles stand, and how conversations landed."
+        "Where review cycles stand, and how conversations landed.": "Where review cycles stand, and how conversations landed.",
+        "Store": "Store",
+        "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding.": "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
