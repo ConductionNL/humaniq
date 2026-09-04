@@ -523,6 +523,14 @@
 		"order": 90
 	},
 	{
+		"id": "StoreMenu",
+		"label": "Store",
+		"icon": "StoreOutline",
+		"route": "Store",
+		"section": "footer",
+		"order": 92
+	},
+	{
 		"id": "ReportsMenu",
 		"label": "Reports",
 		"icon": "ChartBoxOutline",

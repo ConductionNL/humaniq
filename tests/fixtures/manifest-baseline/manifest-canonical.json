@@ -752,6 +752,14 @@
 			"section": "footer"
 		},
 		{
+			"icon": "StoreOutline",
+			"id": "StoreMenu",
+			"label": "Store",
+			"order": 92,
+			"route": "Store",
+			"section": "footer"
+		},
+		{
 			"icon": "ChartBoxOutline",
 			"id": "ReportsMenu",
 			"label": "Reports",
@@ -1218,6 +1226,18 @@
 		}
 	],
 	"pages": [
+		{
+			"_note": "ADR-114 Decision 4 / ADR-080. Declarative: openregister hosts the store plane, so this app writes NO store controller. With no registry configured the page renders the app's built-in items and makes NO network call.",
+			"config": {
+				"app": "humaniq",
+				"description": "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding.",
+				"title": "Store"
+			},
+			"id": "Store",
+			"route": "/store",
+			"title": "Store",
+			"type": "store"
+		},
 		{
 			"config": {
 				"_note": "humaniq-dashboard-steering-indicators replaces the prior 15-widget queue-depth Dashboard (12 stat tiles + 3 object-table lists) with 6 steering indicators. Billable ratio and Headcount & turnover bind via dataSource (raw GraphQL, no new backend endpoint, unguarded — the same exposure every Employees/Timesheets index page already has today); the filter/tenant-scoping token grammar (`@workspace.activeAdministrationId?`) does NOT apply to the raw-GraphQL dataSource form (`useDataSource.js`'s `queryAndVars` passes `graphql.query`/`graphql.variables` through unresolved — confirmed by reading the composable, both in the sibling source tree and the installed dist), so these two widgets are UNSCOPED across administrations rather than carrying the (broken, per brief §6) sentinel token — no worse than today's index-page exposure, but not literally what design.md D4 describes either. Both are also single-series, not the two-named-series design.md's D1 table describes: `useDataSource`'s raw-GraphQL `selectors` map performs one dot-path pluck per output key (`selectByPath` in `useGraphQL.js`) with no mechanism to assemble two differently-aliased root fields into one `[{name,data}]` series array — verified against the installed dist, not just the source tree. Absence rate / Payroll cost per period / Approval lead time bind via `endpointSource` to the new guarded `AnalyticsController::trends()` (REQ-DSI-004/006/007); Obligations binds via `endpointSource` to `AnalyticsController::obligations()` (REQ-DSI-008/009). All three trend `endpointSource` widgets go through the local `chart` widgetKey override (`registry.js` → `src/widgets/TrendChartWidget.vue`), which does its OWN null-safe series mapping rather than delegating to CnChartWidget's native `endpointSource` prop — that prop's own `Number(value) || 0` mapping (`CnChartWidget.vue`'s `endpointChartData`, confirmed in the installed dist) silently turns a `null` bucket into `0`, which is exactly the 'measurement that never ran reads as a good result' failure REQ-DSI-004's null-not-zero contract exists to prevent. The `chart` widgetKey is ALSO overridden for a second, independent reason: CnChartWidget (registered in the library's dashboard-widget catalog) was built to be embedded inside CnDashboardPage's own per-widget template, which supplies the title bar externally — it has no `title` prop and does not self-wrap in CnWidgetWrapper, and `CnWidgetGrid` (the only renderer humaniq's pages use, since every page has a `slot:\"body\"` widget) mounts it bare. `TrendChartWidget.vue` bridges both gaps — the SAME `effectiveRegistry`-wins-over-catalog mechanism `registry.js` already uses for `stat`, and the same bridge-a-mismatched-library-component pattern already used for `actions`/`lifecycle-actions`. The Obligations `object-table` widget uses CnWidgetObjectTable's REAL flat prop names directly (`endpointSource`/`columns`/`emptyText`, siblings of `title` under `props`) rather than nesting them under a `content` key the way the removed 'Aflopende contracten'/'Aflopende BHV-certificaten' widgets did — CnWidgetObjectTable declares no `content` prop (confirmed in both the source tree and the installed dist), so that nested shape would not have reached the component; a per-row route to each obligation's own detail page (SickLeaveCaseDetail/EmploymentContractDetail/BhvCertificeringDetail, varying by row TYPE) is not wired: CnWidgetObjectTable's `rowRoute` is a single STATIC route-name string for the whole table, not a per-row dynamic selector, so the endpoint's own per-row `route` field is carried in the response but not yet clickable from this widget.",
@@ -10533,6 +10553,14 @@
 		"user": {
 			"administrationMode": "standard"
 		}
+	},
+	"store": {
+		"_note": "Configuration exchange, not rows. A configuration set carries the registers, schemas, objects, views, flows, sources and mappings that make one way of working hold together. There is deliberately NO `installable` allowlist: a set exists to introduce schemas the instance does not have YET, so listing schemas this app already owns would refuse exactly the sets worth installing. The trust boundary for a bundle is its publisher, enforced by the engine's source allowlist and trusted-key check. ⚠️ An EMPTY `installable` means install NOTHING, not install anything — omitting the key and declaring an empty list are different things.",
+		"localRegister": "humaniq",
+		"types": [
+			"openregister.configset",
+			"openregister.flows"
+		]
 	},
 	"version": "1.0.0"
 }
