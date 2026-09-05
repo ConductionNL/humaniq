@@ -57,6 +57,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\TimeEntryHoursDeriver;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -67,6 +68,18 @@ use Psr\Log\LoggerInterface;
  * Pre-save mutability guard + stamping for TimeEntry writes.
  *
  * @implements IEventListener<Event>
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) 13, one over the threshold,
+ *  and the metric is right about the cause: this class does three jobs — the
+ *  mutability guard, the resolutions, and the stamping — and its collaborator
+ *  count is what that costs. It sat at exactly 12 before
+ *  `a-time-entry-can-be-booked-to-a-day` moved the hours derivation OUT of it
+ *  into {@see \OCA\Humaniq\Service\TimeEntryHoursDeriver}, which cut its
+ *  complexity from 56 to under the threshold and added the one edge that
+ *  crossed this one. Suppressed here rather than in `phpmd.baseline.xml` so
+ *  the reason travels with the class: splitting the three jobs is a real
+ *  refactor of a lifecycle-bearing listener and belongs in its own change,
+ *  not folded into one that adds a booking shape.
  *
  * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-humaniq-captures-time-entries-under-a-submit→approve-lifecycle-(REQ-TEC-001)
  */
@@ -93,12 +106,15 @@ class TimeEntryStampListener implements IEventListener {
 	 * @param IUserSession $userSession The user session (acting uid for self-service resolution).
 	 * @param InternalWriteMarker $marker The request-scoped internal-writer marker.
 	 * @param LoggerInterface $logger The logger.
+	 * @param TimeEntryHoursDeriver $hoursDeriver Decides the booking's day and hours,
+	 *  in either recorded shape.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly IUserSession $userSession,
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,
+		private readonly TimeEntryHoursDeriver $hoursDeriver,
 	) {
 
 	}//end __construct()
@@ -206,7 +222,7 @@ class TimeEntryStampListener implements IEventListener {
 		[$employeeId, $employee] = $this->resolveEmployee($incoming, $stored);
 
 		// 2. Hours derivation (Decision 5.5) — refuses impossible spans.
-		[$startedAt, $hours] = $this->deriveHours($incoming, $stored);
+		[$startedAt, $hours] = $this->hoursDeriver->derive(incoming: $incoming, stored: $stored);
 
 		// 3. Parent timesheet resolution + mutability guard (Decisions 5.6 + 3).
 		$timesheetId = $this->resolveTimesheet($incoming, $stored, $employeeId, $startedAt);
@@ -221,6 +237,11 @@ class TimeEntryStampListener implements IEventListener {
 			// The entry's own start date is the chain's reference date; null
 			// when it does not resolve to exactly one answer (never guessed).
 			'costCenter' => $this->gateway->uniqueCostCenterFor($employeeId, gmdate('Y-m-d', $startedAt)),
+			// Stamped rather than required, so a clocked entry written before
+			// `date` existed gains one on its next write instead of needing a
+			// data migration, and both shapes end up answering "which day?"
+			// the same way.
+			'date' => gmdate('Y-m-d', $startedAt),
 		];
 
 		if ($isCreate === true) {
@@ -267,46 +288,6 @@ class TimeEntryStampListener implements IEventListener {
 		return [$employeeId, $employee];
 	}//end resolveEmployee()
 
-	/**
-	 * Derive `hours` from the span, refusing impossible input (REQ-TEC-001).
-	 *
-	 * @param array<string, mixed> $incoming The incoming payload.
-	 * @param array<string, mixed>|null $stored The stored payload (update only).
-	 *
-	 * @return array{0: int, 1: float} The UTC start timestamp and the derived hours.
-	 *
-	 * @throws HoursWriteRefusedException When the span is impossible.
-	 *
-	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-humaniq-captures-time-entries-under-a-submit→approve-lifecycle-(REQ-TEC-001)
-	 */
-	private function deriveHours(array $incoming, ?array $stored): array {
-		// Plain strtotime: timestamps are timezone-agnostic, and the two
-		// derived date strings below are formatted with gmdate() — no
-		// DateTime machinery needed.
-		$start = strtotime((string)($incoming['startedAt'] ?? ($stored['startedAt'] ?? '')));
-		$end = strtotime((string)($incoming['endedAt'] ?? ($stored['endedAt'] ?? '')));
-		if ($start === false || $end === false) {
-			throw new HoursWriteRefusedException('De start- of eindtijd van de urenboeking is ongeldig.');
-		}
-
-		if ($end <= $start) {
-			throw new HoursWriteRefusedException('De eindtijd van een urenboeking moet na de starttijd liggen.');
-		}
-
-		$breakMinutes = $incoming['breakMinutes'] ?? ($stored['breakMinutes'] ?? 0);
-		if (is_numeric($breakMinutes) === false || (int)$breakMinutes < 0) {
-			throw new HoursWriteRefusedException('De pauze van een urenboeking moet nul minuten of meer zijn.');
-		}
-
-		$spanMinutes = ($end - $start) / 60;
-		if ((int)$breakMinutes >= $spanMinutes) {
-			throw new HoursWriteRefusedException('De pauze is even lang als of langer dan de geboekte tijd.');
-		}
-
-		$hours = round(($spanMinutes - (int)$breakMinutes) / 60, 2);
-
-		return [$start, $hours];
-	}//end deriveHours()
 
 	/**
 	 * Resolve the parent Timesheet (find-or-create on the month grain) and

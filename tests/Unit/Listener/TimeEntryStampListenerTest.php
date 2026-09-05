@@ -32,6 +32,7 @@ namespace OCA\Humaniq\Tests\Unit\Listener;
 
 use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\TimeEntryHoursDeriver;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\OrgResolutionService;
 use OCA\Humaniq\Service\SettingsService;
@@ -119,7 +120,8 @@ class TimeEntryStampListenerTest extends TestCase {
 			),
 			userSession: $session,
 			marker: $this->marker,
-			logger: new NullLogger()
+			logger: new NullLogger(),
+			hoursDeriver: new TimeEntryHoursDeriver()
 		);
 	}//end setUp()
 
@@ -226,6 +228,110 @@ class TimeEntryStampListenerTest extends TestCase {
 		$this->assertTrue($event->isPropagationStopped());
 		$this->assertStringContainsString('pauze', (string)$event->getErrors()['message']);
 	}//end testImpossibleSpansAreRefused()
+
+	/**
+	 * A day booking — a `date` and an explicit `hours`, no clock times — is
+	 * accepted, totalled and filed on the month's timesheet like any other.
+	 *
+	 * This is the shape pipelinq and planninq record. Neither captures clock
+	 * times, so requiring `startedAt`/`endedAt` would have meant fabricating a
+	 * start and an end that nobody measured.
+	 *
+	 * @return void
+	 */
+	public function testADayBookingIsAcceptedWithoutClockTimes(): void {
+		$event = new ObjectCreatingEvent($this->entryEntity([
+			'date' => '2026-05-04',
+			'hours' => 6.5,
+			'description' => 'Projectwerk',
+		]));
+
+		$this->listener->handle($event);
+
+		$this->assertFalse($event->isPropagationStopped());
+		$modified = $event->getModifiedData();
+		$this->assertSame(6.5, $modified['hours'], 'the supplied hours are taken as given');
+		$this->assertSame('2026-05-04', $modified['date']);
+		$this->assertSame('employee-jansen', $modified['employeeId']);
+		$this->assertSame('CC-100', $modified['costCenter'], 'the cost centre resolves off the booked day');
+
+		$timesheet = $this->store->state->objects['Timesheet'][(string)$modified['timesheetId']];
+		$this->assertSame('2026-05', $timesheet['period'], 'a day booking files on the same month grain');
+
+	}//end testADayBookingIsAcceptedWithoutClockTimes()
+
+	/**
+	 * A clocked booking still gets a `date`, stamped from its start.
+	 *
+	 * Stamped rather than required: an entry written before `date` existed
+	 * gains one on its next write, so the field needed no data migration, and
+	 * both shapes answer "which day?" the same way afterwards.
+	 *
+	 * @return void
+	 */
+	public function testAClockedBookingIsStampedWithItsDay(): void {
+		$event = new ObjectCreatingEvent($this->entryEntity([
+			'startedAt' => '2026-05-04T09:00:00Z',
+			'endedAt' => '2026-05-04T17:30:00Z',
+			'breakMinutes' => 30,
+		]));
+
+		$this->listener->handle($event);
+
+		$this->assertFalse($event->isPropagationStopped());
+		$this->assertSame('2026-05-04', $event->getModifiedData()['date']);
+		$this->assertSame(8.0, $event->getModifiedData()['hours'], 'the clocked derivation is unchanged');
+
+	}//end testAClockedBookingIsStampedWithItsDay()
+
+	/**
+	 * A booking that is neither clocked nor booked to a day is refused.
+	 *
+	 * The schema cannot express "either this pair or that field", so relaxing
+	 * `required` moved the invariant here. If this passed, an entry carrying no
+	 * time at all would land on a timesheet no aggregate could total.
+	 *
+	 * @return void
+	 */
+	public function testAnEntryWithNeitherShapeIsRefused(): void {
+		$event = new ObjectCreatingEvent($this->entryEntity(['description' => 'Iets gedaan']));
+		$this->listener->handle($event);
+
+		$this->assertTrue($event->isPropagationStopped());
+		$this->assertStringContainsString('datum', (string)$event->getErrors()['message']);
+
+	}//end testAnEntryWithNeitherShapeIsRefused()
+
+	/**
+	 * A day booking with a date but no hours is refused, and so is one whose
+	 * hours are zero, negative, or more than a day can hold.
+	 *
+	 * @return void
+	 */
+	public function testADayBookingWithImpossibleHoursIsRefused(): void {
+		$cases = [
+			[['date' => '2026-05-04'], 'uren nodig'],
+			[['date' => '2026-05-04', 'hours' => 0], 'groter dan nul'],
+			[['date' => '2026-05-04', 'hours' => -3], 'groter dan nul'],
+			[['date' => '2026-05-04', 'hours' => 25], '24 uur'],
+		];
+
+		foreach ($cases as [$payload, $needle]) {
+			$event = new ObjectCreatingEvent($this->entryEntity($payload));
+			$this->listener->handle($event);
+
+			$this->assertTrue(
+				$event->isPropagationStopped(),
+				'refused: '.json_encode($payload)
+			);
+			$this->assertStringContainsString(
+				$needle,
+				(string)$event->getErrors()['message'],
+				'refused for the right reason: '.json_encode($payload)
+			);
+		}
+
+	}//end testADayBookingWithImpossibleHoursIsRefused()
 
 	/**
 	 * HR entry: an explicit employeeId is taken as given and ITS identity is
@@ -542,7 +648,8 @@ class TimeEntryStampListenerTest extends TestCase {
 			gateway: $gateway,
 			userSession: $session,
 			marker: new InternalWriteMarker(),
-			logger: new NullLogger()
+			logger: new NullLogger(),
+			hoursDeriver: new TimeEntryHoursDeriver()
 		);
 
 		$event = new ObjectCreatingEvent($this->entryEntity([
