@@ -2,8 +2,8 @@
     "x-humaniq-fragment": "hr-documents",
     "components": {
         "schemas": {
-            "GeneratedDocument": {
-                "slug": "GeneratedDocument",
+            "HrGeneratedDocument": {
+                "slug": "HrGeneratedDocument",
                 "icon": "FileDocumentOutline",
                 "version": "0.2.0",
                 "title": "Generated document",

@@ -171,6 +171,35 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  <install>, where an escaping exception aborts the install and
                  the app never enables. -->
             <step>OCA\Humaniq\Repair\MigrateSchemaApplicationId</step>
+            <!-- ONE LEVEL DOWN FROM MigrateRegisterSlug, AND THE SAME TRAP.
+                 A schema slug is global per organisation, and two apps declared
+                 a generated-document schema: filinq's `generatedDocument` (the
+                 rendered document — templateId, format, dataRefs) and this
+                 app's `GeneratedDocument` (the HR log of what was rendered for
+                 whom — employeeId, contractId, payslipId, jaaropgaafId).
+                 `SchemaMapper::find()` matches `LOWER(slug)`, so whichever row
+                 it reached first answered for both apps.
+
+                 They are not the same entity and neither is retired. This app
+                 already delegates the RENDERING to filinq (OfferLetterService
+                 resolves `OCA\DocuDesk\Service\DocumentService` by FQCN), so
+                 only the NAME collided. It is namespaced here, the way larpinq
+                 namespaced `skill`/`item`/`event` to `larping_*`.
+
+                 MUST run AFTER MigrateSchemaApplicationId, which puts this
+                 app's schemas on the `humaniq` application id that this step
+                 scopes its UPDATE to — before it, the UPDATE would match
+                 nothing. MUST run BEFORE InitializeRegister, because the import
+                 is the thing that forks: its not-found branch CREATES a second,
+                 empty schema and every stored object stays on the old row,
+                 reachable by nothing, with no error.
+
+                 Moves no data: an object is bound to its schema by NUMERIC id
+                 (`_schema`, and the shard tables are named
+                 `oc_openregister_table_<registerId>_<schemaId>`). Idempotent,
+                 non-destructive, and it refuses rather than merges when both
+                 slugs already exist. -->
+            <step>OCA\Humaniq\Repair\MigrateSchemaSlug</step>
             <!-- Import the hrmq register (lib/Settings/humaniq_register.json +
                  register.d/*.json fragments) into OpenRegister. Idempotent;
                  fails soft when OpenRegister is not installed. -->
@@ -284,6 +313,8 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  <install>, where an escaping exception aborts the install and
                  the app never enables. -->
             <step>OCA\Humaniq\Repair\MigrateSchemaApplicationId</step>
+            <!-- See the note in <post-migration>. -->
+            <step>OCA\Humaniq\Repair\MigrateSchemaSlug</step>
             <step>OCA\Humaniq\Repair\InitializeRegister</step>
             <!-- hours-process-redesign: <install> is the ONLY hook that runs
                  unconditionally on a fresh install (see above) — without this

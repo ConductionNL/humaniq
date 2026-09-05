@@ -547,7 +547,7 @@ class HrDocumentServiceTest extends TestCase {
 		$this->assertStringContainsString('aanbiedingsbrief-EMP-0001-', $fileService->calls[0]['fileName']);
 		$this->assertStringEndsWith('.pdf', $fileService->calls[0]['fileName']);
 
-		$docSaves = $this->savedFor($fake, 'GeneratedDocument');
+		$docSaves = $this->savedFor($fake, 'HrGeneratedDocument');
 		$final = end($docSaves);
 		$this->assertSame('generated', $final['status']);
 		$this->assertNotNull($final['filePath']);
@@ -570,7 +570,7 @@ class HrDocumentServiceTest extends TestCase {
 
 		$this->assertSame('failed', $result['status']);
 
-		$docSaves = $this->savedFor($fake, 'GeneratedDocument');
+		$docSaves = $this->savedFor($fake, 'HrGeneratedDocument');
 		$final = end($docSaves);
 		$this->assertSame('failed', $final['status']);
 		$this->assertNull($final['filePath'] ?? null);
@@ -592,7 +592,7 @@ class HrDocumentServiceTest extends TestCase {
 
 		$this->assertSame('failed', $result['status']);
 
-		$docSaves = $this->savedFor($fake, 'GeneratedDocument');
+		$docSaves = $this->savedFor($fake, 'HrGeneratedDocument');
 		$final = end($docSaves);
 		$this->assertSame('failed', $final['status']);
 		$this->assertStringContainsString('docudesk', $final['errorMessage']);
@@ -613,7 +613,7 @@ class HrDocumentServiceTest extends TestCase {
 		$this->assertSame('skipped-no-docudesk', $result['status']);
 		$this->assertCount(0, $fileService->calls);
 
-		$docSaves = $this->savedFor($fake, 'GeneratedDocument');
+		$docSaves = $this->savedFor($fake, 'HrGeneratedDocument');
 		$this->assertCount(1, $docSaves);
 		$this->assertSame('skipped-no-docudesk', $docSaves[0]['status']);
 
@@ -632,7 +632,7 @@ class HrDocumentServiceTest extends TestCase {
 
 		$this->assertSame('failed', $result['status']);
 
-		$docSaves = $this->savedFor($fake, 'GeneratedDocument');
+		$docSaves = $this->savedFor($fake, 'HrGeneratedDocument');
 		$this->assertCount(1, $docSaves);
 		$this->assertSame('failed', $docSaves[0]['status']);
 		$this->assertStringContainsString('Geen docudesk-sjabloon', $docSaves[0]['errorMessage']);
@@ -657,7 +657,7 @@ class HrDocumentServiceTest extends TestCase {
 		$this->assertSame('failed', $result['status']);
 		$this->assertCount(0, $fileService->calls);
 
-		$docSaves = $this->savedFor($fake, 'GeneratedDocument');
+		$docSaves = $this->savedFor($fake, 'HrGeneratedDocument');
 		$this->assertStringContainsString('Getuigschrift A', $docSaves[0]['errorMessage']);
 		$this->assertStringContainsString('Getuigschrift B', $docSaves[0]['errorMessage']);
 
@@ -726,7 +726,7 @@ class HrDocumentServiceTest extends TestCase {
 	public function testGenerateSupersedesAStalePendingRecordThenSucceeds(): void {
 		$rows = [
 			'Employee' => [$this->employee()],
-			'GeneratedDocument' => [
+			'HrGeneratedDocument' => [
 				['id' => 'gd-1', 'documentType' => 'arbeidsovereenkomst', 'employeeId' => 'emp-1', 'contractId' => 'contract-1', 'status' => 'pending'],
 			],
 		];
@@ -736,7 +736,7 @@ class HrDocumentServiceTest extends TestCase {
 
 		$this->assertSame('generated', $result['status']);
 
-		$docSaves = $this->savedFor($fake, 'GeneratedDocument');
+		$docSaves = $this->savedFor($fake, 'HrGeneratedDocument');
 		$statuses = array_column($docSaves, 'status');
 		$this->assertContains('failed', $statuses);
 		$this->assertContains('generated', $statuses);
@@ -765,7 +765,7 @@ class HrDocumentServiceTest extends TestCase {
 				$this->contract(['id' => 'contract-1', 'employeeId' => 'emp-1']),
 				$this->contract(['id' => 'contract-2', 'employeeId' => 'emp-2', 'type' => 'temporary', 'writtenContract' => false]),
 			],
-			'GeneratedDocument' => [
+			'HrGeneratedDocument' => [
 				['id' => 'gd-existing', 'documentType' => 'arbeidsovereenkomst', 'employeeId' => 'emp-1', 'contractId' => 'contract-1', 'status' => 'generated'],
 			],
 		];
@@ -839,7 +839,7 @@ class HrDocumentServiceTest extends TestCase {
 		// No EmploymentContract ref, no Payslip field values copied into adHocData.
 		$this->assertArrayNotHasKey('grossPay', $call['options']['adHocData']);
 
-		$docSaves = $this->savedFor($fake, 'GeneratedDocument');
+		$docSaves = $this->savedFor($fake, 'HrGeneratedDocument');
 		$final = end($docSaves);
 		$this->assertSame('loonstrook', $final['documentType']);
 		$this->assertSame('payslip-1', $final['payslipId']);
@@ -909,7 +909,7 @@ class HrDocumentServiceTest extends TestCase {
 		$retentionGuard->method('isUnderActiveRetention')->willReturn(true);
 		$retentionGuard->expects($this->once())
 			->method('inheritLegalHold')
-			->with($this->anything(), 'GeneratedDocument', $this->stringContains('payslip-1'))
+			->with($this->anything(), 'HrGeneratedDocument', $this->stringContains('payslip-1'))
 			->willReturn(true);
 
 		[$service] = $this->service(
@@ -1031,7 +1031,7 @@ class HrDocumentServiceTest extends TestCase {
 
 		$this->assertSame('failed', $result['status']);
 		$this->assertCount(0, $this->savedFor($fake, 'Jaaropgaaf'));
-		$this->assertCount(0, $this->savedFor($fake, 'GeneratedDocument'));
+		$this->assertCount(0, $this->savedFor($fake, 'HrGeneratedDocument'));
 
 	}//end testGenerateJaaropgaafFailsClosedWhenEmployeeHasNoPayslipsInTheYear()
 
@@ -1047,7 +1047,7 @@ class HrDocumentServiceTest extends TestCase {
 		$retentionGuard->method('isUnderActiveRetention')->willReturn(true);
 		$retentionGuard->expects($this->once())
 			->method('inheritLegalHold')
-			->with($this->anything(), 'GeneratedDocument', $this->stringContains('2026'))
+			->with($this->anything(), 'HrGeneratedDocument', $this->stringContains('2026'))
 			->willReturn(true);
 
 		[$service] = $this->service(
@@ -1075,7 +1075,7 @@ class HrDocumentServiceTest extends TestCase {
 				$this->payslip(['id' => 'ps-may-2', 'period' => '2026-05']),
 				$this->payslip(['id' => 'ps-jun-1', 'period' => '2026-06']),
 			],
-			'GeneratedDocument' => [
+			'HrGeneratedDocument' => [
 				['id' => 'gd-existing', 'documentType' => 'loonstrook', 'employeeId' => 'emp-1', 'payslipId' => 'ps-may-1', 'status' => 'generated'],
 			],
 		];

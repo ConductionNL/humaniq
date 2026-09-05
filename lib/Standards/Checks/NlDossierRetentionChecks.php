@@ -70,7 +70,7 @@ final class NlDossierRetentionChecks implements CheckProvider {
 		'WkrDeclaration',
 		'WkrAssessment',
 		'PensionFiling',
-		'GeneratedDocument',
+		'HrGeneratedDocument',
 	];
 
 	/**

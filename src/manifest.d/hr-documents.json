@@ -3,7 +3,7 @@
 		{
 			"templateRef": "indexScaffold",
 			"register": "humaniq",
-			"schema": "GeneratedDocument",
+			"schema": "HrGeneratedDocument",
 			"params": {
 				"id": "GeneratedDocuments",
 				"route": "/documents",
@@ -28,7 +28,7 @@
 		{
 			"templateRef": "dualDataScaffold",
 			"register": "humaniq",
-			"schema": "GeneratedDocument",
+			"schema": "HrGeneratedDocument",
 			"params": {
 				"id": "GeneratedDocumentDetail",
 				"route": "/documents/:id",

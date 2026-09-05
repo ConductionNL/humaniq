@@ -1284,7 +1284,7 @@ class RuleAuditService {
 	private function buildDocumentsContext(): array {
 		$byContract = [];
 		$byPayslip = [];
-		foreach ($this->loadAll('GeneratedDocument') as $document) {
+		foreach ($this->loadAll('HrGeneratedDocument') as $document) {
 			if ((string)($document['status'] ?? '') !== 'generated') {
 				continue;
 			}
