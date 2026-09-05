@@ -285,7 +285,7 @@ class PayrollRetentionGuardServiceTest extends TestCase {
 		$objectMapper = $this->fakeObjectMapper();
 
 		$service = $this->buildService($retentionService, $objectMapper);
-		$held = $service->inheritLegalHold($derived, 'GeneratedDocument', 'Payslip payslip-1');
+		$held = $service->inheritLegalHold($derived, 'HrGeneratedDocument', 'Payslip payslip-1');
 
 		$this->assertTrue($held);
 		$this->assertCount(1, $retentionService->placeLegalHoldCalls);
@@ -306,7 +306,7 @@ class PayrollRetentionGuardServiceTest extends TestCase {
 		$objectMapper = $this->fakeObjectMapper();
 
 		$service = $this->buildService($retentionService, $objectMapper);
-		$held = $service->inheritLegalHold($derived, 'GeneratedDocument', 'Payslip payslip-1');
+		$held = $service->inheritLegalHold($derived, 'HrGeneratedDocument', 'Payslip payslip-1');
 
 		$this->assertTrue($held);
 		$this->assertSame([], $retentionService->placeLegalHoldCalls);

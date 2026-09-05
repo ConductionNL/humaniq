@@ -58,7 +58,7 @@ class NlDossierRetentionChecksTest extends TestCase {
 	public function testRuleIsRegisteredForThePayrollFamilyAndGeneratedDocument(): void {
 		$checks = NlDossierRetentionChecks::checks();
 
-		foreach (['Payslip', 'PayrollRun', 'LoonaangifteFiling', 'PayrollMutationReport', 'WkrDeclaration', 'WkrAssessment', 'PensionFiling', 'GeneratedDocument'] as $schema) {
+		foreach (['Payslip', 'PayrollRun', 'LoonaangifteFiling', 'PayrollMutationReport', 'WkrDeclaration', 'WkrAssessment', 'PensionFiling', 'HrGeneratedDocument'] as $schema) {
 			$this->assertArrayHasKey($schema, $checks);
 			$this->assertArrayHasKey(self::RULE_ID, $checks[$schema]);
 		}
@@ -71,7 +71,7 @@ class NlDossierRetentionChecksTest extends TestCase {
 	 * @return void
 	 */
 	public function testVacuousWhenArchiefactiedatumIsUnpopulated(): void {
-		$check = $this->checkFor('GeneratedDocument');
+		$check = $this->checkFor('HrGeneratedDocument');
 
 		$this->assertTrue($check(['@self' => ['retention' => []]]));
 		$this->assertTrue($check([]));
@@ -117,7 +117,7 @@ class NlDossierRetentionChecksTest extends TestCase {
 	 * @return void
 	 */
 	public function testSatisfiedWhenArchiefstatusIsVernietigd(): void {
-		$check = $this->checkFor('GeneratedDocument');
+		$check = $this->checkFor('HrGeneratedDocument');
 		$past = date('Y-m-d', strtotime('-1 year'));
 
 		$object = ['@self' => ['retention' => ['archiefactiedatum' => $past, 'archiefstatus' => 'vernietigd']]];

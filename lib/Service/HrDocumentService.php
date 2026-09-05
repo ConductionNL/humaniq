@@ -131,7 +131,13 @@ class HrDocumentService {
 	 *
 	 * @var string
 	 */
-	private const GENERATED_DOCUMENT_SCHEMA = 'GeneratedDocument';
+	// `Hr`-prefixed because a schema slug is global per organisation and filinq
+	// ships a `generatedDocument` too: `SchemaMapper::find()` matches
+	// `LOWER(slug)`, so whichever row it reached first answered for both. The
+	// two are different records — filinq's is the rendered document
+	// (templateId, format, dataRefs), this one is the HR log of what was
+	// rendered for whom (employeeId, contractId, payslipId, jaaropgaafId).
+	private const GENERATED_DOCUMENT_SCHEMA = 'HrGeneratedDocument';
 
 	/**
 	 * @var string

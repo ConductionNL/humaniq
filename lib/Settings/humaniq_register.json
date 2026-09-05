@@ -35,7 +35,7 @@
                     "Employee",
                     "EmploymentContract",
                     "Expense",
-                    "GeneratedDocument",
+                    "HrGeneratedDocument",
                     "IntegrationAccount",
                     "Interview",
                     "Jaaropgaaf",
