@@ -101,9 +101,18 @@ test.describe("app chrome (ADR-114)", () => {
 			timeout: 15_000,
 		});
 
-		for (const label of ["Workforce", "Leave and absence", "Performance"]) {
+		// Assert the three report LINKS by their href, not by loose text.
+		// `getByText("Performance").first()` resolved to
+		// `<option value="wellbeing">Time away and performance</option>` in the
+		// report-group select, and an <option> is never visible to Playwright,
+		// so this failed on a page that was rendering all three correctly. An
+		// href is also not translated, which the surrounding text is.
+		for (const slug of ["workforce", "absence", "performance"]) {
 			await expect(
-				page.getByText(label, { exact: false }).first(),
+				page
+					.locator(`a[href$="/apps/humaniq/reports/${slug}"]`)
+					.first(),
+				`the ${slug} report must be listed on /reports`,
 			).toBeVisible({ timeout: 15_000 });
 		}
 	});
