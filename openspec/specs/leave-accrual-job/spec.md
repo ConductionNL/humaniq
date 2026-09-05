@@ -153,8 +153,9 @@ account yields `userId: null` (fail-closed for `@me` surfaces; the row is skippe
 never mis-attributed), following the job's existing counted-not-per-row-logged skip
 conventions. `userId` remains a pure denormalization of the employee link (mijn-hr-self-service
 REQ-MHS-002); nothing else about accrual math, idempotency (REQ-ACCR-004), or the operator
-toggle (REQ-ACCR-005) changes. The buy/sell settlement path mutates `usedHours` on existing
-rows and never creates balances; it needs no stamping logic.
+toggle (REQ-ACCR-005) changes. The buy/sell settlement path mutates `bovenwettelijkHours` on existing
+rows and never creates balances; it needs no stamping logic. It does not touch `usedHours`, which
+belongs to the projection in `leave-approval-posts-to-the-balance`.
 
 #### Scenario: A newly created balance carries the account link
 

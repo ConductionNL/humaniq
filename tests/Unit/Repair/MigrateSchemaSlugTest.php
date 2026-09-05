@@ -31,6 +31,12 @@ use Psr\Log\LoggerInterface;
  *
  * @covers \OCA\Humaniq\Repair\MigrateSchemaSlug
  *
+ * @uses \OCA\Humaniq\Repair\MigrateRegisterSlugDecisions
+ *  MigrateSchemaSlug asks it which slug wins, so these tests execute it on
+ *  purpose. Undeclared, a coverage-driver run reports both as RISKY and
+ *  `failOnRisky` turns a green suite into a red one on all six CI cells,
+ *  while a local run with no driver stays green.
+ *
  * @spec exclude No canonical spec covers the schema-slug namespacing; it is a
  *  migration for a fleet-wide slug collision, not a product requirement.
  */

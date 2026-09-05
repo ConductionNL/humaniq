@@ -6993,17 +6993,15 @@
             "type": "string",
             "order": 5,
             "format": "date",
-            "title": "Datum",
-            "title:en": "Date",
-            "description": "De dag waarop de uren geboekt zijn. Voor een geklokte boeking stempelt de server dit vanuit de starttijd.",
-            "description:en": "The day the hours are booked to. For a clocked booking the server stamps it from the start time."
+            "title": "Date",
+            "description": "The day the hours are booked to. For a clocked booking the server stamps it from the start time."
           },
           "startedAt": {
             "type": "string",
             "order": 10,
             "format": "date-time",
             "title": "Start",
-            "description": "When the work started. Optional: an entry booked to a day carries `date` and `hours` instead, and TimeEntryStampListener refuses one that carries neither shape."
+            "description": "When the work started. Leave it empty for an entry booked to a day, which carries a date and hours instead."
           },
           "endedAt": {
             "type": "string",

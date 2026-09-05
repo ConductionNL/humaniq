@@ -28,6 +28,7 @@
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Controller/PayrollController.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Controller/PayrollController.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Lifecycle/LeaveBuySellApprovalGuard.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/LeaveBalanceProjectionService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Lifecycle/LeaveBuySellApprovalGuard.php" method="resolveBalance"/>
   <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Payroll/CalculationInput.php" method="__construct"/>
   <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Payroll/CalculationResult.php" method="__construct"/>
