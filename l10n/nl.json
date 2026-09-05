@@ -1915,7 +1915,9 @@
         "What leave was asked for, what was granted, and who is off sick.": "Welk verlof is aangevraagd, wat is toegekend, en wie er ziek gemeld is.",
         "Where review cycles stand, and how conversations landed.": "Waar de gesprekscycli staan, en hoe de gesprekken zijn uitgepakt.",
         "Store": "Store",
-        "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding.": "Installeer registers, schema's en flows die andere organisaties hebben gepubliceerd."
+        "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding.": "Installeer registers, schema's en flows die andere organisaties hebben gepubliceerd.",
+        "The day the hours are booked to. For a clocked booking the server stamps it from the start time.": "De dag waarop de uren geboekt zijn. Voor een geklokte boeking stempelt de server dit vanuit de starttijd.",
+        "When the work started. Leave it empty for an entry booked to a day, which carries a date and hours instead.": "Wanneer het werk begon. Laat leeg bij een boeking op een dag, die een datum en uren draagt."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
