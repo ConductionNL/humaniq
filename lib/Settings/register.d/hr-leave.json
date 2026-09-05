@@ -161,9 +161,9 @@
             "LeaveBalance": {
                 "slug": "LeaveBalance",
                 "icon": "ScaleBalance",
-                "version": "0.3.0",
+                "version": "0.3.1",
                 "title": "Leave balance",
-                "description": "Per-employee, per-year, per-leave-type entitlement and usage ledger (verlofsaldo): the statutory plus bovenwettelijk hours granted for a year, the hours used, and a declaratively calculated remaining balance (x-openregister-calculations). Read by the nl-verlof-wettelijk-minimum / nl-verlof-saldo-niet-negatief / nl-verlof-vervaltermijn rule checks (lib/Standards/rules/labour.json, leave-verzuim-mvp). UsedHours is not yet auto-posted from approved LeaveRequests: that cross-object write hook is a declared follow-up; this MVP records and audits the balance.",
+                "description": "Per-employee, per-year, per-leave-type entitlement and usage ledger (verlofsaldo): the statutory plus bovenwettelijk hours granted for a year, the hours used, and a declaratively calculated remaining balance (x-openregister-calculations). Read by the nl-verlof-wettelijk-minimum / nl-verlof-saldo-niet-negatief / nl-verlof-vervaltermijn rule checks (lib/Standards/rules/labour.json, leave-verzuim-mvp). UsedHours is recomputed from the approved LeaveRequests behind it by LeaveApprovalListener, so approving, correcting or reversing a request restates the balance.",
                 "type": "object",
                 "required": [
                     "employeeId",
@@ -234,7 +234,7 @@
                         "type": "number",
                         "default": 0,
                         "title": "Used hours",
-                        "description": "Hours of this leave type already taken this year.", "x-notes": "Hours of this leave type used/taken so far in the year. Recorded from approved LeaveRequests; not yet auto-posted (follow-up). Checked against the total entitlement by nl-verlof-saldo-niet-negatief."
+                        "description": "Hours of this leave type already taken this year.", "x-notes": "Hours of this leave type used/taken so far in the year. Never written by hand: LeaveApprovalListener recomputes it as the SUM of the approved LeaveRequests for this employee/year/leaveType, so it is idempotent and self-healing (leave-approval-posts-to-the-balance REQ-LEAVE-POST-001). A request with no explicit `hours` is derived as working days x contractHoursPerWeek/5; public holidays are not subtracted, so a week containing one overstates usage by a day. Checked against the total entitlement by nl-verlof-saldo-niet-negatief."
                     },
                     "contractHoursPerWeek": {
                         "type": "number",
