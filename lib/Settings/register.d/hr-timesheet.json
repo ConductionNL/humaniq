@@ -11,10 +11,7 @@
                 "x-notes": "hours-process-redesign Decision 1: the booking granularity split out of the former all-in-one Timesheet schema. English property names per fleet decision; NL only via l10n labels (verb surface 'uren boeken'). No status and no lifecycle here — the process lives on the parent Timesheet, and entry mutability is governed by the parent's state (Decision 3, enforced by TimeEntryStampListener). Concurrency: the aggregate listener recomputes from truth on every entry write, so a stale intermediate total is self-healed by the next write (accepted for dev-stage volumes).",
                 "type": "object",
                 "x-schema-org": "schema:Action",
-                "required": [
-                    "startedAt",
-                    "endedAt"
-                ],
+                "required": [],
                 "properties": {
                     "employeeId": {
                         "type": "string",
@@ -35,12 +32,21 @@
                         "description": "The period timesheet this booking is part of. Assigned automatically from the start date.",
                         "x-notes": "Never a form field. TimeEntryStampListener resolves the employee's draft/rejected Timesheet for the month of startedAt (YYYY-MM grain, fixed by design resolution 2) and creates a draft Timesheet when none exists. Booking into a period whose only timesheet is submitted/approved is refused — never silently forked into a second timesheet. Always a real uuid: the listener and MigrateHoursProcess both assign the parent timesheet's own id, and seed data uses the `@ref:<slug>` token that ImportHandler resolves before validation — see employeeId's note for why format:uuid stays."
                     },
+                    "date": {
+                        "type": "string",
+                        "order": 5,
+                        "format": "date",
+                        "title": "Datum",
+                        "title:en": "Date",
+                        "description": "De dag waarop de uren geboekt zijn. Voor een geklokte boeking stempelt de server dit vanuit de starttijd.",
+                        "description:en": "The day the hours are booked to. For a clocked booking the server stamps it from the start time."
+                    },
                     "startedAt": {
                         "type": "string",
                         "order": 10,
                         "format": "date-time",
                         "title": "Start",
-                        "description": "When the work started."
+                        "description": "When the work started. Optional: an entry booked to a day carries `date` and `hours` instead, and TimeEntryStampListener refuses one that carries neither shape."
                     },
                     "endedAt": {
                         "type": "string",
