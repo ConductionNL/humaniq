@@ -7744,7 +7744,7 @@
 					"status"
 				],
 				"register": "humaniq",
-				"schema": "GeneratedDocument",
+				"schema": "HrGeneratedDocument",
 				"sort": {
 					"field": "generatedAt",
 					"order": "desc"
@@ -7785,7 +7785,7 @@
 					}
 				],
 				"register": "humaniq",
-				"schema": "GeneratedDocument",
+				"schema": "HrGeneratedDocument",
 				"sidebar": {
 					"enabled": true,
 					"hiddenTabs": [

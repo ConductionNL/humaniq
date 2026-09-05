@@ -1916,7 +1916,9 @@ OC.L10N.register(
         "What leave was asked for, what was granted, and who is off sick.": "What leave was asked for, what was granted, and who is off sick.",
         "Where review cycles stand, and how conversations landed.": "Where review cycles stand, and how conversations landed.",
         "Store": "Store",
-        "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding.": "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding."
+        "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding.": "Install HR configurations that other organisations have published: a leave policy, a job framework, or the flows behind an onboarding.",
+        "The day the hours are booked to. For a clocked booking the server stamps it from the start time.": "The day the hours are booked to. For a clocked booking the server stamps it from the start time.",
+        "When the work started. Leave it empty for an entry booked to a day, which carries a date and hours instead.": "When the work started. Leave it empty for an entry booked to a day, which carries a date and hours instead."
     },
     "nplurals=2; plural=(n != 1);"
 )
