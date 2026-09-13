@@ -1945,7 +1945,12 @@ OC.L10N.register(
         "Example data fills the employee lists, contracts and dashboards so you can see the app working straight away. Pick \"None\" on a production install.": "Voorbeeldgegevens vullen de medewerkerslijsten, contracten en dashboards, zodat je de app meteen ziet werken. Kies \"Geen\" op een productie-installatie.",
         "Loads what you picked. The data is obviously sample data, it is safe to run more than once, and you can delete it afterwards.": "Laadt wat je koos. De gegevens zijn herkenbaar voorbeeldgegevens, je kunt dit meer dan een keer uitvoeren en je kunt ze daarna verwijderen.",
         "That's it. Open Employees to see your people, or reopen this setup anytime from the app's … menu.": "Dat is alles. Open Medewerkers om je mensen te zien, of open deze instelwizard opnieuw via het … menu van de app.",
-        "{hours} booked by you": "{hours} door jou geboekt"
+        "{hours} booked by you": "{hours} door jou geboekt",
+        "To": "Tot",
+        "Fill in when you started and when you stopped.": "Vul in wanneer je begon en wanneer je stopte.",
+        "The end has to be after the start.": "Het einde moet na het begin liggen.",
+        "{hours} hours will be booked": "{hours} uur wordt geboekt",
+        "Fill in the day, when you started and when you stopped.": "Vul de dag in, wanneer je begon en wanneer je stopte."
     },
     "nplurals=2; plural=(n != 1);"
 )
