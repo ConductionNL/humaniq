@@ -119,6 +119,13 @@ export async function bookHours(booking) {
 		date: booking.date,
 		hours: booking.hours,
 	}
+	// The clocked shape: a start and an end, from which the server derives the
+	// hours the same way it does for a stopped timer. Sent only when both are
+	// there, so a caller booking a bare count still writes the day shape.
+	if (typeof booking.startedAt === 'string' && typeof booking.endedAt === 'string') {
+		payload.startedAt = booking.startedAt
+		payload.endedAt = booking.endedAt
+	}
 
 	// Omitted rather than sent empty. OpenRegister refuses `{}`, `[]` and `null`
 	// for an absent value, and its own message suggests the null that fails.

@@ -46,18 +46,34 @@
 						data-testid="hq-hours-booking-date">
 				</label>
 
+				<!-- A start and an end, not a count. Hours are derived from the two on
+				     the server, the same way a stopped timer's are (the clocked
+				     shape), so a booking made by hand and a booking made by the
+				     stopwatch carry the same facts. The derived figure is shown
+				     beneath so the reader sees what will be booked before pressing. -->
 				<label class="hq-booking__field">
-					<span class="hq-booking__label">{{ t('humaniq', 'Hours') }}</span>
+					<span class="hq-booking__label">{{ t('humaniq', 'From') }}</span>
 					<input
-						v-model="hours"
-						type="number"
-						min="0.25"
-						max="24"
-						step="0.25"
+						v-model="startTime"
+						type="time"
+						step="300"
 						required
 						class="hq-booking__input"
-						data-testid="hq-hours-booking-hours">
+						data-testid="hq-hours-booking-start">
 				</label>
+				<label class="hq-booking__field">
+					<span class="hq-booking__label">{{ t('humaniq', 'To') }}</span>
+					<input
+						v-model="endTime"
+						type="time"
+						step="300"
+						required
+						class="hq-booking__input"
+						data-testid="hq-hours-booking-end">
+				</label>
+				<p class="hq-booking__derived hq-booking__field--wide" data-testid="hq-hours-booking-hours" aria-live="polite">
+					{{ derivedLine }}
+				</p>
 
 				<label class="hq-booking__field hq-booking__field--wide">
 					<span class="hq-booking__label">{{ t('humaniq', 'What did you work on?') }}</span>
@@ -106,11 +122,13 @@
  * mounts its own Vue 3 instance into a bare host element, and nothing here
  * crosses that boundary.
  *
- * THE DAY SHAPE, NOT THE CLOCK. `TimeEntry` accepts either a start and an end or
- * a date and a number of hours. A person booking against a case knows how long
- * they spent; they rarely know the clock times, and asking for times they would
- * have to invent is worse than asking for the figure they have. The timer covers
- * the other case, where the clock is the point.
+ * THE CLOCKED SHAPE. `TimeEntry` accepts either a start and an end or a date and
+ * a number of hours. This dialog asks for the day, a start and an end, and shows
+ * the hours it derives from the span before the reader presses Book. It sends
+ * both instants and the derived figure, so a booking made by hand and a booking
+ * made by the stopwatch carry the same facts and the server derives the hours
+ * the same way for both. The times default to the last hour, on the quarter,
+ * because the common booking is the work just finished.
  *
  * THE TWO REFERENCE FIELDS ARE NOT ON THE FORM. `domainObjectType` and
  * `domainObjectRef` are written by the integration, which is why neither appears
@@ -122,6 +140,39 @@ import { bookHours } from '../integrations/hoursApi.js'
 
 /** Counter behind the generated label id, so two open dialogs cannot collide. */
 let dialogSeq = 0
+
+/**
+ * A clock time `HH:MM`, `minutesAgo` before `now`, rounded down to the quarter.
+ *
+ * @param {Date} now The reference moment.
+ * @param {number} minutesAgo How far back.
+ *
+ * @return {string} The local time as `HH:MM`.
+ *
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
+ */
+function quarterBefore(now, minutesAgo) {
+	const at = new Date(now.getTime() - minutesAgo * 60000)
+	const minutes = at.getMinutes() - (at.getMinutes() % 15)
+	return `${String(at.getHours()).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+}
+
+/**
+ * Minutes since midnight for a `HH:MM` time input value, or null when unset.
+ *
+ * @param {string} value The input value.
+ *
+ * @return {number|null} The minutes, or null.
+ *
+ * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
+ */
+function minutesOf(value) {
+	const match = /^(\d{2}):(\d{2})/.exec(String(value || ''))
+	if (match === null) {
+		return null
+	}
+	return Number(match[1]) * 60 + Number(match[2])
+}
 
 export default {
 	name: 'HoursBookingDialog',
@@ -151,11 +202,53 @@ export default {
 			// finished. A person backdating knows to change it; a person booking
 			// today should not have to fill it in at all.
 			date: new Date().toISOString().slice(0, 10),
-			hours: '',
+			// The last hour, on the quarter, for the same reason as the date: the
+			// common booking is the work just finished. Both are editable.
+			startTime: quarterBefore(new Date(), 60),
+			endTime: quarterBefore(new Date(), 0),
 			description: '',
 			saving: false,
 			error: '',
 		}
+	},
+
+	computed: {
+		/**
+		 * The hours between the two times, or null while they do not make a span.
+		 *
+		 * Derived the way the server derives them (end minus start), so the
+		 * figure shown is the figure booked. An end at or before the start is
+		 * not a span, and is refused rather than read as an overnight shift.
+		 *
+		 * @return {number|null} The hours, to two decimals, or null.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
+		 */
+		derivedHours() {
+			const start = minutesOf(this.startTime)
+			const end = minutesOf(this.endTime)
+			if (start === null || end === null || end <= start) {
+				return null
+			}
+			return Math.round(((end - start) / 60) * 100) / 100
+		},
+
+		/**
+		 * The line under the two times: what will be booked, or why nothing can be.
+		 *
+		 * @return {string} The line.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
+		 */
+		derivedLine() {
+			if (this.startTime === '' || this.endTime === '') {
+				return t('humaniq', 'Fill in when you started and when you stopped.')
+			}
+			if (this.derivedHours === null) {
+				return t('humaniq', 'The end has to be after the start.')
+			}
+			return t('humaniq', '{hours} hours will be booked', { hours: String(this.derivedHours) })
+		},
 	},
 
 	/**
@@ -204,19 +297,25 @@ export default {
 		 * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
 		 */
 		async submit() {
-			const hours = Number(this.hours)
-			if (this.date === '' || Number.isFinite(hours) === false || hours <= 0) {
-				this.error = t('humaniq', 'Fill in a date and how many hours you worked.')
+			const hours = this.derivedHours
+			if (this.date === '' || hours === null) {
+				this.error = t('humaniq', 'Fill in the day, when you started and when you stopped.')
 				return
 			}
 
 			this.saving = true
 			this.error = ''
 			try {
+				// The two instants are built in the reader's own timezone and sent
+				// as ISO 8601, which is what the server's deriver reads; `hours`
+				// goes along so the figure the reader saw is the figure stored even
+				// on a write that skips the deriver.
 				const entry = await bookHours({
 					domainObjectType: this.domainObjectType,
 					domainObjectRef: this.domainObjectRef,
 					date: this.date,
+					startedAt: new Date(`${this.date}T${this.startTime}:00`).toISOString(),
+					endedAt: new Date(`${this.date}T${this.endTime}:00`).toISOString(),
 					hours,
 					description: this.description,
 				})
@@ -346,5 +445,10 @@ export default {
 .hq-booking__button--primary:hover:enabled,
 .hq-booking__button--primary:focus-visible {
 	background-color: var(--color-primary-element-hover);
+}
+
+.hq-booking__derived {
+	color: var(--color-text-maxcontrast);
+	margin: -4px 0 0;
 }
 </style>

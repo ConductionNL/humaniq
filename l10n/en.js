@@ -1945,7 +1945,12 @@ OC.L10N.register(
         "Example data fills the employee lists, contracts and dashboards so you can see the app working straight away. Pick \"None\" on a production install.": "Example data fills the employee lists, contracts and dashboards so you can see the app working straight away. Pick \"None\" on a production install.",
         "Loads what you picked. The data is obviously sample data, it is safe to run more than once, and you can delete it afterwards.": "Loads what you picked. The data is obviously sample data, it is safe to run more than once, and you can delete it afterwards.",
         "That's it. Open Employees to see your people, or reopen this setup anytime from the app's … menu.": "That's it. Open Employees to see your people, or reopen this setup anytime from the app's … menu.",
-        "{hours} booked by you": "{hours} booked by you"
+        "{hours} booked by you": "{hours} booked by you",
+        "To": "To",
+        "Fill in when you started and when you stopped.": "Fill in when you started and when you stopped.",
+        "The end has to be after the start.": "The end has to be after the start.",
+        "{hours} hours will be booked": "{hours} hours will be booked",
+        "Fill in the day, when you started and when you stopped.": "Fill in the day, when you started and when you stopped."
     },
     "nplurals=2; plural=(n != 1);"
 )

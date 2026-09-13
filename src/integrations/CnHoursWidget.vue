@@ -8,13 +8,28 @@
 		<!-- CHROME. A host places a mount-mode leaf into a bare element and hands
 		     it no card, so the leaf draws its own or it reads as loose text
 		     sitting on the page between the cards that do have one. -->
+		<!-- The header is drawn the way the host draws every other card's:
+		     a coloured icon and a bold title on the left, the controls on the
+		     right, one rule beneath. The host cannot draw it for a mount-mode
+		     leaf, so the leaf copies the shape rather than inventing one, or
+		     this card is the one on the page whose caption is grey and whose
+		     header has no rule. -->
 		<div class="hq-hours__header">
-			<!-- The leaf names itself for the same reason: the host hands it no
-			     title either, and a KPI that is only a number does not say what
-			     was counted. -->
-			<h3 class="hq-hours__caption" data-testid="hq-hours-caption">
-				{{ t('humaniq', 'Hours booked') }}
-			</h3>
+			<div class="hq-hours__header-left">
+				<span class="hq-hours__icon" aria-hidden="true">
+					<svg width="24" height="24" viewBox="0 0 24 24" focusable="false">
+						<path
+							d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16m0-18a10 10 0 1 1 0 20 10 10 0 0 1 0-20m.5 5v5.25l4.5 2.67-.75 1.23L11 13V7z"
+							fill="currentColor" />
+					</svg>
+				</span>
+				<!-- The leaf names itself for the same reason: the host hands it no
+				     title either, and a KPI that is only a number does not say what
+				     was counted. -->
+				<h3 class="hq-hours__caption" data-testid="hq-hours-caption">
+					{{ t('humaniq', 'Hours booked') }}
+				</h3>
+			</div>
 
 			<div class="hq-hours__controls">
 				<!-- The stopwatch is its own control, left of the actions, because
@@ -26,11 +41,27 @@
 					class="hq-hours__timer"
 					:class="{ 'hq-hours__timer--running': runningHere }"
 					:disabled="busy || !canUseTimer"
+					:aria-busy="String(busy)"
 					:title="timerTitle"
 					:aria-label="timerTitle"
 					data-testid="hq-hours-timer"
 					@click="toggleTimer">
-					<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+					<!-- Starting or stopping writes a row before anything changes on
+					     the card, and that write took long enough that a press looked
+					     ignored. The spinner stands in for the icon until the server
+					     has answered. -->
+					<svg
+						v-if="busy"
+						class="hq-hours__spinner"
+						width="18"
+						height="18"
+						viewBox="0 0 24 24"
+						aria-hidden="true"
+						focusable="false"
+						data-testid="hq-hours-timer-busy">
+						<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="32 18" />
+					</svg>
+					<svg v-else width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 						<template v-if="runningHere">
 							<rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor" />
 						</template>
@@ -51,17 +82,35 @@
 				     reader reaches for; the tile's job is the figure. -->
 				<div class="hq-hours__menu">
 					<button
+						ref="actionsTrigger"
 						type="button"
 						class="hq-hours__action"
 						:aria-expanded="String(menuOpen)"
+						:aria-label="t('humaniq', 'Actions')"
 						aria-haspopup="menu"
 						data-testid="hq-hours-actions"
-						@click="menuOpen = !menuOpen">
-						{{ t('humaniq', 'Actions') }}
-						<span class="hq-hours__caret" aria-hidden="true">▾</span>
+						@click="toggleMenu">
+						<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+							<path
+								d="M16 12a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2m-6 0a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2m-6 0a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2"
+								fill="currentColor" />
+						</svg>
+						<span class="hq-hours__action-label">{{ t('humaniq', 'Actions') }}</span>
 					</button>
 
-					<div v-if="menuOpen" class="hq-hours__menu-list" role="menu">
+					<!-- FIXED, not absolute. The host puts this card in a grid cell
+					     that scrolls, and an absolutely positioned list is clipped at
+					     that cell's edge: the menu opened and showed one item and a
+					     half. A fixed list is positioned against the viewport, which
+					     no ancestor's overflow can cut, and it is placed from the
+					     trigger's on-screen box at the moment it opens. Scrolling or
+					     resizing would leave it floating where the trigger was, so
+					     either one closes it. -->
+					<div
+						v-if="menuOpen"
+						class="hq-hours__menu-list"
+						:style="menuStyle"
+						role="menu">
 						<button
 							type="button"
 							class="hq-hours__menu-item"
@@ -82,6 +131,7 @@
 			</div>
 		</div>
 
+		<div class="hq-hours__body">
 		<!-- Timing THIS object: the tile becomes the timer.
 		     Only this object. A timer running elsewhere leaves the figures alone,
 		     because putting another object's elapsed time where this object's
@@ -115,6 +165,7 @@
 		<p v-if="error" class="hq-hours__error" role="alert">
 			{{ error }}
 		</p>
+		</div>
 
 		<HoursBookingDialog
 			v-if="showBooking"
@@ -219,6 +270,10 @@ export default {
 			tick: null,
 			showBooking: false,
 			menuOpen: false,
+			/** Viewport coordinates the open menu is pinned at, or null. */
+			menuStyle: null,
+			/** Whether the document listeners behind the open menu are bound. */
+			menuListenersBound: false,
 		}
 	},
 
@@ -403,6 +458,7 @@ export default {
 			window.clearInterval(this.tick)
 			this.tick = null
 		}
+		this.unbindMenuListeners()
 	},
 
 	methods: {
@@ -499,6 +555,149 @@ export default {
 		},
 
 		/**
+		 * Open the actions menu under its trigger, or close it.
+		 *
+		 * The list is `position: fixed`, so it is placed here from the
+		 * trigger's on-screen box rather than flowing from its parent: the
+		 * host's grid cell scrolls, and a list positioned inside it was cut off
+		 * at the cell's edge. Its right edge sits on the trigger's right edge.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
+		 */
+		toggleMenu() {
+			if (this.menuOpen === true) {
+				this.closeMenu()
+				return
+			}
+
+			const trigger = this.$refs.actionsTrigger
+			const rect = trigger && typeof trigger.getBoundingClientRect === 'function'
+				? trigger.getBoundingClientRect()
+				: null
+			this.menuStyle = rect === null
+				? null
+				: {
+					top: `${Math.round(rect.bottom + 4)}px`,
+					right: `${Math.round(window.innerWidth - rect.right)}px`,
+				}
+			this.menuOpen = true
+			this.bindMenuListeners()
+			// The card is often the last thing in a column, so a list that
+			// always drops downward ends below the viewport, where the reader
+			// cannot reach it: scrolling to it closes it. Once the list has a
+			// size, flip it above the trigger when there is no room beneath.
+			this.$nextTick(() => {
+				const list = this.$el?.querySelector?.('.hq-hours__menu-list')
+				if (rect === null || !list || this.menuOpen === false) {
+					return
+				}
+				const height = list.getBoundingClientRect().height
+				if (rect.bottom + 4 + height > window.innerHeight && rect.top - 4 - height >= 0) {
+					this.menuStyle = {
+						bottom: `${Math.round(window.innerHeight - rect.top + 4)}px`,
+						right: `${Math.round(window.innerWidth - rect.right)}px`,
+					}
+				}
+			})
+		},
+
+		/**
+		 * Close the actions menu and drop its listeners.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
+		 */
+		closeMenu() {
+			this.menuOpen = false
+			this.menuStyle = null
+			this.unbindMenuListeners()
+		},
+
+		/**
+		 * Listen for the three things that end an open menu.
+		 *
+		 * A press outside it, Escape, and any scroll or resize. The last two
+		 * matter because the list is pinned to viewport coordinates taken when
+		 * it opened; after a scroll it would sit where the trigger used to be.
+		 * Bound only while the menu is open, so a closed card costs the page
+		 * no listeners.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
+		 */
+		bindMenuListeners() {
+			if (this.menuListenersBound === true) {
+				return
+			}
+			this.menuListenersBound = true
+			document.addEventListener('pointerdown', this.onDocumentPointerDown, true)
+			document.addEventListener('keydown', this.onDocumentKeydown, true)
+			window.addEventListener('scroll', this.closeMenu, true)
+			window.addEventListener('resize', this.closeMenu)
+		},
+
+		/**
+		 * Undo `bindMenuListeners`. Safe to call when nothing is bound.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
+		 */
+		unbindMenuListeners() {
+			if (this.menuListenersBound !== true) {
+				return
+			}
+			this.menuListenersBound = false
+			document.removeEventListener('pointerdown', this.onDocumentPointerDown, true)
+			document.removeEventListener('keydown', this.onDocumentKeydown, true)
+			window.removeEventListener('scroll', this.closeMenu, true)
+			window.removeEventListener('resize', this.closeMenu)
+		},
+
+		/**
+		 * Close the menu on a press anywhere but the menu or its trigger.
+		 *
+		 * @param {PointerEvent} event The press.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
+		 */
+		onDocumentPointerDown(event) {
+			const target = event.target
+			const inside = target instanceof Node
+				&& this.$el instanceof Node
+				&& this.$el.querySelector('.hq-hours__menu')?.contains(target) === true
+			if (inside === false) {
+				this.closeMenu()
+			}
+		},
+
+		/**
+		 * Close the menu on Escape and hand focus back to the trigger.
+		 *
+		 * @param {KeyboardEvent} event The key press.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
+		 */
+		onDocumentKeydown(event) {
+			if (event.key !== 'Escape') {
+				return
+			}
+			this.closeMenu()
+			const trigger = this.$refs.actionsTrigger
+			if (trigger && typeof trigger.focus === 'function') {
+				trigger.focus()
+			}
+		},
+
+		/**
 		 * Open the booking dialog from the actions menu.
 		 *
 		 * Closes the menu first: leaving it open behind a modal puts two focus
@@ -510,7 +709,7 @@ export default {
 		 * @spec openspec/specs/hours-leaf/spec.md#requirement-hours-can-be-added-from-the-surface-that-shows-them
 		 */
 		openBooking() {
-			this.menuOpen = false
+			this.closeMenu()
 			this.showBooking = true
 		},
 
@@ -555,50 +754,88 @@ export default {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius-large, 12px);
 	box-sizing: border-box;
+	container: hq-hours / inline-size;
 	display: flex;
 	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	padding: 0;
+}
+
+/* The header, spelled like the host's widget header: 12px 16px of padding,
+   a rule beneath, icon and title on the left, controls on the right. The
+   figures match the host's numbers because the host's are the ones every
+   neighbouring card on the page is drawn with. */
+.hq-hours__header {
+	align-items: center;
+	border-bottom: 1px solid var(--color-border);
+	display: flex;
+	flex-shrink: 0;
 	gap: 8px;
+	justify-content: space-between;
 	padding: 12px 16px;
 }
 
-.hq-hours__header {
-	align-items: flex-start;
+.hq-hours__header-left {
+	align-items: center;
 	display: flex;
+	flex: 1 1 auto;
 	gap: 8px;
-	justify-content: space-between;
+	min-width: 0;
+}
+
+.hq-hours__icon {
+	color: var(--color-primary-element);
+	display: flex;
+	flex-shrink: 0;
+	height: 24px;
+	width: 24px;
 }
 
 .hq-hours__caption {
-	color: var(--color-text-maxcontrast);
-	font-size: inherit;
-	font-weight: normal;
+	font-size: 14px;
+	font-weight: 600;
 	margin: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.hq-hours__body {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: 8px;
+	justify-content: center;
+	min-height: 0;
+	padding: 12px 16px;
 }
 
 .hq-hours__controls {
 	align-items: center;
 	display: flex;
 	flex: 0 0 auto;
-	gap: 6px;
+	gap: 4px;
 }
 
 .hq-hours__menu {
 	position: relative;
 }
 
+/* Pinned to the viewport, so no scrolling ancestor can clip it. The
+   coordinates come from the trigger's box when the menu opens; see
+   toggleMenu(). */
 .hq-hours__menu-list {
 	background-color: var(--color-main-background);
 	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
+	border-radius: var(--border-radius-large, 12px);
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 	display: flex;
 	flex-direction: column;
-	inset-inline-end: 0;
 	min-width: 160px;
 	padding: 4px;
-	position: absolute;
-	top: calc(100% + 4px);
-	z-index: 100;
+	position: fixed;
+	z-index: 10000;
 }
 
 .hq-hours__menu-item {
@@ -619,8 +856,23 @@ export default {
 	background-color: var(--color-background-hover);
 }
 
-.hq-hours__caret {
-	margin-inline-start: 4px;
+.hq-hours__action-label {
+	font-weight: bold;
+}
+
+/* A four-column cell at a common desktop width is about 320px. The icon, the
+   title, the stopwatch and a named Actions pill do not fit on that line, and
+   the title is the one that gave: it read "Hours boo…". Below that width the
+   pill drops its label and keeps its icon; the button's accessible name is
+   set on the element, so nothing is lost for a screen reader. */
+@container hq-hours (max-width: 340px) {
+	.hq-hours__action-label {
+		display: none;
+	}
+
+	.hq-hours__action {
+		padding: 0 7px;
+	}
 }
 
 .hq-hours__headline {
@@ -654,39 +906,66 @@ export default {
 	margin: 0;
 }
 
+/* The same shape as the named Actions trigger on every other card: a
+   clickable-area-high pill, no border, icon then label, filled on hover. */
 .hq-hours__action {
-	background: transparent;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-pill, 16px);
-	color: var(--color-main-text);
+	align-items: center;
+	background: var(--color-primary-element-light, var(--color-background-dark));
+	border: none;
+	border-radius: var(--border-radius-element, var(--border-radius-pill, 17px));
+	color: var(--color-primary-element-light-text, var(--color-main-text));
 	cursor: pointer;
-	padding: 4px 12px;
+	display: flex;
+	font: inherit;
+	gap: 4px;
+	height: var(--default-clickable-area, 34px);
+	min-height: var(--default-clickable-area, 34px);
+	padding: 0 12px 0 10px;
 	text-decoration: none;
 }
 
 .hq-hours__action:hover,
 .hq-hours__action:focus-visible {
-	background-color: var(--color-background-hover);
+	background-color: var(--color-primary-element-light-hover, var(--color-background-hover));
 }
 
+/* The same pill as the Actions trigger beside it, icon only. It was the one
+   round, outlined button in a header row of light-filled pills. */
 .hq-hours__timer {
 	align-items: center;
-	background: transparent;
-	border: 1px solid var(--color-border);
-	border-radius: 50%;
-	color: var(--color-main-text);
+	background: var(--color-primary-element-light, var(--color-background-dark));
+	border: none;
+	border-radius: var(--border-radius-element, var(--border-radius-pill, 17px));
+	color: var(--color-primary-element-light-text, var(--color-main-text));
 	cursor: pointer;
 	display: flex;
 	flex: 0 0 auto;
-	height: 32px;
+	height: var(--default-clickable-area, 34px);
 	justify-content: center;
-	padding: 0;
-	width: 32px;
+	min-height: var(--default-clickable-area, 34px);
+	min-width: var(--default-clickable-area, 34px);
+	padding: 0 8px;
 }
 
 .hq-hours__timer:hover:enabled,
 .hq-hours__timer:focus-visible {
-	background-color: var(--color-background-hover);
+	background-color: var(--color-primary-element-light-hover, var(--color-background-hover));
+}
+
+.hq-hours__spinner {
+	animation: hq-hours-spin 0.9s linear infinite;
+}
+
+@keyframes hq-hours-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hq-hours__spinner {
+		animation-duration: 3s;
+	}
 }
 
 .hq-hours__timer:disabled {
