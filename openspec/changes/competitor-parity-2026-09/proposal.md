@@ -51,6 +51,43 @@ against what ceiling. The first six extend `rostering`. The last three extend
   the sweep measured thirteen passers against the agenda question and humaniq is the
   app that answers it.
 
+## Wave 4: the pending proposals
+
+The pending half of the gap register (`procest/_gaps/gap-register.json`, v4,
+2026-09-14) holds 146 proposals. One of them is humaniq's, and it is already carried,
+so no change is opened for it.
+
+| row | rating | carried by | basis |
+|---|---|---|---|
+| 10.17, effort estimate on the case, with the remainder derived from what was booked | no | `estimate-spent-and-remaining-on-an-hours-leaf` | existing, by substance |
+
+The reading, so nobody repeats it. REQ-HL-EST-001 makes an expected effort recordable
+against any host object, and REQ-HL-EST-002 makes remaining a derived figure that is
+never stored. Those two are the row: the estimate and the remainder. The change also
+names the ledger row itself in its lane citation for `C-reporting-17`, "the estimate and
+the remainder are the half 10.11 does not ask for", under the id dossiq published it
+under, 10.13. 10.17 is the id the corpus issued for the same question on 2026-09-14.
+
+The row's citation, for the trail. Source, verbatim: `dossiq#2314, published as 10.13`.
+The ledger note, verbatim: "Row 10.11 asks whether time can be booked against a case and
+is partial. Nothing holds an estimate, so nothing can say how much of it is left." The
+corpus batch file is `procest/_round4/compare/proposed-rows-dossiq-2026-09-10.md`, and
+its table row reads:
+
+```
+| proposed | in dossiq | capability | dossiq | competitors | cross-reference |
+| **10.17** | 10.13 | Effort estimate on the case, with the remainder derived from what was booked | no | unread | discovery D-request-tracker-12 |
+```
+
+The row entered under decision **D1**, so no competitor has been read for it and the
+corpus says so: "Every competitor column is `unread`, and none of them is `no`." What
+does carry driven evidence is the cluster 59 candidate behind the same capability,
+`C-reporting-17`, with GitLab, Kanboard and Request Tracker as passers, which is what
+`estimate-spent-and-remaining-on-an-hours-leaf` already cites.
+
+dossiq's half is unchanged by this: it places the hours leaf and writes the estimate,
+and holds no model of its own.
+
 ## What humaniq does not take
 
 The case, its term and its dates reaching a caseworker's own calendar client is
