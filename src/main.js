@@ -5,6 +5,7 @@ import {
 	buildManifest,
 	CnPageRenderer,
 	defaultPageTypes,
+	registerBuiltinDashboardWidgets,
 	registerIcons,
 	registerTranslations,
 } from '@conduction/nextcloud-vue'
@@ -20,42 +21,6 @@ import menuLayout from './menu-layout.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
 
-// Dashboard widget catalog — the side-effect import the PUBLISHED package drops.
-//
-// `CnWidgetGrid` resolves a `widgetKey` in three steps: the consumer registry
-// (src/registry.js), then `BUILT_IN_WIDGETS`, then the dashboard widget
-// catalog via `getWidgetTypeEntry()`. Six keys live ONLY in that third
-// catalog — `object-list`, `stats-block`, `chart`, `map`, `table`, `related` —
-// and they get there by SELF-REGISTRATION: importing
-// `CnWidgetGrid/registerDashboardWidgets.js` for its side effects is what
-// populates the registry.
-//
-// The library's own `src/index.js` does exactly that on line 13. Its BUILT
-// entrypoint does not:
-//
-//   src/index.js       line  13:  import '.../registerDashboardWidgets.js'      <-- side effect
-//   src/index.js       line 442:  export { registerBuiltinDashboardWidgets } …
-//   dist/esm/index.js  line   2:  export { registerBuiltinDashboardWidgets } …  <-- ONLY this
-//
-// `package.json`'s `module` field points at `dist/esm/index.js`, so every app
-// consuming the published package — which is every app, and CI — gets the
-// re-export without the side effect. A re-export does not execute the module
-// unless the exported binding is used, and nothing uses it. The catalog stays
-// empty and all six keys resolve to nothing.
-//
-// Measured on this instance before the fix: `EmployeeDetail` rendered
-// COMPLETELY BLANK, with 13 `[CnWidgetGrid] Unknown widgetKey` warnings
-// (9x object-list, 4x stats-block). Nine detail pages use these keys
-// (EmployeeDetail, PayrollRunDetail, CompReviewCycleDetail, ApplicationDetail,
-// OrgUnitDetail, AssetDetail, ReviewCycleDetail, ObjectiveDetail,
-// RosterDetail). The Dashboard was unaffected only because src/registry.js
-// overrides `chart` and `stat` locally, at layer 1.
-//
-// Filed upstream against @conduction/nextcloud-vue. This explicit import is
-// the leaf-app workaround and is safe to keep afterwards: the module is
-// idempotent, and `sideEffects` in the package already lists it, so webpack
-// will not drop it.
-import '@conduction/nextcloud-vue/dist/esm/components/CnWidgetGrid/registerDashboardWidgets.js'
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
 // gridstack is a REQUIRED peer of @conduction/nextcloud-vue that no consumer
@@ -68,6 +33,23 @@ import '@conduction/nextcloud-vue/css/index.css'
 import 'gridstack/dist/gridstack.min.css'
 // Global (unscoped) app styles
 import './assets/app.css'
+
+// Dashboard widget catalog. `CnWidgetGrid` resolves six keys (`object-list`,
+// `stats-block`, `chart`, `map`, `table`, `related`) only through a catalog
+// that fills itself when `CnWidgetGrid/registerDashboardWidgets.js` is
+// evaluated. The published `dist/esm/index.js` re-exports from that module
+// without importing it for its side effect, so unless the binding is used the
+// catalog stays empty: measured before the first fix, `EmployeeDetail` rendered
+// blank with 13 `[CnWidgetGrid] Unknown widgetKey` warnings, and nine detail
+// pages depend on these keys.
+//
+// Calling the library's documented `registerBuiltinDashboardWidgets()` uses the
+// binding, which forces the module to evaluate. It is imported from the package
+// root rather than from a `dist/` path, so it resolves identically against the
+// published package and against a local library checkout (`USE_LOCAL_LIB=true`,
+// where no `dist/` exists). dossiq, keepiq, pipelinq, planninq and shillinq
+// bootstrap the same way.
+registerBuiltinDashboardWidgets()
 
 // Register the app's schema/menu icons + lib translations once at bootstrap.
 // Without the icon registration every manifest `icon` name fails the CnIcon
