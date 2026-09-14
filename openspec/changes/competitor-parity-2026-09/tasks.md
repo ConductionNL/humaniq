@@ -11,6 +11,11 @@
 - [ ] 2.3 `a-working-calendar-per-person`
 - [ ] 2.4 `leave-against-a-department-schedule`
 
+## 4. Wave 4, the pending proposals
+
+- [x] 4.1 Read humaniq's one pending-proposal row (10.17) against `estimate-spent-and-remaining-on-an-hours-leaf` and record that REQ-HL-EST-001 and REQ-HL-EST-002 carry it.
+- [x] 4.2 Record the row's citation on the umbrella, so no change has to be opened to hold it.
+
 ## 3. Closing
 
 - [ ] 3.1 Archive this umbrella only after the four changes under it are archived,
