@@ -39,7 +39,55 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for RuleEngine jurisdiction scoping and the block decision.
  *
+ * RuleEngine reads the whole catalogue on construction, so every test here
+ * executes the catalogue and the per-domain check classes it holds. With
+ * `beStrictAboutCoverageMetadata` on and coverage collected in CI, an executed
+ * class that is neither covered nor used makes the test risky, and
+ * `failOnRisky` turns one risky test into a red cell with zero failing
+ * assertions. Locally the suite runs `--no-coverage`, so this never shows up.
+ * The `@uses` lines below name exactly what the engine pulls in.
+ *
  * @covers \OCA\Humaniq\Standards\RuleEngine
+ *
+ * @uses \OCA\Humaniq\Standards\Checks\CompChecks
+ * @uses \OCA\Humaniq\Standards\Checks\EuUsPayrollChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlAbpChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlAbsenceChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlAdministratieChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlAorChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlAssetChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlAtsChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlAttendanceChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlCaoChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlDgaChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlDocumentChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlDossierRetentionChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlEngineChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlFleetChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlGlPostChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlHr21Checks
+ * @uses \OCA\Humaniq\Standards\Checks\NlLeaveChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlNetPayChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlOffboardingChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlOnboardingChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlOrgChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlPayrollChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlPensionFilingChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlPerformanceChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlRetroChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlRosterChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlSignalChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlSinglePersonChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlStagiairChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlTravelExpenseChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlUitzendChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlWageGarnishmentChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlWageTaxFilingChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlWkrChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlWntChecks
+ * @uses \OCA\Humaniq\Standards\RuleCatalogue
+ * @uses \OCA\Humaniq\Standards\TableCheckRegistry
+ * @uses \OCA\Humaniq\Standards\Violation
  */
 final class RuleEngineTest extends TestCase {
 
