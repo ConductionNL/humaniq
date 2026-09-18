@@ -47,6 +47,40 @@ export const TIME_ENTRY_SCHEMA = 'TimeEntry'
 export const ORIGIN_TIMER = 'timer'
 
 /**
+ * Read the estimate summary for one host object: estimated, spent and
+ * remaining, in total and per role.
+ *
+ * Asked of humaniq rather than derived in the browser, because the remainder is
+ * the same number an enforced ceiling is applied against on the server. Two
+ * derivations of one figure drift, and the one a reader sees would be the one
+ * that is wrong (REQ-HL-EST-002).
+ *
+ * @param {string} domainObjectType The `<app>:<schema>` literal of the host object.
+ * @param {string} domainObjectRef  The host object's uuid.
+ *
+ * @return {Promise<object|null>} The summary, or null when there is nothing to ask about.
+ *
+ * @throws {Error} When humaniq refuses or cannot answer.
+ */
+export async function fetchEstimate(domainObjectType, domainObjectRef) {
+	if (!domainObjectType || !domainObjectRef) {
+		return null
+	}
+
+	const url = generateUrl(
+		'/apps/humaniq/api/time-entries/estimate?domainObjectType={domainObjectType}&domainObjectRef={domainObjectRef}',
+		{ domainObjectType, domainObjectRef },
+	)
+
+	const response = await fetch(url, { headers: { 'OCS-APIRequest': 'true' } })
+	if (!response.ok) {
+		throw new Error(`estimate request failed: ${response.status}`)
+	}
+
+	return await response.json()
+}
+
+/**
  * Read every time entry booked against one host object.
  *
  * Asks for the entries rather than for a total, because the tile shows two

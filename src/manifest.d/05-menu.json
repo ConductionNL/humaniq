@@ -213,6 +213,13 @@
 					"order": 10
 				},
 				{
+					"id": "TimeEstimates",
+					"label": "Time estimates",
+					"icon": "ClockPlusOutline",
+					"route": "TimeEstimates",
+					"order": 15
+				},
+				{
 					"id": "Timesheets",
 					"label": "Timesheets",
 					"icon": "ClockCheckOutline",

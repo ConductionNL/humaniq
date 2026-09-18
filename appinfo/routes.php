@@ -134,6 +134,10 @@ return [
         // per user", which spans rows the caller does not send. None of the
         // three accepts an entry id, so every one resolves from the caller and
         // there is no reference to tamper with. BEFORE the SPA catch-all.
+        // estimate-spent-and-remaining-on-an-hours-leaf REQ-HL-EST-002: the
+        // derived figures behind the KPI tile. A read, and the remainder it
+        // answers is computed here rather than stored anywhere.
+        ['name' => 'timeEntry#estimate',   'url' => '/api/time-entries/estimate',    'verb' => 'GET'],
         ['name' => 'timeEntry#timer',      'url' => '/api/time-entries/timer',       'verb' => 'GET'],
         ['name' => 'timeEntry#startTimer', 'url' => '/api/time-entries/timer/start', 'verb' => 'POST'],
         ['name' => 'timeEntry#stopTimer',  'url' => '/api/time-entries/timer/stop',  'verb' => 'POST'],

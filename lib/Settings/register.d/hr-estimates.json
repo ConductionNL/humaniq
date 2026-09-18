@@ -1,0 +1,34 @@
+{
+    "x-humaniq-fragment": "hr-estimates",
+    "components": {
+        "schemas": {
+            "TimeEstimate": {
+                "slug": "TimeEstimate",
+                "icon": "ClockPlusOutline",
+                "version": "0.1.0",
+                "title": "Time estimate",
+                "description": "The expected effort for one object in another app: how many hours it is thought to take, optionally per role, and whether that number is a ceiling. The expected number belongs to the consuming app, which writes it from its own policy: a case type's budgeted hours, a project's planned effort. The object, the derived remainder and the enforcement belong to humaniq (estimate-spent-and-remaining-on-an-hours-leaf, REQ-HL-EST-005). Remaining effort is NEVER stored: it is estimated minus booked, computed on read, so deleting an entry moves it at once.",
+                "type": "object",
+                "required": [
+                    "domainObjectType",
+                    "domainObjectRef",
+                    "estimatedHours"
+                ],
+                "properties": {
+                    "domainObjectType": {"type": "string", "title": "Object type", "description": "Which kind of object this estimate is for, as app:schema.", "x-notes": "The hours-leaf shape, verbatim: the `<app>:<schema>` literal, for example dossiq:zaak. The app id is the `<id>` in that app's appinfo/info.xml, so this literal moves when an app is renamed and not before."},
+                    "domainObjectRef": {"type": "string", "title": "Object", "description": "The uuid of the object this estimate is for.", "x-notes": "A plain string rather than a $ref, because the object lives in another app's register. Set together with domainObjectType or not at all."},
+                    "estimatedHours": {"type": "number", "minimum": 0, "title": "Estimated hours", "description": "How many hours this is expected to take."},
+                    "role": {"type": "string", "nullable": true, "title": "Role", "description": "Which role these hours are expected from. Leave empty for the object as a whole.", "x-notes": "Matched against TimeEntry.role. An object may carry one estimate per role plus at most one estimate with no role; a second estimate for the same object and the same role is refused by TimeEstimateListener (REQ-HL-EST-001), because two expected numbers for one role give two remainders and nothing looks wrong."},
+                    "enforced": {"type": "boolean", "default": false, "title": "Hard ceiling", "description": "Whether a booking that would pass this number is refused.", "x-notes": "REQ-HL-EST-004. False by default and refuses nothing: an estimate is a plan, and most plans are not budgets. When true, a NEW entry past the ceiling is refused in the write path naming the estimate, the ceiling and the hours left, while STOPPING A RUNNING TIMER always lands, because time already worked is a fact and a register that refuses a fact reports a smaller number than the truth."},
+                    "note": {"type": "string", "nullable": true, "title": "Note", "description": "Where this number comes from, in one line."}
+                }
+            },
+            "TimeEntry": {
+                "x-notes": "estimate-spent-and-remaining-on-an-hours-leaf: the booking gains the role it was worked in, so an estimate per role has something to count against. It is the ONLY field this change adds to TimeEntry: spent stays the sum of the entries and remaining is never stored anywhere.",
+                "properties": {
+                    "role": {"type": "string", "nullable": true, "title": "Role", "description": "Which role these hours were worked in. Leave empty when the object is not split by role.", "x-notes": "Matched against TimeEstimate.role when the remainder is derived and when an enforced ceiling is applied (REQ-HL-EST-001/-004). A free string rather than an enum: a gemeente's roles are its own, and an enum here would make adding one a humaniq release."}
+                }
+            }
+        }
+    }
+}

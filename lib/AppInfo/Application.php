@@ -42,6 +42,7 @@ use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
 use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
+use OCA\Humaniq\Listener\TimeEstimateListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
 use OCA\Humaniq\Listener\TimesheetApprovalListener;
 use OCA\Humaniq\Listener\TimesheetProcessStampListener;
@@ -485,6 +486,22 @@ class Application extends App implements IBootstrap {
 				listener: ResourceBookingOverlapListener::class,
 				registers: null,
 				schemas: [ResourceBookingOverlapListener::RESOURCEBOOKING_SLUG]
+			);
+		}
+
+		// estimate-spent-and-remaining-on-an-hours-leaf REQ-HL-EST-001/-004:
+		// refuse a second estimate for one object and role, and refuse a
+		// booking that would carry an ENFORCED estimate past its ceiling. In
+		// the write path because the leaf and the consuming app's own screen
+		// both book through OpenRegister's object API, and the refusal has to
+		// read the same from either.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: TimeEstimateListener::class,
+				registers: null,
+				schemas: [TimeEstimateListener::TIMEESTIMATE_SLUG, TimeEstimateListener::TIMEENTRY_SLUG]
 			);
 		}
 
