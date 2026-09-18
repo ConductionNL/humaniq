@@ -280,6 +280,14 @@
 		"route": "/dsr-requests/:id"
 	},
 	{
+		"id": "TimeEstimates",
+		"route": "/urenschattingen"
+	},
+	{
+		"id": "TimeEstimateDetail",
+		"route": "/urenschattingen/:id"
+	},
+	{
 		"id": "Expenses",
 		"route": "/expenses"
 	},
