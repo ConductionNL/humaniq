@@ -68,11 +68,13 @@ class RosterCheckService {
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param IAppConfig $appConfig App config for the register slug.
 	 * @param LoggerInterface $logger Logger.
+	 * @param CompetenceCheckService $competences The competence cross-check (design D3).
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
+		private readonly CompetenceCheckService $competences = new CompetenceCheckService(),
 	) {
 
 	}//end __construct()
@@ -206,12 +208,14 @@ class RosterCheckService {
 			'assignmentsChecked' => count($projected),
 			'violations' => [],
 			'mandatoryViolations' => 0,
+			'competenceFindings' => 0,
 			'registerResolved' => true,
 		];
 
 		foreach ($projected as $assignment) {
 			foreach (RuleEngine::evaluate('RosterAssignment', $assignment, $context) as $violation) {
 				$report['violations'][] = [
+					'kind' => CompetenceCheckService::WORKING_TIME_KIND,
 					'objectType' => 'RosterAssignment',
 					'objectId' => (string)($assignment['id'] ?? $assignment['@self']['id'] ?? ''),
 					'ruleId' => $violation->ruleId,
@@ -222,6 +226,32 @@ class RosterCheckService {
 				if ($violation->severity === 'mandatory') {
 					$report['mandatoryViolations']++;
 				}
+			}
+		}
+
+		// The competence cross-check runs in the SAME act as the working-time
+		// rules (REQ-ROST-C02), so `occ humaniq:roster:check` and
+		// POST /api/roster/check still answer the whole question in one call.
+		// It keeps the never-throw posture: a competence list that cannot be
+		// read costs its own findings and nothing else.
+		try {
+			$competenceFindings = $this->competences->findings(
+				assignments: $projected,
+				shiftsById: $shiftsById,
+				competences: $this->loadAll('EmployeeCompetence', $register)
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'humaniq: the competence cross-check could not run: ' . $e->getMessage()
+			);
+			$competenceFindings = [];
+		}
+
+		foreach ($competenceFindings as $finding) {
+			$report['violations'][] = $finding;
+			++$report['competenceFindings'];
+			if (($finding['severity'] ?? '') === 'mandatory') {
+				$report['mandatoryViolations']++;
 			}
 		}
 
@@ -317,6 +347,7 @@ class RosterCheckService {
 			'assignmentsChecked' => 0,
 			'violations' => [],
 			'mandatoryViolations' => 0,
+			'competenceFindings' => 0,
 			'registerResolved' => true,
 		];
 
@@ -344,6 +375,7 @@ class RosterCheckService {
 			'assignmentsChecked' => 0,
 			'violations' => [],
 			'mandatoryViolations' => 0,
+			'competenceFindings' => 0,
 			'registerResolved' => false,
 			'error' => $message,
 		];

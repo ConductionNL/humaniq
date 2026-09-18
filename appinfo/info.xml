@@ -102,6 +102,14 @@ Vrij en open source onder de EUPL-1.2-licentie.
              the per-balance lastAccruedPeriod marker — not the interval —
              defines "once a month". Gated by the leave_accrual_enabled toggle. -->
         <job>OCA\Humaniq\BackgroundJob\LeaveAccrualJob</job>
+        <!--
+            agenda-rostering-and-resource-booking REQ-AGD-005: refreshes the
+            cached busy time of every active CalendarSubscription. Reads each
+            feed and never writes to one; a failed poll records the degradation
+            and LEAVES the previous cache, so a calendar server that is briefly
+            down does not make somebody look free all week.
+        -->
+        <job>OCA\Humaniq\BackgroundJob\PollCalendarSubscriptionsJob</job>
     </background-jobs>
 
     <repair-steps>

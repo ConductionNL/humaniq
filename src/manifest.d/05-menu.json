@@ -321,6 +321,12 @@
 					"route": "AttendanceRecords"
 				},
 				{
+					"id": "EmployeeCompetences",
+					"label": "Competences",
+					"icon": "CertificateOutline",
+					"route": "EmployeeCompetences"
+				},
+				{
 					"id": "BhvCertificeringen",
 					"label": "Emergency response certifications",
 					"icon": "ShieldCheckOutline",
@@ -507,6 +513,27 @@
 					"icon": "TimelineClockOutline",
 					"route": "Shifts",
 					"order": 70
+				},
+				{
+					"id": "Resources",
+					"label": "Resources",
+					"icon": "DoorOpen",
+					"route": "Resources",
+					"order": 80
+				},
+				{
+					"id": "ResourceBookings",
+					"label": "Resource bookings",
+					"icon": "CalendarCheck",
+					"route": "ResourceBookings",
+					"order": 90
+				},
+				{
+					"id": "CalendarSubscriptions",
+					"label": "Calendar subscriptions",
+					"icon": "CalendarSyncOutline",
+					"route": "CalendarSubscriptions",
+					"order": 100
 				}
 			]
 		},

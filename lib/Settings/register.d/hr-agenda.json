@@ -1,0 +1,90 @@
+{
+    "x-humaniq-fragment": "hr-agenda",
+    "components": {
+        "schemas": {
+            "EmployeeCompetence": {
+                "slug": "EmployeeCompetence",
+                "icon": "CertificateOutline",
+                "version": "0.1.0",
+                "title": "Employee competence",
+                "description": "One qualification one employee holds, from a date and optionally until one: a BOA bevoegdheid, a heftruckcertificaat, a BHV diploma. A competence whose validUntil has passed stops counting on its own date, without anybody editing the record, because that is the day the roster has to refuse the shift (agenda-rostering-and-resource-booking, REQ-ROST-C01).",
+                "type": "object",
+                "required": [
+                    "employeeId",
+                    "competenceCode"
+                ],
+                "properties": {
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "title": "Employee", "description": "Who holds this qualification."},
+                    "competenceCode": {"type": "string", "title": "Competence", "description": "The code of the qualification, for example boa-domein-1.", "x-notes": "Matched against Shift.requiredCompetences by CompetenceCheckService. A free code rather than an enum: a gemeente's list of qualifications is not a thing humaniq can enumerate in advance."},
+                    "label": {"type": "string", "nullable": true, "title": "Label", "description": "What this qualification is called, for a reader."},
+                    "issuedOn": {"type": "string", "format": "date", "nullable": true, "title": "Issued on", "description": "The first day this qualification counts."},
+                    "validUntil": {"type": "string", "format": "date", "nullable": true, "title": "Valid until", "description": "The last day this qualification counts. Leave empty when it does not expire."},
+                    "note": {"type": "string", "nullable": true, "title": "Note", "description": "Anything the planner should know about this qualification."}
+                }
+            },
+            "Resource": {
+                "slug": "Resource",
+                "icon": "DoorOpen",
+                "version": "0.1.0",
+                "title": "Resource",
+                "description": "Something that can be booked for a period: a room, a vehicle or a piece of equipment. A resource carries a quantity, because one room is not one geluidsmeter: three inspectors and two meters means the third waits (agenda-rostering-and-resource-booking, REQ-AGD-003).",
+                "type": "object",
+                "required": [
+                    "name",
+                    "kind"
+                ],
+                "properties": {
+                    "name": {"type": "string", "title": "Name", "description": "What this resource is called, for example Hoorzittingzaal 2."},
+                    "kind": {"type": "string", "enum": ["room", "vehicle", "equipment"], "x-enum-labels": {"room": "Room", "vehicle": "Vehicle", "equipment": "Equipment"}, "default": "room", "title": "Kind", "description": "What sort of thing this is."},
+                    "orgUnitId": {"type": "string", "format": "uuid", "$ref": "OrgUnit", "nullable": true, "title": "Org unit", "description": "Which team this resource belongs to. Leave empty to make it bookable everywhere."},
+                    "quantity": {"type": "number", "minimum": 1, "default": 1, "title": "Quantity", "description": "How many of this resource there are. A booking past this number over one period is refused.", "x-notes": "REQ-AGD-004: the overlap refusal fires when the overlapping bookings would EXCEED this number, so a room is quantity 1 and two meters is quantity 2."},
+                    "location": {"type": "string", "nullable": true, "title": "Location", "description": "Where this resource is, for a reader who has to go there."},
+                    "active": {"type": "boolean", "default": true, "title": "Active", "description": "Whether this resource can currently be booked. A resource out of service refuses a booking."}
+                }
+            },
+            "ResourceBooking": {
+                "slug": "ResourceBooking",
+                "icon": "CalendarCheck",
+                "version": "0.1.0",
+                "title": "Resource booking",
+                "description": "One resource held for one period, by one employee, optionally for a named object in another app. A booking that would take a resource past its quantity over an overlapping period is refused on the write rather than reported in a later run: a room booked twice for one hoorzitting is a person standing in a corridor (agenda-rostering-and-resource-booking, design D6).",
+                "type": "object",
+                "required": [
+                    "resourceId",
+                    "start",
+                    "end"
+                ],
+                "properties": {
+                    "resourceId": {"type": "string", "format": "uuid", "$ref": "Resource", "title": "Resource", "description": "What is being booked."},
+                    "start": {"type": "string", "format": "date-time", "title": "Start", "description": "When the booking starts."},
+                    "end": {"type": "string", "format": "date-time", "title": "End", "description": "When the booking ends."},
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "nullable": true, "title": "Booked by", "description": "Who booked it, and whose agenda it stands on."},
+                    "purpose": {"type": "string", "nullable": true, "title": "Purpose", "description": "What it is booked for, in a few words."},
+                    "domainObjectType": {"type": "string", "nullable": true, "title": "Object type", "description": "Which kind of object this booking belongs to, as app:schema.", "x-notes": "The hours-leaf shape, verbatim: the `<app>:<schema>` literal, for example dossiq:zaak. Written the same way in both places on purpose, so a consuming app addresses hours and bookings identically."},
+                    "domainObjectRef": {"type": "string", "nullable": true, "title": "Object", "description": "The uuid of the object this booking belongs to.", "x-notes": "The hours-leaf shape: the object's uuid, in the app named by domainObjectType. A free string rather than a $ref, because the object lives in another app's register."}
+                }
+            },
+            "CalendarSubscription": {
+                "slug": "CalendarSubscription",
+                "icon": "CalendarSyncOutline",
+                "version": "0.1.0",
+                "title": "Calendar subscription",
+                "description": "An iCalendar feed humaniq reads for one employee, to know when they are busy. humaniq never writes to it and never makes an object from an event in it: an employee's private agenda is not humaniq's to edit, and a two way sync makes a deletion ambiguous in a way nobody can debug (agenda-rostering-and-resource-booking, design D7).",
+                "type": "object",
+                "required": [
+                    "employeeId",
+                    "feedUrl"
+                ],
+                "properties": {
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "title": "Employee", "description": "Whose calendar this is."},
+                    "feedUrl": {"type": "string", "title": "Feed address", "description": "The iCalendar address humaniq reads.", "x-notes": "Read only. Nothing humaniq does issues anything other than a GET against this address (REQ-AGD-005)."},
+                    "label": {"type": "string", "nullable": true, "title": "Label", "description": "What this calendar is called, for the person who administers it."},
+                    "active": {"type": "boolean", "default": true, "title": "Active", "description": "Whether humaniq still reads this calendar."},
+                    "lastPolledAt": {"type": "string", "format": "date-time", "nullable": true, "title": "Last read", "description": "When humaniq last read this calendar."},
+                    "lastPollStatus": {"type": "string", "enum": ["ok", "unreachable", "unreadable"], "x-enum-labels": {"ok": "Read", "unreachable": "Could not be reached", "unreadable": "Could not be read"}, "nullable": true, "title": "Last result", "description": "How the last read went.", "x-notes": "REQ-AGD-005: a failed poll records the degradation here and LEAVES THE CACHE alone, so a feed that is briefly down does not empty somebody's agenda."},
+                    "busyPeriods": {"type": "array", "nullable": true, "title": "Busy periods", "description": "The periods this calendar says the person is busy.", "x-notes": "Cached busy time ONLY: each item is {start, end}. No title, no location, no attendees, no organiser, ever. The AVG boundary leave-calendar-nc draws for the Nextcloud calendar, drawn again here.", "items": {"type": "object", "properties": {"start": {"type": "string", "format": "date-time", "title": "Start", "description": "When the busy period starts."}, "end": {"type": "string", "format": "date-time", "title": "End", "description": "When the busy period ends."}}}}
+                }
+            }
+        }
+    }
+}

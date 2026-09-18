@@ -21,18 +21,21 @@ driven passers glpi, otobo and znuny. Proving system znuny:
 `AgentAppointmentEdit.pm`.
 
 #### Scenario: A handler's week reads from five sources at once
+@e2e tests/e2e/spec-coverage/agenda-and-resource-booking.spec.ts
 - **GIVEN** an employee with a rostered shift on Monday, approved leave on Wednesday
   and a booked hoorzitting room on Friday
 - **WHEN** the agenda is asked for that employee and that week
 - **THEN** it returns three entries, each naming its kind and the object it came from
 
 #### Scenario: A cancelled leave request leaves the agenda at once
+@e2e tests/e2e/spec-coverage/agenda-and-resource-booking.spec.ts
 - **GIVEN** an approved leave request showing on the agenda
 - **WHEN** the request is withdrawn
 - **THEN** the next read of the agenda does not contain it, with no sync job in
   between
 
 #### Scenario: The reason for an absence never reaches the agenda
+@e2e exclude a sick-leave fixture would put an absence on a person's record; covered by AgendaAndAvailabilityTest::testAnAbsenceEntryCarriesNoReason, which asserts the reason is absent from the whole serialised entry
 - **GIVEN** an open `SickLeaveCase` with a recorded reason
 - **WHEN** the agenda is read by anyone
 - **THEN** the entry carries the kind "absent" and the person's name, and carries no
@@ -50,11 +53,13 @@ The answer SHALL name the free hours per employee, not a yes or a no, so a calle
 tell a person with one free afternoon from a person with a free week.
 
 #### Scenario: An unqualified colleague is not offered
+@e2e exclude covered by AgendaAndAvailabilityTest::testAvailabilityOffersOnlyTheQualified, with the unfiltered answer beside it as the control
 - **GIVEN** two employees free on Thursday, one holding `boa-domein-1` and one not
 - **WHEN** availability is asked for Thursday with competence `boa-domein-1`
 - **THEN** only the holder is returned
 
 #### Scenario: Busy time from a private calendar counts
+@e2e exclude needs a live iCalendar feed the e2e instance has no way to serve; covered by AgendaAndAvailabilityTest::testExternalBusyTimeIsDeductedFromFreeHours and CalendarSubscriptionPollerTest
 - **GIVEN** an employee with a subscribed external calendar showing a three-hour
   event on Thursday morning
 - **WHEN** availability is asked for Thursday
@@ -75,12 +80,14 @@ driven passer glpi (Reservations: `front/reservation.php`, `reservationitem.php`
 `report.reservation.php`).
 
 #### Scenario: A hoorzitting room is booked against the case that needs it
+@e2e tests/e2e/spec-coverage/agenda-and-resource-booking.spec.ts
 - **GIVEN** a resource "Hoorzittingzaal 2" of kind `room`
 - **WHEN** a booking is written for Friday 10:00 to 12:00 with
   `domainObjectType` `dossiq:zaak` and the case's uuid
 - **THEN** the booking holds the room for that period and names the case it belongs to
 
 #### Scenario: A resource out of service stops being bookable
+@e2e tests/e2e/spec-coverage/agenda-and-resource-booking.spec.ts
 - **GIVEN** a resource with `active` false
 - **WHEN** a booking is attempted for it
 - **THEN** the write is refused
@@ -93,11 +100,13 @@ The refusal SHALL happen on the write, not in a later report, and SHALL name the
 booking that blocks it.
 
 #### Scenario: The second booking of one room loses
+@e2e tests/e2e/spec-coverage/agenda-and-resource-booking.spec.ts
 - **GIVEN** "Hoorzittingzaal 2" with quantity 1, booked Friday 10:00 to 12:00
 - **WHEN** a second booking is attempted for Friday 11:00 to 13:00
 - **THEN** the write is refused and the refusal names the existing booking
 
 #### Scenario: Three inspectors and two meters
+@e2e tests/e2e/spec-coverage/agenda-and-resource-booking.spec.ts
 - **GIVEN** a resource "Geluidsmeter" with quantity 2 and two overlapping bookings
 - **WHEN** a third overlapping booking is attempted
 - **THEN** it is refused, and a fourth booking outside the overlap is accepted
@@ -118,16 +127,19 @@ driven passers glpi (`src/Planning.php:1693-1989`) and otobo
 (`AdminAppointmentImport`).
 
 #### Scenario: A private appointment blocks time without disclosing itself
+@e2e exclude needs a live feed; covered by CalendarSubscriptionPollerTest::testASuccessfulPollCachesThePeriods, which asserts the title is absent from the cached payload
 - **GIVEN** a subscribed feed containing an event titled "Tandarts"
 - **WHEN** the agenda is read by the employee's manager
 - **THEN** the period shows as busy and the title is absent from the answer
 
 #### Scenario: An unreachable feed does not empty an agenda
+@e2e exclude covered by CalendarSubscriptionPollerTest::testAnUnreachableFeedKeepsThePreviousCache
 - **GIVEN** a subscribed feed that has been polled successfully before
 - **WHEN** the next poll fails
 - **THEN** the cached busy periods stay in the agenda and a degradation is recorded
 
 #### Scenario: Nothing is written outward
+@e2e exclude covered by CalendarSubscriptionPollerTest::testOnlyReadsAreIssuedAgainstTheFeed, which records every request the poller issues
 - **WHEN** a humaniq roster assignment, leave request or booking is created for an
   employee with a subscribed feed
 - **THEN** no request is made to the feed's URL other than a read
@@ -144,11 +156,13 @@ surface at all rather than an empty one. An empty agenda and a missing humaniq m
 not look the same.
 
 #### Scenario: A case page shows the handler's week without reading the hrmq register
+@e2e exclude needs a consuming app installed beside humaniq; both halves of the leaf are pinned by RegisterAgendaLeafListenerTest and the bundle entry is asserted there too
 - **WHEN** a consuming app places the `humaniq-agenda` leaf on a case detail page
 - **THEN** the widget reads the agenda for that case's handler, and the consuming
   app's own manifest contains no query against the `hrmq` register
 
 #### Scenario: The surface is absent when humaniq is
+@e2e exclude asserts the ABSENCE of a registration on an instance without humaniq, which an instance running humaniq cannot observe; the registration sits inside the class_exists guard in Application::boot()
 - **WHEN** the consuming app is installed and humaniq is not
 - **THEN** no `humaniq-agenda` leaf is registered, and the host renders no agenda
   panel

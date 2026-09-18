@@ -1,0 +1,186 @@
+{
+    "pageInstances": [
+        {
+            "templateRef": "indexScaffold",
+            "register": "humaniq",
+            "schema": "EmployeeCompetence",
+            "params": {
+                "id": "EmployeeCompetences",
+                "route": "/bevoegdheden",
+                "title": "Competences",
+                "columns": [
+                    "employeeId",
+                    "competenceCode",
+                    "label",
+                    "issuedOn",
+                    "validUntil"
+                ],
+                "sort": {
+                    "field": "validUntil",
+                    "order": "asc"
+                },
+                "filters": [
+                    "employeeId",
+                    "competenceCode"
+                ],
+                "description": "Which qualification each person holds, and until when. A qualification that has run out stops counting on its own date.",
+                "note": "agenda-rostering-and-resource-booking (2026-09-18): REQ-ROST-C01. Sorted on validUntil ascending because the interesting row is the one about to expire: a BOA pas that runs out next week is what a planner has to act on, and CompetenceCheckService will refuse the shift the day after it does without anybody editing the record. No lifecycle: a qualification is renewed by writing a new row, not by transitioning an old one."
+            }
+        },
+        {
+            "templateRef": "simpleDetailScaffold",
+            "register": "humaniq",
+            "schema": "EmployeeCompetence",
+            "params": {
+                "id": "EmployeeCompetenceDetail",
+                "route": "/bevoegdheden/:id",
+                "title": "Competence",
+                "dataTitle": "Competence",
+                "dataIcon": "CertificateOutline",
+                "relatedTitle": "Related",
+                "gridHeight": 6,
+                "note": "agenda-rostering-and-resource-booking (2026-09-18): a dated fact, the BhvCertificering precedent. No lifecycleActions widget. employeeId is excluded from the data widget because Related resolves and links the person by name.",
+                "exclude": [
+                    "employeeId"
+                ]
+            }
+        },
+        {
+            "templateRef": "indexScaffold",
+            "register": "humaniq",
+            "schema": "Resource",
+            "params": {
+                "id": "Resources",
+                "route": "/resources",
+                "title": "Resources",
+                "columns": [
+                    "name",
+                    "kind",
+                    "location",
+                    "quantity",
+                    "orgUnitId",
+                    "active"
+                ],
+                "sort": {
+                    "field": "name",
+                    "order": "asc"
+                },
+                "filters": [
+                    "kind",
+                    "active"
+                ],
+                "description": "Rooms, vehicles and equipment that can be booked for a period.",
+                "note": "agenda-rostering-and-resource-booking (2026-09-18): REQ-AGD-003. quantity is a column rather than a hidden setting because it is what decides whether a second booking is a clash: one room is one room, and two geluidsmeters are two. `active` likewise: a resource out of service refuses a booking, and a planner needs to see which ones do."
+            }
+        },
+        {
+            "templateRef": "simpleDetailScaffold",
+            "register": "humaniq",
+            "schema": "Resource",
+            "params": {
+                "id": "ResourceDetail",
+                "route": "/resources/:id",
+                "title": "Resource",
+                "dataTitle": "Resource",
+                "dataIcon": "DoorOpen",
+                "relatedTitle": "Related",
+                "gridHeight": 6,
+                "note": "agenda-rostering-and-resource-booking (2026-09-18): configuration, not a case, so no lifecycleActions widget. The bookings themselves are their own index; this page is what a resource IS, not when it is taken.",
+                "exclude": [
+                    "orgUnitId"
+                ]
+            }
+        },
+        {
+            "templateRef": "indexScaffold",
+            "register": "humaniq",
+            "schema": "ResourceBooking",
+            "params": {
+                "id": "ResourceBookings",
+                "route": "/reserveringen",
+                "title": "Resource bookings",
+                "columns": [
+                    "resourceId",
+                    "start",
+                    "end",
+                    "employeeId",
+                    "purpose"
+                ],
+                "sort": {
+                    "field": "start",
+                    "order": "asc"
+                },
+                "filters": [
+                    "resourceId",
+                    "employeeId"
+                ],
+                "description": "Who holds which room, vehicle or piece of equipment, and when.",
+                "note": "agenda-rostering-and-resource-booking (2026-09-18): REQ-AGD-004. A booking that would take a resource past its quantity over an overlapping period is refused by ResourceBookingOverlapListener in the WRITE path, so this index never shows a clash: the refusal names the booking that blocks it at the moment somebody tries, rather than in a report nobody reads before walking to the room."
+            }
+        },
+        {
+            "templateRef": "simpleDetailScaffold",
+            "register": "humaniq",
+            "schema": "ResourceBooking",
+            "params": {
+                "id": "ResourceBookingDetail",
+                "route": "/reserveringen/:id",
+                "title": "Resource booking",
+                "dataTitle": "Booking",
+                "dataIcon": "CalendarCheck",
+                "relatedTitle": "Related",
+                "gridHeight": 6,
+                "note": "agenda-rostering-and-resource-booking (2026-09-18): domainObjectType and domainObjectRef are kept on the data widget rather than excluded, because they are what says WHAT this room was taken for, and they are written in the hours-leaf shape so a reader recognises them from the hours card.",
+                "exclude": [
+                    "resourceId",
+                    "employeeId"
+                ]
+            }
+        },
+        {
+            "templateRef": "indexScaffold",
+            "register": "humaniq",
+            "schema": "CalendarSubscription",
+            "params": {
+                "id": "CalendarSubscriptions",
+                "route": "/kalenderabonnementen",
+                "title": "Calendar subscriptions",
+                "columns": [
+                    "employeeId",
+                    "label",
+                    "active",
+                    "lastPolledAt",
+                    "lastPollStatus"
+                ],
+                "sort": {
+                    "field": "lastPolledAt",
+                    "order": "desc"
+                },
+                "filters": [
+                    "active",
+                    "lastPollStatus"
+                ],
+                "description": "External calendars humaniq reads to know when somebody is busy. humaniq only ever reads them.",
+                "note": "agenda-rostering-and-resource-booking (2026-09-18): REQ-AGD-005. lastPollStatus is a column because a feed that has quietly stopped answering is the failure that matters: the cached busy time stays in place on purpose, so the agenda keeps looking healthy while going stale, and this column is where that becomes visible. busyPeriods carries periods only, never a title, a location or an attendee."
+            }
+        },
+        {
+            "templateRef": "simpleDetailScaffold",
+            "register": "humaniq",
+            "schema": "CalendarSubscription",
+            "params": {
+                "id": "CalendarSubscriptionDetail",
+                "route": "/kalenderabonnementen/:id",
+                "title": "Calendar subscription",
+                "dataTitle": "Subscription",
+                "dataIcon": "CalendarSyncOutline",
+                "relatedTitle": "Related",
+                "gridHeight": 6,
+                "note": "agenda-rostering-and-resource-booking (2026-09-18): read only. There is no action on this page that writes to the feed, because humaniq never writes to one: a private agenda is not humaniq's to edit, and a two way sync makes a deletion ambiguous in a way nobody can debug (design D7).",
+                "exclude": [
+                    "employeeId"
+                ]
+            }
+        }
+    ]
+}

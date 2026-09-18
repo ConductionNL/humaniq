@@ -59,6 +59,14 @@ return [
         // transitions stay the ones LeaveRequest already declares.
         ['name' => 'leaveSchedule#schedule', 'url' => '/api/leave/schedule', 'verb' => 'GET'],
         ['name' => 'leaveSchedule#coverage', 'url' => '/api/leave/coverage', 'verb' => 'GET'],
+        // agenda-rostering-and-resource-booking — the agenda for one subject
+        // (REQ-AGD-001), who is free in a window and for how many hours
+        // (REQ-AGD-002), and planned against contracted forward from a date
+        // (REQ-ROST-C03). Reads only: every planning object is written through
+        // OpenRegister's own object API.
+        ['name' => 'agenda#agenda', 'url' => '/api/agenda', 'verb' => 'GET'],
+        ['name' => 'agenda#availability', 'url' => '/api/availability', 'verb' => 'GET'],
+        ['name' => 'agenda#capacity', 'url' => '/api/capacity', 'verb' => 'GET'],
         // comp-cycles — guarded trigger for the CompAdjustmentDetail
         // "Effectueren" manifest api-call action (design.md D6).
         ['name' => 'comp#effectuate', 'url' => '/api/comp/effectuate', 'verb' => 'POST'],

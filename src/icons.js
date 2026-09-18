@@ -56,6 +56,7 @@ import CashMultiple from "vue-material-design-icons/CashMultiple.vue";
 import CashPlus from "vue-material-design-icons/CashPlus.vue";
 import CashRemove from "vue-material-design-icons/CashRemove.vue";
 import CashSync from "vue-material-design-icons/CashSync.vue";
+import CertificateOutline from "vue-material-design-icons/CertificateOutline.vue";
 import ChartBar from "vue-material-design-icons/ChartBar.vue";
 import ChartBoxOutline from "vue-material-design-icons/ChartBoxOutline.vue";
 import CheckCircleOutline from "vue-material-design-icons/CheckCircleOutline.vue";
@@ -77,6 +78,7 @@ import DatabaseExportOutline from "vue-material-design-icons/DatabaseExportOutli
 import DeleteAlertOutline from "vue-material-design-icons/DeleteAlertOutline.vue";
 import DesktopTowerMonitor from "vue-material-design-icons/DesktopTowerMonitor.vue";
 import Domain from "vue-material-design-icons/Domain.vue";
+import DoorOpen from "vue-material-design-icons/DoorOpen.vue";
 import DownloadOutline from "vue-material-design-icons/DownloadOutline.vue";
 import EmoticonSickOutline from "vue-material-design-icons/EmoticonSickOutline.vue";
 import EyeOutline from "vue-material-design-icons/EyeOutline.vue";
@@ -170,6 +172,7 @@ export default {
 	CashPlus,
 	CashRemove,
 	CashSync,
+	CertificateOutline,
 	ChartBar,
 	ChartBoxOutline,
 	CheckCircleOutline,
@@ -191,6 +194,7 @@ export default {
 	DeleteAlertOutline,
 	DesktopTowerMonitor,
 	Domain,
+	DoorOpen,
 	DownloadOutline,
 	EmoticonSickOutline,
 	EyeOutline,
