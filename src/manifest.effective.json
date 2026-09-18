@@ -453,6 +453,18 @@
 					"route": "LeaveRequests"
 				},
 				{
+					"icon": "CalendarMultiselectOutline",
+					"id": "LeaveSchedule",
+					"label": "Department leave schedule",
+					"route": "LeaveSchedule"
+				},
+				{
+					"icon": "CalendarStarOutline",
+					"id": "LeaveTypes",
+					"label": "Leave types",
+					"route": "LeaveTypes"
+				},
+				{
 					"icon": "CheckDecagramOutline",
 					"id": "LeaveApproval",
 					"label": "Leave approval",
@@ -8455,6 +8467,118 @@
 			"route": "/configuratie/integraties/:id",
 			"title": "Integration",
 			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "leave-against-a-department-schedule (2026-09-18): REQ-LVM-T01, administered rather than enumerated. A LeaveRequest holds the CODE of its type, not a uuid, so every request written while leaveType was an enum still resolves to the type carrying that code -- LeaveTypeResolver matches uuid first, code second. `active` is a filter rather than a hidden flag because a retired type must stay readable on the requests that carry it while being absent from the picker on a new one. No lifecycle: a type is edited or retired, never transitioned.",
+				"columns": [
+					"code",
+					"label",
+					"drawsFromBalance",
+					"requiresReason",
+					"requiresDocument",
+					"maxNoticeDays",
+					"active"
+				],
+				"description": "The kinds of leave this employer offers, and what each one asks for. Adding a kind of leave is writing a row here.",
+				"filters": [
+					"active"
+				],
+				"register": "humaniq",
+				"schema": "LeaveType",
+				"sort": {
+					"field": "label",
+					"order": "asc"
+				}
+			},
+			"id": "LeaveTypes",
+			"route": "/verlofsoorten",
+			"title": "Leave types",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "leave-against-a-department-schedule (2026-09-18): configuration, not a case. No lifecycleActions widget and no stat leaf -- a leave type has no state machine and no numeric headline. The conditions on this page (requiresReason, requiresDocument, maxNoticeDays) are enforced on submit by LeaveTypeConditionGuard, which is the transition guard declared on LeaveRequest.submit, so this page configures a rule it does not itself enforce.",
+				"layout": [
+					{
+						"gridHeight": 6,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "LeaveType",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"title": "Leave type"
+						},
+						"icon": "CalendarStarOutline",
+						"id": "data",
+						"title": "Leave type",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "LeaveTypeDetail",
+			"route": "/verlofsoorten/:id",
+			"title": "Leave type",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "leave-against-a-department-schedule (2026-09-18): REQ-LVM-S01/S03. The schedule is composed ON READ and nothing is stored, so a withdrawn request is gone from the next read with no sync in between. This page is the declarative half over LeaveRequest itself; the org-unit composition, the redaction of a request the reader may not see, and the coverage warning live in GET /api/leave/schedule and GET /api/leave/coverage, which resolve every request under the CALLER's own RBAC rather than inventing a scoping rule of their own. Approve and reject here drive the transitions LeaveRequest already declares, guarded by the existing NoSelfApprovalGuard: no edge is added for this surface, and the LeaveApproval queue keeps working unchanged beside it.",
+				"columns": [
+					"employeeId",
+					"startDate",
+					"endDate",
+					"leaveType",
+					"status"
+				],
+				"description": "Who is away when, in start-date order, so an approval is decided against the month rather than against one row at a time.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"status",
+					"employeeId"
+				],
+				"register": "humaniq",
+				"schema": "LeaveRequest",
+				"sort": {
+					"field": "startDate",
+					"order": "asc"
+				}
+			},
+			"id": "LeaveSchedule",
+			"route": "/verlofrooster",
+			"title": "Department leave schedule",
+			"type": "index"
 		},
 		{
 			"config": {

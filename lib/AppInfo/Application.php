@@ -32,6 +32,7 @@ use OCA\Humaniq\Command\RulesAuditCommand;
 use OCA\Humaniq\Command\RulesSeedTestDataCommand;
 use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
+use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
@@ -149,6 +150,21 @@ class Application extends App implements IBootstrap {
 			TimesheetNotEmptyGuard::class,
 			static function ($c): TimesheetNotEmptyGuard {
 				return new TimesheetNotEmptyGuard();
+			}
+		);
+
+		// OpenRegister lifecycle guard for the LeaveRequest `submit` transition
+		// (leave-against-a-department-schedule REQ-LVM-T02): a type that needs a
+		// reason, a document or a shorter notice refuses the submit and names the
+		// condition. It loads the administered LeaveTypes, so it takes the shared
+		// register gateway; keyed by its FQCN so OpenRegister's
+		// LifecycleGuardRegistry resolves the `requires` tag on that transition.
+		$context->registerService(
+			LeaveTypeConditionGuard::class,
+			static function ($c): LeaveTypeConditionGuard {
+				return new LeaveTypeConditionGuard(
+					gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class)
+				);
 			}
 		);
 

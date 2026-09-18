@@ -276,6 +276,18 @@
 		"route": "/configuratie/integraties/:id"
 	},
 	{
+		"id": "LeaveTypes",
+		"route": "/verlofsoorten"
+	},
+	{
+		"id": "LeaveTypeDetail",
+		"route": "/verlofsoorten/:id"
+	},
+	{
+		"id": "LeaveSchedule",
+		"route": "/verlofrooster"
+	},
+	{
 		"id": "LeaveRequests",
 		"route": "/leave-requests"
 	},

@@ -29,7 +29,8 @@
                                     "rejected"
                                 ],
                                 "to": "submitted",
-                                "description": "The employee submits the leave request for manager approval. A rejected request may be corrected and re-submitted."
+                                "requires": "OCA\\Humaniq\\Lifecycle\\LeaveTypeConditionGuard",
+                            "description": "The employee submits the leave request for manager approval. A rejected request may be corrected and re-submitted. The LeaveTypeConditionGuard refuses a submit whose leave type needs a reason, needs a document, or limits how far ahead it may be requested, naming the condition that failed (REQ-LVM-T02). A draft is saved without those checks."
                             },
                             "approve": {
                                 "from": [
@@ -61,16 +62,20 @@
                     "leaveType": {
                         "type": "string",
                         "title": "Leave type",
-                        "description": "The kind of leave: holiday, sick, unpaid, special, care or parental.", "x-notes": "The kind of leave requested, aligned with Dutch HR practice (Wet arbeid en zorg / BW 7): holiday (vakantie), sick (ziekteverlof), unpaid (onbetaald verlof), special (bijzonder verlof), care (zorgverlof), parental (ouderschapsverlof).",
-                        "x-enum-labels": {"holiday": "Holiday", "sick": "Sick leave", "unpaid": "Unpaid leave", "special": "Special leave", "care": "Care leave", "parental": "Parental leave"},
-                        "enum": [
-                            "holiday",
-                            "sick",
-                            "unpaid",
-                            "special",
-                            "care",
-                            "parental"
-                        ]
+                        "description": "The kind of leave, by the code of a leave type.", "x-notes": "Holds the CODE of a LeaveType object (leave-against-a-department-schedule, REQ-LVM-T01), not a uuid and no longer a closed enum: a new kind of leave is an administered object rather than a schema change and a release. It stays a plain code string on purpose, so every request written while this was an enum (holiday, sick, unpaid, special, care, parental) still resolves to the type whose code it already holds, which a uuid reference would have broken in silence. LeaveTypeResolver::resolve() matches a stored value against a type's uuid first and its code second.",
+                        "x-enum-labels": {"holiday": "Holiday", "sick": "Sick leave", "unpaid": "Unpaid leave", "special": "Special leave", "care": "Care leave", "parental": "Parental leave"}
+                    },
+                    "documentId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Document",
+                        "description": "The document supporting this request, when its kind of leave needs one.", "x-notes": "Checked on submit when the request's LeaveType has requiresDocument true (REQ-LVM-T02). A free identifier rather than a $ref: the supporting document may live in filinq, in Files or in a case system, so this records WHICH document was shown, not where it is kept."
+                    },
+                    "coverageWarningAccepted": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Accepted coverage warning",
+                        "description": "The coverage warning the approver was shown and accepted when they approved this request anyway.", "x-notes": "REQ-LVM-S02: thin coverage warns and never refuses, so the trail is the record of what the approver read before proceeding. Empty means no warning was produced, not that one was ignored."
                     },
                     "startDate": {
                         "type": "string",

@@ -250,6 +250,18 @@
 					"route": "LeaveRequests"
 				},
 				{
+					"id": "LeaveSchedule",
+					"label": "Department leave schedule",
+					"icon": "CalendarMultiselectOutline",
+					"route": "LeaveSchedule"
+				},
+				{
+					"id": "LeaveTypes",
+					"label": "Leave types",
+					"icon": "CalendarStarOutline",
+					"route": "LeaveTypes"
+				},
+				{
 					"id": "LeaveApproval",
 					"label": "Leave approval",
 					"icon": "CheckDecagramOutline",

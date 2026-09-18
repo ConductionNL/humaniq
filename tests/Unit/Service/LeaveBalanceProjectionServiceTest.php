@@ -256,6 +256,41 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 	}//end testApprovedRequestIsProjectedOntoTheBalance()
 
 	/**
+	 * A type that draws no balance posts nothing: the same approved request,
+	 * with `unpaid` administered as `drawsFromBalance` false, leaves the
+	 * balance where it was.
+	 *
+	 * The drawing type above is the control. Without it, "nothing was written"
+	 * could equally mean the projection never runs in this harness.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-T01
+	 */
+	public function testATypeThatDrawsNoBalancePostsNothing(): void {
+		$request = [
+			'id' => 'req-1',
+			'employeeId' => 'emp-1',
+			'leaveType' => 'unpaid',
+			'startDate' => '2026-03-02',
+			'endDate' => '2026-03-06',
+			'hours' => 40,
+			'status' => 'approved',
+		];
+
+		$rows = $this->fixture([$request]);
+		$rows['LeaveBalance'][0]['leaveType'] = 'unpaid';
+		$rows['LeaveType'] = [
+			['id' => 'type-unpaid', 'code' => 'unpaid', 'label' => 'Onbetaald verlof', 'drawsFromBalance' => false],
+		];
+
+		[$service, $fake] = $this->service($rows);
+		$service->projectForRequest($request);
+
+		$this->assertNull($this->writtenUsedHours($fake), 'An unpaid approval must not move a balance');
+	}//end testATypeThatDrawsNoBalancePostsNothing()
+
+	/**
 	 * A request that is not approved contributes nothing.
 	 *
 	 * @return void

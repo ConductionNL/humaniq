@@ -67,11 +67,13 @@ class LeaveBalanceProjectionService {
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param SettingsService $settingsService Register slug source.
 	 * @param LoggerInterface $logger Logger.
+	 * @param LeaveTypeResolver $leaveTypes Resolves the request's administered leave type.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
+		private readonly LeaveTypeResolver $leaveTypes = new LeaveTypeResolver(),
 	) {
 
 	}//end __construct()
@@ -95,6 +97,18 @@ class LeaveBalanceProjectionService {
 		$employeeId = trim((string)($request['employeeId'] ?? ''));
 		$leaveType = trim((string)($request['leaveType'] ?? ''));
 		if ($employeeId === '' || $leaveType === '') {
+			return;
+		}
+
+		// leave-against-a-department-schedule REQ-LVM-T01: a type that draws no
+		// balance posts nothing. Unpaid leave and most bijzonder verlof spend no
+		// entitlement, and projecting them would move a number that should not
+		// move -- silently, because a balance write reports nothing.
+		if ($this->leaveTypes->drawsFromBalance($this->resolveLeaveType($request)) === false) {
+			$this->logger->info(
+				'humaniq: leave type ' . $leaveType . ' draws no balance, so nothing was projected for employee '
+				. $employeeId . '.'
+			);
 			return;
 		}
 
@@ -154,6 +168,33 @@ class LeaveBalanceProjectionService {
 		}//end for
 
 	}//end projectForRequest()
+
+	/**
+	 * The administered `LeaveType` a request means, or null when none is
+	 * administered or the list cannot be read.
+	 *
+	 * A read failure resolves to null, which {@see LeaveTypeResolver::drawsFromBalance()}
+	 * treats as drawing from the balance: that is what every instance did before
+	 * types existed, so a register hiccup cannot silently stop counting holiday.
+	 *
+	 * @param array<string, mixed> $request The LeaveRequest row.
+	 *
+	 * @return array<string, mixed>|null The type, or null.
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-T01
+	 */
+	private function resolveLeaveType(array $request): ?array {
+		try {
+			$types = $this->loadAll('LeaveType');
+		} catch (\Throwable $e) {
+			$this->logger->info(
+				'humaniq: the leave types could not be read, so the balance projection ran as before: ' . $e->getMessage()
+			);
+			return null;
+		}
+
+		return $this->leaveTypes->resolve(request: $request, types: $types);
+	}//end resolveLeaveType()
 
 	/**
 	 * Write the recomputed usage onto a balance, skipping an unchanged value.

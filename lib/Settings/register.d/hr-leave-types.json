@@ -1,0 +1,145 @@
+{
+    "x-humaniq-fragment": "hr-leave-types",
+    "components": {
+        "schemas": {
+            "LeaveType": {
+                "slug": "LeaveType",
+                "icon": "CalendarStarOutline",
+                "version": "0.1.0",
+                "title": "Leave type",
+                "description": "A kind of leave an employer offers, administered rather than enumerated: a code, a label, whether it draws from a balance, whether it needs a reason or a document, and how far ahead it may be requested. Adding zorgverlof is writing an object, not changing a schema and shipping a release (leave-against-a-department-schedule, REQ-LVM-T01). A LeaveRequest carries the code of its type, so a request written before this schema existed still resolves to the type whose code it already holds.",
+                "type": "object",
+                "required": [
+                    "code",
+                    "label"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "title": "Code",
+                        "description": "The short code a leave request carries, for example holiday or zorgverlof.",
+                        "x-notes": "Stable identifier. LeaveRequest.leaveType holds this value, which is why a code is never rewritten once requests carry it."
+                    },
+                    "label": {
+                        "type": "string",
+                        "title": "Label",
+                        "description": "What this kind of leave is called on screen."
+                    },
+                    "drawsFromBalance": {
+                        "type": "boolean",
+                        "default": true,
+                        "title": "Draws from the balance",
+                        "description": "Whether approving this kind of leave draws hours from the employee's balance.",
+                        "x-notes": "False means the approval posts nothing to LeaveBalance: unpaid leave and most bijzonder verlof draw down no entitlement."
+                    },
+                    "requiresReason": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Needs a reason",
+                        "description": "Whether a request of this kind can only be submitted with a reason filled in."
+                    },
+                    "requiresDocument": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Needs a document",
+                        "description": "Whether a request of this kind can only be submitted with a document attached."
+                    },
+                    "maxNoticeDays": {
+                        "type": "number",
+                        "minimum": 0,
+                        "nullable": true,
+                        "title": "Maximum notice in days",
+                        "description": "How many days ahead this kind of leave may be requested at most. Leave empty for no limit.",
+                        "x-notes": "Checked on submit only: a request starting further ahead than this is refused, naming the condition. Calamiteitenverlof is the case this exists for."
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "default": true,
+                        "title": "Active",
+                        "description": "Whether this kind of leave is offered on new requests. A retired type still resolves on the requests that already carry it."
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveType",
+                    "slug": "leavetype-holiday"
+                },
+                "code": "holiday",
+                "label": "Holiday",
+                "drawsFromBalance": true,
+                "requiresReason": false,
+                "requiresDocument": false,
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveType",
+                    "slug": "leavetype-sick"
+                },
+                "code": "sick",
+                "label": "Sick leave",
+                "drawsFromBalance": false,
+                "requiresReason": false,
+                "requiresDocument": false,
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveType",
+                    "slug": "leavetype-unpaid"
+                },
+                "code": "unpaid",
+                "label": "Unpaid leave",
+                "drawsFromBalance": false,
+                "requiresReason": true,
+                "requiresDocument": false,
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveType",
+                    "slug": "leavetype-special"
+                },
+                "code": "special",
+                "label": "Special leave",
+                "drawsFromBalance": false,
+                "requiresReason": true,
+                "requiresDocument": false,
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveType",
+                    "slug": "leavetype-care"
+                },
+                "code": "care",
+                "label": "Care leave",
+                "drawsFromBalance": true,
+                "requiresReason": true,
+                "requiresDocument": false,
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveType",
+                    "slug": "leavetype-parental"
+                },
+                "code": "parental",
+                "label": "Parental leave",
+                "drawsFromBalance": true,
+                "requiresReason": false,
+                "requiresDocument": true,
+                "active": true
+            }
+        ]
+    }
+}
