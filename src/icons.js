@@ -40,7 +40,10 @@ import CalendarCheck from "vue-material-design-icons/CalendarCheck.vue";
 import CalendarClock from "vue-material-design-icons/CalendarClock.vue";
 import CalendarClockOutline from "vue-material-design-icons/CalendarClockOutline.vue";
 import CalendarMonthOutline from "vue-material-design-icons/CalendarMonthOutline.vue";
+import CalendarMultiselectOutline from "vue-material-design-icons/CalendarMultiselectOutline.vue";
 import CalendarRange from "vue-material-design-icons/CalendarRange.vue";
+import CalendarRemoveOutline from "vue-material-design-icons/CalendarRemoveOutline.vue";
+import CalendarStarOutline from "vue-material-design-icons/CalendarStarOutline.vue";
 import CalendarSyncOutline from "vue-material-design-icons/CalendarSyncOutline.vue";
 import CalendarWeekendOutline from "vue-material-design-icons/CalendarWeekendOutline.vue";
 import CarKey from "vue-material-design-icons/CarKey.vue";
@@ -151,7 +154,10 @@ export default {
 	CalendarClock,
 	CalendarClockOutline,
 	CalendarMonthOutline,
+	CalendarMultiselectOutline,
 	CalendarRange,
+	CalendarRemoveOutline,
+	CalendarStarOutline,
 	CalendarSyncOutline,
 	CalendarWeekendOutline,
 	CarKey,

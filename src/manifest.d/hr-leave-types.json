@@ -1,0 +1,77 @@
+{
+    "pageInstances": [
+        {
+            "templateRef": "indexScaffold",
+            "register": "humaniq",
+            "schema": "LeaveType",
+            "params": {
+                "id": "LeaveTypes",
+                "route": "/verlofsoorten",
+                "title": "Leave types",
+                "columns": [
+                    "code",
+                    "label",
+                    "drawsFromBalance",
+                    "requiresReason",
+                    "requiresDocument",
+                    "maxNoticeDays",
+                    "active"
+                ],
+                "sort": {
+                    "field": "label",
+                    "order": "asc"
+                },
+                "filters": [
+                    "active"
+                ],
+                "description": "The kinds of leave this employer offers, and what each one asks for. Adding a kind of leave is writing a row here.",
+                "note": "leave-against-a-department-schedule (2026-09-18): REQ-LVM-T01, administered rather than enumerated. A LeaveRequest holds the CODE of its type, not a uuid, so every request written while leaveType was an enum still resolves to the type carrying that code -- LeaveTypeResolver matches uuid first, code second. `active` is a filter rather than a hidden flag because a retired type must stay readable on the requests that carry it while being absent from the picker on a new one. No lifecycle: a type is edited or retired, never transitioned."
+            }
+        },
+        {
+            "templateRef": "simpleDetailScaffold",
+            "register": "humaniq",
+            "schema": "LeaveType",
+            "params": {
+                "id": "LeaveTypeDetail",
+                "route": "/verlofsoorten/:id",
+                "title": "Leave type",
+                "dataTitle": "Leave type",
+                "dataIcon": "CalendarStarOutline",
+                "relatedTitle": "Related",
+                "gridHeight": 6,
+                "note": "leave-against-a-department-schedule (2026-09-18): configuration, not a case. No lifecycleActions widget and no stat leaf -- a leave type has no state machine and no numeric headline. The conditions on this page (requiresReason, requiresDocument, maxNoticeDays) are enforced on submit by LeaveTypeConditionGuard, which is the transition guard declared on LeaveRequest.submit, so this page configures a rule it does not itself enforce."
+            }
+        },
+        {
+            "templateRef": "indexScaffold",
+            "register": "humaniq",
+            "schema": "LeaveRequest",
+            "params": {
+                "id": "LeaveSchedule",
+                "route": "/verlofrooster",
+                "title": "Department leave schedule",
+                "columns": [
+                    "employeeId",
+                    "startDate",
+                    "endDate",
+                    "leaveType",
+                    "status"
+                ],
+                "sort": {
+                    "field": "startDate",
+                    "order": "asc"
+                },
+                "filters": [
+                    "status",
+                    "employeeId"
+                ],
+                "filter": {
+                    "administrationId": "@workspace.activeAdministrationId?"
+                },
+                "description": "Who is away when, in start-date order, so an approval is decided against the month rather than against one row at a time.",
+                "note": "leave-against-a-department-schedule (2026-09-18): REQ-LVM-S01/S03. The schedule is composed ON READ and nothing is stored, so a withdrawn request is gone from the next read with no sync in between. This page is the declarative half over LeaveRequest itself; the org-unit composition, the redaction of a request the reader may not see, and the coverage warning live in GET /api/leave/schedule and GET /api/leave/coverage, which resolve every request under the CALLER's own RBAC rather than inventing a scoping rule of their own. Approve and reject here drive the transitions LeaveRequest already declares, guarded by the existing NoSelfApprovalGuard: no edge is added for this surface, and the LeaveApproval queue keeps working unchanged beside it."
+            }
+        }
+    ]
+}

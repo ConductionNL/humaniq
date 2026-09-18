@@ -53,6 +53,12 @@ return [
         // rostering — guarded trigger for the RosterDetail "ATW-controle"
         // manifest api-call action (design.md D5).
         ['name' => 'roster#check', 'url' => '/api/roster/check', 'verb' => 'POST'],
+        // leave-against-a-department-schedule — one org unit's leave over a
+        // period, composed on read (REQ-LVM-S01), and the coverage warning an
+        // approver is shown before approving (REQ-LVM-S02). Reads only: the
+        // transitions stay the ones LeaveRequest already declares.
+        ['name' => 'leaveSchedule#schedule', 'url' => '/api/leave/schedule', 'verb' => 'GET'],
+        ['name' => 'leaveSchedule#coverage', 'url' => '/api/leave/coverage', 'verb' => 'GET'],
         // comp-cycles — guarded trigger for the CompAdjustmentDetail
         // "Effectueren" manifest api-call action (design.md D6).
         ['name' => 'comp#effectuate', 'url' => '/api/comp/effectuate', 'verb' => 'POST'],
