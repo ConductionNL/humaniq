@@ -157,6 +157,19 @@
 			<p class="hq-hours__sub" data-testid="hq-hours-own">
 				{{ ownLine }}
 			</p>
+			<!-- Estimated and remaining stand BESIDE spent, never instead of it
+			     (REQ-HL-EST-003). An overrun renders as a negative remainder,
+			     because a remainder clipped at zero makes "exactly used up" and
+			     "ten hours over" the same picture. -->
+			<p v-if="hasEstimate" class="hq-hours__sub" data-testid="hq-hours-estimate">
+				{{ estimateLine }}
+			</p>
+			<!-- No estimate is SAID. A remaining of zero means the estimate is
+			     used up, and an object nobody estimated has not used anything
+			     up, so no remaining figure is rendered at all. -->
+			<p v-else class="hq-hours__sub" data-testid="hq-hours-no-estimate">
+				{{ t('humaniq', 'No estimate is set for this item.') }}
+			</p>
 			<p v-if="running" class="hq-hours__sub" data-testid="hq-hours-running-elsewhere">
 				{{ t('humaniq', 'Timer running on another item') }}
 			</p>
@@ -210,6 +223,7 @@ import HoursBookingDialog from '../dialogs/HoursBookingDialog.vue'
 import {
 	administrationUrl,
 	fetchEntries,
+	fetchEstimate,
 	fetchRunningTimer,
 	startTimer,
 	stopTimer,
@@ -269,6 +283,8 @@ export default {
 			now: Date.now(),
 			tick: null,
 			showBooking: false,
+			/** The estimate summary humaniq derives, or null when it is unread. */
+			estimate: null,
 			menuOpen: false,
 			/** Viewport coordinates the open menu is pinned at, or null. */
 			menuStyle: null,
@@ -294,6 +310,38 @@ export default {
 			}
 
 			return this.formatHours(this.sumOf(this.entries))
+		},
+
+		/**
+		 * Whether this object carries an estimate at all.
+		 *
+		 * False while the summary is unread, so a failed read renders the
+		 * no-estimate line rather than a remainder computed from nothing.
+		 *
+		 * @return {boolean} True when an estimate exists.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-003
+		 */
+		hasEstimate() {
+			return this.estimate !== null && this.estimate.hasEstimate === true
+		},
+
+		/**
+		 * Estimated and remaining, as a full line beside the spent total.
+		 *
+		 * @return {string} The line.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-003
+		 */
+		estimateLine() {
+			if (this.hasEstimate === false) {
+				return ''
+			}
+
+			const estimated = this.formatHours(Number(this.estimate.estimatedHours || 0))
+			const remaining = this.formatHours(Number(this.estimate.remainingHours || 0))
+
+			return t('humaniq', '{estimated} estimated, {remaining} remaining', { estimated, remaining })
 		},
 
 		/**
@@ -437,6 +485,7 @@ export default {
 		this.uid = String(window?.OC?.getCurrentUser?.()?.uid || '')
 		this.load()
 		this.loadRunning()
+		this.loadEstimate()
 		this.tick = window.setInterval(() => {
 			this.now = Date.now()
 		}, TICK_MS)
@@ -489,6 +538,29 @@ export default {
 		},
 
 		/**
+		 * Ask humaniq for estimated, spent and remaining on this object.
+		 *
+		 * A failed read leaves `estimate` null, which renders the no-estimate
+		 * line: a remainder is only ever shown when one was actually answered,
+		 * so an unread estimate cannot render as a number the reader believes.
+		 *
+		 * @return {Promise<void>} Resolves when the summary has settled.
+		 *
+		 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-002
+		 */
+		async loadEstimate() {
+			if (this.objectId === '' || this.domainObjectType === '') {
+				return
+			}
+
+			try {
+				this.estimate = await fetchEstimate(this.domainObjectType, this.objectId)
+			} catch {
+				this.estimate = null
+			}
+		},
+
+		/**
 		 * Ask the server what timer, if any, the caller has running.
 		 *
 		 * Failing quietly is right here and nowhere else on this tile: not knowing
@@ -523,6 +595,9 @@ export default {
 					await stopTimer()
 					this.running = null
 					await this.load()
+					// A stopped timer always lands, even past an enforced
+					// ceiling, so the remainder it moved has to be re-read.
+					await this.loadEstimate()
 				} else {
 					const result = await startTimer(this.domainObjectType, this.objectId)
 					if (result.status === 'running') {
@@ -552,6 +627,10 @@ export default {
 		async onBooked() {
 			this.showBooking = false
 			await this.load()
+			// The remainder is derived from the entries, so a new booking moves
+			// it. Re-read rather than subtract locally: the server's number is
+			// the one an enforced ceiling is applied against.
+			await this.loadEstimate()
 		},
 
 		/**

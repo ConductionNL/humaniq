@@ -447,6 +447,13 @@
 		{
 			"children": [
 				{
+					"icon": "ClockPlusOutline",
+					"id": "TimeEstimates",
+					"label": "Time estimates",
+					"order": 15,
+					"route": "TimeEstimates"
+				},
+				{
 					"icon": "CalendarWeekendOutline",
 					"id": "LeaveRequests",
 					"label": "Leave requests",
@@ -8531,6 +8538,87 @@
 			"id": "DsrRequestDetail",
 			"route": "/dsr-requests/:id",
 			"title": "Data subject request",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "estimate-spent-and-remaining-on-an-hours-leaf (2026-09-18): REQ-HL-EST-001. There is NO remaining column, and that is the point: remaining is estimated minus booked, derived on read by TimeEstimateService, so deleting an entry moves it at once and no stored figure can go stale. `enforced` is a column because it changes what happens on a write: false refuses nothing, true refuses a new entry past the ceiling naming the hours left, and a stopped timer lands either way. The expected number itself belongs to the consuming app, which writes it from its own policy (REQ-HL-EST-005); this page is where an administrator reads and corrects one.",
+				"columns": [
+					"domainObjectType",
+					"domainObjectRef",
+					"role",
+					"estimatedHours",
+					"enforced"
+				],
+				"description": "How many hours an object in another app is expected to take, and whether that number is a ceiling.",
+				"filters": [
+					"domainObjectType",
+					"enforced"
+				],
+				"register": "humaniq",
+				"schema": "TimeEstimate",
+				"sort": {
+					"field": "estimatedHours",
+					"order": "desc"
+				}
+			},
+			"id": "TimeEstimates",
+			"route": "/urenschattingen",
+			"title": "Time estimates",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "estimate-spent-and-remaining-on-an-hours-leaf (2026-09-18): a plain dated fact with no lifecycle, so no lifecycleActions widget. domainObjectType and domainObjectRef stay ON the data widget rather than being excluded: they are what this estimate is ABOUT, and the object lives in another app, so Related cannot resolve it into a name.",
+				"layout": [
+					{
+						"gridHeight": 6,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "TimeEstimate",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"title": "Estimate"
+						},
+						"icon": "ClockPlusOutline",
+						"id": "data",
+						"title": "Estimate",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "TimeEstimateDetail",
+			"route": "/urenschattingen/:id",
+			"title": "Time estimate",
 			"type": "detail"
 		},
 		{

@@ -40,7 +40,9 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Listener\HoursWriteRefusedException;
+use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\RunningTimerService;
+use OCA\Humaniq\Service\TimeEstimateService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -63,16 +65,72 @@ class TimeEntryController extends Controller {
 	 * @param IUserSession        $userSession  The calling user, the only identity any of these methods trusts.
 	 * @param RunningTimerService $timers       Start, stop and resolve the running timer.
 	 * @param LoggerInterface     $logger       Logger.
+	 * @param HoursRegisterGateway $gateway     The shared register plumbing (the estimate read).
+	 * @param TimeEstimateService $estimates    Derives estimated, spent and remaining.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly IUserSession $userSession,
 		private readonly RunningTimerService $timers,
 		private readonly LoggerInterface $logger,
+		private readonly HoursRegisterGateway $gateway,
+		private readonly TimeEstimateService $estimates,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
 	}//end __construct()
+
+	/**
+	 * `GET /api/time-entries/estimate` — estimated, spent and remaining for one
+	 * host object, in total and per role.
+	 *
+	 * Computed on read from the entries that exist at this moment, so deleting
+	 * a booking moves the remainder at once and no recomputation job stands in
+	 * between. Nothing here is stored (REQ-HL-EST-002).
+	 *
+	 * @param string|null $domainObjectType The `<app>:<schema>` literal of the host object.
+	 * @param string|null $domainObjectRef The host object's uuid.
+	 *
+	 * @return JSONResponse The summary, or 400 when the object is not named.
+	 *
+	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-002
+	 */
+	#[NoAdminRequired]
+	public function estimate(?string $domainObjectType = null, ?string $domainObjectRef = null): JSONResponse {
+		$domainObjectType = trim((string)$domainObjectType);
+		$domainObjectRef = trim((string)$domainObjectRef);
+		if ($domainObjectType === '' || $domainObjectRef === '') {
+			return new JSONResponse(
+				['error' => 'domainObjectType en domainObjectRef zijn verplicht.'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		if ($this->callerUid() === '') {
+			return new JSONResponse(['error' => 'Log in om de uren te bekijken.'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		try {
+			$summary = $this->estimates->summary(
+				estimates: $this->gateway->findFiltered('TimeEstimate', ['domainObjectRef' => $domainObjectRef]),
+				entries: $this->gateway->findFiltered('TimeEntry', ['domainObjectRef' => $domainObjectRef]),
+				domainObjectType: $domainObjectType,
+				domainObjectRef: $domainObjectRef
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'TimeEntryController: the estimate for ' . $domainObjectType . ' ' . $domainObjectRef
+				. ' could not be read: ' . $e->getMessage()
+			);
+
+			return new JSONResponse(
+				['error' => 'De schatting kon niet worden gelezen.'],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+
+		return new JSONResponse($summary);
+	}//end estimate()
 
 	/**
 	 * `GET /api/time-entries/timer` — the caller's running timer, or none.

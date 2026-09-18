@@ -1,0 +1,46 @@
+{
+    "pageInstances": [
+        {
+            "templateRef": "indexScaffold",
+            "register": "humaniq",
+            "schema": "TimeEstimate",
+            "params": {
+                "id": "TimeEstimates",
+                "route": "/urenschattingen",
+                "title": "Time estimates",
+                "columns": [
+                    "domainObjectType",
+                    "domainObjectRef",
+                    "role",
+                    "estimatedHours",
+                    "enforced"
+                ],
+                "sort": {
+                    "field": "estimatedHours",
+                    "order": "desc"
+                },
+                "filters": [
+                    "domainObjectType",
+                    "enforced"
+                ],
+                "description": "How many hours an object in another app is expected to take, and whether that number is a ceiling.",
+                "note": "estimate-spent-and-remaining-on-an-hours-leaf (2026-09-18): REQ-HL-EST-001. There is NO remaining column, and that is the point: remaining is estimated minus booked, derived on read by TimeEstimateService, so deleting an entry moves it at once and no stored figure can go stale. `enforced` is a column because it changes what happens on a write: false refuses nothing, true refuses a new entry past the ceiling naming the hours left, and a stopped timer lands either way. The expected number itself belongs to the consuming app, which writes it from its own policy (REQ-HL-EST-005); this page is where an administrator reads and corrects one."
+            }
+        },
+        {
+            "templateRef": "simpleDetailScaffold",
+            "register": "humaniq",
+            "schema": "TimeEstimate",
+            "params": {
+                "id": "TimeEstimateDetail",
+                "route": "/urenschattingen/:id",
+                "title": "Time estimate",
+                "dataTitle": "Estimate",
+                "dataIcon": "ClockPlusOutline",
+                "relatedTitle": "Related",
+                "gridHeight": 6,
+                "note": "estimate-spent-and-remaining-on-an-hours-leaf (2026-09-18): a plain dated fact with no lifecycle, so no lifecycleActions widget. domainObjectType and domainObjectRef stay ON the data widget rather than being excluded: they are what this estimate is ABOUT, and the object lives in another app, so Related cannot resolve it into a name."
+            }
+        }
+    ]
+}

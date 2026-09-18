@@ -222,6 +222,13 @@
 		"order": 105,
 		"children": [
 			{
+				"id": "TimeEstimates",
+				"label": "Time estimates",
+				"icon": "ClockPlusOutline",
+				"route": "TimeEstimates",
+				"order": 15
+			},
+			{
 				"id": "LeaveRequests",
 				"label": "Leave requests",
 				"icon": "CalendarWeekendOutline",
