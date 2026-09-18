@@ -498,4 +498,88 @@ class AbsenceRateServiceTest extends TestCase {
 
 		$this->assertSame(10.0, $result['absentDayEquivalents']);
 	}//end testZeroPercentStepContributesNothingWithoutClosingTheCase()
+
+	/**
+	 * A working pattern, where the employee has one, supplies the denominator
+	 * instead of the contract's fte, so an absence percentage and a capacity
+	 * percentage divide by the same definition of a working day
+	 * (working-hours-per-person, REQ-WHP-003).
+	 *
+	 * The fte-only figure is asserted first as the control: without it, the
+	 * pattern-based assertion cannot tell "the pattern was applied" from "the
+	 * pattern was ignored and the number happened to match".
+	 *
+	 * @return void
+	 */
+	public function testAWorkingPatternSuppliesTheDenominatorWhereThereIsOne(): void {
+		[$start, $end] = $this->january();
+		$contracts = [$this->contract('emp-1', 24.0)];
+
+		$onFte = $this->service->absenceRate(
+			cases: [],
+			contracts: $contracts,
+			periodStart: $start,
+			periodEnd: $end
+		);
+
+		// Three eight-hour days a week, which is the same 24-hour contract
+		// expressed as days rather than as a fraction.
+		$pattern = [
+			'employeeId' => 'emp-1',
+			'validFrom' => '2025-01-01',
+			'validUntil' => null,
+			'hoursMonday' => 8,
+			'hoursTuesday' => 8,
+			'hoursWednesday' => 8,
+		];
+
+		$onPattern = $this->service->absenceRate(
+			cases: [],
+			contracts: $contracts,
+			periodStart: $start,
+			periodEnd: $end,
+			fullTimeHoursWeek: 40.0,
+			workingPatterns: [$pattern],
+			nonWorkingTimes: [],
+			nonWorkingDates: ['2026-01-01']
+		);
+
+		$this->assertSame(0, $onFte['employeesMeasuredOnPattern'], 'The control runs on the contract alone');
+		$this->assertSame(18.6, $onFte['availableDayEquivalents'], '31 days at 0.6 fte');
+
+		$this->assertSame(1, $onPattern['employeesMeasuredOnPattern']);
+		// January 2026 holds 13 pattern days (Mon-Wed), one of which the
+		// calendar marks non-working: 12 x 8 = 96 hours, at 40/7 hours per
+		// calendar-day equivalent.
+		$this->assertSame(16.8, $onPattern['availableDayEquivalents']);
+	}//end testAWorkingPatternSuppliesTheDenominatorWhereThereIsOne()
+
+	/**
+	 * An employee with no pattern keeps the contract-and-fte denominator, so
+	 * an instance that has written no pattern at all measures exactly what it
+	 * measured before.
+	 *
+	 * @return void
+	 */
+	public function testAnEmployeeWithoutAPatternKeepsTheContractDenominator(): void {
+		[$start, $end] = $this->january();
+
+		$result = $this->service->absenceRate(
+			cases: [],
+			contracts: [$this->contract('emp-1', 24.0)],
+			periodStart: $start,
+			periodEnd: $end,
+			fullTimeHoursWeek: 40.0,
+			workingPatterns: [
+				[
+					'employeeId' => 'emp-somebody-else',
+					'validFrom' => '2025-01-01',
+					'hoursMonday' => 8,
+				],
+			]
+		);
+
+		$this->assertSame(0, $result['employeesMeasuredOnPattern']);
+		$this->assertSame(18.6, $result['availableDayEquivalents']);
+	}//end testAnEmployeeWithoutAPatternKeepsTheContractDenominator()
 }//end class

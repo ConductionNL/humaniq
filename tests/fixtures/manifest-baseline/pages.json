@@ -450,5 +450,21 @@
 	{
 		"id": "WntDisclosureDetail",
 		"route": "/wnt-disclosures/:id"
+	},
+	{
+		"id": "WorkingPatterns",
+		"route": "/werkpatronen"
+	},
+	{
+		"id": "WorkingPatternDetail",
+		"route": "/werkpatronen/:id"
+	},
+	{
+		"id": "NonWorkingTimes",
+		"route": "/niet-werkdagen"
+	},
+	{
+		"id": "NonWorkingTimeDetail",
+		"route": "/niet-werkdagen/:id"
 	}
 ]

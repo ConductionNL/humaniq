@@ -19,6 +19,7 @@ openproject: Administration, Users, `resources :working_hours` and
 `resources :non_working_times` under `/users/:id`, with `working_days_preview`.
 
 #### Scenario: A part-timer's days are recorded, not their fraction
+@e2e tests/e2e/spec-coverage/working-hours-per-person.spec.ts
 - **GIVEN** an employee working eight hours on Monday, Tuesday and Wednesday and
   nothing on Thursday or Friday
 - **WHEN** the pattern is read
@@ -26,12 +27,14 @@ openproject: Administration, Users, `resources :working_hours` and
   is stored on it
 
 #### Scenario: Last quarter still divides by last quarter's contract
+@e2e exclude dated resolution over a past period, covered by WorkingHoursServiceTest::testAPastPeriodDividesByThePatternInForceThen
 - **GIVEN** an employee on 24 hours until 1 July and 32 hours after it
 - **WHEN** a capacity figure is computed over June
 - **THEN** it divides by 24, and the figure does not move when the July pattern is
   written
 
 #### Scenario: Two answers for one Tuesday are refused
+@e2e tests/e2e/spec-coverage/working-hours-per-person.spec.ts (the write path), WorkingHoursServiceTest::testOverlappingPatternsAreRefused (the refusal)
 - **GIVEN** an employee with a pattern valid from 1 January with no end
 - **WHEN** a second pattern valid from 1 March is written without first ending the
   running one
@@ -45,11 +48,13 @@ an administered list. A non-working time SHALL NOT draw down any leave balance a
 SHALL NOT open a sick-leave case.
 
 #### Scenario: A standing free Wednesday costs no leave
+@e2e tests/e2e/spec-coverage/working-hours-per-person.spec.ts
 - **GIVEN** an employee with a recurring non-working Wednesday
 - **WHEN** a Wednesday passes
 - **THEN** the leave balance is unchanged and no leave request exists for it
 
 #### Scenario: A re-integration schedule is recorded without becoming verlof
+@e2e exclude part-day arithmetic, covered by WorkingHoursServiceTest::testAPartDayNonWorkingTimeSubtractsInsideItsWindow
 - **GIVEN** an employee working reduced afternoons during re-integration
 - **WHEN** the reduced hours are recorded as non-working time
 - **THEN** they appear in the working-hours answer and nowhere in
@@ -67,12 +72,14 @@ query, so an absence percentage and a capacity percentage cannot disagree about 
 same person in the same week.
 
 #### Scenario: A national holiday on a working day answers zero
+@e2e exclude calendar application, covered by WorkingHoursServiceTest::testAFeestdagOnAContractedDayAnswersZero
 - **GIVEN** an employee contracted for eight hours on Monday and an openregister
   working calendar marking second Whitsun as non-working
 - **WHEN** the hours for that Monday are asked
 - **THEN** the answer is zero
 
 #### Scenario: A range sums what the pattern and the calendar leave
+@e2e exclude range arithmetic, covered by WorkingHoursServiceTest::testARangeSumsWhatThePatternAndCalendarLeave
 - **GIVEN** an employee on 24 contracted hours a week and one feestdag in the week
   asked about
 - **WHEN** the range is resolved
@@ -88,12 +95,14 @@ SHALL be recorded. humaniq SHALL NOT substitute a calendar of its own, and SHALL
 return a full working day for a date it cannot check.
 
 #### Scenario: An instance without openregister still answers, and says how
+@e2e exclude degradation path needs openregister ABSENT, which the e2e instance cannot be; covered by WorkingCalendarReaderTest and WorkingHoursServiceTest::testAnAnswerWithoutACalendarIsMarkedPatternOnly
 - **GIVEN** openregister is not installed
 - **WHEN** the hours for a Monday are asked
 - **THEN** the answer comes from the pattern alone, is marked pattern-only, and a
   degradation is recorded
 
 #### Scenario: humaniq never defines a feestdag
+@e2e tests/e2e/spec-coverage/working-hours-per-person.spec.ts
 - **WHEN** the working calendar is searched for in humaniq's own register
 - **THEN** no humaniq schema holds a national holiday, and the only source is
   openregister's calendar
@@ -106,10 +115,12 @@ the choice of which week is week one all belong to openregister, under decision 
 humaniq SHALL read the first and SHALL NOT hold any of the four.
 
 #### Scenario: A consuming app counting a termijn does not read humaniq
+@e2e exclude cross-app absence of a call, which no page in this repo can observe; the split is asserted in the register by tests/e2e/spec-coverage/working-hours-per-person.spec.ts
 - **WHEN** a consuming app resolves the working days of a statutory term
 - **THEN** it reads openregister's working calendar, and makes no call to humaniq
 
 #### Scenario: The split holds in the register
+@e2e tests/e2e/spec-coverage/working-hours-per-person.spec.ts
 - **WHEN** humaniq's register fragments are read
 - **THEN** they carry a working pattern and non-working times for people, and no
   organisation-level calendar, freeze period or week-numbering setting

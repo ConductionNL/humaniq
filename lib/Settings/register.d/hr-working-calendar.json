@@ -1,0 +1,53 @@
+{
+    "x-humaniq-fragment": "hr-working-calendar",
+    "components": {
+        "schemas": {
+            "WorkingPattern": {
+                "slug": "WorkingPattern",
+                "icon": "CalendarAccountOutline",
+                "version": "0.1.0",
+                "title": "Working pattern",
+                "description": "The contracted hours one employee works on each weekday, over a dated period. A contract change is a NEW pattern with its own validFrom, never an edit of the running one, so a figure computed over a past period still divides by the contract that was in force then (working-hours-per-person, design D2). Hours are stored per weekday rather than as a full-time fraction: two people on 0.6 fte can work entirely different days, and a planner that only knows the fraction gets both wrong (design D4). Two patterns for one employee whose periods overlap are refused.",
+                "type": "object",
+                "required": [
+                    "employeeId",
+                    "validFrom"
+                ],
+                "properties": {
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "title": "Employee", "description": "Whose working pattern this is.", "x-notes": "UUID reference to the Employee this pattern belongs to."},
+                    "validFrom": {"type": "string", "format": "date", "title": "Valid from", "description": "The first day this pattern applies."},
+                    "validUntil": {"type": "string", "format": "date", "nullable": true, "title": "Valid until", "description": "The last day this pattern applies. Leave empty while it is the running pattern.", "x-notes": "Inclusive end date; null means open-ended. A new pattern ends the running one rather than editing it."},
+                    "hoursMonday": {"type": "number", "minimum": 0, "default": 0, "title": "Hours on Monday", "description": "Contracted hours on a Monday."},
+                    "hoursTuesday": {"type": "number", "minimum": 0, "default": 0, "title": "Hours on Tuesday", "description": "Contracted hours on a Tuesday."},
+                    "hoursWednesday": {"type": "number", "minimum": 0, "default": 0, "title": "Hours on Wednesday", "description": "Contracted hours on a Wednesday."},
+                    "hoursThursday": {"type": "number", "minimum": 0, "default": 0, "title": "Hours on Thursday", "description": "Contracted hours on a Thursday."},
+                    "hoursFriday": {"type": "number", "minimum": 0, "default": 0, "title": "Hours on Friday", "description": "Contracted hours on a Friday."},
+                    "hoursSaturday": {"type": "number", "minimum": 0, "default": 0, "title": "Hours on Saturday", "description": "Contracted hours on a Saturday."},
+                    "hoursSunday": {"type": "number", "minimum": 0, "default": 0, "title": "Hours on Sunday", "description": "Contracted hours on a Sunday."},
+                    "note": {"type": "string", "nullable": true, "title": "Note", "description": "Why this pattern was written, in one line."}
+                }
+            },
+            "NonWorkingTime": {
+                "slug": "NonWorkingTime",
+                "icon": "CalendarRemoveOutline",
+                "version": "0.1.0",
+                "title": "Non-working time",
+                "description": "A day, a part of a day or a recurring weekday one employee does not work, that is neither leave nor sickness: a standing free Wednesday, a reduced schedule during re-integration, an adjusted week. It draws down no leave balance and opens no sick-leave case, because nobody requests it and nothing is deducted from it (working-hours-per-person, design D3). Leave stays in LeaveRequest and sickness in SickLeaveCase.",
+                "type": "object",
+                "required": [
+                    "employeeId",
+                    "reason"
+                ],
+                "properties": {
+                    "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "title": "Employee", "description": "Who does not work this time."},
+                    "reason": {"type": "string", "enum": ["vaste-vrije-dag", "aangepast-rooster", "re-integratie", "onbetaald-verlofafspraak", "anders"], "x-enum-labels": {"vaste-vrije-dag": "Standing free day", "aangepast-rooster": "Adjusted schedule", "re-integratie": "Re-integration schedule", "onbetaald-verlofafspraak": "Unpaid arrangement", "anders": "Other"}, "default": "vaste-vrije-dag", "title": "Reason", "description": "Why this time is not worked. It is never a leave type.", "x-notes": "Administered list. A value here never draws down a leave balance: leave is requested in LeaveRequest and sickness is recorded in SickLeaveCase."},
+                    "recurringWeekday": {"type": "string", "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"], "nullable": true, "x-enum-labels": {"monday": "Monday", "tuesday": "Tuesday", "wednesday": "Wednesday", "thursday": "Thursday", "friday": "Friday", "saturday": "Saturday", "sunday": "Sunday"}, "title": "Recurring weekday", "description": "The weekday this repeats on. Leave empty for a one-off period.", "x-notes": "When set, the entry applies to every occurrence of this weekday inside its start/end window (or for ever, when the window is open)."},
+                    "startDate": {"type": "string", "format": "date", "nullable": true, "title": "Start date", "description": "The first day this applies. Leave empty for a recurring weekday with no start."},
+                    "endDate": {"type": "string", "format": "date", "nullable": true, "title": "End date", "description": "The last day this applies. Leave empty while it runs on."},
+                    "hoursNotWorked": {"type": "number", "minimum": 0, "nullable": true, "title": "Hours not worked", "description": "How many hours of the day are not worked. Leave empty for the whole day.", "x-notes": "Null means the whole contracted day. A number subtracts that many hours from the day, never below zero, which is how a reduced afternoon is recorded."},
+                    "note": {"type": "string", "nullable": true, "title": "Note", "description": "Anything the administrator should know about this arrangement."}
+                }
+            }
+        }
+    }
+}

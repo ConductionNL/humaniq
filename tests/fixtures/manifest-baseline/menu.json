@@ -200,6 +200,18 @@
 				"label": "Offboardings",
 				"icon": "AccountMinusOutline",
 				"route": "Offboardings"
+			},
+			{
+				"id": "WorkingPatterns",
+				"label": "Working patterns",
+				"icon": "CalendarAccountOutline",
+				"route": "WorkingPatterns"
+			},
+			{
+				"id": "NonWorkingTimes",
+				"label": "Non-working times",
+				"icon": "CalendarRemoveOutline",
+				"route": "NonWorkingTimes"
 			}
 		]
 	},

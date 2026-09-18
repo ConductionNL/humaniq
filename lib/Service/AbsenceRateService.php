@@ -101,11 +101,13 @@ class AbsenceRateService {
 
 	/**
 	 * @param AbsenceProgression $progression The step-function half of the calculation.
+	 * @param WorkingHoursService $workingHours The one definition of a working day (working-hours-per-person, design D6).
 	 *
 	 * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-002
 	 */
 	public function __construct(
 		private readonly AbsenceProgression $progression = new AbsenceProgression(),
+		private readonly WorkingHoursService $workingHours = new WorkingHoursService(),
 	) {
 
 	}//end __construct()
@@ -118,11 +120,15 @@ class AbsenceRateService {
 	 * @param DateTimeImmutable $periodStart First day of the period, inclusive.
 	 * @param DateTimeImmutable $periodEnd Last day of the period, inclusive.
 	 * @param float $fullTimeHoursWeek Hours per week a 1.0 FTE works.
+	 * @param array<array<string, mixed>> $workingPatterns WorkingPattern objects, when the caller has them.
+	 * @param array<array<string, mixed>> $nonWorkingTimes NonWorkingTime objects, when the caller has them.
+	 * @param array<int, string>|null $nonWorkingDates ISO dates openregister's working calendar marks non-working, or null when it could not be read.
 	 *
-	 * @return array{absentDayEquivalents: float, availableDayEquivalents: float, percentage: float|null, casesWithoutContract: int}
-	 *                                                                                                                               `percentage` is null when availability is zero -- see the class docblock.
+	 * @return array{absentDayEquivalents: float, availableDayEquivalents: float, percentage: float|null, casesWithoutContract: int, employeesMeasuredOnPattern: int}
+	 *                                                                                                                                                                `percentage` is null when availability is zero -- see the class docblock.
 	 *
 	 * @spec openspec/specs/absence-rate/spec.md#REQ-ABSRATE-001
+	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-003
 	 */
 	public function absenceRate(
 		array $cases,
@@ -130,6 +136,9 @@ class AbsenceRateService {
 		DateTimeImmutable $periodStart,
 		DateTimeImmutable $periodEnd,
 		float $fullTimeHoursWeek = self::DEFAULT_FULL_TIME_HOURS_PER_WEEK,
+		array $workingPatterns = [],
+		array $nonWorkingTimes = [],
+		?array $nonWorkingDates = null,
 	): array {
 		$ftePerEmployee = $this->fteByEmployee(
 			contracts: $contracts,
@@ -138,12 +147,46 @@ class AbsenceRateService {
 			fullTimeHoursWeek: $fullTimeHoursWeek
 		);
 
+		// Availability comes from the working pattern wherever the employee has
+		// one, so an absence percentage and a capacity percentage divide by the
+		// same definition of a working day (working-hours-per-person, D6). An
+		// employee with no pattern keeps the contract-and-fte path, which is
+		// what every instance had before patterns existed.
+		$onPattern = [];
+		foreach ($workingPatterns as $pattern) {
+			$patternEmployee = $this->stringOrNull(value: ($pattern['employeeId'] ?? null));
+			if ($patternEmployee !== null && isset($ftePerEmployee[$patternEmployee]) === true) {
+				$onPattern[$patternEmployee] = true;
+			}
+		}
+
 		$available = 0.0;
 		foreach ($contracts as $contract) {
+			$contractEmployee = $this->stringOrNull(value: ($contract['employeeId'] ?? null));
+			if ($contractEmployee !== null && isset($onPattern[$contractEmployee]) === true) {
+				continue;
+			}
+
 			$available += $this->contractAvailability(
 				contract: $contract,
 				periodStart: $periodStart,
 				periodEnd: $periodEnd,
+				fullTimeHoursWeek: $fullTimeHoursWeek
+			);
+		}
+
+		foreach (array_keys($onPattern) as $patternEmployee) {
+			$resolved = $this->workingHours->contractedHoursOver(
+				employeeId: (string)$patternEmployee,
+				from: $periodStart,
+				to: $periodEnd,
+				patterns: $workingPatterns,
+				nonWorkingTimes: $nonWorkingTimes,
+				nonWorkingDates: $nonWorkingDates
+			);
+
+			$available += $this->workingHours->dayEquivalents(
+				hours: $resolved['hours'],
 				fullTimeHoursWeek: $fullTimeHoursWeek
 			);
 		}
@@ -178,6 +221,7 @@ class AbsenceRateService {
 			'availableDayEquivalents' => round(num: $available, precision: 4),
 			'percentage' => $percentage,
 			'casesWithoutContract' => $unmeasured,
+			'employeesMeasuredOnPattern' => count($onPattern),
 		];
 	}//end absenceRate()
 
