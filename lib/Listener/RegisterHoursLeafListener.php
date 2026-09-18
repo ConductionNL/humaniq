@@ -166,6 +166,15 @@ class RegisterHoursLeafListener implements IEventListener {
 				// MUST declare the same render mode under the shared id or the
 				// surface blanks (gate-24 R3).
 				renderMode: LeafDescriptor::RENDER_MODE_MOUNT,
+				// humaniq builds `js/humaniq-leaves.js` from a dedicated `leaves`
+				// webpack entry, and OpenRegister's `LeafScriptListener` puts it
+				// on the consuming pages. That is the one convention the platform
+				// can VERIFY, so declaring it opts this leaf into being checked:
+				// openregister#3956 refuses a leaf that claims the shared entry
+				// and ships no bundle, which is exactly the failure that left
+				// `humaniq-hours` dark on dossiq case pages before the entry
+				// existed.
+				loadStrategy: LeafDescriptor::LOADS_VIA_SHARED_ENTRY,
 			);
 
 			// Render-only leaf: no IntegrationProvider. The widget reads time
