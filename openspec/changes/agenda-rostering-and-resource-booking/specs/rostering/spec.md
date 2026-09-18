@@ -15,12 +15,14 @@ Candidate C-tasks-and-phases-28 (`tasks-and-phases.tsv:42`), relevance `should`.
 here so no reader takes it for a measurement.
 
 #### Scenario: A shift names what it needs
+@e2e tests/e2e/spec-coverage/agenda-and-resource-booking.spec.ts
 - **GIVEN** a `Shift` "Nachtcontrole horeca" with `requiredCompetences` `["boa-domein-1"]`
 - **WHEN** the shift is read
 - **THEN** the competence set travels with the shift, and every assignment that
   references the shift inherits it without restating it
 
 #### Scenario: An expired qualification stops counting on its own date
+@e2e exclude a date-boundary assertion over two adjacent days; covered by AgendaAndAvailabilityTest::testAnExpiredCompetenceProducesAFindingOnItsOwnDate, with the last valid day beside it as the control
 - **GIVEN** an `EmployeeCompetence` for `boa-domein-1` with `validUntil` yesterday
 - **WHEN** the holder is evaluated for a shift requiring `boa-domein-1`
 - **THEN** the competence does not count as held, without anybody editing the record
@@ -39,6 +41,7 @@ run in the same act as the working-time check, so `occ humaniq:roster:check` and
 `POST /api/roster/check` still answer the whole question in one call.
 
 #### Scenario: A roster with an unqualified assignment does not publish clean
+@e2e exclude covered by AgendaAndAvailabilityTest::testAnExpiredCompetenceProducesAFindingOnItsOwnDate through RosterCheckService's competence cross-check
 - **GIVEN** a concept roster with one assignment putting an employee without
   `boa-domein-1` on a shift that requires it
 - **WHEN** `occ humaniq:roster:check` runs
@@ -46,6 +49,7 @@ run in the same act as the working-time check, so `occ humaniq:roster:check` and
   `boa-domein-1`
 
 #### Scenario: The two kinds of finding stay apart
+@e2e exclude covered by AgendaAndAvailabilityTest::testAnExpiredCompetenceProducesAFindingOnItsOwnDate, which asserts the finding's own kind, and by RosterCheckService tagging every working-time violation with the other kind
 - **GIVEN** a roster that breaks both the daily-rest rule and a competence requirement
 - **WHEN** the check runs
 - **THEN** the working-time finding and the competence finding are reported
@@ -66,12 +70,14 @@ openproject (Team planners, `modules/resource_management/`), documented
 easy-redmine and jira-service-management.
 
 #### Scenario: A part-timer is measured against their own week
+@e2e exclude covered by AgendaAndAvailabilityTest::testCapacityMeasuresAPartTimerAgainstTheirOwnWeek
 - **GIVEN** an employee contracted for 24 hours a week and rostered for 20
 - **WHEN** the capacity read runs over that week
 - **THEN** it reports 20 planned against 24 available, not against the instance's
   full-time week
 
 #### Scenario: A missing contract is said, not guessed
+@e2e tests/e2e/spec-coverage/agenda-and-resource-booking.spec.ts
 - **GIVEN** an employee with no working hours recorded
 - **WHEN** the capacity read runs
 - **THEN** the answer marks that employee as having no contracted hours, and no
@@ -89,6 +95,7 @@ The candidate has **no driven passer**: the evidence is Jira Data Center's
 documented Advanced Roadmaps auto-schedule, admitted under decision D21.
 
 #### Scenario: The capacity answer is offered, the schedule is not
+@e2e exclude asserts that humaniq has NO scheduling endpoint, which is verified by reading appinfo/routes.php: /api/capacity exists and no route proposes dates
 - **WHEN** a consuming app asks humaniq for a proposed set of dates
 - **THEN** humaniq answers with available capacity per person per period, and the
   consuming app composes the schedule from its own dependencies

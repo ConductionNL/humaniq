@@ -15,6 +15,7 @@ import { createApp, h, markRaw } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import appIcons from './icons.js'
+import { registerAgendaLeaf } from './integrations/registerAgendaLeaf.js'
 import { registerHoursLeaf } from './integrations/registerHoursLeaf.js'
 import bundledManifest from './manifest.json'
 import menuLayout from './menu-layout.json'
@@ -61,6 +62,7 @@ registerIcons(appIcons)
 // its own manifest. Installs a load-order-safe stub when OpenRegister's bundle
 // has not initialised yet.
 registerHoursLeaf()
+registerAgendaLeaf()
 try {
 	registerTranslations()
 } catch (e) {

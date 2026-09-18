@@ -25,6 +25,7 @@
  * `./manifest.json`, and no component library.
  */
 import { loadTranslations } from '@nextcloud/l10n'
+import { registerAgendaLeaf } from './integrations/registerAgendaLeaf.js'
 import { registerHoursLeaf } from './integrations/registerHoursLeaf.js'
 
 // Register FIRST, translate second.
@@ -36,6 +37,7 @@ import { registerHoursLeaf } from './integrations/registerHoursLeaf.js'
 // nothing logged. The labels fall back to their English source until the
 // catalogue lands, which is the lesser failure and a visible one.
 registerHoursLeaf()
+registerAgendaLeaf()
 
 // `loadTranslations` REJECTS on a 404, which is any locale for which
 // l10n/<lang>.json was never generated, so an unguarded call here would produce

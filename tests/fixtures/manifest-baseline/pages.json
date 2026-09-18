@@ -156,6 +156,38 @@
 		"route": "/mijn/urenstaten"
 	},
 	{
+		"id": "EmployeeCompetences",
+		"route": "/bevoegdheden"
+	},
+	{
+		"id": "EmployeeCompetenceDetail",
+		"route": "/bevoegdheden/:id"
+	},
+	{
+		"id": "Resources",
+		"route": "/resources"
+	},
+	{
+		"id": "ResourceDetail",
+		"route": "/resources/:id"
+	},
+	{
+		"id": "ResourceBookings",
+		"route": "/reserveringen"
+	},
+	{
+		"id": "ResourceBookingDetail",
+		"route": "/reserveringen/:id"
+	},
+	{
+		"id": "CalendarSubscriptions",
+		"route": "/kalenderabonnementen"
+	},
+	{
+		"id": "CalendarSubscriptionDetail",
+		"route": "/kalenderabonnementen/:id"
+	},
+	{
 		"id": "Assets",
 		"route": "/assets"
 	},

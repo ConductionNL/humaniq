@@ -38,7 +38,9 @@ use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
+use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
+use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
 use OCA\Humaniq\Listener\TimesheetApprovalListener;
@@ -339,6 +341,19 @@ class Application extends App implements IBootstrap {
 				\OCA\OpenRegister\Event\RegisterLeafProvidersEvent::class,
 				RegisterHoursLeafListener::class
 			);
+
+			// The SERVER half of the `humaniq-agenda` leaf
+			// (agenda-rostering-and-resource-booking REQ-AGD-006). Its client
+			// half is src/integrations/registerAgendaLeaf.js, bound by the
+			// shared id, and shipped in the `humaniq-leaves` bundle so the
+			// surface is not dark on a consuming page. Inside the same
+			// class_exists() guard on purpose: when humaniq's host has no
+			// OpenRegister the leaf is not registered at all, so a host renders
+			// no agenda panel rather than an empty one.
+			$dispatcher->addServiceListener(
+				\OCA\OpenRegister\Event\RegisterLeafProvidersEvent::class,
+				RegisterAgendaLeafListener::class
+			);
 		}
 
 		// payroll-run-as-a-flow (REQ-PRF-001): contribute the four payroll
@@ -455,6 +470,21 @@ class Application extends App implements IBootstrap {
 				listener: WorkingPatternOverlapListener::class,
 				registers: null,
 				schemas: [WorkingPatternOverlapListener::WORKINGPATTERN_SLUG]
+			);
+		}
+
+		// agenda-rostering-and-resource-booking REQ-AGD-004: refuse a
+		// ResourceBooking that would take a resource past its quantity over an
+		// overlapping period, or that books a resource out of service. In the
+		// write path rather than in a later report, because a room booked twice
+		// for one hoorzitting is a person standing in a corridor.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: ResourceBookingOverlapListener::class,
+				registers: null,
+				schemas: [ResourceBookingOverlapListener::RESOURCEBOOKING_SLUG]
 			);
 		}
 
