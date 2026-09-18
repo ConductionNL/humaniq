@@ -425,6 +425,18 @@
 					"id": "Offboardings",
 					"label": "Offboardings",
 					"route": "Offboardings"
+				},
+				{
+					"icon": "CalendarAccountOutline",
+					"id": "WorkingPatterns",
+					"label": "Working patterns",
+					"route": "WorkingPatterns"
+				},
+				{
+					"icon": "CalendarRemoveOutline",
+					"id": "NonWorkingTimes",
+					"label": "Non-working times",
+					"route": "NonWorkingTimes"
 				}
 			],
 			"icon": "AccountMultipleOutline",
@@ -10401,6 +10413,177 @@
 			"id": "WntDisclosureDetail",
 			"route": "/wnt-disclosures/:id",
 			"title": "WNT disclosures",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "working-hours-per-person (2026-09-18): the person half of decision D19. A pattern is DATED and is never edited to record a contract change (design.md D2), so the index sorts on validFrom descending and shows validUntil: an open-ended row is the running pattern and an ended one is history a past figure still divides by. Hours are listed per weekday rather than as an fte fraction (design.md D4) -- the fte figure stays on the employment record and is not derived here. No feestdag column: which days are non-working for the organisation is openregister's working calendar, read and never owned.",
+				"columns": [
+					"employeeId",
+					"validFrom",
+					"validUntil",
+					"hoursMonday",
+					"hoursTuesday",
+					"hoursWednesday",
+					"hoursThursday",
+					"hoursFriday"
+				],
+				"description": "Which days and hours each person is contracted for. A contract change is a new pattern with its own start date, so a figure over a past period still divides by the contract that was in force then.",
+				"filters": [
+					"employeeId"
+				],
+				"register": "humaniq",
+				"schema": "WorkingPattern",
+				"sort": {
+					"field": "validFrom",
+					"order": "desc"
+				}
+			},
+			"id": "WorkingPatterns",
+			"route": "/werkpatronen",
+			"title": "Working patterns",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "working-hours-per-person (2026-09-18): a dated fact with no x-openregister-lifecycle, the BhvCertificering precedent -- a contract change writes a NEW pattern rather than transitioning this one, so the page carries no lifecycleActions widget. employeeId is excluded from the data widget because Related already resolves and links the person by name (the EmployeeDetail exclude convention). Audit history is a sidebar tab.",
+				"layout": [
+					{
+						"gridHeight": 6,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "WorkingPattern",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId"
+							],
+							"title": "Working pattern"
+						},
+						"icon": "CalendarAccountOutline",
+						"id": "data",
+						"title": "Working pattern",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "WorkingPatternDetail",
+			"route": "/werkpatronen/:id",
+			"title": "Working pattern",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "working-hours-per-person (2026-09-18): the third kind of absence (design.md D3). Leave is requested and drawn from a balance (LeaveRequests), sickness is a case with a poortwachter timeline (SickLeaveCases), and this is neither: nothing is requested and no balance moves. The reason list is administered and holds no leave type, so a row here can never read as verlof on a day the person was never contracted to work.",
+				"columns": [
+					"employeeId",
+					"reason",
+					"recurringWeekday",
+					"startDate",
+					"endDate",
+					"hoursNotWorked"
+				],
+				"description": "Days and part-days somebody does not work that are neither leave nor sickness: a standing free day, an adjusted schedule, a reduced week during re-integration.",
+				"filters": [
+					"employeeId",
+					"reason"
+				],
+				"register": "humaniq",
+				"schema": "NonWorkingTime",
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				}
+			},
+			"id": "NonWorkingTimes",
+			"route": "/niet-werkdagen",
+			"title": "Non-working times",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "working-hours-per-person (2026-09-18): no lifecycleActions widget -- an arrangement is recorded or ended, never approved, which is exactly what keeps it from becoming a second way to file verlof. employeeId is excluded from the data widget because Related resolves and links the person.",
+				"layout": [
+					{
+						"gridHeight": 6,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "NonWorkingTime",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId"
+							],
+							"title": "Non-working time"
+						},
+						"icon": "CalendarRemoveOutline",
+						"id": "data",
+						"title": "Non-working time",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "NonWorkingTimeDetail",
+			"route": "/niet-werkdagen/:id",
+			"title": "Non-working time",
 			"type": "detail"
 		}
 	],

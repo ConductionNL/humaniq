@@ -159,6 +159,14 @@ if (class_exists('OCA\\OpenRegister\\Service\\ObjectService') === false) {
 	require __DIR__ . '/stubs/OpenRegisterObjectServiceStub.php';
 }
 
+// Same rule, different class: WorkingCalendarReader asks class_exists() for
+// openregister's working calendar before reaching for it (working-hours-per-person,
+// REQ-WHP-004). Without the name present the reader can only ever answer
+// "no working calendar on this instance", and the resolved path would be dark.
+if (class_exists('OCA\\OpenRegister\\Service\\WorkingCalendarService') === false) {
+	require __DIR__ . '/stubs/OpenRegisterWorkingCalendarStub.php';
+}
+
 // Same rule, different class: AssetDialectMigrationService::schemaMapper()
 // establishes availability with class_exists('OCA\OpenRegister\Db\SchemaMapper')
 // (hrmq-asset-fleet-merge tasks.md section 13's withAssetHardValidationDisabled()

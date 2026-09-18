@@ -42,6 +42,7 @@ use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
 use OCA\Humaniq\Listener\TimesheetApprovalListener;
 use OCA\Humaniq\Listener\TimesheetProcessStampListener;
+use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Service\InternalWriteMarker;
@@ -423,6 +424,21 @@ class Application extends App implements IBootstrap {
 				listener: TimesheetAggregateListener::class,
 				registers: null,
 				schemas: [TimesheetAggregateListener::TIMEENTRY_SLUG]
+			);
+		}
+
+		// working-hours-per-person REQ-WHP-001: refuse a WorkingPattern whose
+		// period overlaps one the same employee already has. Two patterns give
+		// two answers to "how many hours on this Tuesday", and the resolution
+		// query would take whichever the store returned first — a number that
+		// moves with query ordering and never looks wrong.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: WorkingPatternOverlapListener::class,
+				registers: null,
+				schemas: [WorkingPatternOverlapListener::WORKINGPATTERN_SLUG]
 			);
 		}
 
