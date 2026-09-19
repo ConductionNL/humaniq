@@ -29,7 +29,9 @@ namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\TimeEntryController;
 use OCA\Humaniq\Listener\HoursWriteRefusedException;
+use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\RunningTimerService;
+use OCA\Humaniq\Service\TimeEstimateService;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
 use OCP\IUser;
@@ -81,7 +83,9 @@ class TimeEntryControllerTest extends TestCase {
 			$this->createMock(IRequest::class),
 			$session,
 			$this->timers,
-			new NullLogger()
+			new NullLogger(),
+			$this->createMock(HoursRegisterGateway::class),
+			$this->createMock(TimeEstimateService::class)
 		);
 	}//end controller()
 
