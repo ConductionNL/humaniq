@@ -48,15 +48,12 @@ use OCA\Humaniq\Service\DepartmentLeaveScheduleService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\LeaveCoverageService;
 use OCA\Humaniq\Service\OrgResolutionService;
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
-use RuntimeException;
 
 /**
  * Reads one org unit's leave schedule, and the coverage warning for approving
@@ -72,9 +69,7 @@ class LeaveScheduleController extends Controller {
 	 * @param DepartmentLeaveScheduleService $schedule Composes the schedule on read.
 	 * @param LeaveCoverageService $coverage Computes the coverage warning.
 	 * @param OrgResolutionService $orgResolution The shared org-chain rules (assignment validity).
-	 * @param ContainerInterface $container DI container for the RBAC-honouring ObjectService resolve.
-	 * @param SettingsService $settingsService The register-slug source.
-	 * @param LoggerInterface $logger Logger.
+	 * @param RbacObjectReader $rbac Reads one object under the caller's own ambient RBAC.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -82,9 +77,7 @@ class LeaveScheduleController extends Controller {
 		private readonly DepartmentLeaveScheduleService $schedule,
 		private readonly LeaveCoverageService $coverage,
 		private readonly OrgResolutionService $orgResolution,
-		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
-		private readonly LoggerInterface $logger,
+		private readonly RbacObjectReader $rbac,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -155,7 +148,7 @@ class LeaveScheduleController extends Controller {
 		// the caller's own RBAC before anything about their department is read.
 		// Unknown and unauthorised collapse to the same 404, so existence is
 		// never leaked.
-		$request = $this->rbacFind(id: $leaveRequestId, schema: 'LeaveRequest');
+		$request = $this->rbac->find(id: $leaveRequestId, schema: 'LeaveRequest');
 		if ($request === null) {
 			return new JSONResponse(['error' => 'Verlofaanvraag niet gevonden.'], Http::STATUS_NOT_FOUND);
 		}
@@ -265,80 +258,13 @@ class LeaveScheduleController extends Controller {
 				continue;
 			}
 
-			if ($this->rbacFind(id: $id, schema: 'LeaveRequest') !== null) {
+			if ($this->rbac->find(id: $id, schema: 'LeaveRequest') !== null) {
 				$visible[] = $id;
 			}
 		}
 
 		return $visible;
 	}//end visibleRequestIds()
-
-	/**
-	 * Read one object under the CALLER's ambient RBAC, the way RosterController
-	 * resolves a roster.
-	 *
-	 * Null covers both "does not exist" and "this caller may not see it", on
-	 * purpose: two answers would let a reader enumerate what exists.
-	 *
-	 * @param string $id The object id.
-	 * @param string $schema The schema slug.
-	 *
-	 * @return array<string, mixed>|null The payload, or null.
-	 *
-	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
-	 */
-	private function rbacFind(string $id, string $schema): ?array {
-		try {
-			$entity = $this->objectService()->find(
-				id: $id,
-				register: $this->settingsService->getRegisterSlug(),
-				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			$this->logger->info(
-				'LeaveScheduleController: ' . $schema . ' ' . $id . ' kon niet worden gelezen: ' . $e->getMessage()
-			);
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		$data = $entity->getObject();
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		$uuid = (string)$entity->getUuid();
-		if ($uuid !== '' && isset($data['id']) === false) {
-			$data['id'] = $uuid;
-		}
-
-		return $data;
-	}//end rbacFind()
-
-	/**
-	 * OpenRegister's ObjectService, with the caller's ambient RBAC left on.
-	 *
-	 * @return mixed The service.
-	 *
-	 * @throws \RuntimeException When OpenRegister is not installed.
-	 *
-	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching, so an instance
-		// without OpenRegister is told which app to install rather than handed
-		// a container exception naming a class nobody has heard of.
-		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
 
 	/**
 	 * The period asked about, or null when it is unusable.
