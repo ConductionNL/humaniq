@@ -22,8 +22,8 @@
                     "note": {"type": "string", "nullable": true, "title": "Note", "description": "Anything the planner should know about this qualification."}
                 }
             },
-            "Resource": {
-                "slug": "Resource",
+            "HrResource": {
+                "slug": "HrResource",
                 "icon": "DoorOpen",
                 "version": "0.1.0",
                 "title": "Resource",
@@ -55,7 +55,7 @@
                     "end"
                 ],
                 "properties": {
-                    "resourceId": {"type": "string", "format": "uuid", "$ref": "Resource", "title": "Resource", "description": "What is being booked."},
+                    "resourceId": {"type": "string", "format": "uuid", "$ref": "HrResource", "title": "Resource", "description": "What is being booked."},
                     "start": {"type": "string", "format": "date-time", "title": "Start", "description": "When the booking starts."},
                     "end": {"type": "string", "format": "date-time", "title": "End", "description": "When the booking ends."},
                     "employeeId": {"type": "string", "format": "uuid", "$ref": "Employee", "nullable": true, "title": "Booked by", "description": "Who booked it, and whose agenda it stands on."},

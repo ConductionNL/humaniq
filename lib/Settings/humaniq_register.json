@@ -66,7 +66,7 @@
                     "PerformanceReview",
                     "ReceiptExtraction",
                     "ReviewCycle",
-                    "Resource",
+                    "HrResource",
                     "ResourceBooking",
                     "Roster",
                     "RosterAssignment",

@@ -16,7 +16,7 @@
       "humaniq": {
         "slug": "humaniq",
         "title": "Humaniq Register (demo)",
-        "version": "0.17.0",
+        "version": "0.19.0",
         "description": "Demo data for Humaniq Register. Generated from the register's own schemas: see hydra-gates/scripts/lib/generate_mock_register.py."
       }
     },
@@ -7643,6 +7643,568 @@
             "x-notes": "Denormalized administratie key this WntDisclosure is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7, the PensionFiling convention)."
           }
         }
+      },
+      "CalendarSubscription": {
+        "slug": "CalendarSubscription",
+        "icon": "CalendarSyncOutline",
+        "version": "0.1.0",
+        "title": "Calendar subscription",
+        "description": "An iCalendar feed humaniq reads for one employee, to know when they are busy. humaniq never writes to it and never makes an object from an event in it: an employee's private agenda is not humaniq's to edit, and a two way sync makes a deletion ambiguous in a way nobody can debug (agenda-rostering-and-resource-booking, design D7).",
+        "type": "object",
+        "required": [
+          "employeeId",
+          "feedUrl"
+        ],
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Employee",
+            "title": "Employee",
+            "description": "Whose calendar this is."
+          },
+          "feedUrl": {
+            "type": "string",
+            "title": "Feed address",
+            "description": "The iCalendar address humaniq reads.",
+            "x-notes": "Read only. Nothing humaniq does issues anything other than a GET against this address (REQ-AGD-005)."
+          },
+          "label": {
+            "type": "string",
+            "nullable": true,
+            "title": "Label",
+            "description": "What this calendar is called, for the person who administers it."
+          },
+          "active": {
+            "type": "boolean",
+            "default": true,
+            "title": "Active",
+            "description": "Whether humaniq still reads this calendar."
+          },
+          "lastPolledAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "title": "Last read",
+            "description": "When humaniq last read this calendar."
+          },
+          "lastPollStatus": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "unreachable",
+              "unreadable"
+            ],
+            "x-enum-labels": {
+              "ok": "Read",
+              "unreachable": "Could not be reached",
+              "unreadable": "Could not be read"
+            },
+            "nullable": true,
+            "title": "Last result",
+            "description": "How the last read went.",
+            "x-notes": "REQ-AGD-005: a failed poll records the degradation here and LEAVES THE CACHE alone, so a feed that is briefly down does not empty somebody's agenda."
+          },
+          "busyPeriods": {
+            "type": "array",
+            "nullable": true,
+            "title": "Busy periods",
+            "description": "The periods this calendar says the person is busy.",
+            "x-notes": "Cached busy time ONLY: each item is {start, end}. No title, no location, no attendees, no organiser, ever. The AVG boundary leave-calendar-nc draws for the Nextcloud calendar, drawn again here.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "start": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Start",
+                  "description": "When the busy period starts."
+                },
+                "end": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "End",
+                  "description": "When the busy period ends."
+                }
+              }
+            }
+          }
+        }
+      },
+      "EmployeeCompetence": {
+        "slug": "EmployeeCompetence",
+        "icon": "CertificateOutline",
+        "version": "0.1.0",
+        "title": "Employee competence",
+        "description": "One qualification one employee holds, from a date and optionally until one: a BOA bevoegdheid, a heftruckcertificaat, a BHV diploma. A competence whose validUntil has passed stops counting on its own date, without anybody editing the record, because that is the day the roster has to refuse the shift (agenda-rostering-and-resource-booking, REQ-ROST-C01).",
+        "type": "object",
+        "required": [
+          "employeeId",
+          "competenceCode"
+        ],
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Employee",
+            "title": "Employee",
+            "description": "Who holds this qualification."
+          },
+          "competenceCode": {
+            "type": "string",
+            "title": "Competence",
+            "description": "The code of the qualification, for example boa-domein-1.",
+            "x-notes": "Matched against Shift.requiredCompetences by CompetenceCheckService. A free code rather than an enum: a gemeente's list of qualifications is not a thing humaniq can enumerate in advance."
+          },
+          "label": {
+            "type": "string",
+            "nullable": true,
+            "title": "Label",
+            "description": "What this qualification is called, for a reader."
+          },
+          "issuedOn": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "title": "Issued on",
+            "description": "The first day this qualification counts."
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "title": "Valid until",
+            "description": "The last day this qualification counts. Leave empty when it does not expire."
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "title": "Note",
+            "description": "Anything the planner should know about this qualification."
+          }
+        }
+      },
+      "HrResource": {
+        "slug": "HrResource",
+        "icon": "DoorOpen",
+        "version": "0.1.0",
+        "title": "Resource",
+        "description": "Something that can be booked for a period: a room, a vehicle or a piece of equipment. A resource carries a quantity, because one room is not one geluidsmeter: three inspectors and two meters means the third waits (agenda-rostering-and-resource-booking, REQ-AGD-003).",
+        "type": "object",
+        "required": [
+          "name",
+          "kind"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "What this resource is called, for example Hoorzittingzaal 2."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "room",
+              "vehicle",
+              "equipment"
+            ],
+            "x-enum-labels": {
+              "room": "Room",
+              "vehicle": "Vehicle",
+              "equipment": "Equipment"
+            },
+            "default": "room",
+            "title": "Kind",
+            "description": "What sort of thing this is."
+          },
+          "orgUnitId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "OrgUnit",
+            "nullable": true,
+            "title": "Org unit",
+            "description": "Which team this resource belongs to. Leave empty to make it bookable everywhere."
+          },
+          "quantity": {
+            "type": "number",
+            "minimum": 1,
+            "default": 1,
+            "title": "Quantity",
+            "description": "How many of this resource there are. A booking past this number over one period is refused.",
+            "x-notes": "REQ-AGD-004: the overlap refusal fires when the overlapping bookings would EXCEED this number, so a room is quantity 1 and two meters is quantity 2."
+          },
+          "location": {
+            "type": "string",
+            "nullable": true,
+            "title": "Location",
+            "description": "Where this resource is, for a reader who has to go there."
+          },
+          "active": {
+            "type": "boolean",
+            "default": true,
+            "title": "Active",
+            "description": "Whether this resource can currently be booked. A resource out of service refuses a booking."
+          }
+        }
+      },
+      "LeaveType": {
+        "slug": "LeaveType",
+        "icon": "CalendarStarOutline",
+        "version": "0.1.0",
+        "title": "Leave type",
+        "description": "A kind of leave an employer offers, administered rather than enumerated: a code, a label, whether it draws from a balance, whether it needs a reason or a document, and how far ahead it may be requested. Adding zorgverlof is writing an object, not changing a schema and shipping a release (leave-against-a-department-schedule, REQ-LVM-T01). A LeaveRequest carries the code of its type, so a request written before this schema existed still resolves to the type whose code it already holds.",
+        "type": "object",
+        "required": [
+          "code",
+          "label"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "The short code a leave request carries, for example holiday or zorgverlof.",
+            "x-notes": "Stable identifier. LeaveRequest.leaveType holds this value, which is why a code is never rewritten once requests carry it."
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "What this kind of leave is called on screen."
+          },
+          "drawsFromBalance": {
+            "type": "boolean",
+            "default": true,
+            "title": "Draws from the balance",
+            "description": "Whether approving this kind of leave draws hours from the employee's balance.",
+            "x-notes": "False means the approval posts nothing to LeaveBalance: unpaid leave and most bijzonder verlof draw down no entitlement."
+          },
+          "requiresReason": {
+            "type": "boolean",
+            "default": false,
+            "title": "Needs a reason",
+            "description": "Whether a request of this kind can only be submitted with a reason filled in."
+          },
+          "requiresDocument": {
+            "type": "boolean",
+            "default": false,
+            "title": "Needs a document",
+            "description": "Whether a request of this kind can only be submitted with a document attached."
+          },
+          "maxNoticeDays": {
+            "type": "number",
+            "minimum": 0,
+            "nullable": true,
+            "title": "Maximum notice in days",
+            "description": "How many days ahead this kind of leave may be requested at most. Leave empty for no limit.",
+            "x-notes": "Checked on submit only: a request starting further ahead than this is refused, naming the condition. Calamiteitenverlof is the case this exists for."
+          },
+          "active": {
+            "type": "boolean",
+            "default": true,
+            "title": "Active",
+            "description": "Whether this kind of leave is offered on new requests. A retired type still resolves on the requests that already carry it."
+          }
+        }
+      },
+      "NonWorkingTime": {
+        "slug": "NonWorkingTime",
+        "icon": "CalendarRemoveOutline",
+        "version": "0.1.0",
+        "title": "Non-working time",
+        "description": "A day, a part of a day or a recurring weekday one employee does not work, that is neither leave nor sickness: a standing free Wednesday, a reduced schedule during re-integration, an adjusted week. It draws down no leave balance and opens no sick-leave case, because nobody requests it and nothing is deducted from it (working-hours-per-person, design D3). Leave stays in LeaveRequest and sickness in SickLeaveCase.",
+        "type": "object",
+        "required": [
+          "employeeId",
+          "reason"
+        ],
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Employee",
+            "title": "Employee",
+            "description": "Who does not work this time."
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "vaste-vrije-dag",
+              "aangepast-rooster",
+              "re-integratie",
+              "onbetaald-verlofafspraak",
+              "anders"
+            ],
+            "x-enum-labels": {
+              "vaste-vrije-dag": "Standing free day",
+              "aangepast-rooster": "Adjusted schedule",
+              "re-integratie": "Re-integration schedule",
+              "onbetaald-verlofafspraak": "Unpaid arrangement",
+              "anders": "Other"
+            },
+            "default": "vaste-vrije-dag",
+            "title": "Reason",
+            "description": "Why this time is not worked. It is never a leave type.",
+            "x-notes": "Administered list. A value here never draws down a leave balance: leave is requested in LeaveRequest and sickness is recorded in SickLeaveCase."
+          },
+          "recurringWeekday": {
+            "type": "string",
+            "enum": [
+              "monday",
+              "tuesday",
+              "wednesday",
+              "thursday",
+              "friday",
+              "saturday",
+              "sunday"
+            ],
+            "nullable": true,
+            "x-enum-labels": {
+              "monday": "Monday",
+              "tuesday": "Tuesday",
+              "wednesday": "Wednesday",
+              "thursday": "Thursday",
+              "friday": "Friday",
+              "saturday": "Saturday",
+              "sunday": "Sunday"
+            },
+            "title": "Recurring weekday",
+            "description": "The weekday this repeats on. Leave empty for a one-off period.",
+            "x-notes": "When set, the entry applies to every occurrence of this weekday inside its start/end window (or for ever, when the window is open)."
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "title": "Start date",
+            "description": "The first day this applies. Leave empty for a recurring weekday with no start."
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "title": "End date",
+            "description": "The last day this applies. Leave empty while it runs on."
+          },
+          "hoursNotWorked": {
+            "type": "number",
+            "minimum": 0,
+            "nullable": true,
+            "title": "Hours not worked",
+            "description": "How many hours of the day are not worked. Leave empty for the whole day.",
+            "x-notes": "Null means the whole contracted day. A number subtracts that many hours from the day, never below zero, which is how a reduced afternoon is recorded."
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "title": "Note",
+            "description": "Anything the administrator should know about this arrangement."
+          }
+        }
+      },
+      "ResourceBooking": {
+        "slug": "ResourceBooking",
+        "icon": "CalendarCheck",
+        "version": "0.1.0",
+        "title": "Resource booking",
+        "description": "One resource held for one period, by one employee, optionally for a named object in another app. A booking that would take a resource past its quantity over an overlapping period is refused on the write rather than reported in a later run: a room booked twice for one hoorzitting is a person standing in a corridor (agenda-rostering-and-resource-booking, design D6).",
+        "type": "object",
+        "required": [
+          "resourceId",
+          "start",
+          "end"
+        ],
+        "properties": {
+          "resourceId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "HrResource",
+            "title": "Resource",
+            "description": "What is being booked."
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start",
+            "description": "When the booking starts."
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End",
+            "description": "When the booking ends."
+          },
+          "employeeId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Employee",
+            "nullable": true,
+            "title": "Booked by",
+            "description": "Who booked it, and whose agenda it stands on."
+          },
+          "purpose": {
+            "type": "string",
+            "nullable": true,
+            "title": "Purpose",
+            "description": "What it is booked for, in a few words."
+          },
+          "domainObjectType": {
+            "type": "string",
+            "nullable": true,
+            "title": "Object type",
+            "description": "Which kind of object this booking belongs to, as app:schema.",
+            "x-notes": "The hours-leaf shape, verbatim: the `<app>:<schema>` literal, for example dossiq:zaak. Written the same way in both places on purpose, so a consuming app addresses hours and bookings identically."
+          },
+          "domainObjectRef": {
+            "type": "string",
+            "nullable": true,
+            "title": "Object",
+            "description": "The uuid of the object this booking belongs to.",
+            "x-notes": "The hours-leaf shape: the object's uuid, in the app named by domainObjectType. A free string rather than a $ref, because the object lives in another app's register."
+          }
+        }
+      },
+      "TimeEstimate": {
+        "slug": "TimeEstimate",
+        "icon": "ClockPlusOutline",
+        "version": "0.1.0",
+        "title": "Time estimate",
+        "description": "The expected effort for one object in another app: how many hours it is thought to take, optionally per role, and whether that number is a ceiling. The expected number belongs to the consuming app, which writes it from its own policy: a case type's budgeted hours, a project's planned effort. The object, the derived remainder and the enforcement belong to humaniq (estimate-spent-and-remaining-on-an-hours-leaf, REQ-HL-EST-005). Remaining effort is NEVER stored: it is estimated minus booked, computed on read, so deleting an entry moves it at once.",
+        "type": "object",
+        "required": [
+          "domainObjectType",
+          "domainObjectRef",
+          "estimatedHours"
+        ],
+        "properties": {
+          "domainObjectType": {
+            "type": "string",
+            "title": "Object type",
+            "description": "Which kind of object this estimate is for, as app:schema.",
+            "x-notes": "The hours-leaf shape, verbatim: the `<app>:<schema>` literal, for example dossiq:zaak. The app id is the `<id>` in that app's appinfo/info.xml, so this literal moves when an app is renamed and not before."
+          },
+          "domainObjectRef": {
+            "type": "string",
+            "title": "Object",
+            "description": "The uuid of the object this estimate is for.",
+            "x-notes": "A plain string rather than a $ref, because the object lives in another app's register. Set together with domainObjectType or not at all."
+          },
+          "estimatedHours": {
+            "type": "number",
+            "minimum": 0,
+            "title": "Estimated hours",
+            "description": "How many hours this is expected to take."
+          },
+          "role": {
+            "type": "string",
+            "nullable": true,
+            "title": "Role",
+            "description": "Which role these hours are expected from. Leave empty for the object as a whole.",
+            "x-notes": "Matched against TimeEntry.role. An object may carry one estimate per role plus at most one estimate with no role; a second estimate for the same object and the same role is refused by TimeEstimateListener (REQ-HL-EST-001), because two expected numbers for one role give two remainders and nothing looks wrong."
+          },
+          "enforced": {
+            "type": "boolean",
+            "default": false,
+            "title": "Hard ceiling",
+            "description": "Whether a booking that would pass this number is refused.",
+            "x-notes": "REQ-HL-EST-004. False by default and refuses nothing: an estimate is a plan, and most plans are not budgets. When true, a NEW entry past the ceiling is refused in the write path naming the estimate, the ceiling and the hours left, while STOPPING A RUNNING TIMER always lands, because time already worked is a fact and a register that refuses a fact reports a smaller number than the truth."
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "title": "Note",
+            "description": "Where this number comes from, in one line."
+          }
+        }
+      },
+      "WorkingPattern": {
+        "slug": "WorkingPattern",
+        "icon": "CalendarAccountOutline",
+        "version": "0.1.0",
+        "title": "Working pattern",
+        "description": "The contracted hours one employee works on each weekday, over a dated period. A contract change is a NEW pattern with its own validFrom, never an edit of the running one, so a figure computed over a past period still divides by the contract that was in force then (working-hours-per-person, design D2). Hours are stored per weekday rather than as a full-time fraction: two people on 0.6 fte can work entirely different days, and a planner that only knows the fraction gets both wrong (design D4). Two patterns for one employee whose periods overlap are refused.",
+        "type": "object",
+        "required": [
+          "employeeId",
+          "validFrom"
+        ],
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Employee",
+            "title": "Employee",
+            "description": "Whose working pattern this is.",
+            "x-notes": "UUID reference to the Employee this pattern belongs to."
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid from",
+            "description": "The first day this pattern applies."
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "title": "Valid until",
+            "description": "The last day this pattern applies. Leave empty while it is the running pattern.",
+            "x-notes": "Inclusive end date; null means open-ended. A new pattern ends the running one rather than editing it."
+          },
+          "hoursMonday": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0,
+            "title": "Hours on Monday",
+            "description": "Contracted hours on a Monday."
+          },
+          "hoursTuesday": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0,
+            "title": "Hours on Tuesday",
+            "description": "Contracted hours on a Tuesday."
+          },
+          "hoursWednesday": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0,
+            "title": "Hours on Wednesday",
+            "description": "Contracted hours on a Wednesday."
+          },
+          "hoursThursday": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0,
+            "title": "Hours on Thursday",
+            "description": "Contracted hours on a Thursday."
+          },
+          "hoursFriday": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0,
+            "title": "Hours on Friday",
+            "description": "Contracted hours on a Friday."
+          },
+          "hoursSaturday": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0,
+            "title": "Hours on Saturday",
+            "description": "Contracted hours on a Saturday."
+          },
+          "hoursSunday": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0,
+            "title": "Hours on Sunday",
+            "description": "Contracted hours on a Sunday."
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "title": "Note",
+            "description": "Why this pattern was written, in one line."
+          }
+        }
       }
     },
     "objects": [
@@ -10798,6 +11360,360 @@
         "totalCompensation": 3.0,
         "status": "concept",
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "CalendarSubscription",
+          "slug": "calendarsubscription-calendarsubscription-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "feedUrl": "Voorbeeld Feedurl 1",
+        "label": "Voorbeeld Label 1",
+        "active": true,
+        "lastPolledAt": "2026-03-01T09:00:00+00:00",
+        "lastPollStatus": "ok",
+        "busyPeriods": [
+          {
+            "start": "2026-03-01T09:00:00+00:00",
+            "end": "2026-03-01T09:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "CalendarSubscription",
+          "slug": "calendarsubscription-calendarsubscription-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "feedUrl": "Voorbeeld Feedurl 2",
+        "label": "Voorbeeld Label 2",
+        "active": true,
+        "lastPolledAt": "2026-03-02T09:00:00+00:00",
+        "lastPollStatus": "unreachable",
+        "busyPeriods": [
+          {
+            "start": "2026-03-02T09:00:00+00:00",
+            "end": "2026-03-02T09:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "CalendarSubscription",
+          "slug": "calendarsubscription-calendarsubscription-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "feedUrl": "Voorbeeld Feedurl 3",
+        "label": "Voorbeeld Label 3",
+        "active": true,
+        "lastPolledAt": "2026-03-03T09:00:00+00:00",
+        "lastPollStatus": "unreadable",
+        "busyPeriods": [
+          {
+            "start": "2026-03-03T09:00:00+00:00",
+            "end": "2026-03-03T09:00:00+00:00"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "EmployeeCompetence",
+          "slug": "employeecompetence-employeecompetence-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "competenceCode": "Voorbeeld Competencecode 1",
+        "label": "Voorbeeld Label 1",
+        "issuedOn": "2026-03-01",
+        "validUntil": "2026-03-01",
+        "note": "Voorbeeld Note 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "EmployeeCompetence",
+          "slug": "employeecompetence-employeecompetence-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "competenceCode": "Voorbeeld Competencecode 2",
+        "label": "Voorbeeld Label 2",
+        "issuedOn": "2026-03-02",
+        "validUntil": "2026-03-02",
+        "note": "Voorbeeld Note 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "EmployeeCompetence",
+          "slug": "employeecompetence-employeecompetence-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "competenceCode": "Voorbeeld Competencecode 3",
+        "label": "Voorbeeld Label 3",
+        "issuedOn": "2026-03-03",
+        "validUntil": "2026-03-03",
+        "note": "Voorbeeld Note 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "HrResource",
+          "slug": "hrresource-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "kind": "room",
+        "orgUnitId": "00000000-0000-4000-8000-000000000000",
+        "quantity": 1,
+        "location": "Voorbeeld Location 1",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "HrResource",
+          "slug": "hrresource-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "kind": "vehicle",
+        "orgUnitId": "00000000-0000-4000-8000-000000000001",
+        "quantity": 1,
+        "location": "Voorbeeld Location 2",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "HrResource",
+          "slug": "hrresource-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "kind": "equipment",
+        "orgUnitId": "00000000-0000-4000-8000-000000000002",
+        "quantity": 1,
+        "location": "Voorbeeld Location 3",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "LeaveType",
+          "slug": "leavetype-leavetype-1-1"
+        },
+        "code": "Voorbeeld Code 1",
+        "label": "Voorbeeld Label 1",
+        "drawsFromBalance": true,
+        "requiresReason": false,
+        "requiresDocument": false,
+        "maxNoticeDays": 0.0,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "LeaveType",
+          "slug": "leavetype-leavetype-2-2"
+        },
+        "code": "Voorbeeld Code 2",
+        "label": "Voorbeeld Label 2",
+        "drawsFromBalance": true,
+        "requiresReason": false,
+        "requiresDocument": false,
+        "maxNoticeDays": 1.0,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "LeaveType",
+          "slug": "leavetype-leavetype-3-3"
+        },
+        "code": "Voorbeeld Code 3",
+        "label": "Voorbeeld Label 3",
+        "drawsFromBalance": true,
+        "requiresReason": false,
+        "requiresDocument": false,
+        "maxNoticeDays": 2.0,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "NonWorkingTime",
+          "slug": "nonworkingtime-nonworkingtime-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "reason": "vaste-vrije-dag",
+        "recurringWeekday": "monday",
+        "startDate": "2026-03-01",
+        "endDate": "2026-03-01",
+        "hoursNotWorked": 0.0,
+        "note": "Voorbeeld Note 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "NonWorkingTime",
+          "slug": "nonworkingtime-nonworkingtime-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "reason": "aangepast-rooster",
+        "recurringWeekday": "tuesday",
+        "startDate": "2026-03-02",
+        "endDate": "2026-03-02",
+        "hoursNotWorked": 1.0,
+        "note": "Voorbeeld Note 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "NonWorkingTime",
+          "slug": "nonworkingtime-nonworkingtime-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "reason": "re-integratie",
+        "recurringWeekday": "wednesday",
+        "startDate": "2026-03-03",
+        "endDate": "2026-03-03",
+        "hoursNotWorked": 2.0,
+        "note": "Voorbeeld Note 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ResourceBooking",
+          "slug": "resourcebooking-resourcebooking-1-1"
+        },
+        "resourceId": "00000000-0000-4000-8000-000000000000",
+        "start": "2026-03-01T09:00:00+00:00",
+        "end": "2026-03-01T09:00:00+00:00",
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "purpose": "Voorbeeld Purpose 1",
+        "domainObjectType": "Voorbeeld Domainobjecttype 1",
+        "domainObjectRef": "Voorbeeld Domainobjectref 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ResourceBooking",
+          "slug": "resourcebooking-resourcebooking-2-2"
+        },
+        "resourceId": "00000000-0000-4000-8000-000000000001",
+        "start": "2026-03-02T09:00:00+00:00",
+        "end": "2026-03-02T09:00:00+00:00",
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "purpose": "Voorbeeld Purpose 2",
+        "domainObjectType": "Voorbeeld Domainobjecttype 2",
+        "domainObjectRef": "Voorbeeld Domainobjectref 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ResourceBooking",
+          "slug": "resourcebooking-resourcebooking-3-3"
+        },
+        "resourceId": "00000000-0000-4000-8000-000000000002",
+        "start": "2026-03-03T09:00:00+00:00",
+        "end": "2026-03-03T09:00:00+00:00",
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "purpose": "Voorbeeld Purpose 3",
+        "domainObjectType": "Voorbeeld Domainobjecttype 3",
+        "domainObjectRef": "Voorbeeld Domainobjectref 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "TimeEstimate",
+          "slug": "timeestimate-timeestimate-1-1"
+        },
+        "domainObjectType": "Voorbeeld Domainobjecttype 1",
+        "domainObjectRef": "Voorbeeld Domainobjectref 1",
+        "estimatedHours": 0.0,
+        "role": "Voorbeeld Role 1",
+        "enforced": false,
+        "note": "Voorbeeld Note 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "TimeEstimate",
+          "slug": "timeestimate-timeestimate-2-2"
+        },
+        "domainObjectType": "Voorbeeld Domainobjecttype 2",
+        "domainObjectRef": "Voorbeeld Domainobjectref 2",
+        "estimatedHours": 1.0,
+        "role": "Voorbeeld Role 2",
+        "enforced": false,
+        "note": "Voorbeeld Note 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "TimeEstimate",
+          "slug": "timeestimate-timeestimate-3-3"
+        },
+        "domainObjectType": "Voorbeeld Domainobjecttype 3",
+        "domainObjectRef": "Voorbeeld Domainobjectref 3",
+        "estimatedHours": 2.0,
+        "role": "Voorbeeld Role 3",
+        "enforced": false,
+        "note": "Voorbeeld Note 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "WorkingPattern",
+          "slug": "workingpattern-workingpattern-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "validFrom": "2026-03-01",
+        "validUntil": "2026-03-01",
+        "hoursMonday": 0,
+        "hoursTuesday": 0,
+        "hoursWednesday": 0,
+        "hoursThursday": 0,
+        "hoursFriday": 0,
+        "hoursSaturday": 0,
+        "hoursSunday": 0,
+        "note": "Voorbeeld Note 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "WorkingPattern",
+          "slug": "workingpattern-workingpattern-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "validFrom": "2026-03-02",
+        "validUntil": "2026-03-02",
+        "hoursMonday": 0,
+        "hoursTuesday": 0,
+        "hoursWednesday": 0,
+        "hoursThursday": 0,
+        "hoursFriday": 0,
+        "hoursSaturday": 0,
+        "hoursSunday": 0,
+        "note": "Voorbeeld Note 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "WorkingPattern",
+          "slug": "workingpattern-workingpattern-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "validFrom": "2026-03-03",
+        "validUntil": "2026-03-03",
+        "hoursMonday": 0,
+        "hoursTuesday": 0,
+        "hoursWednesday": 0,
+        "hoursThursday": 0,
+        "hoursFriday": 0,
+        "hoursSaturday": 0,
+        "hoursSunday": 0,
+        "note": "Voorbeeld Note 3"
       }
     ]
   }
