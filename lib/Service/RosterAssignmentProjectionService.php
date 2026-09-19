@@ -128,6 +128,8 @@ final class RosterAssignmentProjectionService {
 	 * @param array<string, array<string, mixed>> $shiftsById Shift rows keyed by id.
 	 *
 	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-003
 	 */
 	public static function withProjection(array $assignment, array $shiftsById): array {
 		$hasPlannedStart = (trim((string)($assignment['plannedStart'] ?? '')) !== '');
@@ -169,6 +171,8 @@ final class RosterAssignmentProjectionService {
 	 * @param array<int, array<string, mixed>> $assignments The (projected) RosterAssignment rows.
 	 *
 	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/rostering/spec.md#REQ-ROST-004
 	 */
 	public static function plannedClockIndex(array $assignments): array {
 		$index = [];

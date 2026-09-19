@@ -62,6 +62,11 @@ class RbacObjectReader {
 	/**
 	 * Read one object under the CALLER's ambient RBAC.
 	 *
+	 * Named for what it answers with: null, never an exception. Everything
+	 * the read can go wrong on is caught here, because a caller that has to
+	 * translate a failure into a response already has one answer for all of
+	 * them, and the 404 must not say which case it was.
+	 *
 	 * @param string $id The object id.
 	 * @param string $schema The schema slug.
 	 *
@@ -69,7 +74,7 @@ class RbacObjectReader {
 	 *
 	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
 	 */
-	public function find(string $id, string $schema): ?array {
+	public function findOrNull(string $id, string $schema): ?array {
 		try {
 			$entity = $this->objectService()->find(
 				id: $id,
@@ -98,7 +103,7 @@ class RbacObjectReader {
 		}
 
 		return $data;
-	}//end find()
+	}//end findOrNull()
 
 	/**
 	 * OpenRegister's ObjectService, with the caller's ambient RBAC left on.

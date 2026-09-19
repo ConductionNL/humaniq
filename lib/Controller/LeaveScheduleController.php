@@ -148,7 +148,7 @@ class LeaveScheduleController extends Controller {
 		// the caller's own RBAC before anything about their department is read.
 		// Unknown and unauthorised collapse to the same 404, so existence is
 		// never leaked.
-		$request = $this->rbac->find(id: $leaveRequestId, schema: 'LeaveRequest');
+		$request = $this->rbac->findOrNull(id: $leaveRequestId, schema: 'LeaveRequest');
 		if ($request === null) {
 			return new JSONResponse(['error' => 'Verlofaanvraag niet gevonden.'], Http::STATUS_NOT_FOUND);
 		}
@@ -258,7 +258,7 @@ class LeaveScheduleController extends Controller {
 				continue;
 			}
 
-			if ($this->rbac->find(id: $id, schema: 'LeaveRequest') !== null) {
+			if ($this->rbac->findOrNull(id: $id, schema: 'LeaveRequest') !== null) {
 				$visible[] = $id;
 			}
 		}
