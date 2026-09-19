@@ -224,6 +224,16 @@ if (interface_exists('OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === false) {
 	require __DIR__ . '/stubs/OpenRegisterFlowStub.php';
 }
 
+// Same rule, one version BEHIND on purpose: the leaf listeners contribute a
+// LeafDescriptor to RegisterLeafProvidersEvent. The stub mirrors the shape
+// OpenRegister published BEFORE #3956 added `loadStrategy` and the `LOADS_*`
+// constants, because that is the instance the listeners have to survive: on
+// it, reading the constant is an Error their own catch swallows and the leaf
+// is simply absent. Stubbing the old shape makes this suite that instance.
+if (class_exists('OCA\\OpenRegister\\Service\\Integration\\LeafDescriptor') === false) {
+	require __DIR__ . '/stubs/OpenRegisterLeafStub.php';
+}
+
 // Same rule, different classes: table-declared compliance checks delegate
 // matching to OpenRegister's shared decision-table evaluator
 // (lib/Standards/TableCheckEvaluator.php). These are VERBATIM copies of OR's

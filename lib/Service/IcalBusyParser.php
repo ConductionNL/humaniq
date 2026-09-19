@@ -43,6 +43,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
 
@@ -130,31 +131,53 @@ class IcalBusyParser {
 				continue;
 			}
 
-			if (is_array($current) === false || str_contains($line, ':') === false) {
+			if (is_array($current) === false) {
 				continue;
 			}
 
-			[$rawName, $value] = explode(':', $line, 2);
-			$parts = explode(';', $rawName);
-			$name = strtoupper(trim($parts[0]));
-
-			// Only the properties a busy period is made of are kept. SUMMARY,
-			// LOCATION, ATTENDEE, ORGANIZER and DESCRIPTION are deliberately not
-			// among them: what is never read cannot later leak.
-			if (in_array($name, ['DTSTART', 'DTEND', 'DURATION', 'STATUS', 'TRANSP'], true) === false) {
-				continue;
-			}
-
-			if (in_array($name, ['DTSTART', 'DTEND'], true) === true) {
-				$current[$name] = (implode(';', array_slice($parts, 1)) . ':' . $value);
-				continue;
-			}
-
-			$current[$name] = $value;
+			$current = $this->withProperty(event: $current, line: $line);
 		}
 
 		return $events;
 	}//end events()
+
+	/**
+	 * One content line folded into the event being read.
+	 *
+	 * Only the properties a busy period is made of are kept. SUMMARY,
+	 * LOCATION, ATTENDEE, ORGANIZER and DESCRIPTION are deliberately not among
+	 * them: what is never read cannot later leak.
+	 *
+	 * @param array<string, string> $event The event read so far.
+	 * @param string $line One unfolded content line.
+	 *
+	 * @return array<string, string> The event, with the property when it is one this parser reads.
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-005
+	 */
+	private function withProperty(array $event, string $line): array {
+		if (str_contains($line, ':') === false) {
+			return $event;
+		}
+
+		[$rawName, $value] = explode(':', $line, 2);
+		$parts = explode(';', $rawName);
+		$name = strtoupper(trim($parts[0]));
+
+		if (in_array($name, ['DTSTART', 'DTEND', 'DURATION', 'STATUS', 'TRANSP'], true) === false) {
+			return $event;
+		}
+
+		if (in_array($name, ['DTSTART', 'DTEND'], true) === true) {
+			$event[$name] = (implode(';', array_slice($parts, 1)) . ':' . $value);
+
+			return $event;
+		}
+
+		$event[$name] = $value;
+
+		return $event;
+	}//end withProperty()
 
 	/**
 	 * One DTSTART or DTEND as an instant.
@@ -181,14 +204,7 @@ class IcalBusyParser {
 			return null;
 		}
 
-		$timezone = new DateTimeZone('UTC');
-		if (preg_match('/TZID=([^;:]+)/i', $parameters, $matches) === 1) {
-			try {
-				$timezone = new DateTimeZone(trim($matches[1]));
-			} catch (\Throwable $e) {
-				$timezone = new DateTimeZone('UTC');
-			}
-		}
+		$timezone = $this->zone(parameters: $parameters);
 
 		try {
 			if (preg_match('/^\d{8}$/', $raw) === 1) {
@@ -207,6 +223,27 @@ class IcalBusyParser {
 	}//end instant()
 
 	/**
+	 * The zone a DTSTART or DTEND is written in.
+	 *
+	 * @param string $parameters The property parameters, before the colon.
+	 *
+	 * @return DateTimeZone The declared zone, or UTC when there is none or it does not resolve.
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-005
+	 */
+	private function zone(string $parameters): DateTimeZone {
+		if (preg_match('/TZID=([^;:]+)/i', $parameters, $matches) !== 1) {
+			return new DateTimeZone('UTC');
+		}
+
+		try {
+			return new DateTimeZone(trim($matches[1]));
+		} catch (\Throwable $e) {
+			return new DateTimeZone('UTC');
+		}
+	}//end zone()
+
+	/**
 	 * The end of an event that declares a DURATION instead of a DTEND.
 	 *
 	 * @param DateTimeImmutable $start The event start.
@@ -222,7 +259,7 @@ class IcalBusyParser {
 		}
 
 		try {
-			return $start->add(new \DateInterval(trim($duration)));
+			return $start->add(new DateInterval(trim($duration)));
 		} catch (\Throwable $e) {
 			return null;
 		}

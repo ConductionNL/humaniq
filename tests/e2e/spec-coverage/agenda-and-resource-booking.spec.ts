@@ -93,13 +93,13 @@ test.describe.serial("agenda, rostering and resource booking", () => {
 			lastName: `Fixture ${RUN_ID}`,
 			email: `agenda.${RUN_ID}@example.invalid`,
 		});
-		roomId = await create("Resource", {
+		roomId = await create("HrResource", {
 			name: `Hoorzittingzaal ${RUN_ID}`,
 			kind: "room",
 			quantity: 1,
 			active: true,
 		});
-		meterId = await create("Resource", {
+		meterId = await create("HrResource", {
 			name: `Geluidsmeter ${RUN_ID}`,
 			kind: "equipment",
 			quantity: 2,
@@ -218,7 +218,7 @@ test.describe.serial("agenda, rostering and resource booking", () => {
 	});
 
 	test("a resource out of service refuses a booking", async () => {
-		const retiredId = await create("Resource", {
+		const retiredId = await create("HrResource", {
 			name: `Bus ${RUN_ID}`,
 			kind: "vehicle",
 			quantity: 1,

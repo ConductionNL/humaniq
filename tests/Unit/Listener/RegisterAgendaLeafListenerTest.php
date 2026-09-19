@@ -118,4 +118,83 @@ class RegisterAgendaLeafListenerTest extends TestCase {
 
 		$this->assertStringContainsString('registerAgendaLeaf', $leaves);
 	}//end testTheClientHalfIsInTheLeavesBundle()
+
+	/**
+	 * The leaf still registers beside an OpenRegister that predates #3956.
+	 *
+	 * `tests/stubs/OpenRegisterLeafStub.php` is that OpenRegister: it declares
+	 * no `LOADS_VIA_SHARED_ENTRY` and its constructor takes no `loadStrategy`.
+	 * Passing either against it is an `Error`, and `handle()`'s own catch turns
+	 * that into a warning and no leaf at all, which is what hermiq measured on
+	 * a live instance. So the assertion here is the registration itself, not
+	 * the guard's return value: a leaf that is absent is the defect.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-006
+	 */
+	public function testTheLeafStillRegistersOnAnOlderOpenRegister(): void {
+		$logger = new class extends \Psr\Log\AbstractLogger {
+
+			/**
+			 * Everything the listener logged.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $lines = [];
+
+			/**
+			 * {@inheritDoc}
+			 *
+			 * @param mixed $level The log level.
+			 * @param mixed $message The message.
+			 * @param array<string, mixed> $context The context.
+			 *
+			 * @return void
+			 */
+			public function log($level, $message, array $context = []): void {
+				$this->lines[] = (string)$message;
+			}
+		};
+
+		$l10n = $this->createMock(\OCP\IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+
+		$listener = new RegisterAgendaLeafListener($l10n, $logger);
+		$event = new \OCA\OpenRegister\Event\RegisterLeafProvidersEvent();
+
+		$listener->handle($event);
+
+		$this->assertCount(
+			1,
+			$event->getLeaves(),
+			'The agenda leaf was not contributed. The listener swallowed: '
+			. (implode(' | ', $logger->lines) ?: 'nothing, so the event was never reached')
+		);
+		$this->assertSame(
+			RegisterAgendaLeafListener::LEAF_ID,
+			$event->getLeaves()[0]['descriptor']->id
+		);
+	}//end testTheLeafStillRegistersOnAnOlderOpenRegister()
+
+	/**
+	 * The capability probe answers no when the class beside us has neither half.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-006
+	 */
+	public function testTheProbeAnswersNoWithoutTheConstantAndTheParameter(): void {
+		$l10n = $this->createMock(\OCP\IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+
+		$listener = new RegisterAgendaLeafListener($l10n, new \Psr\Log\NullLogger());
+		$probe = new \ReflectionMethod($listener, 'descriptorSupportsLoadStrategy');
+
+		$this->assertFalse(
+			$probe->invoke($listener),
+			'The stubbed LeafDescriptor has neither the constant nor the parameter, '
+			. 'so declaring a load strategy against it can only fail'
+		);
+	}//end testTheProbeAnswersNoWithoutTheConstantAndTheParameter()
 }//end class

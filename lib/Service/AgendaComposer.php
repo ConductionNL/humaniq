@@ -61,6 +61,18 @@ class AgendaComposer {
 	public const KINDS = ['shift', 'leave', 'absent', 'interview', 'booking', 'busy'];
 
 	/**
+	 * Constructor.
+	 *
+	 * @param AgendaBookingEntries $bookings Builds the booking and busy-time entries.
+	 */
+	public function __construct(
+		private readonly AgendaBookingEntries $bookings = new AgendaBookingEntries(),
+	) {
+
+	}//end __construct()
+
+
+	/**
 	 * Compose the agenda for one subject over a period.
 	 *
 	 * @param array<string, mixed> $sources Rows per source: assignments, shifts, leaveRequests, sickLeaveCases, interviews, bookings, subscriptions.
@@ -93,7 +105,7 @@ class AgendaComposer {
 			$this->leaveEntries(sources: $sources, employees: $employees, from: $from, to: $to),
 			$this->absenceEntries(sources: $sources, employees: $employees, from: $from, to: $to),
 			$this->interviewEntries(sources: $sources, employees: $employees, from: $from, to: $to),
-			$this->bookingEntries(
+			$this->bookings->bookingEntries(
 				sources: $sources,
 				employees: $employees,
 				subjectType: $subjectType,
@@ -101,7 +113,7 @@ class AgendaComposer {
 				from: $from,
 				to: $to
 			),
-			$this->busyEntries(sources: $sources, employees: $employees, from: $from, to: $to)
+			$this->bookings->busyEntries(sources: $sources, employees: $employees, from: $from, to: $to)
 		);
 
 		usort(
@@ -355,130 +367,6 @@ class AgendaComposer {
 
 		return array_values(array_unique($candidates));
 	}//end interviewParticipants()
-
-	/**
-	 * Resource bookings as agenda entries, for a person or for the resource
-	 * itself.
-	 *
-	 * @param array<string, mixed> $sources The source rows.
-	 * @param array<int, string> $employees The subject's employees.
-	 * @param string $subjectType The subject kind.
-	 * @param string $subjectId The subject's id.
-	 * @param string $from First day (ISO date).
-	 * @param string $to Last day (ISO date).
-	 *
-	 * @return array<int, array<string, mixed>> The entries.
-	 *
-	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-003
-	 */
-	private function bookingEntries(
-		array $sources,
-		array $employees,
-		string $subjectType,
-		string $subjectId,
-		string $from,
-		string $to,
-	): array {
-		$entries = [];
-		foreach (($sources['bookings'] ?? []) as $booking) {
-			$start = $this->stringOrNull(($booking['start'] ?? null));
-			$end = $this->stringOrNull(($booking['end'] ?? null));
-			if ($start === null || $end === null) {
-				continue;
-			}
-
-			if (substr($start, 0, 10) > $to || substr($end, 0, 10) < $from) {
-				continue;
-			}
-
-			$employeeId = trim((string)($booking['employeeId'] ?? ''));
-			$resourceId = trim((string)($booking['resourceId'] ?? ''));
-
-			$holdsSubject = ($subjectType === 'resource' && $resourceId === $subjectId);
-			if ($holdsSubject === false) {
-				$holdsSubject = ($employeeId !== '' && in_array($employeeId, $employees, true) === true);
-			}
-
-			if ($holdsSubject === false) {
-				continue;
-			}
-
-			$entries[] = [
-				'kind' => 'booking',
-				'subjectType' => ($subjectType === 'resource' ? 'resource' : 'employee'),
-				'subjectId' => ($subjectType === 'resource' ? $resourceId : $employeeId),
-				'start' => $start,
-				'end' => $end,
-				'label' => trim((string)($booking['purpose'] ?? 'Reservering')),
-				'sourceType' => 'ResourceBooking',
-				'sourceId' => trim((string)($booking['id'] ?? '')),
-				'domainObjectType' => $this->stringOrNull(($booking['domainObjectType'] ?? null)),
-				'domainObjectRef' => $this->stringOrNull(($booking['domainObjectRef'] ?? null)),
-			];
-		}
-
-		return $entries;
-	}//end bookingEntries()
-
-	/**
-	 * Cached external busy time as agenda entries.
-	 *
-	 * Title, location and attendees are not copied, because they are not read
-	 * out of the feed in the first place: {@see CalendarSubscriptionPoller}
-	 * caches periods only.
-	 *
-	 * @param array<string, mixed> $sources The source rows.
-	 * @param array<int, string> $employees The subject's employees.
-	 * @param string $from First day (ISO date).
-	 * @param string $to Last day (ISO date).
-	 *
-	 * @return array<int, array<string, mixed>> The entries.
-	 *
-	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-005
-	 */
-	private function busyEntries(array $sources, array $employees, string $from, string $to): array {
-		$entries = [];
-		foreach (($sources['subscriptions'] ?? []) as $subscription) {
-			$employeeId = trim((string)($subscription['employeeId'] ?? ''));
-			if (in_array($employeeId, $employees, true) === false) {
-				continue;
-			}
-
-			$periods = ($subscription['busyPeriods'] ?? []);
-			if (is_array($periods) === false) {
-				continue;
-			}
-
-			foreach ($periods as $period) {
-				if (is_array($period) === false) {
-					continue;
-				}
-
-				$start = $this->stringOrNull(($period['start'] ?? null));
-				$end = $this->stringOrNull(($period['end'] ?? null));
-				if ($start === null || $end === null) {
-					continue;
-				}
-
-				if (substr($start, 0, 10) > $to || substr($end, 0, 10) < $from) {
-					continue;
-				}
-
-				$entries[] = [
-					'kind' => 'busy',
-					'subjectType' => 'employee',
-					'subjectId' => $employeeId,
-					'start' => $start,
-					'end' => $end,
-					'label' => 'Bezet',
-					'sourceType' => 'CalendarSubscription',
-					'sourceId' => trim((string)($subscription['id'] ?? '')),
-				];
-			}
-		}
-
-		return $entries;
-	}//end busyEntries()
 
 	/**
 	 * Narrow a raw value to a non-empty string.

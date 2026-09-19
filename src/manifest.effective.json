@@ -7126,7 +7126,7 @@
 					"active"
 				],
 				"register": "humaniq",
-				"schema": "Resource",
+				"schema": "HrResource",
 				"sort": {
 					"field": "name",
 					"order": "asc"
@@ -7159,7 +7159,7 @@
 					}
 				],
 				"register": "humaniq",
-				"schema": "Resource",
+				"schema": "HrResource",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true

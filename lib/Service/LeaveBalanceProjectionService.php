@@ -126,48 +126,81 @@ class LeaveBalanceProjectionService {
 		$allBalances = $this->loadAll('LeaveBalance');
 
 		for ($year = $startYear; $year <= $endYear; $year++) {
-			$balance = $this->matchBalance($allBalances, $employeeId, $year, $leaveType);
-			if ($balance === null) {
-				$this->logger->info(
-					sprintf(
-						'humaniq: no LeaveBalance for employee %s, year %d, type %s, so nothing was projected.',
-						$employeeId,
-						$year,
-						$leaveType
-					)
-				);
-				continue;
-			}
-
-			$contractHours = null;
-			if (($balance['contractHoursPerWeek'] ?? null) !== null) {
-				$contractHours = (float)$balance['contractHoursPerWeek'];
-			}
-
-			$projection = LeaveHoursCalculator::usedHoursFor(
-				$allRequests,
-				$employeeId,
-				$year,
-				$leaveType,
-				$contractHours
+			$this->projectYear(
+				allRequests: $allRequests,
+				allBalances: $allBalances,
+				employeeId: $employeeId,
+				year: $year,
+				leaveType: $leaveType
 			);
-			if ($projection['underivable'] !== []) {
-				$this->logger->warning(
-					sprintf(
-						'humaniq: %d leave request(s) carry no hours and no contract hours per week, so they counted as zero against employee %s year %d type %s: %s',
-						count($projection['underivable']),
-						$employeeId,
-						$year,
-						$leaveType,
-						implode(', ', $projection['underivable'])
-					)
-				);
-			}
-
-			$this->writeUsedHours($balance, $projection['usedHours']);
 		}//end for
 
 	}//end projectForRequest()
+
+	/**
+	 * Project one employee's used hours for one year and leave type.
+	 *
+	 * A year with no administered balance posts nothing and says so: there is
+	 * no row to write to, and creating one here would invent an entitlement.
+	 *
+	 * @param array<array<string, mixed>> $allRequests Every LeaveRequest.
+	 * @param array<array<string, mixed>> $allBalances Every LeaveBalance.
+	 * @param string $employeeId The employee.
+	 * @param int $year The balance year.
+	 * @param string $leaveType The leave type.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-001
+	 */
+	private function projectYear(
+		array $allRequests,
+		array $allBalances,
+		string $employeeId,
+		int $year,
+		string $leaveType
+	): void {
+		$balance = $this->matchBalance($allBalances, $employeeId, $year, $leaveType);
+		if ($balance === null) {
+			$this->logger->info(
+				sprintf(
+					'humaniq: no LeaveBalance for employee %s, year %d, type %s, so nothing was projected.',
+					$employeeId,
+					$year,
+					$leaveType
+				)
+			);
+			return;
+		}
+
+		$contractHours = null;
+		if (($balance['contractHoursPerWeek'] ?? null) !== null) {
+			$contractHours = (float)$balance['contractHoursPerWeek'];
+		}
+
+		$projection = LeaveHoursCalculator::usedHoursFor(
+			$allRequests,
+			$employeeId,
+			$year,
+			$leaveType,
+			$contractHours
+		);
+		if ($projection['underivable'] !== []) {
+			$this->logger->warning(
+				sprintf(
+					'humaniq: %d leave request(s) carry no hours and no contract hours per week, so they counted as zero against employee %s year %d type %s: %s',
+					count($projection['underivable']),
+					$employeeId,
+					$year,
+					$leaveType,
+					implode(', ', $projection['underivable'])
+				)
+			);
+		}
+
+		$this->writeUsedHours($balance, $projection['usedHours']);
+
+	}//end projectYear()
 
 	/**
 	 * The administered `LeaveType` a request means, or null when none is

@@ -95,7 +95,7 @@ class ResourceBookingOverlapListener implements IEventListener {
 		try {
 			$refusal = $this->bookings->refusal(
 				booking: $incoming,
-				resource: $this->gateway->findObjectData(trim((string)($incoming['resourceId'] ?? '')), 'Resource'),
+				resource: $this->gateway->findObjectData(trim((string)($incoming['resourceId'] ?? '')), 'HrResource'),
 				existing: $this->gateway->findFiltered(
 					'ResourceBooking',
 					['resourceId' => trim((string)($incoming['resourceId'] ?? ''))]

@@ -48,7 +48,7 @@
         {
             "templateRef": "indexScaffold",
             "register": "humaniq",
-            "schema": "Resource",
+            "schema": "HrResource",
             "params": {
                 "id": "Resources",
                 "route": "/resources",
@@ -76,7 +76,7 @@
         {
             "templateRef": "simpleDetailScaffold",
             "register": "humaniq",
-            "schema": "Resource",
+            "schema": "HrResource",
             "params": {
                 "id": "ResourceDetail",
                 "route": "/resources/:id",

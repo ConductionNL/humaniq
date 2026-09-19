@@ -109,24 +109,9 @@ class WorkingCalendarReader {
 	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-004
 	 */
 	public function nonWorkingDates(DateTimeImmutable $from, DateTimeImmutable $to): array {
-		$service = null;
-		$name = null;
-		foreach (self::CANDIDATE_SERVICES as $candidate) {
-			if (class_exists($candidate) === false) {
-				continue;
-			}
-
-			$name = $candidate;
-			try {
-				$service = $this->container->get($candidate);
-			} catch (\Throwable $e) {
-				$service = null;
-			}
-
-			if ($service !== null) {
-				break;
-			}
-		}
+		$resolved = $this->resolveService();
+		$service = $resolved['service'];
+		$name = $resolved['name'];
 
 		if ($service === null) {
 			return $this->degraded(
@@ -155,6 +140,62 @@ class WorkingCalendarReader {
 			);
 		}
 
+		return [
+			'dates' => $this->isoDates(raw: $raw),
+			'resolved' => true,
+			'reason' => null,
+		];
+	}//end nonWorkingDates()
+
+	/**
+	 * The openregister working-calendar service, if this instance has one.
+	 *
+	 * Both names are tried because the service moved namespace; the probe is
+	 * by name on purpose, so an instance without openregister keeps working
+	 * instead of failing to boot.
+	 *
+	 * @return array{service: object|null, name: string|null} The service and the name it answered to.
+	 *
+	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-004
+	 */
+	private function resolveService(): array {
+		$name = null;
+		foreach (self::CANDIDATE_SERVICES as $candidate) {
+			if (class_exists($candidate) === false) {
+				continue;
+			}
+
+			$name = $candidate;
+			try {
+				$service = $this->container->get($candidate);
+			} catch (\Throwable $e) {
+				continue;
+			}
+
+			if ($service !== null) {
+				return [
+					'service' => $service,
+					'name' => $name,
+				];
+			}
+		}
+
+		return [
+			'service' => null,
+			'name' => $name,
+		];
+	}//end resolveService()
+
+	/**
+	 * The answer narrowed to unique ISO dates.
+	 *
+	 * @param array<int|string, mixed> $raw What the working calendar answered.
+	 *
+	 * @return array<int, string> The dates.
+	 *
+	 * @spec openspec/specs/working-hours-per-person/spec.md#REQ-WHP-004
+	 */
+	private function isoDates(array $raw): array {
 		$dates = [];
 		foreach ($raw as $value) {
 			if (is_string($value) === false || trim($value) === '') {
@@ -164,12 +205,8 @@ class WorkingCalendarReader {
 			$dates[] = substr($value, 0, 10);
 		}
 
-		return [
-			'dates' => array_values(array_unique($dates)),
-			'resolved' => true,
-			'reason' => null,
-		];
-	}//end nonWorkingDates()
+		return array_values(array_unique($dates));
+	}//end isoDates()
 
 	/**
 	 * Record one degradation and answer with no dates.

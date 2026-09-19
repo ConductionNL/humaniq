@@ -121,7 +121,7 @@ class AgendaController extends Controller {
 
 		$members = [];
 		if ($subjectType === 'orgUnit') {
-			$members = $this->members(orgUnitId: $subjectId, on: $window[0]);
+			$members = $this->members(orgUnitId: $subjectId, onDate: $window[0]);
 		}
 
 		return new JSONResponse([
@@ -168,7 +168,7 @@ class AgendaController extends Controller {
 		}
 
 		$orgUnitId = trim((string)$orgUnitId);
-		$employeeIds = $this->employeeScope(orgUnitId: $orgUnitId, on: $window[0]);
+		$employeeIds = $this->employeeScope(orgUnitId: $orgUnitId, onDate: $window[0]);
 
 		return new JSONResponse([
 			'from' => $window[0]->format('Y-m-d'),
@@ -210,7 +210,7 @@ class AgendaController extends Controller {
 
 		return new JSONResponse(
 			$this->capacity->capacity(
-				employeeIds: $this->employeeScope(orgUnitId: $orgUnitId, on: $window[0]),
+				employeeIds: $this->employeeScope(orgUnitId: $orgUnitId, onDate: $window[0]),
 				from: $window[0],
 				to: $window[1],
 				sources: $this->sources(from: $window[0], to: $window[1])
@@ -253,15 +253,15 @@ class AgendaController extends Controller {
 	 * The employees an answer covers: one org unit's members, or everybody.
 	 *
 	 * @param string $orgUnitId The org unit, or an empty string for all.
-	 * @param DateTimeImmutable $on The date a placement must be active on.
+	 * @param DateTimeImmutable $onDate The date a placement must be active on.
 	 *
 	 * @return array<int, string> The employee ids.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
 	 */
-	private function employeeScope(string $orgUnitId, DateTimeImmutable $on): array {
+	private function employeeScope(string $orgUnitId, DateTimeImmutable $onDate): array {
 		if ($orgUnitId !== '') {
-			return $this->members(orgUnitId: $orgUnitId, on: $on);
+			return $this->members(orgUnitId: $orgUnitId, onDate: $onDate);
 		}
 
 		$employees = [];
@@ -279,16 +279,16 @@ class AgendaController extends Controller {
 	 * The employees placed in one org unit on one date.
 	 *
 	 * @param string $orgUnitId The org unit.
-	 * @param DateTimeImmutable $on The date the placement must be active on.
+	 * @param DateTimeImmutable $onDate The date the placement must be active on.
 	 *
 	 * @return array<int, string> The employee ids.
 	 *
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-001
 	 */
-	private function members(string $orgUnitId, DateTimeImmutable $on): array {
+	private function members(string $orgUnitId, DateTimeImmutable $onDate): array {
 		$members = [];
 		foreach ($this->gateway->findFiltered('OrgAssignment', ['orgUnitId' => $orgUnitId]) as $assignment) {
-			if ($this->orgResolution->isActiveOn($assignment, $on->format('Y-m-d')) === false) {
+			if ($this->orgResolution->isActiveOn($assignment, $onDate->format('Y-m-d')) === false) {
 				continue;
 			}
 

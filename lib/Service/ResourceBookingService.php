@@ -84,21 +84,70 @@ class ResourceBookingService {
 				. ' is buiten gebruik en kan niet worden gereserveerd.';
 		}
 
-		$quantity = ($resource['quantity'] ?? 1);
-		if (is_numeric($quantity) === false || (int)$quantity < 1) {
-			$quantity = 1;
+		$quantity = $this->capacity(resource: $resource);
+		$overlapping = $this->overlapping(
+			existing: $existing,
+			resourceId: $resourceId,
+			bookingId: trim((string)($booking['id'] ?? '')),
+			start: $start,
+			end: $end
+		);
+
+		if ((count($overlapping) + 1) <= $quantity) {
+			return null;
 		}
 
-		$bookingId = trim((string)($booking['id'] ?? ''));
+		return 'Resource ' . trim((string)($resource['name'] ?? $resourceId))
+			. ' is in deze periode al ' . count($overlapping) . ' keer gereserveerd en er '
+			. ($quantity === 1 ? 'is er één' : 'zijn er ' . $quantity)
+			. '. De reservering van ' . ($this->describe($overlapping[0])) . ' staat in de weg.';
+	}//end refusal()
+
+	/**
+	 * How many bookings of one resource may run at the same time.
+	 *
+	 * @param array<string, mixed> $resource The Resource record.
+	 *
+	 * @return int The capacity, never below one.
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-004
+	 */
+	private function capacity(array $resource): int {
+		$quantity = ($resource['quantity'] ?? 1);
+		if (is_numeric($quantity) === false || (int) $quantity < 1) {
+			return 1;
+		}
+
+		return (int) $quantity;
+	}//end capacity()
+
+	/**
+	 * The stored bookings of one resource that run during a period.
+	 *
+	 * Touching periods do not overlap: 10:00-12:00 and 12:00-13:00 are two
+	 * bookings of one room, not a clash. A booking being edited is not its own
+	 * clash either, so its own id is skipped.
+	 *
+	 * @param array<array<string, mixed>> $existing Every booking already stored, any resource.
+	 * @param string $resourceId The resource the incoming booking asks for.
+	 * @param string $bookingId The incoming booking's own id, empty when it is new.
+	 * @param int $start The incoming booking's start.
+	 * @param int $end The incoming booking's end.
+	 *
+	 * @return array<int, array<string, mixed>> The clashing bookings.
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-004
+	 */
+	private function overlapping(
+		array $existing,
+		string $resourceId,
+		string $bookingId,
+		int $start,
+		int $end
+	): array {
 		$overlapping = [];
 		foreach ($existing as $other) {
-			if (trim((string)($other['resourceId'] ?? '')) !== $resourceId) {
-				continue;
-			}
-
-			$otherId = trim((string)($other['id'] ?? ''));
-			if ($otherId !== '' && $otherId === $bookingId) {
-				// A booking being edited is not its own clash.
+			if ($this->concerns(other: $other, resourceId: $resourceId, bookingId: $bookingId) === false) {
 				continue;
 			}
 
@@ -108,24 +157,34 @@ class ResourceBookingService {
 				continue;
 			}
 
-			// Touching periods do not overlap: 10:00-12:00 and 12:00-13:00 are
-			// two bookings of one room, not a clash.
 			if ($otherStart < $end && $start < $otherEnd) {
 				$overlapping[] = $other;
 			}
 		}
 
-		if ((count($overlapping) + 1) <= (int)$quantity) {
-			return null;
+		return $overlapping;
+	}//end overlapping()
+
+	/**
+	 * Whether a stored booking could clash with the incoming one at all.
+	 *
+	 * @param array<string, mixed> $other The stored booking.
+	 * @param string $resourceId The resource the incoming booking asks for.
+	 * @param string $bookingId The incoming booking's own id, empty when it is new.
+	 *
+	 * @return bool True when it books the same resource and is not the booking under edit.
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-004
+	 */
+	private function concerns(array $other, string $resourceId, string $bookingId): bool {
+		if (trim((string)($other['resourceId'] ?? '')) !== $resourceId) {
+			return false;
 		}
 
-		$blocker = $overlapping[0];
+		$otherId = trim((string)($other['id'] ?? ''));
 
-		return 'Resource ' . trim((string)($resource['name'] ?? $resourceId))
-			. ' is in deze periode al ' . count($overlapping) . ' keer gereserveerd en er '
-			. ((int)$quantity === 1 ? 'is er één' : 'zijn er ' . (int)$quantity)
-			. '. De reservering van ' . ($this->describe($blocker)) . ' staat in de weg.';
-	}//end refusal()
+		return ($otherId === '' || $otherId !== $bookingId);
+	}//end concerns()
 
 	/**
 	 * A short description of the booking that blocks another.
