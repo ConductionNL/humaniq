@@ -102,19 +102,7 @@ class LeaveCoverageService {
 			return $this->noWarning();
 		}
 
-		$requestId = trim((string)($request['id'] ?? ''));
-		$standing = [];
-		foreach ($otherRequests as $other) {
-			if (trim((string)($other['id'] ?? '')) === $requestId && $requestId !== '') {
-				continue;
-			}
-
-			$standing[] = $other;
-		}
-
-		// The request under consideration counts as approved, because the
-		// question is what the unit looks like AFTER approving it.
-		$standing[] = array_merge($request, ['status' => 'approved']);
+		$standing = $this->standingRequests(request: $request, otherRequests: $otherRequests);
 
 		$entries = $this->schedule->compose(
 			requests: $standing,
@@ -127,33 +115,16 @@ class LeaveCoverageService {
 		$cursor = $start;
 		$step = new DateInterval('P1D');
 		while ($cursor <= $end) {
-			$minimum = $this->minimumOn(orgUnit: $orgUnit, date: $cursor);
-			if ($minimum === null) {
-				$cursor = $cursor->add($step);
-				continue;
-			}
-
-			$presence = $this->schedule->presenceOn(
+			$short = $this->shortfallOn(
+				orgUnit: $orgUnit,
 				entries: $entries,
 				memberEmployeeIds: $memberEmployeeIds,
-				date: $cursor
+				date: $cursor,
+				requester: trim((string)($request['employeeId'] ?? ''))
 			);
 
-			if ($presence['present'] < $minimum) {
-				$requester = trim((string)($request['employeeId'] ?? ''));
-				$dates[] = [
-					'date' => $cursor->format('Y-m-d'),
-					'present' => $presence['present'],
-					'minimum' => $minimum,
-					'othersAway' => array_values(
-						array_filter(
-							$presence['away'],
-							static function (string $employeeId) use ($requester): bool {
-								return ($employeeId !== $requester);
-							}
-						)
-					),
-				];
+			if ($short !== null) {
+				$dates[] = $short;
 			}
 
 			$cursor = $cursor->add($step);
@@ -169,6 +140,88 @@ class LeaveCoverageService {
 			'message' => $this->message(dates: $dates),
 		];
 	}//end warning()
+
+	/**
+	 * Every other request, plus the one under consideration counted as approved.
+	 *
+	 * The request counts as approved because the question is what the unit
+	 * looks like AFTER approving it, and an earlier version of the same
+	 * request must not be counted twice.
+	 *
+	 * @param array<string, mixed> $request The LeaveRequest under consideration.
+	 * @param array<array<string, mixed>> $otherRequests Every other LeaveRequest, any status.
+	 *
+	 * @return array<int, array<string, mixed>> The requests to compose the schedule from.
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
+	 */
+	private function standingRequests(array $request, array $otherRequests): array {
+		$requestId = trim((string)($request['id'] ?? ''));
+		$standing = [];
+		foreach ($otherRequests as $other) {
+			if ($requestId !== '' && trim((string)($other['id'] ?? '')) === $requestId) {
+				continue;
+			}
+
+			$standing[] = $other;
+		}
+
+		$standing[] = array_merge($request, ['status' => 'approved']);
+
+		return $standing;
+	}//end standingRequests()
+
+	/**
+	 * The shortfall on one date, or null when that date is covered.
+	 *
+	 * A date the unit administers no minimum for is never short.
+	 *
+	 * @param array<string, mixed> $orgUnit The OrgUnit the requester is placed in.
+	 * @param array<int, array<string, mixed>> $entries The composed schedule.
+	 * @param array<int, string> $memberEmployeeIds The employees placed in that unit.
+	 * @param DateTimeImmutable $date The date.
+	 * @param string $requester The requesting employee, left out of `othersAway`.
+	 *
+	 * @return array<string, mixed>|null The shortfall, or null.
+	 *
+	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S02
+	 */
+	private function shortfallOn(
+		array $orgUnit,
+		array $entries,
+		array $memberEmployeeIds,
+		DateTimeImmutable $date,
+		string $requester
+	): ?array {
+		$minimum = $this->minimumOn(orgUnit: $orgUnit, date: $date);
+		if ($minimum === null) {
+			return null;
+		}
+
+		$presence = $this->schedule->presenceOn(
+			entries: $entries,
+			memberEmployeeIds: $memberEmployeeIds,
+			date: $date
+		);
+
+		if ($presence['present'] >= $minimum) {
+			return null;
+		}
+
+		return [
+			'date' => $date->format('Y-m-d'),
+			'present' => $presence['present'],
+			'minimum' => $minimum,
+			'othersAway' => array_values(
+				array_filter(
+					$presence['away'],
+					static function (string $employeeId) use ($requester): bool {
+						return ($employeeId !== $requester);
+					}
+				)
+			),
+		];
+	}//end shortfallOn()
 
 	/**
 	 * The administered minimum for one date, or null when the unit has none

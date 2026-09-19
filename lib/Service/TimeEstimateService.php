@@ -227,20 +227,13 @@ class TimeEstimateService {
 		$ceiling = $this->estimatedHours($estimate);
 		$entryId = trim((string)($entry['id'] ?? ''));
 
-		$booked = 0.0;
-		foreach ($this->forObject(rows: $entries, type: $type, ref: $ref) as $other) {
-			$otherId = trim((string)($other['id'] ?? ''));
-			if ($otherId !== '' && $otherId === $entryId) {
-				// An entry being corrected does not count against itself.
-				continue;
-			}
-
-			if ($this->role($other) !== $role) {
-				continue;
-			}
-
-			$booked += $this->hours($other);
-		}
+		$booked = $this->bookedAgainst(
+			entries: $entries,
+			type: $type,
+			ref: $ref,
+			role: $role,
+			entryId: $entryId
+		);
 
 		$incoming = $this->hours($entry);
 		if (($booked + $incoming) <= $ceiling) {
@@ -254,6 +247,46 @@ class TimeEstimateService {
 			. ' is ' . $this->number($ceiling) . ' uur en staat als plafond aan. Er is nog '
 			. $this->number($left) . ' uur over, en deze boeking is ' . $this->number($incoming) . ' uur.';
 	}//end refusalForEntry()
+
+	/**
+	 * The hours already booked against one object and role.
+	 *
+	 * An entry being corrected does not count against itself, so an edit is
+	 * measured against the other entries and not against its own old value.
+	 *
+	 * @param array<array<string, mixed>> $entries Every stored TimeEntry.
+	 * @param string $type The `<app>:<schema>` literal.
+	 * @param string $ref The object's uuid.
+	 * @param string $role The role, or {@see NO_ROLE}.
+	 * @param string $entryId The incoming entry's own id, empty when it is new.
+	 *
+	 * @return float The booked hours.
+	 *
+	 * @spec openspec/specs/hours-leaf/spec.md#REQ-HL-EST-004
+	 */
+	private function bookedAgainst(
+		array $entries,
+		string $type,
+		string $ref,
+		string $role,
+		string $entryId
+	): float {
+		$booked = 0.0;
+		foreach ($this->forObject(rows: $entries, type: $type, ref: $ref) as $other) {
+			$otherId = trim((string)($other['id'] ?? ''));
+			if ($otherId !== '' && $otherId === $entryId) {
+				continue;
+			}
+
+			if ($this->role($other) !== $role) {
+				continue;
+			}
+
+			$booked += $this->hours($other);
+		}
+
+		return $booked;
+	}//end bookedAgainst()
 
 	/**
 	 * The estimate governing one object and role, preferring the role's own
