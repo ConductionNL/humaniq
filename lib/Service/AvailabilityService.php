@@ -227,37 +227,111 @@ class AvailabilityService {
 				continue;
 			}
 
-			$cursor = $from->setTime(hour: 0, minute: 0);
-			$last = $to->setTime(hour: 0, minute: 0);
-			while ($cursor <= $last) {
-				$day = $cursor->format('Y-m-d');
-				$dayStart = strtotime($day . ' 00:00:00');
-				$dayEnd = strtotime($day . ' 23:59:59');
-				$cursor = $cursor->modify('+1 day');
-
-				if ($dayStart === false || $dayEnd === false || $end <= $dayStart || $start >= $dayEnd) {
-					continue;
-				}
-
-				$contracted = (float)($contractedPerDay[$day] ?? 0.0);
-				if ($contracted <= 0.0) {
-					// Nothing is committed on a day the person does not work.
-					continue;
-				}
-
-				$overlapHours = ((min($end, $dayEnd) - max($start, $dayStart)) / 3600);
-				if (in_array($entry['kind'], ['leave', 'absent'], true) === true) {
-					// A whole-day absence costs the contracted day, whatever the
-					// clock says: a 0.6 fte on leave loses 4.8 hours, not 24.
-					$overlapHours = $contracted;
-				}
-
-				$perDay[$day] = min($contracted, (($perDay[$day] ?? 0.0) + $overlapHours));
-			}
+			$perDay = $this->spreadOverDays(
+				perDay: $perDay,
+				kind: (string)$entry['kind'],
+				start: $start,
+				end: $end,
+				from: $from,
+				to: $to,
+				contractedPerDay: $contractedPerDay
+			);
 		}
 
 		return array_sum($perDay);
 	}//end committedHours()
+
+	/**
+	 * Add one agenda entry's hours to the per-day totals it touches.
+	 *
+	 * A day never counts more than the contracted hours, so two entries on one
+	 * day cannot commit more time than the person has.
+	 *
+	 * @param array<string, float> $perDay Committed hours so far, by ISO date.
+	 * @param string $kind The entry kind.
+	 * @param int $start The entry's start timestamp.
+	 * @param int $end The entry's end timestamp.
+	 * @param DateTimeImmutable $from First day.
+	 * @param DateTimeImmutable $to Last day.
+	 * @param array<string, float> $contractedPerDay Contracted hours by ISO date.
+	 *
+	 * @return array<string, float> The per-day totals, with this entry added.
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
+	 */
+	private function spreadOverDays(
+		array $perDay,
+		string $kind,
+		int $start,
+		int $end,
+		DateTimeImmutable $from,
+		DateTimeImmutable $to,
+		array $contractedPerDay
+	): array {
+		$cursor = $from->setTime(hour: 0, minute: 0);
+		$last = $to->setTime(hour: 0, minute: 0);
+		while ($cursor <= $last) {
+			$day = $cursor->format('Y-m-d');
+			$dayStart = strtotime($day . ' 00:00:00');
+			$dayEnd = strtotime($day . ' 23:59:59');
+			$cursor = $cursor->modify('+1 day');
+
+			if ($dayStart === false || $dayEnd === false || $end <= $dayStart || $start >= $dayEnd) {
+				continue;
+			}
+
+			$contracted = (float)($contractedPerDay[$day] ?? 0.0);
+			if ($contracted <= 0.0) {
+				// Nothing is committed on a day the person does not work.
+				continue;
+			}
+
+			$overlapHours = $this->dayHours(
+				kind: $kind,
+				start: $start,
+				end: $end,
+				dayStart: $dayStart,
+				dayEnd: $dayEnd,
+				contracted: $contracted
+			);
+
+			$perDay[$day] = min($contracted, (($perDay[$day] ?? 0.0) + $overlapHours));
+		}
+
+		return $perDay;
+	}//end spreadOverDays()
+
+	/**
+	 * What one entry commits on one day.
+	 *
+	 * A whole-day absence costs the contracted day, whatever the clock says: a
+	 * 0.6 fte on leave loses 4.8 hours, not 24.
+	 *
+	 * @param string $kind The entry kind.
+	 * @param int $start The entry's start timestamp.
+	 * @param int $end The entry's end timestamp.
+	 * @param int $dayStart Midnight at the start of the day.
+	 * @param int $dayEnd The last second of the day.
+	 * @param float $contracted Contracted hours on that day.
+	 *
+	 * @return float The committed hours.
+	 *
+	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
+	 */
+	private function dayHours(
+		string $kind,
+		int $start,
+		int $end,
+		int $dayStart,
+		int $dayEnd,
+		float $contracted
+	): float {
+		if (in_array($kind, ['leave', 'absent'], true) === true) {
+			return $contracted;
+		}
+
+		return ((min($end, $dayEnd) - max($start, $dayStart)) / 3600);
+	}//end dayHours()
 
 	/**
 	 * Whether one employee holds every required competence on every day of the
