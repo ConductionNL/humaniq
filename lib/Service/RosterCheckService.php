@@ -198,10 +198,12 @@ class RosterCheckService {
 
 		$projected = [];
 		foreach ($assignments as $assignment) {
-			$projected[] = $this->withProjection($assignment, $shiftsById);
+			$projected[] = RosterAssignmentProjectionService::withProjection($assignment, $shiftsById);
 		}
 
-		$context['rostering'] = ['plannedClockByEmployeeDate' => $this->buildLocalIndex($projected)];
+		$context['rostering'] = [
+			'plannedClockByEmployeeDate' => RosterAssignmentProjectionService::plannedClockIndex($projected),
+		];
 
 		$report = [
 			'rostersChecked' => count($rosters),
@@ -257,76 +259,6 @@ class RosterCheckService {
 
 		return $report;
 	}//end evaluateRosters()
-
-	/**
-	 * Fill an assignment's `plannedStart`/`plannedEnd`/`plannedBreakMinutes`
-	 * from its referenced Shift ONLY when they are missing — an
-	 * already-projected assignment is returned unchanged (design D2
-	 * stability: never re-derive a value the write path already stored).
-	 *
-	 * @param array<string, mixed> $assignment The RosterAssignment.
-	 * @param array<string, array<string, mixed>> $shiftsById Shift rows keyed by id.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function withProjection(array $assignment, array $shiftsById): array {
-		$hasPlannedStart = (trim((string)($assignment['plannedStart'] ?? '')) !== '');
-		$hasPlannedEnd = (trim((string)($assignment['plannedEnd'] ?? '')) !== '');
-		if ($hasPlannedStart === true && $hasPlannedEnd === true) {
-			return $assignment;
-		}
-
-		$shiftId = (string)($assignment['shiftId'] ?? '');
-		$shift = ($shiftsById[$shiftId] ?? null);
-		if (is_array($shift) === false) {
-			return $assignment;
-		}
-
-		$date = (string)($assignment['date'] ?? '');
-		if ($date === '') {
-			return $assignment;
-		}
-
-		$planned = RosterAssignmentProjectionService::project($shift, $date);
-
-		return array_merge(
-			$assignment,
-			[
-				'plannedStart' => $assignment['plannedStart'] ?? $planned['plannedStart'],
-				'plannedEnd' => $assignment['plannedEnd'] ?? $planned['plannedEnd'],
-				'plannedBreakMinutes' => $assignment['plannedBreakMinutes'] ?? $planned['plannedBreakMinutes'],
-			]
-		);
-
-	}//end withProjection()
-
-	/**
-	 * Build the `employeeId => [date => ['clockIn' => plannedStart, 'clockOut' => plannedEnd]]`
-	 * sibling index from exactly the given (already-projected) assignment
-	 * set — the `RuleAuditService::buildRosterContext()` shape, scoped to
-	 * this check's own assignments only.
-	 *
-	 * @param array<int, array<string, mixed>> $assignments The (projected) RosterAssignment rows.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function buildLocalIndex(array $assignments): array {
-		$index = [];
-		foreach ($assignments as $assignment) {
-			$employeeId = (string)($assignment['employeeId'] ?? '');
-			$date = (string)($assignment['date'] ?? '');
-			if ($employeeId === '' || $date === '') {
-				continue;
-			}
-
-			$index[$employeeId][$date] = [
-				'clockIn' => ($assignment['plannedStart'] ?? null),
-				'clockOut' => ($assignment['plannedEnd'] ?? null),
-			];
-		}
-
-		return $index;
-	}//end buildLocalIndex()
 
 	/**
 	 * The zero-result report shape: the register WAS read, and it held no
