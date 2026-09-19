@@ -56,6 +56,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Reads one org unit's leave schedule, and the coverage warning for approving
@@ -115,7 +116,7 @@ class LeaveScheduleController extends Controller {
 			);
 		}
 
-		$members = $this->members(orgUnitId: $orgUnitId, on: $window[0]);
+		$members = $this->members(orgUnitId: $orgUnitId, onDate: $window[0]);
 		$requests = $this->gateway->loadAll('LeaveRequest');
 
 		return new JSONResponse([
@@ -178,7 +179,7 @@ class LeaveScheduleController extends Controller {
 			$this->coverage->warning(
 				request: $request,
 				orgUnit: $orgUnit,
-				memberEmployeeIds: $this->members(orgUnitId: $orgUnitId, on: new DateTimeImmutable('today')),
+				memberEmployeeIds: $this->members(orgUnitId: $orgUnitId, onDate: new DateTimeImmutable('today')),
 				otherRequests: $this->gateway->loadAll('LeaveRequest')
 			)
 		);
@@ -188,18 +189,18 @@ class LeaveScheduleController extends Controller {
 	 * The employees placed in one org unit on one date.
 	 *
 	 * @param string $orgUnitId The org unit.
-	 * @param DateTimeImmutable $on The date the placement must be active on.
+	 * @param DateTimeImmutable $onDate The date the placement must be active on.
 	 *
 	 * @return array<int, string> The employee ids.
 	 *
 	 * @spec openspec/specs/leave-management/spec.md#REQ-LVM-S01
 	 */
-	private function members(string $orgUnitId, DateTimeImmutable $on): array {
+	private function members(string $orgUnitId, DateTimeImmutable $onDate): array {
 		$assignments = $this->gateway->findFiltered('OrgAssignment', ['orgUnitId' => $orgUnitId]);
 
 		$members = [];
 		foreach ($assignments as $assignment) {
-			if ($this->orgResolution->isActiveOn($assignment, $on->format('Y-m-d')) === false) {
+			if ($this->orgResolution->isActiveOn($assignment, $onDate->format('Y-m-d')) === false) {
 				continue;
 			}
 
@@ -331,7 +332,7 @@ class LeaveScheduleController extends Controller {
 		// without OpenRegister is told which app to install rather than handed
 		// a container exception naming a class nobody has heard of.
 		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new \RuntimeException(
+			throw new RuntimeException(
 				'humaniq requires the OpenRegister app, which is not installed on this instance.'
 			);
 		}

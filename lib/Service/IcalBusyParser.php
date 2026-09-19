@@ -43,6 +43,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
 
@@ -222,7 +223,7 @@ class IcalBusyParser {
 		}
 
 		try {
-			return $start->add(new \DateInterval(trim($duration)));
+			return $start->add(new DateInterval(trim($duration)));
 		} catch (\Throwable $e) {
 			return null;
 		}
