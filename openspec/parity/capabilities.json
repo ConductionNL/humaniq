@@ -7431,8 +7431,8 @@
    "personio": "unknown",
    "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "not checked: not settled: https://help.afas.nl/content/NL/SE/98219.htm shows a birthday signal delivered inside Profit and InSite, and https://help.afas.nl/help/NL/SE/140869.htm offers webhooks on dossier items; the help sitemap (https://help.afas.nl/sitemap.xml, 9,138 Dutch titles and descriptions searched for slack, teams, webhook, verjaardag) has no page posting a digest to a team chat channel",
+    "visma-raet": "not checked: not settled: youforce.nl product pages (app, integraties, verlof) and the API docs webhooks overview name no digest posted to a team chat channel; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
@@ -7455,15 +7455,15 @@
    "area": "leave",
    "name": "Have HR approve a leave request as a second step after the manager.",
    "humaniq": "no",
-   "afas": "unknown",
+   "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/content/NL/SE/99386.htm the standard leave request workflow routes to the direct manager and back to the employee ('Op basis van onze ervaring adviseren wij onderstaand workflowschema'), and the workflow editor lets you add statuses; an HR second step is not shipped as standard",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/verlof says 'bepaal je zelf welke aanvragen direct worden verwerkt en wat leidinggevenden nog moeten goedkeuren', which covers automatic versus manager approval but not an HR second step; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
@@ -7486,15 +7486,15 @@
    "area": "leave",
    "name": "See who approved or rejected a leave request and when.",
    "humaniq": "partial",
-   "afas": "unknown",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/help/NL/SE/Ins_Wrkflw_Hystry.htm 'In de workflowhistorie zie je een chronologisch overzicht van alle acties die bij een dossieritem zijn uitgevoerd', in Profit and InSite; leave requests run as such a workflow (https://help.afas.nl/content/NL/SE/99386.htm)",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/verlof and https://youforce.nl/security (logging of user, date, time and event) do not say a leave request shows who approved or rejected it and when; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
@@ -7517,15 +7517,15 @@
    "area": "compliance",
    "name": "Set the password policy, such as minimum length and required character types, from the admin screens.",
    "humaniq": "yes",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "afas": "partial",
+   "visma-raet": "yes",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/vraagantwoord/NL/SE/105619.htm AFAS itself sets the password rules for AFAS Online (at least 12 characters, not reused, no part of the email address, not on a leaked list); the page gives no admin setting to change them",
+    "visma-raet": "https://youforce.nl/security lists among measures you can adapt to your own security policy 'Uitgebreide configuratie van wachtwoorden'",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
@@ -7548,15 +7548,15 @@
    "area": "compliance",
    "name": "Lock an account or slow down sign-in after repeated failed login attempts.",
    "humaniq": "yes",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "afas": "yes",
+   "visma-raet": "yes",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/meldingen/NL/SE/121577.htm after a number of wrong passwords 'Het account wordt hierdoor om veiligheidsredenen 30 minuten geblokkeerd'",
+    "visma-raet": "https://youforce.nl/security lists among measures you can adapt to your own security policy 'Beheersing van het aantal foutieve inlogpogingen'",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
@@ -7579,15 +7579,15 @@
    "area": "hiring",
    "name": "Add your own questions to the public job application form.",
    "humaniq": "no",
-   "afas": "unknown",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/help/NL/SE/134856.htm free fields can be added to the online application form in OutSite (example 'Nummer rijbewijs') and carried over to the employee record",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/werving-en-selectie covers vacancy publishing, the careers site and reminders, not own questions on the application form; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
@@ -7610,19 +7610,19 @@
    "area": "reporting",
    "name": "Compare the pay of employees doing equal work, by job category and gender, to prepare the pay gap report the pay transparency law requires.",
    "humaniq": "no",
-   "afas": "unknown",
+   "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://klant.afas.nl/update/profit-8/payroll Profit 8 groups equivalent jobs into job categories per employer to prepare for pay transparency; https://www.afas.nl/roadmap Profit 9 'Het onderdeel recht op informatie verwachten we in de aanstaande versie op te kunnen leveren'; no gender pay comparison report named",
     "visma-raet": "not checked: https://youforce.nl/richtlijn-loontransparantie-kenjijjeloonkloof: Youforce says it is developing new options and names a new rapportage loontransparantie on salary ratios for the same work; the page does not say whether it has shipped.",
     "hr2day": "https://www.hr2day.com/nieuws/nieuwe-release-llama/ (release Llama, 30 March 2026): Loonkloof overview in HR Analytics; https://www.hr2day.com/nieuws/nieuws-wet-loontransparantie-2027/: reports on hourly pay and by education, age group, service years and salary scale.",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmCorePlugin/Report/FilterField/JobTitle.php:34 the PIM report builder filters employees by job title, and src/plugins/orangehrmCorePlugin/Report/DisplayField/EntityAliasMapping.php:40 plus Report/DisplayField/Personal/EmployeeGender.php let it show salary and gender side by side; no gap calculation (grep -riE 'pay.?gap|pay.?transparen|gender.*(salary|pay)' src/plugins src/client/src: no match)"
    },
    "built": {
     "state": "none",
@@ -7647,14 +7647,14 @@
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "partial",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
     "afas": "https://klant.afas.nl/update/profit-8/hrm and https://help.afas.nl/help/NL/SE/140214.htm: vacancy matching compares vacancies with applicants and employees, AI analyses the application attachments into an applicant profile and shows a matching score.",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/werving-en-selectie and https://vr-api-integration.github.io/youforce-api-documentation/recruitment_api_intro.html do not mention scoring applicants or employees against a vacancy; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "https://support.personio.de/hc/en-us/articles/37951608749981-Set-up-the-Talent-Screening-Agent (help centre release article created 2026-07-28): the Talent Screening Agent checks applications against job requirements and highlights results; it is rolling out gradually and consumes AI credits.",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'vacancy.*match|match.*score|resume.?pars|cv.?pars' src/plugins src/client/src: no match; the recruitment plugin stores candidates per vacancy without any scoring"
    },
    "built": {
     "state": "none",
@@ -7679,14 +7679,14 @@
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "partial",
    "evidence": {
     "afas": "https://klant.afas.nl/update/profit-8/hrm and https://help.afas.nl/help/NL/SE/140314.htm: the renewed Valicare link validates ID documents at onboarding, employee creation and document upload, runs an RTW check and optional PEP, VIS and sanction checks, with hard and soft stops.",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/app verifies diplomas through DUO and the VOG through Justis, but no identity document or right to work check with a hard stop is described; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmPimPlugin/entity/EmployeeImmigrationRecord.php:68 and :103 store passport or visa number and I9 status, entered in src/client/src/orangehrmPimPlugin/components/SaveImmigration.vue:41 under the PIM Immigration menu (Service/PIMLeftMenuService.php:68); recorded only, no onboarding check or hard stop (grep -riE 'right.?to.?work' src/plugins src/client/src: no match)"
    },
    "built": {
     "state": "built",
@@ -7710,14 +7710,14 @@
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
     "afas": "https://klant.afas.nl/update/profit-8/hrm: in Profit 8 leave periods in the leave period table can be blocked so closed periods are left out of the leave calculation and balances show as blocked.",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/verlof covers balances and approval only; nothing on locking closed leave periods; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmLeavePlugin/entity/LeavePeriodHistory.php defines only the leave period start; grep -riE 'lock|clos' on that entity and Service/LeavePeriodService.php and grep -riE 'lock.*leave.?period|leave.?period.*(lock|close)' src/plugins src/client/src: no match"
    },
    "built": {
     "state": "none",
@@ -7741,14 +7741,14 @@
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
     "afas": "https://klant.afas.nl/update/profit-8/hrm: commuting kilometres are deducted from claimed business kilometres, filled from work locations or the wage setup, in InSite, Pocket and OutSite.",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/app covers receipt scanning for expense claims; no youforce.nl page read says home to work kilometres are deducted from a business mileage claim; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'mileage|kilomet|commut' src/plugins src/client/src: no match; src/plugins/orangehrmClaimPlugin/entity/ClaimExpense.php:59 a claim expense is an amount with a type, date and note only"
    },
    "built": {
     "state": "none",
@@ -7772,14 +7772,14 @@
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
     "afas": "https://klant.afas.nl/update/profit-7/hrm: Profit 7 (from November 2025) lets you go live with Payroll on the date you switch packages instead of only on 1 January.",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "visma-raet": "not checked: not settled: https://youforce.nl/implementatie describes shadow runs ('schaduwdraaien') before the switch and https://youforce.nl/product/hr-core-salaris is silent; neither says payroll can start mid year carrying over year to date figures; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'payroll|year.?to.?date|ytd' src/plugins src/client/src: no match; the open source edition has no payroll module"
    },
    "built": {
     "state": "none",
@@ -7803,14 +7803,14 @@
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
     "afas": "https://www.afas.nl/roadmap: planned for Profit 9, entering a licence plate fetches the vehicle data from the RDW in Profit and InSite.",
     "visma-raet": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2: Core en Payroll release notes 2026-02 add a link with the RDW that fills brand, model, first registration dates and catalogue value from the licence plate.",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'licen[cs]e.?plate|vehicle|catalog' src/plugins src/client/src: no match; no company car or vehicle data anywhere in the code"
    },
    "built": {
     "state": "none",
@@ -7830,19 +7830,19 @@
    "area": "payroll",
    "name": "Pay an early retirement benefit to an employee close to state pension age, in one sum or instalments, with the tax handled automatically.",
    "humaniq": "no",
-   "afas": "unknown",
+   "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/cao/cao_32338608 standard wage components for a periodic RVU benefit (100.001.250 'RVU periodieke uitkering') with the threshold exemption and final levy calculated, plus audits for wrongly applied exemption",
     "visma-raet": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/3: Core en Payroll release notes 2025-11 add the workflow Uitdienst met RVU, which creates a second income relationship, pays the RVU in one or more terms and determines wage tax and any final levy.",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'pension|retire|payroll' src/plugins src/client/src: no match; no payroll or benefit payment module"
    },
    "built": {
     "state": "none",
@@ -7866,14 +7866,14 @@
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "not checked: not settled: searched the help sitemap titles and descriptions (https://help.afas.nl/sitemap.xml) for btw with declaratie, vergoeding and voorbelasting; only purchase and finance VAT pages match, none on VAT in an employee expense claim",
     "visma-raet": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2: Core en Payroll release notes 2026-01 add the element Percentage BTW (0, 9 or 21 percent) that employees fill in on a claim in the app or Self Service, so VAT on claims can be reclaimed through journal entries.",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmClaimPlugin/entity/ClaimExpense.php:59 to :78 the expense columns are expense type, date, amount, note and request; grep -riwE 'vat' src/plugins src/client/src: no match"
    },
    "built": {
     "state": "built",
@@ -7892,19 +7892,19 @@
    "area": "self-service",
    "name": "Ask an assistant an HR question and get an answer based on your employer's own policies, collective agreement and your own data.",
    "humaniq": "no",
-   "afas": "unknown",
+   "afas": "partial",
    "visma-raet": "yes",
    "hr2day": "yes",
    "loket": "yes",
    "personio": "yes",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/help/NL/SE/133068.htm a Jonas assistant placed in a workflow answers with source documents such as a company regulation or collective agreement text and the user can chat about the answer; it runs inside set workflows, not as a free HR question assistant, and https://www.afas.nl/roadmap lists InSite documents as Jonas source for Profit 9",
     "visma-raet": "https://apps.apple.com/nl/app/youforce/id1541134359: version 2.21.0 (18 March 2026) adds the Youforce Assistent; https://youforce.nl/product/youforce-assistent says it answers from the organisation's own HR documents and cao and forwards complex questions to HR.",
     "hr2day": "https://www.hr2day.com/nieuws/nieuwe-release-kiwi/ (release Kiwi, 31 October 2025) introduces Daisy; https://data.maglr.com/1697/issues/66612/785292/index.html (Llama): Daisy reads notifications, leave, absence, claims and the latest payslip and can read answers aloud.",
     "loket": "https://loket.nl/nieuws/loket-brengt-hr-van-morgen-dichterbij-met-spraakgestuurde-hr-buddy/ (08/09/2026): launch of the voice driven HR-buddy in MijnLoket that answers HR questions and performs HR tasks for employees.",
     "personio": "https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26): connect Confluence and Google Drive as knowledge sources so employees get quick answers to HR questions without opening a ticket; https://support.personio.de/hc/en-us/articles/32056339085725-Overview-of-Personio-Assistant: the Assistant answers HR questions such as remaining vacation days and payslips, and admins can connect third-party tools.",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'openai|chatgpt|\\bllm\\b|chatbot|\\bassistant\\b' src/plugins src/client/src: no match; no AI assistant in the code"
    },
    "built": {
     "state": "none",
@@ -7924,19 +7924,19 @@
    "area": "filings",
    "name": "Claim the wage cost advantage for an employee in a target group and get a signal when its data is incomplete.",
    "humaniq": "no",
-   "afas": "unknown",
+   "afas": "partial",
    "visma-raet": "yes",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/help/NL/SE/Hrm_WgImpl_LKV.htm standard wage components estimate the wage cost advantage per target group and set the indication in the payroll tax return; no signal for incomplete data is described",
     "visma-raet": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases: Releasenotes Core en Payroll 2026-07 adjust the Loonkostenvoordeel screen and the signal for the LKV doelgroep banenafspraak after the 3-year limit ended on 1-1-2026.",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'target.?group|wage.?cost|subsid|payroll' src/plugins src/client/src: no match; no payroll or wage subsidy handling"
    },
    "built": {
     "state": "none",
@@ -7960,14 +7960,14 @@
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "not checked: not settled: searched the help sitemap (https://help.afas.nl/sitemap.xml) for signals on leave balance (signaal verlof, verlofsaldo hoog, opnemen); leave signals found cover parental leave and replacements, none nudges on a large balance",
     "visma-raet": "https://youforce.nl/kennis/smart-triggers-maak-hr-effici%C3%ABnt-en-proactief-met-slimme-signalen: Youforce werkt verder aan a Smart Trigger that signals who has a high balance, for example over 100 days and no leave in three months, and sends them a prompt to plan leave.",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'nudge|reminder' src/plugins src/client/src: no match; leave notifications in orangehrmLeavePlugin are sent only on request actions"
    },
    "built": {
     "state": "none",
@@ -7991,14 +7991,14 @@
    "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "not checked: not settled: https://klant.afas.nl/update/profit-8/payroll lets you look back a year at how a wage component or basis was built so 'afwijkingen in de opbouw van een grondslag zijn snel te herkennen', a manual review; no page found that flags unusual amounts against each employee's history before closing",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/hr-core-salaris claims 'ingebouwde controles' and continuous processing of mutations without saying unusual amounts are compared with each employee's own history; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "https://data.maglr.com/1697/issues/68666/820322/index.html (ZomerBonus 2026): Payroll Detect combines AI with own checks and groups deviations per alert; https://www.hr2day.com/features/payroll-intelligence/: detection level adjustable per wage component.",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'anomal|outlier|payroll' src/plugins src/client/src: no match; no pay runs exist to compare"
    },
    "built": {
     "state": "built",
@@ -8017,19 +8017,19 @@
    "area": "hiring",
    "name": "Rehire a former employee by attaching the new employment to their existing record instead of creating a duplicate.",
    "humaniq": "partial",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "afas": "yes",
+   "visma-raet": "partial",
    "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/help/NL/SE/Hrm_Employ_Add_ReEntr.htm 'Je hoeft een herintredende medewerker dus niet opnieuw toe te voegen, je meldt deze alleen in dienst' on the existing record",
+    "visma-raet": "https://vr-api-integration.github.io/youforce-api-documentation/iam_api_intro.html Employments 'A person can have multiple employments at the same time' with an Employment Timelines history, so a new employment attaches to the existing person; the rehire screen flow itself is not documented publicly",
     "hr2day": "https://data.maglr.com/1697/issues/66612/785293/index.html (Llama, March 2026): when the BSN already exists and the person has left, the hiring process can be moved onto the known employee.",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmPimPlugin/pages/employee/EmployeeJob.vue:330 shows 'Activate employment' on a terminated employee, which calls src/plugins/orangehrmPimPlugin/Api/EmployeeTerminationAPI.php:368 to clear the termination on the same record; no separate new employment spell is kept (grep -riE 'rehire|re-hire' src/plugins src/client/src: no match)"
    },
    "built": {
     "state": "built",
@@ -8048,19 +8048,19 @@
    "area": "leave",
    "name": "Have an approved parental leave request turned into the right pay components for each leave period automatically.",
    "humaniq": "no",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "afas": "partial",
+   "visma-raet": "partial",
    "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/help/NL/SE/Pay_WgImpl_Pregnt.htm standard wage components exist for paid and unpaid parental leave but hours are booked as a fixed wage mutation, and 'Profit past geen gewogen berekening toe' when leave starts mid period, so booking is manual",
+    "visma-raet": "https://youforce.nl/product/verlof employees request birth and parental leave in Youforce and 'Jij als werkgever wordt ondersteund door een naadloze integratie met het UWV'; automatic conversion into pay components per leave period is not stated",
     "hr2day": "https://data.maglr.com/1697/issues/66612/785294/index.html (Llama, March 2026): after approval a button processes the parental leave request into the employment relation by adding wage components per leave period.",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'parental|maternity|pregnan|payroll' src/plugins src/client/src: no match; leave types in orangehrmLeavePlugin have no pay components"
    },
    "built": {
     "state": "none",
@@ -8085,14 +8085,14 @@
    "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "not checked: not settled: https://help.afas.nl/help/NL/SE/HRM_Sick.htm lists pregnancy leave under absence, but no page in the help sitemap (searched ziekte with zwangerschap and bevalling) says sickness before and after pregnancy leave is counted as one absence",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/verzuim covers sick reporting, Poortwachter steps and SIVI exchange with the occupational health service and UWV, not linking sickness around pregnancy leave; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "https://data.maglr.com/1697/issues/68666/808496/index.html (ZomerBonus 2026): two sickness periods with pregnancy leave in between and no gap are linked and the total duration and tasks are calculated.",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'parental|maternity|pregnan' src/plugins src/client/src: no match; sickness is only a configurable leave type with no linking rules"
    },
    "built": {
     "state": "none",
@@ -8111,19 +8111,19 @@
    "area": "compliance",
    "name": "Keep the citizen service number out of record keys and identifiers, and clear it from existing ones in one go.",
    "humaniq": "yes",
-   "afas": "unknown",
+   "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/help/NL/SE/Hrm_Sick_Arbo_Convrs.htm the BSN is kept out of the absence file and linked by Medewerker ID (GUID), and https://help.afas.nl/help/NL/SE/133636.htm keeps the employee code separate from the BSN; no one step clearing of BSN from existing identifiers is described",
+    "visma-raet": "not checked: not settled: https://youforce.nl/system-privacy-security and https://youforce.nl/security discuss AVG and logging but say nothing on keeping the BSN out of identifiers; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "https://data.maglr.com/1697/issues/66612/785296/index.html (Llama, March 2026): an employer setting disables BSN in key fields and a batch job empties them for privacy reasons; currently visible only to HR2day system administrators.",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmPimPlugin/entity/Employee.php:59 the key is the integer emp_number and :146 the SSN is a separate optional column; src/plugins/orangehrmMaintenancePlugin/config/gdpr_purge_employee_strategy.yaml:18 empties it only when purging a past employee, no bulk clear for current records"
    },
    "built": {
     "state": "built",
@@ -8142,19 +8142,19 @@
    "area": "people",
    "name": "See the average hours worked by an on-call worker over a chosen period, to decide on the statutory offer of fixed hours.",
    "humaniq": "no",
-   "afas": "unknown",
+   "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/content/NL/SE/116369.htm a signal warns when an on-call contract nears a year and states the fixed hours offer is 'gebaseerd op het gemiddelde aantal uren van het afgelopen jaar'; fixed one year window, no chosen period",
+    "visma-raet": "not checked: not settled: no youforce.nl page read shows average hours of on-call workers over a chosen period; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "https://loket.nl/roadmap/ (Overzicht gemiddelde uren/dagen oproepkrachten, marked launched in Q3 2026): an overview in Loket that calculates the average hours or days of on-call workers over a chosen period, exportable to CSV or Excel.",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmAttendancePlugin/Dao/AttendanceDao.php:380 sums punched hours per employee between a from and to date for the attendance summary report (src/plugins/orangehrmTimePlugin/Report/AttendanceReport.php:206 'Time (Hours)'); totals only, no average and no on-call contract type"
    },
    "built": {
     "state": "none",
@@ -8173,19 +8173,19 @@
    "area": "payroll",
    "name": "Handle the 53rd week in a year when paying weekly or four-weekly.",
    "humaniq": "unknown",
-   "afas": "unknown",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/help/NL/SE/Hrm_WgImpl_Week53.htm 'Voor de verwerking van week 53 is periode 13 automatisch verlengd' for weekly and four-weekly payers, with the tax handling explained",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/hr-core-salaris is silent on weekly or four-weekly week 53 handling; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "https://loket.nl/roadmap/ (53e week, launched Q1 2026): the setup for the 53rd week is rebuilt so it is fully available in Loket.",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'payroll|week.?53' src/plugins src/client/src: no match in any pay logic; no payroll module"
    },
    "built": {
     "state": "none",
@@ -8209,14 +8209,14 @@
    "hr2day": "unknown",
    "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "not checked: not settled: collective agreement notes such as https://help.afas.nl/cao/cao_34373767 show pension parameters maintained by AFAS in its Profit CAO; the help sitemap has no page (searched pensioen with eigen, zelf, inrichten) on customers keeping their own pension basis rules",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/hr-core-salaris says Youforce offers 'uitgebreide mogelijkheden voor een flexibele inrichting van de salarisadministratie' without naming customer maintained pension basis rules; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "https://loket.nl/roadmap/ (Rekenregels beheren in Loket, launched Q2 2026): users view, add, change and delete calculation rules used to determine pension bases on all three levels.",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'pension|payroll' src/plugins src/client/src: no match"
    },
    "built": {
     "state": "none",
@@ -8235,19 +8235,19 @@
    "area": "payroll",
    "name": "Trace every wage mutation back to how it came about, so a change can be reprocessed and recalculated under control.",
    "humaniq": "partial",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "afas": "partial",
+   "visma-raet": "partial",
    "hr2day": "unknown",
    "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://klant.afas.nl/update/profit-8/payroll 'Je kan voor een grondslag of looncomponent tot een jaar terugkijken' to see how it was built per period; a trace of each mutation's origin with controlled reprocessing is not described",
+    "visma-raet": "https://vr-api-integration.github.io/youforce-api-documentation/iam_api_intro.html Employment Timelines give 'the chronological sequence of processed events in HR Core' and Employment Planned Changes list pending mutations; tracing each wage mutation to its origin for controlled recalculation is not described",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "https://loket.nl/roadmap/ (Herleidbaarheid en verwerking van declaraties (loontransactiemutaties), launched Q3 2026): every mutation becomes fully traceable as a basis for controlled processing and recalculation.",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'payroll' src/plugins src/client/src: no match; salary components (src/plugins/orangehrmPimPlugin/Api/EmployeeSalaryComponentAPI.php) are edited in place with no recalculation lineage"
    },
    "built": {
     "state": "built",
@@ -8271,14 +8271,14 @@
    "hr2day": "unknown",
    "loket": "no",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "not checked: not settled: https://help.afas.nl/help/NL/SE/141700.htm Jonas automation fills workflow fields from workflow data and source documents, and https://klant.afas.nl/update/profit-8/hrm uses AI on application attachments for vacancy matching; neither says a signed contract is read into a draft employee",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/onboarding and https://youforce.nl/product/app do not say supplied documents are read into a draft employee; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "https://loket.nl/roadmap/ (Onboardingsagent (Loket AI Lab), current Q3 2026): 'Binnen het Loket AI Lab ontwikkelen we een onboardingsagent', creating a new employee 'gebeurt vandaag nog deels handmatig'.",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'resume.?pars|cv.?pars|\\bocr\\b' src/plugins src/client/src: no match; attachments (src/plugins/orangehrmPimPlugin/Api/EmployeeAttachmentAPI.php) are stored, not read"
    },
    "built": {
     "state": "none",
@@ -8297,19 +8297,19 @@
    "area": "platform",
    "name": "Let employees sign in with a passkey instead of a password, and let the employer make that mandatory.",
    "humaniq": "partial",
-   "afas": "unknown",
+   "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "no",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/help/NL/SE/130688.htm 'Passkeys biedt een snelle en veilige manier van inloggen zonder wachtwoord' on AFAS Online; the page says users can keep signing in the old way and gives no setting for the employer to make passkeys mandatory",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/app signs in to the app by fingerprint, face or PIN after a first password login, and https://youforce.nl/security names MFA and SSO; neither mentions passkeys or an employer mandate; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "https://loket.nl/roadmap/ (Inloggen met passkeys voor MijnLoket, current Q3 2026): 'Medewerkers loggen in op MijnLoket met een wachtwoord'; passkeys are being introduced.",
     "personio": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'passkey|webauthn|fido' src/plugins src/client/src: no match; sign in is password, LDAP or OpenID (orangehrmAuthenticationPlugin, orangehrmLDAPAuthenticationPlugin, orangehrmOpenidAuthenticationPlugin)"
    },
    "built": {
     "state": "built",
@@ -8328,19 +8328,19 @@
    "area": "compliance",
    "name": "See in one overview every permission granted across the organisation and its legal entities.",
    "humaniq": "no",
-   "afas": "unknown",
+   "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "yes",
-   "orangehrm": "unknown",
+   "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/help/NL/SE/Ins_Config_Auth_Role_View.htm the Autorisatie tool lists users per role and Autorisatie-inzicht shows InSite page access per employee; https://help.afas.nl/content/NL/SE/101917.htm reports rights per user but 'Rechten die deze gebruikers eventueel krijgt via een autorisatiegroep, worden hierin dus niet weergegeven'",
+    "visma-raet": "not checked: not settled: https://youforce.nl/security and https://vr-api-integration.github.io/youforce-api-documentation/iam_api_intro.html (which feeds external IAM systems) do not describe an in product overview of all granted permissions; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26): 'See every permission in your organisation in one place, built to support complex, multi-entity organisations'; https://support.personio.de/hc/en-us/articles/38455888853405-Review-and-compare-employee-roles-and-permissions compares roles side by side.",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmAdminPlugin/pages/systemUser/SystemUser.vue:34 and :237 list every system user with its user role, filterable by role; there is no per entity or legal entity permission overview"
    },
    "built": {
     "state": "none",
@@ -8359,19 +8359,19 @@
    "area": "talent",
    "name": "Get an automatic summary of all feedback, reviews and notes about an employee to help write a review.",
    "humaniq": "no",
-   "afas": "unknown",
+   "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "yes",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/content/NL/SE/136599.htm the progress conversation workflow uses Jonas 'om automatisch een samenvatting te genereren' of that one conversation; not a summary of all feedback and notes on an employee",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/hr-cyclus and https://youforce.nl/product/het-goede-gesprek cover goals, check-ins and 360 degree feedback, with no generated summary of feedback; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "https://support.personio.de/hc/en-us/articles/30612613685789-Set-up-AI-summaries (help centre release article created 2025-09-26): AI Performance Summaries synthesize continuous feedback, manager, peer and upward reviews and performance notes about an employee.",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'openai|\\bllm\\b|\\bgpt\\b|\\bai\\b' src/plugins/orangehrmPerformancePlugin src/client/src/orangehrmPerformancePlugin: no match; src/client/src/orangehrmPerformancePlugin/components/ReviewSummary.vue:24 is a header showing the reviewer's own final rating and comments, not a generated summary"
    },
    "built": {
     "state": "none",
@@ -8390,19 +8390,19 @@
    "area": "platform",
    "name": "Connect an AI tool to the HR system through an MCP server so it can read HR data and start requests such as time off.",
    "humaniq": "unknown",
-   "afas": "unknown",
+   "afas": "no",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "partial",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://klant.afas.nl/thema/ai-integratie 'Op dit moment worden de mogelijkheden onderzocht om een officiële AFAS MCP-server aan te bieden', and as of June 2026 no AI integration is certified",
+    "visma-raet": "not checked: not settled: the Youforce API docs index (https://vr-api-integration.github.io/youforce-api-documentation/domain_api_intro.html and linked intros) and https://youforce.nl/product/integraties contain no MCP server; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "https://support.personio.de/hc/en-us/articles/38314656674333-Personio-MCP-server-Beta-access-overview (help centre release article created 2026-08-12): read access to employee profiles, time off, compensation and performance data and limited write operations such as requesting time off; in beta and not available to everyone.",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'mcp|model.?context' src/plugins src/client/src: no match; only the REST API v2 and OAuth plugin exist"
    },
    "built": {
     "state": "specified",
@@ -8421,19 +8421,19 @@
    "area": "platform",
    "name": "Track every approval request across processes in one list with its timeline and current status.",
    "humaniq": "partial",
-   "afas": "unknown",
+   "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "partial",
-   "orangehrm": "unknown",
+   "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "https://help.afas.nl/help/NL/SE/Ins_Wrkflw_View_Differ.htm 'Alle taken' lists every workflow task the user may handle and https://help.afas.nl/help/NL/SE/121828.htm adds the current destination to InSite overviews; the timeline sits per item in the workflow history, not in the list",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/verlof and https://youforce.nl/product/rapportages-analyse do not describe one list of all approval requests with timeline and status; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "https://support.personio.de/hc/en-us/articles/36278272594077-Approvals-dashboard-Beta-access-overview (help centre release article created 2026-05-22): the dashboard shows each approval's status and timeline including delegation and rerouting; in beta, and requests cannot be approved or rejected from the dashboard.",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmDashboardPlugin/components/MyActionSummaryWidget.vue:26 'My Actions' fed by src/plugins/orangehrmDashboardPlugin/Api/EmployeeActionSummaryAPI.php:89 to :96 shows counts of pending leave requests, timesheets, reviews and candidates; counts per group, no single list with timeline"
    },
    "built": {
     "state": "built",
@@ -8457,14 +8457,14 @@
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "no",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
-    "visma-raet": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
+    "afas": "not checked: not settled: https://help.afas.nl/help/NL/SE/Crm_Survey.htm describes employee surveys in InSite with own results; no page in the help sitemap (searched benchmark, enquête, tevredenheid) compares results with other organisations",
+    "visma-raet": "not checked: not settled: https://youforce.nl/product/engagement offers pulse surveys, eNPS and scientifically based questionnaires but does not say results are compared with other organisations; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
     "hr2day": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "loket": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress",
     "personio": "https://support.personio.de/hc/en-us/articles/38900337558685-Measure-your-organization-s-AI-fluency: 'Coming soon: Benchmarks against other organizations that use the same standardized survey template.'",
-    "orangehrm": "not checked: row added 2026-09-26 from a demand signal; back-fill in progress"
+    "orangehrm": "orangehrm@v5.9 grep -riE 'benchmark|survey' src/plugins src/client/src: no match"
    },
    "built": {
     "state": "none",
