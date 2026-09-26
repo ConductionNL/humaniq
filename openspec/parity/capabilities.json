@@ -3799,325 +3799,349 @@
    "id": "tal-review-cycle",
    "area": "talent",
    "name": "Run a review cycle of planning, progress and appraisal conversations.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#30874 (AFAS HRM, 2026-05-20, performance-reviews expansion): Talent management -- Functioneren + beoordelen + ontwikkelen",
+    "visma-raet": "comp-features.tsv#2508 (Visma Raet Youforce, 2026-03-27): HR-cyclus -- complete beoordelings- en ontwikkelcyclus",
+    "hr2day": "comp-features.tsv#2442 (HR2day, 2026-03-27): Beoordelingscyclus -- ondersteuning van functionerings- en beoordelingsgesprekken",
+    "loket": "comp-features.tsv#29541 (Loket.nl, 2026-05-20, performance-reviews expansion): Functionerings- en beoordelingscyclus -- gespreksformulieren, doelen, beoordelingen",
+    "orangehrm": "comp-features.tsv#2475 (OrangeHRM, 2026-03-27): Performance Management -- continuous performance tracking, no explicit cycle/round concept"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-performance.json:4 page ReviewCycleDetail; src/manifest.d/hr-performance.json:152 index ReviewCycles /review-cycles; lib/Settings/register.d/hr-performance.json:5 ReviewCycle x-openregister-lifecycle concept->open->gesloten",
+    "reachedOn": "ReviewCycles /review-cycles and ReviewCycleDetail /review-cycles/:id, sub-page under the existing Personeel (EmployeesGroup) menu; openen/sluiten lifecycle buttons on ReviewCycleDetail",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "performance-reviews",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "tal-review-forms",
    "area": "talent",
    "name": "Fill in an appraisal form with ratings and comments, signed off by both sides.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#30874 (AFAS HRM, 2026-05-20): Talent management -- Functioneren + beoordelen + ontwikkelen",
+    "visma-raet": "comp-features.tsv#2508 (Visma Raet Youforce, 2026-03-27): HR-cyclus -- beoordelings- en ontwikkelcyclus",
+    "hr2day": "comp-features.tsv#2442 (HR2day, 2026-03-27): Beoordelingscyclus -- functionerings- en beoordelingsgesprekken",
+    "loket": "comp-features.tsv#29541 (Loket.nl, 2026-05-20): Functionerings- en beoordelingscyclus -- gespreksformulieren, doelen, beoordelingen",
+    "orangehrm": "comp-features.tsv#2475 (OrangeHRM, 2026-03-27): Performance Management -- reviews and continuous tracking, form/sign-off shape not confirmed"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-performance.json:100 PerformanceReview schema (rating/sterktes/ontwikkelpunten/afspraken); src/manifest.d/hr-performance.json:186 page PerformanceReviewDetail, lifecycleActions indienen/bespreken/vaststellen/heropenen; lib/Lifecycle/NoSelfApprovalGuard.php:66 guards vaststellen server-side",
+    "reachedOn": "PerformanceReviewDetail /reviews/:id, reached from the EmployeeDetail Beoordelingen row, the cycle's review list, or MijnBeoordelingen /mijn/beoordelingen self-service",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "performance-reviews",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "tal-360",
    "area": "talent",
    "name": "Collect 360 degree feedback from colleagues.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "decided-no",
+    "evidence": "grep -rniF 360|feedback lib src: no hits beyond unrelated numeric matches; openspec/changes/archive/2026-07-13-performance-reviews-mvp/design.md:22 -- 'No 360°/peer feedback, no self-assessment entity -- a single review object per employee per cycle', named a Non-Goal alongside OKR/9-box/kalibratie",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "peer-feedback-360",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "Explicitly named a non-goal in the performance-reviews-mvp design doc (a deliberate scope cut for that change), not merely absent by omission. No competitor evidence for peer/360 feedback was found either."
   },
   {
    "id": "tal-goals",
    "area": "talent",
    "name": "Set goals and key results and track progress on them.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "yes",
+   "afas": "partial",
+   "visma-raet": "yes",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#2382 (AFAS HRM, 2026-03-27): Talentmanagement -- dashboards voor groei en ontwikkelgesprekken, no explicit goal/OKR tracking named",
+    "visma-raet": "comp-features.tsv#30016 (Visma Raet, 2026-05-20): Talent Management Suite -- beoordeling, doelen, opvolging",
+    "loket": "comp-features.tsv#29541 (Loket.nl, 2026-05-20): Functionerings- en beoordelingscyclus -- gespreksformulieren, doelen, beoordelingen",
+    "orangehrm": "comp-features.tsv#2475 (OrangeHRM, 2026-03-27): Performance Management -- goal setting, reviews and continuous performance tracking"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-okr.json Objective and KeyResult schemas; src/manifest.d/hr-okr.json:4 page ObjectiveDetail with Key results object-list (KeyResult.objectiveId), lifecycleActions activeren/afsluiten",
+    "reachedOn": "ObjectiveDetail /objectives/:id, reached from EmployeeDetail's Doelen & OKR's row and ReviewCycleDetail's OKR's-in-cyclus row",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "goals-okr",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "tal-comp-cycle",
    "area": "talent",
    "name": "Run a compensation review cycle with budgets and proposed raises.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
-   "personio": "unknown",
+   "personio": "yes",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "personio": "comp-features.tsv#2492 (Personio, 2026-03-27): Beloningsbeheer -- compensatiemanagement met 70% efficiëntieverbetering"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-comp.json CompReviewCycle/CompAdjustment/SalaryBand schemas; src/manifest.d/hr-comp.json:4 CompReviewCycleDetail page lifecycleActions sluiten; CompAdjustmentDetail (line 204) lifecycleActions propose/approve/reject, approve/reject guarded by NoSelfApprovalGuard",
+    "reachedOn": "CompReviewCycles /comp-review-cycles (sub-page under Personeel), CompReviewCycleDetail /comp-review-cycles/:id, CompAdjustmentDetail reached from EmployeeDetail's Beloningsvoorstellen row",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "comp-cycles",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "tal-comp-effectuate",
    "area": "talent",
    "name": "Have approved raises take effect on the salary on their date.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "appinfo/routes.php:72 POST /api/comp/effectuate -> comp#effectuate; lib/Lifecycle/CompEffectiveDateGuard.php (read-only within-band/date check); lib/Service/CompAdjustmentService.php writes the Employee.grossMonthlySalary stamp; src/manifest.d/hr-comp.json:220 headerAction 'effectueren' on CompAdjustmentDetail, deliberately NOT a lifecycleActions button (design note at hr-comp.json:211) to avoid the orphaned-capability trap",
+    "reachedOn": "CompAdjustmentDetail /comp-adjustments/:id, 'Effectuate' header button, POST /api/comp/effectuate, confirmed present in _lane/research/frontend-api-paths.txt",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "comp-cycles",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "tal-competences",
    "area": "talent",
    "name": "Record each employee's certificates and competences with expiry dates.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "yes",
+   "afas": "partial",
    "visma-raet": "unknown",
-   "hr2day": "unknown",
+   "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#30875 (AFAS HRM, 2026-05-20): BHV/EHBO certificering met vervaldatum -- covers safety certificates only, not general competences",
+    "hr2day": "comp-features.tsv#2441 (HR2day, 2026-03-27): Competentiemanagement -- beheer van competenties en vaardigheden per medewerker"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-agenda.json:5 EmployeeCompetence schema (competenceCode, issuedOn, validUntil, matched against Shift.requiredCompetences by CompetenceCheckService, hr-roster.json:24); src/manifest.d/hr-agenda.json:3 index EmployeeCompetences /bevoegdheden and EmployeeCompetenceDetail",
+    "reachedOn": "EmployeeCompetences /bevoegdheden, menu group VerlofVerzuimGroup (src/manifest.d/05-menu.json:331)",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "employee-competences",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "tal-bhv",
    "area": "talent",
    "name": "Keep track of emergency response and first aid certifications and coverage.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#30875 (AFAS HRM, 2026-05-20): BHV/EHBO certificering -- verplichte certificaten met vervaldatum",
+    "loket": "comp-features.tsv#29548 (Loket.nl, 2026-05-20): BHV/VCA registratie -- certificaten met vervaldatum + alerts"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-bhv.json:5 BhvCertificering schema (certificaatBehaaldOp/certificaatGeldigTot); description explicitly states the schema 'asserts NO numeric BHV-coverage ratio' since Arbowet art. 15 sets a qualitative standard; src/manifest.d/hr-bhv.json:8 index BhvCertificeringen /bhv-certificeringen; expiry signalling reuses lib/Standards/Checks/NlSignalChecks.php (nl-bhv-certificaat-verloopt)",
+    "reachedOn": "BhvCertificeringen /bhv-certificeringen, menu VerlofVerzuimGroup; expiry surfaces via the hr-signals mechanism",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "bhv-organisatie",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Tracks per-employee certificates and their expiry (and signals on expiry); deliberately computes no numeric coverage ratio (enough BHV'ers for headcount), which the row also asks for."
   },
   {
    "id": "tal-training",
    "area": "talent",
    "name": "Plan training and register who attended.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "no",
+   "afas": "partial",
+   "visma-raet": "yes",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#2382 (AFAS HRM, 2026-03-27): Talentmanagement -- dashboards voor gevolgde opleidingen (tracking dashboard, not a plan-and-register-attendance flow)",
+    "visma-raet": "comp-features.tsv#2521/#30017 (Visma Raet, 2026-03-27/2026-05-20): Trainingsaanbod / Leerportaal LMS met SCORM-import",
+    "orangehrm": "comp-features.tsv#2477 (OrangeHRM, 2026-03-27): Training Management -- training program management, enrollment and completion tracking"
    },
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rliF opleiding lib/Settings/register.d src/manifest.d: only hr-stagiair.json (a school-programme field on an intern, not course/attendance tracking) and hr-bhv.json (safety-certificate specific); no Training/Course schema or page anywhere; lib/Support/FleetAppId.php:77 lists 'learniq' as a resolvable sibling id, but grep -rn \"'learniq'\" lib --include=*.php outside FleetAppId.php: no hits, so nothing in humaniq actually calls it",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "training-admin",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "learniq is a resolvable sibling id in FleetAppId but nothing in humaniq calls it; no training capability exists on either side of that integration today."
   },
   {
    "id": "tal-skills-matrix",
    "area": "talent",
    "name": "See a skills matrix of the team.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rliF 'skills-matrix|skillsmatrix|SkillsMatrix' lib src openspec: no hits; no spec folder under openspec/specs/ either",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "skills-matrix",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "tal-career-paths",
    "area": "talent",
    "name": "Show career paths and succession for key positions.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "no",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#2382 (AFAS HRM, 2026-03-27): Talentmanagement -- succession planning",
+    "orangehrm": "comp-features.tsv#2476 (OrangeHRM, 2026-03-27): Career Development -- career path planning and professional development tracking"
    },
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rliF career lib src openspec: hits only in recruiting/ATS specs (a candidate-facing career page for job postings) and the performance-reviews-mvp design.md non-goals ('career/functie frameworks and competency matrices ... separate draft territory'); no CareerPath/Succession schema or page",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "career-frameworks",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "tal-surveys",
    "area": "talent",
    "name": "Run an employee engagement survey.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "orangehrm": "comp-features.tsv#2478 (OrangeHRM, 2026-03-27): Employee Surveys -- employee satisfaction and engagement survey tools"
    },
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rliF survey lib src openspec: hits only in comp-cycles spec (salary-band reference language, unrelated) and the parity output file itself; no Survey schema or page",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "engagement-surveys",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "tal-recognition",
    "area": "talent",
    "name": "Let colleagues give each other recognition.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rliF recognition lib src openspec: hits only in receipt-ocr (text 'recognition', OCR) and expense schemas, both unrelated; no Recognition/Kudos schema or page",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "recognition-rewards",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
@@ -4667,275 +4691,281 @@
    "id": "cmp-rule-engine",
    "area": "compliance",
    "name": "Check your HR records against labour law and payroll rules and see the violations.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "partial",
+   "afas": "partial",
+   "visma-raet": "partial",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#2390 (AFAS HRM, 2026-03-27): Wet- en Regelgeving Updates -- automatische verwerking van nieuwe wetgeving en cao-regelingen (keeps rule tables current, not shown as a violations report)",
+    "visma-raet": "comp-features.tsv#2505 (Visma Raet Youforce, 2026-03-27): HR Core & Salaris -- actuele wetgeving en automatische controles"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Standards/RuleEngine.php, lib/Standards/RuleCatalogue.php, lib/Standards/Violation.php implement the versioned rule corpus; lib/Command/RulesAuditCommand.php:59 command humaniq:rules:audit prints violations and coverage; no manifest page surfaces RuleEngine output or violation lists",
+    "reachedOn": "occ humaniq:rules:audit only, no page",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "hrm-rule-engine",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "cmp-coverage",
    "area": "compliance",
    "name": "See what share of the machine-checkable rules the system actually enforces.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Command/RulesAuditCommand.php:85 prints 'enforceable today: N (%.1f%% of machine-checkable)'; no dashboard widget or page surfaces this percentage anywhere in src/manifest.d/",
+    "reachedOn": "occ humaniq:rules:audit only, no page",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "hrm-rule-engine",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "cmp-dsr-export",
    "area": "compliance",
    "name": "Export everything held about an employee for a data subject access request.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "partial",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "partial",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#30876 (AFAS HRM, 2026-05-20, compliance-reporting core): AVG-dataverzoeken -- GDPR retentie + werknemer data export",
+    "visma-raet": "comp-features.tsv#30024 (Visma Raet, 2026-05-20, compliance-reporting core): AVG-toolkit -- GDPR dataverzoeken, retentie, BSN-bescherming (export bundled into a generic 'dataverzoeken' toolkit, not separately named)",
+    "loket": "comp-features.tsv#29545 (Loket.nl, 2026-05-20, compliance-reporting core): 30+ AVG-templates -- bewerkersovereenkomsten, dataverzoeken, retentie 7-jaar (export bundled into generic templates)"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "appinfo/routes.php:94 POST /api/dsr/export -> avgDsr#export; src/manifest.d/hr-dsr.json:47 headerAction dsr-export on DsrRequestDetail sends employeeId/right/dsrRequestId; lib/Controller/AvgDsrController.php admin-only guard (isAdmin via IGroupManager)",
+    "reachedOn": "DsrRequestDetail /dsr-requests/:id, 'Export' header button, POST /api/dsr/export (present in _lane/research/frontend-api-paths.txt)",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "avg-dsr",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "cmp-dsr-erase",
    "area": "compliance",
    "name": "Erase an employee's data on request while keeping what the law requires you to keep.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "appinfo/routes.php:95-96 POST /api/dsr/erase-preview and /api/dsr/erase-confirm; src/manifest.d/hr-dsr.json:63,78 headerActions dsr-erase-preview/dsr-erase-confirm (confirm requires a prior preview on the same request, REQ-DSR-006); lib/Service/PayrollRetentionGuardService.php places a legal hold so OpenRegister's guarded erase refuses a still-retained object (e.g. a Payslip inside its AWR 7-year window), reported as 'retained (wettelijke bewaarplicht)'",
+    "reachedOn": "DsrRequestDetail /dsr-requests/:id, 'Preview erasure' then 'Confirm erasure' header buttons, both present in _lane/research/frontend-api-paths.txt",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "avg-dsr",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "cmp-dsr-rectify",
    "area": "compliance",
    "name": "Correct an employee's data on request and record that you did.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "appinfo/routes.php:97 POST /api/dsr/rectify -> AvgDsrController::rectify(); lib/Controller/AvgDsrController.php:206-232 requires a non-empty `changes` array (validateRectifyInput) before calling AvgDsrService::rectifySubjectObject(); src/manifest.d/hr-dsr.json:93-106 headerAction dsr-rectify only sends {employeeId, dsrRequestId}, never `changes` -- the manifest v2 api-call action type has no free-text field-map prompt (design note at hr-dsr.json:41 names this a known fast-follow); lib/Command/AvgDsrRectifyCommand.php:76,102-107 shows the occ path DOES supply --changes and works",
+    "reachedOn": "DsrRequestDetail /dsr-requests/:id, 'Rectify' header button -- clicking it always 400s because it never supplies the required changes payload; the same operation works via occ humaniq:avg:rectify --changes <json>",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "avg-dsr",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Live-defect candidate: the wired Rectify button in the UI can never succeed since it never collects the changes payload the controller requires. The backend logic itself is sound (confirmed working via the occ command); only the manifest UI wiring is broken."
   },
   {
    "id": "cmp-retention",
    "area": "compliance",
    "name": "Delete personnel data automatically when its retention period ends.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "no",
+   "afas": "partial",
+   "visma-raet": "partial",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "partial",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#30876 (AFAS HRM, 2026-05-20): AVG-dataverzoeken -- GDPR retentie (retention tracking named, automatic deletion-on-expiry not confirmed)",
+    "visma-raet": "comp-features.tsv#30024 (Visma Raet, 2026-05-20): AVG-toolkit -- retentie",
+    "loket": "comp-features.tsv#29545 (Loket.nl, 2026-05-20): 30+ AVG-templates -- retentie 7-jaar"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "building",
+    "evidence": "lib/Service/PayrollRetentionGuardService.php places an OpenRegister legal hold to PREVENT premature erasure of a retention-locked payroll object; its docblock states 'A hold, once placed, is never auto-released here -- releasing it is a deliberate HR/finance action once the retention window has genuinely lapsed'; appinfo/info.xml:104,112 registers only LeaveAccrualJob and PollCalendarSubscriptionsJob as BackgroundJobs, no retention-expiry deletion job exists",
+    "reachedOn": "nothing automatically deletes data on retention expiry; NlDossierRetentionChecks (nl-bewaartermijn-verstreken) only flags the moment via occ humaniq:rules:audit, it does not act on it",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "data-retention-automation",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "humaniq only guards AGAINST premature deletion (a legal hold that blocks erasure while retention is active); nothing in the app deletes data automatically once the retention period ends, so the row as asked (automatic deletion) is not built."
   },
   {
    "id": "cmp-audit-trail",
    "area": "compliance",
    "name": "See who viewed or changed an employee's data and when.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-objects.json:14 sidebar.showMetadata:true on EmployeeDetail; the same 'Audit history is a sidebar tab' pattern is repeated in the design notes of essentially every detail page across src/manifest.d/*.json (OpenRegister's own audit-history sidebar feature)",
+    "reachedOn": "every object detail page, 'Audit history' sidebar tab",
+    "owner": "ConductionNL/openregister"
    },
-   "source": "competitor"
+   "provider": "openregister",
+   "providerHow": "read-from-code",
+   "feature": "audit-trail",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "Covers who changed a record and when, on every object; did not verify from humaniq's own code whether OpenRegister's audit trail also logs read/view access, only writes, so rated partial against the row's 'viewed or changed' wording."
   },
   {
    "id": "cmp-roles",
    "area": "compliance",
    "name": "Give HR, payroll, managers and employees different permissions.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "orangehrm": "comp-features.tsv#10562 (OrangeHRM, 2026-04-04, enhancement-issue, planned): 'Ability to Create User Roles or have more than 2 options', an open GitHub request -- evidence the open-source edition ships essentially two role options today"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Controller/AvgDsrController.php:274-281 isAdmin() via IGroupManager::isAdmin(); the same admin-only guard pattern repeats in OfferController.php:135, PayrollController.php:269, JurisdictionPackController.php:110/148, ExpenseController.php:178, InterviewController.php:126, LoonbeslagController.php:261; manager-scoping via a denormalized managerUserId field (mss-team-scope spec) filters the Team*goedkeuring pages; self-service @me filters gate the Mijn* pages (MijnBeoordelingen, MijnLoonstroken)",
+    "reachedOn": "admin-only pages (DsrRequests, JurisdictionPacks, payroll runs); Team*goedkeuring pages scoped to managerUserId=@me; self-service Mijn* pages scoped to userId=@me",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "rbac-permissions",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Only a coarse admin/non-admin split plus data-scoped manager and self-service views; no distinct 'HR' vs 'payroll' vs 'manager' Nextcloud groups exist (grep for isInGroup/dedicated group constants found none)."
   },
   {
    "id": "cmp-field-rbac",
    "area": "compliance",
    "name": "Hide sensitive fields such as salary or BSN from roles that do not need them.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "no x-property-rbac anywhere in humaniq's register tree (grep -rliF 'rbac|x-property-rbac' lib/Settings/register.d/: no hits, matching a fact another reader already confirmed); grep -rn 'visible.*false' lib/Settings/register.d/*.json: 0 hits; salary/BSN fields sit on the same Employee data widget for every viewer who can open the page at all, gated only by page-level admin checks, never hidden per-field per-role",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "field-level-rbac",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "cmp-works-council",
    "area": "compliance",
    "name": "Record works council consent for changes that need it.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rliF 'works.council|ondernemingsraad|WOR' lib src openspec: no hits",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "works-council-consent",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "cmp-whistleblowing",
    "area": "compliance",
    "name": "Offer a confidential channel to report wrongdoing.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rliF 'whistleblow|klokkenluid' lib src openspec: no hits",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "whistleblowing",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -4948,444 +4978,439 @@
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "orangehrm": "comp-features.tsv#10168 (OrangeHRM, 2026-04-04, release-v5.2, released): Data Encryption support, from OrangeHRM 5.2.0 (2022-10-19)"
    },
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF encrypt lib/: no hits anywhere in humaniq's own code. Whether personnel data is encrypted at rest depends entirely on the underlying Nextcloud instance/database/disk configuration, which is outside this app's code and outside the sibling apps this pack is scoped to read",
+    "reachedOn": "n/a -- a platform/infrastructure concern, not app code",
+    "owner": "nextcloud"
    },
+   "provider": "nextcloud",
+   "providerHow": "inferred",
+   "feature": "data-encryption",
+   "featureConfidence": "low",
    "source": "competitor"
   },
   {
    "id": "cmp-self-hosting",
    "area": "compliance",
    "name": "Run the HR system on your own servers or a Dutch cloud.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "yes",
+   "afas": "no",
    "visma-raet": "unknown",
-   "hr2day": "unknown",
+   "hr2day": "no",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "concurrentie-analyse/hrm/README.md (2026-03-28): On-premise option row -- AFAS = No",
+    "hr2day": "concurrentie-analyse/hrm/README.md (2026-03-28): On-premise option row -- HR2day = No",
+    "orangehrm": "concurrentie-analyse/hrm/README.md (2026-03-28): On-premise option row -- OrangeHRM = Yes; also comp-features.tsv#2483 (OrangeHRM, 2026-03-27): On-Premise Hosting -- flexible hosting options including on-premise deployment"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "appinfo/info.xml:68-69 declares <php min-version=\"8.3\"/> and <nextcloud min-version=\"32\" max-version=\"34\"/>; humaniq is a Nextcloud app by construction, deployed on a self-managed or self-hosted Nextcloud instance, never a SaaS product of its own",
+    "reachedOn": "n/a -- inherent to being a Nextcloud app, not a page or route",
+    "owner": "nextcloud"
    },
+   "provider": "nextcloud",
+   "providerHow": "inferred",
+   "feature": "self-hosting",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "plt-multi-administration",
    "area": "platform",
    "name": "Run several legal entities or payroll administrations side by side and switch between them.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#30871 (AFAS HRM, 2026-05-20, multi-entity enterprise): Multi-administratie -- holding-structuur + meerdere BVs",
+    "visma-raet": "comp-features.tsv#30022 (Visma Raet, 2026-05-20, multi-entity enterprise): Multi-CAO/Multi-LH -- concern-administratie",
+    "hr2day": "comp-features.tsv#30891 (HR2day, 2026-05-20, multi-entity enterprise): Multi-entity NL -- meerdere BVs",
+    "loket": "comp-features.tsv#29542 (Loket.nl, 2026-05-20, multi-entity enterprise): Multi-loonheffingsnummer -- meerdere BVs, holdingstructuur, intercompany verloning"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-administratie.json:28 Administration membership schema (one row binds an NC user to an administratie with a role); appinfo/routes.php:76 POST /api/administration/active -> administration#setActive; src/views/AdministrationSwitcher.vue injects the active administration on first paint and on switch",
+    "reachedOn": "AdministrationSwitcher.vue mounted app-wide in src/App.vue, POST /api/administration/active (present in _lane/research/frontend-api-paths.txt)",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "multi-administratie",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "plt-single-person-modes",
    "area": "platform",
    "name": "Run the app for a sole trader or single director without the full HR structure.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-administratie.json:20 Administration.mode enum standard/dga_single_person/eenmanszaak_no_payroll, resolved by AdministrationService and stamped into manifest.runtime.user.administrationMode; nc-vue's visibleIf primitive gates multi-person surfaces (org-chart, team-approval, roster) and, for eenmanszaak_no_payroll, the whole payroll surface",
+    "reachedOn": "Administration settings; mode-gated menu surfaces fleet-wide once a mode is set; reversible with no data loss",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "single-person-modes",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "plt-public-api",
    "area": "platform",
    "name": "Read and write HR data through a documented public API.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#30869 (AFAS HRM, 2026-05-20, integration core): GetConnector/UpdateConnector -- REST API + connector framework",
+    "loket": "comp-features.tsv#29535 (Loket.nl, 2026-05-20, integration expansion): API REST -- volledig OpenAPI gedocumenteerd, webhooks, SCIM 2.0",
+    "orangehrm": "comp-features.tsv#10184 (OrangeHRM, 2026-04-04, release-v5.0, released): Technology stack upgrade including REST APIs, no dedicated public-API documentation confirmed"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "openspec/specs/hris-api-public/spec.md: 'humaniq builds no parallel REST/GraphQL/webhook/SCIM stack; external access is Nextcloud app passwords over OpenRegister's own API'; lib/Settings/register.d/hr-integrations.json:5 IntegrationAccount is a catalog only, not the API itself; no dedicated OpenAPI/API-docs artifact found under docs/",
+    "reachedOn": "external systems call OpenRegister's generic object API (GET/POST/PUT/PATCH/DELETE /api/objects/{register}/{schema}) directly, authenticated with a Nextcloud app password; humaniq's own contribution is the IntegrationAccounts audit page",
+    "owner": "ConductionNL/openregister"
    },
+   "provider": "openregister",
+   "providerHow": "read-from-code",
+   "feature": "hris-api-public",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "plt-accounting-link",
    "area": "platform",
    "name": "Connect to accounting software so payroll and expenses post themselves.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "loket": "comp-features.tsv#29536 (Loket.nl, 2026-05-20, bookkeeping-integration core): Bookhouding-koppelingen -- native exports naar Exact, Twinfield, Snelstart, AccountView, Reeleezee, MUIS"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Flow/PayrollGlPostNode.php:43 posts an approved payroll run's journal to shillinq, duck-typed ('skipped-no-shillinq' outcome when absent); lib/Flow/PayrollNetPayNode.php does the same for SEPA net-pay; lib/Command/GlPostRunCommand.php and lib/Command/NetPayRunCommand.php are the occ entry points; no route for glpost/netpay exists in appinfo/routes.php and no headerAction exists in src/manifest.d/hr-paybatch.json -- reachable only via occ or via the Loonrun Flow (lib/Settings/register.d/hr-objects.json:193), which arrives DISABLED by default",
+    "reachedOn": "occ humaniq:glpost:run / occ humaniq:netpay:run, or the Loonrun flow's glpost/netpay nodes once an admin deliberately enables the flow in OpenRegister -- no humaniq page button",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "accounting-integrations",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "plt-integration-accounts",
    "area": "platform",
    "name": "Configure connections to outside systems such as a pension fund or health service.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
    "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "hr2day": "yes",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#30865 (AFAS HRM, 2026-05-20, pension-admin core): Pensioenkoppeling -- alle grote NL pensioenfondsen, a real working connector",
+    "hr2day": "comp-features.tsv#30888 (HR2day, 2026-05-20, pension-admin core): Pensioenaanlevering -- NL pensioenfondsen",
+    "loket": "comp-features.tsv#29531 (Loket.nl, 2026-05-20, pension-admin core): Pensioenkoppeling -- direct pensioenfonds aanlevering (PFZW, BpfBOUW, PMT, BPL, ABP)"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-integrations.json:10 IntegrationAccount description: 'deliberately NOT an authorization mechanism ... The actual access grant lives entirely in OpenRegister's own RBAC configuration ... outside this schema and outside any humaniq file'; field grantedSchemas (line 23) 'does NOT grant or enforce access -- it is purely a record of intent'; src/manifest.d/hr-integrations.json:8-9 index page IntegrationAccounts /configuratie/integraties",
+    "reachedOn": "IntegrationAccounts /configuratie/integraties, IntegrationAccountDetail /configuratie/integraties/:id",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "hris-api-public",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "The page only catalogues which external systems are said to have access; it configures no actual connection, credential, or data exchange with a pension fund or health service, unlike the competitor rows cited, which are real working connectors."
   },
   {
    "id": "plt-workflows",
    "area": "platform",
    "name": "Automate HR processes with configurable workflows and approvals.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
-   "personio": "unknown",
-   "orangehrm": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
+   "visma-raet": "partial",
+   "hr2day": "yes",
+   "loket": "partial",
+   "personio": "yes",
+   "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv#30867 (AFAS HRM, 2026-05-20, self-service expansion): Workflow management -- configureerbare workflows zonder code",
+    "hr2day": "comp-features.tsv#2435 (HR2day, 2026-03-27): Workflow Management -- automatisering van HR-processen met workflows, taken en signalen",
+    "personio": "comp-features.tsv#2486 (Personio, 2026-03-27): Workflow Builder -- snel automatiseringen instellen vanuit sjabloonbibliotheek of eigen templates",
+    "loket": "comp-features.tsv#29538/#29539 (Loket.nl, 2026-05-20): fixed Onboarding/Offboarding workflows, not a general-purpose builder",
+    "visma-raet": "comp-features.tsv#2506 (Visma Raet Youforce, 2026-03-27): Verlofregistratie -- approval-only workflow, not general-purpose",
+    "orangehrm": "comp-features.tsv#2472 (OrangeHRM, 2026-03-27): Leave Management -- approval workflows scoped to leave only"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-objects.json:193 x-openregister-flows declares the 'Loonrun' flow with real custom nodes: humaniq.payroll-calculate (lib/Flow/PayrollCalculateNode.php), an openregister.user-task review/approval gate, humaniq.payroll-approve (lib/Flow/PayrollApproveNode.php), then glpost/netpay; the description at line 197 states 'The flow arrives disabled per the engine's adoption contract: enable it deliberately'",
+    "reachedOn": "OpenRegister's own Flow admin UI is where the Loonrun flow is enabled and configured; no humaniq page authors, lists, or edits workflows itself",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "workflow-automation",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "plt-configurable-notifications",
    "area": "platform",
    "name": "Choose per workflow step whether a notification is sent.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rliF x-openregister-notifications lib/Settings/register.d/*.json: no hits; grep -rniF notification lib/Settings/register.d/*.json: only date-field labels (UWV 42-week notification due/done in hr-verzuim.json:122-130) and an FR statutory field, none a send/suppress toggle; notifications/reminders are named an app-wide ADR-031/gate-18 deferral in openspec/changes/archive/2026-07-13-performance-reviews-mvp/design.md's non-goals",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "notification-preferences",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "plt-template-store",
    "area": "platform",
    "name": "Install ready-made HR configurations others have published, such as a leave policy.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rn 'Store'|'template.store' src/manifest.d/*.json: no hits; no page or schema exists for installing a published, ready-made configuration such as a leave policy",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "template-store",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "plt-setup-wizard",
    "area": "platform",
    "name": "Set the app up through a guided first-run wizard.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "appinfo/routes.php:17-19 GET /api/setup/status, POST /api/setup/config, POST /api/setup/action/{actionId}; src/manifest.json:7-22 'setup' block (ADR-042 contract) with welcome/demo-data steps; lib/Controller/SetupController.php implements the endpoints and notes its version 'matches manifest.setup.version'",
+    "reachedOn": "the platform's generic CnSetupWizard shell (nextcloud-vue), driven entirely by src/manifest.json's declarative setup block, shown on first admin visit -- no humaniq-authored Vue component imports CnSetupWizard directly, which is expected for this shared ADR-042 mechanism",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "setup-wizard",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "plt-multilingual",
    "area": "platform",
    "name": "Use the app in Dutch and English.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "concurrentie-analyse/hrm/README.md (2026-03-28): Multi-language row -- AFAS = NL/EN",
+    "hr2day": "concurrentie-analyse/hrm/README.md (2026-03-28): Multi-language row -- HR2day = NL/EN",
+    "visma-raet": "concurrentie-analyse/hrm/README.md (2026-03-28): Multi-language row -- Youforce = NL/EN (Visma Raet Youforce is the same product family as the visma-raet system key)",
+    "orangehrm": "comp-features.tsv#10121/#10169/#10188 (OrangeHRM, 2026-04-04, released): Language Package Import / Custom Language Packages"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "l10n/en.json and l10n/nl.json, 2115 translation keys each",
+    "reachedOn": "app-wide, via Nextcloud's own personal locale setting",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "i18n-multilang",
+   "featureConfidence": "high",
    "source": "competitor"
-  },
-  {
-   "id": "plt-mcp",
-   "area": "platform",
-   "name": "Let an AI tool work with HR data through MCP.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
-   "personio": "unknown",
-   "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
-   "built": {
-    "state": "none",
-    "note": "not yet read"
-   },
-   "source": "own"
   },
   {
    "id": "plt-demo-data",
    "area": "platform",
    "name": "Load sample data to try the app.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Service/DemoDataService.php:120 install() reads a shipped demo-dataset descriptor and imports records generated from the app's own schemas; lib/Controller/SetupController.php:87,95,142 wires DemoDataService into the setup wizard's status/action flow, matching src/manifest.json's 'demo-data' step",
+    "reachedOn": "the setup wizard's 'Load example data' step, on first run",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "demo-data",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "plt-hours-leaf",
    "area": "platform",
    "name": "Place an hours booking widget inside another app's page.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Listener/RegisterHoursLeafListener.php registers the humaniq-hours leaf on OpenRegister's RegisterLeafProvidersEvent (ADR-066), a render-surface-only descriptor (no data-provider, since the widget reads time entries through OpenRegister's own object API client-side); lib/AppInfo/Application.php registers the listener; client half in src/integrations/registerHoursLeaf.js shares the same id",
+    "reachedOn": "a render-surface leaf mounted by a consuming app (e.g. dossiq) on its own case page via ADR-066, not a humaniq page of its own",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "hours-leaf",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "plt-agenda-leaf",
    "area": "platform",
    "name": "Place a person's agenda widget inside another app's page.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Listener/RegisterAgendaLeafListener.php registers the agenda leaf on OpenRegister's RegisterLeafProvidersEvent, the same ADR-066 render-surface pattern as the hours leaf; lib/AppInfo/Application.php registers the listener",
+    "reachedOn": "a render-surface leaf mounted by a consuming app on its own page via ADR-066, not a humaniq page of its own",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "agenda-leaf",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "plt-sso",
    "area": "platform",
    "name": "Sign in with the organisation's single sign-on.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "appinfo/info.xml:69 <nextcloud min-version=\"32\" max-version=\"34\"/>; grep -rniF 'saml|oidc' lib/: no hits -- humaniq has no auth code of its own",
+    "reachedOn": "Nextcloud's own login flow, platform-wide; humaniq adds nothing and blocks nothing, so any SSO app the instance runs (user_saml/user_oidc) covers humaniq transparently",
+    "owner": "nextcloud"
    },
+   "provider": "nextcloud",
+   "providerHow": "inferred",
+   "feature": "sso-identity",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "plt-marketplace",
    "area": "platform",
    "name": "Extend the system with third-party integrations from a marketplace.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
-   "hr2day": "unknown",
+   "hr2day": "yes",
    "loket": "unknown",
-   "personio": "unknown",
+   "personio": "yes",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "hr2day": "comp-features.tsv#30890 (HR2day, 2026-05-20, integration expansion): Salesforce app marketplace -- AppExchange ecosysteem",
+    "personio": "comp-features.tsv#2493 (Personio, 2026-03-27): Marketplace (200+ Integraties) -- toegang tot meer dan 200 integraties"
    },
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rliF marketplace lib src openspec: hits only in the rostering proposal's shift-swap 'marketplace' concept (an explicitly named non-goal, unrelated to third-party integrations) and the parity output file itself; no third-party integration marketplace exists",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "marketplace",
+   "featureConfidence": "high",
    "source": "competitor"
   }
  ],
@@ -5416,6 +5441,32 @@
    "source": "competitor",
    "note": "hermiq is never referenced anywhere in humaniq. This is a read-only MCP tool surface for an external agent, not an in-app 'ask a question in plain language' assistant.",
    "pendingReason": "The only mechanism is the x-openregister-mcp declaration on six schemas; there is no in-product chat surface, only a tool contract for an external MCP-connected agent to call."
+  },
+  {
+   "id": "plt-mcp",
+   "area": "platform",
+   "name": "Let an AI tool work with HR data through MCP.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {},
+   "built": {
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-assets.json, hr-ats.json, hr-timesheet.json, hr-expense.json, hr-org.json each carry x-openregister-mcp; grep -rliF mcp lib/Controller lib/Service lib/Command: no hits",
+    "reachedOn": "an MCP client calls the tool surface OpenRegister exposes for these schemas; not a humaniq page",
+    "owner": "ConductionNL/openregister",
+    "readingRating": "yes"
+   },
+   "provider": "openregister",
+   "providerHow": "read-from-code",
+   "feature": "humaniq-mcp-surface",
+   "featureConfidence": "high",
+   "source": "own",
+   "pendingReason": "Rests only on x-openregister-mcp declarations in 5 register schemas (hr-assets, hr-ats, hr-timesheet, hr-expense, hr-org); no humaniq PHP code implements or extends MCP tool behaviour beyond the declaration, execution is entirely OpenRegister's own MCP gateway."
   }
  ]
 }
