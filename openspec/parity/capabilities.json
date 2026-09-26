@@ -6349,7 +6349,7 @@
    "id": "td-mutation-approval",
    "area": "people",
    "name": "Have a change to an employee record take effect only after the role set for that kind of change approves it.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -6366,7 +6366,8 @@
    },
    "built": {
     "state": "none",
-    "evidence": "not yet read",
+    "evidence": "grep -rniF 'MijnGegevens|approval' on the Employee schema lib/Settings/register.d/hr-objects.json:5: Employee carries no x-openregister-lifecycle and no pending-change object; a change on EmployeeDetail is saved at once by whoever may edit it (same finding as ess-edit-details); no per-change-type approval role exists",
+    "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6380,7 +6381,7 @@
    "id": "td-dossier-validation",
    "area": "people",
    "name": "Get a signal when a mandatory document such as an ID, certificate of conduct or professional registration is missing or expired in a personnel file.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -6396,8 +6397,9 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmPimPlugin/entity/EmployeeLicense.php:63 licenses carry an expiry date, but no job reads it for a signal; the only scheduled signals are BIRTHDAY and LEAVE_TODAY (src/plugins/orangehrmWorkspaceNotificationsPlugin/entity/WorkspaceNotificationRegistration.php:33)"
    },
    "built": {
-    "state": "none",
-    "evidence": "not yet read",
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-agenda.json:21 EmployeeCompetence.validUntil holds a professional registration or certificate with an expiry, checked only when rostering by lib/Service/CompetenceCheckService.php:149; no schema lists mandatory dossier documents (ID, contract, certificate of conduct) and nothing checks their presence periodically (grep -rniE 'identiteitsbewijs|\\bvog\\b|requiredDocument' lib/Settings src/manifest.d: no hits outside a payroll rule source label)",
+    "reachedOn": "EmployeeCompetences /bevoegdheden (expiry per competence); nothing reaches a dossier completeness check",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6411,7 +6413,7 @@
    "id": "td-multiple-employments",
    "area": "people",
    "name": "Hold several concurrent employments for one person, each with its own scale and hours, and see them together.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -6427,8 +6429,9 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmPimPlugin/entity/Employee.php:197 one job title, one employment status and one salary grade per employee record; no concurrent employments"
    },
    "built": {
-    "state": "none",
-    "evidence": "not yet read",
+    "state": "built",
+    "evidence": "EmploymentContract.employeeId $ref Employee (lib/Settings/register.d/hr-objects.json) allows several contracts per person, each with its own salary and hours; src/manifest.d/hr-objects.json:150 EmployeeDetail object-list of EmploymentContract filtered to the employee, rowRoute EmploymentContractDetail (:181); lib/Service/AbsenceRateService.php:481 sums overlapping contracts' FTE; no combined leave overview across employments (LeaveBalance is per employee and leave type)",
+    "reachedOn": "EmployeeDetail /employees/:id contracts list; EmploymentContracts /contracts",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6442,7 +6445,7 @@
    "id": "td-secondment",
    "area": "people",
    "name": "Register an employee who is seconded to another organisation.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -6459,7 +6462,8 @@
    },
    "built": {
     "state": "none",
-    "evidence": "not yet read",
+    "evidence": "grep -rniE 'detacher|seconded|secondment' lib/Settings src/manifest.d: the only hit is an x-notes remark in lib/Settings/register.d/hr-cost-rate.json:20 that the cost-rate field cannot tell a seconded employee apart; no field or schema records an outward secondment",
+    "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6473,7 +6477,7 @@
    "id": "td-side-activities",
    "area": "people",
    "name": "Register an employee's side activities inside and outside the organisation.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "partial",
@@ -6489,8 +6493,9 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(side activit\\w*|nevenwerk\\w*)\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "none",
-    "evidence": "not yet read",
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-objects.json:54 Employee.nevenwerkzaamhedenGemeld is a single yes or no attestation for civil servants, checked by rule nl-ambtenaar-nevenwerkzaamheden-melding (lib/Standards/rules/labour.json:451) only through occ humaniq:rules:audit; no register of the side activities themselves",
+    "reachedOn": "EmployeeDetail /employees/:id edit form (the boolean); the rule result only via occ humaniq:rules:audit",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6504,7 +6509,7 @@
    "id": "td-personnel-budget",
    "area": "reporting",
    "name": "Draw up next year's personnel budget from the formation and current staff, per team, job and cost centre.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "partial",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -6521,7 +6526,8 @@
    },
    "built": {
     "state": "none",
-    "evidence": "not yet read",
+    "evidence": "grep -rniE 'personeelsbegroting|personnelBudget|formatiebudget|budgetFte' lib src: no hits; ppl-position-management is also no (no budgeted positions exist to budget from)",
+    "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6535,7 +6541,7 @@
    "id": "td-formation-scenarios",
    "area": "reporting",
    "name": "Model formation scenarios such as growth or cuts in FTE per department.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -6552,7 +6558,8 @@
    },
    "built": {
     "state": "none",
-    "evidence": "not yet read",
+    "evidence": "grep -rniE 'scenario|formatieplan' lib/Settings src/manifest.d lib/Service: only seed notes and rule-check comments; no formation model exists (see ppl-position-management)",
+    "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6566,7 +6573,7 @@
    "id": "td-net-fte",
    "area": "reporting",
    "name": "See net occupancy in FTE after subtracting parental, pregnancy and long-term sick leave.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -6583,7 +6590,8 @@
    },
    "built": {
     "state": "none",
-    "evidence": "not yet read",
+    "evidence": "grep -rniE 'netFte|nettoBezetting|occupancy' lib src: no hits; lib/Service/AbsenceRateService.php computes an absence percentage, not occupancy in FTE, and there is no formation to measure against",
+    "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6597,7 +6605,7 @@
    "id": "td-manager-dashboard",
    "area": "reporting",
    "name": "Show a manager a dashboard of their own department's absence, occupancy, vacancies and wage costs.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -6613,8 +6621,9 @@
     "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmDashboardPlugin/components/MyActionSummaryWidget.vue:127 a manager sees pending team actions and who is on leave today (EmployeesOnLeaveWidget.vue:91); no department absence rate, occupancy, vacancies or wage costs"
    },
    "built": {
-    "state": "none",
-    "evidence": "not yet read",
+    "state": "built",
+    "evidence": "src/manifest.json:400 Dashboard carries org-wide steering tiles (absence rate, billable ratio, payroll cost) from /apps/humaniq/api/analytics/trends with no department or manager parameter; src/manifest.d/personal-dashboard.json:71 MijnHr has a te-beoordelen widget for the manager's own approvals; no dashboard scoped to the manager's department figures",
+    "reachedOn": "Dashboard /dashboard (org-wide), MijnHr /mijn",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6628,7 +6637,7 @@
    "id": "td-frequent-absence",
    "area": "absence",
    "name": "Get a signal when an employee reports sick often, at a threshold you set.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -6645,7 +6654,8 @@
    },
    "built": {
     "state": "none",
-    "evidence": "not yet read",
+    "evidence": "lib/Service/AbsenceRateService.php:12 docblock names frequency and duration trends a non-goal; grep -rniE 'frequen|sickCount' lib/Settings lib/Service: no absence frequency signal or threshold",
+    "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6659,7 +6669,7 @@
    "id": "td-manager-deputy",
    "area": "self-service",
    "name": "Let a manager hand approvals for their team to a deputy for a period.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -6676,7 +6686,8 @@
    },
    "built": {
     "state": "none",
-    "evidence": "not yet read",
+    "evidence": "grep -rniE 'deputy|vervanger|plaatsvervang|substitute' lib/Settings src/manifest.d lib/Service: no hits for manager substitution; managerUserId is stamped from the org chart (ess-manager-team) with no temporary delegate",
+    "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6690,7 +6701,7 @@
    "id": "td-step-increase",
    "area": "talent",
    "name": "Approve or refuse an employee's yearly step in their pay scale, with the reason sent to them.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "partial",
@@ -6706,8 +6717,9 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(step increase|periodiek)\\b' src/plugins src/client/src finds no match; pay grades have only min and max, no steps (src/client/src/orangehrmPimPlugin/components/SaveSalaryComponent.vue:329)"
    },
    "built": {
-    "state": "none",
-    "evidence": "not yet read",
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-comp.json CompAdjustment with lifecycle propose, approve, reject (approve and reject guarded by NoSelfApprovalGuard), reached from src/manifest.d/hr-comp.json CompAdjustmentDetail; a raise is proposed and approved per employee, but no yearly step in the scale is generated and no rejection reason is sent to the employee",
+    "reachedOn": "CompReviewCycles /comp-review-cycles, CompAdjustmentDetail /comp-adjustments/:id",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6721,7 +6733,7 @@
    "id": "td-review-progress-private",
    "area": "talent",
    "name": "Let HR track whether appraisal conversations took place without reading what was said.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -6737,8 +6749,9 @@
     "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmPerformancePlugin/pages/ReviewList.vue:44 HR can filter reviews by status, but the admin can also open and evaluate the content (src/plugins/orangehrmPerformancePlugin/config/routes.yaml:135), so status is not separated from what was said"
    },
    "built": {
-    "state": "none",
-    "evidence": "not yet read",
+    "state": "built",
+    "evidence": "src/manifest.d/hr-performance.json ReviewCycleDetail lists the cycle's reviews with their status, so HR sees progress; lib/Settings/register.d/hr-performance.json:100 PerformanceReview declares no property-level authorization, so the content is not hidden from HR",
+    "reachedOn": "ReviewCycles /review-cycles, ReviewCycleDetail /review-cycles/:id",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6752,7 +6765,7 @@
    "id": "td-commute-allowance",
    "area": "expenses",
    "name": "Calculate a commuting allowance from the travel distance and apply the tax-free rules.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -6768,8 +6781,9 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(commut\\w*|travel distance)\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "none",
-    "evidence": "not yet read",
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-expense.json:211-227 Expense.travelType business or commute with distanceKm, but the amount is typed by the employee (no calculation from distance); lib/Standards/Checks/NlTravelExpenseChecks.php:99 checks the per-km amount against the tax-free rate only via occ humaniq:rules:audit; no route planner lookup",
+    "reachedOn": "ExpenseDetail /expenses/:id travel fields; the tax-free check only via occ humaniq:rules:audit",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6783,7 +6797,7 @@
    "id": "td-wpm-co2",
    "area": "reporting",
    "name": "Register commuting and business travel by transport mode for the employer's CO2 mobility reporting duty.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -6800,7 +6814,8 @@
    },
    "built": {
     "state": "none",
-    "evidence": "not yet read",
+    "evidence": "grep -rniE 'co2|wpm|transportMode|vervoersmiddel' lib src: only Asset.fuelType for a company vehicle (lib/Settings/register.d/hr-assets.json:159); commuting and business trips carry no transport mode and nothing aggregates them for the WPM reporting duty",
+    "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6814,7 +6829,7 @@
    "id": "td-ikb",
    "area": "payroll",
    "name": "Let employees spend their individual choice budget under the municipal collective agreement.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "partial",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -6830,8 +6845,9 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(ikb|choice budget)\\b' src/plugins src/client/src finds no match; no payroll plugin among the 23 in src/plugins"
    },
    "built": {
-    "state": "none",
-    "evidence": "not yet read",
+    "state": "built",
+    "evidence": "src/manifest.d/hr-leave.json:221 the IKB-style leave buy and sell request (LeaveTransaction, lifecycle guarded by LeaveBuySellApprovalGuard in lib/Settings/register.d/hr-leave.json:317) settles leave hours in pay; no individual choice budget that accrues a percentage and can be spent on several goals (grep -rniE 'keuzebudget|\\bikb\\b' finds only this note)",
+    "reachedOn": "MijnVerlofKopenVerkopen /mijn/verlof-kopen-verkopen, LeaveTransactionDetail /leave-transactions/:id",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6845,7 +6861,7 @@
    "id": "td-political-office-holders",
    "area": "payroll",
    "name": "Administer and pay political office holders such as a mayor and aldermen, including their post-office allowance.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -6862,7 +6878,8 @@
    },
    "built": {
     "state": "none",
-    "evidence": "not yet read",
+    "evidence": "grep -rniE 'wethouder|burgemeester|politiek|ambtsdrager|wachtgeld' lib src: no hits; Employee.publicSectorRegime (lib/Settings/register.d/hr-objects.json:52) covers civil servants, not political office holders",
+    "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6876,7 +6893,7 @@
    "id": "td-bi-feed",
    "area": "platform",
    "name": "Feed HR data to a BI tool such as Power BI on a schedule without manual exports.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -6892,11 +6909,12 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmCoreOAuthPlugin/config/routes.yaml:45 an OAuth2 client can pull data from the REST API on its own schedule; grep -riE '\\b(power ?bi|business intelligence)\\b' src/plugins src/client/src finds no match, so no built-in feed"
    },
    "built": {
-    "state": "none",
-    "evidence": "not yet read",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "openspec/specs/hris-api-public/spec.md: external access is Nextcloud app passwords over OpenRegister's generic object API, which a BI tool can poll on its own schedule; no OData or BI connector (grep -rniE 'odata|power ?bi' lib src: only DemoDataService name matches)",
+    "reachedOn": "external client on /api/objects/{register}/{schema}, no humaniq page",
+    "owner": "ConductionNL/openregister"
    },
-   "provider": "humaniq",
+   "provider": "openregister",
    "providerHow": "read-from-code",
    "source": "tender",
    "origin": "tender",
@@ -6907,7 +6925,7 @@
    "id": "td-dms-link",
    "area": "platform",
    "name": "Store generated HR documents automatically in the organisation's document management system.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "partial",
@@ -6923,11 +6941,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(dms|document management|sharepoint)\\b' src/plugins src/client/src finds no match; OrangeHRM generates no HR documents to store"
    },
    "built": {
-    "state": "none",
-    "evidence": "not yet read",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-documents.json:25 generated HR documents are rendered and stored by docudesk (lib/Settings/register.d/hr-documents.json:232 records a docudesk handoff per document) into Nextcloud Files; no link to an external DMS over ZGW or STUF-ZDS (grep -rniE 'zgw|zds|drc' lib src: no hits)",
+    "reachedOn": "GeneratedDocuments /documents, GeneratedDocumentDetail /documents/:id",
+    "owner": "ConductionNL/filinq"
    },
-   "provider": "humaniq",
+   "provider": "docudesk",
    "providerHow": "read-from-code",
    "source": "tender",
    "origin": "tender",
@@ -6938,7 +6957,7 @@
    "id": "td-event-webhooks",
    "area": "platform",
    "name": "Send an event to other systems when someone joins, leaves, changes job, takes leave or reports sick.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -6954,8 +6973,9 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmWorkspaceNotificationsPlugin/entity/WorkspaceNotificationRegistration.php:33 webhooks exist only for daily birthday and leave-today messages to Slack, Teams or Google Chat; no joiner, leaver, job change or sickness events. Driven 2026-09-26 on the lab at v5.9: /admin/workspaceNotificationConfiguration offers notification type, platform (Slack incoming webhook), channel, sub unit, timezone and send time only."
    },
    "built": {
-    "state": "none",
-    "evidence": "not yet read",
+    "state": "built",
+    "evidence": "lib/Service/TimeEntryEventService.php:6 emits a nl.conduction.hrmq.timeentry.approved CloudEvent through OpenRegister's WebhookService, called from lib/Listener/TimesheetApprovalListener.php:92; no event on joining, leaving, job change, leave or sickness in humaniq (OpenRegister's generic object webhooks could be configured by an admin outside humaniq)",
+    "reachedOn": "machine consumer of the timesheet-approved webhook; nothing else",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6969,7 +6989,7 @@
    "id": "td-lms-sync",
    "area": "platform",
    "name": "Keep employees, roles and organisation data in sync with a learning management system.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "partial",
    "visma-raet": "yes",
    "hr2day": "unknown",
@@ -6986,7 +7006,8 @@
    },
    "built": {
     "state": "none",
-    "evidence": "not yet read",
+    "evidence": "grep -rniE 'learniq|scholiq|\\blms\\b|studytube' lib src: only the fleet app id map in lib/Support/FleetAppId.php and src/main.js; no sync of employees, roles or organisation data to a learning platform",
+    "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
