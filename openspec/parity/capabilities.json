@@ -3656,8 +3656,9 @@
    },
    "built": {
     "state": "building",
-    "evidence": "lib/Settings/register.d/hr-objects.json LoonaangifteFiling x-openregister-lifecycle 'corrigeren' description: 'A sent filing can be superseded by a correction ... this transition's reset-to-concept semantics are a simplified placeholder: full correctie-berichten (VL/IB-correcties) are a future spec.' Also blocked by the same dead lifecycleActions button as fil-wage-tax-return. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row.",
-    "reachedOn": "nothing reaches a real correction message; the corrigeren transition (even if its button rendered) only resets status to concept, it builds no correctiebericht"
+    "evidence": "lib/Settings/register.d/hr-objects.json LoonaangifteFiling x-openregister-lifecycle 'corrigeren' description: 'A sent filing can be superseded by a correction ... this transition's reset-to-concept semantics are a simplified placeholder: full correctie-berichten (VL/IB-correcties) are a future spec.' The transition only resets a sent filing to concept and builds no correctiebericht. Corrected 2026-09-26: the earlier claim that the lifecycle button never renders is refuted. At @conduction/nextcloud-vue 2.40.0 CnPageRenderer.vue:586-591 builds the body grid only from page-level widgets; humaniq moved its widgets to config.widgets (hrmq#115), so CnDetailPage mounts and renders config.lifecycleActions (CnDetailPage.vue:101-117). A live check that the button shows on the filing detail page is still owed.",
+    "reachedOn": "nothing reaches a real correction message; the corrigeren transition only resets status to concept, it builds no correctiebericht",
+    "readOn": "2026-09-26"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4546,22 +4547,23 @@
    },
    "built": {
     "state": "built",
-    "evidence": "openspec/specs/humaniq-dashboard-steering-indicators/spec.md; src/manifest.json 'Dashboard' page carries kpi-absence-rate/kpi-billable-ratio/kpi-payroll-cost tiles plus chart widgets (Billable ratio, Headcount & turnover, Absence rate, Payroll cost per period, Approval lead time) and an Obligations object-table; lib/Controller/AnalyticsController.php + lib/Service/AnalyticsService.php back the endpointSource widgets",
+    "evidence": "openspec/specs/humaniq-dashboard-steering-indicators/spec.md; src/manifest.json 'Dashboard' page carries kpi-absence-rate/kpi-billable-ratio/kpi-payroll-cost tiles plus chart widgets (Billable ratio, Headcount & turnover, Absence rate, Payroll cost per period, Approval lead time) and an Obligations object-table; lib/Controller/AnalyticsController.php + lib/Service/AnalyticsService.php back the endpointSource widgets; The Billable ratio (src/manifest.json:484-506) and Headcount and turnover (:536-566) charts bind to /apps/humaniq/api/analytics/trends; AnalyticsController::authorizeCaller (lib/Controller/AnalyticsController.php:195-206) scopes to the caller's authorised administration and AnalyticsService::loadFiltered (lib/Service/AnalyticsService.php:481) filters rows by administrationId.",
     "reachedOn": "Dashboard (main landing page)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "readOn": "2026-09-26"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "humaniq-dashboard-steering-indicators",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Per the manifest's own note, the two dataSource-bound charts (Billable ratio, Headcount & turnover) are unscoped across administrations and single-series only, a live-defect candidate on a multi-tenant install."
+   "note": "Corrected 2026-09-26: the unscoped claim came from the page-level _note at src/manifest.json:406, which is stale. The Billable ratio (src/manifest.json:484-506) and Headcount and turnover (:536-566) charts bind to /apps/humaniq/api/analytics/trends; AnalyticsController::authorizeCaller (lib/Controller/AnalyticsController.php:195-206) scopes to the caller's authorised administration and AnalyticsService::loadFiltered (lib/Service/AnalyticsService.php:481) filters rows by administrationId. No cross-administration leak."
   },
   {
    "id": "rep-headcount-turnover",
    "area": "reporting",
    "name": "See headcount, inflow and outflow over time.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "partial",
    "visma-raet": "yes",
    "hr2day": "unknown",
@@ -4575,16 +4577,17 @@
    },
    "built": {
     "state": "built",
-    "evidence": "src/manifest.json Dashboard 'Headcount & turnover' chart widget binds via dataSource raw-GraphQL: Employee startDate/endDate, interval MONTH, metric COUNT; per its own _note, this dataSource form is UNSCOPED across administrations (the tenant filter token does not apply to raw-GraphQL) and is single-series, not the two-named-series (starters vs leavers) REQ-DSI-003 describes",
+    "evidence": "src/manifest.json:536-566 'Headcount and turnover' chart binds to the guarded /apps/humaniq/api/analytics/trends endpoint (metric headcount) with three series, Headcount, Starters and Leavers; lib/Service/AnalyticsService.php:172 and :303-321 return headcount at each period end plus starters and leavers within the period; AnalyticsController::authorizeCaller (lib/Controller/AnalyticsController.php:195-206) scopes to the caller's authorised administration and AnalyticsService::loadFiltered (lib/Service/AnalyticsService.php:481) filters rows by administrationId. The earlier unscoped, single-series reading came from the stale page-level _note at src/manifest.json:406.",
     "reachedOn": "Dashboard, chart widget (main landing page)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "readOn": "2026-09-26"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "humaniq-dashboard-steering-indicators",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "Cross-tenant data leakage and a single-series render are documented live defects in the widget's own manifest note, not just a design gap."
+   "note": "Re-rated partial to yes on 2026-09-26: three series (headcount, starters, leavers), scoped per administration. The earlier partial rested only on the stale note."
   },
   {
    "id": "rep-wage-costs",
@@ -4734,16 +4737,17 @@
    "evidence": {},
    "built": {
     "state": "built",
-    "evidence": "src/manifest.json Dashboard 'Billable ratio' widgets: a kpi-billable-ratio tile via endpointSource (scoped, real) plus a chart widget bound via dataSource raw-GraphQL (billable vs total Timesheet.hours by period); per its own _note this GraphQL form is UNSCOPED across administrations and single-series only; the figure is one fleet/tenant-wide percentage, not broken down per person or team as the row asks",
+    "evidence": "src/manifest.json:484-506 'Billable ratio' chart and the kpi-billable-ratio tile both bind to the guarded /apps/humaniq/api/analytics/trends endpoint (lib/Service/AnalyticsService.php:171 and :274-300 billableRatioSeries()); AnalyticsController::authorizeCaller (lib/Controller/AnalyticsController.php:195-206) scopes to the caller's authorised administration and AnalyticsService::loadFiltered (lib/Service/AnalyticsService.php:481) filters rows by administrationId. The figure is one percentage per administration per period, not broken down per person or team as the row asks. The earlier unscoped reading came from the stale page-level _note at src/manifest.json:406.",
     "reachedOn": "Dashboard, Billable ratio widgets (main landing page)",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "readOn": "2026-09-26"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "humaniq-dashboard-steering-indicators",
    "featureConfidence": "medium",
    "source": "own",
-   "note": "Only one aggregate ratio for the whole administration is shown; there is no per-person or per-team breakdown."
+   "note": "Only one aggregate ratio for the whole administration is shown; there is no per-person or per-team breakdown. Corrected 2026-09-26: the chart is scoped per administration, no leak; the missing per-person or per-team breakdown is why the row stays partial."
   },
   {
    "id": "rep-benchmark",
