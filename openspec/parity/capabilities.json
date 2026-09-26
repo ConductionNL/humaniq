@@ -1,0 +1,5257 @@
+{
+ "comparedOn": "2026-09-26",
+ "category": "Humaniq competes as an HR and payroll administration suite for Dutch employers, from a sole director or small business to a municipality: the employee and contract record, leave and sickness under Dutch law (Gatekeeper Act, statutory and extra-statutory leave), hours, timesheets and rostering, expenses, a table-driven Dutch payroll engine with wage tax and pension filings, performance and compensation cycles, and employee self-service, with a labour-law rule engine checking the records. The buyer compares it with Dutch HR and payroll suites (AFAS, Visma Raet Youforce, HR2day, Loket.nl), with a European HRIS (Personio) and with the open-source HRM a self-hosting buyer would try first (OrangeHRM). Written 2026-09-26 from appinfo/info.xml, 78 openspec specs, 130 manifest pages, 35 register fragments and appinfo/routes.php at ConductionNL/humaniq@c3b838a66589; correct it here if it is wrong, because the areas and the columns follow from it.",
+ "corpus": {
+  "repo": "ConductionNL/concurrentie-analyse (read-only) and the intelligence database",
+  "file": "hrm/README.md (2026-03-28); competitor_features and canonical_features where app_slug = 'humaniq' (659 and 224 rows); shillinq openspec/parity/capabilities.json rows ppl-time and ppl-timesheet-approval (moved here by shillinq openspec/changes/hours-to-humaniq)"
+ },
+ "systems": [
+  {
+   "key": "humaniq",
+   "name": "Humaniq",
+   "vendor": "Conduction",
+   "isSelf": true,
+   "readOn": "2026-09-26",
+   "columnAddedOn": "2026-09-26",
+   "note": "Rated by reading the code at ConductionNL/humaniq@c3b838a66589 (development), not by driving an instance."
+  },
+  {
+   "key": "afas",
+   "name": "AFAS Profit HRM and Payroll",
+   "vendor": "AFAS Software",
+   "readOn": "2026-05-20",
+   "columnAddedOn": "2026-09-26",
+   "evidenceGrade": "docs-only",
+   "unknownReason": "Not among the 45 feature rows the intelligence database holds for AFAS HRM (competitor 153), written 2026-03-27 and 2026-05-20 from vendor pages, nor in concurrentie-analyse/hrm/README.md (2026-03-28); absence from those lists is not evidence the product lacks it, and nobody has driven the product."
+  },
+  {
+   "key": "visma-raet",
+   "name": "Visma Raet Youforce",
+   "vendor": "Visma",
+   "readOn": "2026-05-20",
+   "columnAddedOn": "2026-09-26",
+   "evidenceGrade": "docs-only",
+   "note": "Two database records describe the same product: competitor 155 (Visma Raet Youforce, 20 rows) and 1318 (Visma Raet, 20 rows). Both are read into this column. Visma YouServe (1317) is the outsourced service line and is not a column.",
+   "unknownReason": "Not among the 40 feature rows the intelligence database holds for Visma Raet Youforce (competitors 155 and 1318, a duplicate record), written 2026-03-27 and 2026-05-20 from vendor pages, nor in concurrentie-analyse/hrm/README.md (2026-03-28); absence from those lists is not evidence the product lacks it, and nobody has driven the product."
+  },
+  {
+   "key": "hr2day",
+   "name": "HR2day",
+   "vendor": "HR2day",
+   "readOn": "2026-05-20",
+   "columnAddedOn": "2026-09-26",
+   "evidenceGrade": "docs-only",
+   "unknownReason": "Not among the 25 feature rows the intelligence database holds for HR2day (competitor 157), written 2026-03-27 and 2026-05-20 from vendor pages, nor in concurrentie-analyse/hrm/README.md (2026-03-28); absence from those lists is not evidence the product lacks it, and nobody has driven the product."
+  },
+  {
+   "key": "loket",
+   "name": "Loket.nl",
+   "vendor": "Loket.nl",
+   "readOn": "2026-05-20",
+   "columnAddedOn": "2026-09-26",
+   "evidenceGrade": "docs-only",
+   "unknownReason": "Not among the 27 feature rows the intelligence database holds for Loket.nl (competitor 1316), written 2026-05-20 from vendor pages, nor in concurrentie-analyse/hrm/README.md (2026-03-28); absence from those lists is not evidence the product lacks it, and nobody has driven the product."
+  },
+  {
+   "key": "personio",
+   "name": "Personio",
+   "vendor": "Personio",
+   "readOn": "2026-03-27",
+   "columnAddedOn": "2026-09-26",
+   "evidenceGrade": "docs-only",
+   "unknownReason": "Not among the 20 feature rows the intelligence database holds for Personio (competitor 152), written 2026-03-27 from vendor pages, nor in concurrentie-analyse/hrm/README.md (2026-03-28); absence from those lists is not evidence the product lacks it, and nobody has driven the product."
+  },
+  {
+   "key": "orangehrm",
+   "name": "OrangeHRM (open source)",
+   "vendor": "OrangeHRM",
+   "readOn": "2026-07-23",
+   "columnAddedOn": "2026-09-26",
+   "evidenceGrade": "docs-only",
+   "note": "119 database rows: 20 module names, release notes up to 5.9, and 19 open GitHub enhancement requests. An open request is read as evidence the open-source edition lacks the thing, not that it has it.",
+   "unknownReason": "Not among the 119 feature rows the intelligence database holds for OrangeHRM (competitor 151), written 2026-03-27 to 2026-07-23 from vendor pages, nor in concurrentie-analyse/hrm/README.md (2026-03-28); absence from those lists is not evidence the product lacks it, and nobody has driven the product."
+  }
+ ],
+ "areas": [
+  {
+   "key": "people",
+   "name": "Employees, contracts and organisation",
+   "name_nl": "Medewerkers, contracten en organisatie"
+  },
+  {
+   "key": "hiring",
+   "name": "Recruiting, onboarding and offboarding",
+   "name_nl": "Werving, onboarding en offboarding"
+  },
+  {
+   "key": "leave",
+   "name": "Leave",
+   "name_nl": "Verlof"
+  },
+  {
+   "key": "absence",
+   "name": "Sickness absence",
+   "name_nl": "Verzuim"
+  },
+  {
+   "key": "time",
+   "name": "Hours, timesheets and attendance",
+   "name_nl": "Uren, urenstaten en aanwezigheid"
+  },
+  {
+   "key": "planning",
+   "name": "Rostering, agenda and resources",
+   "name_nl": "Roosters, agenda en middelen"
+  },
+  {
+   "key": "expenses",
+   "name": "Expenses and assets",
+   "name_nl": "Declaraties en bedrijfsmiddelen"
+  },
+  {
+   "key": "payroll",
+   "name": "Payroll",
+   "name_nl": "Salarisverwerking"
+  },
+  {
+   "key": "filings",
+   "name": "Statutory filings",
+   "name_nl": "Aangiften en verplichte opgaven"
+  },
+  {
+   "key": "talent",
+   "name": "Performance, pay reviews and development",
+   "name_nl": "Gesprekscyclus, beloning en ontwikkeling"
+  },
+  {
+   "key": "self-service",
+   "name": "Employee and manager self-service",
+   "name_nl": "Medewerker- en managerselfservice"
+  },
+  {
+   "key": "reporting",
+   "name": "Reporting and analytics",
+   "name_nl": "Rapportages en analyse"
+  },
+  {
+   "key": "compliance",
+   "name": "Privacy, security and labour-law compliance",
+   "name_nl": "Privacy, beveiliging en arbeidsrechtelijke compliance"
+  },
+  {
+   "key": "platform",
+   "name": "Platform and integrations",
+   "name_nl": "Platform en koppelingen"
+  }
+ ],
+ "providers": [
+  {
+   "key": "humaniq",
+   "name": "Humaniq",
+   "kind": "self"
+  },
+  {
+   "key": "openregister",
+   "name": "Open Register",
+   "kind": "app"
+  },
+  {
+   "key": "shillinq",
+   "name": "Shillinq",
+   "kind": "app"
+  },
+  {
+   "key": "docudesk",
+   "name": "Filinq (app id still docudesk)",
+   "kind": "app"
+  },
+  {
+   "key": "integriq",
+   "name": "Integriq (app id still openconnector)",
+   "kind": "app"
+  },
+  {
+   "key": "portaliq",
+   "name": "Portaliq",
+   "kind": "app"
+  },
+  {
+   "key": "learniq",
+   "name": "Learniq",
+   "kind": "app"
+  },
+  {
+   "key": "hermiq",
+   "name": "Hermiq",
+   "kind": "app"
+  },
+  {
+   "key": "dossiq",
+   "name": "Dossiq (app id still procest)",
+   "kind": "app"
+  },
+  {
+   "key": "nextcloud",
+   "name": "Nextcloud",
+   "kind": "platform"
+  },
+  {
+   "key": "nextcloud-vue",
+   "name": "Conduction nextcloud-vue",
+   "kind": "platform"
+  }
+ ],
+ "capabilities": [
+  {
+   "id": "ppl-employee-record",
+   "area": "people",
+   "name": "Keep one record per employee with personal, contact and employment details.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-bsn-iban-validation",
+   "area": "people",
+   "name": "Have a BSN, IBAN and date of birth checked for validity when they are entered.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-contracts",
+   "area": "people",
+   "name": "Record each employment contract with its type, hours, salary and start and end date.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-chain-rule",
+   "area": "people",
+   "name": "Get warned before a series of fixed-term contracts turns into a permanent one.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-transition-payment",
+   "area": "people",
+   "name": "Calculate the statutory transition payment when a contract ends.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-contract-expiry-signal",
+   "area": "people",
+   "name": "Get a signal when a contract is about to expire or a probation period ends.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-jubilee-signal",
+   "area": "people",
+   "name": "Get a signal for work anniversaries and other personnel milestones.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-org-units",
+   "area": "people",
+   "name": "Model departments and teams as a hierarchy of organisational units.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-org-chart",
+   "area": "people",
+   "name": "See an organisation chart of who reports to whom.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-placements",
+   "area": "people",
+   "name": "Place an employee in a unit and position for a period, keeping the history.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "ppl-position-management",
+   "area": "people",
+   "name": "Manage formation: budgeted positions and which are filled or vacant.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-job-framework",
+   "area": "people",
+   "name": "Keep a job framework of standard functions with their grading, such as HR21.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "ppl-salary-bands",
+   "area": "people",
+   "name": "Define salary bands per job grade and check pay against them.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "ppl-cao-library",
+   "area": "people",
+   "name": "Attach an employee to a collective labour agreement whose rules the system applies.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-cao-updates",
+   "area": "people",
+   "name": "Receive updated collective agreement and legislation rules without reconfiguring by hand.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-personnel-dossier",
+   "area": "people",
+   "name": "Keep an employee's documents together in a digital personnel file.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-generate-documents",
+   "area": "people",
+   "name": "Generate an employment contract, offer letter or reference from a template with the employee's data filled in.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-esign-documents",
+   "area": "people",
+   "name": "Have an HR document signed electronically.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-employee-timeline",
+   "area": "people",
+   "name": "See an employee's history of contracts, placements and changes on one timeline.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "ppl-interns",
+   "area": "people",
+   "name": "Administer interns and work-based learners with their school and placement agreement.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "ppl-flex-workers",
+   "area": "people",
+   "name": "Administer temporary agency and flex pool workers alongside employees.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "ppl-bulk-mutations",
+   "area": "people",
+   "name": "Apply a change such as a collective pay rise to many employees at once.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-brp-lookup",
+   "area": "people",
+   "name": "Fill in an employee's address and personal details from the population register.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-custom-fields",
+   "area": "people",
+   "name": "Add your own fields to the employee record.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ppl-employee-relations",
+   "area": "people",
+   "name": "Record grievances, disciplinary measures and other employee relations cases.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-vacancies",
+   "area": "hiring",
+   "name": "Open a vacancy with its requirements and track it until it is filled.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-career-page",
+   "area": "hiring",
+   "name": "Publish vacancies on a public careers page where candidates can apply.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-multiposting",
+   "area": "hiring",
+   "name": "Post a vacancy to several job boards in one go.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-applicant-pipeline",
+   "area": "hiring",
+   "name": "Move applicants through the stages of a hiring pipeline.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-interview-scheduling",
+   "area": "hiring",
+   "name": "Schedule interviews and put them in the interviewers' calendars.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-candidate-evaluation",
+   "area": "hiring",
+   "name": "Record interviewers' scores and notes on a candidate.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-offer-letter",
+   "area": "hiring",
+   "name": "Send a candidate an offer letter and have it signed electronically.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "hir-hire-to-employee",
+   "area": "hiring",
+   "name": "Turn a hired applicant into an employee without retyping their data.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-referrals",
+   "area": "hiring",
+   "name": "Let employees refer candidates and track the referral.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-onboarding-checklist",
+   "area": "hiring",
+   "name": "Run an onboarding checklist of tasks for a new hire across HR, IT and the manager.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-preboarding",
+   "area": "hiring",
+   "name": "Give a new hire access to information and forms before their first day.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-offboarding",
+   "area": "hiring",
+   "name": "Run an offboarding checklist when someone leaves, including returning equipment.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-exit-interview",
+   "area": "hiring",
+   "name": "Record an exit interview and the reason for leaving.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "hir-access-revocation",
+   "area": "hiring",
+   "name": "Have accounts and access revoked when an employee leaves.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "lve-request",
+   "area": "leave",
+   "name": "Request leave and have a manager approve or reject it.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "lve-no-self-approval",
+   "area": "leave",
+   "name": "Stop a manager approving their own leave, hours or expenses.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "lve-balance",
+   "area": "leave",
+   "name": "See how much leave an employee has left, split into statutory and extra-statutory days.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "lve-accrual",
+   "area": "leave",
+   "name": "Have leave accrue each month automatically from the contract hours.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "lve-expiry",
+   "area": "leave",
+   "name": "Have statutory leave expire after its legal term and warn before it does.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "lve-types",
+   "area": "leave",
+   "name": "Configure leave types such as special leave, parental leave and unpaid leave with their own rules.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "lve-hours-from-pattern",
+   "area": "leave",
+   "name": "Calculate the leave hours a request costs from the employee's working pattern and public holidays.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "lve-buy-sell",
+   "area": "leave",
+   "name": "Buy or sell extra leave hours and have it settled in pay.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "lve-team-calendar",
+   "area": "leave",
+   "name": "See a calendar of who in the team is on leave.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "lve-department-coverage",
+   "area": "leave",
+   "name": "Check a leave request against minimum staffing for the department.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "lve-nc-calendar-sync",
+   "area": "leave",
+   "name": "Show approved leave in a shared Nextcloud calendar.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "lve-year-end",
+   "area": "leave",
+   "name": "Carry leave over to the next year according to the rules.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "lve-public-holidays",
+   "area": "leave",
+   "name": "Keep a list of public holidays and non-working days that leave calculations respect.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "lve-leave-in-pay",
+   "area": "leave",
+   "name": "Pay out remaining leave when someone leaves.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "abs-sick-report",
+   "area": "absence",
+   "name": "Report an employee sick and record their recovery.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "abs-gatekeeper",
+   "area": "absence",
+   "name": "Follow the Dutch Gatekeeper Act milestones for long-term sickness with deadlines.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "abs-gatekeeper-reminders",
+   "area": "absence",
+   "name": "Get reminded before a Gatekeeper deadline such as the week 42 notification is due.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "abs-medical-data-separation",
+   "area": "absence",
+   "name": "Keep medical details away from the manager, who only sees that someone is sick.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "abs-sick-pay",
+   "area": "absence",
+   "name": "Calculate continued pay during sickness at the legal or agreed percentage.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "abs-occupational-health",
+   "area": "absence",
+   "name": "Exchange sickness reports with the occupational health service.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "abs-partial-recovery",
+   "area": "absence",
+   "name": "Record partial recovery and therapeutic return to work percentages.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "abs-rate",
+   "area": "absence",
+   "name": "See the absence rate and frequency per department over time.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "abs-trend-widgets",
+   "area": "absence",
+   "name": "See absence trends on the dashboard.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "abs-uwv-reporting",
+   "area": "absence",
+   "name": "Produce the notifications the benefits agency needs for long-term sickness.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-log-hours",
+   "area": "time",
+   "name": "Log the hours you worked on a day.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-log-against-object",
+   "area": "time",
+   "name": "Book hours against a case, project or other object in another app.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "tim-timer",
+   "area": "time",
+   "name": "Start and stop a timer that turns into a time entry.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-weekly-timesheet",
+   "area": "time",
+   "name": "Collect a week's or period's hours on a timesheet.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-timesheet-approval",
+   "area": "time",
+   "name": "Approve a team's timesheets per week.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-timesheet-not-empty",
+   "area": "time",
+   "name": "Stop an empty timesheet being submitted.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "tim-reopen",
+   "area": "time",
+   "name": "Reopen an approved timesheet for correction before payroll uses it.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "tim-billable-rates",
+   "area": "time",
+   "name": "Track time on projects at billable rates.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-cost-rate",
+   "area": "time",
+   "name": "Work out an employee's full hourly cost rate including employer charges.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "tim-estimate-remaining",
+   "area": "time",
+   "name": "Record an effort estimate on a case or project and see how much is left.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-clock-in",
+   "area": "time",
+   "name": "Clock in and out to record attendance.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-attendance-overview",
+   "area": "time",
+   "name": "See who is present, absent or late today.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-overtime",
+   "area": "time",
+   "name": "Register overtime and have it compensated in time or pay.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-atw-limits",
+   "area": "time",
+   "name": "Get warned when logged or rostered hours break Working Hours Act limits.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-hours-to-payroll",
+   "area": "time",
+   "name": "Have approved hours flow into payroll.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-hours-to-invoice",
+   "area": "time",
+   "name": "Hand approved billable hours to invoicing.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-mobile-hours",
+   "area": "time",
+   "name": "Log hours from a phone.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tim-geofence",
+   "area": "time",
+   "name": "Only allow clocking in at the work location.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pln-rosters",
+   "area": "planning",
+   "name": "Build a roster that assigns people to shifts over a period and publish it.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pln-shift-templates",
+   "area": "planning",
+   "name": "Define shift types with start and end times to reuse in rosters.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pln-roster-atw-check",
+   "area": "planning",
+   "name": "Check a roster against the Working Hours Act before publishing it.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "pln-competence-check",
+   "area": "planning",
+   "name": "Only roster someone who holds the required certificate or competence.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "pln-working-patterns",
+   "area": "planning",
+   "name": "Record each person's working pattern of days and hours.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "pln-working-calendar",
+   "area": "planning",
+   "name": "Keep a working calendar per person that deadlines and plans count against.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "pln-availability",
+   "area": "planning",
+   "name": "See a person's availability combining roster, leave and calendar.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pln-agenda",
+   "area": "planning",
+   "name": "See one agenda per person of roster, leave, bookings and appointments.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "pln-capacity",
+   "area": "planning",
+   "name": "See forward capacity of a team against planned work.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pln-resource-booking",
+   "area": "planning",
+   "name": "Book rooms, vehicles or equipment without double booking.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "pln-calendar-subscriptions",
+   "area": "planning",
+   "name": "Read busy time from an external calendar feed into availability.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "pln-shift-swap",
+   "area": "planning",
+   "name": "Let employees swap or pick up open shifts.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pln-leave-in-roster",
+   "area": "planning",
+   "name": "See approved leave inside the roster so nobody is planned while away.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "exp-claim",
+   "area": "expenses",
+   "name": "Submit an expense claim and have it approved and reimbursed.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "exp-receipt-ocr",
+   "area": "expenses",
+   "name": "Photograph a receipt and have amount, date and supplier filled in.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "exp-mileage",
+   "area": "expenses",
+   "name": "Log business mileage and have it paid at the tax-free rate.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "exp-policy",
+   "area": "expenses",
+   "name": "Check an expense against a spending policy before it is approved.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "exp-reimburse-in-pay",
+   "area": "expenses",
+   "name": "Reimburse approved expenses through the payslip.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "exp-team-approval",
+   "area": "expenses",
+   "name": "Approve the expense claims of your team in one list.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "exp-assets",
+   "area": "expenses",
+   "name": "Keep track of laptops, phones and other equipment issued to employees.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "exp-lease-car",
+   "area": "expenses",
+   "name": "Record a lease car and calculate the taxable addition for private use.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "exp-fixed-allowances",
+   "area": "expenses",
+   "name": "Pay fixed allowances such as a home working or travel allowance.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "exp-card-feed",
+   "area": "expenses",
+   "name": "Import company card transactions as expenses.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-gross-to-net",
+   "area": "payroll",
+   "name": "Calculate net pay from gross with Dutch wage tax and social insurance.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-run",
+   "area": "payroll",
+   "name": "Run payroll for a period and produce a payslip for every employee.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-run-approval",
+   "area": "payroll",
+   "name": "Have a payroll run checked and approved before it is paid.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-run-check",
+   "area": "payroll",
+   "name": "Get a pre-run check that flags missing or odd data before payroll is final.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-payslip-view",
+   "area": "payroll",
+   "name": "Let an employee view and download their payslips.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-payslip-pdf",
+   "area": "payroll",
+   "name": "Produce a payslip as a PDF.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-annual-statement",
+   "area": "payroll",
+   "name": "Produce the annual statement of earnings for each employee.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-holiday-allowance",
+   "area": "payroll",
+   "name": "Reserve and pay holiday allowance and a thirteenth month.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-proforma",
+   "area": "payroll",
+   "name": "Simulate a payslip for a proposed salary without saving anything.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-retro",
+   "area": "payroll",
+   "name": "Correct an earlier period retroactively and pay the difference.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-mutation-report",
+   "area": "payroll",
+   "name": "See what changed between two payroll runs per employee.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "pay-reproduce",
+   "area": "payroll",
+   "name": "Recompute a sealed payslip from its stored inputs to prove it is unchanged.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "pay-cao-components",
+   "area": "payroll",
+   "name": "Pay allowances, shift premiums and other components a collective agreement prescribes.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-30-percent",
+   "area": "payroll",
+   "name": "Apply the 30 percent ruling for expat employees.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-dga",
+   "area": "payroll",
+   "name": "Run payroll for a director-major shareholder with the customary wage rule.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-garnishment",
+   "area": "payroll",
+   "name": "Process a wage garnishment respecting the protected income limit.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-loans",
+   "area": "payroll",
+   "name": "Deduct an employee loan or advance from pay in instalments.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-sepa",
+   "area": "payroll",
+   "name": "Pay net salaries through a SEPA payment batch.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-gl-journal",
+   "area": "payroll",
+   "name": "Book the payroll journal into the general ledger.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-cost-allocation",
+   "area": "payroll",
+   "name": "Allocate wage costs to cost centres or projects.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "pay-year-transition",
+   "area": "payroll",
+   "name": "Move to a new tax year with the new tables without reconfiguring.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "pay-flow",
+   "area": "payroll",
+   "name": "Run the payroll cycle as a visible flow of calculate, approve, post and pay steps.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "pay-multi-jurisdiction",
+   "area": "payroll",
+   "name": "Run payroll under another country's rules through a jurisdiction pack.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "pay-outsourced",
+   "area": "payroll",
+   "name": "Hand payroll processing to the vendor's own payroll service.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "fil-wage-tax-return",
+   "area": "filings",
+   "name": "Prepare the monthly wage tax return for the tax authority.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "fil-digipoort",
+   "area": "filings",
+   "name": "Submit the wage tax return to the tax authority through Digipoort.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "fil-correction",
+   "area": "filings",
+   "name": "File a correction for an earlier wage tax return.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "fil-pension",
+   "area": "filings",
+   "name": "Deliver pension data to the pension fund in the UPA format.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "fil-abp",
+   "area": "filings",
+   "name": "Connect to ABP for public sector pension administration.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "fil-wkr",
+   "area": "filings",
+   "name": "Track the work-related costs scheme free allowance and what is left of it.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "fil-wnt",
+   "area": "filings",
+   "name": "Produce the executive pay disclosure under the WNT for public bodies.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "fil-ib47",
+   "area": "filings",
+   "name": "Report payments to third parties who are not employees.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "fil-cbs",
+   "area": "filings",
+   "name": "Deliver the wage statistics that CBS asks employers for.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "fil-premium-differentiation",
+   "area": "filings",
+   "name": "Apply the lower unemployment premium for permanent contracts and the higher one for flex.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "fil-employer-statement",
+   "area": "filings",
+   "name": "Produce an employer statement for an employee's mortgage or rental application.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tal-review-cycle",
+   "area": "talent",
+   "name": "Run a review cycle of planning, progress and appraisal conversations.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tal-review-forms",
+   "area": "talent",
+   "name": "Fill in an appraisal form with ratings and comments, signed off by both sides.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tal-360",
+   "area": "talent",
+   "name": "Collect 360 degree feedback from colleagues.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tal-goals",
+   "area": "talent",
+   "name": "Set goals and key results and track progress on them.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tal-comp-cycle",
+   "area": "talent",
+   "name": "Run a compensation review cycle with budgets and proposed raises.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tal-comp-effectuate",
+   "area": "talent",
+   "name": "Have approved raises take effect on the salary on their date.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "tal-competences",
+   "area": "talent",
+   "name": "Record each employee's certificates and competences with expiry dates.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tal-bhv",
+   "area": "talent",
+   "name": "Keep track of emergency response and first aid certifications and coverage.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tal-training",
+   "area": "talent",
+   "name": "Plan training and register who attended.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tal-skills-matrix",
+   "area": "talent",
+   "name": "See a skills matrix of the team.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tal-career-paths",
+   "area": "talent",
+   "name": "Show career paths and succession for key positions.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tal-surveys",
+   "area": "talent",
+   "name": "Run an employee engagement survey.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "tal-recognition",
+   "area": "talent",
+   "name": "Let colleagues give each other recognition.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ess-portal",
+   "area": "self-service",
+   "name": "Give every employee a personal HR page with their own hours, leave, pay and reviews.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ess-edit-details",
+   "area": "self-service",
+   "name": "Let an employee update their own address or bank account, with approval where needed.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ess-manager-team",
+   "area": "self-service",
+   "name": "Let a manager see and act on only their own team.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ess-personal-dashboard",
+   "area": "self-service",
+   "name": "Show each person a dashboard of what needs their attention.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "ess-mobile",
+   "area": "self-service",
+   "name": "Use HR self-service from a mobile app.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ess-notifications",
+   "area": "self-service",
+   "name": "Get notified when something you submitted is approved or rejected.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ess-hr-inbox",
+   "area": "self-service",
+   "name": "Send a question to HR and track it as a request.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ess-digid-irma",
+   "area": "self-service",
+   "name": "Let employees and applicants sign in with DigiD or IRMA.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "ess-external-portal",
+   "area": "self-service",
+   "name": "Offer an external portal for applicants or former employees.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "ess-announcements",
+   "area": "self-service",
+   "name": "Publish announcements and policies for all employees.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "ess-dga-customary-wage",
+   "area": "self-service",
+   "name": "Let a director-major shareholder check their own customary wage status.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "rep-dashboard",
+   "area": "reporting",
+   "name": "See headcount, absence and hours on an HR dashboard.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "rep-headcount-turnover",
+   "area": "reporting",
+   "name": "See headcount, inflow and outflow over time.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "rep-wage-costs",
+   "area": "reporting",
+   "name": "See total wage costs per period and department.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "rep-report-builder",
+   "area": "reporting",
+   "name": "Build your own report and export it.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "rep-standard-reports",
+   "area": "reporting",
+   "name": "Pick from ready-made HR reports.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "rep-export",
+   "area": "reporting",
+   "name": "Export any list to a spreadsheet.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "rep-obligations",
+   "area": "reporting",
+   "name": "See upcoming statutory obligations and deadlines in one place.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "rep-billable-ratio",
+   "area": "reporting",
+   "name": "See the billable share of hours per person or team.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "rep-benchmark",
+   "area": "reporting",
+   "name": "Compare your HR figures with a sector benchmark.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "rep-ai-assistant",
+   "area": "reporting",
+   "name": "Ask questions about your HR data in plain language.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "cmp-rule-engine",
+   "area": "compliance",
+   "name": "Check your HR records against labour law and payroll rules and see the violations.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "cmp-coverage",
+   "area": "compliance",
+   "name": "See what share of the machine-checkable rules the system actually enforces.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "cmp-dsr-export",
+   "area": "compliance",
+   "name": "Export everything held about an employee for a data subject access request.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "cmp-dsr-erase",
+   "area": "compliance",
+   "name": "Erase an employee's data on request while keeping what the law requires you to keep.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "cmp-dsr-rectify",
+   "area": "compliance",
+   "name": "Correct an employee's data on request and record that you did.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "cmp-retention",
+   "area": "compliance",
+   "name": "Delete personnel data automatically when its retention period ends.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "cmp-audit-trail",
+   "area": "compliance",
+   "name": "See who viewed or changed an employee's data and when.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "cmp-roles",
+   "area": "compliance",
+   "name": "Give HR, payroll, managers and employees different permissions.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "cmp-field-rbac",
+   "area": "compliance",
+   "name": "Hide sensitive fields such as salary or BSN from roles that do not need them.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "cmp-works-council",
+   "area": "compliance",
+   "name": "Record works council consent for changes that need it.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "cmp-whistleblowing",
+   "area": "compliance",
+   "name": "Offer a confidential channel to report wrongdoing.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "cmp-encryption",
+   "area": "compliance",
+   "name": "Keep personnel data encrypted at rest.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "cmp-self-hosting",
+   "area": "compliance",
+   "name": "Run the HR system on your own servers or a Dutch cloud.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "plt-multi-administration",
+   "area": "platform",
+   "name": "Run several legal entities or payroll administrations side by side and switch between them.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "plt-single-person-modes",
+   "area": "platform",
+   "name": "Run the app for a sole trader or single director without the full HR structure.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "plt-public-api",
+   "area": "platform",
+   "name": "Read and write HR data through a documented public API.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "plt-accounting-link",
+   "area": "platform",
+   "name": "Connect to accounting software so payroll and expenses post themselves.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "plt-integration-accounts",
+   "area": "platform",
+   "name": "Configure connections to outside systems such as a pension fund or health service.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "plt-workflows",
+   "area": "platform",
+   "name": "Automate HR processes with configurable workflows and approvals.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "plt-configurable-notifications",
+   "area": "platform",
+   "name": "Choose per workflow step whether a notification is sent.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "plt-template-store",
+   "area": "platform",
+   "name": "Install ready-made HR configurations others have published, such as a leave policy.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "plt-setup-wizard",
+   "area": "platform",
+   "name": "Set the app up through a guided first-run wizard.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "plt-multilingual",
+   "area": "platform",
+   "name": "Use the app in Dutch and English.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "plt-mcp",
+   "area": "platform",
+   "name": "Let an AI tool work with HR data through MCP.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "plt-demo-data",
+   "area": "platform",
+   "name": "Load sample data to try the app.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "plt-hours-leaf",
+   "area": "platform",
+   "name": "Place an hours booking widget inside another app's page.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "plt-agenda-leaf",
+   "area": "platform",
+   "name": "Place a person's agenda widget inside another app's page.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "own"
+  },
+  {
+   "id": "plt-sso",
+   "area": "platform",
+   "name": "Sign in with the organisation's single sign-on.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  },
+  {
+   "id": "plt-marketplace",
+   "area": "platform",
+   "name": "Extend the system with third-party integrations from a marketplace.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {
+    "afas": "not checked: reader pack not yet folded",
+    "visma-raet": "not checked: reader pack not yet folded",
+    "hr2day": "not checked: reader pack not yet folded",
+    "loket": "not checked: reader pack not yet folded",
+    "personio": "not checked: reader pack not yet folded",
+    "orangehrm": "not checked: reader pack not yet folded"
+   },
+   "built": {
+    "state": "none",
+    "note": "not yet read"
+   },
+   "source": "competitor"
+  }
+ ],
+ "pending": []
+}
