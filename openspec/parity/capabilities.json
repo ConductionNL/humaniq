@@ -1874,776 +1874,790 @@
    "id": "tim-log-hours",
    "area": "time",
    "name": "Log the hours you worked on a day.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2387 (AFAS HRM, 2026-03-27): Urenregistratie",
+    "visma-raet": "intelligence-db competitor_features#30021 (Visma Raet, 2026-05-20): Tijdregistratie",
+    "loket": "intelligence-db competitor_features#29540 (Loket.nl, 2026-05-20): Tijdregistratie",
+    "orangehrm": "intelligence-db competitor_features#2473 (OrangeHRM, 2026-03-27): Time and Attendance"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-timesheet.json page MijnUren (route /mijn/uren) includeFields startedAt/endedAt/breakMinutes/description/projectId/billable; lib/Listener/TimeEntryStampListener.php stamps userId/administrationId/costCenter server-side; hours derived from start/end/break by TimeEntryHoursDeriver.php",
+    "reachedOn": "MijnUren /mijn/uren (menu My HR > My hours), self-service create form",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "time-entry-capture",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "tim-log-against-object",
    "area": "time",
    "name": "Book hours against a case, project or other object in another app.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "webpack.config.js:56-58 dedicated 'leaves' entry building humaniq-leaves.js from src/leaves.js (registers both registerHoursLeaf and registerAgendaLeaf); src/integrations/CnHoursWidget.vue filters TimeEntry on domainObjectType/domainObjectRef and offers a booking dialog + timer; consumed at dossiq(procest)/src/manifest.json:1307 CaseDetail integration widget placing the humaniq-hours leaf with domainObjectType 'dossiq:case', with dossiq's own vitest coverage (tests/vitest/hoursLeafManifest.spec.js)",
+    "reachedOn": "CaseDetail page in dossiq; the leaf mechanism is generic to any host app that declares it",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "hours-leaf",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "openspec/changes/hours-leaf-loads-on-a-consuming-page documents this leaf as previously dark on every host page (no leaves webpack entry existed, so OpenRegister's LeafScriptListener silently skipped humaniq). The entry and src/leaves.js now exist and dossiq's CaseDetail already places and tests the leaf, even though that change's own tasks.md is still all unchecked: code and consumer are both confirmed live, the tasks file is just stale."
   },
   {
    "id": "tim-timer",
    "area": "time",
    "name": "Start and stop a timer that turns into a time entry.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "appinfo/routes.php:140-143 timeEntry#estimate/timer/startTimer/stopTimer; lib/Service/RunningTimerService.php enforces one running timer per user; src/integrations/hoursApi.js calls /apps/humaniq/api/time-entries/timer(/start|/stop)",
+    "reachedOn": "CnHoursWidget.vue (the hours leaf) start/stop timer control; confirmed called at /apps/humaniq/api/time-entries/timer/start and /stop in _lane/research/frontend-api-paths.txt",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "time-entry-capture",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "tim-weekly-timesheet",
    "area": "time",
    "name": "Collect a week's or period's hours on a timesheet.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "orangehrm": "intelligence-db competitor_features#2473 (OrangeHRM, 2026-03-27): Time and Attendance (clock in/out, attendance tracking and timesheet management)"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Listener/TimesheetAggregateListener.php builds the Timesheet period aggregate from TimeEntry bookings server-side (hrmq-hours-process-redesign Decision 8); src/manifest.d/hr-timesheet.json TimesheetDetail 'stat' widget sums TimeEntry.hours filtered by timesheetId, Timesheets index page lists period/hours/entryCount/status",
+    "reachedOn": "Timesheets /timesheets and TimesheetDetail /timesheets/:id (menu Time and scheduling)",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "time-entry-capture",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "tim-timesheet-approval",
    "area": "time",
    "name": "Approve a team's timesheets per week.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
-   "hr2day": "unknown",
+   "hr2day": "partial",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "hr2day": "intelligence-db competitor_features#2438 (HR2day, 2026-03-27): Manager Self-Service, managers have their own dashboard for approvals and team overview (not specific to timesheets)"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-timesheet.json:193,201 Timesheet approve/reject requires OCA\\\\Humaniq\\\\Lifecycle\\\\NoSelfApprovalGuard, submit requires TimesheetNotEmptyGuard; both registered in lib/AppInfo/Application.php; src/manifest.d/hr-timesheet.json TeamUrengoedkeuring (managerUserId:@me, defaultFilters status:submitted) and TimesheetApproval pages, TimesheetDetail lifecycleActions submit/approve/reject/reopen",
+    "reachedOn": "TeamUrengoedkeuring /timesheets/team-approval (menu Time and scheduling > Team timesheet approval), approve/reject buttons on TimesheetDetail",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "humaniq-timesheet-approval",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "shillinq's ppl-timesheet-approval row (decided-no there) moves this capability to humaniq per openspec/changes/hours-to-humaniq; humaniq's own implementation is a real working approval path."
   },
   {
    "id": "tim-timesheet-not-empty",
    "area": "time",
    "name": "Stop an empty timesheet being submitted.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-timesheet.json:185 submit requires OCA\\\\Humaniq\\\\Lifecycle\\\\TimesheetNotEmptyGuard; lib/Lifecycle/TimesheetNotEmptyGuard.php; registered in lib/AppInfo/Application.php:152-163",
+    "reachedOn": "TimesheetDetail /timesheets/:id, Submit lifecycle action",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "humaniq-timesheet-approval",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "tim-reopen",
    "area": "time",
    "name": "Reopen an approved timesheet for correction before payroll uses it.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-timesheet.json TimesheetDetail lifecycleActions 'reopen' from approved to draft; lib/Listener/TimesheetProcessStampListener.php:312 'All four process fields cleared (the reopen edge)'; lib/Settings/register.d/hr-timesheet.json carries no requires guard on the approved->draft edge (only submit and approve/reject are guarded)",
+    "reachedOn": "TimesheetDetail /timesheets/:id, Reopen lifecycle action (visible only when status is approved)",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "humaniq-timesheet-approval",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "The reopen transition works and clears the approval stamps, but carries no requires guard at all, unlike submit/approve/reject. That is harmless today because approved hours never flow into payroll yet (see tim-hours-to-payroll), but the row's own 'before payroll uses it' framing has no enforcement if that changes."
   },
   {
    "id": "tim-billable-rates",
    "area": "time",
    "name": "Track time on projects at billable rates.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-timesheet.json TimeEntry properties include projectId and billable (boolean); no 'rate' property anywhere on TimeEntry (grep '\\\"rate\\\"' hr-timesheet.json: no hits); MijnUren /mijn/uren includeFields ends with projectId, billable",
+    "reachedOn": "MijnUren /mijn/uren booking form (project + billable flag only, no rate field)",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "time-billing",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "shillinq's ppl-time row moved here with provider humaniq (openspec/changes/hours-to-humaniq). An entry can be tagged to a project and flagged billable, but no rate lives on TimeEntry itself; EmployeeCostRateService gives an employer cost rate consumed by shillinq (see tim-cost-rate), not a client billing rate on the entry."
   },
   {
    "id": "tim-cost-rate",
    "area": "time",
    "name": "Work out an employee's full hourly cost rate including employer charges.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Service/EmployeeCostRateService.php computes hourlyCost = wageCost + additions (override, or derived from EmploymentContract via ProformaPayslipService); lib/Controller/EmployerCostRateController.php exposes POST /api/employees/cost-rate; shillinq's lib/Service/HrmqCostRateAdapter.php resolves EmployeeCostRateService IN-PROCESS via class_exists (not over HTTP) and is tested in shillinq/tests/Unit/Service/HrmqCostRateAdapterTest.php",
+    "reachedOn": "the HTTP route exists, but the real path is in-process: consumed by shillinq's HrmqCostRateAdapter for cost allocation (ADR-081)",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "employer-hourly-cost-rate",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "tim-estimate-remaining",
    "area": "time",
    "name": "Record an effort estimate on a case or project and see how much is left.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-estimates.json TimeEstimates/TimeEstimateDetail pages over TimeEstimate (domainObjectType/domainObjectRef/role/estimatedHours/enforced); lib/Service/TimeEstimateService.php derives remaining = estimated - booked on read, never stored; appinfo/routes.php:140 timeEntry#estimate GET /api/time-entries/estimate, present in _lane/research/frontend-api-paths.txt as /apps/humaniq/api/time-entries/estimate",
+    "reachedOn": "TimeEstimates /urenschattingen (administrator view); remaining is computed on read wherever a consuming app calls GET /api/time-entries/estimate",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "hours-leaf",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "tim-clock-in",
    "area": "time",
    "name": "Clock in and out to record attendance.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30882 (AFAS HRM, 2026-05-20): Time + attendance (Klokken + roosters + planning)",
+    "visma-raet": "intelligence-db competitor_features#30021 (Visma Raet, 2026-05-20): Tijdregistratie (Klokken via portal, mobiel, biometrisch)",
+    "loket": "intelligence-db competitor_features#29540 (Loket.nl, 2026-05-20): Tijdregistratie (Uren-registratie web/mobiel)",
+    "orangehrm": "intelligence-db competitor_features#2473 (OrangeHRM, 2026-03-27): Time and Attendance (Clock in/out)"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-attendance.json AttendanceRecords /attendance and AttendanceRecordDetail /attendance/:id over AttendanceRecord (clockIn/clockOut/workedHours/status); lifecycleActions sluiten/heropenen (open<->gesloten)",
+    "reachedOn": "AttendanceRecords /attendance (menu), AttendanceRecordDetail",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "time-attendance",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "tim-attendance-overview",
    "area": "time",
    "name": "See who is present, absent or late today.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "orangehrm": "intelligence-db competitor_features#10569 (OrangeHRM, 2026-04-04): Daily attendance summary report and export is an open enhancement-issue (planned, 0 upvotes), evidence the shipped product lacks a daily summary today"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-attendance.json AttendanceRecords index page columns employeeId/date/clockIn/clockOut/workedHours/status, filters status+location; a plain list, no live present/absent/late summary widget",
+    "reachedOn": "AttendanceRecords /attendance (menu Time and scheduling), filter by status",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "time-attendance",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "A user can filter the AttendanceRecord list by status/location to approximate today's picture, but there is no dedicated present/absent/late summary view."
   },
   {
    "id": "tim-overtime",
    "area": "time",
    "name": "Register overtime and have it compensated in time or pay.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF 'overtime|overwerk' lib/ src/ appinfo/: no hits outside archived spec prose",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "time-attendance",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "tim-atw-limits",
    "area": "time",
    "name": "Get warned when logged or rostered hours break Working Hours Act limits.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Standards/Checks/NlAttendanceChecks.php implements nl-atw-dagelijkse-rust/nl-atw-max-werkdag/nl-atw-pauze over AttendanceRecord (logged hours); lib/Standards/Checks/NlRosterChecks.php + lib/Service/RosterCheckService.php check rostered hours. The AttendanceRecord CheckProvider is wired only into the compliance rule engine (occ humaniq:rules:audit / RuleAuditService); no page surfaces an ATW violation for logged hours. The rostered half additionally has a live headerAction 'Working hours check' on RosterDetail (POST /api/roster/check)",
+    "reachedOn": "rostered hours: RosterDetail /rosters/:id headerAction 'Working hours check'; logged/clocked hours: occ humaniq:rules:audit only, no page",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "atw-compliance",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "Rostered-hours warnings are a real button; logged-hours ATW violations are visible only through the occ compliance audit, not on the screens where a user actually logs or clocks hours."
   },
   {
    "id": "tim-hours-to-payroll",
    "area": "time",
    "name": "Have approved hours flow into payroll.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "lib/Service/PayrollRunService.php:23-26 own docblock: employees with no grossMonthlySalary are SKIPPED with a reason because '(the hourly x Timesheet path is a named fast-follow)'; PayrollCalculator/PayrollRunService read EmploymentContract.grossMonthlySalary, never TimeEntry or Timesheet",
+    "reachedOn": "nothing reaches it: approved timesheet hours are not read by any payroll calculation path",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-core-engine",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "tim-hours-to-invoice",
    "area": "time",
    "name": "Hand approved billable hours to invoicing.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Listener/TimesheetApprovalListener.php + lib/Service/TimeEntryEventService.php dispatch the nl.conduction.hrmq.timeentry.approved webhook CloudEvent and (per openspec/specs/humaniq-timesheet-approved-typed-event) a typed TimesheetApprovedEvent carrying the billable flag and cost-allocation references, on the Timesheet submitted->approved edge; grep -rniF 'TimesheetApproved|hrmq.timeentry.approved' across shillinq/lib and shillinq/openspec: no hits, no listener anywhere in the checked-out fleet",
+    "reachedOn": "nothing reaches it: the event dispatches correctly but no sibling app (checked: shillinq) subscribes to it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "time-billing",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "tim-mobile-hours",
    "area": "time",
    "name": "Log hours from a phone.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "humaniq": "no",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2387 (AFAS HRM, 2026-03-27): Urenregistratie via ESS en Pocket app; concurrentie-analyse/hrm/README.md (2026-03-28): Mobile app row, AFAS = Yes",
+    "visma-raet": "concurrentie-analyse/hrm/README.md (2026-03-28): Mobile app row, Youforce = Yes",
+    "hr2day": "concurrentie-analyse/hrm/README.md (2026-03-28): Mobile app row, HR2day = Yes",
+    "loket": "intelligence-db competitor_features#29540 (Loket.nl, 2026-05-20): Tijdregistratie, Uren-registratie web/mobiel",
+    "orangehrm": "concurrentie-analyse/hrm/README.md (2026-03-28): Mobile app row, OrangeHRM = Yes"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "decided-no",
+    "evidence": "openspec/changes/archive/2026-07-12-mijn-hr-self-service/proposal.md: 'No mobile app, no notifications (x-openregister-notifications adoption is deliberately deferred app-wide...)'; no native app or mobile-specific surface anywhere in src/",
+    "reachedOn": "nothing reaches it: MijnUren is a responsive web page, not a mobile app or PWA feature",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "time-entry-capture",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "tim-geofence",
    "area": "time",
    "name": "Only allow clocking in at the work location.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF 'geofenc' lib/ src/ openspec/: no hits; AttendanceRecord carries a 'location' filter/field but nothing enforces or checks it against a work-site boundary",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "time-attendance",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "pln-rosters",
    "area": "planning",
    "name": "Build a roster that assigns people to shifts over a period and publish it.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
    "hr2day": "unknown",
    "loket": "unknown",
-   "personio": "unknown",
-   "orangehrm": "unknown",
+   "personio": "yes",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30882 (AFAS HRM, 2026-05-20): Time + attendance (Klokken + roosters + planning)",
+    "visma-raet": "intelligence-db competitor_features#30020 (Visma Raet, 2026-05-20): Personeelsplanning (Roostering voor zorg en industrie)",
+    "personio": "intelligence-db competitor_features#2490 (Personio, 2026-03-27): Personeelsplanning (Tools voor vereenvoudigde personeelsplanning zonder spreadsheets)",
+    "orangehrm": "intelligence-db competitor_features#2474 (OrangeHRM, 2026-03-27): Roster/Scheduling (Employee shift scheduling and roster management)"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-roster.json RosterDetail carries a real x-openregister-lifecycle (concept<->gepubliceerd via publiceren/intrekken), per its own note 'Unlike PayrollRun, Roster carries a REAL x-openregister-lifecycle'; Rosters /rosters index, RosterAssignments child object-list",
+    "reachedOn": "Rosters /rosters, RosterDetail /rosters/:id (menu Time and scheduling), Publish/Withdraw lifecycle actions",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "rostering",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "pln-shift-templates",
    "area": "planning",
    "name": "Define shift types with start and end times to reuse in rosters.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "orangehrm": "intelligence-db competitor_features#2474 (OrangeHRM, 2026-03-27): Roster/Scheduling covers shift assignment generally; no separate reusable shift-template feature is named"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-roster.json Shifts /shifts and ShiftDetail /shifts/:id over the Shift schema (name/startTime/endTime/breakMinutes/active), reused by RosterAssignment.shiftId",
+    "reachedOn": "Shifts /shifts (menu Time and scheduling)",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "rostering",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "pln-roster-atw-check",
    "area": "planning",
    "name": "Check a roster against the Working Hours Act before publishing it.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-roster.json RosterDetail headerActions 'atw-controle' posts {rosterId:@objectId} to POST /api/roster/check, present in _lane/research/frontend-api-paths.txt; lib/Controller/RosterController.php::authorizeRoster() guards it; lib/Service/RosterCheckService.php runs NlRosterChecks + CompetenceCheckService over RosterAssignments",
+    "reachedOn": "RosterDetail /rosters/:id, 'Working hours check' header button",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "rostering",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "A roster violation does not hard-block publishing (design.md documents this as a non-goal); the check is advisory."
   },
   {
    "id": "pln-competence-check",
    "area": "planning",
    "name": "Only roster someone who holds the required certificate or competence.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "partial",
+   "afas": "partial",
    "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "hr2day": "partial",
+   "loket": "partial",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30875 (AFAS HRM, 2026-05-20): BHV/EHBO certificering, Verplichte certificaten met vervaldatum",
+    "hr2day": "intelligence-db competitor_features#2441 (HR2day, 2026-03-27): Competentiemanagement, Beheer van competenties en vaardigheden per medewerker",
+    "loket": "intelligence-db competitor_features#29548 (Loket.nl, 2026-05-20): BHV/VCA registratie, Certificaten met vervaldatum + alerts"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Service/CompetenceCheckService.php:11 'The roster has to refuse' a shift once a certificate expires; called from lib/Service/RosterCheckService.php:240 as part of the same working-time check act, producing competenceFindings; also called from lib/Service/AvailabilityService.php",
+    "reachedOn": "RosterDetail /rosters/:id 'Working hours check' button surfaces competenceFindings alongside the ATW report; not a hard block on saving a RosterAssignment itself",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "rostering",
+   "featureConfidence": "medium",
+   "source": "own",
+   "note": "Certificate/competence tracking with expiry exists in humaniq and in these competitors; none is confirmed to actually gate a roster assignment, only to track and alert on expiry, so all are rated partial rather than yes."
   },
   {
    "id": "pln-working-patterns",
    "area": "planning",
    "name": "Record each person's working pattern of days and hours.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-working-calendar.json WorkingPatterns /werkpatronen, WorkingPatternDetail; lib/Listener/WorkingPatternOverlapListener.php refuses two overlapping patterns for one employee (OverlappingWorkingPatternException.php); lib/Service/WorkingHoursService.php resolves contracted hours from the pattern in force on a date",
+    "reachedOn": "WorkingPatterns /werkpatronen (menu)",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "working-hours-per-person",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "pln-working-calendar",
    "area": "planning",
    "name": "Keep a working calendar per person that deadlines and plans count against.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "openspec/changes/a-working-calendar-per-person/tasks.md: all tasks checked [x]; lib/Service/WorkingCalendarReader.php reads openregister's national-holiday calendar duck-typed, never owns it (decision D19); lib/Service/WorkingHoursService.php composes WorkingPattern + NonWorkingTime + the calendar into contractedHoursOn(employee,date); src/manifest.d/hr-working-calendar.json NonWorkingTimes /niet-werkdagen page; consumed by lib/Service/AbsenceRateService.php and lib/Controller/AgendaController.php (availability/capacity)",
+    "reachedOn": "WorkingPatterns /werkpatronen and NonWorkingTimes /niet-werkdagen pages; contractedHoursOn() feeds the Dashboard absence-rate metric and the availability/capacity endpoints",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "working-hours-per-person",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "pln-availability",
    "area": "planning",
    "name": "See a person's availability combining roster, leave and calendar.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Controller/AgendaController.php GET /api/availability calls lib/Service/AvailabilityService.php, which composes AgendaComposer + CompetenceCheckService + WorkingHoursService to answer free hours per employee; the route is not present in _lane/research/frontend-api-paths.txt (only /apps/humaniq/api/agenda is), and no consuming app checked out in the workspace calls /api/availability",
+    "reachedOn": "route GET /api/availability exists; nothing in this workspace's frontend or sibling apps reaches it",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "agenda-and-resource-booking",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "AgendaController's own docblock frames availability as 'the one call a consuming app actually makes', but no app in this workspace calls it yet."
   },
   {
    "id": "pln-agenda",
    "area": "planning",
    "name": "See one agenda per person of roster, leave, bookings and appointments.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/integrations/agendaApi.js calls GET /apps/humaniq/api/agenda (present in _lane/research/frontend-api-paths.txt); src/integrations/CnAgendaWidget.vue + registerAgendaLeaf.js form the humaniq-agenda leaf, built into the same humaniq-leaves.js bundle as the confirmed-live hours leaf; lib/Controller/AgendaController.php composes roster, leave, sick leave, interviews, resource bookings and cached external calendar busy time; grep 'humaniq-agenda' across the checked-out workspace: only humaniq's own registration files, no host app places it",
+    "reachedOn": "the leaf mechanism works (proven by the sibling hours leaf, which dossiq does place) but no host in this workspace currently places the humaniq-agenda leaf on a page",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "agenda-and-resource-booking",
+   "featureConfidence": "medium",
    "source": "own"
   },
   {
    "id": "pln-capacity",
    "area": "planning",
    "name": "See forward capacity of a team against planned work.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2389 (AFAS HRM, 2026-03-27): Formatiebeheer, Dashboard voor bezetting, over-/onderbezetting en formatieplanning"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Controller/AgendaController.php GET /api/capacity calls lib/Service/ForwardCapacityService.php (uses AvailabilityService + WorkingHoursService); route not in _lane/research/frontend-api-paths.txt and no consuming app found in the workspace",
+    "reachedOn": "route GET /api/capacity exists; nothing reaches it in this workspace",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "agenda-and-resource-booking",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "pln-resource-booking",
    "area": "planning",
    "name": "Book rooms, vehicles or equipment without double booking.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-agenda.json Resources /resources, ResourceBookings /reserveringen; lib/Service/ResourceBookingService.php + ResourceBookingOverlapListener refuses a booking that would exceed the resource's quantity over an overlapping period, in the WRITE path",
+    "reachedOn": "Resources /resources and Resource bookings /reserveringen (menu)",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "agenda-and-resource-booking",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "pln-calendar-subscriptions",
    "area": "planning",
    "name": "Read busy time from an external calendar feed into availability.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "appinfo/info.xml:112 registers OCA\\\\Humaniq\\\\BackgroundJob\\\\PollCalendarSubscriptionsJob (one of only two registered background jobs); src/manifest.d/hr-agenda.json CalendarSubscriptions /kalenderabonnementen shows lastPolledAt/lastPollStatus; lib/Service/CalendarSubscriptionPoller.php + IcalBusyParser.php read external ICS feeds read-only",
+    "reachedOn": "CalendarSubscriptions /kalenderabonnementen (menu); PollCalendarSubscriptionsJob runs it in the background",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "agenda-and-resource-booking",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "pln-shift-swap",
    "area": "planning",
    "name": "Let employees swap or pick up open shifts.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "decided-no",
+    "evidence": "openspec/specs/rostering/spec.md:31 'a drag-and-drop planbord, shift-swap ... is an explicit non-goal -- a future openconnector integration'",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "rostering",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "pln-leave-in-roster",
    "area": "planning",
    "name": "See approved leave inside the roster so nobody is planned while away.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -niF leave lib/Service/RosterCheckService.php lib/Standards/Checks/NlRosterChecks.php lib/Controller/RosterController.php: no hits; RosterAssignmentProjectionService.php only composes a Shift's start/end times, not leave; RosterAssignments/RosterDetail manifest pages show no leave column",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "rostering",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "The input hint pointed at RosterAssignmentProjectionService, but that class only projects a Shift's start/end times onto an assignment; it has nothing to do with leave."
   },
   {
    "id": "exp-claim",
@@ -4408,250 +4422,245 @@
    "id": "rep-dashboard",
    "area": "reporting",
    "name": "See headcount, absence and hours on an HR dashboard.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
    "loket": "unknown",
-   "personio": "unknown",
-   "orangehrm": "unknown",
+   "personio": "yes",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2383 (AFAS HRM, 2026-03-27): HR Analytics & Dashboards, BI-dashboards voor ziekteverzuim, loonkosten, bezetting",
+    "visma-raet": "intelligence-db competitor_features#2509 (Visma Raet Youforce, 2026-03-27): Rapportages & Analytics",
+    "hr2day": "intelligence-db competitor_features#2434 (HR2day, 2026-03-27): HR Analytics & Dashboards, Realtime dashboards",
+    "personio": "intelligence-db competitor_features#2501 (Personio, 2026-03-27): People Analytics",
+    "orangehrm": "intelligence-db competitor_features#2467 (OrangeHRM, 2026-03-27): Reporting and Analytics"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "openspec/specs/humaniq-dashboard-steering-indicators/spec.md; src/manifest.json 'Dashboard' page carries kpi-absence-rate/kpi-billable-ratio/kpi-payroll-cost tiles plus chart widgets (Billable ratio, Headcount & turnover, Absence rate, Payroll cost per period, Approval lead time) and an Obligations object-table; lib/Controller/AnalyticsController.php + lib/Service/AnalyticsService.php back the endpointSource widgets",
+    "reachedOn": "Dashboard (main landing page)",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "humaniq-dashboard-steering-indicators",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Per the manifest's own note, the two dataSource-bound charts (Billable ratio, Headcount & turnover) are unscoped across administrations and single-series only, a live-defect candidate on a multi-tenant install."
   },
   {
    "id": "rep-headcount-turnover",
    "area": "reporting",
    "name": "See headcount, inflow and outflow over time.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "partial",
+   "afas": "partial",
+   "visma-raet": "yes",
    "hr2day": "unknown",
    "loket": "unknown",
-   "personio": "unknown",
+   "personio": "yes",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2383 (AFAS HRM, 2026-03-27): HR Analytics & Dashboards mentions 'bezetting' (occupancy) generally, not turnover specifically",
+    "visma-raet": "intelligence-db competitor_features#2509 (Visma Raet Youforce, 2026-03-27): Rapportages & Analytics, voorspelling van verzuim en verloop (verloop = turnover)",
+    "personio": "intelligence-db competitor_features#2501 (Personio, 2026-03-27): People Analytics, inzichten in personeelsverloop, behoud en trends"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.json Dashboard 'Headcount & turnover' chart widget binds via dataSource raw-GraphQL: Employee startDate/endDate, interval MONTH, metric COUNT; per its own _note, this dataSource form is UNSCOPED across administrations (the tenant filter token does not apply to raw-GraphQL) and is single-series, not the two-named-series (starters vs leavers) REQ-DSI-003 describes",
+    "reachedOn": "Dashboard, chart widget (main landing page)",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "humaniq-dashboard-steering-indicators",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "Cross-tenant data leakage and a single-series render are documented live defects in the widget's own manifest note, not just a design gap."
   },
   {
    "id": "rep-wage-costs",
    "area": "reporting",
    "name": "See total wage costs per period and department.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
+   "visma-raet": "yes",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2383 (AFAS HRM, 2026-03-27): HR Analytics & Dashboards, BI-dashboards voor ... loonkosten",
+    "visma-raet": "intelligence-db competitor_features#2509 (Visma Raet Youforce, 2026-03-27): Rapportages & Analytics, salariskosten analyse"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Service/AnalyticsService.php:219-242 payrollCostSeries() sums totalGross+totalEmployerCharges per period from finalised PayrollRuns, with a null (never 0) bucket when nothing ran; no department/orgUnit breakdown anywhere in the method (grep 'department|orgUnit' in payrollCostSeries: no hits); rendered as the Dashboard's kpi-payroll-cost tile and a chart widget",
+    "reachedOn": "Dashboard, Payroll cost per period widget (main landing page)",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "humaniq-dashboard-steering-indicators",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Total wage cost per period exists; a per-department breakdown does not."
   },
   {
    "id": "rep-report-builder",
    "area": "reporting",
    "name": "Build your own report and export it.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
-   "visma-raet": "unknown",
+   "visma-raet": "yes",
    "hr2day": "unknown",
    "loket": "unknown",
-   "personio": "unknown",
+   "personio": "yes",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "visma-raet": "intelligence-db competitor_features#30027 (Visma Raet, 2026-05-20): Reporting Beaufort, Klassieke crystal-reports + new BI module",
+    "personio": "intelligence-db competitor_features#2495 (Personio, 2026-03-27): Rapport Builder, Aanpasbare rapporten met sjablonen of eigen configuratie"
    },
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF 'report.builder|custom-report' lib/ src/ openspec/specs openspec/changes: no hits outside archive",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "hr-reporting",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "afas/hr2day/orangehrm's dashboard/analytics rows name dashboards, not a report builder, so per the matrix's own rule (a dashboard row does not support a report-builder row) they are left unknown rather than inferred yes."
   },
   {
    "id": "rep-standard-reports",
    "area": "reporting",
    "name": "Pick from ready-made HR reports.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
-   "personio": "unknown",
+   "personio": "yes",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "personio": "intelligence-db competitor_features#2497 (Personio, 2026-03-27): Vooraf Opgestelde Rapporten, Bibliotheek van kant-en-klare rapporten voor snelle inzichten"
    },
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF 'WorkforceReport|AbsenceReport|PerformanceReport' lib/ src/: no hits outside compiled manifest.json/manifest.effective.json (which contain no such schemas); no 'Reports' page anywhere in src/manifest.d",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "hr-reporting",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "rep-export",
    "area": "reporting",
    "name": "Export any list to a spreadsheet.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
-   "hr2day": "unknown",
+   "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "hr2day": "intelligence-db competitor_features#2443 (HR2day, 2026-03-27): Rapportages & Exports, Uitgebreide rapportages en data-exports voor managementinformatie"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "nextcloud-vue CnIndexPage.vue:1605 showMassExport defaults true (a mass action exporting only the fetched/selected rows as a blob download); its allowExport prop (native full-list CSV/Excel export via OpenRegister's export leaf, honouring the current filters) defaults false and additionally requires the schema flagged exportable:true; grep -rn 'allowExport|exportable' src/manifest.d lib/Settings/register.d src/manifest.json: no hits anywhere in humaniq",
+    "reachedOn": "every index page (indexScaffold template), e.g. Timesheets /timesheets, mass-select rows then Export; the full filtered-list export is never enabled",
+    "owner": "nextcloud-vue"
    },
-   "source": "competitor"
+   "provider": "nextcloud-vue",
+   "providerHow": "read-from-code",
+   "feature": "index-export",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Only the fetched or selected rows can be exported as a blob; humaniq never opts into the library's full filtered-list export (allowExport + schema exportable:true), so 'export any list' is only partly true."
   },
   {
    "id": "rep-obligations",
    "area": "reporting",
    "name": "See upcoming statutory obligations and deadlines in one place.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Service/ObligationsService.php + lib/Controller/AnalyticsController.php::obligations() GET /api/analytics/obligations, present in _lane/research/frontend-api-paths.txt; src/manifest.json Dashboard Obligations object-table widget bound via endpointSource",
+    "reachedOn": "Dashboard, Obligations list widget (main landing page)",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "humaniq-dashboard-steering-indicators",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "Per its own manifest note, per-row click-through to the specific obligation's own detail page is not wired: CnWidgetObjectTable's rowRoute is one static route for the whole table."
   },
   {
    "id": "rep-billable-ratio",
    "area": "reporting",
    "name": "See the billable share of hours per person or team.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.json Dashboard 'Billable ratio' widgets: a kpi-billable-ratio tile via endpointSource (scoped, real) plus a chart widget bound via dataSource raw-GraphQL (billable vs total Timesheet.hours by period); per its own _note this GraphQL form is UNSCOPED across administrations and single-series only; the figure is one fleet/tenant-wide percentage, not broken down per person or team as the row asks",
+    "reachedOn": "Dashboard, Billable ratio widgets (main landing page)",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "humaniq-dashboard-steering-indicators",
+   "featureConfidence": "medium",
+   "source": "own",
+   "note": "Only one aggregate ratio for the whole administration is shown; there is no per-person or per-team breakdown."
   },
   {
    "id": "rep-benchmark",
    "area": "reporting",
    "name": "Compare your HR figures with a sector benchmark.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
-   "visma-raet": "unknown",
+   "visma-raet": "yes",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "visma-raet": "intelligence-db competitor_features#2518 (Visma Raet Youforce, 2026-03-27): HR Benchmark, Vergelijk HR-kengetallen met branchegemiddelden"
    },
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF benchmark lib/ src/ openspec/specs openspec/changes: no hits outside archive",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
-  },
-  {
-   "id": "rep-ai-assistant",
-   "area": "reporting",
-   "name": "Ask questions about your HR data in plain language.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
-   "personio": "unknown",
-   "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
-   "built": {
-    "state": "none",
-    "note": "not yet read"
-   },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "hr-reporting",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -5380,5 +5389,33 @@
    "source": "competitor"
   }
  ],
- "pending": []
+ "pending": [
+  {
+   "id": "rep-ai-assistant",
+   "area": "reporting",
+   "name": "Ask questions about your HR data in plain language.",
+   "humaniq": "unknown",
+   "afas": "unknown",
+   "visma-raet": "unknown",
+   "hr2day": "unknown",
+   "loket": "unknown",
+   "personio": "unknown",
+   "orangehrm": "unknown",
+   "evidence": {},
+   "built": {
+    "state": "built",
+    "evidence": "openspec/specs/humaniq-mcp-surface/spec.md: x-openregister-mcp declares exactly six read-only schemas (Vacancy, OrgUnit, Asset, AssetAssignment, Timesheet, Expense) with search/get verbs only, scope:read, readOnlyHint:true; no chat/assistant UI anywhere in src/ (grep -rniF 'hermiq|ai-assistant|chatbot|assistant' lib/ src/ openspec/specs openspec/changes: no hits outside this MCP spec)",
+    "reachedOn": "no page; only reachable via an external MCP client calling humaniq.{schema}.search/get on the six allowlisted schemas, none of which include Employee, EmploymentContract or Payslip",
+    "owner": "ConductionNL/humaniq",
+    "readingRating": "partial"
+   },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "humaniq-mcp-surface",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "hermiq is never referenced anywhere in humaniq. This is a read-only MCP tool surface for an external agent, not an in-app 'ask a question in plain language' assistant.",
+   "pendingReason": "The only mechanism is the x-openregister-mcp declaration on six schemas; there is no in-product chat surface, only a tool contract for an external MCP-connected agent to call."
+  }
+ ]
 }
