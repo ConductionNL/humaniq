@@ -2704,7 +2704,7 @@
     "state": "built",
     "evidence": "appinfo/routes.php:102 POST /api/expenses/extract-receipt -> ExpenseController::extractReceipt; lib/Service/ReceiptExtractionService.php:100-108 DOCUMENT_APP='filinq', docudeskAvailable() (lines 479-491) calls FleetAppId::isInstalled($appManager,'filinq') then FleetAppId::getService(...,'filinq','Service\\FinancialExtractionService') which tries OCA\\Filinq then OCA\\DocuDesk namespaces; verified against the live filinq checkout: appinfo/info.xml has <id>filinq</id>/<namespace>Filinq</namespace> and lib/Service/FinancialExtractionService.php declares namespace OCA\\Filinq\\Service, matching FleetAppId's first candidate; src/manifest.d/hr-expense.json:197 ExpenseDetail 'Extract receipt data' header action calls the route; also occ humaniq:expense:extract-receipt",
     "reachedOn": "ExpenseDetail /expenses/:id 'Extract receipt data' button",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/filinq"
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
@@ -2924,876 +2924,960 @@
    "id": "pay-gross-to-net",
    "area": "payroll",
    "name": "Calculate net pay from gross with Dutch wage tax and social insurance.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
-   "personio": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
+   "personio": "partial",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2377 (AFAS HRM, 2026-03-27): Salarisverwerking, geintegreerde salarisadministratie met automatische loonverwerking",
+    "visma-raet": "intelligence-db competitor_features#2505 (Visma Raet Youforce, 2026-03-27): HR Core & Salaris, geintegreerde salarisverwerking met actuele wetgeving",
+    "hr2day": "intelligence-db competitor_features#30885 (HR2day, 2026-05-20): NL Payroll engine, native NL payroll met loonheffing + UPA",
+    "loket": "intelligence-db competitor_features#29525 (Loket.nl, 2026-05-20): Salarisverwerking maandelijks, volledige bruto-netto berekening incl. loonheffing, ZVW, WW, WIA, AOW, pensioenpremies",
+    "personio": "intelligence-db competitor_features#2502 (Personio, 2026-03-27): Loonadministratie Integratie, hands off to an external payroll processor rather than computing it itself"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Payroll/PayrollCalculator.php:60-66 is a facade delegating to Dsl/PackInterpreter over lib/Standards/packs/nl-2026.pack.json, a declarative NL gross-to-net chain (loonheffing, ZVW, AOW/WW/WIA, heffingskortingen); openspec/specs/jurisdiction-packs/spec.md says all 9 golden fixtures reproduce digit-for-digit through the pack path; lib/Service/PayrollRunService.php:530-570 calls it per employee per period",
+    "reachedOn": "PayrollRunDetail /payroll-runs/:id and PayslipDetail /payslips/:id (menu Payroll) once a run exists via occ humaniq:payroll:run or the Flow step humaniq.payroll-calculate; also exercised live with nothing saved by ProformaPayslip /proforma (host-app SFC, POST /api/payroll/proforma)",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-core-engine",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "humaniq computes its own NL bruto-netto chain rather than integrating an external processor, closer to loket/afas/hr2day/visma-raet's own-engine shape than personio's integration shape."
   },
   {
    "id": "pay-run",
    "area": "payroll",
    "name": "Run payroll for a period and produce a payslip for every employee.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
-   "personio": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
+   "personio": "partial",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2377 (AFAS HRM, 2026-03-27): Salarisverwerking, geintegreerde salarisadministratie met automatische loonverwerking",
+    "visma-raet": "intelligence-db competitor_features#2505 (Visma Raet Youforce, 2026-03-27): HR Core & Salaris, geintegreerde salarisverwerking",
+    "hr2day": "intelligence-db competitor_features#2432 (HR2day, 2026-03-27): Salarisadministratie, geautomatiseerde loonverwerking, loonaangifte, loonstroken en betalingen in een systeem",
+    "loket": "intelligence-db competitor_features#29525 (Loket.nl, 2026-05-20): Salarisverwerking maandelijks",
+    "personio": "intelligence-db competitor_features#2502 (Personio, 2026-03-27): Loonadministratie Integratie"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-objects.json:1013 PayrollRunDetail headerAction '(Re)calculate' POST /api/payroll/calculate (in the frontend API path list); PayrollRuns index open-form creates the draft; lib/Service/PayrollRunService.php runFor. Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
+    "reachedOn": "PayrollRuns /payroll-runs (menu Payroll) creates a draft; PayrollRunDetail '(Re)calculate' produces the payslips; also occ humaniq:payroll:run and the Flow step humaniq.payroll-calculate",
+    "owner": "ConductionNL/humaniq",
+    "readerRating": "partial",
+    "readerEvidence": "lib/Service/PayrollRunService.php (runFor) creates the draft PayrollRun and Payslip rows; lib/Command/PayrollRunCommand.php runs it from occ; src/manifest.d/hr-objects.json:1750-1761 PayrollRuns index page has a working open-form action 'Create payroll run'; but the '(Re)calculate' headerAction that actually populates the payslips (hr-objects.json:1009-1002, url /api/payroll/calculate) sits on PayrollRunDetail, a detail page with body-slot widgets, so it never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-core-engine",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
   },
   {
    "id": "pay-run-approval",
    "area": "payroll",
    "name": "Have a payroll run checked and approved before it is paid.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Flow/PayrollApproveNode.php implements humaniq.payroll-approve, flipping a draft PayrollRun to approved, registered by lib/Flow/HumaniqFlowNodeListener.php and wired in lib/AppInfo/Application.php:367-370 onto OpenRegister's RegisterFlowNodesEvent; PayrollRun.status is a plain enum with no x-openregister-lifecycle (hr-objects.json:832 note: 'driving lifecycleActions here would invent transition names the backend does not guard'), so there is no direct approve button anywhere on PayrollRunDetail",
+    "reachedOn": "Flows /flows and FlowDetail (menu Flows, generic OpenRegister flow engine) with a flow step 'Approve payroll run' (humaniq.payroll-approve); no direct button on PayrollRunDetail",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-run-as-a-flow",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Approving a run only works if HR builds a flow containing this step first; there is no one-click approve on the run itself."
   },
   {
    "id": "pay-run-check",
    "area": "payroll",
    "name": "Get a pre-run check that flags missing or odd data before payroll is final.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2377 (AFAS HRM, 2026-03-27): Salarisverwerking ... en foutcontrole"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Command/PayrollVerifyCommand.php: 'Run-scoped corpus audit over one period's PayrollRun(s) + their payslips; exits non-zero on any mandatory violation' (appinfo/info.xml commands block); no controller route or manifest page calls this check",
+    "reachedOn": "occ humaniq:payroll:verify only, no page",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-core-engine",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "pay-payslip-view",
    "area": "payroll",
    "name": "Let an employee view and download their payslips.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2386 (AFAS HRM, 2026-03-27): Loonstroken & Jaaropgaven, digitale loonstroken beschikbaar via app en portaal",
+    "visma-raet": "intelligence-db competitor_features#2522 (Visma Raet Youforce, 2026-03-27): Loonstroken & Jaaropgaven, digitale loonstroken en jaaropgaven beschikbaar via app en portaal",
+    "hr2day": "intelligence-db competitor_features#2432 (HR2day, 2026-03-27): Salarisadministratie ... loonstroken ... in een systeem",
+    "loket": "intelligence-db competitor_features#29528 (Loket.nl, 2026-05-20): Werknemer self-service portaal, werknemer kan loonstrook zelf inzien"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-objects.json:1571-1600 MijnLoonstroken @me Payslip index; PayslipDetail hr-objects.json:680-830 with 'Generate PDF' at hr-objects.json:809. Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
+    "reachedOn": "MijnLoonstroken /mijn/loonstroken (menu My HR) to PayslipDetail /payslips/:id, with the Generate PDF button",
+    "owner": "ConductionNL/humaniq",
+    "readerRating": "partial",
+    "readerEvidence": "src/manifest.d/hr-objects.json:1571-1600 MijnLoonstroken is an @me-scoped, read-only Payslip index (filter userId:'@me'), per openspec/specs/mijn-hr-self-service/spec.md:144 REQ-MHS-004; PayslipDetail (hr-objects.json:680-830) shows the full breakdown; the page's own 'Generate PDF' headerAction (hr-objects.json:816) never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "mijn-hr-self-service",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
   },
   {
    "id": "pay-payslip-pdf",
    "area": "payroll",
    "name": "Produce a payslip as a PDF.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "loket": "intelligence-db competitor_features#29527 (Loket.nl, 2026-05-20): Loonstrook generatie, PDF loonstrook + digitaal portaal voor werknemer"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-objects.json:809 PayslipDetail 'Generate PDF' POST /api/documents/generate; lib/Service/HrDocumentService.php renders through filinq resolved by lib/Support/FleetAppId.php. Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
+    "reachedOn": "PayslipDetail /payslips/:id 'Generate PDF'; output under GeneratedDocuments /documents; also occ humaniq:documents:generate --type loonstrook",
+    "owner": "ConductionNL/filinq",
+    "readerRating": "partial",
+    "readerEvidence": "lib/Command/DocumentsGenerateCommand.php --type loonstrook and lib/Service/HrDocumentService.php generate a payslip PDF via filinq's (FleetAppId-resolved docudesk/filinq) template/render engine, per openspec/specs/payslip-pdf-docudesk; PayslipDetail's own 'Generate PDF' headerAction (hr-objects.json:806-820, POST /api/documents/generate) is a detail-page headerAction and never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
    },
-   "source": "competitor"
+   "provider": "docudesk",
+   "providerHow": "read-from-code",
+   "feature": "payslip-pdf-docudesk",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
   },
   {
    "id": "pay-annual-statement",
    "area": "payroll",
    "name": "Produce the annual statement of earnings for each employee.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
+   "visma-raet": "yes",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2386 (AFAS HRM, 2026-03-27): Loonstroken & Jaaropgaven",
+    "visma-raet": "intelligence-db competitor_features#2522 (Visma Raet Youforce, 2026-03-27): Loonstroken & Jaaropgaven",
+    "loket": "intelligence-db competitor_features#29527 (Loket.nl, 2026-05-20): ... digitaal portaal voor werknemer, jaaropgaaf, loonbeslag-brieven"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-documents.json Jaaropgaven /jaaropgaven index + JaaropgaafDetail /jaaropgaven/:id show the aggregated per-employee annual totals; the note says the Jaaropgaaf record 'is a pure data aggregate upserted server-side by HrDocumentService', which is driven from lib/Command/DocumentsGenerateCommand.php --type jaaropgaaf; no page action triggers generation",
+    "reachedOn": "Jaaropgaven /jaaropgaven and JaaropgaafDetail /jaaropgaven/:id (view only, menu Payroll); generation is occ humaniq:documents:generate --type jaaropgaaf only, no page",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payslip-pdf-docudesk",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "The annual statement can be viewed once it exists, but nothing in the UI can produce a new one; that is occ-only."
   },
   {
    "id": "pay-holiday-allowance",
    "area": "payroll",
    "name": "Reserve and pay holiday allowance and a thirteenth month.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
+   "visma-raet": "yes",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30880 (AFAS HRM, 2026-05-20): 13e maand + vakantiegeld, automatische reservering + uitbetaling",
+    "visma-raet": "intelligence-db competitor_features#30010 (Visma Raet, 2026-05-20): Payroll Business, volledige NL salarisrun, jaarwerk, 13e maand, vakantiegeld",
+    "loket": "intelligence-db competitor_features#30895 (Loket.nl, 2026-05-20): Payroll cost posting to bookkeeping ... vakantiegeld reservering"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Standards/packs/nl-2026.pack.json:259-315 computes an 8% vakantiegeldReservering per period as a reserve step ('neither cash to the employee this period nor an employer charge'); lib/Service/PayrollRunService.php:682-683 stores vakantiegeldReserved/vakantiegeldRate on the Payslip; grep -rniF 'dertiende|13e maand|thirteenth month' lib src: no hits, and grep -rniF 'uitbetal|payout' against the pack/PayrollRunService for vakantiegeld: no hits either",
+    "reachedOn": "PayslipDetail /payslips/:id and PayrollRunDetail /payroll-runs/:id show the reserved amount as a field on every payslip; there is no separate payout run and no thirteenth-month component anywhere",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-core-engine",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "Vakantiegeld is reserved and tracked per payslip, but never actually paid out as a lump sum, and there is no thirteenth-month component at all; afas and visma-raet explicitly do both."
   },
   {
    "id": "pay-proforma",
    "area": "payroll",
    "name": "Simulate a payslip for a proposed salary without saving anything.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
-   "visma-raet": "unknown",
+   "visma-raet": "yes",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "visma-raet": "intelligence-db competitor_features#2517 (Visma Raet Youforce, 2026-03-27): Salarissimulator, tool om salarisberekeningen te simuleren voor budgettering"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/views/ProformaPayslip.vue, registered kind:'page' in src/registry.js:117-121 as a host-app SFC ('persist-nothing interactive gross-to-net compute-form'), calling POST /api/payroll/proforma (routes.php:35), which runs the same PayrollCalculator chain and saves nothing per openspec/specs/proforma-payslip",
+    "reachedOn": "ProformaPayslip page (route present in src/manifest.json, menu Payroll)",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "proforma-payslip",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "pay-retro",
    "area": "payroll",
    "name": "Correct an earlier period retroactively and pay the difference.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-objects.json:1042 PayrollRunDetail 'Book retro correction' open-form; src/manifest.d/hr-retro.json:97 PayrollAdjustmentDetail 'Recompute' POST /api/payroll/adjust; lib/Command/PayrollAdjustCommand.php. Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
+    "reachedOn": "PayrollRunDetail 'Book retro correction' and PayrollAdjustmentDetail /payroll-adjustments/:id 'Recompute' (menu Payroll > Retro corrections)",
+    "owner": "ConductionNL/humaniq",
+    "readerRating": "partial",
+    "readerEvidence": "lib/Command/PayrollAdjustCommand.php computes/settles a TWK correction as a delta, never mutating the sealed original; src/manifest.d/hr-retro.json PayrollAdjustmentDetail /payroll-adjustments/:id shows it with a stat KPI (deltaNet); its 'Recompute' headerAction (POST /api/payroll/adjust) and PayrollRunDetail's 'Book retro correction' headerAction (hr-objects.json:1040-1046, open-form) are both detail-page headerActions and never render. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "retro-adjustments",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
   },
   {
    "id": "pay-mutation-report",
    "area": "payroll",
    "name": "See what changed between two payroll runs per employee.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-objects.json:1027 PayrollRunDetail 'Mutation report' POST /api/payroll/mutations, onSuccessRoute PayrollMutationReportDetail (hr-objects.json:1185). Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
+    "reachedOn": "PayrollRunDetail 'Mutation report' to PayrollMutationReportDetail /payroll-mutations/:id (menu Payroll > Mutation reports)",
+    "owner": "ConductionNL/humaniq",
+    "readerRating": "partial",
+    "readerEvidence": "lib/Command/PayrollMutationsCommand.php: 'pure read over persisted payslips; never recomputes'; PayrollRunDetail's 'Mutation report' headerAction (hr-objects.json:1024-1035, POST /api/payroll/mutations, onSuccessRoute PayrollMutationReportDetail) is a detail-page headerAction and never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-mutation-reports",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
   },
   {
    "id": "pay-reproduce",
    "area": "payroll",
    "name": "Recompute a sealed payslip from its stored inputs to prove it is unchanged.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Command/PayrollReproduceCommand.php: 'Recompute a sealed Payslip from its stored engineInputSnapshot ... and compare cents-exact against the archived figures; exits non-zero on any mismatch or missing snapshot' (appinfo/info.xml commands block); grep -rniF 'reproduce' src/manifest.d: no hits, no controller route, no page",
+    "reachedOn": "occ humaniq:payroll:reproduce only, no page anywhere",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "audit-trail-payroll",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "A genuine audit tool for accountants/auditors, CLI-only by design; there is no reason to expect a page for it."
   },
   {
    "id": "pay-cao-components",
    "area": "payroll",
    "name": "Pay allowances, shift premiums and other components a collective agreement prescribes.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "humaniq": "no",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30860 (AFAS HRM, 2026-05-20): CAO-bibliotheek 200+, brede NL CAO-ondersteuning",
+    "visma-raet": "intelligence-db competitor_features#30012 (Visma Raet, 2026-05-20): CAO-bibliotheek 400+, industry leading, alle ambtelijke CAOs",
+    "hr2day": "intelligence-db competitor_features#30887 (HR2day, 2026-05-20): CAO-bibliotheek, grote NL CAOs ondersteund",
+    "loket": "intelligence-db competitor_features#29526 (Loket.nl, 2026-05-20): CAO-bibliotheek 250+, pre-configured CAOs voor alle grote NL branches"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Standards/Checks/NlCaoChecks.php (cao-library) only runs two machine-checkable compliance checks, nl-cao-minimumloon-schaal (salary floor) and nl-cao-verlof-minimum (leave floor); Caos/CaoDetail (hr-cao.json) are read-only reference pages; grep -n -iE 'shift.?premie|toeslag|allowance|premium' lib/Standards/packs/nl-2026.pack.json: no hits, so no step in the actual payroll calculation chain applies a CAO-specific shift premium or allowance",
+    "reachedOn": "Caos /caos and CaoDetail show the CAO's minimum scale and leave figures for reference; the compliance check runs via occ humaniq:rules:audit; nothing in a payroll run actually adds a CAO-prescribed component to a payslip"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "cao-library",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "humaniq's CAO library checks a floor and shows reference data, it does not calculate or pay a CAO's shift premiums or allowances; that is a materially smaller claim than 'CAO-ondersteuning' in these competitor rows, which implies the CAO rules actually run in payroll."
   },
   {
    "id": "pay-30-percent",
    "area": "payroll",
    "name": "Apply the 30 percent ruling for expat employees.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
    "visma-raet": "unknown",
-   "hr2day": "unknown",
+   "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30866 (AFAS HRM, 2026-05-20): 30%-regeling, expat 30%-regeling",
+    "hr2day": "intelligence-db competitor_features#30893 (HR2day, 2026-05-20): 30%-regeling expat, 30%-regeling administratie"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Standards/packs/nl-2026.pack.json:97 the taxable-wage step notes 'the TAXABLE wage after the 30%-ruling exemption. Every step below that used to read @binding.tvl as its tax/premium/vakantiegeld base now reads THIS instead'; PayrollCalculator.php header cites @spec dga-payroll-mode and 30-procent-regeling; reached through the same PayrollRun/Payslip path as pay-gross-to-net",
+    "reachedOn": "PayrollRunDetail/PayslipDetail via occ humaniq:payroll:run or the Flow calculate step, and via ProformaPayslip for a live simulation; same reachability as pay-gross-to-net",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-core-engine",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "pay-dga",
    "area": "payroll",
    "name": "Run payroll for a director-major shareholder with the customary wage rule.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30881 (AFAS HRM, 2026-05-20): DGA-administratie, gebruikelijk-loon DGA + holdingstructuur"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Standards/packs/nl-2026.pack.json:468 'A DGA is not verzekeringsplichtig for the werknemersverzekeringen (Wfsv art. 6 lid 1 sub d), so the gate is a declared predicate', with a golden fixture tests/fixtures/payroll-2026/dga-anchor.json; the customary-wage (gebruikelijk loon) norm check runs via NlDgaChecks + RuleEngine and is surfaced live, per src/manifest.json:749-766, as a self-service warning banner bound to GET /apps/humaniq/api/payroll/dga-status (single-person-modes)",
+    "reachedOn": "PayrollRun/Payslip carry the correct DGA insurance treatment automatically (same reachability as pay-gross-to-net); the customary-wage compliance banner is on the DGA self-service page gated by administrationMode:dga_single_person, plus occ humaniq:rules:audit",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "dga-payroll-mode",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "pay-garnishment",
    "area": "payroll",
    "name": "Process a wage garnishment respecting the protected income limit.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30879 (AFAS HRM, 2026-05-20): Loonbeslag automatisering, beslag-berekening + beslagvrije voet",
+    "loket": "intelligence-db competitor_features#29546 (Loket.nl, 2026-05-20): Loonbeslag automatisering, beslag-berekening, beslagvrije voet, deurwaarder-correspondentie"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-loonbeslag.json:160 LoonbeslagDetail 'Verify and activate' plus settle and withdraw against /api/loonbeslag/*; lib/Service/PayrollRunService.php:402,530-570 deducts an active garnishment respecting the protected income limit. Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
+    "reachedOn": "Loonbeslagen /loonbeslagen (menu Payroll > Wage garnishments) register, then LoonbeslagDetail activate, settle, withdraw",
+    "owner": "ConductionNL/humaniq",
+    "readerRating": "partial",
+    "readerEvidence": "lib/Service/PayrollRunService.php:402,530-570 deducts an actief Loonbeslag from net pay after settlement/leave-buy-sell, respecting the beslagvrije voet (loonbeslag design.md D2-D4); src/manifest.d/hr-loonbeslag.json:LoonbeslagDetail's own note: 'Loonbeslag.status carries no x-openregister-lifecycle ... all three transitions are guarded api-call actions against LoonbeslagController instead' (activate/settle/withdraw are all detail-page headerActions). src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row. A garnishment can be registered (index-page open-form action 'Register wage garnishment', hr-loonbeslag.json:206-224, which is NOT a detail-page headerAction and works), but nothing can move it out of draft into actief through the app."
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "loonbeslag",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
   },
   {
    "id": "pay-loans",
    "area": "payroll",
    "name": "Deduct an employee loan or advance from pay in instalments.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "no",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2391 (AFAS HRM, 2026-03-27): Loonbeslagen & Leningen, beheer en verwerking van loonbeslagen en leningen in salarisadministratie"
    },
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF 'loan|voorschot|advance' lib openspec (excluding archive): no hits; Payslip/Loonbeslag schemas carry no loan or advance-instalment field",
+    "reachedOn": "nothing reaches it"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-core-engine",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "pay-sepa",
    "area": "payroll",
    "name": "Pay net salaries through a SEPA payment batch.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Service/PayrollNetPayService.php hands off each payable PayrollRun's payslips as a draft SEPA PaymentRun into shillinq's own PaymentRun register (isInstalled('shillinq') duck-type probe, SHILLINQ_APP_ID/SHILLINQ_REGISTER constants), idempotent by runNumber; lib/Flow/PayrollNetPayNode.php exposes the same as flow step humaniq.payroll-netpay; src/manifest.d/hr-paybatch.json PayrollPaymentBatchDetail note: 'a PayrollPaymentBatch is humaniq's log of ONE net-pay handoff attempt ... never the payment batch itself ... Copy says klaargezet in shillinq, NEVER betaald: created != paid, money only moves after shillinq's controller approves and exports'",
+    "reachedOn": "occ humaniq:netpay:run or the Flow step humaniq.payroll-netpay create the draft handoff (this page declares no headerActions/lifecycleActions, so there is no dead-button issue here, it is occ/flow-driven by design); PaymentBatches /payment-batches and PayrollPaymentBatchDetail show the attempt read-only",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-sepa-netpay-shillinq",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "humaniq computes and hands off the payment lines; the actual SEPA export and payment execution is shillinq's PaymentRun lifecycle, not humaniq's. This is a different, real path from shillinq's own matrix row ppl-payroll, whose PayrollService/berekenLoonStrook is separate, unreached code with no caller."
   },
   {
    "id": "pay-gl-journal",
    "area": "payroll",
    "name": "Book the payroll journal into the general ledger.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30897 (AFAS HRM, 2026-05-20): Payroll cost posting to bookkeeping, AFAS Profit single-system: salariskosten direct in grootboek",
+    "loket": "intelligence-db competitor_features#30895 (Loket.nl, 2026-05-20): Payroll cost posting to bookkeeping, Loket posts salariskosten + sociale lasten + vakantiegeld reservering to NL bookkeeping packages"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Command/GlPostRunCommand.php + a PayrollGLPostService post each approved PayrollRun as a balanced loonjournaalpost into shillinq's JournalEntry register via PayrollChartOfAccountsMapping (duck-typed no-op when shillinq is absent); lib/Flow/PayrollGlPostNode.php exposes the same as flow step humaniq.payroll-glpost; src/manifest.d/hr-glpost.json PayrollGLPostDetail note: 'a PayrollGLPost is humaniq's log of ONE handoff attempt into shillinq's JournalEntry register, never the journal itself'",
+    "reachedOn": "occ humaniq:glpost:run or the Flow step humaniq.payroll-glpost (this page declares no headerActions/lifecycleActions, occ/flow-driven by design); PayrollGLPosts /gl-posts and PayrollGLPostDetail show the attempt read-only",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-glpost-shillinq",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "humaniq computes the balanced journal entry, but the actual ledger it posts into is shillinq's JournalEntry register; shillinq's own matrix row ppl-payroll-journal describes a SEPARATE, unreached journal builder inside shillinq itself (bouwLoonjournaalpost, no caller), which this handoff bypasses entirely."
   },
   {
    "id": "pay-cost-allocation",
    "area": "payroll",
    "name": "Allocate wage costs to cost centres or projects.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF 'costcent|cost.centre|projectid' lib/Settings/register.d/hr-objects.json and grep -rniF 'kostenplaats|cost.?cent' lib openspec src/manifest.d (excluding archive): no hits anywhere; PayrollRun/Payslip carry no cost-centre or project field",
+    "reachedOn": "nothing reaches it"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-core-engine",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "pay-year-transition",
    "area": "payroll",
    "name": "Move to a new tax year with the new tables without reconfiguring.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Payroll/PackRepository.php:86-104 resolves a pack purely by (jurisdiction, year-of(period)), so a new tax year is data-only in design; but lib/Command/PayrollYearTransitionCommand.php per appinfo/info.xml is only an 'Annual tax-year roll preflight: asserts the new nl-YYYY.json table exists ... Changes no engine state'; lib/Standards/packs/ ships exactly one file, nl-2026.pack.json",
+    "reachedOn": "occ humaniq:payroll:year-transition only, and it is read-only (a preflight check, not an actual roll); no 2027 (or later) pack exists yet, so payroll cannot literally run for a new year until someone ships one",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-core-engine",
+   "featureConfidence": "medium",
+   "source": "own",
+   "note": "The architecture genuinely makes a year transition config-only, which is the real claim behind this row, but it has only been proven for one year, and nothing automates authoring the next year's pack."
   },
   {
    "id": "pay-flow",
    "area": "payroll",
    "name": "Run the payroll cycle as a visible flow of calculate, approve, post and pay steps.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "yes",
+   "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30867 (AFAS HRM, 2026-05-20): Workflow management, configureerbare workflows zonder code (a general no-code workflow builder, not a dedicated payroll-cycle visualisation)"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Flow/HumaniqFlowNodeListener.php registers 4 payroll nodes (PayrollCalculateNode humaniq.payroll-calculate, PayrollApproveNode humaniq.payroll-approve, PayrollGlPostNode humaniq.payroll-glpost, PayrollNetPayNode humaniq.payroll-netpay) onto OpenRegister's RegisterFlowNodesEvent, wired in lib/AppInfo/Application.php:367-370 (class_exists-guarded); each node is a thin adapter over the real domain service (PayrollRunService/PayrollGLPostService/PayrollNetPayService) per lib/Flow/PayrollFlowNodeBase.php; the Flows/FlowDetail page types exist in src/manifest.json:797,807 with menu label 'Flows' at line 837-839",
+    "reachedOn": "Flows /flows and FlowDetail (menu Flows), a user can drag the four payroll steps onto a canvas and chain calculate -> approve -> post -> pay; the canvas/list are OpenRegister's shared flow engine, the four steps are humaniq's own contribution",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-run-as-a-flow",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "The flow engine itself belongs to OpenRegister, but the four payroll steps are real, humaniq-specific adapters over the same services occ uses, so building a flow genuinely orchestrates the payroll cycle end to end."
   },
   {
    "id": "pay-multi-jurisdiction",
    "area": "payroll",
    "name": "Run payroll under another country's rules through a jurisdiction pack.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "partial",
+   "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2393 (AFAS HRM, 2026-03-27): Internationaal HR, overzicht over meerdere landen via een portaal met koppeling aan lokale payroll (a multi-country overview linked to local payroll, not one engine running foreign rules itself)"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "building",
+    "evidence": "lib/Payroll/PackRepository.php/PackValidator.php/Dsl/* implement a genuine closed step-DSL a jurisdiction pack declares itself in (ADR-101, openspec/specs/jurisdiction-packs); routes.php:52 exposes an admin-only POST /api/payroll/packs upload endpoint with no CRUD; grep 'payroll/packs' _lane/research/frontend-api-paths.txt: no hits, so no page calls it; lib/Standards/packs/ only ships nl-2026.pack.json, no second jurisdiction",
+    "reachedOn": "nothing reaches the upload endpoint (no frontend caller); only the NL pack is bundled, so no other country's payroll can actually be run today even though the interpreter is jurisdiction-agnostic",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-core-engine",
+   "featureConfidence": "medium",
+   "source": "own",
+   "note": "The pack architecture is real and would let a second country onboard as data, but nobody has shipped a second pack and there is no page to upload one."
   },
   {
    "id": "pay-outsourced",
    "area": "payroll",
    "name": "Hand payroll processing to the vendor's own payroll service.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
-   "visma-raet": "unknown",
+   "visma-raet": "yes",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "visma-raet": "intelligence-db competitor_features#2514 (Visma Raet Youforce, 2026-03-27): Uitbesteding Salarisadministratie, optie om salarisadministratie volledig uit te besteden aan Visma Raet"
    },
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF 'youforce|uitbesteed|outsourc' lib openspec README.md (excluding archive): no hits; humaniq's own README describes it as the payroll engine itself, not a hand-off to a bureau",
+    "reachedOn": "nothing reaches it"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "payroll-core-engine",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "humaniq is built to be the alternative to outsourcing, not a broker for it; this is a deliberate scope choice, not a gap in the areas it does cover."
   },
   {
    "id": "fil-wage-tax-return",
    "area": "filings",
    "name": "Prepare the monthly wage tax return for the tax authority.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30861 (AFAS HRM, 2026-05-20): UPA Loonaangifte, Belastingdienst UPA + correctieberichten",
+    "visma-raet": "intelligence-db competitor_features#30013 (Visma Raet, 2026-05-20): UPA Loonaangifte, Belastingdienst UPA aanlevering met correcties",
+    "hr2day": "intelligence-db competitor_features#30886 (HR2day, 2026-05-20): UPA Loonaangifte, UPA aanlevering Belastingdienst",
+    "loket": "intelligence-db competitor_features#29524 (Loket.nl, 2026-05-20): Loonaangifte UPA, volledige Belastingdienst UPA loonaangifte met automatische indiening en correctieberichten"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "LoonaangifteFiling x-openregister-lifecycle concept, klaargezet, bevestigd, verzonden in lib/Settings/register.d/hr-objects.json, driven from LoonaangifteFilingDetail lifecycleActions (src/manifest.d/hr-objects.json:1060-1187); verzenden only stamps a date and submits nothing (see fil-digipoort). Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
+    "reachedOn": "LoonaangifteFilings /filings and LoonaangifteFilingDetail (menu Payroll > Wage tax filings), transition buttons render",
+    "owner": "ConductionNL/humaniq",
+    "readerRating": "partial",
+    "readerEvidence": "lib/Settings/register.d/hr-objects.json LoonaangifteFiling schema declares x-openregister-lifecycle concept->klaargezet->bevestigd->verzonden->(heropenen/corrigeren); src/manifest.d/hr-objects.json:1060-1187 LoonaangifteFilingDetail /filings/:id exposes it via config.lifecycleActions; manifest.effective.json confirms the lifecycleActions block is present but no widgetKey \"lifecycle-actions\" entry exists anywhere in the compiled manifest. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "loonaangifte-filing-lifecycle",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
   },
   {
    "id": "fil-digipoort",
    "area": "filings",
    "name": "Submit the wage tax return to the tax authority through Digipoort.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "humaniq": "no",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30861 (AFAS HRM, 2026-05-20): UPA Loonaangifte, Belastingdienst UPA + correctieberichten (electronic filing to the tax authority in NL is only possible via Digipoort-connected software)",
+    "visma-raet": "intelligence-db competitor_features#30013 (Visma Raet, 2026-05-20): UPA Loonaangifte, Belastingdienst UPA aanlevering met correcties",
+    "hr2day": "intelligence-db competitor_features#30886 (HR2day, 2026-05-20): UPA Loonaangifte, UPA aanlevering Belastingdienst",
+    "loket": "intelligence-db competitor_features#29524 (Loket.nl, 2026-05-20): Loonaangifte UPA, met automatische indiening"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "decided-no",
+    "evidence": "openspec/specs/loonaangifte-filing-lifecycle/spec.md:23 'Digipoort wire transport is explicitly out of scope.'; openspec/changes/archive/2026-07-12-loonaangifte-filing-lifecycle/design.md:15 lists 'Digipoort transport' under Non-Goals and line 93 tracks the decision as an open Spectr insight, not a commitment; grep -rniF digipoort lib src (excluding archive): no hits",
+    "reachedOn": "nothing reaches it; verzenden on LoonaangifteFilingDetail only stamps submittedDate/verzondenDoor, it makes no outbound call"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "loonaangifte-filing-lifecycle",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Explicitly refused on the record for this change, not merely unbuilt."
   },
   {
    "id": "fil-correction",
    "area": "filings",
    "name": "File a correction for an earlier wage tax return.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
+   "humaniq": "no",
+   "afas": "yes",
+   "visma-raet": "yes",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30861 (AFAS HRM, 2026-05-20): UPA Loonaangifte, Belastingdienst UPA + correctieberichten",
+    "visma-raet": "intelligence-db competitor_features#30013 (Visma Raet, 2026-05-20): UPA Loonaangifte met correcties",
+    "loket": "intelligence-db competitor_features#29524 (Loket.nl, 2026-05-20): met automatische indiening en correctieberichten"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "building",
+    "evidence": "lib/Settings/register.d/hr-objects.json LoonaangifteFiling x-openregister-lifecycle 'corrigeren' description: 'A sent filing can be superseded by a correction ... this transition's reset-to-concept semantics are a simplified placeholder: full correctie-berichten (VL/IB-correcties) are a future spec.' Also blocked by the same dead lifecycleActions button as fil-wage-tax-return. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row.",
+    "reachedOn": "nothing reaches a real correction message; the corrigeren transition (even if its button rendered) only resets status to concept, it builds no correctiebericht"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "loonaangifte-filing-lifecycle",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "The schema's own maintainer note calls this a placeholder, not a real correction message; rating no rather than pending because it is a declaration the maintainers themselves say is a stand-in, not a thin-but-real capability."
   },
   {
    "id": "fil-pension",
    "area": "filings",
    "name": "Deliver pension data to the pension fund in the UPA format.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30865 (AFAS HRM, 2026-05-20): Pensioenkoppeling, alle grote NL pensioenfondsen",
+    "visma-raet": "intelligence-db competitor_features#30019 (Visma Raet, 2026-05-20): Pensioen-aanlevering, ABP, PFZW, alle branche-fondsen",
+    "hr2day": "intelligence-db competitor_features#30888 (HR2day, 2026-05-20): Pensioenaanlevering, NL pensioenfondsen",
+    "loket": "intelligence-db competitor_features#29531 (Loket.nl, 2026-05-20): Pensioenkoppeling, direct pensioenfonds aanlevering (PFZW, BpfBOUW, PMT, BPL, ABP)"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "PensionFiling lifecycle controleren, bevestigen, verzenden in lib/Settings/register.d/hr-pension.json, controleren guarded by lib/Lifecycle/PayrollRunApprovedGuard.php (registered lib/AppInfo/Application.php:137); no UPA file is produced. Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
+    "reachedOn": "PensionFilings /pension-filings and PensionFilingDetail (menu Payroll > Pension filings), transition buttons render",
+    "owner": "ConductionNL/humaniq",
+    "readerRating": "partial",
+    "readerEvidence": "lib/Settings/register.d/hr-pension.json PensionFiling x-openregister-lifecycle controleren/bevestigen/verzenden/heropenen, controleren guarded by lib/Lifecycle/PayrollRunApprovedGuard.php (registered lib/AppInfo/Application.php:137-139), which denies the transition unless the referenced PayrollRun is approved/posted/paid; src/manifest.d/hr-pension.json PensionFilingDetail exposes the transitions via config.lifecycleActions, confirmed present in manifest.effective.json with zero matching widgetKey wiring. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "pension-filing-upa-mvp",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
   },
   {
    "id": "fil-abp",
    "area": "filings",
    "name": "Connect to ABP for public sector pension administration.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
-   "visma-raet": "unknown",
+   "visma-raet": "yes",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "visma-raet": "intelligence-db competitor_features#30019 (Visma Raet, 2026-05-20): Pensioen-aanlevering, ABP, PFZW, alle branche-fondsen",
+    "loket": "intelligence-db competitor_features#29531 (Loket.nl, 2026-05-20): Pensioenkoppeling, direct pensioenfonds aanlevering (PFZW, BpfBOUW, PMT, BPL, ABP)"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Standards/Checks/NlAbpChecks.php is a compliance-only check (nl-abp-fund-required) auditing whether an ABP-obligated administratie has its own filing for its own period, via RuleAuditService::buildRelatedContext() cross-object indexes; there is no ABP-specific schema, page, or connector, only the generic PensionFiling.fund field can hold 'ABP' as a value",
+    "reachedOn": "PensionFilings/PensionFilingDetail (generic pension page, fund recorded manually) plus occ humaniq:rules:audit for the compliance check that flags a missing ABP filing; no dedicated ABP connection page",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "abp-aansluiting",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "afas/hr2day only claim 'alle grote NL pensioenfondsen' without naming ABP, so left unknown rather than inferred yes; humaniq has no real ABP connection, only a generic filing record plus an audit check that something exists."
   },
   {
    "id": "fil-wkr",
    "area": "filings",
    "name": "Track the work-related costs scheme free allowance and what is left of it.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30864 (AFAS HRM, 2026-05-20): WKR-administratie, werkkostenregeling + vrije ruimte",
+    "visma-raet": "intelligence-db competitor_features#30023 (Visma Raet, 2026-05-20): Werkkostenregeling, WKR + eindheffing",
+    "hr2day": "intelligence-db competitor_features#30889 (HR2day, 2026-05-20): WKR + vergoedingen, werkkostenregeling",
+    "loket": "intelligence-db competitor_features#29534 (Loket.nl, 2026-05-20): Werkkostenregeling WKR, vrije ruimte berekening, eindheffing, OR-toets"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-objects.json:1554 WkrAssessmentDetail 'Assess' POST /api/payroll/wkr-assess; lib/Command/WkrAssessCommand.php. Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
+    "reachedOn": "WkrAssessments /wkr-assessments and WkrAssessmentDetail 'Assess' (menu Payroll > WKR assessments)",
+    "owner": "ConductionNL/humaniq",
+    "readerRating": "partial",
+    "readerEvidence": "lib/Command/WkrAssessCommand.php computes/persists the per-(administration, year) werkkostenregeling vrije-ruimte assessment; src/manifest.d/hr-objects.json:1374-1477 WkrAssessments/WkrAssessmentDetail show it with headline KPIs (fiscale loonsom, vrije ruimte, used, eindheffing due); the 'Assess' headerAction (hr-objects.json:1553-1567, POST /api/payroll/wkr-assess) is a detail-page headerAction and never renders. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "wkr-administration",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
   },
   {
    "id": "fil-wnt",
    "area": "filings",
    "name": "Produce the executive pay disclosure under the WNT for public bodies.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-wnt.json:63 WntDisclosureDetail lifecycle action publiceren (concept to gepubliceerd); WntDisclosure schema in lib/Settings/register.d/hr-objects.json. Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
+    "reachedOn": "WntDisclosures /wnt-disclosures and WntDisclosureDetail Publish (menu Payroll > WNT disclosures)",
+    "owner": "ConductionNL/humaniq",
+    "readerRating": "partial",
+    "readerEvidence": "lib/Settings/register.d/hr-objects.json WntDisclosure x-openregister-lifecycle 'publiceren' (concept->gepubliceerd, no guard); src/manifest.d/hr-wnt.json WntDisclosureDetail exposes it via config.lifecycleActions, confirmed present with no matching widgetKey wiring in manifest.effective.json. src/registry.js:33-58 documents the actions/lifecycle-actions widgetKey fix (live-verified 2026-07-16), but every detail page still declares the old shape (config.headerActions / config.lifecycleActions) inside a body-slot widgets[] array; manifest.effective.json has zero widgetKey \"actions\" or \"lifecycle-actions\" occurrences against 16 headerActions + 26 lifecycleActions blocks, so CnPageRenderer takes the widgetsBySlot.has('body') branch, never instantiates CnDetailPage, and the button never renders. Fleet-wide, not specific to this row."
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "wnt-disclosure",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "Re-rated by the lead from the reader's partial: the reader held that detail-page action buttons never render, which the code at the locked nextcloud-vue 2.40.0 does not bear out (see built.evidence). Needs a live check."
   },
   {
    "id": "fil-ib47",
    "area": "filings",
    "name": "Report payments to third parties who are not employees.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF 'ib.?47' lib src openspec (excluding archive): no hits anywhere",
+    "reachedOn": "nothing reaches it"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "ib47-reporting",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "fil-cbs",
    "area": "filings",
    "name": "Deliver the wage statistics that CBS asks employers for.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF '\\bcbs\\b' lib src openspec (excluding archive): no hits anywhere",
+    "reachedOn": "nothing reaches it"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "cbs-wage-statistics",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "fil-premium-differentiation",
    "area": "filings",
    "name": "Apply the lower unemployment premium for permanent contracts and the higher one for flex.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF 'premiedifferentiatie|premie.?differentiation|\\bWAB\\b' lib src openspec (excluding archive): no hits; grep -n -iE 'ww.premie|laag.*tarief|hoog.*tarief|permanent|flex|contractType|onbepaalde|bepaalde.*tijd' lib/Standards/packs/nl-2026.pack.json: no hits, so the pack's employer premium steps are not differentiated by contract type at all",
+    "reachedOn": "nothing reaches it"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "wab-premium-differentiation",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "fil-employer-statement",
    "area": "filings",
    "name": "Produce an employer statement for an employee's mortgage or rental application.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Command/DocumentsGenerateCommand.php:59,92 lists 'werkgeversverklaring' as a supported --type, rendered through filinq's (FleetAppId-resolved docudesk/filinq) template engine per lib/Service/HrDocumentService.php; grep -n 'documentType' src/manifest.d/*.json shows page-level generate actions only for loonstrook (Payslip) and arbeidsovereenkomst (EmploymentContract), none for werkgeversverklaring",
+    "reachedOn": "occ humaniq:documents:generate --type werkgeversverklaring only, no page can trigger a new one; once generated it is viewable/downloadable via GeneratedDocuments /documents -> GeneratedDocumentDetail's Files tab",
+    "owner": "ConductionNL/filinq"
    },
-   "source": "competitor"
+   "provider": "docudesk",
+   "providerHow": "read-from-code",
+   "feature": "humaniq-docudesk-documents",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "The rendering itself is filinq's (docudesk's), humaniq only has an occ trigger and a viewer; no page can request one for a specific employee."
   },
   {
    "id": "tal-review-cycle",
