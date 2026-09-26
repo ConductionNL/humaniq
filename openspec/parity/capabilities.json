@@ -1098,7 +1098,7 @@
    "feature": "uitzend-flexpool",
    "featureConfidence": "high",
    "source": "own",
-   "note": "humaniq models the uitzendkracht as the agency's OWN Employee (it serves the uitzendbureau, not a client 'inlener' tracking someone else's flex worker) -- openspec/specs/uitzend-flexpool/spec.md states this design choice explicitly."
+   "note": "humaniq models the uitzendkracht as the agency's OWN Employee (it serves the uitzendbureau, not a client 'inlener' tracking someone else's flex worker), openspec/specs/uitzend-flexpool/spec.md states this design choice explicitly."
   },
   {
    "id": "ppl-bulk-mutations",
@@ -1279,7 +1279,7 @@
    },
    "built": {
     "state": "none",
-    "evidence": "lib/Settings/register.d/hr-ats.json Vacancy description states explicitly: 'no public career page (portaliq per ADR-046)'; openspec/specs/recruiting-vacancies/spec.md:25: 'public career page (portaliq per ADR-046) are explicitly out of scope'; lib/Portal/PortalContributionProvider.php:getAudiences() returns only ['external-employee','client','manager'] -- no 'candidate' audience, and grep -n 'Vacancy|candidate' lib/Portal/PortalContributionProvider.php: no hits, confirming portaliq's contribution today carries no vacancy/candidate surface either",
+    "evidence": "lib/Settings/register.d/hr-ats.json Vacancy description states explicitly: 'no public career page (portaliq per ADR-046)'; openspec/specs/recruiting-vacancies/spec.md:25: 'public career page (portaliq per ADR-046) are explicitly out of scope'; lib/Portal/PortalContributionProvider.php:getAudiences() returns only ['external-employee','client','manager'], no 'candidate' audience, and grep -n 'Vacancy|candidate' lib/Portal/PortalContributionProvider.php: no hits, confirming portaliq's contribution today carries no vacancy/candidate surface either",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -1288,7 +1288,7 @@
    "feature": "recruiting-vacancies",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "This is planned to live in portaliq per ADR-046, but the shipped PortalContributionProvider carries no candidate audience yet -- there is no public page a candidate can reach today."
+   "note": "This is planned to live in portaliq per ADR-046, but the shipped PortalContributionProvider carries no candidate audience yet, there is no public page a candidate can reach today."
   },
   {
    "id": "hir-multiposting",
@@ -1405,7 +1405,7 @@
    },
    "built": {
     "state": "none",
-    "evidence": "lib/Settings/register.d/hr-ats.json Interview schema properties are exactly [applicationId, scheduledStart, scheduledEnd, interviewers, mode, location, status, calendarEventUid] -- no score/rating/feedback field; job-application schema properties are [vacancyId, candidateName, email, phone, cvFile, motivation, status, rejectedDate, talentPoolOptIn, retentionExpiryDate, administrationId, offerLetterFileId, offerSigningRequestId, offerSigningStatus] -- no evaluation field either; grep -nie score,feedback,rating,beoordeling,notities lib/Settings/register.d/hr-ats.json: no hits",
+    "evidence": "lib/Settings/register.d/hr-ats.json Interview schema properties are exactly [applicationId, scheduledStart, scheduledEnd, interviewers, mode, location, status, calendarEventUid], no score/rating/feedback field; job-application schema properties are [vacancyId, candidateName, email, phone, cvFile, motivation, status, rejectedDate, talentPoolOptIn, retentionExpiryDate, administrationId, offerLetterFileId, offerSigningRequestId, offerSigningStatus], no evaluation field either; grep -nie score,feedback,rating,beoordeling,notities lib/Settings/register.d/hr-ats.json: no hits",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -1446,7 +1446,7 @@
    "feature": "offer-esign",
    "featureConfidence": "high",
    "source": "own",
-   "note": "Candidate self-service signing completion, webhook-driven status updates and auto-hire on completion are explicitly out of scope per openspec/specs/offer-esign/spec.md purpose section -- HR still runs OfferSyncSignatureCommand (occ) to poll status."
+   "note": "Candidate self-service signing completion, webhook-driven status updates and auto-hire on completion are explicitly out of scope per openspec/specs/offer-esign/spec.md purpose section, HR still runs OfferSyncSignatureCommand (occ) to poll status."
   },
   {
    "id": "hir-hire-to-employee",
@@ -1470,7 +1470,7 @@
    "built": {
     "state": "built",
     "evidence": "src/manifest.d/hr-ats.json:11 note states plainly: 'aannemen's onboarding hand-off (creating the Employee from this data) is a MANUAL follow-up action in the MVP, no cross-object write hook fires here'; the aannemen lifecycle transition only flips job-application.status, it does not create or populate an Employee record",
-    "reachedOn": "Applications /applications, ApplicationDetail /applications/:id, aannemen lifecycle action -- but HR must then create the Employee by hand on Employees /employees and retype the data",
+    "reachedOn": "Applications /applications, ApplicationDetail /applications/:id, aannemen lifecycle action, but HR must then create the Employee by hand on Employees /employees and retype the data",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -3354,7 +3354,7 @@
    },
    "built": {
     "state": "decided-no",
-    "evidence": "openspec/specs/rostering/spec.md:31 'a drag-and-drop planbord, shift-swap ... is an explicit non-goal -- a future openconnector integration'",
+    "evidence": "openspec/specs/rostering/spec.md:31 'a drag-and-drop planbord, shift-swap ... is an explicit non-goal, a future openconnector integration'",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -4917,7 +4917,7 @@
    },
    "built": {
     "state": "decided-no",
-    "evidence": "grep -rniF 360|feedback lib src: no hits beyond unrelated numeric matches; openspec/changes/archive/2026-07-13-performance-reviews-mvp/design.md:22 -- 'No 360°/peer feedback, no self-assessment entity -- a single review object per employee per cycle', named a Non-Goal alongside OKR/9-box/kalibratie",
+    "evidence": "grep -rniF 360|feedback lib src: no hits beyond unrelated numeric matches; openspec/changes/archive/2026-07-13-performance-reviews-mvp/design.md:22, 'No 360°/peer feedback, no self-assessment entity, a single review object per employee per cycle', named a Non-Goal alongside OKR/9-box/kalibratie",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -6019,8 +6019,8 @@
    },
    "built": {
     "state": "built",
-    "evidence": "appinfo/routes.php:97 POST /api/dsr/rectify -> AvgDsrController::rectify(); lib/Controller/AvgDsrController.php:206-232 requires a non-empty `changes` array (validateRectifyInput) before calling AvgDsrService::rectifySubjectObject(); src/manifest.d/hr-dsr.json:93-106 headerAction dsr-rectify only sends {employeeId, dsrRequestId}, never `changes` -- the manifest v2 api-call action type has no free-text field-map prompt (design note at hr-dsr.json:41 names this a known fast-follow); lib/Command/AvgDsrRectifyCommand.php:76,102-107 shows the occ path DOES supply --changes and works",
-    "reachedOn": "DsrRequestDetail /dsr-requests/:id, 'Rectify' header button -- clicking it always 400s because it never supplies the required changes payload; the same operation works via occ humaniq:avg:rectify --changes <json>",
+    "evidence": "appinfo/routes.php:97 POST /api/dsr/rectify -> AvgDsrController::rectify(); lib/Controller/AvgDsrController.php:206-232 requires a non-empty `changes` array (validateRectifyInput) before calling AvgDsrService::rectifySubjectObject(); src/manifest.d/hr-dsr.json:93-106 headerAction dsr-rectify only sends {employeeId, dsrRequestId}, never `changes`, the manifest v2 api-call action type has no free-text field-map prompt (design note at hr-dsr.json:41 names this a known fast-follow); lib/Command/AvgDsrRectifyCommand.php:76,102-107 shows the occ path DOES supply --changes and works",
+    "reachedOn": "DsrRequestDetail /dsr-requests/:id, 'Rectify' header button, clicking it always 400s because it never supplies the required changes payload; the same operation works via occ humaniq:avg:rectify --changes <json>",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6051,7 +6051,7 @@
    },
    "built": {
     "state": "building",
-    "evidence": "lib/Service/PayrollRetentionGuardService.php places an OpenRegister legal hold to PREVENT premature erasure of a retention-locked payroll object; its docblock states 'A hold, once placed, is never auto-released here -- releasing it is a deliberate HR/finance action once the retention window has genuinely lapsed'; appinfo/info.xml:104,112 registers only LeaveAccrualJob and PollCalendarSubscriptionsJob as BackgroundJobs, no retention-expiry deletion job exists",
+    "evidence": "lib/Service/PayrollRetentionGuardService.php places an OpenRegister legal hold to PREVENT premature erasure of a retention-locked payroll object; its docblock states 'A hold, once placed, is never auto-released here, releasing it is a deliberate HR/finance action once the retention window has genuinely lapsed'; appinfo/info.xml:104,112 registers only LeaveAccrualJob and PollCalendarSubscriptionsJob as BackgroundJobs, no retention-expiry deletion job exists",
     "reachedOn": "nothing automatically deletes data on retention expiry; NlDossierRetentionChecks (nl-bewaartermijn-verstreken) only flags the moment via occ humaniq:rules:audit, it does not act on it",
     "owner": "ConductionNL/humaniq"
    },
@@ -6241,7 +6241,7 @@
    "built": {
     "state": "none",
     "evidence": "grep -rniF encrypt lib/: no hits anywhere in humaniq's own code. Whether personnel data is encrypted at rest depends entirely on the underlying Nextcloud instance/database/disk configuration, which is outside this app's code and outside the sibling apps this pack is scoped to read",
-    "reachedOn": "n/a -- a platform/infrastructure concern, not app code",
+    "reachedOn": "n/a, a platform/infrastructure concern, not app code",
     "owner": "nextcloud/server"
    },
    "provider": "nextcloud",
@@ -6272,7 +6272,7 @@
    "built": {
     "state": "built",
     "evidence": "appinfo/info.xml:68-69 declares <php min-version=\"8.3\"/> and <nextcloud min-version=\"32\" max-version=\"34\"/>; humaniq is a Nextcloud app by construction, deployed on a self-managed or self-hosted Nextcloud instance, never a SaaS product of its own",
-    "reachedOn": "n/a -- inherent to being a Nextcloud app, not a page or route",
+    "reachedOn": "n/a, inherent to being a Nextcloud app, not a page or route",
     "owner": "nextcloud/server"
    },
    "provider": "nextcloud",
@@ -6395,8 +6395,8 @@
    },
    "built": {
     "state": "built",
-    "evidence": "lib/Flow/PayrollGlPostNode.php:43 posts an approved payroll run's journal to shillinq, duck-typed ('skipped-no-shillinq' outcome when absent); lib/Flow/PayrollNetPayNode.php does the same for SEPA net-pay; lib/Command/GlPostRunCommand.php and lib/Command/NetPayRunCommand.php are the occ entry points; no route for glpost/netpay exists in appinfo/routes.php and no headerAction exists in src/manifest.d/hr-paybatch.json -- reachable only via occ or via the Loonrun Flow (lib/Settings/register.d/hr-objects.json:193), which arrives DISABLED by default",
-    "reachedOn": "occ humaniq:glpost:run / occ humaniq:netpay:run, or the Loonrun flow's glpost/netpay nodes once an admin deliberately enables the flow in OpenRegister -- no humaniq page button",
+    "evidence": "lib/Flow/PayrollGlPostNode.php:43 posts an approved payroll run's journal to shillinq, duck-typed ('skipped-no-shillinq' outcome when absent); lib/Flow/PayrollNetPayNode.php does the same for SEPA net-pay; lib/Command/GlPostRunCommand.php and lib/Command/NetPayRunCommand.php are the occ entry points; no route for glpost/netpay exists in appinfo/routes.php and no headerAction exists in src/manifest.d/hr-paybatch.json, reachable only via occ or via the Loonrun Flow (lib/Settings/register.d/hr-objects.json:193), which arrives DISABLED by default",
+    "reachedOn": "occ humaniq:glpost:run / occ humaniq:netpay:run, or the Loonrun flow's glpost/netpay nodes once an admin deliberately enables the flow in OpenRegister, no humaniq page button",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6426,7 +6426,7 @@
    },
    "built": {
     "state": "built",
-    "evidence": "lib/Settings/register.d/hr-integrations.json:10 IntegrationAccount description: 'deliberately NOT an authorization mechanism ... The actual access grant lives entirely in OpenRegister's own RBAC configuration ... outside this schema and outside any humaniq file'; field grantedSchemas (line 23) 'does NOT grant or enforce access -- it is purely a record of intent'; src/manifest.d/hr-integrations.json:8-9 index page IntegrationAccounts /configuratie/integraties",
+    "evidence": "lib/Settings/register.d/hr-integrations.json:10 IntegrationAccount description: 'deliberately NOT an authorization mechanism ... The actual access grant lives entirely in OpenRegister's own RBAC configuration ... outside this schema and outside any humaniq file'; field grantedSchemas (line 23) 'does NOT grant or enforce access, it is purely a record of intent'; src/manifest.d/hr-integrations.json:8-9 index page IntegrationAccounts /configuratie/integraties",
     "reachedOn": "IntegrationAccounts /configuratie/integraties, IntegrationAccountDetail /configuratie/integraties/:id",
     "owner": "ConductionNL/humaniq"
    },
@@ -6552,7 +6552,7 @@
    "built": {
     "state": "built",
     "evidence": "appinfo/routes.php:17-19 GET /api/setup/status, POST /api/setup/config, POST /api/setup/action/{actionId}; src/manifest.json:7-22 'setup' block (ADR-042 contract) with welcome/demo-data steps; lib/Controller/SetupController.php implements the endpoints and notes its version 'matches manifest.setup.version'",
-    "reachedOn": "the platform's generic CnSetupWizard shell (nextcloud-vue), driven entirely by src/manifest.json's declarative setup block, shown on first admin visit -- no humaniq-authored Vue component imports CnSetupWizard directly, which is expected for this shared ADR-042 mechanism",
+    "reachedOn": "the platform's generic CnSetupWizard shell (nextcloud-vue), driven entirely by src/manifest.json's declarative setup block, shown on first admin visit, no humaniq-authored Vue component imports CnSetupWizard directly, which is expected for this shared ADR-042 mechanism",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6706,7 +6706,7 @@
    },
    "built": {
     "state": "built",
-    "evidence": "appinfo/info.xml:69 <nextcloud min-version=\"32\" max-version=\"34\"/>; grep -rniF 'saml|oidc' lib/: no hits -- humaniq has no auth code of its own",
+    "evidence": "appinfo/info.xml:69 <nextcloud min-version=\"32\" max-version=\"34\"/>; grep -rniF 'saml|oidc' lib/: no hits, humaniq has no auth code of its own",
     "reachedOn": "Nextcloud's own login flow, platform-wide; humaniq adds nothing and blocks nothing, so any SSO app the instance runs (user_saml/user_oidc) covers humaniq transparently",
     "owner": "nextcloud/server"
    },
@@ -7432,7 +7432,7 @@
    "orangehrm": "yes",
    "evidence": {
     "afas": "not checked: not settled: https://help.afas.nl/content/NL/SE/98219.htm shows a birthday signal delivered inside Profit and InSite, and https://help.afas.nl/help/NL/SE/140869.htm offers webhooks on dossier items; the help sitemap (https://help.afas.nl/sitemap.xml, 9,138 Dutch titles and descriptions searched for slack, teams, webhook, verjaardag) has no page posting a digest to a team chat channel",
-    "visma-raet": "not checked: not settled: youforce.nl product pages (app, integraties, verlof) and the API docs webhooks overview name no digest posted to a team chat channel; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: searched the YouServe release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases for Teams, Slack, verjaardag and chat; no digest to a team chat channel",
     "hr2day": "not checked: not settled: searched the cached hr2day.com pages and HR2day release notes on data.maglr.com (Albatross to ZomerBonus 2026, incl. Kiwi and Llama) for Slack, Teams and birthday posts; only job ads and blogs mention Slack or Teams as HR2day's own tools, nothing about posting to a chat channel",
     "loket": "not checked: not settled: searched the cached loket.nl pages, the roadmap https://loket.nl/roadmap/ and the API reference https://developer.loket.nl/ApiDocs for Slack, Teams and birthday digests; https://loket.nl/hrm-systeem/ names in-app signals for birthdays, but nothing posts to a chat channel; helpdesk.loket.nl returns a Cloudflare challenge to scripted reads, so the help centre was not read",
     "personio": "https://support.personio.de/hc/en-us/articles/360018734057-Slack says channel updates to public Slack channels include 'Who is absent today, and until when? Who has a birthday today?'; https://support.personio.de/hc/en-us/articles/4408183346705-Microsoft-Teams sends time off and birthday updates to MS Teams",
@@ -7463,7 +7463,7 @@
    "orangehrm": "no",
    "evidence": {
     "afas": "https://help.afas.nl/content/NL/SE/99386.htm the standard leave request workflow routes to the direct manager and back to the employee ('Op basis van onze ervaring adviseren wij onderstaand workflowschema'), and the workflow editor lets you add statuses; an HR second step is not shipped as standard",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/verlof says 'bepaal je zelf welke aanvragen direct worden verwerkt en wat leidinggevenden nog moeten goedkeuren', which covers automatic versus manager approval but not an HR second step; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: searched the YouServe Self Service release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases for leave approval routing; Self Service forms can pass manager (Goedkeuren MGR) and payroll (Fiatteren SA) steps per https://www.ssc-ons.nl/content/uploads/2024/07/Handleiding-Mijn-Youforce-1.pdf, but no page shows an HR second step on leave requests",
     "hr2day": "https://www.hr2day.com/features/slimme-workflows/ says 'Voeg meerdere goedkeurders toe per workflow. Instelbare hiërarchische goedkeuringsstappen' and https://www.hr2day.com/features/verlof/ lists 'Instelbare verlofsoorten en flows'; no page states an HR step after the manager for leave specifically",
     "loket": "https://loket.nl/functionaliteiten/verlof/ says 'Wil je dat de afdelingsmanager aanvragen goedkeurt, of juist de werkgever? Of mag goedkeuren automatisch gebeuren?', so one configurable approver; https://loket.nl/roadmap/ lists 'Verlof aansluiten op workflow editor' (Q1 2026) without a Gerealiseerd mark, and the extra fiatteur of Workflow Editor Pro is not stated for leave",
     "personio": "https://support.personio.de/hc/en-us/articles/26385271786653-Set-up-time-off-approval-rules says 'If your approval process has multiple steps, they trigger in the order you set. Approvers only receive tasks after the previous step is approved', with roles assignable as approvers",
@@ -7487,14 +7487,14 @@
    "name": "See who approved or rejected a leave request and when.",
    "humaniq": "partial",
    "afas": "yes",
-   "visma-raet": "unknown",
+   "visma-raet": "partial",
    "hr2day": "yes",
    "loket": "yes",
    "personio": "yes",
    "orangehrm": "no",
    "evidence": {
     "afas": "https://help.afas.nl/help/NL/SE/Ins_Wrkflw_Hystry.htm 'In de workflowhistorie zie je een chronologisch overzicht van alle acties die bij een dossieritem zijn uitgevoerd', in Profit and InSite; leave requests run as such a workflow (https://help.afas.nl/content/NL/SE/99386.htm)",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/verlof and https://youforce.nl/security (logging of user, date, time and event) do not say a leave request shows who approved or rejected it and when; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/3: Self Service September 2025 notes describe the Te doen, Gedaan and Archief lists with Personen bevoegd voor Activiteit, and https://www.ssc-ons.nl/content/uploads/2024/07/Handleiding-Mijn-Youforce-1.pdf shows each request status such as Goedkeuren MGR in Gedaan; who approved and when is not stated explicitly.",
     "hr2day": "https://data.maglr.com/1697/issues/49954/605654/index.html (Giraffe release notes) says for a verlofboeking the approver shows in the progress bar and 'in de goedkeuringshistorie'; https://data.maglr.com/1697/issues/59392/705148/index.html (Jellyfish) shows the rejection reason and previous approver's remark, kept in the Goedkeuringshistorie tab",
     "loket": "https://developer.loket.nl/ApiDocs leave request resource returns submittedBy, submittedOn, leaveRequestStatus, handledBy, handledTime and commentHandler, so who handled the request and when is recorded",
     "personio": "https://support.personio.de/hc/en-us/articles/360006849378-Request-time-off shows 'who requested the time off and who approved it'; https://support.personio.de/hc/en-us/articles/16452123199901-Monitor-and-manage-workflows shows 'the approval timeline including assignees and timestamps'",
@@ -7587,7 +7587,7 @@
    "orangehrm": "no",
    "evidence": {
     "afas": "https://help.afas.nl/help/NL/SE/134856.htm free fields can be added to the online application form in OutSite (example 'Nummer rijbewijs') and carried over to the employee record",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/werving-en-selectie covers vacancy publishing, the careers site and reminders, not own questions on the application form; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: the YouServe release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases cover HR Core, Payroll, Self Service and access management, not the Ubeeo recruitment add-on; no own application form questions found",
     "hr2day": "not checked: not settled: read https://www.hr2day.com/hire2day/screening/, /hire2day/sourcing/, /hire2day/hiring/ and /features/recruitment-ats/; none mentions custom questions on the application form",
     "loket": "not checked: not settled: searched the cached loket.nl pages, the roadmap https://loket.nl/roadmap/ and the API reference https://developer.loket.nl/ApiDocs for sollicitatie, vacature and recruitment; loket.nl describes no applicant tracking or application form",
     "personio": "https://support.personio.de/hc/en-us/articles/115003421629-Create-a-job lets you add application form fields per job; https://support.personio.de/hc/en-us/articles/28017305502493-Set-up-automated-screening adds screening questions that candidates must answer when applying",
@@ -7650,7 +7650,7 @@
    "orangehrm": "no",
    "evidence": {
     "afas": "https://klant.afas.nl/update/profit-8/hrm and https://help.afas.nl/help/NL/SE/140214.htm: vacancy matching compares vacancies with applicants and employees, AI analyses the application attachments into an applicant profile and shows a matching score.",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/werving-en-selectie and https://vr-api-integration.github.io/youforce-api-documentation/recruitment_api_intro.html do not mention scoring applicants or employees against a vacancy; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: searched the YouServe release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases and web for Youforce vacancy matching; nothing found",
     "hr2day": "https://www.hr2day.com/hire2day/sourcing/ lists 'Skills-based zoeken, Automatische kandidaat scoring, Semantic CV matching'; https://www.hr2day.com/features/recruitment-ats/ says 'Automatische matching op skills, ervaring en fit' across internal talent pools and external candidates",
     "loket": "not checked: not settled: searched the cached loket.nl pages, the roadmap https://loket.nl/roadmap/ and the API reference https://developer.loket.nl/ApiDocs for matching, vacatures and candidates; Loket describes no recruitment module",
     "personio": "https://support.personio.de/hc/en-us/articles/37951608749981-Set-up-the-Talent-Screening-Agent (help centre release article created 2026-07-28): the Talent Screening Agent checks applications against job requirements and highlights results; it is rolling out gradually and consumes AI credits.",
@@ -7682,7 +7682,7 @@
    "orangehrm": "partial",
    "evidence": {
     "afas": "https://klant.afas.nl/update/profit-8/hrm and https://help.afas.nl/help/NL/SE/140314.htm: the renewed Valicare link validates ID documents at onboarding, employee creation and document upload, runs an RTW check and optional PEP, VIS and sanction checks, with hard and soft stops.",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/app verifies diplomas through DUO and the VOG through Justis, but no identity document or right to work check with a hard stop is described; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases Self Service notes of March 2026 mention a BSN verification step in the (re)hire workflow, but no identity document or right to work check with a hard stop is described",
     "hr2day": "not checked: not settled: searched the cached hr2day.com pages and HR2day release notes on data.maglr.com (Albatross to ZomerBonus 2026, incl. Kiwi and Llama) for ID check, identiteitsbewijs, legitimatie, paspoort and verblijfsvergunning; no hit about checking a new hire's identity or right to work",
     "loket": "https://loket.nl/roadmap/ marks 'Preboarding smartscan' Gerealiseerd (Q1 2025): 'automatische gegevensuitlezing uit identiteitsdocumenten' with clear messages on error detection; no right to work check or hard stop on failure is stated",
     "personio": "https://support.personio.de/hc/en-us/articles/39191997301789-manage-employee-attributes-in-Personio-Payroll lists 'Work permit valid until' as 'relevant for the compliance check' (German payroll); no identity document check or hard stop during onboarding is described",
@@ -7706,14 +7706,14 @@
    "name": "Lock closed leave periods so later changes cannot alter historical leave balances.",
    "humaniq": "unknown",
    "afas": "yes",
-   "visma-raet": "unknown",
+   "visma-raet": "partial",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "no",
    "evidence": {
     "afas": "https://klant.afas.nl/update/profit-8/hrm: in Profit 8 leave periods in the leave period table can be blocked so closed periods are left out of the leave calculation and balances show as blocked.",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/verlof covers balances and approval only; nothing on locking closed leave periods; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2: Self Service Business December 2025 notes add the leave setting Alleen toekomstige verlofopnames intrekken, which blocks cancelling past leave; locking closed leave periods against other changes is not described.",
     "hr2day": "not checked: not settled: searched the cached hr2day.com pages and HR2day release notes on data.maglr.com (Albatross to ZomerBonus 2026, incl. Kiwi and Llama) for closing or locking leave periods; only automatic blocking of expired leave (Kiwi) found, nothing about freezing historical balances",
     "loket": "not checked: not settled: searched the cached loket.nl pages, the roadmap https://loket.nl/roadmap/ and the API reference https://developer.loket.nl/ApiDocs for closing or locking leave periods and freezing balances; no hit; helpdesk.loket.nl returns a Cloudflare challenge to scripted reads, so the help centre was not read",
     "personio": "not checked: not settled: searched the support.personio.de help centre (full en-us article set fetched via the Zendesk API) for locking or closing past time off periods; only pay period rules (past pay periods unaffected by changes) found, nothing on freezing leave balances",
@@ -7744,7 +7744,7 @@
    "orangehrm": "no",
    "evidence": {
     "afas": "https://klant.afas.nl/update/profit-8/hrm: commuting kilometres are deducted from claimed business kilometres, filled from work locations or the wage setup, in InSite, Pocket and OutSite.",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/app covers receipt scanning for expense claims; no youforce.nl page read says home to work kilometres are deducted from a business mileage claim; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: searched the YouServe release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases for woon-werk deduction on dienstreis kilometres; only commute allowance tables and travel distance determination are covered",
     "hr2day": "not checked: not settled: searched the cached hr2day.com pages and HR2day release notes on data.maglr.com (Albatross to ZomerBonus 2026, incl. Kiwi and Llama) for woon-werk with declaraties; notes cover commute allowance claims per day and five km rates (Elephant, Jellyfish) but not deducting commute km from a business trip claim",
     "loket": "not checked: not settled: https://loket.nl/functionaliteiten/declareren/ says 'Kilometers? Loket berekent de afstand automatisch' but not that commute kilometres are deducted; searched woon-werk with declaraties; helpdesk.loket.nl returns a Cloudflare challenge to scripted reads, so the help centre was not read",
     "personio": "not checked: not settled: searched the support.personio.de help centre (full en-us article set fetched via the Zendesk API) for mileage and commute in expense claims; Personio has no native expense module in the help centre (expense tools come from marketplace partners), and no page covers deducting commute kilometres; personio.com returns a 429 checkpoint to scripted reads, so marketing pages were not read",
@@ -7775,7 +7775,7 @@
    "orangehrm": "no",
    "evidence": {
     "afas": "https://klant.afas.nl/update/profit-7/hrm: Profit 7 (from November 2025) lets you go live with Payroll on the date you switch packages instead of only on 1 January.",
-    "visma-raet": "not checked: not settled: https://youforce.nl/implementatie describes shadow runs ('schaduwdraaien') before the switch and https://youforce.nl/product/hr-core-salaris is silent; neither says payroll can start mid year carrying over year to date figures; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: searched the YouServe release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases for starting payroll mid year with carried-over cumulative figures; nothing found",
     "hr2day": "not checked: not settled: searched the cached hr2day.com pages and HR2day release notes on data.maglr.com (Albatross to ZomerBonus 2026, incl. Kiwi and Llama) for switching mid year, conversion and opening cumulatives; no page describes carrying over year to date figures from another package",
     "loket": "https://loket.nl/roadmap/ item 'Loonaangiftebedragen' says that when an employer switches to Loket after filing earlier returns that year with another vendor, 'kunnen de betreffende loonaangiftebedragen eenvoudig worden vastgelegd' and Loket takes the paid amounts into account; carrying over wider year to date payroll figures is not described",
     "personio": "https://support.personio.de/hc/en-us/articles/34084487430685-Year-to-date-implementation-of-Personio-Payroll describes the YTD import of cumulative amounts from the previous provider when starting Personio Payroll (Germany only)",
@@ -7987,14 +7987,14 @@
    "name": "Have pay runs compared with each employee's own pay history so unusual amounts are flagged before payroll closes.",
    "humaniq": "partial",
    "afas": "unknown",
-   "visma-raet": "unknown",
+   "visma-raet": "partial",
    "hr2day": "yes",
    "loket": "partial",
    "personio": "partial",
    "orangehrm": "no",
    "evidence": {
     "afas": "not checked: not settled: https://klant.afas.nl/update/profit-8/payroll lets you look back a year at how a wage component or basis was built so 'afwijkingen in de opbouw van een grondslag zijn snel te herkennen', a manual review; no page found that flags unusual amounts against each employee's history before closing",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/hr-core-salaris claims 'ingebouwde controles' and continuous processing of mutations without saying unusual amounts are compared with each employee's own history; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases: Releasenotes Core en Payroll 2026-06 show Standenregister uitgebreid with previous month, mutations, current month and percentage afwijking per employee and pay component; comparison with each employee longer pay history is not described.",
     "hr2day": "https://data.maglr.com/1697/issues/68666/820322/index.html (ZomerBonus 2026): Payroll Detect combines AI with own checks and groups deviations per alert; https://www.hr2day.com/features/payroll-intelligence/: detection level adjustable per wage component.",
     "loket": "https://loket.nl/loonadministratie-zelf-doen/ says to 'Beoordeel de preview van de loonadministratie of eventuele afwijkingen' before approval, and https://loket.nl/roadmap/ describes an error and signal report per payroll run; comparison with each employee's own pay history is not stated",
     "personio": "https://support.personio.de/hc/en-us/articles/14264749183773-Personio-Payroll-functions-in-the-area-of-payroll lists a 'Highest gross salary variance' widget to 'Identify significant salary changes, Detect and verify anomalies' (German payroll); comparison with each employee's own pay history is not spelled out",
@@ -8088,7 +8088,7 @@
    "orangehrm": "no",
    "evidence": {
     "afas": "not checked: not settled: https://help.afas.nl/help/NL/SE/HRM_Sick.htm lists pregnancy leave under absence, but no page in the help sitemap (searched ziekte with zwangerschap and bevalling) says sickness before and after pregnancy leave is counted as one absence",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/verzuim covers sick reporting, Poortwachter steps and SIVI exchange with the occupational health service and UWV, not linking sickness around pregnancy leave; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: searched the YouServe release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases for sickness linked to zwangerschapsverlof; only a fix to the report Zorg voor kinderen appears",
     "hr2day": "https://data.maglr.com/1697/issues/68666/808496/index.html (ZomerBonus 2026): two sickness periods with pregnancy leave in between and no gap are linked and the total duration and tasks are calculated.",
     "loket": "not checked: not settled: searched the cached loket.nl pages, the roadmap https://loket.nl/roadmap/ and the API reference https://developer.loket.nl/ApiDocs for zwangerschap with ziekte; only knowledge base articles on pay during pregnancy related sickness, no feature for one continuous absence; helpdesk.loket.nl returns a Cloudflare challenge to scripted reads, so the help centre was not read",
     "personio": "not checked: not settled: searched the support.personio.de help centre (full en-us article set fetched via the Zendesk API) for pregnancy related sickness; only German maternity protection and EEL articles found; Personio Payroll is German (https://support.personio.de/hc/en-us/articles/34084487430685-Year-to-date-implementation-of-Personio-Payroll says \"Personio Payroll (Germany)\") and Dutch payroll runs through the Loket integration (https://support.personio.de/hc/en-us/articles/24665026109853-Set-up-the-Loket-integration), so the Dutch rule is not settled by Personio docs",
@@ -8119,7 +8119,7 @@
    "orangehrm": "partial",
    "evidence": {
     "afas": "https://help.afas.nl/help/NL/SE/Hrm_Sick_Arbo_Convrs.htm the BSN is kept out of the absence file and linked by Medewerker ID (GUID), and https://help.afas.nl/help/NL/SE/133636.htm keeps the employee code separate from the BSN; no one step clearing of BSN from existing identifiers is described",
-    "visma-raet": "not checked: not settled: https://youforce.nl/system-privacy-security and https://youforce.nl/security discuss AVG and logging but say nothing on keeping the BSN out of identifiers; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: searched the YouServe release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases for BSN; notes cover BSN in returns and a BSN verification in the hire workflow, nothing on keeping BSN out of identifiers",
     "hr2day": "https://data.maglr.com/1697/issues/66612/785296/index.html (Llama, March 2026): an employer setting disables BSN in key fields and a batch job empties them for privacy reasons; currently visible only to HR2day system administrators.",
     "loket": "not checked: not settled: searched the cached loket.nl pages, the roadmap https://loket.nl/roadmap/ and the API reference https://developer.loket.nl/ApiDocs for BSN as identifier; the API exposes citizenServiceNumber lists but nothing on keeping BSN out of keys or clearing it",
     "personio": "not checked: not settled: searched the support.personio.de help centre (full en-us article set fetched via the Zendesk API) for BSN; https://support.personio.de/hc/en-us/articles/35527484814621-Loket-integration-Summary-of-supported-attributes maps BSN as a person attribute, nothing on keeping it out of keys or clearing it",
@@ -8150,7 +8150,7 @@
    "orangehrm": "partial",
    "evidence": {
     "afas": "https://help.afas.nl/content/NL/SE/116369.htm a signal warns when an on-call contract nears a year and states the fixed hours offer is 'gebaseerd op het gemiddelde aantal uren van het afgelopen jaar'; fixed one year window, no chosen period",
-    "visma-raet": "not checked: not settled: no youforce.nl page read shows average hours of on-call workers over a chosen period; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2 notes only fix the minimum wage check for oproepkrachten; no average hours over a period for the fixed hours offer",
     "hr2day": "not checked: not settled: searched the cached hr2day.com pages and HR2day release notes on data.maglr.com (Albatross to ZomerBonus 2026, incl. Kiwi and Llama) for oproepkracht, average hours and the statutory offer of fixed hours; oproepkrachten appear only in km and payment file notes",
     "loket": "https://loket.nl/roadmap/ (Overzicht gemiddelde uren/dagen oproepkrachten, marked launched in Q3 2026): an overview in Loket that calculates the average hours or days of on-call workers over a chosen period, exportable to CSV or Excel.",
     "personio": "not checked: not settled: searched the support.personio.de help centre (full en-us article set fetched via the Zendesk API) for on-call workers and average hours; the Loket attribute list maps an on-call worker flag, but no average hours overview for the fixed hours offer is described; Personio Payroll is German (https://support.personio.de/hc/en-us/articles/34084487430685-Year-to-date-implementation-of-Personio-Payroll says \"Personio Payroll (Germany)\") and Dutch payroll runs through the Loket integration (https://support.personio.de/hc/en-us/articles/24665026109853-Set-up-the-Loket-integration), so the Dutch rule is not settled by Personio docs",
@@ -8174,14 +8174,14 @@
    "name": "Handle the 53rd week in a year when paying weekly or four-weekly.",
    "humaniq": "unknown",
    "afas": "yes",
-   "visma-raet": "unknown",
+   "visma-raet": "partial",
    "hr2day": "partial",
    "loket": "yes",
    "personio": "unknown",
    "orangehrm": "no",
    "evidence": {
     "afas": "https://help.afas.nl/help/NL/SE/Hrm_WgImpl_Week53.htm 'Voor de verwerking van week 53 is periode 13 automatisch verlengd' for weekly and four-weekly payers, with the tax handling explained",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/hr-core-salaris is silent on weekly or four-weekly week 53 handling; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases: Core en Payroll release notes 2026-05 fix the minimum wage element for companies with 4-weekly payroll where a factor for the 53e week was applied, so week 53 is handled in 4-weekly pay; full handling for weekly pay is not described.",
     "hr2day": "https://data.maglr.com/1697/issues/68666/808497/index.html (ZomerBonus 2026 release notes) handles a 53rd week for two-weekly rosters; https://data.maglr.com/1697/issues/64244/760228/index.html shows four-weekly payroll runs exist; no page describes the 53rd pay period in weekly or four-weekly payroll",
     "loket": "https://loket.nl/roadmap/ (53e week, launched Q1 2026): the setup for the 53rd week is rebuilt so it is fully available in Loket.",
     "personio": "not checked: not settled: searched the support.personio.de help centre (full en-us article set fetched via the Zendesk API) for week 53 and weekly or four-weekly pay periods; no hit",
@@ -8205,14 +8205,14 @@
    "name": "Maintain your own calculation rules for pension bases per collective agreement, wage model or administration.",
    "humaniq": "no",
    "afas": "unknown",
-   "visma-raet": "unknown",
+   "visma-raet": "partial",
    "hr2day": "unknown",
    "loket": "yes",
    "personio": "unknown",
    "orangehrm": "no",
    "evidence": {
     "afas": "not checked: not settled: collective agreement notes such as https://help.afas.nl/cao/cao_34373767 show pension parameters maintained by AFAS in its Profit CAO; the help sitemap has no page (searched pensioen with eigen, zelf, inrichten) on customers keeping their own pension basis rules",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/hr-core-salaris says Youforce offers 'uitgebreide mogelijkheden voor een flexibele inrichting van de salarisadministratie' without naming customer maintained pension basis rules; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases: Releasenotes Core en Payroll 2026-08 describe pension settings on the company screen for a benoemde regeling and an eigen regeling, with standard values per Klant CAO, Klant, Bedrijf CAO or Bedrijf; customer-maintained pension base rules are not spelled out.",
     "hr2day": "not checked: not settled: searched the cached hr2day.com pages and HR2day release notes on data.maglr.com (Albatross to ZomerBonus 2026, incl. Kiwi and Llama) for pensioengrondslag, franchise and own calculation rules; no page describes customer-maintained pension base rules",
     "loket": "https://loket.nl/roadmap/ (Rekenregels beheren in Loket, launched Q2 2026): users view, add, change and delete calculation rules used to determine pension bases on all three levels.",
     "personio": "not checked: not settled: searched the support.personio.de help centre (full en-us article set fetched via the Zendesk API) for pension calculation rules; https://support.personio.de/hc/en-us/articles/19061541411101-Manage-company-pension-schemes-BAV-in-Personio-Payroll covers German company pension agreements and ranking rules, not customer maintained pension base rules per collective agreement",
@@ -8274,7 +8274,7 @@
    "orangehrm": "no",
    "evidence": {
     "afas": "not checked: not settled: https://help.afas.nl/help/NL/SE/141700.htm Jonas automation fills workflow fields from workflow data and source documents, and https://klant.afas.nl/update/profit-8/hrm uses AI on application attachments for vacancy matching; neither says a signed contract is read into a draft employee",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/onboarding and https://youforce.nl/product/app do not say supplied documents are read into a draft employee; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: searched the YouServe release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases; no reading of supplied documents into a draft employee",
     "hr2day": "not checked: not settled: searched the cached hr2day.com pages and HR2day release notes on data.maglr.com (Albatross to ZomerBonus 2026, incl. Kiwi and Llama) for OCR and reading contracts or documents into a new employee; no hit",
     "loket": "https://loket.nl/roadmap/ (Onboardingsagent (Loket AI Lab), current Q3 2026): 'Binnen het Loket AI Lab ontwikkelen we een onboardingsagent', creating a new employee 'gebeurt vandaag nog deels handmatig'.",
     "personio": "https://support.personio.de/hc/en-us/articles/34223677497117-AI-powered-scanning-of-pay-slips: the AI scan 'automatically extracts and validates employee and compensation data from the uploaded pay slip' for admin review, during Personio Payroll onboarding in Germany; reading a signed contract into a new hire draft is not described",
@@ -8298,14 +8298,14 @@
    "name": "Let employees sign in with a passkey instead of a password, and let the employer make that mandatory.",
    "humaniq": "partial",
    "afas": "partial",
-   "visma-raet": "unknown",
+   "visma-raet": "partial",
    "hr2day": "unknown",
    "loket": "no",
    "personio": "unknown",
    "orangehrm": "no",
    "evidence": {
     "afas": "https://help.afas.nl/help/NL/SE/130688.htm 'Passkeys biedt een snelle en veilige manier van inloggen zonder wachtwoord' on AFAS Online; the page says users can keep signing in the old way and gives no setting for the employer to make passkeys mandatory",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/app signs in to the app by fingerprint, face or PIN after a first password login, and https://youforce.nl/security names MFA and SSO; neither mentions passkeys or an employer mandate; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "https://connect.visma.com/: the Visma Connect login used by Youforce offers Log in met beveiligingssleutel of biometrie; https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases access management notes (18-02-2026) cover 2FA. An employer setting to make passkeys mandatory is not described.",
     "hr2day": "not checked: not settled: https://www.hr2day.com/data-veiligheid/cloud-hosting/ names enforced MFA and a transition to phishing resistant methods for admins and privileged accounts; passkeys for employees are not named; searched for passkey and wachtwoordloos",
     "loket": "https://loket.nl/roadmap/ (Inloggen met passkeys voor MijnLoket, current Q3 2026): 'Medewerkers loggen in op MijnLoket met een wachtwoord'; passkeys are being introduced.",
     "personio": "not checked: not settled: searched the support.personio.de help centre (full en-us article set fetched via the Zendesk API) for passkey, passwordless and WebAuthn; hits concern only Remote magic links and Docusign identity wallets",
@@ -8329,14 +8329,14 @@
    "name": "See in one overview every permission granted across the organisation and its legal entities.",
    "humaniq": "no",
    "afas": "partial",
-   "visma-raet": "unknown",
+   "visma-raet": "partial",
    "hr2day": "unknown",
    "loket": "partial",
    "personio": "yes",
    "orangehrm": "partial",
    "evidence": {
     "afas": "https://help.afas.nl/help/NL/SE/Ins_Config_Auth_Role_View.htm the Autorisatie tool lists users per role and Autorisatie-inzicht shows InSite page access per employee; https://help.afas.nl/content/NL/SE/101917.htm reports rights per user but 'Rechten die deze gebruikers eventueel krijgt via een autorisatiegroep, worden hierin dus niet weergegeven'",
-    "visma-raet": "not checked: not settled: https://youforce.nl/security and https://vr-api-integration.github.io/youforce-api-documentation/iam_api_intro.html (which feeds external IAM systems) do not describe an in product overview of all granted permissions; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases: Release notes Toegangsbeheer 16-02-2026 add the report Gebruikersconfiguratie listing all users with application rights for a customer, including users from other customers, with authorisation, type and application role; it covers application roles, not every HR data permission.",
     "hr2day": "not checked: not settled: searched the cached hr2day.com pages and HR2day release notes on data.maglr.com (Albatross to ZomerBonus 2026, incl. Kiwi and Llama) for autorisatieoverzicht, rechtenoverzicht and permission reports; only a leave entitlement overview found",
     "loket": "https://loket.nl/roadmap/ marks Gerealiseerd 'Overzicht werkgevergebruikers op providerniveau' (one exportable overview of all employer users' settings across employers) and 'Inzicht in rechten en producten' (which rights are needed per option); a single overview of every permission granted is not stated in those words",
     "personio": "https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26): 'See every permission in your organisation in one place, built to support complex, multi-entity organisations'; https://support.personio.de/hc/en-us/articles/38455888853405-Review-and-compare-employee-roles-and-permissions compares roles side by side.",
@@ -8367,7 +8367,7 @@
    "orangehrm": "no",
    "evidence": {
     "afas": "https://help.afas.nl/content/NL/SE/136599.htm the progress conversation workflow uses Jonas 'om automatisch een samenvatting te genereren' of that one conversation; not a summary of all feedback and notes on an employee",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/hr-cyclus and https://youforce.nl/product/het-goede-gesprek cover goals, check-ins and 360 degree feedback, with no generated summary of feedback; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: searched the YouServe release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases for AI and samenvatting; only an explanation field for AI agents in the Menu API (Nov 2025) appears, no feedback summary",
     "hr2day": "not checked: not settled: read https://www.hr2day.com/features/daisy-ai-assistent/ (Q&A, starting processes) and https://www.hr2day.com/features/360-feedback/; no AI summary of feedback or reviews described",
     "loket": "not checked: not settled: searched the cached loket.nl pages, the roadmap https://loket.nl/roadmap/ and the API reference https://developer.loket.nl/ApiDocs for AI summaries of reviews or feedback; the HR-buddy items cover answering questions only",
     "personio": "https://support.personio.de/hc/en-us/articles/30612613685789-Set-up-AI-summaries (help centre release article created 2025-09-26): AI Performance Summaries synthesize continuous feedback, manager, peer and upward reviews and performance notes about an employee.",
@@ -8398,7 +8398,7 @@
    "orangehrm": "no",
    "evidence": {
     "afas": "https://klant.afas.nl/thema/ai-integratie 'Op dit moment worden de mogelijkheden onderzocht om een officiële AFAS MCP-server aan te bieden', and as of June 2026 no AI integration is certified",
-    "visma-raet": "not checked: not settled: the Youforce API docs index (https://vr-api-integration.github.io/youforce-api-documentation/domain_api_intro.html and linked intros) and https://youforce.nl/product/integraties contain no MCP server; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2 Self Service November 2025 notes add a Toelichting field in the Menu API that an AI agent can use, which is not an MCP server; web search for a Youforce MCP server found none",
     "hr2day": "not checked: not settled: searched the cached hr2day.com pages and HR2day release notes on data.maglr.com (Albatross to ZomerBonus 2026, incl. Kiwi and Llama) for MCP and Model Context Protocol; no hit",
     "loket": "not checked: not settled: searched the cached loket.nl pages, the roadmap https://loket.nl/roadmap/ and the API reference https://developer.loket.nl/ApiDocs for MCP and Model Context Protocol; no hit",
     "personio": "https://support.personio.de/hc/en-us/articles/38314656674333-Personio-MCP-server-Beta-access-overview (help centre release article created 2026-08-12): read access to employee profiles, time off, compensation and performance data and limited write operations such as requesting time off; in beta and not available to everyone.",
@@ -8422,14 +8422,14 @@
    "name": "Track every approval request across processes in one list with its timeline and current status.",
    "humaniq": "partial",
    "afas": "partial",
-   "visma-raet": "unknown",
+   "visma-raet": "partial",
    "hr2day": "yes",
    "loket": "yes",
    "personio": "partial",
    "orangehrm": "partial",
    "evidence": {
     "afas": "https://help.afas.nl/help/NL/SE/Ins_Wrkflw_View_Differ.htm 'Alle taken' lists every workflow task the user may handle and https://help.afas.nl/help/NL/SE/121828.htm adds the current destination to InSite overviews; the timeline sits per item in the workflow history, not in the list",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/verlof and https://youforce.nl/product/rapportages-analyse do not describe one list of all approval requests with timeline and status; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/3: Self Service notes add status filters (niet behandeld, in behandeling, behandeld, blokkerend) and a default 3-month period to the workflow overview; one list of all approval requests with a timeline across processes is not described.",
     "hr2day": "https://www.hr2day.com/features/slimme-workflows/ says 'Eén overzicht voor alle lopende workflows', 'Persoonlijk dashboard met actieve taken en statusupdates', filterable by workflow type; release notes show a progress bar and approval history per process (https://data.maglr.com/1697/issues/49954/605654/index.html)",
     "loket": "https://loket.nl/roadmap/ marks Gerealiseerd 'Procesbeheer functie' ('op één centrale plek een overzicht ... van de lopende en afgeronde statussen van de workflows') and 'Nieuwe flowweergave voor workflows' (Q3 2026) showing per step who is responsible and the current status",
     "personio": "https://support.personio.de/hc/en-us/articles/36278272594077-Approvals-dashboard-Beta-access-overview (help centre release article created 2026-05-22): the dashboard shows each approval's status and timeline including delegation and rerouting; in beta, and requests cannot be approved or rejected from the dashboard.",
@@ -8460,7 +8460,7 @@
    "orangehrm": "no",
    "evidence": {
     "afas": "not checked: not settled: https://help.afas.nl/help/NL/SE/Crm_Survey.htm describes employee surveys in InSite with own results; no page in the help sitemap (searched benchmark, enquête, tevredenheid) compares results with other organisations",
-    "visma-raet": "not checked: not settled: https://youforce.nl/product/engagement offers pulse surveys, eNPS and scientifically based questionnaires but does not say results are compared with other organisations; community.visma.com (YouServe release notes and ideas) returned 403 to curl and WebFetch on 2026-09-26",
+    "visma-raet": "not checked: not settled: searched the YouServe release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases; the engagement add-on is not covered there and https://youforce.nl/product/engagement names no cross-organisation comparison",
     "hr2day": "not checked: not settled: read https://www.hr2day.com/features/surveys/ (custom surveys, anonymity, dashboards and trends); no comparison with other organisations using the same survey",
     "loket": "not checked: not settled: searched the cached loket.nl pages, the roadmap https://loket.nl/roadmap/ and the API reference https://developer.loket.nl/ApiDocs for surveys and benchmarks; Loket offers a salary benchmark (Salarisbenchmark) but no employee survey with a cross-organisation comparison",
     "personio": "https://support.personio.de/hc/en-us/articles/38900337558685-Measure-your-organization-s-AI-fluency: 'Coming soon: Benchmarks against other organizations that use the same standardized survey template.'",
