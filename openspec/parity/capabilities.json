@@ -4443,7 +4443,7 @@
     "state": "built",
     "evidence": "openspec/specs/irma-digid-auth/spec.md REQ-AUTH-001 (humaniq builds no auth/identity code of its own) and REQ-AUTH-002 (DigiD/Yivi/eHerkenning federation SHALL be delivered by the Nextcloud platform apps user_saml/user_oidc against a Logius/eIDAS or Yivi broker; once authenticated, humaniq requires zero additional configuration and consumes the resulting IUser exactly like a password login); the whole app's self-service scoping already runs on the authenticated NC user id (@me token used throughout Mijn* pages), so any NC-authenticated identity, DigiD/IRMA included, reaches it unmodified",
     "reachedOn": "any Nextcloud login screen once the instance admin configures user_saml/user_oidc; humaniq's own pages need no further change",
-    "owner": "nextcloud"
+    "owner": "nextcloud/server"
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
@@ -4689,7 +4689,7 @@
     "state": "built",
     "evidence": "nextcloud-vue CnIndexPage.vue:1605 showMassExport defaults true (a mass action exporting only the fetched/selected rows as a blob download); its allowExport prop (native full-list CSV/Excel export via OpenRegister's export leaf, honouring the current filters) defaults false and additionally requires the schema flagged exportable:true; grep -rn 'allowExport|exportable' src/manifest.d lib/Settings/register.d src/manifest.json: no hits anywhere in humaniq",
     "reachedOn": "every index page (indexScaffold template), e.g. Timesheets /timesheets, mass-select rows then Export; the full filtered-list export is never enabled",
-    "owner": "nextcloud-vue"
+    "owner": "ConductionNL/nextcloud-vue"
    },
    "provider": "nextcloud-vue",
    "providerHow": "read-from-code",
@@ -5074,7 +5074,7 @@
     "state": "none",
     "evidence": "grep -rniF encrypt lib/: no hits anywhere in humaniq's own code. Whether personnel data is encrypted at rest depends entirely on the underlying Nextcloud instance/database/disk configuration, which is outside this app's code and outside the sibling apps this pack is scoped to read",
     "reachedOn": "n/a -- a platform/infrastructure concern, not app code",
-    "owner": "nextcloud"
+    "owner": "nextcloud/server"
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
@@ -5102,7 +5102,7 @@
     "state": "built",
     "evidence": "appinfo/info.xml:68-69 declares <php min-version=\"8.3\"/> and <nextcloud min-version=\"32\" max-version=\"34\"/>; humaniq is a Nextcloud app by construction, deployed on a self-managed or self-hosted Nextcloud instance, never a SaaS product of its own",
     "reachedOn": "n/a -- inherent to being a Nextcloud app, not a page or route",
-    "owner": "nextcloud"
+    "owner": "nextcloud/server"
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
@@ -5466,7 +5466,7 @@
     "state": "built",
     "evidence": "appinfo/info.xml:69 <nextcloud min-version=\"32\" max-version=\"34\"/>; grep -rniF 'saml|oidc' lib/: no hits -- humaniq has no auth code of its own",
     "reachedOn": "Nextcloud's own login flow, platform-wide; humaniq adds nothing and blocks nothing, so any SSO app the instance runs (user_saml/user_oidc) covers humaniq transparently",
-    "owner": "nextcloud"
+    "owner": "nextcloud/server"
    },
    "provider": "nextcloud",
    "providerHow": "inferred",
