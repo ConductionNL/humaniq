@@ -206,400 +206,426 @@
    "id": "ppl-employee-record",
    "area": "people",
    "name": "Keep one record per employee with personal, contact and employment details.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
-   "hr2day": "unknown",
+   "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "hr2day": "comp-features.tsv hr2day#2430 (HR2day, 2026-03-27): Digitaal Personeelsdossier, centraal digitaal dossier met alle medewerkergegevens, contracten en documenten",
+    "orangehrm": "comp-features.tsv orangehrm#2466 (OrangeHRM, 2026-03-27): Employee Management, comprehensive employee information management with profiles, job details and history"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-objects.json Employee schema (employeeNumber, bsn, firstName, lastName, dateOfBirth, startDate, endDate, grossMonthlySalary, iban and more); src/manifest.effective.json pages Employees (index) and EmployeeDetail (detail)",
+    "reachedOn": "Employees /employees (menu Personeel), EmployeeDetail /employees/:id",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "employee-records",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "ppl-bsn-iban-validation",
    "area": "people",
    "name": "Have a BSN, IBAN and date of birth checked for validity when they are entered.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "partial",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "loket": "comp-features.tsv loket#29538 (Loket.nl, 2026-05-20): Onboarding workflows, digitaal welkomstpakket, ID-check, IBAN, BSN, contract digitale handtekening"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-objects.json:46 Employee.iban carries pattern ^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$ (its own x-notes call this a shape check only, mod-97 checksum a non-goal); grep -rniF bsn lib/Settings/register.d/hr-objects.json shows Employee.bsn has no pattern or format keyword at all; Employee.dateOfBirth carries only format: date, no plausibility or age check",
+    "reachedOn": "enforced by OpenRegister schema validation on every Employee create/edit, Employees /employees, EmployeeDetail /employees/:id",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "employee-records",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Only IBAN gets a real check, and by the schema's own note it is a shape regex, not a mod-97 checksum. BSN has no elfproef or format check anywhere in lib/Standards or the schema. Date of birth gets only generic ISO date parsing."
   },
   {
    "id": "ppl-contracts",
    "area": "people",
    "name": "Record each employment contract with its type, hours, salary and start and end date.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
    "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "hr2day": "partial",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv afas#2388 (AFAS HRM, 2026-03-27): Contractbeheer, overzicht van contracten, proeftijden en verloopdatums met automatische signalering",
+    "loket": "comp-features.tsv loket#29533 (Loket.nl, 2026-05-20): Contractbeheer, vast/tijdelijk/oproep contracten met automatische einddata-alerts en addenda",
+    "hr2day": "comp-features.tsv hr2day#2430 (HR2day, 2026-03-27): Digitaal Personeelsdossier, centraal digitaal dossier met alle medewerkergegevens, contracten en documenten (contracts folded into the dossier feature, not a standalone one)"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-objects.json EmploymentContract schema (employeeId $ref Employee, type enum permanent/temporary/agency/minijob/bbl, writtenContract, startDate, endDate, salary fields); src/manifest.effective.json pages EmploymentContracts (index) and EmploymentContractDetail (detail)",
+    "reachedOn": "EmploymentContracts /contracts (menu Personeel), EmploymentContractDetail /contracts/:id",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "employment-contracts",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "ppl-chain-rule",
    "area": "people",
    "name": "Get warned before a series of fixed-term contracts turns into a permanent one.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF ketenregeling . (excluding _lane): only hits are openspec/specs/hr-signals/spec.md and openspec/changes/archive/2026-07-13-hr-signals/{proposal,design}.md, all naming ketenregeling chain counting as explicitly out of scope; no PHP class or rule id implements it",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "employment-contracts",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "hr-signals' design.md and proposal.md both name ketenregeling (Wab 3x3) chain counting as a deliberate non-goal/follow-up. The successor check that does exist (nl-signaal-contract-verloopt) only looks for one later contract, not a legal 3-contract/3-year chain, so it cannot substitute."
   },
   {
    "id": "ppl-transition-payment",
    "area": "people",
    "name": "Calculate the statutory transition payment when a contract ends.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-onboarding.json:299 Offboarding.transitievergoedingBedrag (nullable number, human-entered); lib/Standards/Checks/NlOffboardingChecks.php:77 and :100-125 nl-offboarding-transitievergoeding only asserts the field is a non-null number once status reaches eindafrekening_gereed for a dismissal-initiated reason; grep -rniF 'formule\\|bereken\\|calculat' lib/Standards/Checks/NlOffboardingChecks.php lib/Service/: no calculation logic found",
+    "reachedOn": "OffboardingDetail /offboardings/:id (transitievergoedingBedrag field), enforced by occ humaniq:rules:audit before the eindafrekening checklist gate is considered ready",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "offboarding-wizard",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "The row asks the system to calculate the statutory amount. The code only requires HR to type a number in manually before offboarding can close (BW 7:673 presence check); no formula exists anywhere in the codebase."
   },
   {
    "id": "ppl-contract-expiry-signal",
    "area": "people",
    "name": "Get a signal when a contract is about to expire or a probation period ends.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv afas#2388 (AFAS HRM, 2026-03-27): Contractbeheer, overzicht van contracten, proeftijden en verloopdatums met automatische signalering",
+    "loket": "comp-features.tsv loket#29533 (Loket.nl, 2026-05-20): Contractbeheer, vast/tijdelijk/oproep contracten met automatische einddata-alerts en addenda"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Standards/rules/labour.json nl-signaal-contract-verloopt (60-day window, advisory, no successor contract) and nl-aanzegtermijn-bewaking (BW 7:668 lid 1, mandatory, missed one-month notice on a >=6-month fixed term); lib/Standards/Checks/NlSignalChecks.php implements both; lib/Standards/Checks/NlOnboardingChecks.php:71 nl-onboarding-proeftijd-bewaking covers probation-ending separately; lib/Service/ObligationsService.php:73,191-218 folds EmploymentContract expiries into the merged obligations list; src/manifest.effective.json:~1660 Dashboard 'Open obligations' widget calls GET /api/analytics/obligations",
+    "reachedOn": "Dashboard /dashboard, Open obligations widget (object-table) via GET /api/analytics/obligations, rowRoute EmploymentContractDetail",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "hr-signals",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Probation-ending is a separate rule (nl-onboarding-proeftijd-bewaking), not part of the two signals named in this row's hint; both are wired and both feed the same Dashboard obligations list."
   },
   {
    "id": "ppl-jubilee-signal",
    "area": "people",
    "name": "Get a signal for work anniversaries and other personnel milestones.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "orangehrm": "comp-features.tsv orangehrm#10161 (OrangeHRM, 2026-04-04, release-v5.3): Display upcoming work anniversaries of the employees"
    },
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF 'jubileum|anniversary|milestone' . (excluding _lane, node_modules): no hits in lib/, src/, or openspec/",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "hr-signals",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "openspec/changes/archive/2026-07-13-hr-signals/design.md explicitly names 'WIA/jubilea fuzzy signals' as a non-goal alongside ketenregeling."
   },
   {
    "id": "ppl-org-units",
    "area": "people",
    "name": "Model departments and teams as a hierarchy of organisational units.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
-   "hr2day": "unknown",
+   "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "hr2day": "comp-features.tsv hr2day#2444 (HR2day, 2026-03-27): Organisatiestructuur, beheer van organisatiestructuur, afdelingen en functies"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-org.json OrgUnit schema (name, type enum afdeling/team/kostenplaats, parentUnitId self-referencing $ref OrgUnit, costCenter, managerId $ref Employee, active); lib/Standards/Checks/NlOrgChecks.php:91 nl-org-unit-cycle keeps the parentUnitId chain acyclic; src/manifest.d/hr-org.json OrgUnits index (/org-units) and OrgUnitDetail (/org-units/:id) with Child units and Assignments object-lists",
+    "reachedOn": "OrgUnits /org-units (menu Personeel), OrgUnitDetail /org-units/:id",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "org-chart-basic",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "ppl-org-chart",
    "area": "people",
    "name": "See an organisation chart of who reports to whom.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "openspec/specs/org-chart-basic/spec.md: 'The interactive D3 tree, exports, snapshots and reorg tooling from the round-0 draft are explicitly out of scope ... org-chart-visualization (nc-vue first) and snapshot materialisation are declared follow-ups'; lib/Settings/register.d/hr-org.json OrgUnit.parentUnitId/managerId resolve through the Related widget, and OrgUnitDetail's Child units object-list lets a user walk the tree one level at a time",
+    "reachedOn": "OrgUnitDetail /org-units/:id (Child units object-list, Related parent/manager links); no dedicated chart view exists anywhere in src/manifest.d",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "org-chart-basic",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "You can walk the hierarchy one click at a time via parent/child links and see who manages a unit, but there is no visual org chart; the spec explicitly names the D3 tree visualization as a descoped follow-up, not something built."
   },
   {
    "id": "ppl-placements",
    "area": "people",
    "name": "Place an employee in a unit and position for a period, keeping the history.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-org.json OrgAssignment schema (employeeId $ref Employee, orgUnitId $ref OrgUnit, role, startDate, endDate nullable = effective-dated placement); src/manifest.d/hr-org.json OrgAssignments index (/org-assignments) and OrgAssignmentDetail (/org-assignments/:id); EmployeeDetail and OrgUnitDetail each carry an Assignments object-list filtered by employeeId/orgUnitId, so multiple historical rows accumulate per employee rather than one field being overwritten",
+    "reachedOn": "OrgAssignments /org-assignments (menu Personeel), OrgAssignmentDetail /org-assignments/:id; also surfaced on EmployeeDetail and OrgUnitDetail",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "org-chart-basic",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "ppl-position-management",
    "area": "people",
    "name": "Manage formation: budgeted positions and which are filled or vacant.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "no",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
-   "personio": "unknown",
+   "personio": "partial",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv afas#2389 (AFAS HRM, 2026-03-27): Formatiebeheer, dashboard voor bezetting, over-/onderbezetting en formatieplanning",
+    "personio": "comp-features.tsv personio#2490 (Personio, 2026-03-27): Personeelsplanning, tools voor vereenvoudigde personeelsplanning zonder spreadsheets (workforce planning, not explicitly budgeted-vs-filled position tracking)"
    },
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -nie formatieplaats -e budgeted -e 'vacant position' lib/Settings/ src/manifest.d/ openspec/specs/: no hits; only OrgUnit (department/team, no headcount fields) and Normfunctie (job-grading catalogue, no headcount fields) exist; neither schema tracks a budgeted number of positions or whether one is filled or vacant",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "position-management",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "ppl-job-framework",
    "area": "people",
    "name": "Keep a job framework of standard functions with their grading, such as HR21.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-hr21.json Normfunctie schema (functiecode, naam, functiegroep, caoSchaal, caoSchaalVerified, caoSchaalSource) with its own description: 'Seeded illustrative subset only (allowCreate:false). NOT a claimed-complete ~150-function library'; src/manifest.d/hr-hr21.json:26,51 allowCreate:false on both the Normfuncties index and NormfunctieDetail; EmploymentContract.normfunctieId links a contract to one, HR-set, never derived",
+    "reachedOn": "Normfuncties /normfuncties (menu Personeel), NormfunctieDetail /normfuncties/:id, read-only reference data",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "functiehuis-hr21",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "Works as a lookup and grading link, but the schema's own description says the seeded HR21 library is an illustrative subset, not claimed-complete, and allowCreate is false everywhere so nobody can add a missing normfunctie through the app."
   },
   {
    "id": "ppl-salary-bands",
    "area": "people",
    "name": "Define salary bands per job grade and check pay against them.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-comp.json SalaryBand schema (bandId, title, grade, minSalary/referenceSalary/maxSalary in integer cents, currency, cao/caoSchaal, effectiveFrom, active); lib/Service/CompBandValidator.php:54-72 evaluate() refuses a comp proposal outside [minSalary,maxSalary] or when the band cannot be resolved; lib/Service/CompAdjustmentService.php:82,88,279,298 injects and calls CompBandValidator during compensation-adjustment effectuation",
+    "reachedOn": "SalaryBands /salary-bands (menu Personeel, read-only reference), SalaryBandDetail /salary-bands/:id; enforced live from CompReviewCycles/CompAdjustmentDetail via CompAdjustmentService",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "comp-cycles",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "ppl-cao-library",
    "area": "people",
    "name": "Attach an employee to a collective labour agreement whose rules the system applies.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv afas#30860 (AFAS HRM, 2026-05-20): CAO-bibliotheek 200+, brede NL CAO-ondersteuning",
+    "visma-raet": "comp-features.tsv visma-raet#30012 (Visma Raet, 2026-05-20): CAO-bibliotheek 400+, alle ambtelijke CAOs incl. CAR-UWO, Rijk, NU-WO",
+    "hr2day": "comp-features.tsv hr2day#30887 (HR2day, 2026-05-20): CAO-bibliotheek, grote NL CAOs ondersteund",
+    "loket": "comp-features.tsv loket#29526 (Loket.nl, 2026-05-20): CAO-bibliotheek 250+, pre-configured CAOs voor alle grote NL branches",
+    "orangehrm": "concurrentie-analyse/hrm/README.md (2026-03-28): From Competitor Analysis table, CAO compliance row, OrangeHRM = No"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Standards/cao/*.json nine CAOs (cao-generiek verified anchor, cao-metaal-techniek, cao-horeca, cao-rijk, cao-gemeenten, cao-onderwijs-po, cao-onderwijs-vo, cao-ziekenhuizen, cao-zorg-vvt; most leaves placeholder:true except cao-generiek and cao-rijk's IKB/workingTime); lib/Standards/CaoRegistry.php loader (availableCaos/get/minMaandloonCents/minLeaveHours); lib/Standards/Checks/NlCaoChecks.php nl-cao-minimumloon-schaal and nl-cao-verlof-minimum audit EmploymentContract.cao/caoSchaal; src/manifest.d pages Caos (/caos) and CaoDetail (/caos/:id)",
+    "reachedOn": "Caos /caos (menu Personeel), CaoDetail /caos/:id; enforced against every EmploymentContract.cao by occ humaniq:rules:audit",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "cao-library",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "ppl-cao-updates",
    "area": "people",
    "name": "Receive updated collective agreement and legislation rules without reconfiguring by hand.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "partial",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv afas#2390 (AFAS HRM, 2026-03-27): Wet- en Regelgeving Updates, automatische verwerking van nieuwe wetgeving en actuele cao-regelingen"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Service/JurisdictionPackService.php + lib/Controller/JurisdictionPackController.php: ONE endpoint POST /api/payroll/packs (ADR-022, no CRUD) lets an admin upload a jurisdiction pack; grep -F 'payroll/packs' _lane/research/frontend-api-paths.txt: no hits, confirming no manifest page calls it; the bundled CAO/tax corpus (lib/Standards/cao/*.json, lib/Standards/tables/nl-2026.json) ships as code and only changes on an app upgrade",
+    "reachedOn": "route POST /api/payroll/packs, not called by any frontend page (API-only); bundled CAO/tax data changes require a new app release, not an in-app action",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "jurisdiction-packs",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "Both paths to a legislation update need a manual, out-of-band step: an app upgrade for bundled data, or a raw API call with no UI for an uploaded pack. Neither is automatic and neither has a page."
   },
   {
    "id": "ppl-personnel-dossier",
    "area": "people",
    "name": "Keep an employee's documents together in a digital personnel file.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
-   "personio": "unknown",
-   "orangehrm": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "yes",
+   "loket": "yes",
+   "personio": "yes",
+   "orangehrm": "partial",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "comp-features.tsv afas#30878 (AFAS HRM, 2026-05-20): Document management, personeelsdossier + e-sign",
+    "hr2day": "comp-features.tsv hr2day#2430 (HR2day, 2026-03-27): Digitaal Personeelsdossier, centraal digitaal dossier met alle medewerkergegevens, contracten en documenten",
+    "loket": "comp-features.tsv loket#29543 (Loket.nl, 2026-05-20): Documentbeheer werknemer, centraal personeelsdossier met versiebeheer, AVG retentie",
+    "personio": "comp-features.tsv personio#2485 (Personio, 2026-03-27): Documenten & Elektronische Handtekeningen, digitaal ondertekenen en opslaan van documenten",
+    "visma-raet": "concurrentie-analyse/hrm/README.md (2026-03-28): From Competitor Analysis table, Document management row, Youforce (Visma Raet) = Yes",
+    "orangehrm": "concurrentie-analyse/hrm/README.md (2026-03-28): From Competitor Analysis table, Document management row, OrangeHRM = Partial"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "openspec/specs/document-dossier-avg/spec.md REQ-DOSS-001/002, status done; src/manifest.d/hr-objects.json EmployeeDetail object-list-10 (schema HrGeneratedDocument, filter employeeId=@objectId, sort generatedAt desc, rowRoute GeneratedDocumentDetail) plus a native Files sidebar tab; lib/Settings/register.d/hr-objects.json Employee.loonheffingenVerklaringRetainedUntil + lib/Standards/Checks/NlPayrollChecks.php nl-loonbelastingverklaring-bewaarplicht-5jaar retention check",
+    "reachedOn": "EmployeeDetail /employees/:id, Documents object-list plus Files tab",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "document-dossier-avg",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
@@ -1181,351 +1207,372 @@
    "id": "lve-request",
    "area": "leave",
    "name": "Request leave and have a manager approve or reject it.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
-   "personio": "unknown",
-   "orangehrm": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "partial",
+   "loket": "yes",
+   "personio": "partial",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2378 (AFAS HRM, 2026-03-27): Verlofregistratie, digitale verlofaanvragen, saldo-overzicht en automatische goedkeuringsworkflows",
+    "visma-raet": "intelligence-db competitor_features#2506 (Visma Raet Youforce, 2026-03-27): Medewerkers vragen verlof aan, monitoren saldo, directe goedkeuring door manager",
+    "hr2day": "intelligence-db competitor_features#2433 (HR2day, 2026-03-27): Verlof- en Verzuimregistratie, beheer van verlof en verzuim (generic, approval workflow not stated)",
+    "loket": "intelligence-db competitor_features#29529 (Loket.nl, 2026-05-20): Verlofregistratie, vakantie/ouderschaps/zorg/geboorteverlof, saldo opbouw per CAO",
+    "personio": "intelligence-db competitor_features#2504 (Personio, 2026-03-27): Medewerker Self-Service, medewerkers beheren eigen profiel, verlof en documenten (approval side not stated)",
+    "orangehrm": "intelligence-db competitor_features#2472 (OrangeHRM, 2026-03-27): Leave Management, configurable leave types, balance tracking, approval workflows and PTO management"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-leave.json:33 LeaveRequest.submit requires LeaveTypeConditionGuard (registered lib/AppInfo/Application.php:166); hr-leave.json:41,49 approve/reject require NoSelfApprovalGuard (registered Application.php:125); src/manifest.d/hr-leave.json:4 LeaveRequestDetail lifecycleActions submit/approve/reject; src/manifest.d/hr-leave.json:150 LeaveRequests index page",
+    "reachedOn": "LeaveRequestDetail /leave-requests/:id (menu Leave & Absence > My leave / Leave requests / Leave approval), submit/approve/reject via lifecycle action buttons",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-management",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "lve-no-self-approval",
    "area": "leave",
    "name": "Stop a manager approving their own leave, hours or expenses.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/AppInfo/Application.php:125 registers NoSelfApprovalGuard; lib/Settings/register.d/hr-leave.json:41,49 LeaveRequest.approve/reject require it; hr-leave.json:317,325 LeaveTransaction.approve requires LeaveBuySellApprovalGuard (delegates to NoSelfApprovalGuard, registered Application.php:206), reject requires NoSelfApprovalGuard directly",
+    "reachedOn": "LeaveRequestDetail and LeaveTransactionDetail approve/reject lifecycle actions; the same guard class also gates Timesheet and Expense approvals elsewhere in the app",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "no-self-approval",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "No competitor feature row names separation-of-duties as a distinct capability; it is presumably bundled inside their approval workflows."
   },
   {
    "id": "lve-balance",
    "area": "leave",
    "name": "See how much leave an employee has left, split into statutory and extra-statutory days.",
-   "humaniq": "unknown",
-   "afas": "unknown",
-   "visma-raet": "unknown",
-   "hr2day": "unknown",
-   "loket": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
+   "visma-raet": "yes",
+   "hr2day": "partial",
+   "loket": "yes",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#2378 (AFAS HRM, 2026-03-27): saldo-overzicht",
+    "visma-raet": "intelligence-db competitor_features#2506 (Visma Raet Youforce, 2026-03-27): monitoren saldo",
+    "hr2day": "intelligence-db competitor_features#2433 (HR2day, 2026-03-27): Verlof- en Verzuimregistratie, generic, balance detail not stated",
+    "loket": "intelligence-db competitor_features#29529 (Loket.nl, 2026-05-20): saldo opbouw per CAO",
+    "orangehrm": "intelligence-db competitor_features#2472 (OrangeHRM, 2026-03-27): balance tracking"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-leave.json:181-198 LeaveBalance.remainingHours (x-openregister-calculations) = entitledHours+bovenwettelijkHours-usedHours; lib/Service/LeaveBalanceProjectionService.php recomputes usedHours from approved LeaveRequests on every change; lib/BackgroundJob/LeaveAccrualJob.php writes entitledHours/bovenwettelijkHours; src/manifest.d/hr-leave.json:179 LeaveBalances index shows all four columns",
+    "reachedOn": "LeaveBalances /leave-balances (menu Leave & Absence > Leave balances)",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-management",
+   "featureConfidence": "high",
+   "source": "competitor",
+   "note": "remainingHours is declarative but is fed by real write logic (LeaveBalanceProjectionService, LeaveAccrualJob), so this is not a pending rating."
   },
   {
    "id": "lve-accrual",
    "area": "leave",
    "name": "Have leave accrue each month automatically from the contract hours.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "intelligence-db competitor_features#30873 (AFAS HRM, 2026-05-20): leave-management core, Verlofregistratie + accrual",
+    "loket": "intelligence-db competitor_features#29529 (Loket.nl, 2026-05-20): saldo opbouw per CAO"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "appinfo/info.xml:104 registers OCA\\Humaniq\\BackgroundJob\\LeaveAccrualJob under background-jobs; lib/BackgroundJob/LeaveAccrualJob.php grants the full statutory holiday entitlement on the year's first accrual and accrues bovenwettelijkHours 1/12 per month, idempotent per (employee,year,month) via lastAccruedPeriod",
+    "reachedOn": "runs automatically as a registered TimedJob (fires ~daily, the per-balance lastAccruedPeriod marker enforces monthly cadence); output shown on LeaveBalances /leave-balances",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-accrual-job",
+   "featureConfidence": "high",
    "source": "own"
   },
   {
    "id": "lve-expiry",
    "area": "leave",
    "name": "Have statutory leave expire after its legal term and warn before it does.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Standards/Checks/NlLeaveChecks.php:135-149 nl-verlof-vervaltermijn only checks that LeaveBalance.expiryDate equals 1 July of year+1 (a data-integrity audit run via occ humaniq:rules:audit, lib/Command/RulesAuditCommand.php); grep -rn expiryDate lib/ shows the value is never read anywhere else (not by the remainingHours calculation, not by any write path that would zero or remove expired hours); grep -rniF notification lib/Listener lib/BackgroundJob: no hits for a pre-expiry reminder",
+    "reachedOn": "occ humaniq:rules:audit only, no page; no warning mechanism found",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-management",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "The expiry date is correctly computed and stored, but nothing acts on it: the balance does not shrink after 1 July and no one is warned beforehand."
   },
   {
    "id": "lve-types",
    "area": "leave",
    "name": "Configure leave types such as special leave, parental leave and unpaid leave with their own rules.",
-   "humaniq": "unknown",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
-   "personio": "unknown",
-   "orangehrm": "unknown",
+   "personio": "yes",
+   "orangehrm": "yes",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "personio": "intelligence-db competitor_features#2489 (Personio, 2026-03-27): Aanpasbare Regelingen, pas regelingen aan op eigen behoeften van afwezigheid tot overuren",
+    "orangehrm": "intelligence-db competitor_features#2472 (OrangeHRM, 2026-03-27): configurable leave types"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-leave-types.json LeaveType schema (code/label/drawsFromBalance/requiresReason/requiresDocument/maxNoticeDays/active) with 6 seeded types; lib/Lifecycle/LeaveTypeConditionGuard.php enforces requiresReason/requiresDocument/maxNoticeDays on LeaveRequest.submit (registered Application.php:166); lib/Service/LeaveTypeResolver.php resolves by uuid then code so legacy enum values still work; src/manifest.d/hr-leave-types.json LeaveTypes /verlofsoorten index + LeaveTypeDetail",
+    "reachedOn": "LeaveTypes /verlofsoorten (settings), enforced live when an employee submits a LeaveRequestDetail",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-management",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "lve-hours-from-pattern",
    "area": "leave",
    "name": "Calculate the leave hours a request costs from the employee's working pattern and public holidays.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Service/LeaveHoursCalculator.php:59-65 counts only Monday-Friday days (docblock: 'Public holidays are NOT subtracted, so a range covering one overstates usage by a day'); requestHours() derives hours as workingDays*(contractHoursPerWeek/5), a flat daily average, never reading the employee's actual per-weekday WorkingPattern; lib/Service/WorkingHoursService.php implements the real per-weekday WorkingPattern math but `grep -rl LeaveHoursCalculator lib/` shows only LeaveBalanceProjectionService calls it, never WorkingHoursService",
+    "reachedOn": "computed server-side inside LeaveBalanceProjectionService whenever a LeaveRequest is approved; the resulting number lands in the LeaveBalances usedHours column, no direct page trigger",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-management",
+   "featureConfidence": "medium",
+   "source": "own",
+   "note": "The calculation is a flat contractHoursPerWeek/5 per working day, not the employee's actual working pattern, and ignores public holidays."
   },
   {
    "id": "lve-buy-sell",
    "area": "leave",
    "name": "Buy or sell extra leave hours and have it settled in pay.",
-   "humaniq": "unknown",
-   "afas": "unknown",
+   "humaniq": "yes",
+   "afas": "yes",
    "visma-raet": "unknown",
-   "hr2day": "unknown",
+   "hr2day": "yes",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "afas": "concurrentie-analyse/hrm/README.md (2026-03-28): Differentiating features found in premium solutions: IKB (Individueel Keuzebudget) management (AFAS, HR2day)",
+    "hr2day": "concurrentie-analyse/hrm/README.md (2026-03-28): Differentiating features found in premium solutions: IKB (Individueel Keuzebudget) management (AFAS, HR2day)"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-leave.json:279-462 LeaveTransaction buy/sell lifecycle submit/approve/reject/settle, guarded by LeaveBuySellApprovalGuard and LeaveSettlementPeriodGuard (both registered Application.php:206,222); appinfo/routes.php:82 POST /api/leave/settle -> LeaveController::settle -> lib/Service/LeaveBuySellSettlementService.php writes bovenwettelijkHours and settledAmount; src/manifest.d/hr-leave.json:214-266 LeaveTransactionDetail headerActions 'verrekenen' calls that route",
+    "reachedOn": "LeaveTransactionDetail /leave-transactions/:id 'Settle' button (also MijnVerlofKopenVerkopen /mijn/verlof-kopen-verkopen for the employee's own view)",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-buy-sell",
+   "featureConfidence": "high",
    "source": "competitor"
   },
   {
    "id": "lve-team-calendar",
    "area": "leave",
    "name": "See a calendar of who in the team is on leave.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
-   "orangehrm": "unknown",
+   "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "orangehrm": "intelligence-db competitor_features#10570 (OrangeHRM, 2026-04-04): enhancement-issue (planned, open GitHub issue) 'Leave Calendar Plugin', evidence the open-source edition lacks a leave calendar"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "src/manifest.d/hr-leave-types.json LeaveSchedule pageInstance (templateRef indexScaffold over register humaniq schema LeaveRequest), sorted by startDate ascending, filter administrationId=@workspace.activeAdministrationId?; menu 05-menu.json:260 LeaveSchedule entry",
+    "reachedOn": "LeaveSchedule /verlofrooster (menu Leave & Absence > Department leave schedule)",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-against-a-department-schedule",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "It is a sortable list of requests, not a calendar grid. The page's own manifest note says the org-unit composition and RBAC redaction live in GET /api/leave/schedule and GET /api/leave/coverage, but the page is a plain indexScaffold and does not call either endpoint (see lve-department-coverage): what a user actually gets is an unfiltered-by-RBAC list of LeaveRequest rows for the active administration."
   },
   {
    "id": "lve-department-coverage",
    "area": "leave",
    "name": "Check a leave request against minimum staffing for the department.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "appinfo/routes.php:61 GET /api/leave/coverage -> lib/Controller/LeaveScheduleController.php::coverage, backed by lib/Service/LeaveCoverageService.php; the path /api/leave/coverage is absent from _lane/research/frontend-api-paths.txt and `grep -rn \"leave/coverage\" src/ --include=*.vue --include=*.js` has no hits; the LeaveSchedule manifest page (src/manifest.d/hr-leave-types.json) is a plain indexScaffold over LeaveRequest and does not call this endpoint",
+    "reachedOn": "nothing reaches it: the route and LeaveCoverageService exist but no page, widget or occ command calls them",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-against-a-department-schedule",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "Live-defect candidate: a real controller and service exist for this capability but have no caller anywhere in the app."
   },
   {
    "id": "lve-nc-calendar-sync",
    "area": "leave",
    "name": "Show approved leave in a shared Nextcloud calendar.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Command/CalendarSyncCommand.php:47,67 registers occ humaniq:calendar:sync (appinfo/info.xml:385); lib/Service/LeaveCalendarService.php one-way projects approved LeaveRequest/SickLeaveCase onto a configured shared Nextcloud calendar; appinfo/info.xml background-jobs block (lines 99-113) registers only LeaveAccrualJob and PollCalendarSubscriptionsJob, not this command, so it never runs unattended",
+    "reachedOn": "occ humaniq:calendar:sync only, no page and no scheduled job",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-calendar-nc",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "A Nextcloud-shared-calendar sync has no equivalent in the competitor set, which are not built on Nextcloud."
   },
   {
    "id": "lve-year-end",
    "area": "leave",
    "name": "Carry leave over to the next year according to the rules.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
     "state": "none",
-    "note": "not yet read"
+    "evidence": "grep -rniF 'year.end|carry.over|jaarovergang|year transition' lib/ src/manifest.d src/manifest.json openspec/specs (outside payroll): no hits; lib/BackgroundJob/LeaveAccrualJob.php grants each year's statutory entitlement fresh on the year's first accrual with no code reading or carrying forward the prior year's remainingHours into the new year's entitledHours",
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-management",
+   "featureConfidence": "medium",
    "source": "competitor"
   },
   {
    "id": "lve-public-holidays",
    "area": "leave",
    "name": "Keep a list of public holidays and non-working days that leave calculations respect.",
-   "humaniq": "unknown",
+   "humaniq": "no",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
    "loket": "unknown",
    "personio": "unknown",
    "orangehrm": "unknown",
-   "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
-   },
+   "evidence": {},
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-working-calendar.json:22-35 NonWorkingTime models only per-employee arrangements (reason enum: vaste-vrije-dag/aangepast-rooster/re-integratie/onbetaald-verlofafspraak/anders), not a shared public-holiday list; lib/Service/LeaveHoursCalculator.php:59-65 docblock states plainly 'Public holidays are NOT subtracted'; grep -rliF 'feestdag|public holiday|publicholiday' lib/Settings/register.d src/manifest.d lib/Service: no hits",
+    "reachedOn": "NonWorkingTimes /niet-werkdagen page exists but models a different concept (individual non-working arrangements); no page or service holds a company-wide holiday calendar that leave math reads",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "own"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-management",
+   "featureConfidence": "high",
+   "source": "own",
+   "note": "The hint's NonWorkingTime schema is a real page but is the wrong schema for this capability: it is individual per-employee non-working time, not a shared public-holiday list, and leave calculations explicitly do not subtract holidays."
   },
   {
    "id": "lve-leave-in-pay",
    "area": "leave",
    "name": "Pay out remaining leave when someone leaves.",
-   "humaniq": "unknown",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
-   "loket": "unknown",
+   "loket": "yes",
    "personio": "unknown",
    "orangehrm": "unknown",
    "evidence": {
-    "afas": "not checked: reader pack not yet folded",
-    "visma-raet": "not checked: reader pack not yet folded",
-    "hr2day": "not checked: reader pack not yet folded",
-    "loket": "not checked: reader pack not yet folded",
-    "personio": "not checked: reader pack not yet folded",
-    "orangehrm": "not checked: reader pack not yet folded"
+    "loket": "intelligence-db competitor_features#29539 (Loket.nl, 2026-05-20): offboarding expansion, Uitdiensttreding, eindafrekening, vakantiegeld + saldo verlof uitbetalen"
    },
    "built": {
-    "state": "none",
-    "note": "not yet read"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-onboarding.json:170-291 Offboarding schema carries a verlofsaldoUitbetaald checklist boolean, checked cross-object against the employee's LeaveBalance rows by nl-offboarding-verlofsaldo-uitbetaling (lib/Standards/rules/labour.json:249, lib/Standards/Checks/NlOffboardingChecks.php:79); the field is a manual HR checkbox on the eindafrekening-ready transition, not a computed payout amount or a payslip line; the offboarding-wizard-mvp proposal explicitly lists 'no eindafrekening computation engine' as out of scope",
+    "reachedOn": "OffboardingDetail page (src/manifest.d/hr-onboarding.json:168), checked by occ humaniq:rules:audit for nl-offboarding-verlofsaldo-uitbetaling",
+    "owner": "ConductionNL/humaniq"
    },
-   "source": "competitor"
+   "provider": "humaniq",
+   "providerHow": "read-from-code",
+   "feature": "leave-management",
+   "featureConfidence": "medium",
+   "source": "competitor",
+   "note": "HR can tick that the leave balance was paid out and it is audited against the real balance, but nothing computes the payout amount or posts it to a payslip."
   },
   {
    "id": "abs-sick-report",
