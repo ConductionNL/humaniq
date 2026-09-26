@@ -304,6 +304,10 @@
      "accessibilityStatement": "2026-09-26: web search for an OrangeHRM accessibility statement, VPAT or WCAG page returned nothing from orangehrm.com; none linked from the pricing or open-source pages.",
      "tenders": "no tender in the intelligence database names OrangeHRM as winner or in its title or description (searched 2026-09-26)"
     }
+   },
+   "readVersion": {
+    "tag": "v5.9",
+    "commit": "56e23b3b09e7af29317a0943523b825843fff527"
    }
   }
  ],
