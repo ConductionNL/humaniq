@@ -746,8 +746,8 @@
   {
     "row": "plt-template-store",
     "matrix": "humaniq",
-    "decision": "defer",
-    "reason": "No competitor yes, no demand, outside the core area.",
+    "decision": "existing",
+    "reason": "Matrix corrected. humaniq has a Store page (src/manifest.json:388, type store, commit bf32851c of 2026-09-04, before the matrix read) on OpenRegister's store plane that installs configuration sets other organisations publish; with no registry configured it shows the app's own items. Rating set to partial (no published HR configuration set exists yet to install) and built.state to built.",
     "change": null,
     "decidedOn": "2026-09-27"
   },
@@ -891,7 +891,7 @@
     "row": "rep-standard-reports",
     "matrix": "humaniq",
     "decision": "build",
-    "reason": "Build: 6 competitors rate yes (afas, visma-raet, hr2day, loket, personio, orangehrm).",
+    "reason": "Build: 6 competitors rate yes (afas, visma-raet, hr2day, loket, personio, orangehrm). Specified for the missing half: payroll, wage-cost, turnover and leave-balance reports beside the three ready-made reports on the Reports page (matrix corrected from no and none: src/manifest.json:816, commit cc2d18ab).",
     "change": "reporting-standard-reports-and-builder",
     "decidedOn": "2026-09-27"
   },
@@ -1189,6 +1189,14 @@
     "decision": "defer",
     "reason": "planninq matrix row: single competitor (xedule) with a changelog demand only (zermelo release 25.11); changelog alone does not meet the build rule.",
     "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tim-non-project",
+    "matrix": "planninq",
+    "decision": "build",
+    "reason": "planninq matrix row, decided no for planninq by the planninq lane (its docs/ARCHITECTURE.md section 5, resolved question 4, places non-project time with humaniq) and handed to humaniq by the coordinator on 2026-09-27. Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/365739); no existing humaniq change covers non-project activities, leave or sickness in the timesheet.",
+    "change": "time-non-project-activities",
     "decidedOn": "2026-09-27"
   },
   {

@@ -5732,7 +5732,7 @@
    "id": "rep-standard-reports",
    "area": "reporting",
    "name": "Pick from ready-made HR reports.",
-   "humaniq": "no",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -5748,9 +5748,9 @@
     "loket": "https://loket.nl/functionaliteiten/rapportages/: ready-made reports on payroll processing, absence, mutations, dossiers and training."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'WorkforceReport|AbsenceReport|PerformanceReport' lib/ src/: no hits outside compiled manifest.json/manifest.effective.json (which contain no such schemas); no 'Reports' page anywhere in src/manifest.d",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "evidence": "Matrix corrected 2026-09-27 in the openspec pass: src/manifest.json:816 page Reports (type reports, commit cc2d18ab 2026-09-03) offers three ready-made reports, WorkforceReport /reports/workforce, AbsenceReport /reports/absence and PerformanceReport, as declarative dashboard pages over the register. Partial: no payroll, wage-cost or turnover report. Before: grep -rniF 'WorkforceReport|AbsenceReport|PerformanceReport' lib/ src/: no hits outside compiled manifest.json/manifest.effective.json (which contain no such schemas); no 'Reports' page anywhere in src/manifest.d",
+    "reachedOn": "Reports /reports (footer menu, ReportsMenu)",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6517,7 +6517,7 @@
    "id": "plt-template-store",
    "area": "platform",
    "name": "Install ready-made HR configurations others have published, such as a leave policy.",
-   "humaniq": "no",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "partial",
    "hr2day": "unknown",
@@ -6533,9 +6533,9 @@
     "personio": "https://support.personio.de/hc/en-us/articles/16452157755421-Create-workflows offers a gallery of pre-built workflow templates and https://support.personio.de/hc/en-us/articles/28446992415901-Use-time-off-policy-templates offers country time off policy templates, including a Dutch one; these come from Personio, and installing configurations published by others is not described."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rn 'Store'|'template.store' src/manifest.d/*.json: no hits; no page or schema exists for installing a published, ready-made configuration such as a leave policy",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "evidence": "Matrix corrected 2026-09-27 in the openspec pass: src/manifest.json:388 page Store (type store, commit bf32851c 2026-09-04) adopts OpenRegister's store plane, which installs configuration sets other organisations publish (a leave policy, a job framework, onboarding flows); with no registry configured it shows the app's own items and makes no network call. Partial: no published HR configuration set exists yet to install. Before: grep -rn 'Store'|'template.store' src/manifest.d/*.json: no hits; no page or schema exists for installing a published, ready-made configuration such as a leave policy",
+    "reachedOn": "Store /store (footer menu, StoreMenu)",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
