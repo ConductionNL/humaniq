@@ -1,0 +1,1210 @@
+[
+  {
+    "row": "abs-gatekeeper-reminders",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket).",
+    "change": "absence-deadlines-and-signals",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "abs-medical-data-separation",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Partial, built, no demand, one competitor yes (hr2day). The missing half is file-level and role-level restriction on the case; no demand row and a single competitor.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "abs-rate",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, personio). Specified for the missing half: the per-department breakdown and the absence frequency trend; the overall rate over time is built.",
+    "change": "reporting-department-figures",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "abs-uwv-reporting",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate yes (afas, visma-raet, hr2day). Specified for the missing half: producing the 42-week notification content from the case; deadline tracking is built.",
+    "change": "absence-deadlines-and-signals",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "cmp-coverage",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Partial, built, no demand, no competitor yes. The coverage figure prints on occ humaniq:rules:audit.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "cmp-dsr-rectify",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (afas, personio). Specified for the missing half: a Rectify action that collects the changes it sends; the occ path works.",
+    "change": "compliance-dsr-rectify-form",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "cmp-field-rbac",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate yes (hr2day, personio, orangehrm).",
+    "change": "compliance-roles-and-field-access",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "cmp-roles",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, hr2day, loket, personio). Specified for the missing half: distinct HR, payroll, manager and employee roles instead of the admin or non-admin split.",
+    "change": "compliance-roles-and-field-access",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "cmp-rule-engine",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Partial, built, no demand, one competitor yes (afas). A page listing every violation is also a recorded change-level non-goal of 2026-08-20-hrmq-dashboard-steering-indicators.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "cmp-whistleblowing",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Single competitor (personio), no demand, outside the core area. Named as a case-management fast-follow in 2026-08-20-aor-ambtenarenrecht (F-003), not decided no.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "cmp-works-council",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "No competitor yes, no demand, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-ai-feedback-summary",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Single competitor (personio) with a changelog demand only; changelog alone does not meet the build rule and talent is outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-ai-policy-assistant",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (visma-raet, hr2day, loket, personio).",
+    "change": "self-service-policy-assistant",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-applicant-questions",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (afas, personio); a featureRequest demand row (https://github.com/orangehrm/orangehrm/issues/484) plus one competitor yes (afas); core area (hiring).",
+    "change": "hiring-portal-audiences",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-approvals-dashboard",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (hr2day, loket). Specified for the missing half: one list across hours, leave and expense approvals with each request's timeline.",
+    "change": "self-service-approvals-inbox",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-chat-channel-digest",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (personio, orangehrm).",
+    "change": "self-service-announcements-and-digest",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-commute-deduct-mileage",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Single competitor (afas) with a changelog demand only, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-document-to-employee",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: core area (hiring).",
+    "change": "hiring-hire-to-employee",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-leave-approval-history",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, hr2day, loket, personio); a featureRequest demand row (https://github.com/orangehrm/orangehrm/issues/1770) plus one competitor yes (afas). Specified for the missing half: stamping who approved or rejected a leave request and when on the request itself.",
+    "change": "leave-approval-steps-and-history",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-leave-multi-step-approval",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a featureRequest demand row (https://github.com/orangehrm/orangehrm/issues/1676) plus one competitor yes (personio).",
+    "change": "leave-approval-steps-and-history",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-leave-nudge",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Roadmap demand (youforce) but no competitor rated yes, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-lkv",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Single competitor (visma-raet) with a changelog demand only, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-lock-leave-periods",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Single competitor (afas) with a changelog demand only; humaniq's own cell is unknown (not traced).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-midyear-payroll-start",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (afas, personio).",
+    "change": "payroll-period-edge-cases",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-mutation-lineage",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: partial and built, with a changelog demand row (https://loket.nl/roadmap/) for the missing half. Specified for the missing half: tracing a payslip line back to the input mutation that produced it.",
+    "change": "payroll-mutation-lineage",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-oncall-average-hours",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: core area (people).",
+    "change": "people-flex-contract-rules",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-own-pension-rules",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Single competitor (loket) with a changelog demand only, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-parental-leave-pay",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Single competitor (hr2day) with a changelog demand only, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-pay-anomaly",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: partial and built, with a changelog demand row (https://data.maglr.com/1697/issues/68666/820322/index.html) for the missing half. Specified for the missing half: comparing each employee's pay with their own history and flagging outliers before close.",
+    "change": "payroll-run-checks",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-pay-transparency",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (hr2day, personio).",
+    "change": "reporting-pay-transparency",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-permission-overview",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Single competitor (personio) with a changelog demand only, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-plate-lookup",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (visma-raet, loket).",
+    "change": "people-register-prefill",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-rehire",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate yes (afas, hr2day, loket). Specified for the missing half: matching a hire to an existing former employee instead of creating a duplicate.",
+    "change": "hiring-hire-to-employee",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-right-to-work-check",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: partial and built, with a changelog demand row (https://klant.afas.nl/update/profit-8/hrm) for the missing half. Specified for the missing half: a check of the identity document with a hard stop when it fails; the checklist tick is built.",
+    "change": "people-dossier-completeness",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-rvu",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (afas, visma-raet).",
+    "change": "payroll-special-regimes",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-sickness-around-pregnancy",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Single competitor (hr2day) with a changelog demand only, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-survey-benchmark",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Roadmap demand (personio) but no competitor rated yes, and it depends on engagement surveys that do not exist yet.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-vacancy-matching",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (afas, hr2day); core area (hiring).",
+    "change": "hiring-candidate-assessment",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-week-53",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (afas, loket).",
+    "change": "payroll-period-edge-cases",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ess-announcements",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, hr2day, loket, personio).",
+    "change": "self-service-announcements-and-digest",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ess-edit-details",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, hr2day, loket, personio).",
+    "change": "people-record-change-approval",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ess-external-portal",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (afas, hr2day). Specified for the missing half: a candidate audience and a former-employee audience on the portal contribution.",
+    "change": "hiring-portal-audiences",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ess-hr-inbox",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "No competitor yes, no demand, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ess-mobile",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 6 competitors rate yes (afas, visma-raet, hr2day, loket, personio, orangehrm).",
+    "change": "self-service-mobile",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ess-notifications",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, personio).",
+    "change": "platform-notifications",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "exp-card-feed",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "No competitor yes, no demand, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "exp-fixed-allowances",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, hr2day, loket, personio). Specified for the missing half: a recurring fixed allowance that pays itself on each payslip.",
+    "change": "payroll-expenses-and-allowances",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "exp-mileage",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate yes (afas, visma-raet, hr2day). Specified for the missing half: computing the claim amount from the distance at the tax-free rate.",
+    "change": "expenses-travel-calculation",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "exp-policy",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "No competitor yes, no demand, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "exp-reimburse-in-pay",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: paying the approved claim as a payslip line; the status flip is built.",
+    "change": "payroll-expenses-and-allowances",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "fil-abp",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: an ABP-specific delivery in the UPA message; the obligation check is built.",
+    "change": "filings-pension-upa-message",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "fil-cbs",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "No competitor yes, no demand, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "fil-ib47",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (afas, hr2day).",
+    "change": "filings-ib47",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "fil-pension",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: generating the UPA message file; the filing lifecycle is built.",
+    "change": "filings-pension-upa-message",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "fil-premium-differentiation",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket).",
+    "change": "filings-premium-differentiation",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "fil-wage-tax-return",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: rendering the loonaangifte message (Gegevensspecificaties) from the run; the filing lifecycle is built.",
+    "change": "filings-wage-tax-message",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "hir-access-revocation",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, personio). Specified for the missing half: actually disabling the leaver's Nextcloud account; the checklist tick is built.",
+    "change": "hiring-offboarding-completion",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "hir-candidate-evaluation",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate yes (afas, hr2day, personio); core area (hiring).",
+    "change": "hiring-candidate-assessment",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "hir-career-page",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, hr2day, personio, orangehrm); core area (hiring).",
+    "change": "hiring-portal-audiences",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "hir-exit-interview",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, personio). Specified for the missing half: a structured exit interview record; the reason for leaving is built.",
+    "change": "hiring-offboarding-completion",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "hir-hire-to-employee",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 6 competitors rate yes (afas, visma-raet, hr2day, loket, personio, orangehrm); core area (hiring). Specified for the missing half: creating the Employee from the hired application; the status flip is built.",
+    "change": "hiring-hire-to-employee",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "hir-multiposting",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate yes (visma-raet, hr2day, personio); core area (hiring).",
+    "change": "hiring-multiposting",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "hir-preboarding",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket); core area (hiring).",
+    "change": "hiring-portal-audiences",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "hir-referrals",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: core area (hiring).",
+    "change": "hiring-candidate-assessment",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "lve-department-coverage",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "Open change leave-against-a-department-schedule covers it: REQ-LVM-S02 warns the approver on thin coverage. LeaveCoverageService and GET /api/leave/coverage exist but no page calls them yet (matrix evidence), which is that change's unfinished wiring, reported in the hand-back.",
+    "change": "leave-against-a-department-schedule",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "lve-expiry",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate yes (afas, visma-raet, hr2day). Specified for the missing half: acting on the expiry date and warning before it; the date is stored.",
+    "change": "leave-expiry-and-carry-over",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "lve-hours-from-pattern",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, loket, personio, orangehrm). Specified for the missing half: using the employee's working pattern and the calendar's public holidays instead of contract hours divided by five.",
+    "change": "leave-hours-from-the-working-pattern",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "lve-leave-in-pay",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Partial, built, no demand, one competitor yes (afas). The payout computation is an offboarding follow-up (eindafrekening engine), not demanded here.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "lve-nc-calendar-sync",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Partial, built, no demand, no competitor yes (the competitors are not Nextcloud apps).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "lve-public-holidays",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, loket, personio, orangehrm). Specified for the missing half: leave calculations reading the public holidays from openregister's working calendar.",
+    "change": "leave-hours-from-the-working-pattern",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "lve-team-calendar",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "Open change leave-against-a-department-schedule covers it: REQ-LVM-S01 reads an org unit's leave as one schedule over a period. Its tasks are ticked while the LeaveSchedule page is still a plain index that does not call GET /api/leave/schedule (matrix evidence); closing that wiring is that change's own verification, reported in the hand-back.",
+    "change": "leave-against-a-department-schedule",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "lve-year-end",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, hr2day, loket, personio).",
+    "change": "leave-expiry-and-carry-over",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pay-annual-statement",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: generating the annual statement from its page; viewing is built.",
+    "change": "payroll-annual-statement-action",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pay-cao-components",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: paying CAO-prescribed allowances and premiums in the run; the CAO floor check is built.",
+    "change": "payroll-cao-components",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pay-cost-allocation",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket).",
+    "change": "payroll-cost-allocation",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pay-gl-journal",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "Open change payroll-run-as-a-flow covers the missing half: the humaniq.payroll-glpost step posts every approved run without an occ call once an admin adopts the flow. Driving shillinq's own post transition is shillinq's by the recorded non-goal in 2026-07-12-payroll-glpost-shillinq.",
+    "change": "payroll-run-as-a-flow",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pay-holiday-allowance",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: paying out the reserved holiday allowance and a thirteenth month; the reservation is built.",
+    "change": "payroll-reservation-payouts",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pay-loans",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Single competitor (afas), no demand, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pay-outsourced",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (visma-raet, personio).",
+    "change": "payroll-external-bureau-handoff",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pay-reproduce",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Partial, built, no demand, no competitor yes; occ-only is the audit tool's intended shape.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pay-run-approval",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "Open change payroll-run-as-a-flow covers it: its Loonrun flow puts the review as an openregister.user-task before the humaniq.payroll-approve step, so the check-and-approve is engine state. The flow ships disabled by the engine's adoption contract and its task 7.3 (guard the raw status edit) is still open; that is the change's own remaining work, not a new capability.",
+    "change": "payroll-run-as-a-flow",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pay-run-check",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, hr2day, loket, personio). Specified for the missing half: the pre-run check on the payroll run page; the occ check is built.",
+    "change": "payroll-run-checks",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pay-sepa",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "Open change payroll-run-as-a-flow covers the humaniq half as the humaniq.payroll-netpay step. The SEPA export and payment execution are shillinq's by the recorded non-goal in 2026-07-13-payroll-sepa-netpay-shillinq (pain.001 generation is shillinq's), so nothing is left for humaniq to specify.",
+    "change": "payroll-run-as-a-flow",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pay-year-transition",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: loading the next year's tables from a page without a release; the year-keyed resolution is built.",
+    "change": "payroll-pack-and-cao-updates",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pln-agenda",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "Open change agenda-rostering-and-resource-booking covers it (REQ-AGD-001 one agenda per person, REQ-AGD-006 a consuming app places the agenda leaf). The partial rating is that no host places the leaf yet; placing it is the consuming app's step named in that change.",
+    "change": "agenda-rostering-and-resource-booking",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pln-availability",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "Open change agenda-rostering-and-resource-booking covers it (REQ-AGD-002 availability for a period and a competence). GET /api/availability exists; no consumer calls it yet, which is the consuming app's step named in that change.",
+    "change": "agenda-rostering-and-resource-booking",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pln-capacity",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "Open change agenda-rostering-and-resource-booking covers it (REQ-ROST-C03 planned capacity read forward against each person's own hours). GET /api/capacity exists without a caller, the consuming app's step named in that change.",
+    "change": "agenda-rostering-and-resource-booking",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pln-competence-check",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "Open change agenda-rostering-and-resource-booking covers it: REQ-ROST-C02 says a roster check refuses an assignment the person is not competent for. The matrix finds only a finding on the Working hours check, not a refusal on save, which is that change's own unfinished half, reported in the hand-back.",
+    "change": "agenda-rostering-and-resource-booking",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pln-leave-in-roster",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "No competitor rated yes (four partials), no demand, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "plt-accounting-link",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: expenses posting through payroll, since reimbursed expenses reach no ledger or payslip; the payroll half is covered by payroll-run-as-a-flow.",
+    "change": "payroll-expenses-and-allowances",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "plt-configurable-notifications",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, hr2day, loket, personio).",
+    "change": "platform-notifications",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "plt-integration-accounts",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, hr2day, loket, personio). Specified for the missing half: configuring a working connection through integriq; the catalogue of intent is built.",
+    "change": "platform-integrations-catalogue",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "plt-marketplace",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate yes (afas, loket, personio).",
+    "change": "platform-integrations-catalogue",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "plt-template-store",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "No competitor yes, no demand, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "plt-workflows",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, hr2day, loket, personio). Specified for the missing half: HR processes beyond payroll as shipped, adoptable flows; the Loonrun flow is built.",
+    "change": "platform-hr-workflows",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-brp-lookup",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: core area (people).",
+    "change": "people-register-prefill",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-bsn-iban-validation",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Partial, built, no demand, no competitor yes. BSN elfproef and IBAN mod-97 are named follow-ups of 2026-07-13-onboarding-wizard-mvp, not decided no.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-bulk-mutations",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, hr2day, loket, personio). Specified for the missing half: a page action to apply a collective raise to many employees; per adjustment and occ are built.",
+    "change": "comp-collective-raise-and-step-increase",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-cao-updates",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: a page to load a pack or CAO update without a release; the upload endpoint is built.",
+    "change": "payroll-pack-and-cao-updates",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-chain-rule",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: core area (people).",
+    "change": "people-flex-contract-rules",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-employee-relations",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: core area (people).",
+    "change": "people-employee-relations-cases",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-employee-timeline",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: core area (people). Specified for the missing half: one chronological timeline on the employee page.",
+    "change": "people-employment-history",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-esign-documents",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, hr2day, loket, personio). Specified for the missing half: e-signature for generated HR documents about an existing employee; offer letters are built.",
+    "change": "people-esign-hr-documents",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-job-framework",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (afas, personio). Specified for the missing half: maintaining the normfunctie library in the app; the seeded subset is built.",
+    "change": "people-job-framework-maintenance",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-jubilee-signal",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Recorded non-goal: openspec/changes/archive/2026-07-13-hr-signals/proposal.md:29 'WIA/jubilea/verjaardagen signals, too fuzzy for the corpus's machine-checkable discipline' and design.md:19 Non-Goals 'WIA/jubilea fuzzy signals'. Unlike ketenregeling it is not listed among that change's follow-ups (design.md:103). Five competitors rate yes, so this is flagged for review.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-org-chart",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate yes (afas, hr2day, personio). Specified for the missing half: a visual chart of the hierarchy; walking it one level at a time is built.",
+    "change": "people-org-chart-view",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-position-management",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate yes (afas, visma-raet, personio); core area (people).",
+    "change": "people-formation-positions",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "ppl-transition-payment",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: calculating the statutory transition payment; recording a typed amount is built.",
+    "change": "hiring-offboarding-completion",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "rep-benchmark",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Single competitor (loket), no demand. External benchmarking is a named future change gated on a market-data service in 2026-07-14-comp-cycles.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "rep-billable-ratio",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Partial, built, no demand, no competitor yes.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "rep-report-builder",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, hr2day, loket, personio).",
+    "change": "reporting-standard-reports-and-builder",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "rep-standard-reports",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 6 competitors rate yes (afas, visma-raet, hr2day, loket, personio, orangehrm).",
+    "change": "reporting-standard-reports-and-builder",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "rep-wage-costs",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, hr2day, loket, personio). Specified for the missing half: the per-department breakdown; the total per period is built.",
+    "change": "reporting-department-figures",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tal-bhv",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "The missing half (a numeric BHV coverage ratio) is a recorded non-goal: openspec/changes/archive/2026-07-17-bhv-organisatie/proposal.md 'No Location entity, no per-location coverage formula, no numeric BHV-ratio: Arbowet art. 15 sets a qualitative RI&E-driven standard, not a number; inventing one would be worse than not checking at all'. The certificate tracking half is built.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tal-career-paths",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "No competitor yes, no demand, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tal-recognition",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "No competitor yes, no demand, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tal-skills-matrix",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Single competitor (hr2day), no demand, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tal-surveys",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, personio).",
+    "change": "talent-engagement-surveys",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tal-training",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 5 competitors rate yes (afas, visma-raet, hr2day, loket, personio).",
+    "change": "talent-training-and-lms",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-commute-allowance",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415705); 3 competitors rate yes (afas, visma-raet, hr2day). Specified for the missing half: calculating the commuting allowance from the distance with the tax-free rules and a route lookup.",
+    "change": "expenses-travel-calculation",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-dossier-validation",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415705); 2 competitors rate yes (afas, hr2day). Specified for the missing half: a mandatory-document list per employee with a signal when one is missing or expired.",
+    "change": "people-dossier-completeness",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-event-webhooks",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415227); 3 competitors rate yes (afas, hr2day, personio). Specified for the missing half: events for joining, leaving, job change, leave and sickness; the timesheet event is built.",
+    "change": "platform-hr-lifecycle-events",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-formation-scenarios",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415227).",
+    "change": "reporting-personnel-budget-and-scenarios",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-frequent-absence",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415705).",
+    "change": "absence-deadlines-and-signals",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-ikb",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415227); 2 competitors rate yes (visma-raet, hr2day). Specified for the missing half: an individual choice budget that accrues and can be spent on several goals; leave buy and sell is built.",
+    "change": "payroll-reservation-payouts",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-lms-sync",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415227).",
+    "change": "talent-training-and-lms",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-manager-dashboard",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415227); 2 competitors rate yes (afas, hr2day). Specified for the missing half: a dashboard scoped to the manager's own department.",
+    "change": "reporting-department-figures",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-manager-deputy",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415705); 2 competitors rate yes (afas, hr2day).",
+    "change": "self-service-approvals-inbox",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-multiple-employments",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415227); 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: one combined view of concurrent employments, including leave across them.",
+    "change": "people-employment-history",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-mutation-approval",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415705); 5 competitors rate yes (afas, visma-raet, hr2day, loket, personio); core area (people).",
+    "change": "people-record-change-approval",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-net-fte",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415227).",
+    "change": "people-formation-positions",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-personnel-budget",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415705).",
+    "change": "reporting-personnel-budget-and-scenarios",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-political-office-holders",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415227).",
+    "change": "payroll-special-regimes",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-review-progress-private",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415705). Specified for the missing half: hiding the review content from HR while showing progress.",
+    "change": "compliance-roles-and-field-access",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-secondment",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415227); core area (people).",
+    "change": "people-secondment-and-side-activities",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-side-activities",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415227); 2 competitors rate yes (afas, visma-raet). Specified for the missing half: a register of the side activities themselves; the yes or no attestation is built.",
+    "change": "people-secondment-and-side-activities",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-step-increase",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415705). Specified for the missing half: a yearly step in the scale proposed, decided and explained to the employee.",
+    "change": "comp-collective-raise-and-step-increase",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-wpm-co2",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415227); 3 competitors rate yes (afas, visma-raet, hr2day).",
+    "change": "expenses-travel-calculation",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tim-attendance-overview",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Partial, built, no demand, no competitor yes.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tim-atw-limits",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Partial, built, no demand, no competitor yes.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tim-billable-rates",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "Partial, built, no demand, one competitor yes (afas).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tim-geofence",
+    "matrix": "humaniq",
+    "decision": "defer",
+    "reason": "No competitor yes, no demand. GPS and geofence are a named follow-up of 2026-07-13-time-attendance-mvp with their own AVG spec.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tim-hours-to-invoice",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "Archived change 2026-09-06-humaniq-timesheet-approved-typed-event shipped humaniq's half: a typed TimesheetApprovedEvent and the webhook carry the billable flag on approval. The consumer is shillinq's consume-hrmq-events change by that change's recorded non-goal, so the missing half is owed by shillinq, not specifiable here.",
+    "change": "2026-09-06-humaniq-timesheet-approved-typed-event",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tim-hours-to-payroll",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket).",
+    "change": "time-hours-and-overtime-to-payroll",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tim-overtime",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, loket, personio).",
+    "change": "time-hours-and-overtime-to-payroll",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tt-staff-count-export",
+    "matrix": "planninq",
+    "decision": "build",
+    "reason": "planninq matrix row, owned by humaniq. Build: 2 competitors rate yes (zermelo, xedule).",
+    "change": "education-staff-deployment-and-count",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tt-staff-deployment",
+    "matrix": "planninq",
+    "decision": "build",
+    "reason": "planninq matrix row, owned by humaniq. Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/271977, https://www.tenderned.nl/aankondigingen/overzicht/414807).",
+    "change": "education-staff-deployment-and-count",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tt-staff-report-absence",
+    "matrix": "planninq",
+    "decision": "defer",
+    "reason": "planninq matrix row: no competitor rated yes (untis partial), no demand, outside humaniq's core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tt-strategic-staff-planning",
+    "matrix": "planninq",
+    "decision": "defer",
+    "reason": "planninq matrix row: single competitor (xedule) with a changelog demand only (zermelo release 25.11); changelog alone does not meet the build rule.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "cmp-encryption",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Owned by nextcloud/server: encryption at rest is a Nextcloud server and storage capability outside the fleet; decided no for humaniq per the openspec pass addendum.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "dm-passkeys",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Owned by nextcloud/server: passkey sign-in is Nextcloud WebAuthn, outside the fleet; decided no for humaniq per the openspec pass addendum.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  }
+]
