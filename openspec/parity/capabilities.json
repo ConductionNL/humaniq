@@ -4835,8 +4835,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/115002763969-Create-Document-Templates-Placeholders: document templates filled with employee data such as hire date, position and contract end date can produce employer letters; no ready-made employer statement for mortgage or rental applications is described."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Command/DocumentsGenerateCommand.php:59,92 lists 'werkgeversverklaring' as a supported --type, rendered through filinq's (FleetAppId-resolved docudesk/filinq) template engine per lib/Service/HrDocumentService.php; grep -n 'documentType' src/manifest.d/*.json shows page-level generate actions only for loonstrook (Payslip) and arbeidsovereenkomst (EmploymentContract), none for werkgeversverklaring",
+    "state": "specified",
+    "evidence": "lib/Command/DocumentsGenerateCommand.php:59,92 lists 'werkgeversverklaring' as a supported --type, rendered through filinq's (FleetAppId-resolved docudesk/filinq) template engine per lib/Service/HrDocumentService.php; grep -n 'documentType' src/manifest.d/*.json shows page-level generate actions only for loonstrook (Payslip) and arbeidsovereenkomst (EmploymentContract), none for werkgeversverklaring. Specified in ConductionNL/filinq openspec/changes/templates-employer-statement (filinq lane, OpenSpec pass 2026-09-27).",
     "reachedOn": "occ humaniq:documents:generate --type werkgeversverklaring only, no page can trigger a new one; once generated it is viewable/downloadable via GeneratedDocuments /documents -> GeneratedDocumentDetail's Files tab",
     "owner": "ConductionNL/filinq"
    },
@@ -5779,8 +5779,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/115001324149-Overview-of-the-People-List: export the People List with extra columns; https://support.personio.de/hc/en-us/articles/15718133638685-Create-a-report: any report exports as Excel or CSV."
    },
    "built": {
-    "state": "built",
-    "evidence": "nextcloud-vue CnIndexPage.vue:1605 showMassExport defaults true (a mass action exporting only the fetched/selected rows as a blob download); its allowExport prop (native full-list CSV/Excel export via OpenRegister's export leaf, honouring the current filters) defaults false and additionally requires the schema flagged exportable:true; grep -rn 'allowExport|exportable' src/manifest.d lib/Settings/register.d src/manifest.json: no hits anywhere in humaniq",
+    "state": "specified",
+    "evidence": "nextcloud-vue CnIndexPage.vue:1605 showMassExport defaults true (a mass action exporting only the fetched/selected rows as a blob download); its allowExport prop (native full-list CSV/Excel export via OpenRegister's export leaf, honouring the current filters) defaults false and additionally requires the schema flagged exportable:true; grep -rn 'allowExport|exportable' src/manifest.d lib/Settings/register.d src/manifest.json: no hits anywhere in humaniq. Specified in ConductionNL/nextcloud-vue openspec/changes/index-export-follows-the-page (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
     "reachedOn": "every index page (indexScaffold template), e.g. Timesheets /timesheets, mass-select rows then Export; the full filtered-list export is never enabled",
     "owner": "ConductionNL/nextcloud-vue"
    },
@@ -6098,14 +6098,14 @@
     "state": "built",
     "evidence": "src/manifest.d/hr-objects.json:14 sidebar.showMetadata:true on EmployeeDetail; the same 'Audit history is a sidebar tab' pattern is repeated in the design notes of essentially every detail page across src/manifest.d/*.json (OpenRegister's own audit-history sidebar feature)",
     "reachedOn": "every object detail page, 'Audit history' sidebar tab",
-    "owner": "ConductionNL/openregister"
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
    "feature": "audit-trail",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "Covers who changed a record and when, on every object; did not verify from humaniq's own code whether OpenRegister's audit trail also logs read/view access, only writes, so rated partial against the row's 'viewed or changed' wording."
+   "note": "Covers who changed a record and when, on every object; did not verify from humaniq's own code whether OpenRegister's audit trail also logs read/view access, only writes, so rated partial against the row's 'viewed or changed' wording. Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-03-21-audit-trail-immutable; the missing half is humaniq's own work, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister)."
   },
   {
    "id": "cmp-roles",
@@ -6380,13 +6380,14 @@
     "state": "built",
     "evidence": "openspec/specs/hris-api-public/spec.md: 'humaniq builds no parallel REST/GraphQL/webhook/SCIM stack; external access is Nextcloud app passwords over OpenRegister's own API'; lib/Settings/register.d/hr-integrations.json:5 IntegrationAccount is a catalog only, not the API itself; no dedicated OpenAPI/API-docs artifact found under docs/",
     "reachedOn": "external systems call OpenRegister's generic object API (GET/POST/PUT/PATCH/DELETE /api/objects/{register}/{schema}) directly, authenticated with a Nextcloud app password; humaniq's own contribution is the IntegrationAccounts audit page",
-    "owner": "ConductionNL/openregister"
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
    "feature": "hris-api-public",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-06-14-openapi-generation; the missing half is humaniq's own work, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister)."
   },
   {
    "id": "plt-accounting-link",
@@ -7325,8 +7326,8 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmCoreOAuthPlugin/config/routes.yaml:45 an OAuth2 client can pull data from the REST API on its own schedule; grep -riE '\\b(power ?bi|business intelligence)\\b' src/plugins src/client/src finds no match, so no built-in feed"
    },
    "built": {
-    "state": "built",
-    "evidence": "openspec/specs/hris-api-public/spec.md: external access is Nextcloud app passwords over OpenRegister's generic object API, which a BI tool can poll on its own schedule; no OData or BI connector (grep -rniE 'odata|power ?bi' lib src: only DemoDataService name matches)",
+    "state": "specified",
+    "evidence": "openspec/specs/hris-api-public/spec.md: external access is Nextcloud app passwords over OpenRegister's generic object API, which a BI tool can poll on its own schedule; no OData or BI connector (grep -rniE 'odata|power ?bi' lib src: only DemoDataService name matches) Specified in ConductionNL/openregister openspec/changes/rapportage-bi-export (openregister lane, OpenSpec pass 2026-09-27).",
     "reachedOn": "external client on /api/objects/{register}/{schema}, no humaniq page",
     "owner": "ConductionNL/openregister"
    },
@@ -7357,8 +7358,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(dms|document management|sharepoint)\\b' src/plugins src/client/src finds no match; OrangeHRM generates no HR documents to store"
    },
    "built": {
-    "state": "built",
-    "evidence": "src/manifest.d/hr-documents.json:25 generated HR documents are rendered and stored by docudesk (lib/Settings/register.d/hr-documents.json:232 records a docudesk handoff per document) into Nextcloud Files; no link to an external DMS over ZGW or STUF-ZDS (grep -rniE 'zgw|zds|drc' lib src: no hits)",
+    "state": "specified",
+    "evidence": "src/manifest.d/hr-documents.json:25 generated HR documents are rendered and stored by docudesk (lib/Settings/register.d/hr-documents.json:232 records a docudesk handoff per document) into Nextcloud Files; no link to an external DMS over ZGW or STUF-ZDS (grep -rniE 'zgw|zds|drc' lib src: no hits) Specified in ConductionNL/filinq openspec/changes/generate-store-in-case-system (filinq lane, OpenSpec pass 2026-09-27).",
     "reachedOn": "GeneratedDocuments /documents, GeneratedDocumentDetail /documents/:id",
     "owner": "ConductionNL/filinq"
    },
@@ -8423,13 +8424,14 @@
     "state": "specified",
     "evidence": "openspec/specs/humaniq-mcp-surface/spec.md: x-openregister-mcp declares six read-only schemas (Vacancy, OrgUnit, Asset, AssetAssignment, Timesheet, Expense) with search and get only, so no request can be started; the row rests on a declaration only and whether the installed OpenRegister serves it was not driven (same as the pending row rep-ai-assistant)",
     "reachedOn": "an external MCP client, declaration only",
-    "owner": "ConductionNL/openregister"
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
    "source": "changelog",
    "origin": "changelog",
-   "originUrl": "https://support.personio.de/hc/en-us/articles/38314656674333-Personio-MCP-server-Beta-access-overview"
+   "originUrl": "https://support.personio.de/hc/en-us/articles/38314656674333-Personio-MCP-server-Beta-access-overview",
+   "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-08-17-declared-actions-and-mcp-scope (a schema can declare a write action as an MCP tool); humaniq declaring the time-off action is humaniq's, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister)."
   },
   {
    "id": "dm-approvals-dashboard",
