@@ -555,8 +555,8 @@
     "personio": "not checked: not settled: searched help centre articles for fixed-term, chain, successive contracts and ketenregeling; https://support.personio.de/hc/en-us/articles/34554225234845-Manage-employment-changes covers contract type changes but no warning about a run of fixed-term contracts becoming permanent."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF ketenregeling . (excluding _lane): only hits are openspec/specs/hr-signals/spec.md and openspec/changes/archive/2026-07-13-hr-signals/{proposal,design}.md, all naming ketenregeling chain counting as explicitly out of scope; no PHP class or rule id implements it",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-flex-contract-rules on 2026-09-27. Before: grep -rniF ketenregeling . (excluding _lane): only hits are openspec/specs/hr-signals/spec.md and openspec/changes/archive/2026-07-13-hr-signals/{proposal,design}.md, all naming ketenregeling chain counting as explicitly out of scope; no PHP class or rule id implements it",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -651,8 +651,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360000455585-Create-reminders-for-work-anniversaries-and-birthdays: explains creating reminders for employees' five-year and other work anniversaries and birthdays."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'jubileum|anniversary|milestone' . (excluding _lane, node_modules): no hits in lib/, src/, or openspec/",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-27, source: Recorded non-goal: openspec/changes/archive/2026-07-13-hr-signals/proposal.md:29 'WIA/jubilea/verjaardagen signals, too fuzzy for the corpus's machine-checkable discipline' and design.md:19 Non-Goals 'WIA/jubilea fuzzy signals'. Unlike ketenregeling it is not listed among that change's follow-ups (design.md:103). Five competitors rate yes, so this is flagged for review. Before: grep -rniF 'jubileum|anniversary|milestone' . (excluding _lane, node_modules): no hits in lib/, src/, or openspec/",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -661,7 +661,7 @@
    "feature": "hr-signals",
    "featureConfidence": "medium",
    "source": "competitor",
-   "note": "openspec/changes/archive/2026-07-13-hr-signals/design.md explicitly names 'WIA/jubilea fuzzy signals' as a non-goal alongside ketenregeling."
+   "note": "openspec/changes/archive/2026-07-13-hr-signals/design.md explicitly names 'WIA/jubilea fuzzy signals' as a non-goal alongside ketenregeling. Decided no on 2026-09-27 in the openspec pass, see built.evidence for the source."
   },
   {
    "id": "ppl-org-units",
@@ -714,8 +714,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360017540757-Overview-of-the-Org-chart: the chart shows the company hierarchy, reporting chains and employee relationships by employee, department or team."
    },
    "built": {
-    "state": "built",
-    "evidence": "openspec/specs/org-chart-basic/spec.md: 'The interactive D3 tree, exports, snapshots and reorg tooling from the round-0 draft are explicitly out of scope ... org-chart-visualization (nc-vue first) and snapshot materialisation are declared follow-ups'; lib/Settings/register.d/hr-org.json OrgUnit.parentUnitId/managerId resolve through the Related widget, and OrgUnitDetail's Child units object-list lets a user walk the tree one level at a time",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-org-chart-view on 2026-09-27 for the missing half: a visual chart of the hierarchy; walking it one level at a time is built. Before: openspec/specs/org-chart-basic/spec.md: 'The interactive D3 tree, exports, snapshots and reorg tooling from the round-0 draft are explicitly out of scope ... org-chart-visualization (nc-vue first) and snapshot materialisation are declared follow-ups'; lib/Settings/register.d/hr-org.json OrgUnit.parentUnitId/managerId resolve through the Related widget, and OrgUnitDetail's Child units object-list lets a user walk the tree one level at a time",
     "reachedOn": "OrgUnitDetail /org-units/:id (Child units object-list, Related parent/manager links); no dedicated chart view exists anywhere in src/manifest.d",
     "owner": "ConductionNL/humaniq"
    },
@@ -777,8 +777,8 @@
     "loket": "not checked: not settled: searched loket.nl feature pages, the API reference tag list (https://developer.loket.nl/ApiDocs) and the roadmap for formatie, budgeted positions or vacancies; nothing covers formation management."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -nie formatieplaats -e budgeted -e 'vacant position' lib/Settings/ src/manifest.d/ openspec/specs/: no hits; only OrgUnit (department/team, no headcount fields) and Normfunctie (job-grading catalogue, no headcount fields) exist; neither schema tracks a budgeted number of positions or whether one is filled or vacant",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-formation-positions on 2026-09-27. Before: grep -nie formatieplaats -e budgeted -e 'vacant position' lib/Settings/ src/manifest.d/ openspec/specs/: no hits; only OrgUnit (department/team, no headcount fields) and Normfunctie (job-grading catalogue, no headcount fields) exist; neither schema tracks a budgeted number of positions or whether one is filled or vacant",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -808,8 +808,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/18286680534813-Overview-of-the-Job-architecture-in-Personio: a job catalog with standardized job name, job family, track, level and salary band, assigned to employees."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-hr21.json Normfunctie schema (functiecode, naam, functiegroep, caoSchaal, caoSchaalVerified, caoSchaalSource) with its own description: 'Seeded illustrative subset only (allowCreate:false). NOT a claimed-complete ~150-function library'; src/manifest.d/hr-hr21.json:26,51 allowCreate:false on both the Normfuncties index and NormfunctieDetail; EmploymentContract.normfunctieId links a contract to one, HR-set, never derived",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-job-framework-maintenance on 2026-09-27 for the missing half: maintaining the normfunctie library in the app; the seeded subset is built. Before: lib/Settings/register.d/hr-hr21.json Normfunctie schema (functiecode, naam, functiegroep, caoSchaal, caoSchaalVerified, caoSchaalSource) with its own description: 'Seeded illustrative subset only (allowCreate:false). NOT a claimed-complete ~150-function library'; src/manifest.d/hr-hr21.json:26,51 allowCreate:false on both the Normfuncties index and NormfunctieDetail; EmploymentContract.normfunctieId links a contract to one, HR-set, never derived",
     "reachedOn": "Normfuncties /normfuncties (menu Personeel), NormfunctieDetail /normfuncties/:id, read-only reference data",
     "owner": "ConductionNL/humaniq"
    },
@@ -1029,8 +1029,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/36539231813661-Summary-of-Employee-profile-and-Employment-details-permissions-New-experience: the History tab in the employee profile shows a record of all data changes made to an employee's attributes."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Service/EmployeeTimeline.php:65 place() buckets raw Employee rows by startDate/endDate for headcount counting; grep -rln EmployeeTimeline lib/ shows its only caller is lib/Service/AnalyticsService.php, which feeds the Dashboard's 'Headcount & turnover' trend widget, not a per-employee view; EmployeeDetail (src/manifest.d/hr-objects.json) instead shows Contracts, Payslips, Expenses, Timesheets, Assignments, Reviews, Goals & OKRs, Compensation adjustments, Buy/sell leave and Generated documents as SEPARATE object-list panels, with no merged chronological timeline widget anywhere",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-employment-history on 2026-09-27 for the missing half: one chronological timeline on the employee page. Before: lib/Service/EmployeeTimeline.php:65 place() buckets raw Employee rows by startDate/endDate for headcount counting; grep -rln EmployeeTimeline lib/ shows its only caller is lib/Service/AnalyticsService.php, which feeds the Dashboard's 'Headcount & turnover' trend widget, not a per-employee view; EmployeeDetail (src/manifest.d/hr-objects.json) instead shows Contracts, Payslips, Expenses, Timesheets, Assignments, Reviews, Goals & OKRs, Compensation adjustments, Buy/sell leave and Generated documents as SEPARATE object-list panels, with no merged chronological timeline widget anywhere",
     "reachedOn": "EmployeeTimeline itself reaches the Dashboard's aggregate Headcount & turnover chart, not EmployeeDetail; a user reads an individual employee's history by opening several separate list panels on EmployeeDetail /employees/:id, not one timeline",
     "owner": "ConductionNL/humaniq"
    },
@@ -1156,8 +1156,8 @@
     "personio": "not checked: not settled: searched help centre for population register, BRP and address lookup; no article on filling personal details from a population register."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rnie brp -e gba -e personsapi -e ingeschrevenpersonen lib/ src/manifest.d/ openspec/specs/ (excluding _lane): no hits anywhere in the repository",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-register-prefill on 2026-09-27. Before: grep -rnie brp -e gba -e personsapi -e ingeschrevenpersonen lib/ src/manifest.d/ openspec/specs/ (excluding _lane): no hits anywhere in the repository",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -1219,8 +1219,8 @@
     "personio": "not checked: not settled: searched help centre for grievance, disciplinary, warning and employee relations cases; employee relationships in https://support.personio.de/hc/en-us/articles/23599397956893-Summary-of-supervisors-and-employee-relationships means mentor or supervisor links, not cases, and whistleblowing is a separate reporting channel."
    },
    "built": {
-    "state": "none",
-    "evidence": "openspec/specs/humaniq-employee-relations/spec.md is a name collision: its actual content ('The detail-page related widget surfaces the linked Employee') is about OpenRegister's Relations mechanism resolving Timesheet.employeeId/Expense.employeeId to a real Employee object, not HR employee-relations cases; grep -rnie grievance,disciplinary,klacht,tuchtmaatregel,waarschuwing lib/Settings/register.d/ src/manifest.d/: no hits anywhere",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-employee-relations-cases on 2026-09-27. Before: openspec/specs/humaniq-employee-relations/spec.md is a name collision: its actual content ('The detail-page related widget surfaces the linked Employee') is about OpenRegister's Relations mechanism resolving Timesheet.employeeId/Expense.employeeId to a real Employee object, not HR employee-relations cases; grep -rnie grievance,disciplinary,klacht,tuchtmaatregel,waarschuwing lib/Settings/register.d/ src/manifest.d/: no hits anywhere",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -4129,7 +4129,8 @@
    "built": {
     "state": "built",
     "evidence": "lib/Standards/Checks/NlCaoChecks.php (cao-library) only runs two machine-checkable compliance checks, nl-cao-minimumloon-schaal (salary floor) and nl-cao-verlof-minimum (leave floor); Caos/CaoDetail (hr-cao.json) are read-only reference pages; grep -n -iE 'shift.?premie|toeslag|allowance|premium' lib/Standards/packs/nl-2026.pack.json: no hits, so no step in the actual payroll calculation chain applies a CAO-specific shift premium or allowance",
-    "reachedOn": "Caos /caos and CaoDetail show the CAO's minimum scale and leave figures for reference; the compliance check runs via occ humaniq:rules:audit; nothing in a payroll run actually adds a CAO-prescribed component to a payslip"
+    "reachedOn": "Caos /caos and CaoDetail show the CAO's minimum scale and leave figures for reference; the compliance check runs via occ humaniq:rules:audit; nothing in a payroll run actually adds a CAO-prescribed component to a payslip",
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4256,7 +4257,8 @@
    "built": {
     "state": "none",
     "evidence": "grep -rniF 'loan|voorschot|advance' lib openspec (excluding archive): no hits; Payslip/Loonbeslag schemas carry no loan or advance-instalment field",
-    "reachedOn": "nothing reaches it"
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4350,7 +4352,8 @@
    "built": {
     "state": "none",
     "evidence": "grep -rniF 'costcent|cost.centre|projectid' lib/Settings/register.d/hr-objects.json and grep -rniF 'kostenplaats|cost.?cent' lib openspec src/manifest.d (excluding archive): no hits anywhere; PayrollRun/Payslip carry no cost-centre or project field",
-    "reachedOn": "nothing reaches it"
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4476,7 +4479,8 @@
    "built": {
     "state": "none",
     "evidence": "grep -rniF 'youforce|uitbesteed|outsourc' lib openspec README.md (excluding archive): no hits; humaniq's own README describes it as the payroll engine itself, not a hand-off to a bureau",
-    "reachedOn": "nothing reaches it"
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4541,7 +4545,8 @@
    "built": {
     "state": "decided-no",
     "evidence": "openspec/specs/loonaangifte-filing-lifecycle/spec.md:23 'Digipoort wire transport is explicitly out of scope.'; openspec/changes/archive/2026-07-12-loonaangifte-filing-lifecycle/design.md:15 lists 'Digipoort transport' under Non-Goals and line 93 tracks the decision as an open Spectr insight, not a commitment; grep -rniF digipoort lib src (excluding archive): no hits",
-    "reachedOn": "nothing reaches it; verzenden on LoonaangifteFilingDetail only stamps submittedDate/verzondenDoor, it makes no outbound call"
+    "reachedOn": "nothing reaches it; verzenden on LoonaangifteFilingDetail only stamps submittedDate/verzondenDoor, it makes no outbound call",
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4573,7 +4578,8 @@
     "state": "building",
     "evidence": "lib/Settings/register.d/hr-objects.json LoonaangifteFiling x-openregister-lifecycle 'corrigeren' description: 'A sent filing can be superseded by a correction ... this transition's reset-to-concept semantics are a simplified placeholder: full correctie-berichten (VL/IB-correcties) are a future spec.' The transition only resets a sent filing to concept and builds no correctiebericht. Corrected 2026-09-26: the earlier claim that the lifecycle button never renders is refuted. At @conduction/nextcloud-vue 2.40.0 CnPageRenderer.vue:586-591 builds the body grid only from page-level widgets; humaniq moved its widgets to config.widgets (hrmq#115), so CnDetailPage mounts and renders config.lifecycleActions (CnDetailPage.vue:101-117). A live check that the button shows on the filing detail page is still owed.",
     "reachedOn": "nothing reaches a real correction message; the corrigeren transition only resets status to concept, it builds no correctiebericht",
-    "readOn": "2026-09-26"
+    "readOn": "2026-09-26",
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4738,7 +4744,8 @@
    "built": {
     "state": "none",
     "evidence": "grep -rniF 'ib.?47' lib src openspec (excluding archive): no hits anywhere",
-    "reachedOn": "nothing reaches it"
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4768,7 +4775,8 @@
    "built": {
     "state": "none",
     "evidence": "grep -rniF '\\bcbs\\b' lib src openspec (excluding archive): no hits anywhere",
-    "reachedOn": "nothing reaches it"
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4798,7 +4806,8 @@
    "built": {
     "state": "none",
     "evidence": "grep -rniF 'premiedifferentiatie|premie.?differentiation|\\bWAB\\b' lib src openspec (excluding archive): no hits; grep -n -iE 'ww.premie|laag.*tarief|hoog.*tarief|permanent|flex|contractType|onbepaalde|bepaalde.*tijd' lib/Standards/packs/nl-2026.pack.json: no hits, so the pack's employer premium steps are not differentiated by contract type at all",
-    "reachedOn": "nothing reaches it"
+    "reachedOn": "nothing reaches it",
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -5076,8 +5085,8 @@
     "personio": "not checked: not settled: searched help centre for emergency response, first aid and BHV; only generic course records with expiration dates exist (https://support.personio.de/hc/en-us/articles/4426976022045-Manage-courses-and-sessions), nothing on coverage of emergency responders."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-bhv.json:5 BhvCertificering schema (certificaatBehaaldOp/certificaatGeldigTot); description explicitly states the schema 'asserts NO numeric BHV-coverage ratio' since Arbowet art. 15 sets a qualitative standard; src/manifest.d/hr-bhv.json:8 index BhvCertificeringen /bhv-certificeringen; expiry signalling reuses lib/Standards/Checks/NlSignalChecks.php (nl-bhv-certificaat-verloopt)",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-27, source: The missing half (a numeric BHV coverage ratio) is a recorded non-goal: openspec/changes/archive/2026-07-17-bhv-organisatie/proposal.md 'No Location entity, no per-location coverage formula, no numeric BHV-ratio: Arbowet art. 15 sets a qualitative RI&E-driven standard, not a number; inventing one would be worse than not checking at all'. The certificate tracking half is built. Before: lib/Settings/register.d/hr-bhv.json:5 BhvCertificering schema (certificaatBehaaldOp/certificaatGeldigTot); description explicitly states the schema 'asserts NO numeric BHV-coverage ratio' since Arbowet art. 15 sets a qualitative standard; src/manifest.d/hr-bhv.json:8 index BhvCertificeringen /bhv-certificeringen; expiry signalling reuses lib/Standards/Checks/NlSignalChecks.php (nl-bhv-certificaat-verloopt)",
     "reachedOn": "BhvCertificeringen /bhv-certificeringen, menu VerlofVerzuimGroup; expiry surfaces via the hr-signals mechanism",
     "owner": "ConductionNL/humaniq"
    },
@@ -5086,7 +5095,7 @@
    "feature": "bhv-organisatie",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "Tracks per-employee certificates and their expiry (and signals on expiry); deliberately computes no numeric coverage ratio (enough BHV'ers for headcount), which the row also asks for."
+   "note": "Tracks per-employee certificates and their expiry (and signals on expiry); deliberately computes no numeric coverage ratio (enough BHV'ers for headcount), which the row also asks for. Decided no on 2026-09-27 in the openspec pass, see built.evidence for the source."
   },
   {
    "id": "tal-training",
@@ -5295,8 +5304,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/21453114449053-Set-up-employee-data-change-approval-workflows: admins define which changes to employee information need manual approval, based on the profile section updated, and which are approved automatically."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -n iban/address lib/Settings/register.d/hr-objects.json: only Employee.iban exists, editable only on the HR-admin EmployeeDetail page (not @me-scoped); Employee declares no street/postcode/city address field at all; grep -rniF 'MijnGegevens|MijnProfiel|self.service.*edit' src/manifest.d src/manifest.json: no hits; no approval workflow for a personal-details change exists anywhere",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-record-change-approval on 2026-09-27. Before: grep -n iban/address lib/Settings/register.d/hr-objects.json: only Employee.iban exists, editable only on the HR-admin EmployeeDetail page (not @me-scoped); Employee declares no street/postcode/city address field at all; grep -rniF 'MijnGegevens|MijnProfiel|self.service.*edit' src/manifest.d src/manifest.json: no hits; no approval workflow for a personal-details change exists anywhere",
     "reachedOn": "nothing reaches it: an employee cannot edit their own IBAN or address anywhere in the app",
     "owner": "ConductionNL/humaniq"
    },
@@ -5723,7 +5732,7 @@
    "id": "rep-standard-reports",
    "area": "reporting",
    "name": "Pick from ready-made HR reports.",
-   "humaniq": "no",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -5739,9 +5748,9 @@
     "loket": "https://loket.nl/functionaliteiten/rapportages/: ready-made reports on payroll processing, absence, mutations, dossiers and training."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'WorkforceReport|AbsenceReport|PerformanceReport' lib/ src/: no hits outside compiled manifest.json/manifest.effective.json (which contain no such schemas); no 'Reports' page anywhere in src/manifest.d",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "evidence": "Matrix corrected 2026-09-27 in the openspec pass: src/manifest.json:816 page Reports (type reports, commit cc2d18ab 2026-09-03) offers three ready-made reports, WorkforceReport /reports/workforce, AbsenceReport /reports/absence and PerformanceReport, as declarative dashboard pages over the register. Partial: no payroll, wage-cost or turnover report. Before: grep -rniF 'WorkforceReport|AbsenceReport|PerformanceReport' lib/ src/: no hits outside compiled manifest.json/manifest.effective.json (which contain no such schemas); no 'Reports' page anywhere in src/manifest.d",
+    "reachedOn": "Reports /reports (footer menu, ReportsMenu)",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6243,8 +6252,8 @@
     "personio": "https://www.personio.com/security/ (Personio Trust Center, read in a browser 2026-09-26 because scripted reads get HTTP 429): Personio uses industry-standard encryption to protect data in transit and at rest; ISO 27001 certified."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF encrypt lib/: no hits anywhere in humaniq's own code. Whether personnel data is encrypted at rest depends entirely on the underlying Nextcloud instance/database/disk configuration, which is outside this app's code and outside the sibling apps this pack is scoped to read",
+    "state": "decided-no",
+    "evidence": "Decided no for humaniq on 2026-09-27: owned by nextcloud/server (encryption at rest is a Nextcloud server and storage capability), a platform capability outside the fleet, per the openspec pass addendum. Before: grep -rniF encrypt lib/: no hits anywhere in humaniq's own code. Whether personnel data is encrypted at rest depends entirely on the underlying Nextcloud instance/database/disk configuration, which is outside this app's code and outside the sibling apps this pack is scoped to read",
     "reachedOn": "n/a, a platform/infrastructure concern, not app code",
     "owner": "nextcloud/server"
    },
@@ -6252,7 +6261,8 @@
    "providerHow": "inferred",
    "feature": "data-encryption",
    "featureConfidence": "low",
-   "source": "competitor"
+   "source": "competitor",
+   "note": "Decided no on 2026-09-27: platform-provided by nextcloud/server."
   },
   {
    "id": "cmp-self-hosting",
@@ -6507,7 +6517,7 @@
    "id": "plt-template-store",
    "area": "platform",
    "name": "Install ready-made HR configurations others have published, such as a leave policy.",
-   "humaniq": "no",
+   "humaniq": "partial",
    "afas": "unknown",
    "visma-raet": "partial",
    "hr2day": "unknown",
@@ -6523,9 +6533,9 @@
     "personio": "https://support.personio.de/hc/en-us/articles/16452157755421-Create-workflows offers a gallery of pre-built workflow templates and https://support.personio.de/hc/en-us/articles/28446992415901-Use-time-off-policy-templates offers country time off policy templates, including a Dutch one; these come from Personio, and installing configurations published by others is not described."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rn 'Store'|'template.store' src/manifest.d/*.json: no hits; no page or schema exists for installing a published, ready-made configuration such as a leave policy",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "evidence": "Matrix corrected 2026-09-27 in the openspec pass: src/manifest.json:388 page Store (type store, commit bf32851c 2026-09-04) adopts OpenRegister's store plane, which installs configuration sets other organisations publish (a leave policy, a job framework, onboarding flows); with no registry configured it shows the app's own items and makes no network call. Partial: no published HR configuration set exists yet to install. Before: grep -rn 'Store'|'template.store' src/manifest.d/*.json: no hits; no page or schema exists for installing a published, ready-made configuration such as a leave policy",
+    "reachedOn": "Store /store (footer menu, StoreMenu)",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6771,8 +6781,8 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmPimPlugin/config/routes.yaml:56 job-details and other PIM updates save directly with no pending state; grep -riE 'mutation approval|change request' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'MijnGegevens|approval' on the Employee schema lib/Settings/register.d/hr-objects.json:5: Employee carries no x-openregister-lifecycle and no pending-change object; a change on EmployeeDetail is saved at once by whoever may edit it (same finding as ess-edit-details); no per-change-type approval role exists",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-record-change-approval on 2026-09-27. Before: grep -rniF 'MijnGegevens|approval' on the Employee schema lib/Settings/register.d/hr-objects.json:5: Employee carries no x-openregister-lifecycle and no pending-change object; a change on EmployeeDetail is saved at once by whoever may edit it (same finding as ess-edit-details); no per-change-type approval role exists",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -6835,8 +6845,8 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmPimPlugin/entity/Employee.php:197 one job title, one employment status and one salary grade per employee record; no concurrent employments"
    },
    "built": {
-    "state": "built",
-    "evidence": "EmploymentContract.employeeId $ref Employee (lib/Settings/register.d/hr-objects.json) allows several contracts per person, each with its own salary and hours; src/manifest.d/hr-objects.json:150 EmployeeDetail object-list of EmploymentContract filtered to the employee, rowRoute EmploymentContractDetail (:181); lib/Service/AbsenceRateService.php:481 sums overlapping contracts' FTE; no combined leave overview across employments (LeaveBalance is per employee and leave type)",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-employment-history on 2026-09-27 for the missing half: one combined view of concurrent employments, including leave across them. Before: EmploymentContract.employeeId $ref Employee (lib/Settings/register.d/hr-objects.json) allows several contracts per person, each with its own salary and hours; src/manifest.d/hr-objects.json:150 EmployeeDetail object-list of EmploymentContract filtered to the employee, rowRoute EmploymentContractDetail (:181); lib/Service/AbsenceRateService.php:481 sums overlapping contracts' FTE; no combined leave overview across employments (LeaveBalance is per employee and leave type)",
     "reachedOn": "EmployeeDetail /employees/:id contracts list; EmploymentContracts /contracts",
     "owner": "ConductionNL/humaniq"
    },
@@ -6867,8 +6877,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(secondment|seconded)\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'detacher|seconded|secondment' lib/Settings src/manifest.d: the only hit is an x-notes remark in lib/Settings/register.d/hr-cost-rate.json:20 that the cost-rate field cannot tell a seconded employee apart; no field or schema records an outward secondment",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-secondment-and-side-activities on 2026-09-27. Before: grep -rniE 'detacher|seconded|secondment' lib/Settings src/manifest.d: the only hit is an x-notes remark in lib/Settings/register.d/hr-cost-rate.json:20 that the cost-rate field cannot tell a seconded employee apart; no field or schema records an outward secondment",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -6899,8 +6909,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(side activit\\w*|nevenwerk\\w*)\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-objects.json:54 Employee.nevenwerkzaamhedenGemeld is a single yes or no attestation for civil servants, checked by rule nl-ambtenaar-nevenwerkzaamheden-melding (lib/Standards/rules/labour.json:451) only through occ humaniq:rules:audit; no register of the side activities themselves",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-secondment-and-side-activities on 2026-09-27 for the missing half: a register of the side activities themselves; the yes or no attestation is built. Before: lib/Settings/register.d/hr-objects.json:54 Employee.nevenwerkzaamhedenGemeld is a single yes or no attestation for civil servants, checked by rule nl-ambtenaar-nevenwerkzaamheden-melding (lib/Standards/rules/labour.json:451) only through occ humaniq:rules:audit; no register of the side activities themselves",
     "reachedOn": "EmployeeDetail /employees/:id edit form (the boolean); the rule result only via occ humaniq:rules:audit",
     "owner": "ConductionNL/humaniq"
    },
@@ -6931,8 +6941,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\bbudget' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'personeelsbegroting|personnelBudget|formatiebudget|budgetFte' lib src: no hits; ppl-position-management is also no (no budgeted positions exist to budget from)",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/reporting-personnel-budget-and-scenarios on 2026-09-27. Before: grep -rniE 'personeelsbegroting|personnelBudget|formatiebudget|budgetFte' lib src: no hits; ppl-position-management is also no (no budgeted positions exist to budget from)",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -6963,8 +6973,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\bfte\\b' src/plugins src/client/src finds no match; grep -riE '\\b(scenario|formation)\\b' src/plugins src/client/src hits only two test fixtures"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'scenario|formatieplan' lib/Settings src/manifest.d lib/Service: only seed notes and rule-check comments; no formation model exists (see ppl-position-management)",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/reporting-personnel-budget-and-scenarios on 2026-09-27. Before: grep -rniE 'scenario|formatieplan' lib/Settings src/manifest.d lib/Service: only seed notes and rule-check comments; no formation model exists (see ppl-position-management)",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -6995,8 +7005,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\bfte\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'netFte|nettoBezetting|occupancy' lib src: no hits; lib/Service/AbsenceRateService.php computes an absence percentage, not occupancy in FTE, and there is no formation to measure against",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-formation-positions on 2026-09-27. Before: grep -rniE 'netFte|nettoBezetting|occupancy' lib src: no hits; lib/Service/AbsenceRateService.php computes an absence percentage, not occupancy in FTE, and there is no formation to measure against",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -7817,8 +7827,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'licen[cs]e.?plate|vehicle|catalog' src/plugins src/client/src: no match; no company car or vehicle data anywhere in the code"
    },
    "built": {
-    "state": "none",
-    "evidence": "lib/Settings/register.d/hr-assets.json:113 Asset.licencePlate is typed by hand next to catalogue value and fuel type; grep -rniE 'rdw|opendata' lib: no lookup",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-register-prefill on 2026-09-27. Before: lib/Settings/register.d/hr-assets.json:113 Asset.licencePlate is typed by hand next to catalogue value and fuel type; grep -rniE 'rdw|opendata' lib: no lookup",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -8161,8 +8171,8 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmAttendancePlugin/Dao/AttendanceDao.php:380 sums punched hours per employee between a from and to date for the attendance summary report (src/plugins/orangehrmTimePlugin/Report/AttendanceReport.php:206 'Time (Hours)'); totals only, no average and no on-call contract type"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'oproep|onCall|nuluren|zero.?hours' lib src: no on-call contract type or average-hours calculation (EmploymentContract.type enum in lib/Settings/register.d/hr-objects.json has no on-call value)",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/people-flex-contract-rules on 2026-09-27. Before: grep -rniE 'oproep|onCall|nuluren|zero.?hours' lib src: no on-call contract type or average-hours calculation (EmploymentContract.type enum in lib/Settings/register.d/hr-objects.json has no on-call value)",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -8316,8 +8326,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'passkey|webauthn|fido' src/plugins src/client/src: no match; sign in is password, LDAP or OpenID (orangehrmAuthenticationPlugin, orangehrmLDAPAuthenticationPlugin, orangehrmOpenidAuthenticationPlugin)"
    },
    "built": {
-    "state": "built",
-    "evidence": "humaniq has no own login; Nextcloud supports passwordless sign-in with WebAuthn devices (Personal settings, Security), but has no switch to make passkeys mandatory",
+    "state": "decided-no",
+    "evidence": "Decided no for humaniq on 2026-09-27: owned by nextcloud/server (passkey sign-in is Nextcloud WebAuthn), a platform capability outside the fleet, per the openspec pass addendum. Before: humaniq has no own login; Nextcloud supports passwordless sign-in with WebAuthn devices (Personal settings, Security), but has no switch to make passkeys mandatory",
     "reachedOn": "Nextcloud sign-in and Personal settings, Security",
     "owner": "nextcloud/server"
    },
@@ -8325,7 +8335,8 @@
    "providerHow": "read-from-code",
    "source": "roadmap",
    "origin": "roadmap",
-   "originUrl": "https://loket.nl/roadmap/"
+   "originUrl": "https://loket.nl/roadmap/",
+   "note": "Decided no on 2026-09-27: platform-provided by nextcloud/server."
   },
   {
    "id": "dm-permission-overview",
