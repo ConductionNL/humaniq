@@ -2354,8 +2354,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/19296003063709-Access-key-insights-in-the-Metrics-tab: Time Off Rate shows how frequently employees are absent over time, with Time Off Rate by Department and by Type."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Service/AbsenceRateService.php computes the CBS-style FTE-weighted verzuimpercentage over a period from SickLeaveCase.absenceProgression and EmploymentContract availability, exposed via guarded AnalyticsController::trends() (metric absence-rate); its own docblock states 'frequency/duration trends' are a named non-goal; grep -n 'department|OrgUnit|groupBy' lib/Service/AbsenceRateService.php: no hits, and src/manifest.json AbsenceReport (route /reports/absence) widgets carry no department dimension",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/reporting-department-figures on 2026-09-27 for the missing half: the per-department breakdown and the absence frequency trend; the overall rate over time is built. Before: lib/Service/AbsenceRateService.php computes the CBS-style FTE-weighted verzuimpercentage over a period from SickLeaveCase.absenceProgression and EmploymentContract availability, exposed via guarded AnalyticsController::trends() (metric absence-rate); its own docblock states 'frequency/duration trends' are a named non-goal; grep -n 'department|OrgUnit|groupBy' lib/Service/AbsenceRateService.php: no hits, and src/manifest.json AbsenceReport (route /reports/absence) widgets carry no department dimension",
     "reachedOn": "Dashboard /dashboard 'Absence rate' KPI/trend and AbsenceReport /reports/absence (menu Leave & Absence > Absence report)",
     "owner": "ConductionNL/humaniq"
    },
@@ -4509,8 +4509,8 @@
     "personio": "not checked: not settled: the help centre says Personio Payroll is Germany only (https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll, updated 2026-09-25) and Dutch pay is run in Loket (https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration), while https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26) announces 'Personio Payroll, powered by Loket', managed payroll delivery for the Netherlands; no page states whether the monthly Dutch wage tax return is prepared within that service."
    },
    "built": {
-    "state": "built",
-    "evidence": "LoonaangifteFiling x-openregister-lifecycle concept, klaargezet, bevestigd, verzonden in lib/Settings/register.d/hr-objects.json, driven from LoonaangifteFilingDetail lifecycleActions (src/manifest.d/hr-objects.json:1060-1187); verzenden only stamps a date and submits nothing (see fil-digipoort). Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/filings-wage-tax-message on 2026-09-27 for the missing half: rendering the loonaangifte message (Gegevensspecificaties) from the run; the filing lifecycle is built. Before: LoonaangifteFiling x-openregister-lifecycle concept, klaargezet, bevestigd, verzonden in lib/Settings/register.d/hr-objects.json, driven from LoonaangifteFilingDetail lifecycleActions (src/manifest.d/hr-objects.json:1060-1187); verzenden only stamps a date and submits nothing (see fil-digipoort). Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
     "reachedOn": "LoonaangifteFilings /filings and LoonaangifteFilingDetail (menu Payroll > Wage tax filings), transition buttons render",
     "owner": "ConductionNL/humaniq",
     "readerRating": "partial",
@@ -4608,8 +4608,8 @@
     "personio": "not checked: not settled: the help centre says Personio Payroll is Germany only (https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll, updated 2026-09-25) and Dutch pay is run in Loket (https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration), while https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26) announces 'Personio Payroll, powered by Loket', managed payroll delivery for the Netherlands; no page states whether UPA pension deliveries are covered."
    },
    "built": {
-    "state": "built",
-    "evidence": "PensionFiling lifecycle controleren, bevestigen, verzenden in lib/Settings/register.d/hr-pension.json, controleren guarded by lib/Lifecycle/PayrollRunApprovedGuard.php (registered lib/AppInfo/Application.php:137); no UPA file is produced. Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/filings-pension-upa-message on 2026-09-27 for the missing half: generating the UPA message file; the filing lifecycle is built. Before: PensionFiling lifecycle controleren, bevestigen, verzenden in lib/Settings/register.d/hr-pension.json, controleren guarded by lib/Lifecycle/PayrollRunApprovedGuard.php (registered lib/AppInfo/Application.php:137); no UPA file is produced. Detail-page actions render: @conduction/nextcloud-vue v2.40.0 CnPageRenderer.vue:586-591 builds widgetsBySlot only from page-level page.widgets, and humaniq's manifest.effective.json has 0 pages with page-level widgets (its detail pages carry config.widgets, moved there under hrmq#115 per CnPageRenderer.vue:86), so the body-grid branch never fires and CnDetailPage mounts; CnDetailPage.vue:101-117 renders config.lifecycleActions (CnLifecycleActions) and config.headerActions (CnActionButtons). The src/registry.js:33-58 note dated 2026-07-16 predates that move and is stale. Code reading by the lead, needs a live check.",
     "reachedOn": "PensionFilings /pension-filings and PensionFilingDetail (menu Payroll > Pension filings), transition buttons render",
     "owner": "ConductionNL/humaniq",
     "readerRating": "partial",
@@ -4642,8 +4642,8 @@
     "personio": "not checked: not settled: the help centre says Personio Payroll is Germany only (https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll, updated 2026-09-25) and Dutch pay is run in Loket (https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration), while https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26) announces 'Personio Payroll, powered by Loket', managed payroll delivery for the Netherlands; no page states whether ABP is connected."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Standards/Checks/NlAbpChecks.php is a compliance-only check (nl-abp-fund-required) auditing whether an ABP-obligated administratie has its own filing for its own period, via RuleAuditService::buildRelatedContext() cross-object indexes; there is no ABP-specific schema, page, or connector, only the generic PensionFiling.fund field can hold 'ABP' as a value",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/filings-pension-upa-message on 2026-09-27 for the missing half: an ABP-specific delivery in the UPA message; the obligation check is built. Before: lib/Standards/Checks/NlAbpChecks.php is a compliance-only check (nl-abp-fund-required) auditing whether an ABP-obligated administratie has its own filing for its own period, via RuleAuditService::buildRelatedContext() cross-object indexes; there is no ABP-specific schema, page, or connector, only the generic PensionFiling.fund field can hold 'ABP' as a value",
     "reachedOn": "PensionFilings/PensionFilingDetail (generic pension page, fund recorded manually) plus occ humaniq:rules:audit for the compliance check that flags a missing ABP filing; no dedicated ABP connection page",
     "owner": "ConductionNL/humaniq"
    },
@@ -4742,8 +4742,8 @@
     "personio": "not checked: not settled: the help centre says Personio Payroll is Germany only (https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll, updated 2026-09-25) and Dutch pay is run in Loket (https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration), while https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26) announces 'Personio Payroll, powered by Loket', managed payroll delivery for the Netherlands; no page states whether IB47 reports are produced."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'ib.?47' lib src openspec (excluding archive): no hits anywhere",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/filings-ib47 on 2026-09-27. Before: grep -rniF 'ib.?47' lib src openspec (excluding archive): no hits anywhere",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -5430,8 +5430,8 @@
     "loket": "https://loket.nl/functionaliteiten/verlof/: employees follow the status of their leave request; https://loket.nl/functionaliteiten/workflows/: notifications and tasks go automatically to the right people; https://loket.nl/roadmap/ (Duidelijke status na goedkeuring van declaraties) says approved claims long showed only In behandeling; an explicit approved or rejected notice to the submitter is not described."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rln 'INotification|NotificationManager|x-openregister-notifications' lib/: no hits anywhere in the app",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/platform-notifications on 2026-09-27. Before: grep -rln 'INotification|NotificationManager|x-openregister-notifications' lib/: no hits anywhere in the app",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -5556,8 +5556,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/36459341835037-Summary-of-permissions-New-experience: the Announcements permission lets roles create and manage company-wide announcements that all employees see on their homepage, via the Announcements card."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'announcement|mededeling|policy publish|beleidsdocument' lib/Settings/register.d src/manifest.d openspec/specs: no hits anywhere",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/self-service-announcements-and-digest on 2026-09-27. Before: grep -rniF 'announcement|mededeling|policy publish|beleidsdocument' lib/Settings/register.d src/manifest.d openspec/specs: no hits anywhere",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -5684,8 +5684,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/19300731976093-Summary-of-templates-available-for-reporting: Last month compensation costs per employee (gross salary, one-time and recurring compensation, total payout) and Compensation costs by legal entity over the previous year; reports can be segmented in the builder (https://support.personio.de/hc/en-us/articles/15718133638685-Create-a-report)."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Service/AnalyticsService.php:219-242 payrollCostSeries() sums totalGross+totalEmployerCharges per period from finalised PayrollRuns, with a null (never 0) bucket when nothing ran; no department/orgUnit breakdown anywhere in the method (grep 'department|orgUnit' in payrollCostSeries: no hits); rendered as the Dashboard's kpi-payroll-cost tile and a chart widget",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/reporting-department-figures on 2026-09-27 for the missing half: the per-department breakdown; the total per period is built. Before: lib/Service/AnalyticsService.php:219-242 payrollCostSeries() sums totalGross+totalEmployerCharges per period from finalised PayrollRuns, with a null (never 0) bucket when nothing ran; no department/orgUnit breakdown anywhere in the method (grep 'department|orgUnit' in payrollCostSeries: no hits); rendered as the Dashboard's kpi-payroll-cost tile and a chart widget",
     "reachedOn": "Dashboard, Payroll cost per period widget (main landing page)",
     "owner": "ConductionNL/humaniq"
    },
@@ -5716,8 +5716,8 @@
     "loket": "https://loket.nl/functionaliteiten/rapportages/: build your own reports and exports on HR and salary data for analyses, controls or management reports."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'report.builder|custom-report' lib/ src/ openspec/specs openspec/changes: no hits outside archive",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/reporting-standard-reports-and-builder on 2026-09-27. Before: grep -rniF 'report.builder|custom-report' lib/ src/ openspec/specs openspec/changes: no hits outside archive",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -5748,8 +5748,8 @@
     "loket": "https://loket.nl/functionaliteiten/rapportages/: ready-made reports on payroll processing, absence, mutations, dossiers and training."
    },
    "built": {
-    "state": "built",
-    "evidence": "Matrix corrected 2026-09-27 in the openspec pass: src/manifest.json:816 page Reports (type reports, commit cc2d18ab 2026-09-03) offers three ready-made reports, WorkforceReport /reports/workforce, AbsenceReport /reports/absence and PerformanceReport, as declarative dashboard pages over the register. Partial: no payroll, wage-cost or turnover report. Before: grep -rniF 'WorkforceReport|AbsenceReport|PerformanceReport' lib/ src/: no hits outside compiled manifest.json/manifest.effective.json (which contain no such schemas); no 'Reports' page anywhere in src/manifest.d",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/reporting-standard-reports-and-builder on 2026-09-27 for the missing half: payroll, wage-cost, turnover and leave-balance reports beside the three ready-made reports on the Reports page (matrix corrected from no and none: src/manifest.json:816, commit cc2d18ab). Before: Matrix corrected 2026-09-27 in the openspec pass: src/manifest.json:816 page Reports (type reports, commit cc2d18ab 2026-09-03) offers three ready-made reports, WorkforceReport /reports/workforce, AbsenceReport /reports/absence and PerformanceReport, as declarative dashboard pages over the register. Partial: no payroll, wage-cost or turnover report. Before: grep -rniF 'WorkforceReport|AbsenceReport|PerformanceReport' lib/ src/: no hits outside compiled manifest.json/manifest.effective.json (which contain no such schemas); no 'Reports' page anywhere in src/manifest.d",
     "reachedOn": "Reports /reports (footer menu, ReportsMenu)",
     "owner": "ConductionNL/humaniq"
    },
@@ -6031,8 +6031,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/213331029-Update-employee-data: HR edits employee attributes, and https://support.personio.de/hc/en-us/articles/18906413010589-Use-the-Personio-Audit-Log tracks changes to employee data showing who did what and when, with entries that cannot be changed."
    },
    "built": {
-    "state": "built",
-    "evidence": "appinfo/routes.php:97 POST /api/dsr/rectify -> AvgDsrController::rectify(); lib/Controller/AvgDsrController.php:206-232 requires a non-empty `changes` array (validateRectifyInput) before calling AvgDsrService::rectifySubjectObject(); src/manifest.d/hr-dsr.json:93-106 headerAction dsr-rectify only sends {employeeId, dsrRequestId}, never `changes`, the manifest v2 api-call action type has no free-text field-map prompt (design note at hr-dsr.json:41 names this a known fast-follow); lib/Command/AvgDsrRectifyCommand.php:76,102-107 shows the occ path DOES supply --changes and works",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/compliance-dsr-rectify-form on 2026-09-27 for the missing half: a Rectify action that collects the changes it sends; the occ path works. Before: appinfo/routes.php:97 POST /api/dsr/rectify -> AvgDsrController::rectify(); lib/Controller/AvgDsrController.php:206-232 requires a non-empty `changes` array (validateRectifyInput) before calling AvgDsrService::rectifySubjectObject(); src/manifest.d/hr-dsr.json:93-106 headerAction dsr-rectify only sends {employeeId, dsrRequestId}, never `changes`, the manifest v2 api-call action type has no free-text field-map prompt (design note at hr-dsr.json:41 names this a known fast-follow); lib/Command/AvgDsrRectifyCommand.php:76,102-107 shows the occ path DOES supply --changes and works",
     "reachedOn": "DsrRequestDetail /dsr-requests/:id, 'Rectify' header button, clicking it always 400s because it never supplies the required changes payload; the same operation works via occ humaniq:avg:rectify --changes <json>",
     "owner": "ConductionNL/humaniq"
    },
@@ -6127,8 +6127,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360000040389-Set-up-permissions-and-employee-roles and https://support.personio.de/hc/en-us/articles/36424006279453-Set-up-and-manage-employee-roles-and-permissions-New-experience: employee roles with distinct permissions for admins, supervisors, payroll and employees."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Controller/AvgDsrController.php:274-281 isAdmin() via IGroupManager::isAdmin(); the same admin-only guard pattern repeats in OfferController.php:135, PayrollController.php:269, JurisdictionPackController.php:110/148, ExpenseController.php:178, InterviewController.php:126, LoonbeslagController.php:261; manager-scoping via a denormalized managerUserId field (mss-team-scope spec) filters the Team*goedkeuring pages; self-service @me filters gate the Mijn* pages (MijnBeoordelingen, MijnLoonstroken)",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/compliance-roles-and-field-access on 2026-09-27 for the missing half: distinct HR, payroll, manager and employee roles instead of the admin or non-admin split. Before: lib/Controller/AvgDsrController.php:274-281 isAdmin() via IGroupManager::isAdmin(); the same admin-only guard pattern repeats in OfferController.php:135, PayrollController.php:269, JurisdictionPackController.php:110/148, ExpenseController.php:178, InterviewController.php:126, LoonbeslagController.php:261; manager-scoping via a denormalized managerUserId field (mss-team-scope spec) filters the Team*goedkeuring pages; self-service @me filters gate the Mijn* pages (MijnBeoordelingen, MijnLoonstroken)",
     "reachedOn": "admin-only pages (DsrRequests, JurisdictionPacks, payroll runs); Team*goedkeuring pages scoped to managerUserId=@me; self-service Mijn* pages scoped to userId=@me",
     "owner": "ConductionNL/humaniq"
    },
@@ -6159,8 +6159,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/36459341835037-Summary-of-permissions-New-experience: permissions per profile section and data group, with salary information and salary band as separate permissions that can be withheld from a role."
    },
    "built": {
-    "state": "none",
-    "evidence": "no x-property-rbac anywhere in humaniq's register tree (grep -rliF 'rbac|x-property-rbac' lib/Settings/register.d/: no hits, matching a fact another reader already confirmed); grep -rn 'visible.*false' lib/Settings/register.d/*.json: 0 hits; salary/BSN fields sit on the same Employee data widget for every viewer who can open the page at all, gated only by page-level admin checks, never hidden per-field per-role",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/compliance-roles-and-field-access on 2026-09-27. Before: no x-property-rbac anywhere in humaniq's register tree (grep -rliF 'rbac|x-property-rbac' lib/Settings/register.d/: no hits, matching a fact another reader already confirmed); grep -rn 'visible.*false' lib/Settings/register.d/*.json: 0 hits; salary/BSN fields sit on the same Employee data widget for every viewer who can open the page at all, gated only by page-level admin checks, never hidden per-field per-role",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -6439,8 +6439,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/24665026109853-Set-up-the-Loket-integration: connect Personio to a Loket administration with a dedicated API user and authorizations; https://support.personio.de/hc/en-us/articles/4404623630993-Generate-and-manage-API-credentials manages credentials for custom and marketplace integrations."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-integrations.json:10 IntegrationAccount description: 'deliberately NOT an authorization mechanism ... The actual access grant lives entirely in OpenRegister's own RBAC configuration ... outside this schema and outside any humaniq file'; field grantedSchemas (line 23) 'does NOT grant or enforce access, it is purely a record of intent'; src/manifest.d/hr-integrations.json:8-9 index page IntegrationAccounts /configuratie/integraties",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/platform-integrations-catalogue on 2026-09-27 for the missing half: configuring a working connection through integriq; the catalogue of intent is built. Before: lib/Settings/register.d/hr-integrations.json:10 IntegrationAccount description: 'deliberately NOT an authorization mechanism ... The actual access grant lives entirely in OpenRegister's own RBAC configuration ... outside this schema and outside any humaniq file'; field grantedSchemas (line 23) 'does NOT grant or enforce access, it is purely a record of intent'; src/manifest.d/hr-integrations.json:8-9 index page IntegrationAccounts /configuratie/integraties",
     "reachedOn": "IntegrationAccounts /configuratie/integraties, IntegrationAccountDetail /configuratie/integraties/:id",
     "owner": "ConductionNL/humaniq"
    },
@@ -6471,8 +6471,8 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmCorePlugin/entity/WorkflowStateMachine.php:86 leave, timesheet, attendance, recruitment, review and claim workflows are state tables seeded by the installer; no UI to configure them"
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-objects.json:193 x-openregister-flows declares the 'Loonrun' flow with real custom nodes: humaniq.payroll-calculate (lib/Flow/PayrollCalculateNode.php), an openregister.user-task review/approval gate, humaniq.payroll-approve (lib/Flow/PayrollApproveNode.php), then glpost/netpay; the description at line 197 states 'The flow arrives disabled per the engine's adoption contract: enable it deliberately'",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/platform-hr-workflows on 2026-09-27 for the missing half: HR processes beyond payroll as shipped, adoptable flows; the Loonrun flow is built. Before: lib/Settings/register.d/hr-objects.json:193 x-openregister-flows declares the 'Loonrun' flow with real custom nodes: humaniq.payroll-calculate (lib/Flow/PayrollCalculateNode.php), an openregister.user-task review/approval gate, humaniq.payroll-approve (lib/Flow/PayrollApproveNode.php), then glpost/netpay; the description at line 197 states 'The flow arrives disabled per the engine's adoption contract: enable it deliberately'",
     "reachedOn": "OpenRegister's own Flow admin UI is where the Loonrun flow is enabled and configured; no humaniq page authors, lists, or edits workflows itself",
     "owner": "ConductionNL/humaniq"
    },
@@ -6502,8 +6502,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/16599105162909-Summary-of-workflow-components: workflow actions include Assign a task, Send a notification, Send an email and Add a participant, added per step in the chosen order."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rliF x-openregister-notifications lib/Settings/register.d/*.json: no hits; grep -rniF notification lib/Settings/register.d/*.json: only date-field labels (UWV 42-week notification due/done in hr-verzuim.json:122-130) and an FR statutory field, none a send/suppress toggle; notifications/reminders are named an app-wide ADR-031/gate-18 deferral in openspec/changes/archive/2026-07-13-performance-reviews-mvp/design.md's non-goals",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/platform-notifications on 2026-09-27. Before: grep -rliF x-openregister-notifications lib/Settings/register.d/*.json: no hits; grep -rniF notification lib/Settings/register.d/*.json: only date-field labels (UWV 42-week notification due/done in hr-verzuim.json:122-130) and an FR statutory field, none a send/suppress toggle; notifications/reminders are named an app-wide ADR-031/gate-18 deferral in openspec/changes/archive/2026-07-13-performance-reviews-mvp/design.md's non-goals",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -6750,8 +6750,8 @@
     "loket": "https://developer.loket.nl/ApiDocs#tag/Marketplace: list all applications available to the employer and their authorizations; https://loket.nl/functionaliteiten/koppelingen/: over 100 linked applications; https://loket.nl/roadmap/ (Doorontwikkeling Marketplace)."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rliF marketplace lib src openspec: hits only in the rostering proposal's shift-swap 'marketplace' concept (an explicitly named non-goal, unrelated to third-party integrations) and the parity output file itself; no third-party integration marketplace exists",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/platform-integrations-catalogue on 2026-09-27. Before: grep -rliF marketplace lib src openspec: hits only in the rostering proposal's shift-swap 'marketplace' concept (an explicitly named non-goal, unrelated to third-party integrations) and the parity output file itself; no third-party integration marketplace exists",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -7037,8 +7037,8 @@
     "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmDashboardPlugin/components/MyActionSummaryWidget.vue:127 a manager sees pending team actions and who is on leave today (EmployeesOnLeaveWidget.vue:91); no department absence rate, occupancy, vacancies or wage costs"
    },
    "built": {
-    "state": "built",
-    "evidence": "src/manifest.json:400 Dashboard carries org-wide steering tiles (absence rate, billable ratio, payroll cost) from /apps/humaniq/api/analytics/trends with no department or manager parameter; src/manifest.d/personal-dashboard.json:71 MijnHr has a te-beoordelen widget for the manager's own approvals; no dashboard scoped to the manager's department figures",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/reporting-department-figures on 2026-09-27 for the missing half: a dashboard scoped to the manager's own department. Before: src/manifest.json:400 Dashboard carries org-wide steering tiles (absence rate, billable ratio, payroll cost) from /apps/humaniq/api/analytics/trends with no department or manager parameter; src/manifest.d/personal-dashboard.json:71 MijnHr has a te-beoordelen widget for the manager's own approvals; no dashboard scoped to the manager's department figures",
     "reachedOn": "Dashboard /dashboard (org-wide), MijnHr /mijn",
     "owner": "ConductionNL/humaniq"
    },
@@ -7101,8 +7101,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(delegat\\w*|deputy)\\b' src/plugins src/client/src finds no match; approval rights follow report-to lines only (src/plugins/orangehrmCorePlugin/Authorization/UserRole/SupervisorUserRole.php:91)"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'deputy|vervanger|plaatsvervang|substitute' lib/Settings src/manifest.d lib/Service: no hits for manager substitution; managerUserId is stamped from the org chart (ess-manager-team) with no temporary delegate",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/self-service-approvals-inbox on 2026-09-27. Before: grep -rniE 'deputy|vervanger|plaatsvervang|substitute' lib/Settings src/manifest.d lib/Service: no hits for manager substitution; managerUserId is stamped from the org chart (ess-manager-team) with no temporary delegate",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -7165,8 +7165,8 @@
     "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmPerformancePlugin/pages/ReviewList.vue:44 HR can filter reviews by status, but the admin can also open and evaluate the content (src/plugins/orangehrmPerformancePlugin/config/routes.yaml:135), so status is not separated from what was said"
    },
    "built": {
-    "state": "built",
-    "evidence": "src/manifest.d/hr-performance.json ReviewCycleDetail lists the cycle's reviews with their status, so HR sees progress; lib/Settings/register.d/hr-performance.json:100 PerformanceReview declares no property-level authorization, so the content is not hidden from HR",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/compliance-roles-and-field-access on 2026-09-27 for the missing half: hiding the review content from HR while showing progress. Before: src/manifest.d/hr-performance.json ReviewCycleDetail lists the cycle's reviews with their status, so HR sees progress; lib/Settings/register.d/hr-performance.json:100 PerformanceReview declares no property-level authorization, so the content is not hidden from HR",
     "reachedOn": "ReviewCycles /review-cycles, ReviewCycleDetail /review-cycles/:id",
     "owner": "ConductionNL/humaniq"
    },
@@ -7389,8 +7389,8 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmWorkspaceNotificationsPlugin/entity/WorkspaceNotificationRegistration.php:33 webhooks exist only for daily birthday and leave-today messages to Slack, Teams or Google Chat; no joiner, leaver, job change or sickness events. Driven 2026-09-26 on the lab at v5.9: /admin/workspaceNotificationConfiguration offers notification type, platform (Slack incoming webhook), channel, sub unit, timezone and send time only."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Service/TimeEntryEventService.php:6 emits a nl.conduction.hrmq.timeentry.approved CloudEvent through OpenRegister's WebhookService, called from lib/Listener/TimesheetApprovalListener.php:92; no event on joining, leaving, job change, leave or sickness in humaniq (OpenRegister's generic object webhooks could be configured by an admin outside humaniq)",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/platform-hr-lifecycle-events on 2026-09-27 for the missing half: events for joining, leaving, job change, leave and sickness; the timesheet event is built. Before: lib/Service/TimeEntryEventService.php:6 emits a nl.conduction.hrmq.timeentry.approved CloudEvent through OpenRegister's WebhookService, called from lib/Listener/TimesheetApprovalListener.php:92; no event on joining, leaving, job change, leave or sickness in humaniq (OpenRegister's generic object webhooks could be configured by an admin outside humaniq)",
     "reachedOn": "machine consumer of the timesheet-approved webhook; nothing else",
     "owner": "ConductionNL/humaniq"
    },
@@ -7453,8 +7453,8 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmWorkspaceNotificationsPlugin/entity/WorkspaceNotificationRegistration.php:33 BIRTHDAY and LEAVE_TODAY registrations delivered to Slack, Google Chat or Teams webhooks (:41), configured under /admin/workspaceNotificationConfiguration (origin https://github.com/orangehrm/orangehrm/releases/tag/v5.9)"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'slack|teams|spreed|talk' lib/Settings src/manifest.d lib/Service: no chat channel delivery of any kind",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/self-service-announcements-and-digest on 2026-09-27. Before: grep -rniE 'slack|teams|spreed|talk' lib/Settings src/manifest.d lib/Service: no chat channel delivery of any kind",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -7639,8 +7639,8 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmCorePlugin/Report/FilterField/JobTitle.php:34 the PIM report builder filters employees by job title, and src/plugins/orangehrmCorePlugin/Report/DisplayField/EntityAliasMapping.php:40 plus Report/DisplayField/Personal/EmployeeGender.php let it show salary and gender side by side; no gap calculation (grep -riE 'pay.?gap|pay.?transparen|gender.*(salary|pay)' src/plugins src/client/src: no match)"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'pay.?gap|loonkloof|loontransparan|gender' lib src: no hits; SalaryBand (lib/Settings/register.d/hr-comp.json) checks pay against a band but nothing compares groups",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/reporting-pay-transparency on 2026-09-27. Before: grep -rniE 'pay.?gap|loonkloof|loontransparan|gender' lib src: no hits; SalaryBand (lib/Settings/register.d/hr-comp.json) checks pay against a band but nothing compares groups",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -7921,8 +7921,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'openai|chatgpt|\\bllm\\b|chatbot|\\bassistant\\b' src/plugins src/client/src: no match; no AI assistant in the code"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'hermiq|assistant|chatbot' lib src: no hits (see pending row rep-ai-assistant: only a read-only MCP surface on six schemas, no employee-facing assistant)",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/self-service-policy-assistant on 2026-09-27. Before: grep -rniE 'hermiq|assistant|chatbot' lib src: no hits (see pending row rep-ai-assistant: only a read-only MCP surface on six schemas, no employee-facing assistant)",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -8451,8 +8451,8 @@
     "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmDashboardPlugin/components/MyActionSummaryWidget.vue:26 'My Actions' fed by src/plugins/orangehrmDashboardPlugin/Api/EmployeeActionSummaryAPI.php:89 to :96 shows counts of pending leave requests, timesheets, reviews and candidates; counts per group, no single list with timeline"
    },
    "built": {
-    "state": "built",
-    "evidence": "src/manifest.d/05-menu.json:242, :287, :369 three separate team approval pages (hours, leave, expenses) filtered to the manager; src/manifest.d/personal-dashboard.json:71 MijnHr te-beoordelen widget; no single cross-process list with a timeline",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/self-service-approvals-inbox on 2026-09-27 for the missing half: one list across hours, leave and expense approvals with each request's timeline. Before: src/manifest.d/05-menu.json:242, :287, :369 three separate team approval pages (hours, leave, expenses) filtered to the manager; src/manifest.d/personal-dashboard.json:71 MijnHr te-beoordelen widget; no single cross-process list with a timeline",
     "reachedOn": "TeamUrengoedkeuring, TeamVerlofgoedkeuring, TeamDeclaratiegoedkeuring, MijnHr /mijn",
     "owner": "ConductionNL/humaniq"
    },
