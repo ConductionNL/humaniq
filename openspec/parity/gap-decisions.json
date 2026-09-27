@@ -435,7 +435,7 @@
     "row": "fil-premium-differentiation",
     "matrix": "humaniq",
     "decision": "build",
-    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket).",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: the low premium for BBL apprentices and young part-timers and the review (herziening) on early ending and extra hours; matrix corrected from no and none, since low and high by contract type are applied (PayrollRunService::awfTariffFor, pack binding awfRate, rule nl-awf-laag-hoog-tarief).",
     "change": "filings-premium-differentiation",
     "decidedOn": "2026-09-27"
   },
@@ -787,7 +787,7 @@
     "row": "ppl-cao-updates",
     "matrix": "humaniq",
     "decision": "build",
-    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: a page to load a pack or CAO update without a release; the upload endpoint is built.",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket). Specified for the missing half: a page to load the next year's jurisdiction pack and tax tables without a release (the upload endpoint is built); loading CAO data from a page is a recorded exclusion ('A CAO import/authoring UI, the corpus is maintained in code', 2026-07-14-cao-library and 2026-07-17-cao-sector-datasets), so CAO updates keep arriving with app releases.",
     "change": "payroll-pack-and-cao-updates",
     "decidedOn": "2026-09-27"
   },

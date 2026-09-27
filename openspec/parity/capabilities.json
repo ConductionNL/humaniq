@@ -4788,7 +4788,7 @@
    "id": "fil-premium-differentiation",
    "area": "filings",
    "name": "Apply the lower unemployment premium for permanent contracts and the higher one for flex.",
-   "humaniq": "no",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -4804,9 +4804,9 @@
     "personio": "not checked: not settled: the help centre says Personio Payroll is Germany only (https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll, updated 2026-09-25) and Dutch pay is run in Loket (https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration), while https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26) announces 'Personio Payroll, powered by Loket', managed payroll delivery for the Netherlands; no page states whether the unemployment premium differentiation is applied (the Loket integration syncs contract duration type, https://support.personio.de/hc/en-us/articles/35527484814621-Loket-integration-Summary-of-supported-attributes)."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'premiedifferentiatie|premie.?differentiation|\\bWAB\\b' lib src openspec (excluding archive): no hits; grep -n -iE 'ww.premie|laag.*tarief|hoog.*tarief|permanent|flex|contractType|onbepaalde|bepaalde.*tijd' lib/Standards/packs/nl-2026.pack.json: no hits, so the pack's employer premium steps are not differentiated by contract type at all",
-    "reachedOn": "nothing reaches it",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/filings-premium-differentiation on 2026-09-27 for the missing half: the low premium for BBL apprentices and young part-timers and the review (herziening) on early ending and extra hours; matrix corrected from no and none, since low and high by contract type are applied (PayrollRunService::awfTariffFor, pack binding awfRate, rule nl-awf-laag-hoog-tarief). Before: Matrix corrected 2026-09-27 in the openspec pass: lib/Service/PayrollRunService.php:1611 awfTariffFor() gives low for a permanent written contract and high otherwise (or the contract's EmploymentContract.awfTariff), lib/Standards/packs/nl-2026.pack.json:284 binding awfRate matches it to werknemersverzekeringen.awf.laag or .hoog (lib/Standards/tables/nl-2026.json:103), audited by nl-awf-laag-hoog-tarief (lib/Standards/rules/payroll.json:42). Partial: BBL and young part-timers get the high rate and there is no review (herziening). The earlier search missed the pack's laag and hoog keys. Before: grep -rniF 'premiedifferentiatie|premie.?differentiation|\\bWAB\\b' lib src openspec (excluding archive): no hits; grep -n -iE 'ww.premie|laag.*tarief|hoog.*tarief|permanent|flex|contractType|onbepaalde|bepaalde.*tijd' lib/Standards/packs/nl-2026.pack.json: no hits, so the pack's employer premium steps are not differentiated by contract type at all",
+    "reachedOn": "every payroll run (employer charges on the payslip); audited by occ humaniq:rules:audit",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
