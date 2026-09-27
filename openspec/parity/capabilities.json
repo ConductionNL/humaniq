@@ -902,8 +902,8 @@
     "personio": "not checked: not settled: searched help centre for collective agreement and legislation rule updates; the turn of the year articles (https://support.personio.de/hc/en-us/articles/23183076578717-Overview-of-the-turn-of-the-year) cover German payroll law only, nothing on shipped collective agreement rule updates."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Service/JurisdictionPackService.php + lib/Controller/JurisdictionPackController.php: ONE endpoint POST /api/payroll/packs (ADR-022, no CRUD) lets an admin upload a jurisdiction pack; grep -F 'payroll/packs' _lane/research/frontend-api-paths.txt: no hits, confirming no manifest page calls it; the bundled CAO/tax corpus (lib/Standards/cao/*.json, lib/Standards/tables/nl-2026.json) ships as code and only changes on an app upgrade",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-pack-and-cao-updates on 2026-09-27 for the missing half: a page to load a pack or CAO update without a release; the upload endpoint is built. Before: lib/Service/JurisdictionPackService.php + lib/Controller/JurisdictionPackController.php: ONE endpoint POST /api/payroll/packs (ADR-022, no CRUD) lets an admin upload a jurisdiction pack; grep -F 'payroll/packs' _lane/research/frontend-api-paths.txt: no hits, confirming no manifest page calls it; the bundled CAO/tax corpus (lib/Standards/cao/*.json, lib/Standards/tables/nl-2026.json) ships as code and only changes on an app upgrade",
     "reachedOn": "route POST /api/payroll/packs, not called by any frontend page (API-only); bundled CAO/tax data changes require a new app release, not an in-app action",
     "owner": "ConductionNL/humaniq"
    },
@@ -1124,8 +1124,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/213331029-Update-employee-data: select several employees in the People list, Actions, Edit profile to set one attribute value for all of them; https://support.personio.de/hc/en-us/articles/208329169-Import-salary-and-one-time-compensations imports salaries in bulk from Excel."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Command/CompEffectuateCommand.php + appinfo/info.xml <command>: 'Batch-effectuate every approved, due CompAdjustment in one compensation review cycle', occ-only; lib/Controller/CompController.php POST /api/comp/effectuate (2 hits in frontend-api-paths.txt) is called from CompAdjustmentDetail's single 'Effectueren' header action (src/manifest.d/hr-comp.json:220-224), one CompAdjustment/employee at a time, not the cycle-wide batch",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/comp-collective-raise-and-step-increase on 2026-09-27 for the missing half: a page action to apply a collective raise to many employees; per adjustment and occ are built. Before: lib/Command/CompEffectuateCommand.php + appinfo/info.xml <command>: 'Batch-effectuate every approved, due CompAdjustment in one compensation review cycle', occ-only; lib/Controller/CompController.php POST /api/comp/effectuate (2 hits in frontend-api-paths.txt) is called from CompAdjustmentDetail's single 'Effectueren' header action (src/manifest.d/hr-comp.json:220-224), one CompAdjustment/employee at a time, not the cycle-wide batch",
     "reachedOn": "occ humaniq:comp:effectuate for the true bulk/cycle-wide path (no page); CompAdjustmentDetail /comp-adjustments/:id exposes only a per-adjustment Effectueren action",
     "owner": "ConductionNL/humaniq"
    },
@@ -2826,8 +2826,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/37338523068701-Manage-overtime-new-experience: review overtime balances and compensate overtime as a payout or as time off; https://support.personio.de/hc/en-us/articles/35372955485341-Create-overtime-policies."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'overtime|overwerk' lib/ src/ appinfo/: no hits outside archived spec prose",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/time-hours-and-overtime-to-payroll on 2026-09-27. Before: grep -rniF 'overtime|overwerk' lib/ src/ appinfo/: no hits outside archived spec prose",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -2889,8 +2889,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/17710517111069-Export-hourly-salaries-with-the-DATEV-integration transfers hourly wages to German DATEV payroll, but https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration says tracked hours for hourly employees are outside the Dutch Loket integration and are added manually."
    },
    "built": {
-    "state": "none",
-    "evidence": "lib/Service/PayrollRunService.php:23-26 own docblock: employees with no grossMonthlySalary are SKIPPED with a reason because '(the hourly x Timesheet path is a named fast-follow)'; PayrollCalculator/PayrollRunService read EmploymentContract.grossMonthlySalary, never TimeEntry or Timesheet",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/time-hours-and-overtime-to-payroll on 2026-09-27. Before: lib/Service/PayrollRunService.php:23-26 own docblock: employees with no grossMonthlySalary are SKIPPED with a reason because '(the hourly x Timesheet path is a named fast-follow)'; PayrollCalculator/PayrollRunService read EmploymentContract.grossMonthlySalary, never TimeEntry or Timesheet",
     "reachedOn": "nothing reaches it: approved timesheet hours are not read by any payroll calculation path",
     "owner": "ConductionNL/humaniq"
    },
@@ -3484,8 +3484,8 @@
     "personio": "not checked: not settled: searched help centre for mileage and kilometre allowance; German company car valuation exists (https://support.personio.de/hc/en-us/articles/17363240160669-Manage-company-cars-in-Personio-Payroll) but nothing on business mileage claims; the marketplace category page does not state mileage features."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-expense.json:211-227 Expense.travelType/distanceKm fields (business/commute); no x-openregister-calculations derives amount from distanceKm, so the euro amount is typed by the employee, not computed; lib/Standards/rules/payroll.json:1358 nl-reiskosten-onbelast-tarief checks the amount against the tax-free per-km rate only via occ humaniq:rules:audit",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/expenses-travel-calculation on 2026-09-27 for the missing half: computing the claim amount from the distance at the tax-free rate. Before: lib/Settings/register.d/hr-expense.json:211-227 Expense.travelType/distanceKm fields (business/commute); no x-openregister-calculations derives amount from distanceKm, so the euro amount is typed by the employee, not computed; lib/Standards/rules/payroll.json:1358 nl-reiskosten-onbelast-tarief checks the amount against the tax-free per-km rate only via occ humaniq:rules:audit",
     "reachedOn": "ExpenseDetail /expenses/:id, category=travel fields; compliance with the tax-free rate checked only by occ humaniq:rules:audit, no page enforcement at submit",
     "owner": "ConductionNL/humaniq"
    },
@@ -3547,8 +3547,8 @@
     "personio": "not checked: not settled: searched help centre for expense reimbursement through payroll; one-time compensations exist (https://support.personio.de/hc/en-us/articles/360000406549-Create-and-manage-one-time-compensations) but no page describes approved expenses flowing onto the payslip."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-expense.json Expense.reimburse transition (approved->reimbursed) carries no requires guard and is a bare status flip with a reimbursedAt timestamp; grep -rln Expense lib/Command lib/Payroll: no hits, and grep -n Expense lib/Service/PayrollRunService.php: no hits, unlike sick pay and lease-car bijtelling which both do appear there",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-expenses-and-allowances on 2026-09-27 for the missing half: paying the approved claim as a payslip line; the status flip is built. Before: lib/Settings/register.d/hr-expense.json Expense.reimburse transition (approved->reimbursed) carries no requires guard and is a bare status flip with a reimbursedAt timestamp; grep -rln Expense lib/Command lib/Payroll: no hits, and grep -n Expense lib/Service/PayrollRunService.php: no hits, unlike sick pay and lease-car bijtelling which both do appear there",
     "reachedOn": "ExpenseDetail 'reimburse' lifecycle action only marks the claim reimbursed; no PayrollRun or Payslip ever reads it",
     "owner": "ConductionNL/humaniq"
    },
@@ -3672,8 +3672,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360000401925-Create-and-manage-recurring-payments: recurring compensations are salary components paid monthly, quarterly, half-yearly or yearly at a constant amount, such as a public transport subsidy; https://support.personio.de/hc/en-us/articles/35527325688605-Loket-integration-Sync-compensation-data syncs monthly recurring compensations to Loket for Dutch payroll."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-objects.json:460-504 WkrDeclaration: a hand-entered ledger row (date/description/amount/wkrCategory/sourceReference, optional employeeId for a collective allowance) categorised vrije-ruimte/gericht-vrijgesteld/eindheffing, summed into vrijeRuimteUsed; src/manifest.d/hr-objects.json:1829,1872 WkrDeclarations index + WkrDeclarationDetail, menu 05-menu.json:462; grep -n homeWorking/travelAllowance/reiskostenvergoeding/thuiswerkvergoeding lib/Settings/register.d/hr-objects.json lib/Service/PayrollRunService.php: no hits, so there is no dedicated recurring-allowance field",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-expenses-and-allowances on 2026-09-27 for the missing half: a recurring fixed allowance that pays itself on each payslip. Before: lib/Settings/register.d/hr-objects.json:460-504 WkrDeclaration: a hand-entered ledger row (date/description/amount/wkrCategory/sourceReference, optional employeeId for a collective allowance) categorised vrije-ruimte/gericht-vrijgesteld/eindheffing, summed into vrijeRuimteUsed; src/manifest.d/hr-objects.json:1829,1872 WkrDeclarations index + WkrDeclarationDetail, menu 05-menu.json:462; grep -n homeWorking/travelAllowance/reiskostenvergoeding/thuiswerkvergoeding lib/Settings/register.d/hr-objects.json lib/Service/PayrollRunService.php: no hits, so there is no dedicated recurring-allowance field",
     "reachedOn": "WkrDeclarations /wkr-declarations (menu), one row per payment; no lifecycleActions, carries no workflow",
     "owner": "ConductionNL/humaniq"
    },
@@ -3833,8 +3833,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360001796137-Monthly-Payroll-Accounting-With-Personio-Payroll: the task column shows warnings and blockers per employee before approval; https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration has you resolve open tasks and validation errors in the payroll table before the Loket sync."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Command/PayrollVerifyCommand.php: 'Run-scoped corpus audit over one period's PayrollRun(s) + their payslips; exits non-zero on any mandatory violation' (appinfo/info.xml commands block); no controller route or manifest page calls this check",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-run-checks on 2026-09-27 for the missing half: the pre-run check on the payroll run page; the occ check is built. Before: lib/Command/PayrollVerifyCommand.php: 'Run-scoped corpus audit over one period's PayrollRun(s) + their payslips; exits non-zero on any mandatory violation' (appinfo/info.xml commands block); no controller route or manifest page calls this check",
     "reachedOn": "occ humaniq:payroll:verify only, no page",
     "owner": "ConductionNL/humaniq"
    },
@@ -3932,8 +3932,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/31150544664989-The-income-tax-certificate is produced by Personio Payroll for Germany; for Dutch entities https://support.personio.de/hc/en-us/articles/35527377864861-Loket-Integration-Sync-payroll-documents fetches annual statements produced in Loket into Personio, so Personio does not produce the Dutch statement itself."
    },
    "built": {
-    "state": "built",
-    "evidence": "src/manifest.d/hr-documents.json Jaaropgaven /jaaropgaven index + JaaropgaafDetail /jaaropgaven/:id show the aggregated per-employee annual totals; the note says the Jaaropgaaf record 'is a pure data aggregate upserted server-side by HrDocumentService', which is driven from lib/Command/DocumentsGenerateCommand.php --type jaaropgaaf; no page action triggers generation",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-annual-statement-action on 2026-09-27 for the missing half: generating the annual statement from its page; viewing is built. Before: src/manifest.d/hr-documents.json Jaaropgaven /jaaropgaven index + JaaropgaafDetail /jaaropgaven/:id show the aggregated per-employee annual totals; the note says the Jaaropgaaf record 'is a pure data aggregate upserted server-side by HrDocumentService', which is driven from lib/Command/DocumentsGenerateCommand.php --type jaaropgaaf; no page action triggers generation",
     "reachedOn": "Jaaropgaven /jaaropgaven and JaaropgaafDetail /jaaropgaven/:id (view only, menu Payroll); generation is occ humaniq:documents:generate --type jaaropgaaf only, no page",
     "owner": "ConductionNL/humaniq"
    },
@@ -3964,8 +3964,8 @@
     "personio": "not checked: not settled: the help centre says Personio Payroll is Germany only (https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll, updated 2026-09-25) and Dutch pay is run in Loket (https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration), while https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26) announces 'Personio Payroll, powered by Loket', managed payroll delivery for the Netherlands; no page states whether holiday allowance reservation and payment is part of that service; for customers on their own Loket, https://support.personio.de/hc/en-us/articles/35527325688605-Loket-integration-Sync-compensation-data says holiday allowance is configured and processed directly in Loket."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Standards/packs/nl-2026.pack.json:259-315 computes an 8% vakantiegeldReservering per period as a reserve step ('neither cash to the employee this period nor an employer charge'); lib/Service/PayrollRunService.php:682-683 stores vakantiegeldReserved/vakantiegeldRate on the Payslip; grep -rniF 'dertiende|13e maand|thirteenth month' lib src: no hits, and grep -rniF 'uitbetal|payout' against the pack/PayrollRunService for vakantiegeld: no hits either",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-reservation-payouts on 2026-09-27 for the missing half: paying out the reserved holiday allowance and a thirteenth month; the reservation is built. Before: lib/Standards/packs/nl-2026.pack.json:259-315 computes an 8% vakantiegeldReservering per period as a reserve step ('neither cash to the employee this period nor an employer charge'); lib/Service/PayrollRunService.php:682-683 stores vakantiegeldReserved/vakantiegeldRate on the Payslip; grep -rniF 'dertiende|13e maand|thirteenth month' lib src: no hits, and grep -rniF 'uitbetal|payout' against the pack/PayrollRunService for vakantiegeld: no hits either",
     "reachedOn": "PayslipDetail /payslips/:id and PayrollRunDetail /payroll-runs/:id show the reserved amount as a field on every payslip; there is no separate payout run and no thirteenth-month component anywhere",
     "owner": "ConductionNL/humaniq"
    },
@@ -4127,8 +4127,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/13632466245661-Personio-Payroll-About: Personio Payroll processes overtime and shift allowances (not linked to time tracking) and https://support.personio.de/hc/en-us/articles/31082835200797-Create-and-manage-additional-pay grants allowances relative to salary as collective agreements mandate; no collective agreement rule set applies them, and Personio Payroll is Germany only per https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Standards/Checks/NlCaoChecks.php (cao-library) only runs two machine-checkable compliance checks, nl-cao-minimumloon-schaal (salary floor) and nl-cao-verlof-minimum (leave floor); Caos/CaoDetail (hr-cao.json) are read-only reference pages; grep -n -iE 'shift.?premie|toeslag|allowance|premium' lib/Standards/packs/nl-2026.pack.json: no hits, so no step in the actual payroll calculation chain applies a CAO-specific shift premium or allowance",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-cao-components on 2026-09-27 for the missing half: paying CAO-prescribed allowances and premiums in the run; the CAO floor check is built. Before: lib/Standards/Checks/NlCaoChecks.php (cao-library) only runs two machine-checkable compliance checks, nl-cao-minimumloon-schaal (salary floor) and nl-cao-verlof-minimum (leave floor); Caos/CaoDetail (hr-cao.json) are read-only reference pages; grep -n -iE 'shift.?premie|toeslag|allowance|premium' lib/Standards/packs/nl-2026.pack.json: no hits, so no step in the actual payroll calculation chain applies a CAO-specific shift premium or allowance",
     "reachedOn": "Caos /caos and CaoDetail show the CAO's minimum scale and leave figures for reference; the compliance check runs via occ humaniq:rules:audit; nothing in a payroll run actually adds a CAO-prescribed component to a payslip"
    },
    "provider": "humaniq",
@@ -4348,8 +4348,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/29589909415837-Summary-of-data-available-for-reporting has a cost center allocation attribute per employee, and https://support.personio.de/hc/en-us/articles/19284187332509-Set-up-the-Accounting-Report-for-Personio-Payroll groups booked wage costs by cost center in German payroll only."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'costcent|cost.centre|projectid' lib/Settings/register.d/hr-objects.json and grep -rniF 'kostenplaats|cost.?cent' lib openspec src/manifest.d (excluding archive): no hits anywhere; PayrollRun/Payslip carry no cost-centre or project field",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-cost-allocation on 2026-09-27. Before: grep -rniF 'costcent|cost.centre|projectid' lib/Settings/register.d/hr-objects.json and grep -rniF 'kostenplaats|cost.?cent' lib openspec src/manifest.d (excluding archive): no hits anywhere; PayrollRun/Payslip carry no cost-centre or project field",
     "reachedOn": "nothing reaches it"
    },
    "provider": "humaniq",
@@ -4378,8 +4378,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/23183076578717-Overview-of-the-turn-of-the-year: at the turn of the year Personio takes over the automated calculation for German tax and social insurance changes; Personio Payroll is Germany only per https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Payroll/PackRepository.php:86-104 resolves a pack purely by (jurisdiction, year-of(period)), so a new tax year is data-only in design; but lib/Command/PayrollYearTransitionCommand.php per appinfo/info.xml is only an 'Annual tax-year roll preflight: asserts the new nl-YYYY.json table exists ... Changes no engine state'; lib/Standards/packs/ ships exactly one file, nl-2026.pack.json",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-pack-and-cao-updates on 2026-09-27 for the missing half: loading the next year's tables from a page without a release; the year-keyed resolution is built. Before: lib/Payroll/PackRepository.php:86-104 resolves a pack purely by (jurisdiction, year-of(period)), so a new tax year is data-only in design; but lib/Command/PayrollYearTransitionCommand.php per appinfo/info.xml is only an 'Annual tax-year roll preflight: asserts the new nl-YYYY.json table exists ... Changes no engine state'; lib/Standards/packs/ ships exactly one file, nl-2026.pack.json",
     "reachedOn": "occ humaniq:payroll:year-transition only, and it is read-only (a preflight check, not an actual roll); no 2027 (or later) pack exists yet, so payroll cannot literally run for a new year until someone ships one",
     "owner": "ConductionNL/humaniq"
    },
@@ -4474,8 +4474,8 @@
     "personio": "https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26): 'Personio Payroll, powered by Loket. Managed payroll delivery for the Netherlands, combining Personio's HR workflows with compliant, local payroll expertise'; for Germany https://support.personio.de/hc/en-us/articles/24333241923485-About-the-Personio-Payroll-Expert-plan adds support from Personio's tax consulting partners."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'youforce|uitbesteed|outsourc' lib openspec README.md (excluding archive): no hits; humaniq's own README describes it as the payroll engine itself, not a hand-off to a bureau",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-external-bureau-handoff on 2026-09-27. Before: grep -rniF 'youforce|uitbesteed|outsourc' lib openspec README.md (excluding archive): no hits; humaniq's own README describes it as the payroll engine itself, not a hand-off to a bureau",
     "reachedOn": "nothing reaches it"
    },
    "provider": "humaniq",
@@ -6398,8 +6398,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/19284187332509-Set-up-the-Accounting-Report-for-Personio-Payroll produces a DATEV SKR03/04 booking report for German payroll, and https://support.personio.de/hc/en-us/articles/17475536553885-Set-up-the-Xero-integration syncs employee data to Xero Payroll for UK entities; no automatic posting of payroll and expenses into accounting software for Dutch entities is described."
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Flow/PayrollGlPostNode.php:43 posts an approved payroll run's journal to shillinq, duck-typed ('skipped-no-shillinq' outcome when absent); lib/Flow/PayrollNetPayNode.php does the same for SEPA net-pay; lib/Command/GlPostRunCommand.php and lib/Command/NetPayRunCommand.php are the occ entry points; no route for glpost/netpay exists in appinfo/routes.php and no headerAction exists in src/manifest.d/hr-paybatch.json, reachable only via occ or via the Loonrun Flow (lib/Settings/register.d/hr-objects.json:193), which arrives DISABLED by default",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-expenses-and-allowances on 2026-09-27 for the missing half: expenses posting through payroll, since reimbursed expenses reach no ledger or payslip; the payroll half is covered by payroll-run-as-a-flow. Before: lib/Flow/PayrollGlPostNode.php:43 posts an approved payroll run's journal to shillinq, duck-typed ('skipped-no-shillinq' outcome when absent); lib/Flow/PayrollNetPayNode.php does the same for SEPA net-pay; lib/Command/GlPostRunCommand.php and lib/Command/NetPayRunCommand.php are the occ entry points; no route for glpost/netpay exists in appinfo/routes.php and no headerAction exists in src/manifest.d/hr-paybatch.json, reachable only via occ or via the Loonrun Flow (lib/Settings/register.d/hr-objects.json:193), which arrives DISABLED by default",
     "reachedOn": "occ humaniq:glpost:run / occ humaniq:netpay:run, or the Loonrun flow's glpost/netpay nodes once an admin deliberately enables the flow in OpenRegister, no humaniq page button",
     "owner": "ConductionNL/humaniq"
    },
@@ -7123,8 +7123,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(step increase|periodiek)\\b' src/plugins src/client/src finds no match; pay grades have only min and max, no steps (src/client/src/orangehrmPimPlugin/components/SaveSalaryComponent.vue:329)"
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-comp.json CompAdjustment with lifecycle propose, approve, reject (approve and reject guarded by NoSelfApprovalGuard), reached from src/manifest.d/hr-comp.json CompAdjustmentDetail; a raise is proposed and approved per employee, but no yearly step in the scale is generated and no rejection reason is sent to the employee",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/comp-collective-raise-and-step-increase on 2026-09-27 for the missing half: a yearly step in the scale proposed, decided and explained to the employee. Before: lib/Settings/register.d/hr-comp.json CompAdjustment with lifecycle propose, approve, reject (approve and reject guarded by NoSelfApprovalGuard), reached from src/manifest.d/hr-comp.json CompAdjustmentDetail; a raise is proposed and approved per employee, but no yearly step in the scale is generated and no rejection reason is sent to the employee",
     "reachedOn": "CompReviewCycles /comp-review-cycles, CompAdjustmentDetail /comp-adjustments/:id",
     "owner": "ConductionNL/humaniq"
    },
@@ -7187,8 +7187,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(commut\\w*|travel distance)\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Settings/register.d/hr-expense.json:211-227 Expense.travelType business or commute with distanceKm, but the amount is typed by the employee (no calculation from distance); lib/Standards/Checks/NlTravelExpenseChecks.php:99 checks the per-km amount against the tax-free rate only via occ humaniq:rules:audit; no route planner lookup",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/expenses-travel-calculation on 2026-09-27 for the missing half: calculating the commuting allowance from the distance with the tax-free rules and a route lookup. Before: lib/Settings/register.d/hr-expense.json:211-227 Expense.travelType business or commute with distanceKm, but the amount is typed by the employee (no calculation from distance); lib/Standards/Checks/NlTravelExpenseChecks.php:99 checks the per-km amount against the tax-free rate only via occ humaniq:rules:audit; no route planner lookup",
     "reachedOn": "ExpenseDetail /expenses/:id travel fields; the tax-free check only via occ humaniq:rules:audit",
     "owner": "ConductionNL/humaniq"
    },
@@ -7219,8 +7219,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(co2|emission)\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'co2|wpm|transportMode|vervoersmiddel' lib src: only Asset.fuelType for a company vehicle (lib/Settings/register.d/hr-assets.json:159); commuting and business trips carry no transport mode and nothing aggregates them for the WPM reporting duty",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/expenses-travel-calculation on 2026-09-27. Before: grep -rniE 'co2|wpm|transportMode|vervoersmiddel' lib src: only Asset.fuelType for a company vehicle (lib/Settings/register.d/hr-assets.json:159); commuting and business trips carry no transport mode and nothing aggregates them for the WPM reporting duty",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -7251,8 +7251,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(ikb|choice budget)\\b' src/plugins src/client/src finds no match; no payroll plugin among the 23 in src/plugins"
    },
    "built": {
-    "state": "built",
-    "evidence": "src/manifest.d/hr-leave.json:221 the IKB-style leave buy and sell request (LeaveTransaction, lifecycle guarded by LeaveBuySellApprovalGuard in lib/Settings/register.d/hr-leave.json:317) settles leave hours in pay; no individual choice budget that accrues a percentage and can be spent on several goals (grep -rniE 'keuzebudget|\\bikb\\b' finds only this note)",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-reservation-payouts on 2026-09-27 for the missing half: an individual choice budget that accrues and can be spent on several goals; leave buy and sell is built. Before: src/manifest.d/hr-leave.json:221 the IKB-style leave buy and sell request (LeaveTransaction, lifecycle guarded by LeaveBuySellApprovalGuard in lib/Settings/register.d/hr-leave.json:317) settles leave hours in pay; no individual choice budget that accrues a percentage and can be spent on several goals (grep -rniE 'keuzebudget|\\bikb\\b' finds only this note)",
     "reachedOn": "MijnVerlofKopenVerkopen /mijn/verlof-kopen-verkopen, LeaveTransactionDetail /leave-transactions/:id",
     "owner": "ConductionNL/humaniq"
    },
@@ -7283,8 +7283,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(mayor|alderm\\w*|wethouder|political)\\b' src/plugins src/client/src finds no match; no payroll plugin among the 23 in src/plugins"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'wethouder|burgemeester|politiek|ambtsdrager|wachtgeld' lib src: no hits; Employee.publicSectorRegime (lib/Settings/register.d/hr-objects.json:52) covers civil servants, not political office holders",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-special-regimes on 2026-09-27. Before: grep -rniE 'wethouder|burgemeester|politiek|ambtsdrager|wachtgeld' lib src: no hits; Employee.publicSectorRegime (lib/Settings/register.d/hr-objects.json:52) covers civil servants, not political office holders",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -7786,8 +7786,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'payroll|year.?to.?date|ytd' src/plugins src/client/src: no match; the open source edition has no payroll module"
    },
    "built": {
-    "state": "none",
-    "evidence": "not settled: grep -rniE 'openingBalance|priorYtd|beginsaldo|cumulat' lib/Service lib/Payroll: no hits for carried-over year to date figures, but the payroll engine's cumulative handling was not traced end to end",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-period-edge-cases on 2026-09-27. Before: not settled: grep -rniE 'openingBalance|priorYtd|beginsaldo|cumulat' lib/Service lib/Payroll: no hits for carried-over year to date figures, but the payroll engine's cumulative handling was not traced end to end",
     "reachedOn": "not traced",
     "owner": "ConductionNL/humaniq"
    },
@@ -7849,8 +7849,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'pension|retire|payroll' src/plugins src/client/src: no match; no payroll or benefit payment module"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'rvu|vervroegd' lib src: no hits",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-special-regimes on 2026-09-27. Before: grep -rniE 'rvu|vervroegd' lib src: no hits",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -8005,8 +8005,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'anomal|outlier|payroll' src/plugins src/client/src: no match; no pay runs exist to compare"
    },
    "built": {
-    "state": "built",
-    "evidence": "lib/Service/PayrollMutationService.php compares a run with the previous one per employee (pay-mutation-report, PayrollMutationReportDetail /payroll-mutations/:id); no learned history or per-component sensitivity (grep -rniE 'anomal|outlier' lib: no hits)",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-run-checks on 2026-09-27 for the missing half: comparing each employee's pay with their own history and flagging outliers before close. Before: lib/Service/PayrollMutationService.php compares a run with the previous one per employee (pay-mutation-report, PayrollMutationReportDetail /payroll-mutations/:id); no learned history or per-component sensitivity (grep -rniE 'anomal|outlier' lib: no hits)",
     "reachedOn": "PayrollMutations /payroll-mutations, PayrollMutationReportDetail",
     "owner": "ConductionNL/humaniq"
    },
@@ -8192,8 +8192,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'payroll|week.?53' src/plugins src/client/src: no match in any pay logic; no payroll module"
    },
    "built": {
-    "state": "none",
-    "evidence": "not settled: lib/Settings/register.d/hr-objects.json:114 Payslip.period allows four-weekly YYYY-Pnn, but whether a year with a 53rd week or a 14th period is handled was not traced in the payroll engine",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-period-edge-cases on 2026-09-27. Before: not settled: lib/Settings/register.d/hr-objects.json:114 Payslip.period allows four-weekly YYYY-Pnn, but whether a year with a 53rd week or a 14th period is handled was not traced in the payroll engine",
     "reachedOn": "not traced",
     "owner": "ConductionNL/humaniq"
    },
@@ -8254,8 +8254,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'payroll' src/plugins src/client/src: no match; salary components (src/plugins/orangehrmPimPlugin/Api/EmployeeSalaryComponentAPI.php) are edited in place with no recalculation lineage"
    },
    "built": {
-    "state": "built",
-    "evidence": "pay-reproduce: a sealed payslip is recomputed from its stored inputs (lib/Service/PayrollReproduceService.php) and pay-mutation-report compares runs; the OpenRegister audit history records who changed each input; no per-mutation lineage from origin to payslip line",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/payroll-mutation-lineage on 2026-09-27 for the missing half: tracing a payslip line back to the input mutation that produced it. Before: pay-reproduce: a sealed payslip is recomputed from its stored inputs (lib/Service/PayrollReproduceService.php) and pay-mutation-report compares runs; the OpenRegister audit history records who changed each input; no per-mutation lineage from origin to payslip line",
     "reachedOn": "PayslipDetail /payslips/:id, PayrollMutationReportDetail /payroll-mutations/:id",
     "owner": "ConductionNL/humaniq"
    },
