@@ -540,6 +540,21 @@ function executeProbeBundle(bundlePath) {
 	global.document = window.document;
 	global.self = window;
 
+	// jsdom's window has no Fetch API, but every browser does, and Node ships
+	// one. @conduction/nextcloud-vue >= 2.57 bundles a WebDAV client (behind
+	// the `files` widget) whose module init runs `window.fetch.bind(window)`.
+	// Without these the probe crashed with "Cannot read properties of
+	// undefined (reading 'bind')", and files/object-list/stats-block read as
+	// UNRESOLVED because the probe never ran, not because they were missing.
+	for (const key of ["fetch", "Headers", "Request", "Response"]) {
+		if (
+			typeof window[key] === "undefined" &&
+			typeof globalThis[key] !== "undefined"
+		) {
+			window[key] = globalThis[key];
+		}
+	}
+
 	// require() (not a <script> tag) loads the bundle, so jsdom never sets
 	// document.currentScript itself — only needed if some future change
 	// reintroduces publicPath:'auto' for the probe; harmless to define anyway.
