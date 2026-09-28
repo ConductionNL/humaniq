@@ -780,7 +780,7 @@
     "state": "built",
     "change": "2026-09-28-people-formation-positions",
     "evidence": "lib/Settings/register.d/hr-formation.json Formatieplaats (orgUnitId, normfunctieId, budgetedFte, validFrom, validUntil, status); EmploymentContract.formatieplaatsId and Vacancy.formatieplaatsId; lib/Service/FormationOccupancyService.php computes budgeted, filled, vacant and overfilled per place on read; GET /api/formation/occupancy (FormationController, RBAC-checked unit or place). Tests: tests/Unit/Service/FormationOccupancyServiceTest.php.",
-    "reachedOn": "OrgUnitDetail /org-units/:id (Formation widget and Formation places list), Formatieplaatsen /formation-places, FormatieplaatsDetail /formation-places/:id",
+    "reachedOn": "OrgUnitDetail /org-units/:id (budgeted, filled, vacant and net FTE tiles and the Formation table), Formatieplaatsen /formation-places, FormatieplaatsDetail /formation-places/:id",
     "readOn": "2026-09-28",
     "owner": "ConductionNL/humaniq"
    },
@@ -7016,7 +7016,7 @@
     "state": "built",
     "change": "2026-09-28-people-formation-positions",
     "evidence": "lib/Service/FormationAbsence.php and FormationOccupancyService::occupancy() subtract, per occupant and working day, FTE times the fraction away on approved leave of the types in formation_net_fte_leave_types (default parental, zwangerschap) or on sickness past formation_long_term_sick_weeks (default 6, weighted by AbsenceProgression). Tests: FormationOccupancyServiceTest::testParentalLeaveAndLongSicknessLowerTheNetFigure.",
-    "reachedOn": "OrgUnitDetail /org-units/:id (Formation widget and Formation places list), Formatieplaatsen /formation-places, FormatieplaatsDetail /formation-places/:id",
+    "reachedOn": "OrgUnitDetail /org-units/:id (budgeted, filled, vacant and net FTE tiles and the Formation table), Formatieplaatsen /formation-places, FormatieplaatsDetail /formation-places/:id",
     "readOn": "2026-09-28",
     "owner": "ConductionNL/humaniq"
    },
