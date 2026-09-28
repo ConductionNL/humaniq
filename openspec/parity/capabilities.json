@@ -8422,7 +8422,7 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'mcp|model.?context' src/plugins src/client/src: no match; only the REST API v2 and OAuth plugin exist"
    },
    "built": {
-    "state": "none",
+    "state": "decided-no",
     "evidence": "openspec/specs/humaniq-mcp-surface/spec.md: x-openregister-mcp declares six read-only schemas (Vacancy, OrgUnit, Asset, AssetAssignment, Timesheet, Expense) with search and get only, so no request can be started; the row rests on a declaration only and whether the installed OpenRegister serves it was not driven (same as the pending row rep-ai-assistant) Corrections round 8 (2026-09-28): the read-only declaration is at lib/Settings/register.d/hr-org.json:10 (and hr-ats, hr-assets, hr-timesheet, hr-expense) at e08ffe0; no humaniq change specifies a write or time-off tool.",
     "reachedOn": "an external MCP client, declaration only",
     "owner": "ConductionNL/humaniq"
@@ -8432,7 +8432,7 @@
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://support.personio.de/hc/en-us/articles/38314656674333-Personio-MCP-server-Beta-access-overview",
-   "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-08-17-declared-actions-and-mcp-scope (a schema can declare a write action as an MCP tool); humaniq declaring the time-off action is humaniq's, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister). Corrections round 8 (2026-09-28): built.state specified to none, because no humaniq change specifies the missing half. The archived openspec/changes/archive/2026-09-07-humaniq-mcp-adoption only declares six read-only schemas, and its spec openspec/specs/humaniq-mcp-surface/spec.md:41-42 and :89-90 refuses every write verb and the leave cluster, so it does not cover starting a time-off request; the open change self-service-policy-assistant puts submitting leave from the chat out of scope (proposal.md:88)."
+   "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-08-17-declared-actions-and-mcp-scope (a schema can declare a write action as an MCP tool); humaniq declaring the time-off action is humaniq's, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister). Corrections round 8 (2026-09-28): built.state specified to none, because no humaniq change specifies the missing half. The archived openspec/changes/archive/2026-09-07-humaniq-mcp-adoption only declares six read-only schemas, and its spec openspec/specs/humaniq-mcp-surface/spec.md:41-42 and :89-90 refuses every write verb and the leave cluster, so it does not cover starting a time-off request; the open change self-service-policy-assistant puts submitting leave from the chat out of scope (proposal.md:88). Corrections round 9 (2026-09-28): built.state none to decided-no. Starting a request such as time off from an AI tool is a recorded non-goal of humaniq's main spec openspec/specs/humaniq-mcp-surface/spec.md: :41-42 \"The create, update and delete verbs MUST NOT be enabled on any humaniq schema, and no humaniq service may carry #[McpTool]\", and :89-90 keeps LeaveRequest, LeaveBalance and SickLeaveCase off the tool surface because sick leave is health data. The read half stays declared (lib/Settings/register.d/hr-org.json:10)."
   },
   {
    "id": "dm-approvals-dashboard",
