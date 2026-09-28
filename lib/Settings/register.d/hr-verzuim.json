@@ -723,6 +723,38 @@
                         "title": "Administration",
                         "description": "Which administration this case belongs to. Normally the same as the employee's.", "x-notes": "Denormalized administratie key this SickLeaveCase is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
                     },
+                    "probleemanalyseDaysLeft": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Days left: problem analysis",
+                        "description": "Days from today until the problem analysis is due. Empty once it is done or the employee has recovered.",
+                        "x-notes": "absence-deadlines-and-signals D1: the display declaration of the materialised calculation of the same name in configuration.x-openregister-calculations, which OpenRegister's temporal sweep recomputes daily. Plain property, no calculation key, so it is not a second declaration."
+                    },
+                    "planVanAanpakDaysLeft": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Days left: action plan",
+                        "description": "Days from today until the action plan is due. Empty once it is done or the employee has recovered.",
+                        "x-notes": "absence-deadlines-and-signals D1: the display declaration of the materialised calculation of the same name in configuration.x-openregister-calculations, which OpenRegister's temporal sweep recomputes daily. Plain property, no calculation key, so it is not a second declaration."
+                    },
+                    "uwv42WeekMeldingDaysLeft": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Days left: 42-week notification to UWV",
+                        "description": "Days from today until the 42-week notification to UWV is due. Empty once it is done or the employee has recovered.",
+                        "x-notes": "absence-deadlines-and-signals D1: the display declaration of the materialised calculation of the same name in configuration.x-openregister-calculations, which OpenRegister's temporal sweep recomputes daily. Plain property, no calculation key, so it is not a second declaration."
+                    },
+                    "eerstejaarsevaluatieDaysLeft": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Days left: first-year evaluation",
+                        "description": "Days from today until the first-year evaluation is due. Empty once it is done or the employee has recovered.",
+                        "x-notes": "absence-deadlines-and-signals D1: the display declaration of the materialised calculation of the same name in configuration.x-openregister-calculations, which OpenRegister's temporal sweep recomputes daily. Plain property, no calculation key, so it is not a second declaration."
+                    },
                     "episodesInWindow": {
                         "type": "integer",
                         "nullable": true,

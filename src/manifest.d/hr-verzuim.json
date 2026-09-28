@@ -8,7 +8,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "SickLeaveCase",
-				"_note": "leave-verzuim-mvp (2026-07-12): administrative-only sickness case -- NO medical/diagnosis data exists on this schema or its widgets (REQ-VWP-002). The 'Case' data widget (firstSickDay/recoveredDate/status/wachtdag/loondoorbetalingPercentage) excludes employeeId since Related already resolves and links the sick Employee by name; the 'Poortwachter milestones' widget surfaces all eight Due/Done WVP dates (probleemanalyse/plan van aanpak/UWV 42-wekenmelding/eerstejaarsevaluatie) so the re-integration clock is the page's second headline fact. Files is labeled and described for gespreksverslagen & plan-van-aanpak process documents ONLY -- repeating the no-medical-data warning, matching the schema's own privacy stance. lifecycleActions expose exactly herstellen/heropenen (gemeld<->hersteld) -- no invented edges. Audit history is a sidebar tab.",
+				"_note": "leave-verzuim-mvp (2026-07-12): administrative-only sickness case -- NO medical/diagnosis data exists on this schema or its widgets (REQ-VWP-002). The 'Case' data widget (firstSickDay/recoveredDate/status/wachtdag/loondoorbetalingPercentage) excludes employeeId since Related already resolves and links the sick Employee by name; the 'Poortwachter milestones' widget surfaces all eight Due/Done WVP dates (probleemanalyse/plan van aanpak/UWV 42-wekenmelding/eerstejaarsevaluatie) so the re-integration clock is the page's second headline fact. Files is labeled and described for gespreksverslagen & plan-van-aanpak process documents ONLY -- repeating the no-medical-data warning, matching the schema's own privacy stance. lifecycleActions expose exactly herstellen/heropenen (gemeld<->hersteld) -- no invented edges. Audit history is a sidebar tab. absence-deadlines-and-signals (2026-09-28): each milestone shows its days left (a materialised calculation the reminder rules watch); the 'Generate 42-week notification' api-call posts to POST /api/sick-leave/{id}/uwv-notification (UwvNotificationController, HR or admin only), which files the rendered document as an HrGeneratedDocument on the case. Nothing is sent to UWV.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -32,7 +32,11 @@
 								"eerstejaarsevaluatieDue",
 								"eerstejaarsevaluatieDone",
 								"currentAbsencePercentage",
-								"absenceProgression"
+								"absenceProgression",
+								"probleemanalyseDaysLeft",
+								"planVanAanpakDaysLeft",
+								"uwv42WeekMeldingDaysLeft",
+								"eerstejaarsevaluatieDaysLeft"
 							],
 							"title": "Case"
 						}
@@ -46,12 +50,16 @@
 							"columns": 2,
 							"include": [
 								"probleemanalyseDue",
+								"probleemanalyseDaysLeft",
 								"probleemanalyseDone",
 								"planVanAanpakDue",
+								"planVanAanpakDaysLeft",
 								"planVanAanpakDone",
 								"uwv42WeekMeldingDue",
+								"uwv42WeekMeldingDaysLeft",
 								"uwv42WeekMeldingDone",
 								"eerstejaarsevaluatieDue",
+								"eerstejaarsevaluatieDaysLeft",
 								"eerstejaarsevaluatieDone"
 							],
 							"title": "Poortwachter milestones"
@@ -149,7 +157,20 @@
 							"label": "Reopen"
 						}
 					]
-				}
+				},
+				"headerActions": [
+					{
+						"id": "generate-uwv-42",
+						"label": "Generate 42-week notification",
+						"type": "api-call",
+						"icon": "FileSendOutline",
+						"url": "/api/sick-leave/{objectId}/uwv-notification",
+						"method": "POST",
+						"confirm": true,
+						"successMessage": "The 42-week notification is on the case. Submit it to UWV and fill in the date it was done.",
+						"errorMessage": "The 42-week notification could not be made."
+					}
+				]
 			}
 		}
 	],

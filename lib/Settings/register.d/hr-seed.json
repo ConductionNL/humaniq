@@ -671,6 +671,67 @@
                 "@self": {
                     "register": "humaniq",
                     "schema": "SickLeaveCase",
+                    "slug": "sickcase-jansen-kort"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "firstSickDay": "2025-10-20",
+                "recoveredDate": "2025-10-22",
+                "status": "hersteld",
+                "wachtdag": false,
+                "loondoorbetalingPercentage": 70,
+                "episodesInWindow": 1,
+                "frequentAbsence": false,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SickLeaveCase",
+                    "slug": "sickcase-jansen-frequent"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "firstSickDay": "2026-09-14",
+                "status": "gemeld",
+                "wachtdag": false,
+                "loondoorbetalingPercentage": 70,
+                "probleemanalyseDue": "2026-10-26",
+                "planVanAanpakDue": "2026-11-09",
+                "uwv42WeekMeldingDue": "2027-07-05",
+                "eerstejaarsevaluatieDue": "2027-09-13",
+                "episodesInWindow": 3,
+                "frequentAbsence": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SickLeaveCase",
+                    "slug": "sickcase-uitzend-week40"
+                },
+                "employeeId": "@ref:employee-uitzend-abu",
+                "firstSickDay": "2025-12-22",
+                "status": "gemeld",
+                "wachtdag": false,
+                "loondoorbetalingPercentage": 70,
+                "probleemanalyseDue": "2026-02-02",
+                "probleemanalyseDone": "2026-01-29",
+                "planVanAanpakDue": "2026-02-16",
+                "planVanAanpakDone": "2026-02-12",
+                "uwv42WeekMeldingDue": "2026-10-05",
+                "eerstejaarsevaluatieDue": "2026-12-14",
+                "absenceProgression": [
+                    {"effectiveFrom": "2025-12-22", "absencePercentage": 100},
+                    {"effectiveFrom": "2026-06-01", "absencePercentage": 50}
+                ],
+                "currentAbsencePercentage": 50,
+                "episodesInWindow": 1,
+                "frequentAbsence": false,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SickLeaveCase",
                     "slug": "sickcase-devries-week7"
                 },
                 "employeeId": "@ref:employee-devries",
@@ -1729,6 +1790,8 @@
                 "kvkNumber": "12345678",
                 "loonheffingennummer": "000000000L01",
                 "active": true,
+                "frequentAbsenceThreshold": 3,
+                "frequentAbsenceWindowMonths": 12,
                 "abpAansluitingsplichtig": true,
                 "_note": "abp-aansluiting (design.md Seed Data): flipped to true -- ADM-001's existing approved 2026-05/2026-06 NL PayrollRuns already each carry a fund:abp PensionFiling (pension-filing-upa-mvp REQ-PFU-007), so nl-abp-fund-required reports zero violations for ADM-001 with no new filing seeds."
             },
