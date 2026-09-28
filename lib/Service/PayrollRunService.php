@@ -51,7 +51,9 @@
  * here; the sealed historical payslip each adjustment was diffed against is
  * never read or written by this service. No open/applied adjustment for an
  * employee -> `retroAdjustment` stays null and `nettoPay` is unchanged
- * (byte-identical to before this change).
+ * (byte-identical to before this change). The cost side of the same payout
+ * (`deltaGross`, `deltaLoonheffing`, the employer charge deltas) is added to
+ * the run totals, so the GL journal books what net pays out (humaniq#514).
  *
  * leave-buy-sell (design.md D6, humaniq#513): every `settled`
  * `LeaveTransaction` whose `settlementPeriod` equals this run's period is
@@ -210,6 +212,19 @@ class PayrollRunService {
 	 * @var int
 	 */
 	private const YEAR_ONE_WEEKS = 52;
+
+	/**
+	 * The retro fold of an employee with no applied adjustment this period:
+	 * nothing paid, nothing booked (humaniq#514).
+	 *
+	 * @var array{net: int, gross: int, loonheffing: int, employerCharges: int}
+	 */
+	private const NO_RETRO_ADJUSTMENT = [
+		'net' => 0,
+		'gross' => 0,
+		'loonheffing' => 0,
+		'employerCharges' => 0,
+	];
 
 	/**
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
@@ -529,7 +544,8 @@ class PayrollRunService {
 			// into the payslip's retroAdjustment component + nettoPay. No
 			// applied adjustment -> retroAdjustmentCents is 0 and the payload
 			// stays byte-identical to before this change.
-			$retroAdjustmentCents = ($retroAdjustmentsByEmployeeId[$employeeId] ?? 0);
+			$retroAdjustment = ($retroAdjustmentsByEmployeeId[$employeeId] ?? self::NO_RETRO_ADJUSTMENT);
+			$retroAdjustmentCents = $retroAdjustment['net'];
 
 			// loonbeslag (design.md D3): computed against the FULLY-folded
 			// nettoPay-so-far (engine net, which already carries any settled
@@ -567,10 +583,16 @@ class PayrollRunService {
 
 			$computed[] = ['employee' => $employeeLabel, 'payslipId' => $this->idOf($saved)];
 
-			$totals['gross'] += $result->grossPayCents;
-			$totals['loonheffing'] += $result->loonheffingCents;
-			$totals['employerCharges'] += $result->employerChargesCents;
-			$totals['withholdings'] += $result->loonheffingCents;
+			// humaniq#514: the retro nabetaling/terugvordering is paid out in
+			// net, so its gross, its wage tax and its employer charges belong
+			// on the cost side too. Without them totalNet holds money
+			// totalGross does not, the GL journal books no cost for it, and a
+			// large enough delta makes the run unpostable. A leave buy/sell
+			// already sits inside the engine gross since humaniq#513.
+			$totals['gross'] += ($result->grossPayCents + $retroAdjustment['gross']);
+			$totals['loonheffing'] += ($result->loonheffingCents + $retroAdjustment['loonheffing']);
+			$totals['employerCharges'] += ($result->employerChargesCents + $retroAdjustment['employerCharges']);
+			$totals['withholdings'] += ($result->loonheffingCents + $retroAdjustment['loonheffing']);
 			$totals['net'] += ($nettoPaySoFarCents - $loonbeslagDeductionCents);
 		}//end foreach
 
@@ -1273,7 +1295,7 @@ class PayrollRunService {
 	}//end thirtyPercentRulingFields()
 
 	/**
-	 * Every employee's summed `deltaNet` (cents) across `applied`
+	 * Every employee's summed retro deltas (cents) across `applied`
 	 * PayrollAdjustments whose `settlementPeriod` equals this run's period
 	 * (retro-adjustments design.md D4) -- the current-run-only folding index.
 	 * `draft` adjustments and adjustments settling a different period are
@@ -1281,9 +1303,16 @@ class PayrollRunService {
 	 * empty map when the PayrollAdjustment schema does not exist yet in the
 	 * register (the two changes may land in either order).
 	 *
+	 * Per employee: `net` (summed `deltaNet`, folded into nettoPay) and the
+	 * cost side of the same payout (humaniq#514): `gross` (`deltaGross`),
+	 * `loonheffing` (`deltaLoonheffing`) and `employerCharges` (`deltaZvw` +
+	 * `deltaWerknemersverzekeringen`). An adjustment without a numeric
+	 * `deltaGross` books `deltaNet + deltaLoonheffing` as its gross, so a net
+	 * payout never reaches the run without a matching cost.
+	 *
 	 * @param string $period Wage period (YYYY-MM).
 	 *
-	 * @return array<string, int>
+	 * @return array<string, array{net: int, gross: int, loonheffing: int, employerCharges: int}>
 	 *
 	 * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-004
 	 */
@@ -1303,14 +1332,41 @@ class PayrollRunService {
 				continue;
 			}
 
-			$deltaNet = ($adjustment['deltaNet'] ?? 0);
-			$cents = is_numeric($deltaNet) === true ? (int)round(((float)$deltaNet) * 100) : 0;
+			$netCents = $this->centsOrZero($adjustment['deltaNet'] ?? null);
+			$loonheffingCents = $this->centsOrZero($adjustment['deltaLoonheffing'] ?? null);
+			$grossCents = ($netCents + $loonheffingCents);
+			if (is_numeric($adjustment['deltaGross'] ?? null) === true) {
+				$grossCents = $this->centsOrZero($adjustment['deltaGross']);
+			}
 
-			$out[$employeeId] = (($out[$employeeId] ?? 0) + $cents);
-		}
+			$chargesCents = ($this->centsOrZero($adjustment['deltaZvw'] ?? null) + $this->centsOrZero($adjustment['deltaWerknemersverzekeringen'] ?? null));
+
+			$current = ($out[$employeeId] ?? self::NO_RETRO_ADJUSTMENT);
+			$out[$employeeId] = [
+				'net' => ($current['net'] + $netCents),
+				'gross' => ($current['gross'] + $grossCents),
+				'loonheffing' => ($current['loonheffing'] + $loonheffingCents),
+				'employerCharges' => ($current['employerCharges'] + $chargesCents),
+			];
+		}//end foreach
 
 		return $out;
 	}//end appliedRetroAdjustmentsByEmployeeId()
+
+	/**
+	 * A stored euro amount as integer cents; anything non-numeric is 0.
+	 *
+	 * @param mixed $value The stored value.
+	 *
+	 * @return int
+	 */
+	private function centsOrZero(mixed $value): int {
+		if (is_numeric($value) === false) {
+			return 0;
+		}
+
+		return (int)round(((float)$value) * 100);
+	}//end centsOrZero()
 
 	/**
 	 * The retroAdjustment + (adjusted) nettoPay Payslip fields to merge onto

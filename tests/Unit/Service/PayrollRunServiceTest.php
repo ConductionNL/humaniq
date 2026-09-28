@@ -44,10 +44,12 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
+use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -956,6 +958,120 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertSame(3081.17, $payslips[0]['nettoPay']);
 
 	}//end testUnsettledOrWrongPeriodLeaveTransactionDoesNotFold()
+
+	/**
+	 * The run totals PayrollRunService stamps for 2026-02, and the journal
+	 * PayrollGLPostService builds from them (humaniq#514).
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $extraRows Extra seed rows (adjustments, leave transactions).
+	 *
+	 * @return array{0: array<string, mixed>, 1: array<string, float>, 2: array<string, mixed>} `[run, amount per account, buildLines result]`.
+	 */
+	private function runAndJournal(array $extraRows): array {
+		[$service, $fake] = $this->service(
+			array_merge(
+				[
+					'Employee' => [$this->employee()],
+					'EmploymentContract' => [$this->contract()],
+					'PayrollRun' => [],
+					'Payslip' => [],
+				],
+				$extraRows
+			)
+		);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$run = $fake->rowsBySchema['PayrollRun'][0];
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getGlPostAccountGross')->willReturn('4001');
+		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
+		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
+		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
+
+		$glPost = new PayrollGLPostService(
+			$this->createMock(ContainerInterface::class),
+			$this->createMock(IAppManager::class),
+			$settings,
+			$this->createMock(LoggerInterface::class)
+		);
+		$built = $glPost->buildLines($run);
+
+		$byAccount = [];
+		foreach ($built['lines'] as $line) {
+			$byAccount[$line['accountNumber']] = $line['amount'];
+		}
+
+		return [$run, $byAccount, $built];
+
+	}//end runAndJournal()
+
+	/**
+	 * humaniq#514: a retro nabetaling and a leave sale are paid out in net, so
+	 * the journal must book them as wage cost. Against the same run without
+	 * them, the gross cost line grows by the retro gross delta plus the sale,
+	 * the wage tax line by the tax on both, and the net wages liability holds
+	 * only net pay plus employer charges: no folded amount is left for the
+	 * remainder to absorb.
+	 *
+	 * @return void
+	 */
+	public function testRetroAndLeaveFoldsReachTheCostSideOfTheJournal(): void {
+		[$plainRun, $plain] = $this->runAndJournal([]);
+		[$run, $journal, $built] = $this->runAndJournal(
+			[
+				'PayrollAdjustment' => [
+					['id' => 'adj-1', 'employeeId' => 'emp-1', 'originalPeriod' => '2026-01', 'correctionRef' => 't1', 'status' => 'applied', 'settlementPeriod' => '2026-02', 'settlementLine' => 'nabetaling', 'deltaGross' => 250.00, 'deltaLoonheffing' => 48.83, 'deltaNet' => 201.17, 'deltaZvw' => 16.00, 'deltaWerknemersverzekeringen' => 20.00],
+				],
+				'LeaveTransaction' => [
+					['id' => 'txn-1', 'employeeId' => 'emp-1', 'transactionType' => 'sell', 'status' => 'settled', 'settlementPeriod' => '2026-02', 'settledAmount' => 200.00],
+				],
+			]
+		);
+
+		$this->assertNull($built['error']);
+
+		// The sale is inside the engine gross (humaniq#513); the retro gross
+		// delta must join it on the cost side.
+		$this->assertEqualsWithDelta(($plain['4001'] + 250.00 + 200.00), $journal['4001'], 0.001, 'The gross cost line books the retro gross delta and the leave sale.');
+		// The sale's own employer charges come from the engine: reference is
+		// the plain run at salary plus sale.
+		[$saleRun] = $this->runAndJournal(['Employee' => [$this->employee(['grossMonthlySalary' => 4000.00])]]);
+		$this->assertEqualsWithDelta(($saleRun['totalEmployerCharges'] + 36.00), $run['totalEmployerCharges'], 0.001, 'The retro employer charge deltas reach the run total.');
+		$this->assertGreaterThan(($plain['1701'] + 48.83), $journal['1701'], 'The wage tax line carries the retro tax delta and the tax on the sale.');
+
+		// Nothing folded is left for the remainder: the net wages liability is
+		// exactly net pay plus employer charges, as for a run without folds.
+		$this->assertEqualsWithDelta($plainRun['totalEmployerCharges'], ($plain['1702'] - $plainRun['totalNet']), 0.001, 'Control: without folds the remainder is the employer charges.');
+		$this->assertEqualsWithDelta($run['totalEmployerCharges'], ($journal['1702'] - $run['totalNet']), 0.001, 'With folds the remainder is still the employer charges only.');
+
+		$debit = ($journal['4001'] + $journal['4002']);
+		$credit = ($journal['1701'] + $journal['1702']);
+		$this->assertEqualsWithDelta($debit, $credit, 0.001);
+
+	}//end testRetroAndLeaveFoldsReachTheCostSideOfTheJournal()
+
+	/**
+	 * humaniq#514: a back-pay delta larger than the employer charges used to
+	 * push the journal remainder below zero, so the whole run could not be
+	 * posted ("Inconsistente runtotalen"). With the retro gross and tax on the
+	 * cost side, the run posts.
+	 *
+	 * @return void
+	 */
+	public function testALargeRetroDeltaNoLongerMakesTheRunUnpostable(): void {
+		[, $journal, $built] = $this->runAndJournal(
+			[
+				'PayrollAdjustment' => [
+					['id' => 'adj-1', 'employeeId' => 'emp-1', 'originalPeriod' => '2026-01', 'correctionRef' => 't1', 'status' => 'applied', 'settlementPeriod' => '2026-02', 'settlementLine' => 'nabetaling', 'deltaGross' => 2500.00, 'deltaLoonheffing' => 500.00, 'deltaNet' => 2000.00, 'deltaZvw' => 0.0, 'deltaWerknemersverzekeringen' => 0.0],
+				],
+			]
+		);
+
+		$this->assertNull($built['error'], 'A run with a large nabetaling still posts.');
+		$this->assertEqualsWithDelta(6300.00, $journal['4001'], 0.001);
+
+	}//end testALargeRetroDeltaNoLongerMakesTheRunUnpostable()
 
 	/**
 	 * The loonbeslag fixture: an `actief` Loonbeslag covering 2026-02 for the
