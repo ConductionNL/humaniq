@@ -167,6 +167,8 @@ export default {
 	computed: {
 		/**
 		 * @return {boolean} Whether the person picks the cycle here.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		picksCycle() {
 			return this.selectedIds.length > 0 && this.cycleId === ''
@@ -174,6 +176,8 @@ export default {
 
 		/**
 		 * @return {string} The cycle the step runs on.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		targetCycleId() {
 			if (this.cycleId !== '') {
@@ -187,6 +191,8 @@ export default {
 
 		/**
 		 * @return {string} The dialog title.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		title() {
 			if (this.step === 'approve') {
@@ -200,6 +206,8 @@ export default {
 
 		/**
 		 * @return {string} The confirm button text.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		confirmLabel() {
 			if (this.step === 'approve') {
@@ -213,6 +221,8 @@ export default {
 
 		/**
 		 * @return {boolean} Whether confirming would do something.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		canConfirm() {
 			if (this.loading || this.targetCycleId === '') {
@@ -229,6 +239,8 @@ export default {
 
 		/**
 		 * @return {number} Adjustments the effectuation would write.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		dueCount() {
 			return this.preview?.counts?.['would-apply'] ?? 0
@@ -236,6 +248,8 @@ export default {
 
 		/**
 		 * @return {number} Approved adjustments that are not due yet.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		notDueCount() {
 			return this.preview?.counts?.['refused-not-due'] ?? 0
@@ -243,6 +257,8 @@ export default {
 
 		/**
 		 * @return {number} Every other outcome, already-effective excluded.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		otherCount() {
 			const counts = this.preview?.counts ?? {}
@@ -253,6 +269,8 @@ export default {
 
 		/**
 		 * @return {string} What the confirmed call did.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		doneText() {
 			const d = this.done ?? {}
@@ -270,6 +288,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the cycles for a selection, or run the preview on the cycle page.
+	 *
+	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
+	 */
 	mounted() {
 		if (this.picksCycle) {
 			this.loadCycles()
@@ -285,6 +308,8 @@ export default {
 		 * Load the open cycles a selection can be proposed into.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		async loadCycles() {
 			this.loadingCycles = true
@@ -306,6 +331,8 @@ export default {
 		 * Ask the server what the step would do, writing nothing.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		async runPreview() {
 			this.preview = null
@@ -328,6 +355,8 @@ export default {
 		 * Run the step for real.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		async confirm() {
 			this.loading = true
@@ -347,6 +376,8 @@ export default {
 
 		/**
 		 * @return {string} The endpoint for this step.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		endpoint() {
 			return `/apps/humaniq/api/comp/cycles/${this.step}`
@@ -355,6 +386,8 @@ export default {
 		/**
 		 * @param {boolean} dryRun Whether this is the preview.
 		 * @return {object} The request body.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		payload(dryRun) {
 			const body = { cycleId: this.targetCycleId }
@@ -374,6 +407,8 @@ export default {
 		/**
 		 * @param {number|null} cents An amount in cents.
 		 * @return {string} The amount in euros.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		money(cents) {
 			if (typeof cents !== 'number') {
@@ -384,6 +419,8 @@ export default {
 
 		/**
 		 * @param {boolean} open The dialog's open state.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
 		 */
 		onOpen(open) {
 			if (!open) {
@@ -391,6 +428,11 @@ export default {
 			}
 		},
 
+		/**
+		 * Tell the host to close the dialog.
+		 *
+		 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
+		 */
 		close() {
 			this.$emit('close')
 		},

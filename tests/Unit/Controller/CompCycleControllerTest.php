@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Contract tests for the three cycle endpoints on CompController.
+ * Contract tests for the three cycle endpoints on CompCycleController.
  *
  * Each endpoint resolves the cycle under the caller's own RBAC first (an
  * unreadable cycle is a 404, never a hint that it exists), then requires an
@@ -29,11 +29,12 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
-use OCA\Humaniq\Controller\CompController;
+use OCA\Humaniq\Controller\CompCycleController;
 use OCA\Humaniq\Service\AdministrationService;
 use OCA\Humaniq\Service\CompAdjustmentService;
 use OCA\Humaniq\Service\CompCollectiveService;
-use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Service\CompCycleApprover;
+use OCA\Humaniq\Service\RbacObjectReader;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -41,13 +42,11 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * The cycle endpoints' 404, 403 and happy paths.
  */
-class CompControllerCycleTest extends TestCase {
+class CompCycleControllerTest extends TestCase {
 
 	/**
 	 * The collective service double.
@@ -55,6 +54,13 @@ class CompControllerCycleTest extends TestCase {
 	 * @var CompCollectiveService&MockObject
 	 */
 	private CompCollectiveService&MockObject $collective;
+
+	/**
+	 * The approval service double.
+	 *
+	 * @var CompCycleApprover&MockObject
+	 */
+	private CompCycleApprover&MockObject $approver;
 
 	/**
 	 * The effectuation service double.
@@ -70,36 +76,11 @@ class CompControllerCycleTest extends TestCase {
 	 * @param bool $admin Whether the caller is a Nextcloud admin.
 	 * @param string|null $role The caller's role in the active administration.
 	 *
-	 * @return CompController
+	 * @return CompCycleController
 	 */
-	private function controller(bool $cycleReadable, bool $admin, ?string $role): CompController {
-		$objects = new class($cycleReadable) {
-			/**
-			 * @param bool $readable Whether find() answers.
-			 */
-			public function __construct(private readonly bool $readable) {
-			}
-
-			/**
-			 * The ObjectService::find() named arguments the controller uses.
-			 *
-			 * @param string $id Object id.
-			 * @param string|null $register Register.
-			 * @param string|null $schema Schema.
-			 *
-			 * @return array<string, mixed>|null
-			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null): ?array {
-				return $this->readable === true ? ['id' => $id, 'status' => 'open', 'kind' => 'collective'] : null;
-			}
-		};
-
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($objects);
-
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getRegisterSlug')->willReturn('humaniq');
+	private function controller(bool $cycleReadable, bool $admin, ?string $role): CompCycleController {
+		$rbac = $this->createMock(RbacObjectReader::class);
+		$rbac->method('findOrNull')->willReturn($cycleReadable === true ? ['id' => 'cycle-1', 'status' => 'open', 'kind' => 'collective'] : null);
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('salarisadmin');
@@ -113,15 +94,15 @@ class CompControllerCycleTest extends TestCase {
 		$administrations->method('getActiveAdministrationRole')->willReturn($role);
 
 		$this->collective = $this->createMock(CompCollectiveService::class);
+		$this->approver = $this->createMock(CompCycleApprover::class);
 		$this->adjustments = $this->createMock(CompAdjustmentService::class);
 
-		return new CompController(
+		return new CompCycleController(
 			$this->createMock(IRequest::class),
-			$container,
-			$this->adjustments,
-			$settings,
-			$this->createMock(LoggerInterface::class),
 			$this->collective,
+			$this->approver,
+			$this->adjustments,
+			$rbac,
 			$administrations,
 			$groups,
 			$session,
@@ -136,7 +117,7 @@ class CompControllerCycleTest extends TestCase {
 	public function testAnUnreadableCycleIs404(): void {
 		$controller = $this->controller(false, true, 'hr');
 		$this->collective->expects($this->never())->method('proposeForCycle');
-		$this->collective->expects($this->never())->method('approveCycle');
+		$this->approver->expects($this->never())->method('approveCycle');
 		$this->adjustments->expects($this->never())->method('effectuateCycle');
 
 		self::assertSame(Http::STATUS_NOT_FOUND, $controller->proposeCollective('cycle-1')->getStatus());
@@ -152,7 +133,7 @@ class CompControllerCycleTest extends TestCase {
 	public function testAnEmployeeRoleIs403(): void {
 		$controller = $this->controller(true, false, 'employee');
 		$this->collective->expects($this->never())->method('proposeForCycle');
-		$this->collective->expects($this->never())->method('approveCycle');
+		$this->approver->expects($this->never())->method('approveCycle');
 		$this->adjustments->expects($this->never())->method('effectuateCycle');
 
 		self::assertSame(Http::STATUS_FORBIDDEN, $controller->proposeCollective('cycle-1')->getStatus());
@@ -197,7 +178,7 @@ class CompControllerCycleTest extends TestCase {
 	 */
 	public function testAnAdminApprovesAndPreviewsTheEffectuation(): void {
 		$controller = $this->controller(true, true, null);
-		$this->collective->expects($this->once())->method('approveCycle')
+		$this->approver->expects($this->once())->method('approveCycle')
 			->with('cycle-1', 'salarisadmin', 'CAO 2026')
 			->willReturn(['status' => 'ok', 'approved' => 3]);
 		$this->adjustments->expects($this->once())->method('effectuateCycle')

@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\CompCollectiveService;
+use OCA\Humaniq\Service\CompCycleApprover;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
@@ -196,6 +197,53 @@ class CompCollectiveServiceTest extends TestCase {
 	 * @return CompCollectiveService
 	 */
 	private function service(): CompCollectiveService {
+		return new CompCollectiveService($this->gateway(), $this->createMock(LoggerInterface::class));
+	}//end service()
+
+	/**
+	 * The approver over the same gateway double and a transition engine
+	 * stand-in with OpenRegister's `TransitionEngine::transition()` signature.
+	 *
+	 * @return CompCycleApprover
+	 */
+	private function approver(): CompCycleApprover {
+		$engine = new class($this) {
+			/**
+			 * @param CompCollectiveServiceTest $test The test recording transitions.
+			 */
+			public function __construct(private readonly CompCollectiveServiceTest $test) {
+			}
+
+			/**
+			 * OpenRegister's TransitionEngine::transition() signature.
+			 *
+			 * @param string $objectId Object id.
+			 * @param string $action Transition.
+			 * @param array<string, mixed> $data Inputs.
+			 *
+			 * @return object
+			 */
+			public function transition(string $objectId, string $action, array $data = []): object {
+				$this->test->recordTransition($objectId, $action, $data);
+				return (object)['id' => $objectId];
+			}
+		};
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCA\OpenRegister\Service\Lifecycle\TransitionEngine')->willReturn($engine);
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
+
+		return new CompCycleApprover($this->gateway(), $container, $settings, $this->createMock(LoggerInterface::class));
+	}//end approver()
+
+	/**
+	 * A gateway double answering from $this->rows with the real method names.
+	 *
+	 * @return HoursRegisterGateway
+	 */
+	private function gateway(): HoursRegisterGateway {
 		$gateway = $this->createMock(HoursRegisterGateway::class);
 		$gateway->method('loadAll')->willReturnCallback(fn (string $schema): array => ($this->rows[$schema] ?? []));
 		$gateway->method('findObjectData')->willReturnCallback(
@@ -236,36 +284,8 @@ class CompCollectiveServiceTest extends TestCase {
 			}
 		);
 
-		$engine = new class($this) {
-			/**
-			 * @param CompCollectiveServiceTest $test The test recording transitions.
-			 */
-			public function __construct(private readonly CompCollectiveServiceTest $test) {
-			}
-
-			/**
-			 * OpenRegister's TransitionEngine::transition() signature.
-			 *
-			 * @param string $objectId Object id.
-			 * @param string $action Transition.
-			 * @param array<string, mixed> $data Inputs.
-			 *
-			 * @return object
-			 */
-			public function transition(string $objectId, string $action, array $data = []): object {
-				$this->test->recordTransition($objectId, $action, $data);
-				return (object)['id' => $objectId];
-			}
-		};
-
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->with('OCA\OpenRegister\Service\Lifecycle\TransitionEngine')->willReturn($engine);
-
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-
-		return new CompCollectiveService($gateway, $container, $settings, $this->createMock(LoggerInterface::class));
-	}//end service()
+		return $gateway;
+	}//end gateway()
 
 	/**
 	 * Record a transition the engine stand-in received, and apply it.
@@ -417,7 +437,7 @@ class CompCollectiveServiceTest extends TestCase {
 	 */
 	public function testTheProposerCannotApproveTheirOwnBatch(): void {
 		$this->service()->proposeForCycle(self::id('cycle-collective'), 'hr-adviseur');
-		$result = $this->service()->approveCycle(self::id('cycle-collective'), 'hr-adviseur');
+		$result = $this->approver()->approveCycle(self::id('cycle-collective'), 'hr-adviseur');
 
 		self::assertSame(0, $result['approved']);
 		self::assertSame(3, $result['refusedSelfApproval']);
@@ -434,7 +454,7 @@ class CompCollectiveServiceTest extends TestCase {
 	 */
 	public function testASecondPersonApprovesEachThroughItsOwnTransition(): void {
 		$this->service()->proposeForCycle(self::id('cycle-collective'), 'hr-adviseur');
-		$result = $this->service()->approveCycle(self::id('cycle-collective'), 'salarisadmin');
+		$result = $this->approver()->approveCycle(self::id('cycle-collective'), 'salarisadmin');
 
 		self::assertSame(3, $result['approved']);
 		self::assertCount(3, $this->transitions);
@@ -443,7 +463,7 @@ class CompCollectiveServiceTest extends TestCase {
 			self::assertSame(['approvedBy' => 'salarisadmin'], $transition['data']);
 		}
 
-		$byBakker = $this->service()->approveCycle(self::id('cycle-collective'), 'mbakker');
+		$byBakker = $this->approver()->approveCycle(self::id('cycle-collective'), 'mbakker');
 		self::assertSame(0, $byBakker['approved'], 'Nothing is left proposed after the approval.');
 	}//end testASecondPersonApprovesEachThroughItsOwnTransition()
 
@@ -454,7 +474,7 @@ class CompCollectiveServiceTest extends TestCase {
 	 */
 	public function testAnEmployeeIsSkippedForTheirOwnRaise(): void {
 		$this->service()->proposeForCycle(self::id('cycle-collective'), 'hr-adviseur');
-		$result = $this->service()->approveCycle(self::id('cycle-collective'), 'sjansen');
+		$result = $this->approver()->approveCycle(self::id('cycle-collective'), 'sjansen');
 
 		self::assertSame(2, $result['approved']);
 		self::assertSame(1, $result['refusedSelfApproval']);

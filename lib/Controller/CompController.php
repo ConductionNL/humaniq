@@ -28,14 +28,7 @@
  *
  * @link https://conduction.nl
  *
- * The three cycle endpoints (comp-collective-raise-and-step-increase D8)
- * propose, approve and effectuate a whole cycle. Each resolves the cycle under
- * the caller's RBAC first (404 otherwise), then requires a Nextcloud
- * administrator or the `hr` role in the caller's active administration (403
- * otherwise). None edits a cycle or an adjustment field by field.
- *
  * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-006
- * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
  */
 
 declare(strict_types=1);
@@ -43,26 +36,19 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\AdministrationService;
 use OCA\Humaniq\Service\CompAdjustmentService;
-use OCA\Humaniq\Service\CompCollectiveService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IGroupManager;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * Guarded endpoints that effectuate one approved, due CompAdjustment, and
- * propose, approve and effectuate a whole cycle.
- *
- * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-006
+ * Guarded endpoint that effectuates one approved, due CompAdjustment.
  */
 class CompController extends Controller {
 
@@ -72,10 +58,6 @@ class CompController extends Controller {
 	 * @param CompAdjustmentService $compAdjustmentService The effective-dating write service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param LoggerInterface $logger Logger.
-	 * @param CompCollectiveService $compCollectiveService Bulk proposal and approval for a cycle.
-	 * @param AdministrationService $administrationService The caller's role in the active administration.
-	 * @param IGroupManager $groupManager The admin check.
-	 * @param IUserSession $userSession The caller.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -83,10 +65,6 @@ class CompController extends Controller {
 		private readonly CompAdjustmentService $compAdjustmentService,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
-		private readonly CompCollectiveService $compCollectiveService,
-		private readonly AdministrationService $administrationService,
-		private readonly IGroupManager $groupManager,
-		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -144,144 +122,6 @@ class CompController extends Controller {
 	}//end effectuate()
 
 	/**
-	 * `POST /api/comp/cycles/propose`: propose one adjustment per employee the
-	 * cycle covers, or per employee in a hand-picked selection. With `dryRun`
-	 * it counts and lists, and writes nothing.
-	 *
-	 * @param string|null $cycleId The CompReviewCycle id.
-	 * @param mixed $dryRun Truthy for a preview.
-	 * @param mixed $employeeIds A list of Employee ids that replaces the cycle's scope.
-	 *
-	 * @return JSONResponse The outcome; 400 when the cycle cannot take bulk proposals.
-	 *
-	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
-	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-004
-	 */
-	#[NoAdminRequired]
-	public function proposeCollective(?string $cycleId = null, mixed $dryRun = false, mixed $employeeIds = []): JSONResponse {
-		$caller = $this->authorizeCycle($cycleId);
-		if ($caller instanceof JSONResponse) {
-			return $caller;
-		}
-
-		$selection = (is_array($employeeIds) === true ? array_values(array_map('strval', $employeeIds)) : []);
-		$result = $this->compCollectiveService->proposeForCycle((string)$cycleId, $caller, $this->flag($dryRun), $selection);
-
-		return $this->respond($result);
-	}//end proposeCollective()
-
-	/**
-	 * `POST /api/comp/cycles/approve`: approve every proposed adjustment in the
-	 * cycle, each through its own guarded transition. The caller's own
-	 * proposals come back as `refused-self-approval`.
-	 *
-	 * @param string|null $cycleId The CompReviewCycle id.
-	 * @param string|null $decisionReason An optional reason the employees receive.
-	 *
-	 * @return JSONResponse Counts and one row per proposed adjustment.
-	 *
-	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-002
-	 */
-	#[NoAdminRequired]
-	public function approveCycle(?string $cycleId = null, ?string $decisionReason = null): JSONResponse {
-		$caller = $this->authorizeCycle($cycleId);
-		if ($caller instanceof JSONResponse) {
-			return $caller;
-		}
-
-		return $this->respond($this->compCollectiveService->approveCycle((string)$cycleId, $caller, $decisionReason));
-	}//end approveCycle()
-
-	/**
-	 * `POST /api/comp/cycles/effectuate`: effectuate every approved, due
-	 * adjustment in the cycle through the existing batch. With `dryRun` it is
-	 * the preview of what it would write.
-	 *
-	 * @param string|null $cycleId The CompReviewCycle id.
-	 * @param mixed $dryRun Truthy for a preview.
-	 *
-	 * @return JSONResponse `{cycleId, dryRun, counts, outcomes}`.
-	 *
-	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-003
-	 */
-	#[NoAdminRequired]
-	public function effectuateCycle(?string $cycleId = null, mixed $dryRun = false): JSONResponse {
-		$caller = $this->authorizeCycle($cycleId);
-		if ($caller instanceof JSONResponse) {
-			return $caller;
-		}
-
-		$preview = $this->flag($dryRun);
-		$outcomes = $this->compAdjustmentService->effectuateCycle((string)$cycleId, null, $preview);
-		$counts = [];
-		foreach ($outcomes as $outcome) {
-			$status = (string)($outcome['status'] ?? '');
-			$counts[$status] = (($counts[$status] ?? 0) + 1);
-		}
-
-		return new JSONResponse(['cycleId' => $cycleId, 'dryRun' => $preview, 'counts' => $counts, 'outcomes' => $outcomes]);
-	}//end effectuateCycle()
-
-	/**
-	 * The cycle endpoints' guard: a signed-in caller, a cycle their RBAC can
-	 * read (404 otherwise, so existence is never leaked), and an administrator
-	 * or the `hr` role in their active administration (403 otherwise).
-	 *
-	 * @param string|null $cycleId The posted CompReviewCycle id.
-	 *
-	 * @return string|JSONResponse The caller's uid, or the refusal.
-	 *
-	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-001
-	 */
-	private function authorizeCycle(?string $cycleId): string|JSONResponse {
-		$uid = (string)($this->userSession->getUser()?->getUID() ?? '');
-		if ($uid === '') {
-			return new JSONResponse(['error' => 'Niet ingelogd.'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$cycleId = trim((string)$cycleId);
-		if ($cycleId === '') {
-			return new JSONResponse(['error' => 'cycleId is verplicht.'], Http::STATUS_BAD_REQUEST);
-		}
-
-		if ($this->authorizeObject('CompReviewCycle', $cycleId) === null) {
-			return new JSONResponse(['error' => 'Beloningsronde niet gevonden.'], Http::STATUS_NOT_FOUND);
-		}
-
-		if ($this->groupManager->isAdmin($uid) === false && $this->administrationService->getActiveAdministrationRole($uid) !== 'hr') {
-			return new JSONResponse(['error' => 'Alleen HR of een beheerder kan een hele ronde verwerken.'], Http::STATUS_FORBIDDEN);
-		}
-
-		return $uid;
-	}//end authorizeCycle()
-
-	/**
-	 * A service outcome as a response: a refusal is 400, the rest 200.
-	 *
-	 * @param array<string, mixed> $result The outcome.
-	 *
-	 * @return JSONResponse
-	 */
-	private function respond(array $result): JSONResponse {
-		if (str_starts_with((string)($result['status'] ?? ''), 'refused-') === true) {
-			return new JSONResponse($result, Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse($result);
-	}//end respond()
-
-	/**
-	 * A request flag as a boolean: true, 1, "1", "true", "yes", "on".
-	 *
-	 * @param mixed $value The posted value.
-	 *
-	 * @return bool
-	 */
-	private function flag(mixed $value): bool {
-		return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) === true;
-	}//end flag()
-
-	/**
 	 * Resolve the posted adjustmentId through OpenRegister's ObjectService
 	 * under the caller's ambient RBAC (default $_rbac=true) — the
 	 * no-admin-idor guard for this endpoint (the
@@ -296,38 +136,23 @@ class CompController extends Controller {
 	 * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-006
 	 */
 	private function authorizeAdjustment(string $adjustmentId): ?array {
-		return $this->authorizeObject('CompAdjustment', $adjustmentId);
-	}//end authorizeAdjustment()
-
-	/**
-	 * Resolve an object under the caller's ambient RBAC; null when it does not
-	 * exist or the caller may not read it.
-	 *
-	 * @param string $schema The schema.
-	 * @param string $id The object id.
-	 *
-	 * @return array<string, mixed>|null
-	 *
-	 * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-006
-	 */
-	private function authorizeObject(string $schema, string $id): ?array {
 		try {
-			$row = $this->objectService()->find(
-				id: $id,
+			$adjustment = $this->objectService()->find(
+				id: $adjustmentId,
 				register: $this->settingsService->getRegisterSlug(),
-				schema: $schema
+				schema: 'CompAdjustment'
 			);
 		} catch (\Throwable $e) {
-			$this->logger->info('CompController: ' . $schema . ' ' . $id . ' kon niet worden opgehaald: ' . $e->getMessage());
+			$this->logger->info('CompController: aanpassing ' . $adjustmentId . ' kon niet worden opgehaald: ' . $e->getMessage());
 			return null;
 		}
 
-		if ($row === null) {
+		if ($adjustment === null) {
 			return null;
 		}
 
-		return $this->toArray($row);
-	}//end authorizeObject()
+		return $this->toArray($adjustment);
+	}//end authorizeAdjustment()
 
 	/**
 	 * @return mixed The OpenRegister ObjectService, resolved with the caller's ambient RBAC (default $_rbac=true).

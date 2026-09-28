@@ -83,12 +83,14 @@ class CompAdjustmentService {
 	 * @param SettingsService $settingsService Register slug source.
 	 * @param LoggerInterface $logger Logger.
 	 * @param CompBandValidator $bandValidator The within-band predicate over a resolved SalaryBand.
+	 * @param CompContractChange $contractChange The hourly wage and step a change writes onto its contract.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
 		private readonly CompBandValidator $bandValidator,
+		private readonly CompContractChange $contractChange = new CompContractChange(),
 	) {
 
 	}//end __construct()
@@ -166,7 +168,7 @@ class CompAdjustmentService {
 	 * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-007
 	 */
 	private function effectuate(array $adjustment, ?string $asOf, bool $dryRun): array {
-		$adjustmentId = $this->idOf($adjustment);
+		$adjustmentId = (string)($adjustment['id'] ?? $adjustment['@self']['id'] ?? '');
 		$status = (string)($adjustment['status'] ?? '');
 
 		if ($status === 'effective') {
@@ -222,7 +224,9 @@ class CompAdjustmentService {
 			return $this->outcome($adjustmentId, 'refused-employee-unresolvable', 'De gekoppelde medewerker kon niet worden geladen.');
 		}
 
-		$newGrossMonthlySalary = $this->euros($proposedSalaryCents);
+		// Employee.grossMonthlySalary stores euros (seeded as 3800.00), not
+		// cents: the PayrollRunService::euros() conversion, rounded to 2 decimals.
+		$newGrossMonthlySalary = round(($proposedSalaryCents / 100), 2);
 
 		$contractChange = $this->contractChange($adjustment);
 		if ($contractChange === false) {
@@ -233,7 +237,7 @@ class CompAdjustmentService {
 			$outcome = $this->outcome($adjustmentId, 'would-apply', 'Zou grossMonthlySalary bijwerken naar ' . $newGrossMonthlySalary . ' en de aanpassing effectief maken (dry-run: niets geschreven).');
 			$outcome['employeeId'] = $employeeId;
 			$outcome['newGrossMonthlySalary'] = $newGrossMonthlySalary;
-			return $this->withContractChange($outcome, $contractChange);
+			return $this->contractChange->describe($outcome, $contractChange);
 		}
 
 		try {
@@ -293,7 +297,7 @@ class CompAdjustmentService {
 		$outcome['employeeId'] = $employeeId;
 		$outcome['newGrossMonthlySalary'] = $newGrossMonthlySalary;
 
-		return $this->withContractChange($outcome, $contractChange);
+		return $this->contractChange->describe($outcome, $contractChange);
 	}//end effectuate()
 
 	/**
@@ -310,56 +314,23 @@ class CompAdjustmentService {
 	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-004
 	 */
 	private function contractChange(array $adjustment): array|false|null {
-		$hourlyWage = ($adjustment['proposedHourlyWage'] ?? null);
-		$toStep = ($adjustment['toStep'] ?? null);
-		$hourlyWage = (is_numeric($hourlyWage) === true ? round((float)$hourlyWage, 2) : null);
-		$toStep = (is_numeric($toStep) === true ? (int)$toStep : null);
-		if ($hourlyWage === null && $toStep === null) {
+		if ($this->contractChange->touchesContract($adjustment) === false) {
 			return null;
 		}
 
 		$contractId = trim((string)($adjustment['contractId'] ?? ''));
-		$contract = ($contractId === '' ? null : $this->findById('EmploymentContract', $contractId));
+		$contract = $this->findById('EmploymentContract', $contractId);
 		if ($contract === null) {
 			return false;
 		}
 
-		unset($contract['@self']);
-		if ($hourlyWage !== null) {
-			$contract['hourlyWage'] = $hourlyWage;
-		}
-
-		if ($toStep !== null) {
-			$contract['salaryStep'] = $toStep;
-			$stepDate = trim((string)($contract['stepDate'] ?? ''));
-			$next = ($stepDate === '' ? false : strtotime($stepDate . ' +1 year'));
-			if ($next !== false) {
-				$contract['stepDate'] = gmdate('Y-m-d', $next);
-			}
-		}
-
-		return ['contractId' => $contractId, 'contract' => $contract, 'hourlyWage' => $hourlyWage, 'salaryStep' => $toStep];
+		return [
+			'contractId' => $contractId,
+			'contract' => $this->contractChange->apply($adjustment, $contract),
+			'hourlyWage' => $this->contractChange->hourlyWage($adjustment),
+			'salaryStep' => $this->contractChange->toStep($adjustment),
+		];
 	}//end contractChange()
-
-	/**
-	 * Name the contract change in an outcome, so the preview shows it too.
-	 *
-	 * @param array<string, mixed> $outcome The outcome.
-	 * @param array<string, mixed>|null $contractChange The change, or null.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function withContractChange(array $outcome, ?array $contractChange): array {
-		if ($contractChange === null) {
-			return $outcome;
-		}
-
-		$outcome['contractId'] = $contractChange['contractId'];
-		$outcome['newHourlyWage'] = $contractChange['hourlyWage'];
-		$outcome['newSalaryStep'] = $contractChange['salaryStep'];
-
-		return $outcome;
-	}//end withContractChange()
 
 	/**
 	 * The comp-adjustment-within-band predicate, evaluated inline (belt and
@@ -387,20 +358,6 @@ class CompAdjustmentService {
 		// lookup; the DECISION over it lives in CompBandValidator.
 		return $this->bandValidator->evaluate($this->findById('SalaryBand', $targetBandId), $proposedSalaryCents);
 	}//end withinBand()
-
-	/**
-	 * Convert integer cents to a euro float rounded to 2 decimals — the unit
-	 * `Employee.grossMonthlySalary` actually stores (verified: a plain number
-	 * field, e.g. seeded as `3800.00`, NOT integer cents), mirroring
-	 * `PayrollRunService::euros()`.
-	 *
-	 * @param int $cents The cents amount.
-	 *
-	 * @return float
-	 */
-	private function euros(int $cents): float {
-		return round(($cents / 100), 2);
-	}//end euros()
 
 	/**
 	 * Find one object by id, or null when it cannot be loaded/does not exist.
@@ -484,17 +441,6 @@ class CompAdjustmentService {
 
 		return [];
 	}//end toArray()
-
-	/**
-	 * The object id of a row, falling back to `@self.id`.
-	 *
-	 * @param array<string, mixed> $row The row.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $row): string {
-		return (string)($row['id'] ?? $row['@self']['id'] ?? '');
-	}//end idOf()
 
 	/**
 	 * @return mixed The OpenRegister ObjectService.

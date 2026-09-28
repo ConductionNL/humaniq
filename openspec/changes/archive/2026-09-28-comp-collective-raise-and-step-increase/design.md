@@ -167,6 +167,12 @@ optional one.
 
 ### D8. Three guarded endpoints, no pass-through CRUD
 
+As built: the endpoints live on a new `CompCycleController` rather than on `CompController`,
+bulk approval on a new `CompCycleApprover`, the proposal arithmetic on a pure
+`CompProposalBuilder`, and the contract write on a pure `CompContractChange`, which keeps each
+class under the repo's phpmd coupling and complexity limits. The routes are the ones named
+below.
+
 `CompController` gains `proposeCollective(cycleId, dryRun)`, `approveCycle(cycleId)` and
 `effectuateCycle(cycleId, dryRun)` at `POST /api/comp/cycles/propose`,
 `POST /api/comp/cycles/approve` and `POST /api/comp/cycles/effectuate`. Each resolves the

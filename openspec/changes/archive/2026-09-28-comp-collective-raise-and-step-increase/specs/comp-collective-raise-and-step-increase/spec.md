@@ -58,14 +58,14 @@ adjustment carries one.
 Rows: `ppl-bulk-mutations` (humaniq matrix).
 
 #### Scenario: Effectuating a collective raise
-@e2e exclude the salary write is server side; covered by CompAdjustmentServiceTest::testApprovedDueWithinBandWritesSalaryAndBecomesEffective, ::testAnHourlyRaiseIsWrittenOntoTheContract and CompControllerCycleTest::testAnAdminApprovesAndPreviewsTheEffectuation
+@e2e exclude the salary write is server side; covered by CompAdjustmentServiceTest::testApprovedDueWithinBandWritesSalaryAndBecomesEffective, ::testAnHourlyRaiseIsWrittenOntoTheContract and CompCycleControllerTest::testAnAdminApprovesAndPreviewsTheEffectuation
 - **GIVEN** three approved adjustments with an effective date of today
 - **WHEN** the payroll officer runs "Effectuate due adjustments" and confirms the preview
 - **THEN** the three employees' gross monthly salaries carry the proposed figures and the
   adjustments are `effective`
 
 #### Scenario: An adjustment that is not due stays untouched
-@e2e exclude covered by CompAdjustmentServiceTest::testNotYetDueAdjustmentRefusedWritesNothing and CompControllerCycleTest::testAnAdminApprovesAndPreviewsTheEffectuation, whose preview counts it as refused-not-due
+@e2e exclude covered by CompAdjustmentServiceTest::testNotYetDueAdjustmentRefusedWritesNothing and CompCycleControllerTest::testAnAdminApprovesAndPreviewsTheEffectuation, whose preview counts it as refused-not-due
 - **GIVEN** one approved adjustment with an effective date next month
 - **WHEN** the cycle is effectuated today
 - **THEN** that adjustment stays `approved` and the preview lists it as not due
