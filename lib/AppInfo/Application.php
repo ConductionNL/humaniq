@@ -31,6 +31,7 @@ namespace OCA\Humaniq\AppInfo;
 use OCA\Humaniq\Command\RulesAuditCommand;
 use OCA\Humaniq\Command\RulesSeedTestDataCommand;
 use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
+use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
 use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
@@ -195,6 +196,17 @@ class Application extends App implements IBootstrap {
 			CompEffectiveDateGuard::class,
 			static function ($c): CompEffectiveDateGuard {
 				return new CompEffectiveDateGuard();
+			}
+		);
+
+		// OpenRegister lifecycle guard for the CompAdjustment `refuse` transition
+		// (comp-collective-raise-and-step-increase D6): a refusal needs a reason
+		// and a decider who did not propose it. Stateless, so it is built like
+		// NoSelfApprovalGuard, which it chains.
+		$context->registerService(
+			DecisionReasonGuard::class,
+			static function ($c): DecisionReasonGuard {
+				return new DecisionReasonGuard(new NoSelfApprovalGuard());
 			}
 		);
 

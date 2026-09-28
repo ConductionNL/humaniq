@@ -48,6 +48,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/archive/2026-06-22-hrmq-timesheet-approval/specs/hrmq-timesheet-approval/spec.md
+ * @spec openspec/changes/comp-collective-raise-and-step-increase/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-002
  */
 
 declare(strict_types=1);
@@ -82,6 +83,7 @@ class NoSelfApprovalGuard implements LifecycleGuardInterface {
 	 *  applies to both approve and reject.
 	 *
 	 * @spec openspec/changes/archive/2026-06-22-hrmq-timesheet-approval/specs/hrmq-timesheet-approval/spec.md
+	 * @spec openspec/changes/comp-collective-raise-and-step-increase/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-002
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		if ($userId === '') {
@@ -101,6 +103,23 @@ class NoSelfApprovalGuard implements LifecycleGuardInterface {
 			return GuardResult::deny(
 				'U mag uw eigen urenstaat of declaratie niet goedkeuren of afkeuren. '
 				. 'Een andere medewerker (manager) moet dit doen.'
+			);
+		}
+
+		// A pay change (CompAdjustment) carries no `userId`: its subject's
+		// account is `employeeUserId` and its author is `proposedBy`, both
+		// Nextcloud uids. Neither may decide on it. Without these two checks
+		// the rule the CompAdjustment schema promised ("the approver may not
+		// be the proposer") never fired, because `userId` is always empty there.
+		$subjectUserId = trim((string)($object['employeeUserId'] ?? ''));
+		if ($subjectUserId !== '' && $subjectUserId === $userId) {
+			return GuardResult::deny('U mag geen besluit nemen over uw eigen salarisaanpassing.');
+		}
+
+		$proposedBy = trim((string)($object['proposedBy'] ?? ''));
+		if ($proposedBy !== '' && $proposedBy === $userId) {
+			return GuardResult::deny(
+				'U heeft dit voorstel zelf gedaan en mag het niet goedkeuren of afwijzen. Een tweede persoon moet dit doen.'
 			);
 		}
 
