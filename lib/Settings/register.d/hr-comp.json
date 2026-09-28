@@ -5,7 +5,7 @@
             "SalaryBand": {
                 "slug": "SalaryBand",
                 "icon": "CurrencyEur",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Salary band",
                 "description": "An internal salary band/scale (min/reference/max gross monthly salary, in integer cents) that compensation-review proposals are checked against (comp-cycles). Bands are the employer's own internal structure, not an external market benchmark (explicitly out of scope). A band MAY reference the maintained CAO corpus by caoId/caoSchaal so its minSalary can be anchored at or above the CAO's statutory minimum maandloon for that scale. Authored reference data: every SalaryBand manifest surface keeps allowCreate:false.",
                 "type": "object",
@@ -80,13 +80,40 @@
                         "default": true,
                         "title": "Active",
                         "description": "Whether this band is currently in use for new proposals."
+                    },
+                    "steps": {
+                        "type": "array",
+                        "title": "Steps",
+                        "description": "The steps of this scale, each with its gross monthly salary in cents. An employee moves up one step at each yearly step increase.",
+                        "x-notes": "comp-collective-raise-and-step-increase D5: the employer's own step table (periodieken). Not the CAO corpus, whose per-step tables stay a cao-library non-goal. A step-increase cycle proposes EmploymentContract.salaryStep + 1 at that step's monthlySalaryCents, and never beyond the highest step listed here.",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "step",
+                                "monthlySalaryCents"
+                            ],
+                            "properties": {
+                                "step": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "title": "Step",
+                                    "description": "The step number."
+                                },
+                                "monthlySalaryCents": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "title": "Monthly salary",
+                                    "description": "Gross monthly salary at this step, in cents."
+                                }
+                            }
+                        }
                     }
                 }
             },
             "CompReviewCycle": {
                 "slug": "CompReviewCycle",
                 "icon": "CalendarRange",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Compensation review cycle",
                 "description": "A periodic compensation-review round (comp-cycles) grouping the per-employee CompAdjustment proposals raised during it. A light open/closed container only: approval happens per adjustment (CompAdjustment carries the draft→proposed→approved→effective lifecycle), so a cycle MAY close while still holding adjustments in any state.",
                 "type": "object",
@@ -143,6 +170,63 @@
                         ],
                         "default": "open"
                     },
+                    "kind": {
+                        "type": "string",
+                        "title": "Kind",
+                        "description": "What this round does: individual proposals, one raise for everyone in scope, or the yearly step increase.",
+                        "x-notes": "comp-collective-raise-and-step-increase D1/D5. individual: proposals are made one at a time (the comp-cycles MVP). collective: CompCollectiveService proposes raisePercentage or raiseAmountCents for every employee in scope. step-increase: it proposes the next step of the contract's SalaryBand for every contract whose stepDate falls in period.",
+                        "x-enum-labels": {
+                            "individual": "Individual",
+                            "collective": "Collective raise",
+                            "step-increase": "Step increase"
+                        },
+                        "enum": [
+                            "individual",
+                            "collective",
+                            "step-increase"
+                        ],
+                        "default": "individual"
+                    },
+                    "raisePercentage": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Raise percentage",
+                        "description": "For a collective raise: the percentage every salary goes up, for example 2.5.",
+                        "x-notes": "Applied as round(currentCents x (1 + raisePercentage / 100)) per adjustment, and to EmploymentContract.hourlyWage as proposedHourlyWage. Wins over raiseAmountCents when both are set."
+                    },
+                    "raiseAmountCents": {
+                        "type": "integer",
+                        "nullable": true,
+                        "title": "Raise amount",
+                        "description": "For a collective raise: a fixed amount in cents added to every monthly salary."
+                    },
+                    "scope": {
+                        "type": "object",
+                        "nullable": true,
+                        "title": "Scope",
+                        "description": "Who a collective raise or step increase covers: an administration, a collective agreement, a team, or any combination.",
+                        "x-notes": "Every key that is set must match (AND). administrationId matches Employee.administrationId; cao matches the covering EmploymentContract.cao; orgUnitId matches an OrgAssignment of the employee that covers the cycle's effectiveDate. An empty scope covers every employee with a contract on the effective date.",
+                        "properties": {
+                            "administrationId": {
+                                "type": "string",
+                                "nullable": true,
+                                "title": "Administration",
+                                "description": "Only employees of this administration."
+                            },
+                            "cao": {
+                                "type": "string",
+                                "nullable": true,
+                                "title": "Collective labour agreement",
+                                "description": "Only contracts under this collective agreement."
+                            },
+                            "orgUnitId": {
+                                "type": "string",
+                                "nullable": true,
+                                "title": "Org unit",
+                                "description": "Only employees placed in this team or department."
+                            }
+                        }
+                    },
                     "description": {
                         "type": "string",
                         "nullable": true,
@@ -155,7 +239,7 @@
             "CompAdjustment": {
                 "slug": "CompAdjustment",
                 "icon": "CashPlus",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Compensation adjustment",
                 "description": "One manager-proposed compensation adjustment for one employee within one CompReviewCycle (comp-cycles), carrying the review-round lifecycle draft → proposed → approved → effective. Separation of duties on approve/reject is enforced by the reused NoSelfApprovalGuard; the approved→effective transition is gated by the read-only, fail-closed CompEffectiveDateGuard. The effective-dated write onto the employee's compensation is a separate imperative step (CompAdjustmentService), never performed by the declarative transition alone.",
                 "type": "object",
@@ -173,7 +257,8 @@
                         "field": "status",
                         "initial": "draft",
                         "terminal": [
-                            "effective"
+                            "effective",
+                            "refused"
                         ],
                         "transitions": {
                             "propose": {
@@ -189,7 +274,17 @@
                                 ],
                                 "to": "approved",
                                 "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
-                                "description": "A different manager approves the proposal. NoSelfApprovalGuard rejects self-approval (the approver may not be the proposer)."
+                                "inputs": [
+                                    {
+                                        "field": "decisionReason",
+                                        "required": false
+                                    },
+                                    {
+                                        "field": "approvedBy",
+                                        "required": false
+                                    }
+                                ],
+                                "description": "A different manager approves the proposal. NoSelfApprovalGuard rejects self-approval (the approver may not be the proposer). An optional decisionReason reaches the employee in the approval notification."
                             },
                             "reject": {
                                 "from": [
@@ -199,6 +294,24 @@
                                 "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
                                 "description": "The proposal is rejected and returns to draft for revision and re-proposal. NoSelfApprovalGuard rejects self-rejection."
                             },
+                            "refuse": {
+                                "from": [
+                                    "proposed"
+                                ],
+                                "to": "refused",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\DecisionReasonGuard",
+                                "inputs": [
+                                    {
+                                        "field": "decisionReason",
+                                        "required": true
+                                    },
+                                    {
+                                        "field": "approvedBy",
+                                        "required": false
+                                    }
+                                ],
+                                "description": "The proposal is refused for good, with a reason the employee receives (comp-collective-raise-and-step-increase D6). Terminal, unlike reject, which sends it back to draft for rework. DecisionReasonGuard refuses an empty decisionReason and, through NoSelfApprovalGuard, a refusal by the proposer."
+                            },
                             "effectuate": {
                                 "from": [
                                     "approved"
@@ -207,6 +320,58 @@
                                 "requires": "OCA\\Humaniq\\Lifecycle\\CompEffectiveDateGuard",
                                 "description": "The approved adjustment takes effect. CompEffectiveDateGuard fail-closed denies unless effectiveDate is present and on or before today. Read-only guard: the actual grossMonthlySalary write happens imperatively in CompAdjustmentService, not in the guard."
                             }
+                        }
+                    },
+                    "x-openregister-notifications": {
+                        "compAdjustmentApproved": {
+                            "trigger": {
+                                "type": "transition",
+                                "action": "approve"
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "field",
+                                    "field": "employeeUserId"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Je salarisaanpassing is goedgekeurd",
+                                "en": "Your pay change was approved"
+                            },
+                            "message": {
+                                "nl": "Nieuw brutomaandsalaris per {{effectiveDate}}. {{decisionReason}}",
+                                "en": "New gross monthly salary from {{effectiveDate}}. {{decisionReason}}"
+                            },
+                            "_note": "comp-collective-raise-and-step-increase D7 (REQ-CRS-005): the employee hears the decision. employeeUserId is stamped from Employee.nextcloudUserId by CompCollectiveService, the Payslip.userId denormalisation; an adjustment without it sends nothing. Declarative only, never an imperative dispatch (gate-18, ADR-031)."
+                        },
+                        "compAdjustmentRefused": {
+                            "trigger": {
+                                "type": "transition",
+                                "action": "refuse"
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "field",
+                                    "field": "employeeUserId"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Je salarisaanpassing is afgewezen",
+                                "en": "Your pay change was refused"
+                            },
+                            "message": {
+                                "nl": "Reden: {{decisionReason}}",
+                                "en": "Reason: {{decisionReason}}"
+                            },
+                            "_note": "comp-collective-raise-and-step-increase D7 (REQ-CRS-005): a refused step or raise reaches the employee with its reason. DecisionReasonGuard makes the reason non-empty before this can fire."
                         }
                     }
                 },
@@ -260,13 +425,14 @@
                     "status": {
                         "type": "string",
                         "title": "Status",
-                        "description": "Where this adjustment has got to: draft, proposed, approved, then in effect.", "x-notes": "Governed by the x-openregister-lifecycle state machine (draft → proposed → approved → effective).",
-                        "x-enum-labels": {"draft": "Draft", "proposed": "Proposed", "approved": "Approved", "effective": "In effect"},
+                        "description": "Where this adjustment has got to: draft, proposed, approved, then in effect. A refused proposal stays refused.", "x-notes": "Governed by the x-openregister-lifecycle state machine (draft → proposed → approved → effective, or proposed → refused).",
+                        "x-enum-labels": {"draft": "Draft", "proposed": "Proposed", "approved": "Approved", "effective": "In effect", "refused": "Refused"},
                         "enum": [
                             "draft",
                             "proposed",
                             "approved",
-                            "effective"
+                            "effective",
+                            "refused"
                         ],
                         "default": "draft"
                     },
@@ -288,6 +454,57 @@
                         "maxLength": 2000,
                         "title": "Rationale",
                         "description": "Why this change is proposed.", "x-notes": "Free-text motivation for the proposed adjustment."
+                    },
+                    "adjustmentKind": {
+                        "type": "string",
+                        "default": "individual",
+                        "title": "Kind of change",
+                        "description": "Whether this is an individual change, part of a collective raise, or a yearly step increase.",
+                        "x-enum-labels": {
+                            "individual": "Individual",
+                            "collective": "Collective raise",
+                            "step-increase": "Step increase"
+                        },
+                        "enum": [
+                            "individual",
+                            "collective",
+                            "step-increase"
+                        ]
+                    },
+                    "fromStep": {
+                        "type": "integer",
+                        "nullable": true,
+                        "title": "From step",
+                        "description": "For a step increase: the step the employee is on now."
+                    },
+                    "toStep": {
+                        "type": "integer",
+                        "nullable": true,
+                        "title": "To step",
+                        "description": "For a step increase: the step the employee moves to.",
+                        "x-notes": "Effectuation writes this onto EmploymentContract.salaryStep and moves stepDate one year on (CompAdjustmentService, D4)."
+                    },
+                    "proposedHourlyWage": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Proposed hourly wage",
+                        "description": "The new hourly wage on the contract, in euros, when the contract has one.",
+                        "x-notes": "Effectuation writes this onto EmploymentContract.hourlyWage (euros, the unit that field stores). Filled by a percentage raise only."
+                    },
+                    "decisionReason": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 2000,
+                        "title": "Reason for the decision",
+                        "description": "Why the change was approved or refused. The employee receives it.",
+                        "x-notes": "Required on the refuse transition (DecisionReasonGuard), optional on approve. Rendered into the employee's notification."
+                    },
+                    "employeeUserId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Employee account",
+                        "description": "The employee's Nextcloud account, which receives the decision.",
+                        "x-notes": "Denormalised copy of Employee.nextcloudUserId, stamped by CompCollectiveService when it creates the proposal (the Payslip.userId precedent). The notification recipient field, and the account NoSelfApprovalGuard compares against so an employee cannot approve their own raise."
                     },
                     "appliedAt": {
                         "type": "string",
