@@ -66,6 +66,8 @@ use RuntimeException;
  * Effectuates approved, due CompAdjustments: within-band validation, the
  * cents-to-euros Employee.grossMonthlySalary write, and driving the
  * effectuate transition.
+ *
+ * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-006
  */
 class CompAdjustmentService {
 
