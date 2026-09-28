@@ -53,20 +53,21 @@
  * employee -> `retroAdjustment` stays null and `nettoPay` is unchanged
  * (byte-identical to before this change).
  *
- * leave-buy-sell (design.md D6): after folding retro-adjustments, every
- * `settled` `LeaveTransaction` whose `settlementPeriod` equals this run's
- * period is summed (by `settledAmount`, cents-exact, signed: sold = payment,
- * bought = deduction) into that employee's `leaveBuySell` component and
- * folded into `nettoPay` on top of any retro-adjustment delta. The engine
- * (`PayrollCalculator`) is never invoked to (re)compute `settledAmount` --
- * `LeaveBuySellSettlementService` already computed and stored it; this
- * service only reads and folds the already-settled figure. No settled
- * transaction for an employee/period -> `leaveBuySell` stays null and
- * `nettoPay` is unchanged (byte-identical to before this change).
+ * leave-buy-sell (design.md D6, humaniq#513): every `settled`
+ * `LeaveTransaction` whose `settlementPeriod` equals this run's period is
+ * summed (by `settledAmount`, cents-exact, signed: sold = taxable wage
+ * added, bought = wage given up) into the GROSS fed to `PayrollCalculator`,
+ * before the engine runs. Loonheffing is withheld on it and `nettoPay`
+ * follows from the engine; the amount is never added onto net after tax.
+ * The payslip names it in its `leaveBuySell` component. The engine is never
+ * invoked to (re)compute `settledAmount` itself --
+ * `LeaveBuySellSettlementService` already computed and stored it. No
+ * settled transaction for an employee/period -> `leaveBuySell` stays null
+ * and the gross is unchanged (byte-identical to before this change).
  *
- * loonbeslag (design.md D2/D3/D4): after folding retro-adjustments AND
- * leave-buy-sell -- against the fully-folded `nettoPay` (engine net +
- * retroAdjustment + leaveBuySell), never an intermediate figure -- the one
+ * loonbeslag (design.md D2/D3/D4): after folding retro-adjustments --
+ * against the fully-folded `nettoPay` (engine net, which already carries
+ * any leave buy/sell, + retroAdjustment), never an intermediate figure -- the one
  * `actief` Loonbeslag covering an employee's period (resolved via the same
  * id/slug/employeeNumber key convention as `coveringContract()`/
  * `openSickCaseFor()`, deterministic earliest-`effectiveFrom` tie-break when
@@ -480,6 +481,17 @@ class PayrollRunService {
 				$grossMonthlySalaryCents += $bijtellingCents;
 			}
 
+			// leave-buy-sell (humaniq#513): a settled LeaveTransaction is WAGE,
+			// so it is settled BEFORE tax. Every settled transaction whose
+			// settlementPeriod equals THIS period enters the gross fed to the
+			// calculator: a sell adds taxable wage, a buy takes it off. The
+			// engine then withholds loonheffing on it and the net follows from
+			// the engine, never from adding a gross amount onto net after tax.
+			// No settled transaction -> leaveBuySellCents is 0 and the gross is
+			// unchanged.
+			$leaveBuySellCents = ($leaveBuySellByEmployeeId[$employeeId] ?? 0);
+			$grossMonthlySalaryCents += $leaveBuySellCents;
+
 			// 30-procent-regeling (design.md D2/D7): a granted 30%-ruling feeds
 			// its applied rate into the engine, which reduces the TAXABLE base
 			// (pack `belastbaarLoon` binding) while leaving the net-fold's gross
@@ -519,21 +531,13 @@ class PayrollRunService {
 			// stays byte-identical to before this change.
 			$retroAdjustmentCents = ($retroAdjustmentsByEmployeeId[$employeeId] ?? 0);
 
-			// leave-buy-sell (design.md D6): fold every SETTLED LeaveTransaction
-			// whose settlementPeriod equals THIS period for this employee into
-			// the payslip's leaveBuySell component + nettoPay -- on top of any
-			// retro-adjustment delta, never in place of it. No settled
-			// transaction -> leaveBuySellCents is 0 and the payload stays
-			// byte-identical to before this change.
-			$leaveBuySellCents = ($leaveBuySellByEmployeeId[$employeeId] ?? 0);
-
 			// loonbeslag (design.md D3): computed against the FULLY-folded
-			// nettoPay-so-far (engine net + retroAdjustment + leaveBuySell) --
-			// the fourth and final fold, so the beslagvrije voet protects the
-			// employee's actual take-home this period, never an intermediate
-			// figure a same-period nabetaling/leave-payout would still
-			// inflate past.
-			$nettoPaySoFarCents = ($result->nettoPayCents + $retroAdjustmentCents + $leaveBuySellCents);
+			// nettoPay-so-far (engine net, which already carries any settled
+			// leave buy/sell, + retroAdjustment) -- the final fold, so the
+			// beslagvrije voet protects the employee's actual take-home this
+			// period, never an intermediate figure a same-period
+			// nabetaling/leave-payout would still inflate past.
+			$nettoPaySoFarCents = ($result->nettoPayCents + $retroAdjustmentCents);
 			$loonbeslag = $this->activeLoonbeslagFor($employee, $loonbeslagenByEmployeeKey, $period);
 			$loonbeslagDeductionCents = ($loonbeslag !== null) ? $this->loonbeslagDeductionCents($loonbeslag, $nettoPaySoFarCents) : 0;
 
@@ -542,7 +546,7 @@ class PayrollRunService {
 			$payload = array_merge($payload, $this->bijtellingFields($assetAssignment, $bijtellingCents));
 			$payload = array_merge($payload, $this->thirtyPercentRulingFields($thirtyPercentExemptionCents));
 			$payload = array_merge($payload, $this->retroAdjustmentFields($retroAdjustmentCents, $result->nettoPayCents));
-			$payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents, ($result->nettoPayCents + $retroAdjustmentCents)));
+			$payload = array_merge($payload, $this->leaveBuySellFields($leaveBuySellCents));
 			$payload = array_merge($payload, $this->loonbeslagFields($loonbeslag, $loonbeslagDeductionCents, $nettoPaySoFarCents));
 
 			// audit-trail-payroll (REQ-AUDP-001): stamp the exact resolved
@@ -1337,8 +1341,8 @@ class PayrollRunService {
 	 * Every employee's summed signed settled LeaveTransaction amount (cents)
 	 * whose settlementPeriod equals this run's period (leave-buy-sell
 	 * design.md D6) -- the current-run-only folding index. A `sell`
-	 * contributes a POSITIVE amount (a payment, increases net); a `buy`
-	 * contributes a NEGATIVE amount (a deduction, decreases net). Draft/
+	 * contributes a POSITIVE amount (taxable wage added to the gross); a
+	 * `buy` contributes a NEGATIVE amount (taken off the gross). Draft/
 	 * submitted/approved/rejected transactions and transactions settling a
 	 * different period are excluded. Degrades gracefully to an empty map
 	 * when the LeaveTransaction schema does not exist yet in the register
@@ -1377,30 +1381,28 @@ class PayrollRunService {
 	}//end settledLeaveTransactionsByEmployeeId()
 
 	/**
-	 * The leaveBuySell + (adjusted) nettoPay Payslip fields to merge onto the
-	 * payload (leave-buy-sell design.md D6): null/unchanged when no settled
-	 * transaction folds into this period for this employee -- a normal
-	 * payslip stays byte-identical to the pre-change shape. `PayrollCalculator`
-	 * is never invoked to (re)compute this figure -- `settledAmount` is a
-	 * fact `LeaveBuySellSettlementService` already computed and stored; this
-	 * merely reads and folds it.
+	 * The leaveBuySell Payslip field to merge onto the payload (leave-buy-sell
+	 * design.md D6, humaniq#513): null when no settled transaction settles
+	 * into this period for this employee, so a normal payslip stays
+	 * byte-identical to the pre-change shape. The amount itself already
+	 * entered the calculator's gross, so `grossPay`, `loonheffing` and
+	 * `nettoPay` carry it; this field only names the component. It never
+	 * touches `nettoPay`. `settledAmount` is a fact
+	 * `LeaveBuySellSettlementService` already computed and stored; this
+	 * merely reads it.
 	 *
 	 * @param int $leaveBuySellCents The summed settled amount for this employee/period, in cents.
-	 * @param int $nettoPayCents The nettoPay-so-far (engine output, already folded with any retro-adjustment), in cents.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
 	 */
-	private function leaveBuySellFields(int $leaveBuySellCents, int $nettoPayCents): array {
+	private function leaveBuySellFields(int $leaveBuySellCents): array {
 		if ($leaveBuySellCents === 0) {
 			return ['leaveBuySell' => null];
 		}
 
-		return [
-			'leaveBuySell' => $this->euros($leaveBuySellCents),
-			'nettoPay' => $this->euros($nettoPayCents + $leaveBuySellCents),
-		];
+		return ['leaveBuySell' => $this->euros($leaveBuySellCents)];
 
 	}//end leaveBuySellFields()
 
@@ -1511,7 +1513,7 @@ class PayrollRunService {
 	 * below `beslagvrijeVoet`.
 	 *
 	 * @param array<string, mixed> $loonbeslag The covering `actief` Loonbeslag.
-	 * @param int $nettoPaySoFarCents nettoPay after retroAdjustment + leaveBuySell are already folded, in cents.
+	 * @param int $nettoPaySoFarCents nettoPay after retroAdjustment is folded (the engine net already carries any leaveBuySell), in cents.
 	 *
 	 * @return int The deduction, in cents (0 when there is no headroom).
 	 *
@@ -1541,7 +1543,7 @@ class PayrollRunService {
 	 *
 	 * @param array<string, mixed>|null $loonbeslag The covering `actief` Loonbeslag, or null.
 	 * @param int $deductionCents The floor-clamped deduction, in cents.
-	 * @param int $nettoPaySoFarCents nettoPay after retroAdjustment + leaveBuySell are already folded, in cents.
+	 * @param int $nettoPaySoFarCents nettoPay after retroAdjustment is folded (the engine net already carries any leaveBuySell), in cents.
 	 *
 	 * @return array<string, mixed>
 	 *

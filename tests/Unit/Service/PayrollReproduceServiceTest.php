@@ -181,11 +181,13 @@ class PayrollReproduceServiceTest extends TestCase {
 	 * figures are the genuine engine output, not hand-typed golden values),
 	 * seeded into a fresh ObjectService fake.
 	 *
+	 * @param array<string, array<int, array<string, mixed>>> $extraRows Extra seed rows keyed by schema (for example a settled LeaveTransaction).
+	 *
 	 * @return array{0: object, 1: array<string, mixed>, 2: array<string, mixed>} `[fake ObjectService, saved PayrollRun, saved Payslip]`.
 	 */
-	private function generateAnchorRunAndPayslip(): array {
+	private function generateAnchorRunAndPayslip(array $extraRows = []): array {
 		$fake = $this->fakeObjectService(
-			[
+			$extraRows + [
 				'Employee' => [
 					[
 						'id' => 'emp-1',
@@ -282,6 +284,35 @@ class PayrollReproduceServiceTest extends TestCase {
 		$this->assertSame([], $result['mismatches']);
 
 	}//end testACleanPayslipReproducesExactlyFromItsStoredSnapshot()
+
+	/**
+	 * humaniq#513: a settled leave sale is part of the engine input, so the
+	 * stored snapshot already carries it. Reproduction must not add
+	 * `leaveBuySell` onto the recomputed net a second time.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/audit-trail-payroll/spec.md#REQ-AUDP-002
+	 * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
+	 */
+	public function testAPayslipWithASettledLeaveSaleReproducesExactly(): void {
+		[$fake, , $payslip] = $this->generateAnchorRunAndPayslip(
+			[
+				'LeaveTransaction' => [
+					['id' => 'txn-1', 'employeeId' => 'emp-1', 'transactionType' => 'sell', 'status' => 'settled', 'settlementPeriod' => '2026-02', 'settledAmount' => 200.00],
+				],
+			]
+		);
+
+		$this->assertSame(200.00, $payslip['leaveBuySell']);
+
+		$service = $this->reproduceService($fake);
+		$result = $service->reproduce((string)$payslip['id']);
+
+		$this->assertSame([], $result['mismatches']);
+		$this->assertSame('reproduced', $result['status']);
+
+	}//end testAPayslipWithASettledLeaveSaleReproducesExactly()
 
 	/**
 	 * fixing hrmq#98: reproduction reads ONLY the stored snapshot — editing
