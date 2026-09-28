@@ -33,17 +33,19 @@ the record forever.
 
 ## What changes
 
-- **Every retained schema gets a retention period OpenRegister understands.** The payroll
-  family and the employee dossier declare an `archive` configuration, so OpenRegister computes
-  each object's `archiefactiedatum` on save.
+- **An expired record is marked for destruction with the date humaniq already knows.** When a
+  statutory floor has passed, humaniq writes the appraisal `vernietigen` and that floor date
+  into the record's OpenRegister retention block, the fields OpenRegister's destruction check
+  reads. An ended employee's record gets the same mark seven full years after the year the
+  employment ended, the longest floor that applies to the payroll that refers to it.
 - **OpenRegister's destruction list does the deleting.** humaniq does not delete anything
   itself. OpenRegister's daily destruction check puts expired objects on a destruction list;
   a person with the archivist role approves the list, and OpenRegister deletes, re-checking
   every legal hold and writing the audit trail.
 - **humaniq releases its own floor holds when the floor has passed.** A daily job releases
   the statutory holds `PayrollRetentionGuardService` placed once their date has passed, and
-  only those, so the destruction list can pick the record up. Holds placed by a person for
-  another reason stay.
+  only those, so the destruction list can pick the record up. A hold a person placed for
+  another reason stays.
 - **An admin turns it on.** The release job does nothing until an admin enables it in the
   humaniq settings, so an existing installation does not start losing records on upgrade.
 
@@ -56,17 +58,17 @@ the record forever.
 
 ## Impact
 
-- `lib/Settings/register.d/hr-objects.json` and `hr-payroll*.json`: `archive` configuration on
-  `Payslip`, `PayrollRun`, `LoonaangifteFiling`, `PensionFiling`, `GeneratedDocument` and
-  `Employee`.
-- `lib/Service/PayrollRetentionGuardService.php`: a `releaseLapsedFloorHolds()` method.
+- `lib/Service/PayrollRetentionGuardService.php`: release a lapsed floor hold and mark the
+  record for destruction.
+- `lib/Service/RetentionExpiryService.php` (new): walks the retained schemas.
 - `lib/BackgroundJob/RetentionHoldReleaseJob.php` (new), registered in `appinfo/info.xml`.
 - Admin settings: one switch, off by default.
 
 ## Cross-app dependencies
 
 - openregister: the destruction list, its approval and `RetentionService::releaseLegalHold()`
-  already exist; nothing is owed.
+  already exist; nothing is owed. The destruction check runs only once an admin has set the
+  destruction list register and schema in the OpenRegister archival settings.
 
 ## Out of scope
 
