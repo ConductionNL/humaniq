@@ -300,6 +300,136 @@ class AnalyticsServiceTest extends TestCase {
 	}//end approvalRecord()
 
 	/**
+	 * department-figures REQ-DPF-001: with an org unit the absence rate only
+	 * counts the people placed in that unit or its children.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
+	 */
+	public function testAUnitsAbsenceRateCountsOnlyItsOwnPeople(): void {
+		$thisMonth = $this->thisMonth();
+		$admin = ['administrationId' => 'ADM-001'];
+		$service = $this->buildService($this->unitFixture() + [
+			'EmploymentContract' => [
+				(['employeeId' => 'a', 'hoursPerWeek' => 40.0, 'startDate' => '2020-01-01', 'endDate' => null] + $admin),
+				(['employeeId' => 'b', 'hoursPerWeek' => 40.0, 'startDate' => '2020-01-01', 'endDate' => null] + $admin),
+			],
+			'SickLeaveCase' => [
+				(['employeeId' => 'b', 'firstSickDay' => $thisMonth . '-01', 'status' => 'gemeld'] + $admin),
+			],
+		]);
+
+		$team = $this->bucketFor($service->getTrends('absence-rate', 'quarter', 'ADM-001', 'team')['series'], $thisMonth);
+		$other = $this->bucketFor($service->getTrends('absence-rate', 'quarter', 'ADM-001', 'other')['series'], $thisMonth);
+		$all = $this->bucketFor($service->getTrends('absence-rate', 'quarter', 'ADM-001')['series'], $thisMonth);
+
+		$this->assertSame(0.0, $team['value']);
+		$this->assertSame(100.0, $other['value']);
+		$this->assertSame(50.0, $all['value']);
+	}//end testAUnitsAbsenceRateCountsOnlyItsOwnPeople()
+
+	/**
+	 * department-figures REQ-DPF-001: the absence-frequency metric, sick
+	 * reports per employee per year, across the administration.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
+	 */
+	public function testAbsenceFrequencyIsAMetric(): void {
+		$thisMonth = $this->thisMonth();
+		$admin = ['administrationId' => 'ADM-001'];
+		$service = $this->buildService([
+			'EmploymentContract' => [
+				(['employeeId' => 'a', 'hoursPerWeek' => 40.0, 'startDate' => '2020-01-01', 'endDate' => null] + $admin),
+				(['employeeId' => 'b', 'hoursPerWeek' => 40.0, 'startDate' => '2020-01-01', 'endDate' => null] + $admin),
+			],
+			'SickLeaveCase' => [
+				(['employeeId' => 'b', 'firstSickDay' => $thisMonth . '-02', 'status' => 'gemeld'] + $admin),
+			],
+		]);
+
+		$result = $service->getTrends('absence-frequency', 'quarter', 'ADM-001');
+		$days = (int)(new \DateTimeImmutable($thisMonth . '-01'))->format('t');
+
+		$bucket = $this->bucketFor($result['series'], $thisMonth);
+		$this->assertSame(round((0.5 * 365 / $days), 2), $bucket['value']);
+	}//end testAbsenceFrequencyIsAMetric()
+
+	/**
+	 * department-figures REQ-DPF-001: a unit's wage cost is its people's
+	 * payslips plus the run's employer charge share.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
+	 */
+	public function testAUnitsWageCostComesFromItsPeoplesPayslips(): void {
+		$thisMonth = $this->thisMonth();
+		$admin = ['administrationId' => 'ADM-001'];
+		$service = $this->buildService($this->unitFixture() + [
+			'PayrollRun' => [
+				(['id' => 'run-1', 'period' => $thisMonth, 'status' => 'posted', 'totalGross' => 5000.0, 'totalEmployerCharges' => 1000.0] + $admin),
+			],
+			'Payslip' => [
+				(['employeeId' => 'a', 'payrollRunId' => 'run-1', 'grossPay' => 3000.0] + $admin),
+				(['employeeId' => 'b', 'payrollRunId' => 'run-1', 'grossPay' => 2000.0] + $admin),
+			],
+		]);
+
+		$team = $this->bucketFor($service->getTrends('payroll-cost', 'quarter', 'ADM-001', 'team')['series'], $thisMonth);
+		$all = $this->bucketFor($service->getTrends('payroll-cost', 'quarter', 'ADM-001')['series'], $thisMonth);
+
+		$this->assertSame(3600.0, $team['value']);
+		$this->assertSame(6000.0, $all['value']);
+	}//end testAUnitsWageCostComesFromItsPeoplesPayslips()
+
+	/**
+	 * department-figures REQ-DPF-002: under the small-unit threshold a
+	 * period answers null with a reason, never a figure.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-002
+	 */
+	public function testASmallUnitIsWithheldWithAReason(): void {
+		$thisMonth = $this->thisMonth();
+		$admin = ['administrationId' => 'ADM-001'];
+		$service = $this->buildService($this->unitFixture() + [
+			'EmploymentContract' => [
+				(['employeeId' => 'a', 'hoursPerWeek' => 40.0, 'startDate' => '2020-01-01', 'endDate' => null] + $admin),
+			],
+		]);
+
+		$bucket = $this->bucketFor($service->getTrends('absence-rate', 'quarter', 'ADM-001', 'team', 5)['series'], $thisMonth);
+
+		$this->assertNull($bucket['value']);
+		$this->assertSame('unit-too-small', $bucket['suppressed']);
+	}//end testASmallUnitIsWithheldWithAReason()
+
+	/**
+	 * Two units: `team` (with child `desk`, where `a` sits) and `other`
+	 * (where `b` sits).
+	 *
+	 * @return array<string, list<array<string, mixed>>>
+	 */
+	private function unitFixture(): array {
+		$admin = ['administrationId' => 'ADM-001'];
+		return [
+			'OrgUnit' => [
+				(['id' => 'team', 'name' => 'Team', 'parentUnitId' => null] + $admin),
+				(['id' => 'desk', 'name' => 'Desk', 'parentUnitId' => 'team'] + $admin),
+				(['id' => 'other', 'name' => 'Other', 'parentUnitId' => null] + $admin),
+			],
+			'OrgAssignment' => [
+				(['employeeId' => 'a', 'orgUnitId' => 'desk', 'startDate' => '2020-01-01'] + $admin),
+				(['employeeId' => 'b', 'orgUnitId' => 'other', 'startDate' => '2020-01-01'] + $admin),
+			],
+		];
+	}//end unitFixture()
+
+	/**
 	 * Find one bucket by its `date` key in a resolved trend series.
 	 *
 	 * @param array<int, array<string, mixed>> $series The resolved series.

@@ -481,6 +481,21 @@ class SettingsService {
 	}//end getFormationLongTermSickWeeks()
 
 	/**
+	 * department-figures: the fewest people a unit must hold in a period
+	 * before its manager sees its figures, so a small team's absence or wage
+	 * cost cannot be traced to one person. App config key
+	 * `department_figures_minimum_members`, default 5; HR and accountants are
+	 * not bound by it.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-002
+	 */
+	public function getDepartmentFiguresMinimumMembers(): int {
+		return max(1, $this->appConfig->getValueInt(Application::APP_ID, 'department_figures_minimum_members', 5));
+	}//end getDepartmentFiguresMinimumMembers()
+
+	/**
 	 * The annual bovenwettelijk (above-statutory) leave hours LeaveAccrualJob
 	 * accrues 1/12 of per month (leave-accrual-job design.md D3), configurable
 	 * via app config key `leave_bovenwettelijk_annual_hours`. Defaults to `0`

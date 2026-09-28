@@ -138,6 +138,10 @@ return [
         // parameter is ever read. BEFORE the SPA catch-all.
         ['name' => 'analytics#trends', 'url' => '/api/analytics/trends', 'verb' => 'GET'],
         ['name' => 'analytics#obligations', 'url' => '/api/analytics/obligations', 'verb' => 'GET'],
+        // department-figures: units side by side (HR/accountant), the caller's own units, and one unit.
+        ['name' => 'departmentFigures#units', 'url' => '/api/analytics/units', 'verb' => 'GET'],
+        ['name' => 'departmentFigures#myUnits', 'url' => '/api/analytics/my-units', 'verb' => 'GET'],
+        ['name' => 'departmentFigures#unitFigures', 'url' => '/api/analytics/unit-figures', 'verb' => 'GET'],
         // hours-leaf-for-any-object — the three timer endpoints behind the hours
         // leaf. ONE constraint, no CRUD (ADR-022): entries are read and written
         // declaratively through OpenRegister's object API everywhere else, and

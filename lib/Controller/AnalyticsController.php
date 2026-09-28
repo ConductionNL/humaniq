@@ -42,7 +42,7 @@ namespace OCA\Humaniq\Controller;
 
 use InvalidArgumentException;
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\Service\AdministrationService;
+use OCA\Humaniq\Service\AnalyticsAccess;
 use OCA\Humaniq\Service\AnalyticsService;
 use OCA\Humaniq\Service\ObligationsService;
 use OCA\Humaniq\Service\SeriesLatest;
@@ -63,18 +63,10 @@ use Psr\Log\LoggerInterface;
 class AnalyticsController extends Controller {
 
 	/**
-	 * `AdministrationAccess.role` values this endpoint admits
-	 * (REQ-DSI-005) — `employee` is refused.
-	 *
-	 * @var array<int, string>
-	 */
-	private const ALLOWED_ROLES = ['hr', 'accountant'];
-
-	/**
 	 * @param IRequest $request The request object.
 	 * @param AnalyticsService $analyticsService The trends aggregation service.
 	 * @param ObligationsService $obligationsService The cross-schema obligations merge service.
-	 * @param AdministrationService $administrationService Resolves the caller's active administration + role.
+	 * @param AnalyticsAccess $access Resolves the caller's active administration, role and managed units.
 	 * @param IUserSession $userSession The current user session (acting userId).
 	 * @param LoggerInterface $logger Logger.
 	 *
@@ -84,7 +76,7 @@ class AnalyticsController extends Controller {
 		IRequest $request,
 		private readonly AnalyticsService $analyticsService,
 		private readonly ObligationsService $obligationsService,
-		private readonly AdministrationService $administrationService,
+		private readonly AnalyticsAccess $access,
 		private readonly SeriesLatest $seriesLatest,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
@@ -103,6 +95,8 @@ class AnalyticsController extends Controller {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-005
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-006
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-002
 	 */
 	#[NoAdminRequired]
 	public function trends(): JSONResponse {
@@ -111,8 +105,9 @@ class AnalyticsController extends Controller {
 			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$administrationId = $this->authorizeCaller($userId);
-		if ($administrationId === null) {
+		$orgUnitId = trim((string)$this->request->getParam('orgUnitId', ''));
+		$access = $this->access->unitReader($userId, $orgUnitId);
+		if ($access === null) {
 			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -120,7 +115,13 @@ class AnalyticsController extends Controller {
 		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
 
 		try {
-			$trends = $this->analyticsService->getTrends($metric, $period, $administrationId);
+			$trends = $this->analyticsService->getTrends(
+				$metric,
+				$period,
+				$access['administrationId'],
+				($orgUnitId === '') ? null : $orgUnitId,
+				$access['minimumMembers']
+			);
 
 			// The Dashboard's KPI tiles read a headline number from this same
 			// response rather than from an endpoint of their own, so a tile can
@@ -193,17 +194,7 @@ class AnalyticsController extends Controller {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function authorizeCaller(string $userId): ?string {
-		$administrationId = $this->administrationService->getActiveAdministrationId($userId);
-		if ($administrationId === null) {
-			return null;
-		}
-
-		$role = $this->administrationService->getActiveAdministrationRole($userId);
-		if (in_array($role, self::ALLOWED_ROLES, true) === false) {
-			return null;
-		}
-
-		return $administrationId;
+		return $this->access->fullReaderAdministration($userId);
 	}//end authorizeCaller()
 
 }//end class
