@@ -1898,7 +1898,7 @@
    "id": "lve-buy-sell",
    "area": "leave",
    "name": "Buy or sell extra leave hours and have it settled in pay.",
-   "humaniq": "yes",
+   "humaniq": "partial",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -1915,7 +1915,7 @@
    },
    "built": {
     "state": "built",
-    "evidence": "lib/Settings/register.d/hr-leave.json:279-462 LeaveTransaction buy/sell lifecycle submit/approve/reject/settle, guarded by LeaveBuySellApprovalGuard and LeaveSettlementPeriodGuard (both registered Application.php:206,222); appinfo/routes.php:82 POST /api/leave/settle -> LeaveController::settle -> lib/Service/LeaveBuySellSettlementService.php writes bovenwettelijkHours and settledAmount; src/manifest.d/hr-leave.json:214-266 LeaveTransactionDetail headerActions 'verrekenen' calls that route",
+    "evidence": "lib/Settings/register.d/hr-leave.json:279-462 LeaveTransaction buy/sell lifecycle submit/approve/reject/settle, guarded by LeaveBuySellApprovalGuard and LeaveSettlementPeriodGuard (both registered Application.php:206,222); appinfo/routes.php:82 POST /api/leave/settle -> LeaveController::settle -> lib/Service/LeaveBuySellSettlementService.php writes bovenwettelijkHours and settledAmount; src/manifest.d/hr-leave.json:214-266 LeaveTransactionDetail headerActions 'verrekenen' calls that route Corrections round 8 (2026-09-28), humaniq#513: the settled amount is gross (lib/Service/LeaveBuySellSettlementService.php:159-160), but lib/Service/PayrollRunService.php:1369-1371 and :536 fold it straight into net after the engine input is built at :492, so sold leave is paid out with no wage tax withheld and bought leave comes off net after tax, at e08ffe0.",
     "reachedOn": "LeaveTransactionDetail /leave-transactions/:id 'Settle' button (also MijnVerlofKopenVerkopen /mijn/verlof-kopen-verkopen for the employee's own view)",
     "owner": "ConductionNL/humaniq"
    },
@@ -1923,7 +1923,8 @@
    "providerHow": "read-from-code",
    "feature": "leave-buy-sell",
    "featureConfidence": "high",
-   "source": "competitor"
+   "source": "competitor",
+   "note": "Own rating yes to partial (corrections round 8, 2026-09-28): leave is bought and sold through the approved lifecycle and settled, but pay folds the gross amount into net without wage tax, humaniq#513."
   },
   {
    "id": "lve-team-calendar",
@@ -3108,7 +3109,7 @@
    },
    "built": {
     "state": "built",
-    "evidence": "lib/Service/CompetenceCheckService.php:11 'The roster has to refuse' a shift once a certificate expires; called from lib/Service/RosterCheckService.php:240 as part of the same working-time check act, producing competenceFindings; also called from lib/Service/AvailabilityService.php",
+    "evidence": "lib/Service/CompetenceCheckService.php:11 'The roster has to refuse' a shift once a certificate expires; called from lib/Service/RosterCheckService.php:240 as part of the same working-time check act, producing competenceFindings; also called from lib/Service/AvailabilityService.php Corrections round 8 (2026-09-28), humaniq#512: nothing refuses an unqualified assignment, because lib/Service/RosterCheckService.php:234-258 only adds competence findings to the report, the Roster publiceren transition at lib/Settings/register.d/hr-roster.json:44-48 has no requires guard, and no RosterAssignment save guard reads the check, at e08ffe0.",
     "reachedOn": "RosterDetail /rosters/:id 'Working hours check' button surfaces competenceFindings alongside the ATW report; not a hard block on saving a RosterAssignment itself",
     "owner": "ConductionNL/humaniq"
    },
@@ -3117,7 +3118,7 @@
    "feature": "rostering",
    "featureConfidence": "medium",
    "source": "own",
-   "note": "Certificate/competence tracking with expiry exists in humaniq and in these competitors; none is confirmed to actually gate a roster assignment, only to track and alert on expiry, so all are rated partial rather than yes."
+   "note": "Certificate/competence tracking with expiry exists in humaniq and in these competitors; none is confirmed to actually gate a roster assignment, only to track and alert on expiry, so all are rated partial rather than yes. Corrections round 8 (2026-09-28): REQ-ROST-C02 is titled as a refusal, but the check only reports and a roster with an unqualified person can still be published, humaniq#512; rating kept because partial already records a report without a block."
   },
   {
    "id": "pln-working-patterns",
@@ -4319,7 +4320,7 @@
    },
    "built": {
     "state": "built",
-    "evidence": "lib/Command/GlPostRunCommand.php + a PayrollGLPostService post each approved PayrollRun as a balanced loonjournaalpost into shillinq's JournalEntry register via PayrollChartOfAccountsMapping (duck-typed no-op when shillinq is absent); lib/Flow/PayrollGlPostNode.php exposes the same as flow step humaniq.payroll-glpost; src/manifest.d/hr-glpost.json PayrollGLPostDetail note: 'a PayrollGLPost is humaniq's log of ONE handoff attempt into shillinq's JournalEntry register, never the journal itself'",
+    "evidence": "lib/Command/GlPostRunCommand.php + a PayrollGLPostService post each approved PayrollRun as a balanced loonjournaalpost into shillinq's JournalEntry register via PayrollChartOfAccountsMapping (duck-typed no-op when shillinq is absent); lib/Flow/PayrollGlPostNode.php exposes the same as flow step humaniq.payroll-glpost; src/manifest.d/hr-glpost.json PayrollGLPostDetail note: 'a PayrollGLPost is humaniq's log of ONE handoff attempt into shillinq's JournalEntry register, never the journal itself' Corrections round 8 (2026-09-28), humaniq#514: retro pay and leave payouts folded into net at lib/Service/PayrollRunService.php:536 reach totals net at :570 but not totals gross at :566, so lib/Service/PayrollGLPostService.php:254-267 books no cost line for them and refuses the post with Inconsistente runtotalen once the folds exceed the remainder, at e08ffe0.",
     "reachedOn": "occ humaniq:glpost:run or the Flow step humaniq.payroll-glpost (this page declares no headerActions/lifecycleActions, occ/flow-driven by design); PayrollGLPosts /gl-posts and PayrollGLPostDetail show the attempt read-only",
     "owner": "ConductionNL/humaniq"
    },
@@ -4328,7 +4329,7 @@
    "feature": "payroll-glpost-shillinq",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "humaniq computes the balanced journal entry, but the actual ledger it posts into is shillinq's JournalEntry register; shillinq's own matrix row ppl-payroll-journal describes a SEPARATE, unreached journal builder inside shillinq itself (bouwLoonjournaalpost, no caller), which this handoff bypasses entirely."
+   "note": "humaniq computes the balanced journal entry, but the actual ledger it posts into is shillinq's JournalEntry register; shillinq's own matrix row ppl-payroll-journal describes a SEPARATE, unreached journal builder inside shillinq itself (bouwLoonjournaalpost, no caller), which this handoff bypasses entirely. Corrections round 8 (2026-09-28): a run that carries retro pay or a leave payout posts a journal that leaves that money out of wage costs, and a large enough fold stops the post, humaniq#514; rating kept at partial because a run without those folds still posts a balanced journal."
   },
   {
    "id": "pay-cost-allocation",
@@ -8421,8 +8422,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'mcp|model.?context' src/plugins src/client/src: no match; only the REST API v2 and OAuth plugin exist"
    },
    "built": {
-    "state": "specified",
-    "evidence": "openspec/specs/humaniq-mcp-surface/spec.md: x-openregister-mcp declares six read-only schemas (Vacancy, OrgUnit, Asset, AssetAssignment, Timesheet, Expense) with search and get only, so no request can be started; the row rests on a declaration only and whether the installed OpenRegister serves it was not driven (same as the pending row rep-ai-assistant)",
+    "state": "none",
+    "evidence": "openspec/specs/humaniq-mcp-surface/spec.md: x-openregister-mcp declares six read-only schemas (Vacancy, OrgUnit, Asset, AssetAssignment, Timesheet, Expense) with search and get only, so no request can be started; the row rests on a declaration only and whether the installed OpenRegister serves it was not driven (same as the pending row rep-ai-assistant) Corrections round 8 (2026-09-28): the read-only declaration is at lib/Settings/register.d/hr-org.json:10 (and hr-ats, hr-assets, hr-timesheet, hr-expense) at e08ffe0; no humaniq change specifies a write or time-off tool.",
     "reachedOn": "an external MCP client, declaration only",
     "owner": "ConductionNL/humaniq"
    },
@@ -8431,7 +8432,7 @@
    "source": "changelog",
    "origin": "changelog",
    "originUrl": "https://support.personio.de/hc/en-us/articles/38314656674333-Personio-MCP-server-Beta-access-overview",
-   "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-08-17-declared-actions-and-mcp-scope (a schema can declare a write action as an MCP tool); humaniq declaring the time-off action is humaniq's, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister)."
+   "note": "Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-08-17-declared-actions-and-mcp-scope (a schema can declare a write action as an MCP tool); humaniq declaring the time-off action is humaniq's, so the owner moved to ConductionNL/humaniq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister). Corrections round 8 (2026-09-28): built.state specified to none, because no humaniq change specifies the missing half. The archived openspec/changes/archive/2026-09-07-humaniq-mcp-adoption only declares six read-only schemas, and its spec openspec/specs/humaniq-mcp-surface/spec.md:41-42 and :89-90 refuses every write verb and the leave cluster, so it does not cover starting a time-off request; the open change self-service-policy-assistant puts submitting leave from the chat out of scope (proposal.md:88)."
   },
   {
    "id": "dm-approvals-dashboard",
