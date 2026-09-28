@@ -8,7 +8,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "OrgUnit",
-				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab.",
+				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab. people-formation-positions (2026-09-28): a 'formation' host widget (src/widgets/FormationWidget.vue) shows budgeted, filled, vacant and net FTE per formation place from GET /api/formation/occupancy, computed on read; a stat tile cannot, because filled and net FTE cross three schemas and are weighted by absence per day. Beside it an object-list of the unit's Formatieplaats records.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -120,6 +120,53 @@
 							},
 							"emptyText": "No placements yet"
 						}
+					},
+					{
+						"id": "formation",
+						"type": "formation",
+						"title": "Formation",
+						"icon": "AccountGroupOutline",
+						"content": {
+							"title": "Formation"
+						}
+					},
+					{
+						"id": "object-list-3",
+						"type": "object-list",
+						"title": "Formation places",
+						"icon": "AccountGroupOutline",
+						"content": {
+							"register": "humaniq",
+							"schema": "Formatieplaats",
+							"filter": {
+								"orgUnitId": "@objectId"
+							},
+							"sort": {
+								"field": "title",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Name"
+								},
+								{
+									"key": "budgetedFte",
+									"label": "Budgeted FTE"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "FormatieplaatsDetail",
+							"viewAllRoute": "Formatieplaatsen",
+							"viewAllQuery": {
+								"orgUnitId": "@objectId"
+							},
+							"emptyText": "No formation places yet"
+						}
 					}
 				],
 				"layout": [
@@ -154,6 +201,22 @@
 						"gridY": 6,
 						"gridWidth": 6,
 						"gridHeight": 4
+					},
+					{
+						"id": 5,
+						"widgetId": "formation",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 8,
+						"gridHeight": 5
+					},
+					{
+						"id": 6,
+						"widgetId": "object-list-3",
+						"gridX": 8,
+						"gridY": 10,
+						"gridWidth": 4,
+						"gridHeight": 5
 					}
 				]
 			}

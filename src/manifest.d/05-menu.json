@@ -136,6 +136,17 @@
 					}
 				},
 				{
+					"id": "Formatieplaatsen",
+					"label": "Formation places",
+					"icon": "AccountGroupOutline",
+					"route": "Formatieplaatsen",
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
+				},
+				{
 					"id": "OrgAssignments",
 					"label": "Placements",
 					"icon": "AccountArrowRightOutline",

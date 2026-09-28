@@ -104,6 +104,7 @@ import { CnActionButtons, CnDeltaWidget, CnStatWidget } from '@conduction/nextcl
 import AdministrationSwitcher from './views/AdministrationSwitcher.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
+import FormationWidget from './widgets/FormationWidget.vue'
 import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
 import TrendChartWidget from './widgets/TrendChartWidget.vue'
 
@@ -143,6 +144,16 @@ export default {
 		allowedSlots: ['body', 'sidebar'],
 		propsSchema: null,
 		_note: 'Explicit override for the library\'s CnDeltaWidget, for exactly the reason `stat` needs one — see the module docblock above. CnDeltaWidget self-registers its key through the same bare side-effect import that gets tree-shaken out of Humaniq\'s bundle, so without this entry every `type:"delta"` placement resolves to nothing and renders blank. Manifest widgets already pass the { title, icon, content } shape it expects, so no wrapper is needed.',
+	},
+	formation: {
+		kind: 'widget',
+		component: FormationWidget,
+		defaultSize: { w: 8, h: 5 },
+		minSize: { w: 4, h: 3 },
+		maxSize: { w: 12, h: 8 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'people-formation-positions REQ-FRM-002/003: budgeted, filled, vacant and net FTE per formation place from GET /api/formation/occupancy, computed on read. A stat tile cannot express it: filled and net FTE cross three schemas and are weighted by absence per day. Placed on OrgUnitDetail and FormatieplaatsDetail.',
 	},
 	chart: {
 		kind: 'widget',

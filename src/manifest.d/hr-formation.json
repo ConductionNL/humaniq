@@ -1,0 +1,162 @@
+{
+	"pages": [
+		{
+			"id": "FormatieplaatsDetail",
+			"route": "/formation-places/:id",
+			"type": "detail",
+			"title": "Formation place",
+			"config": {
+				"register": "humaniq",
+				"schema": "Formatieplaats",
+				"_note": "people-formation-positions (2026-09-28): the data widget excludes orgUnitId/normfunctieId since Related resolves both; the formation widget shows this one place's budgeted, filled, vacant and net FTE (objectType Formatieplaats); the object-list names the contracts that fill the place. No lifecycleActions: status is a plain enum (design.md, declarative-vs-imperative table).",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"id": "data",
+						"type": "data",
+						"title": "Formation place",
+						"icon": "AccountGroupOutline",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"orgUnitId",
+								"normfunctieId"
+							],
+							"title": "Formation place"
+						}
+					},
+					{
+						"id": "related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"content": {
+							"title": "Related"
+						}
+					},
+					{
+						"id": "formation",
+						"type": "formation",
+						"title": "Occupancy",
+						"icon": "ChartBar",
+						"content": {
+							"title": "Occupancy"
+						}
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
+						"title": "Contracts on this place",
+						"icon": "FileSign",
+						"content": {
+							"register": "humaniq",
+							"schema": "EmploymentContract",
+							"filter": {
+								"formatieplaatsId": "@objectId"
+							},
+							"sort": {
+								"field": "startDate",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "hoursPerWeek",
+									"label": "Hours per week"
+								},
+								{
+									"key": "startDate",
+									"label": "Start"
+								},
+								{
+									"key": "endDate",
+									"label": "End"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "EmploymentContractDetail",
+							"viewAllRoute": "EmploymentContracts",
+							"viewAllQuery": {
+								"formatieplaatsId": "@objectId"
+							},
+							"emptyText": "No contract fills this place yet"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 5
+					},
+					{
+						"id": 2,
+						"widgetId": "related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 5
+					},
+					{
+						"id": 3,
+						"widgetId": "formation",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 4,
+						"widgetId": "object-list",
+						"gridX": 6,
+						"gridY": 5,
+						"gridWidth": 6,
+						"gridHeight": 4
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "Formatieplaats",
+			"params": {
+				"id": "Formatieplaatsen",
+				"route": "/formation-places",
+				"title": "Formation places",
+				"columns": [
+					"title",
+					"orgUnitId",
+					"normfunctieId",
+					"budgetedFte",
+					"validFrom",
+					"validUntil",
+					"status"
+				],
+				"sort": {
+					"field": "title",
+					"order": "asc"
+				},
+				"filters": [
+					"orgUnitId",
+					"status"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Budgeted places per unit and function. Open a unit to see which are filled, vacant or overfilled, and the net FTE."
+			}
+		}
+	]
+}

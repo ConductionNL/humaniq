@@ -374,6 +374,17 @@
 					}
 				},
 				{
+					"icon": "AccountGroupOutline",
+					"id": "Formatieplaatsen",
+					"label": "Formation places",
+					"route": "Formatieplaatsen",
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
+				},
+				{
 					"icon": "AccountArrowRightOutline",
 					"id": "OrgAssignments",
 					"label": "Placements",
@@ -3385,6 +3396,131 @@
 		},
 		{
 			"config": {
+				"_note": "people-formation-positions (2026-09-28): the data widget excludes orgUnitId/normfunctieId since Related resolves both; the formation widget shows this one place's budgeted, filled, vacant and net FTE (objectType Formatieplaats); the object-list names the contracts that fill the place. No lifecycleActions: status is a plain enum (design.md, declarative-vs-imperative table).",
+				"layout": [
+					{
+						"gridHeight": 5,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 5,
+						"id": 3,
+						"widgetId": "formation"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 5,
+						"id": 4,
+						"widgetId": "object-list"
+					}
+				],
+				"register": "humaniq",
+				"schema": "Formatieplaats",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"orgUnitId",
+								"normfunctieId"
+							],
+							"title": "Formation place"
+						},
+						"icon": "AccountGroupOutline",
+						"id": "data",
+						"title": "Formation place",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					},
+					{
+						"content": {
+							"title": "Occupancy"
+						},
+						"icon": "ChartBar",
+						"id": "formation",
+						"title": "Occupancy",
+						"type": "formation"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "employeeId",
+									"label": "Employee"
+								},
+								{
+									"key": "hoursPerWeek",
+									"label": "Hours per week"
+								},
+								{
+									"key": "startDate",
+									"label": "Start"
+								},
+								{
+									"key": "endDate",
+									"label": "End"
+								}
+							],
+							"emptyText": "No contract fills this place yet",
+							"filter": {
+								"formatieplaatsId": "@objectId"
+							},
+							"limit": 25,
+							"register": "humaniq",
+							"rowRoute": "EmploymentContractDetail",
+							"schema": "EmploymentContract",
+							"sort": {
+								"dir": "desc",
+								"field": "startDate"
+							},
+							"viewAllQuery": {
+								"formatieplaatsId": "@objectId"
+							},
+							"viewAllRoute": "EmploymentContracts"
+						},
+						"icon": "FileSign",
+						"id": "object-list",
+						"title": "Contracts on this place",
+						"type": "object-list"
+					}
+				]
+			},
+			"id": "FormatieplaatsDetail",
+			"route": "/formation-places/:id",
+			"title": "Formation place",
+			"type": "detail"
+		},
+		{
+			"config": {
 				"_note": "leave-verzuim-mvp (2026-07-12): drives the EXISTING LeaveRequest lifecycle from portal-schemas (submit -> approve/reject, guarded server-side by NoSelfApprovalGuard) -- nothing on the schema changes here, only its UI. TimesheetDetail pattern: the data widget is SPLIT into 'Request' (leaveType/startDate/endDate/hours/reason -- what is being requested) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason -- the workflow trail), both excluding employeeId since Related already resolves and links the requesting Employee by name. Files sits full-width below for supporting documents (e.g. a bijzonder-verlof invitation). NO stat KPI tile: unlike Timesheet's hours-sum or Expense's amount-sum, a leave request has no single numeric headline worth a dedicated stat (hours is optional and nullable). lifecycleActions expose exactly submit/approve/reject -- no invented cancel/withdraw edge (PayrollRunDetail _note precedent: never claim a transition the backend does not guard). Audit history is a sidebar tab.",
 				"layout": [
 					{
@@ -5759,7 +5895,7 @@
 		},
 		{
 			"config": {
-				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab.",
+				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab. people-formation-positions (2026-09-28): a 'formation' host widget (src/widgets/FormationWidget.vue) shows budgeted, filled, vacant and net FTE per formation place from GET /api/formation/occupancy, computed on read; a stat tile cannot, because filled and net FTE cross three schemas and are weighted by absence per day. Beside it an object-list of the unit's Formatieplaats records.",
 				"layout": [
 					{
 						"gridHeight": 6,
@@ -5792,6 +5928,22 @@
 						"gridY": 6,
 						"id": 4,
 						"widgetId": "object-list-2"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 10,
+						"id": 5,
+						"widgetId": "formation"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 10,
+						"id": 6,
+						"widgetId": "object-list-3"
 					}
 				],
 				"register": "humaniq",
@@ -5906,6 +6058,53 @@
 						"icon": "AccountArrowRightOutline",
 						"id": "object-list-2",
 						"title": "Assignments",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"title": "Formation"
+						},
+						"icon": "AccountGroupOutline",
+						"id": "formation",
+						"title": "Formation",
+						"type": "formation"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "title",
+									"label": "Name"
+								},
+								{
+									"key": "budgetedFte",
+									"label": "Budgeted FTE"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"emptyText": "No formation places yet",
+							"filter": {
+								"orgUnitId": "@objectId"
+							},
+							"limit": 25,
+							"register": "humaniq",
+							"rowRoute": "FormatieplaatsDetail",
+							"schema": "Formatieplaats",
+							"sort": {
+								"dir": "asc",
+								"field": "title"
+							},
+							"viewAllQuery": {
+								"orgUnitId": "@objectId"
+							},
+							"viewAllRoute": "Formatieplaatsen"
+						},
+						"icon": "AccountGroupOutline",
+						"id": "object-list-3",
+						"title": "Formation places",
 						"type": "object-list"
 					}
 				]
@@ -8648,6 +8847,37 @@
 			"id": "Expenses",
 			"route": "/expenses",
 			"title": "Expenses",
+			"type": "index"
+		},
+		{
+			"config": {
+				"columns": [
+					"title",
+					"orgUnitId",
+					"normfunctieId",
+					"budgetedFte",
+					"validFrom",
+					"validUntil",
+					"status"
+				],
+				"description": "Budgeted places per unit and function. Open a unit to see which are filled, vacant or overfilled, and the net FTE.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"orgUnitId",
+					"status"
+				],
+				"register": "humaniq",
+				"schema": "Formatieplaats",
+				"sort": {
+					"field": "title",
+					"order": "asc"
+				}
+			},
+			"id": "Formatieplaatsen",
+			"route": "/formation-places",
+			"title": "Formation places",
 			"type": "index"
 		},
 		{
