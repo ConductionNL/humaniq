@@ -450,6 +450,37 @@ class SettingsService {
 	}//end isRetentionExpiryEnabled()
 
 	/**
+	 * The leave type codes the net FTE of a formation leaves out
+	 * (people-formation-positions design.md D3), configurable via app config
+	 * key `formation_net_fte_leave_types` as a comma-separated list. Defaults
+	 * to parental leave and pregnancy and childbirth leave, the tender's
+	 * categories; long-term sickness is the separate threshold below.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-003
+	 */
+	public function getFormationNetFteLeaveTypes(): array {
+		$raw = $this->appConfig->getValueString(Application::APP_ID, 'formation_net_fte_leave_types', 'parental,zwangerschap');
+
+		return array_values(array_filter(array_map('trim', explode(',', $raw)), static fn (string $code): bool => $code !== ''));
+	}//end getFormationNetFteLeaveTypes()
+
+	/**
+	 * The number of weeks after which a sickness case counts against the net
+	 * FTE of a formation (people-formation-positions design.md D3),
+	 * configurable via app config key `formation_long_term_sick_weeks`.
+	 * Defaults to 6.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/specs/formation-positions/spec.md#REQ-FRM-003
+	 */
+	public function getFormationLongTermSickWeeks(): int {
+		return max(0, $this->appConfig->getValueInt(Application::APP_ID, 'formation_long_term_sick_weeks', 6));
+	}//end getFormationLongTermSickWeeks()
+
+	/**
 	 * The annual bovenwettelijk (above-statutory) leave hours LeaveAccrualJob
 	 * accrues 1/12 of per month (leave-accrual-job design.md D3), configurable
 	 * via app config key `leave_bovenwettelijk_annual_hours`. Defaults to `0`
