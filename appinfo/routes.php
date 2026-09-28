@@ -75,6 +75,10 @@ return [
         // comp-cycles — guarded trigger for the CompAdjustmentDetail
         // "Effectueren" manifest api-call action (design.md D6).
         ['name' => 'comp#effectuate', 'url' => '/api/comp/effectuate', 'verb' => 'POST'],
+        // comp-collective-raise-and-step-increase D8: propose, approve and effectuate a whole cycle.
+        ['name' => 'comp#proposeCollective', 'url' => '/api/comp/cycles/propose', 'verb' => 'POST'],
+        ['name' => 'comp#approveCycle', 'url' => '/api/comp/cycles/approve', 'verb' => 'POST'],
+        ['name' => 'comp#effectuateCycle', 'url' => '/api/comp/cycles/effectuate', 'verb' => 'POST'],
         // multi-administratie — guarded per-user active-administration
         // selection + context for the switcher (design.md D4/D5). BEFORE the
         // SPA catch-all per REQ-MULTI-003.
