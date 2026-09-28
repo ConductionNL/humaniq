@@ -26,7 +26,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/comp-collective-raise-and-step-increase/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-005
+ * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-005
  */
 
 declare(strict_types=1);
@@ -38,6 +38,8 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 
 /**
  * Denies a refusal without a reason, or by its proposer.
+ *
+ * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-005
  */
 class DecisionReasonGuard implements LifecycleGuardInterface {
 
@@ -63,7 +65,7 @@ class DecisionReasonGuard implements LifecycleGuardInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess) GuardResult exposes only the static
 	 *  allow()/deny() factories mandated by OpenRegister's contract.
 	 *
-	 * @spec openspec/changes/comp-collective-raise-and-step-increase/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-005
+	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-005
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		$reason = trim((string)($object['decisionReason'] ?? ''));

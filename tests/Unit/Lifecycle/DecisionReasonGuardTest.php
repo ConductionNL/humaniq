@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/comp-collective-raise-and-step-increase/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-005
+ * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-005
  */
 
 declare(strict_types=1);

@@ -48,7 +48,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/archive/2026-06-22-hrmq-timesheet-approval/specs/hrmq-timesheet-approval/spec.md
- * @spec openspec/changes/comp-collective-raise-and-step-increase/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-002
+ * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-002
  */
 
 declare(strict_types=1);
@@ -63,6 +63,8 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
  *
  * Fails closed: when the acting user cannot be identified, or the claiming
  * employee is unknown, the transition is denied rather than allowed on a guess.
+ *
+ * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-002
  */
 class NoSelfApprovalGuard implements LifecycleGuardInterface {
 
@@ -83,7 +85,7 @@ class NoSelfApprovalGuard implements LifecycleGuardInterface {
 	 *  applies to both approve and reject.
 	 *
 	 * @spec openspec/changes/archive/2026-06-22-hrmq-timesheet-approval/specs/hrmq-timesheet-approval/spec.md
-	 * @spec openspec/changes/comp-collective-raise-and-step-increase/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-002
+	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-002
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		if ($userId === '') {
