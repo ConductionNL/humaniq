@@ -66,11 +66,11 @@ class RetentionExpiryTest extends TestCase {
 	 * @return void
 	 */
 	public function testALapsedHumaniqFloorHoldIsReleasedAndMarkedForDestruction(): void {
-		[$guard, $retention, $mapper] = $this->guard();
+		[$guard, $retention, $mapper, $expiry] = $this->guard();
 		$payslip = $this->entity(['period' => '2012-03'], []);
 		$guard->placeStatutoryFloorHold($payslip, 'Payslip', 'period', 7, PayrollRetentionGuardService::AWR_LAW_REFERENCE);
 
-		$result = $guard->releaseLapsedFloorHold($payslip, 'Payslip', new DateTimeImmutable(self::TODAY), true);
+		$result = $expiry->releaseLapsedFloorHold($payslip, 'Payslip', new DateTimeImmutable(self::TODAY), true);
 
 		$this->assertTrue($result['released']);
 		$this->assertSame('2019-12-31', $result['floor']);
@@ -89,11 +89,11 @@ class RetentionExpiryTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFloorHoldThatHasNotLapsedIsKept(): void {
-		[$guard, $retention] = $this->guard();
+		[$guard, $retention, , $expiry] = $this->guard();
 		$payslip = $this->entity(['period' => '2024-03'], []);
 		$guard->placeStatutoryFloorHold($payslip, 'Payslip', 'period', 7, PayrollRetentionGuardService::AWR_LAW_REFERENCE);
 
-		$result = $guard->releaseLapsedFloorHold($payslip, 'Payslip', new DateTimeImmutable(self::TODAY), true);
+		$result = $expiry->releaseLapsedFloorHold($payslip, 'Payslip', new DateTimeImmutable(self::TODAY), true);
 
 		$this->assertFalse($result['eligible']);
 		$this->assertTrue($payslip->getRetention()['legalHold']['active']);
@@ -109,11 +109,11 @@ class RetentionExpiryTest extends TestCase {
 	 * @return void
 	 */
 	public function testAHoldAPersonPlacedStaysAndThePayslipIsNotMarked(): void {
-		[$guard, $retention] = $this->guard();
+		[$guard, $retention, , $expiry] = $this->guard();
 		$payslip = $this->entity(['period' => '2012-03'], []);
 		$retention->placeLegalHold($payslip, 'Geschil met werknemer, dossier 2026-14');
 
-		$result = $guard->releaseLapsedFloorHold($payslip, 'Payslip', new DateTimeImmutable(self::TODAY), true);
+		$result = $expiry->releaseLapsedFloorHold($payslip, 'Payslip', new DateTimeImmutable(self::TODAY), true);
 
 		$this->assertFalse($result['eligible']);
 		$this->assertTrue($payslip->getRetention()['legalHold']['active']);
@@ -128,11 +128,11 @@ class RetentionExpiryTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnAppraisalAlreadyRecordedWins(): void {
-		[$guard] = $this->guard();
+		[$guard, , , $expiry] = $this->guard();
 		$payslip = $this->entity(['period' => '2012-03'], ['archiefnominatie' => 'blijvend_bewaren', 'archiefactiedatum' => '2040-01-01']);
 		$guard->placeStatutoryFloorHold($payslip, 'Payslip', 'period', 7, PayrollRetentionGuardService::AWR_LAW_REFERENCE);
 
-		$guard->releaseLapsedFloorHold($payslip, 'Payslip', new DateTimeImmutable(self::TODAY), true);
+		$expiry->releaseLapsedFloorHold($payslip, 'Payslip', new DateTimeImmutable(self::TODAY), true);
 
 		$this->assertSame('blijvend_bewaren', $payslip->getRetention()['archiefnominatie']);
 		$this->assertSame('2040-01-01', $payslip->getRetention()['archiefactiedatum']);
@@ -145,10 +145,10 @@ class RetentionExpiryTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnEmployeeWhoLeftIn2017IsMarkedWithTheEndOf2024(): void {
-		[$guard, , $mapper] = $this->guard();
+		[, , $mapper, $expiry] = $this->guard();
 		$employee = $this->entity(['endDate' => '2017-05-31'], []);
 
-		$result = $guard->markEndedEmployee($employee, new DateTimeImmutable(self::TODAY), true);
+		$result = $expiry->markEndedEmployee($employee, new DateTimeImmutable(self::TODAY), true);
 
 		$this->assertTrue($result['marked']);
 		$this->assertSame('vernietigen', $employee->getRetention()['archiefnominatie']);
@@ -163,16 +163,16 @@ class RetentionExpiryTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnEmployeeStillInsideTheFloorOrUnderAHoldIsNotMarked(): void {
-		[$guard, $retention, $mapper] = $this->guard();
+		[$guard, $retention, $mapper, $expiry] = $this->guard();
 		$today = new DateTimeImmutable(self::TODAY);
 		$employed = $this->entity(['startDate' => '2010-01-01'], []);
 		$recent = $this->entity(['endDate' => '2020-06-30'], []);
 		$held = $this->entity(['endDate' => '2015-06-30'], []);
 		$retention->placeLegalHold($held, 'Procedure bij de rechtbank');
 
-		$this->assertFalse($guard->markEndedEmployee($employed, $today, true)['eligible']);
-		$this->assertFalse($guard->markEndedEmployee($recent, $today, true)['eligible']);
-		$this->assertFalse($guard->markEndedEmployee($held, $today, true)['eligible']);
+		$this->assertFalse($expiry->markEndedEmployee($employed, $today, true)['eligible']);
+		$this->assertFalse($expiry->markEndedEmployee($recent, $today, true)['eligible']);
+		$this->assertFalse($expiry->markEndedEmployee($held, $today, true)['eligible']);
 		$this->assertSame([], $mapper->saved);
 
 	}//end testAnEmployeeStillInsideTheFloorOrUnderAHoldIsNotMarked()
@@ -247,7 +247,10 @@ class RetentionExpiryTest extends TestCase {
 	 * @return array{0: RetentionExpiryService, 1: object, 2: object, 3: object, 4: object}
 	 */
 	private function walk(bool $enabled): array {
-		[$guard, $retention, $mapper] = $this->guard();
+		$retention = $this->retentionService();
+		$mapper = $this->mapper();
+		$logger = $this->createMock(LoggerInterface::class);
+		$guard = new PayrollRetentionGuardService($this->container($retention, $mapper, null), $logger);
 		$payslip = $this->entity(['period' => '2012-03'], []);
 		$guard->placeStatutoryFloorHold($payslip, 'Payslip', 'period', 7, PayrollRetentionGuardService::AWR_LAW_REFERENCE);
 		$mapper->saved = [];
@@ -297,27 +300,87 @@ class RetentionExpiryTest extends TestCase {
 			}//end findAll()
 		};
 
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($objects);
-		$settings = $this->createMock(SettingsService::class);
-		$settings->method('isOpenRegisterAvailable')->willReturn(true);
-		$settings->method('getRegisterSlug')->willReturn('humaniq');
-		$settings->method('isRetentionExpiryEnabled')->willReturn($enabled);
-
-		$service = new RetentionExpiryService($container, $settings, $guard, $this->createMock(LoggerInterface::class));
+		$service = new RetentionExpiryService($this->container($retention, $mapper, $objects), $this->settings($enabled), $logger);
 
 		return [$service, $retention, $mapper, $payslip, $employee];
 
 	}//end walk()
 
 	/**
-	 * Build the guard service over OpenRegister doubles with real semantics.
+	 * Build the guard service (to place real humaniq holds) and the expiry
+	 * service over OpenRegister doubles with real semantics.
 	 *
-	 * @return array{0: PayrollRetentionGuardService, 1: object, 2: object}
+	 * @return array{0: PayrollRetentionGuardService, 1: object, 2: object, 3: RetentionExpiryService}
 	 */
 	private function guard(): array {
 		$retention = $this->retentionService();
-		$mapper = new class {
+		$mapper = $this->mapper();
+		$container = $this->container($retention, $mapper, null);
+		$logger = $this->createMock(LoggerInterface::class);
+
+		return [
+			new PayrollRetentionGuardService($container, $logger),
+			$retention,
+			$mapper,
+			new RetentionExpiryService($container, $this->settings(true), $logger),
+		];
+
+	}//end guard()
+
+	/**
+	 * Settings with OpenRegister present and the switch as given.
+	 *
+	 * @param bool $enabled The admin switch.
+	 *
+	 * @return SettingsService
+	 */
+	private function settings(bool $enabled): SettingsService {
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
+		$settings->method('isRetentionExpiryEnabled')->willReturn($enabled);
+
+		return $settings;
+
+	}//end settings()
+
+	/**
+	 * A container answering OpenRegister's RetentionService, MagicMapper and ObjectService.
+	 *
+	 * @param object      $retention The RetentionService double.
+	 * @param object      $mapper    The MagicMapper double.
+	 * @param object|null $objects   The ObjectService double, if any.
+	 *
+	 * @return ContainerInterface
+	 */
+	private function container(object $retention, object $mapper, ?object $objects): ContainerInterface {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			static function (string $id) use ($retention, $mapper, $objects) {
+				$map = [
+					'OCA\OpenRegister\Service\RetentionService' => $retention,
+					'OCA\OpenRegister\Db\MagicMapper' => $mapper,
+					'OCA\OpenRegister\Service\ObjectService' => $objects,
+				];
+				if (($map[$id] ?? null) === null) {
+					throw new \RuntimeException('Unexpected container->get(' . $id . ')');
+				}
+
+				return $map[$id];
+			}
+		);
+
+		return $container;
+
+	}//end container()
+
+	/**
+	 * OpenRegister MagicMapper double: `update()` records every write.
+	 *
+	 * @return object
+	 */
+	private function mapper(): object {
+		return new class {
 			/**
 			 * @var array<int, object>
 			 */
@@ -334,24 +397,7 @@ class RetentionExpiryTest extends TestCase {
 			}//end update()
 		};
 
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(
-			static function (string $id) use ($retention, $mapper) {
-				if ($id === 'OCA\OpenRegister\Service\RetentionService') {
-					return $retention;
-				}
-
-				if ($id === 'OCA\OpenRegister\Db\MagicMapper') {
-					return $mapper;
-				}
-
-				throw new \RuntimeException('Unexpected container->get(' . $id . ')');
-			}
-		);
-
-		return [new PayrollRetentionGuardService($container, $this->createMock(LoggerInterface::class)), $retention, $mapper];
-
-	}//end guard()
+	}//end mapper()
 
 	/**
 	 * An ObjectEntity double with the real getObject/getRetention/setRetention contract.

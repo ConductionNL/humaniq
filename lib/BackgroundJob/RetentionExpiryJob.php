@@ -66,6 +66,8 @@ class RetentionExpiryJob extends TimedJob {
 	 *
 	 * @return void
 	 *
+	 * @spec openspec/specs/personnel-retention-expiry/spec.md#REQ-RET-002
+	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	protected function run($argument): void {
