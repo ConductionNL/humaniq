@@ -78,6 +78,11 @@ contract carries an `hourlyWage`, the same percentage fills `proposedHourlyWage`
 already present for `(cycleId, employeeId)` is left alone, so a second run creates nothing.
 `dryRun` returns the count and the first rows without writing. `proposedBy` is the caller.
 
+As built: a step proposal's `effectiveDate` is the contract's `stepDate`, not the cycle's, so each
+periodiek takes effect on its own date. A collective proposal leaves `targetBandId` empty, so a
+raise that moves someone past their band's maximum is not refused at effectuation; the open
+question below stays open for that reason.
+
 Alternative considered: a browser loop creating adjustments through the object API. Rejected:
 hundreds of client writes with no idempotency, and `proposedBy` would be client supplied.
 
@@ -90,6 +95,13 @@ skipped and reported as `refused-self-approval`.
 
 Alternative considered: a cycle-level transition that flips all children. Rejected: the guard
 would run once, on the cycle, and a proposer could approve their own proposals in bulk.
+
+As built (2026-09-28): each approval goes through OpenRegister's `TransitionEngine::transition()`
+with `approve` and `{approvedBy}`, so the lifecycle listener runs the guard and the
+`ObjectTransitionedEvent` that the D7 notification rules listen for is dispatched. Reading the
+guard at HEAD showed that `NoSelfApprovalGuard` compared only the claimant's `userId`, which a
+CompAdjustment never carries, so the rule the schema promised never fired on it. The guard now
+also denies when the acting uid is the adjustment's `proposedBy` or its `employeeUserId`.
 
 ### D4. Effectuation reuses the existing batch, with a preview
 
@@ -135,7 +147,31 @@ service creates the proposal, the same denormalisation `Payslip.userId` uses.
 Alternative considered: a PHP notifier. Rejected by ADR-031: the dialect is the declared path
 and a hand-rolled `IManager::notify()` dispatcher is an anti-pattern there.
 
+### D7b. The pages: one host dialog, and a handler for the selection
+
+The cycle page offers "Propose for everyone in scope", "Approve all proposed" and "Effectuate
+due adjustments" as `open-modal` header actions on one host dialog,
+`src/dialogs/CompCycleRunDialog.vue`, because an `api-call` action cannot show a dry run before
+it writes. The dialog posts the dry run, shows it, and sends the confirmed call through the
+library's `dispatchAction` api-call so the page refreshes.
+
+The Employees list's "Propose a raise" bulk action is a `kind: 'handler'` registry entry that
+mounts the same dialog with the selection. Reading `@conduction/nextcloud-vue` 2.57.1 showed
+that a bulk action of type `open-modal` only emits an `open-modal` event from `CnIndexPage`
+that no page renderer forwards to `CnAppRoot`'s modal host, so it would open nothing. The
+`indexScaffold` template gained an optional `bulkActions` parameter to carry it.
+
+On `CompAdjustmentDetail`, "Refuse" is a lifecycle action that declares `decisionReason` as a
+required input, so the library asks for the reason before posting; "Approve" asks for an
+optional one.
+
 ### D8. Three guarded endpoints, no pass-through CRUD
+
+As built: the endpoints live on a new `CompCycleController` rather than on `CompController`,
+bulk approval on a new `CompCycleApprover`, the proposal arithmetic on a pure
+`CompProposalBuilder`, and the contract write on a pure `CompContractChange`, which keeps each
+class under the repo's phpmd coupling and complexity limits. The routes are the ones named
+below.
 
 `CompController` gains `proposeCollective(cycleId, dryRun)`, `approveCycle(cycleId)` and
 `effectuateCycle(cycleId, dryRun)` at `POST /api/comp/cycles/propose`,
@@ -158,10 +194,13 @@ field by field: that stays the object API (ADR-022).
 
 ## Seed data
 
-- `salaryband-a` gains four steps; `contract-jansen-vast` gains `salaryBandId`,
-  `salaryStep: 2` and a `stepDate` inside the seeded 2026 cycle.
-- A second seeded cycle `compcycle-2026-collective` of kind `collective` with a 2% raise and
-  scope `ADM-001`, status `open`, so the propose action has something to show.
+- `salaryband-a` gains four steps (3400.00, 3800.00, 4000.00, 4200.00); `contract-jansen-vast`
+  gains `salaryBandId`, `salaryStep: 2` (Jansen earns 3800.00) and `stepDate: 2026-03-01`.
+- A seeded cycle `compcycle-2026-collective` of kind `collective` with a 2% raise and scope
+  `ADM-001`, status `open`, so the propose action has something to show.
+- A seeded cycle `compcycle-2026-periodiek` of kind `step-increase` for 2026, so "Propose for
+  everyone in scope" on it proposes Jansen's step 2 to 3 at 4000.00. The existing
+  `compcycle-2026` keeps kind `individual`.
 
 ## Risks / Trade-offs
 

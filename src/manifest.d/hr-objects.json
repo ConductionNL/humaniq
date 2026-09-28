@@ -1660,7 +1660,15 @@
 				],
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
-				}
+				},
+				"bulkActions": [
+					{
+						"id": "propose-raise",
+						"label": "Propose a raise",
+						"icon": "CashPlus",
+						"handler": "proposeRaiseForSelection"
+					}
+				]
 			}
 		},
 		{

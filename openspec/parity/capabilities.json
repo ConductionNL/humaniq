@@ -1112,7 +1112,7 @@
    "id": "ppl-bulk-mutations",
    "area": "people",
    "name": "Apply a change such as a collective pay rise to many employees at once.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -1128,9 +1128,11 @@
     "personio": "https://support.personio.de/hc/en-us/articles/213331029-Update-employee-data: select several employees in the People list, Actions, Edit profile to set one attribute value for all of them; https://support.personio.de/hc/en-us/articles/208329169-Import-salary-and-one-time-compensations imports salaries in bulk from Excel."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/comp-collective-raise-and-step-increase on 2026-09-27 for the missing half: a page action to apply a collective raise to many employees; per adjustment and occ are built. Before: lib/Command/CompEffectuateCommand.php + appinfo/info.xml <command>: 'Batch-effectuate every approved, due CompAdjustment in one compensation review cycle', occ-only; lib/Controller/CompController.php POST /api/comp/effectuate (2 hits in frontend-api-paths.txt) is called from CompAdjustmentDetail's single 'Effectueren' header action (src/manifest.d/hr-comp.json:220-224), one CompAdjustment/employee at a time, not the cycle-wide batch",
-    "reachedOn": "occ humaniq:comp:effectuate for the true bulk/cycle-wide path (no page); CompAdjustmentDetail /comp-adjustments/:id exposes only a per-adjustment Effectueren action",
+    "state": "built",
+    "change": "2026-09-28-comp-collective-raise-and-step-increase",
+    "evidence": "lib/Service/CompCollectiveService.php::proposeForCycle() proposes one CompAdjustment per employee a collective cycle covers (percentage or amount, scope by administration, CAO or org unit, or a hand-picked selection), idempotent per cycle and employee, with a dry run; CompCycleApprover::approveCycle() drives each through OpenRegister's approve transition so NoSelfApprovalGuard runs per adjustment; POST /api/comp/cycles/{propose,approve,effectuate} (CompCycleController, 404 unreadable cycle, 403 without hr or admin); CompAdjustmentService::effectuate() also writes the contract's hourly wage. Tests: tests/Unit/Service/CompCollectiveServiceTest.php, tests/Unit/Controller/CompCycleControllerTest.php, tests/Unit/Service/CompAdjustmentServiceTest.php.",
+    "reachedOn": "CompReviewCycleDetail /comp-review-cycles/:id (Propose for everyone in scope, Approve all proposed, Effectuate due adjustments, each with a preview); Employees /employees (select rows, Propose a raise)",
+    "readOn": "2026-09-28",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -7131,7 +7133,7 @@
    "id": "td-step-increase",
    "area": "talent",
    "name": "Approve or refuse an employee's yearly step in their pay scale, with the reason sent to them.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "partial",
@@ -7147,9 +7149,11 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(step increase|periodiek)\\b' src/plugins src/client/src finds no match; pay grades have only min and max, no steps (src/client/src/orangehrmPimPlugin/components/SaveSalaryComponent.vue:329)"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/comp-collective-raise-and-step-increase on 2026-09-27 for the missing half: a yearly step in the scale proposed, decided and explained to the employee. Before: lib/Settings/register.d/hr-comp.json CompAdjustment with lifecycle propose, approve, reject (approve and reject guarded by NoSelfApprovalGuard), reached from src/manifest.d/hr-comp.json CompAdjustmentDetail; a raise is proposed and approved per employee, but no yearly step in the scale is generated and no rejection reason is sent to the employee",
-    "reachedOn": "CompReviewCycles /comp-review-cycles, CompAdjustmentDetail /comp-adjustments/:id",
+    "state": "built",
+    "change": "2026-09-28-comp-collective-raise-and-step-increase",
+    "evidence": "SalaryBand.steps and EmploymentContract.salaryBandId/salaryStep/stepDate (lib/Settings/register.d); a step-increase cycle proposes the next step at its salary for every contract whose stepDate falls in the period and is below the top step (CompProposalBuilder::stepProposal); effectuation sets salaryStep and moves stepDate a year (CompContractChange::apply); CompAdjustment refuse transition requires decisionReason (DecisionReasonGuard) and approve and refuse each notify employeeUserId with the reason (x-openregister-notifications). Tests: CompCollectiveServiceTest::testADueStepIsProposedAndTheTopAndNotDueAreNot, DecisionReasonGuardTest, tests/Unit/Settings/CompDecisionNotificationTest.php.",
+    "reachedOn": "CompReviewCycleDetail /comp-review-cycles/:id on a step-increase cycle (Propose for everyone in scope); CompAdjustmentDetail /comp-adjustments/:id (Approve, Refuse with a reason)",
+    "readOn": "2026-09-28",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",

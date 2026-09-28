@@ -8,7 +8,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "CompReviewCycle",
-				"_note": "comp-cycles (2026-07-15): the round-container half of the compensation-review MVP (ADR-001 Rule 6 sub-page under the existing Personeel menu, the ReviewCycleDetail precedent). The 'Cyclus' data widget carries every field (name/period/effectiveDate/status/description — no $ref to exclude). The 'Voorstellen in deze cyclus' object-list (CompAdjustment.cycleId = @objectId) is the round's in-progress roster, rowRoute to CompAdjustmentDetail. lifecycleActions expose exactly sluiten (open->closed, hr-comp.json) -- no reopen edge, a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent); approval/effectuation lives per-adjustment, not here. The 'Aanpassing voorstellen' open-form action opens a plain CompAdjustment create form -- verified: this manifest version has no declarative field-prefill primitive (no existing open-form action in the codebase carries default field values), so cycleId is entered on the created form rather than auto-seeded, a deliberate scope-down from design.md's aspirational 'scoped to the cycle' prose. Audit history is a sidebar tab.",
+				"_note": "comp-cycles (2026-07-15): the round-container half of the compensation-review MVP (ADR-001 Rule 6 sub-page under the existing Personeel menu, the ReviewCycleDetail precedent). The 'Cyclus' data widget carries every field (name/period/effectiveDate/status/description — no $ref to exclude). The 'Voorstellen in deze cyclus' object-list (CompAdjustment.cycleId = @objectId) is the round's in-progress roster, rowRoute to CompAdjustmentDetail. lifecycleActions expose exactly sluiten (open->closed, hr-comp.json) -- no reopen edge, a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent); approval/effectuation lives per-adjustment, not here. The 'Aanpassing voorstellen' open-form action opens a plain CompAdjustment create form -- verified: this manifest version has no declarative field-prefill primitive (no existing open-form action in the codebase carries default field values), so cycleId is entered on the created form rather than auto-seeded, a deliberate scope-down from design.md's aspirational 'scoped to the cycle' prose. Audit history is a sidebar tab. comp-collective-raise-and-step-increase (2026-09-28): a collective or step-increase cycle is run from here in three steps, each an open-modal header action on the CompCycleRunDialog host modal (src/dialogs), which shows a dry run first (propose, effectuate) and then posts to POST /api/comp/cycles/{propose,approve,effectuate}. A host modal and not api-call actions because api-call cannot show a preview of what it will write.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -100,6 +100,36 @@
 						"schema": "CompAdjustment",
 						"onSuccessRoute": "CompAdjustmentDetail",
 						"successMessage": "Compensation adjustment created."
+					},
+					{
+						"id": "propose-for-scope",
+						"label": "Propose for everyone in scope",
+						"type": "open-modal",
+						"icon": "AccountMultipleOutline",
+						"target": "CompCycleRunDialog",
+						"props": {
+							"step": "propose"
+						}
+					},
+					{
+						"id": "approve-all-proposed",
+						"label": "Approve all proposed",
+						"type": "open-modal",
+						"icon": "CheckCircleOutline",
+						"target": "CompCycleRunDialog",
+						"props": {
+							"step": "approve"
+						}
+					},
+					{
+						"id": "effectuate-due",
+						"label": "Effectuate due adjustments",
+						"type": "open-modal",
+						"icon": "CashCheck",
+						"target": "CompCycleRunDialog",
+						"props": {
+							"step": "effectuate"
+						}
 					}
 				]
 			}
@@ -171,6 +201,7 @@
 				"columns": [
 					"name",
 					"period",
+					"kind",
 					"effectiveDate",
 					"status"
 				],
@@ -248,7 +279,13 @@
 								"proposed"
 							],
 							"to": "approved",
-							"label": "Approve"
+							"label": "Approve",
+							"inputs": [
+								{
+									"field": "decisionReason",
+									"required": false
+								}
+							]
 						},
 						{
 							"action": "reject",
@@ -257,6 +294,20 @@
 							],
 							"to": "draft",
 							"label": "Reject"
+						},
+						{
+							"action": "refuse",
+							"from": [
+								"proposed"
+							],
+							"to": "refused",
+							"label": "Refuse",
+							"inputs": [
+								{
+									"field": "decisionReason",
+									"required": true
+								}
+							]
 						}
 					]
 				}

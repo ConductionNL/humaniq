@@ -1355,6 +1355,9 @@
                 "endDate": null,
                 "hoursPerWeek": 36,
                 "hourlyWage": 24.36,
+                "salaryBandId": "@ref:salaryband-a",
+                "salaryStep": 2,
+                "stepDate": "2026-03-01",
                 "cao": null,
                 "normfunctieId": null,
                 "awfTariff": "low",
@@ -1630,7 +1633,13 @@
                 "cao": "cao-generiek",
                 "caoSchaal": "generiek",
                 "effectiveFrom": "2026-01-01",
-                "active": true
+                "active": true,
+                "steps": [
+                    {"step": 1, "monthlySalaryCents": 340000},
+                    {"step": 2, "monthlySalaryCents": 380000},
+                    {"step": 3, "monthlySalaryCents": 400000},
+                    {"step": 4, "monthlySalaryCents": 420000}
+                ]
             },
             {
                 "@self": {
@@ -1661,6 +1670,34 @@
                 "effectiveDate": "2026-07-01",
                 "status": "open",
                 "description": "Jaarlijkse beloningsronde voor 2026: per-medewerker aanpassingen tegen de interne salarisschalen."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "CompReviewCycle",
+                    "slug": "compcycle-2026-collective"
+                },
+                "name": "Collectieve verhoging 2026",
+                "period": "2026",
+                "effectiveDate": "2026-07-01",
+                "status": "open",
+                "kind": "collective",
+                "raisePercentage": 2,
+                "scope": {"administrationId": "ADM-001"},
+                "description": "Cao-verhoging van 2% per 1 juli 2026 voor iedereen in administratie ADM-001."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "CompReviewCycle",
+                    "slug": "compcycle-2026-periodiek"
+                },
+                "name": "Periodieken 2026",
+                "period": "2026",
+                "effectiveDate": "2026-01-01",
+                "status": "open",
+                "kind": "step-increase",
+                "description": "De jaarlijkse periodieken die in 2026 ingaan, per contract op de stapdatum."
             },
             {
                 "@self": {

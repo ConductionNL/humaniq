@@ -893,6 +893,7 @@
 					"_note": "{{note}}",
 					"actionToggles": "{{actionToggles}}",
 					"allowCreate": "{{allowCreate}}",
+					"bulkActions": "{{bulkActions}}",
 					"columns": "{{columns}}",
 					"defaultFilters": "{{defaultFilters}}",
 					"description": "{{description}}",
@@ -971,6 +972,10 @@
 				},
 				{
 					"name": "actions",
+					"required": false
+				},
+				{
+					"name": "bulkActions",
 					"required": false
 				}
 			]
@@ -3082,7 +3087,7 @@
 		},
 		{
 			"config": {
-				"_note": "comp-cycles (2026-07-15): the round-container half of the compensation-review MVP (ADR-001 Rule 6 sub-page under the existing Personeel menu, the ReviewCycleDetail precedent). The 'Cyclus' data widget carries every field (name/period/effectiveDate/status/description — no $ref to exclude). The 'Voorstellen in deze cyclus' object-list (CompAdjustment.cycleId = @objectId) is the round's in-progress roster, rowRoute to CompAdjustmentDetail. lifecycleActions expose exactly sluiten (open->closed, hr-comp.json) -- no reopen edge, a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent); approval/effectuation lives per-adjustment, not here. The 'Aanpassing voorstellen' open-form action opens a plain CompAdjustment create form -- verified: this manifest version has no declarative field-prefill primitive (no existing open-form action in the codebase carries default field values), so cycleId is entered on the created form rather than auto-seeded, a deliberate scope-down from design.md's aspirational 'scoped to the cycle' prose. Audit history is a sidebar tab.",
+				"_note": "comp-cycles (2026-07-15): the round-container half of the compensation-review MVP (ADR-001 Rule 6 sub-page under the existing Personeel menu, the ReviewCycleDetail precedent). The 'Cyclus' data widget carries every field (name/period/effectiveDate/status/description — no $ref to exclude). The 'Voorstellen in deze cyclus' object-list (CompAdjustment.cycleId = @objectId) is the round's in-progress roster, rowRoute to CompAdjustmentDetail. lifecycleActions expose exactly sluiten (open->closed, hr-comp.json) -- no reopen edge, a closed cycle is history (the ReviewCycle/Objective no-resurrection precedent); approval/effectuation lives per-adjustment, not here. The 'Aanpassing voorstellen' open-form action opens a plain CompAdjustment create form -- verified: this manifest version has no declarative field-prefill primitive (no existing open-form action in the codebase carries default field values), so cycleId is entered on the created form rather than auto-seeded, a deliberate scope-down from design.md's aspirational 'scoped to the cycle' prose. Audit history is a sidebar tab. comp-collective-raise-and-step-increase (2026-09-28): a collective or step-increase cycle is run from here in three steps, each an open-modal header action on the CompCycleRunDialog host modal (src/dialogs), which shows a dry run first (propose, effectuate) and then posts to POST /api/comp/cycles/{propose,approve,effectuate}. A host modal and not api-call actions because api-call cannot show a preview of what it will write.",
 				"headerActions": [
 					{
 						"icon": "PlusCircleOutline",
@@ -3093,6 +3098,36 @@
 						"schema": "CompAdjustment",
 						"successMessage": "Compensation adjustment created.",
 						"type": "open-form"
+					},
+					{
+						"icon": "AccountMultipleOutline",
+						"id": "propose-for-scope",
+						"label": "Propose for everyone in scope",
+						"props": {
+							"step": "propose"
+						},
+						"target": "CompCycleRunDialog",
+						"type": "open-modal"
+					},
+					{
+						"icon": "CheckCircleOutline",
+						"id": "approve-all-proposed",
+						"label": "Approve all proposed",
+						"props": {
+							"step": "approve"
+						},
+						"target": "CompCycleRunDialog",
+						"type": "open-modal"
+					},
+					{
+						"icon": "CashCheck",
+						"id": "effectuate-due",
+						"label": "Effectuate due adjustments",
+						"props": {
+							"step": "effectuate"
+						},
+						"target": "CompCycleRunDialog",
+						"type": "open-modal"
 					}
 				],
 				"layout": [
@@ -8503,6 +8538,7 @@
 				"columns": [
 					"name",
 					"period",
+					"kind",
 					"effectiveDate",
 					"status"
 				],
@@ -8575,6 +8611,12 @@
 							"from": [
 								"proposed"
 							],
+							"inputs": [
+								{
+									"field": "decisionReason",
+									"required": false
+								}
+							],
 							"label": "Approve",
 							"to": "approved"
 						},
@@ -8585,6 +8627,20 @@
 							],
 							"label": "Reject",
 							"to": "draft"
+						},
+						{
+							"action": "refuse",
+							"from": [
+								"proposed"
+							],
+							"inputs": [
+								{
+									"field": "decisionReason",
+									"required": true
+								}
+							],
+							"label": "Refuse",
+							"to": "refused"
 						}
 					]
 				},
@@ -9764,6 +9820,14 @@
 		},
 		{
 			"config": {
+				"bulkActions": [
+					{
+						"handler": "proposeRaiseForSelection",
+						"icon": "CashPlus",
+						"id": "propose-raise",
+						"label": "Propose a raise"
+					}
+				],
 				"columns": [
 					"employeeNumber",
 					"firstName",

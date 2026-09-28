@@ -67,6 +67,10 @@
 				{
 					"name": "actions",
 					"required": false
+				},
+				{
+					"name": "bulkActions",
+					"required": false
 				}
 			],
 			"page": {
@@ -87,7 +91,8 @@
 					"extend": "{{extend}}",
 					"sort": "{{sort}}",
 					"allowCreate": "{{allowCreate}}",
-					"actionToggles": "{{actionToggles}}"
+					"actionToggles": "{{actionToggles}}",
+					"bulkActions": "{{bulkActions}}"
 				}
 			}
 		},
