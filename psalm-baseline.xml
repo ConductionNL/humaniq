@@ -20,6 +20,9 @@
       <code><![CDATA[PayrollRunApprovedGuard]]></code>
       <code><![CDATA[PayrollRunApprovedGuard]]></code>
       <code><![CDATA[PayrollRunApprovedGuard]]></code>
+      <code><![CDATA[RosterCompetenceGuard]]></code>
+      <code><![CDATA[RosterCompetenceGuard]]></code>
+      <code><![CDATA[RosterCompetenceGuard]]></code>
       <code><![CDATA[TimesheetNotEmptyGuard]]></code>
       <code><![CDATA[TimesheetNotEmptyGuard]]></code>
       <code><![CDATA[TimesheetNotEmptyGuard]]></code>

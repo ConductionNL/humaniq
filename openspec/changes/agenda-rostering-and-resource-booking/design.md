@@ -40,6 +40,12 @@ publishable", and one screen still shows why not.
 A competence violation is a finding of its own kind, so a reader can tell "Jan is not
 a BOA" from "Jan has eleven hours of rest, not twelve".
 
+Amended 2026-09-28 (humaniq#512): the check reported but nothing refused, so an
+unqualified person could still reach a published roster. Publishing now refuses. A
+lifecycle guard on `publiceren` (`RosterCompetenceGuard`) runs this same check and denies
+on any `competence` finding. The check stays the one place the rule lives; the guard only
+acts on its answer. Working-time findings still only report.
+
 ## D4. The agenda is a read model with no storage
 
 An agenda entry has four fields: a period, a subject (person, team or resource), a
