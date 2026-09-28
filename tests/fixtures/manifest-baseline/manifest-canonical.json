@@ -3396,7 +3396,7 @@
 		},
 		{
 			"config": {
-				"_note": "people-formation-positions (2026-09-28): the data widget excludes orgUnitId/normfunctieId since Related resolves both; the formation widget shows this one place's budgeted, filled, vacant and net FTE (objectType Formatieplaats); the object-list names the contracts that fill the place. No lifecycleActions: status is a plain enum (design.md, declarative-vs-imperative table).",
+				"_note": "people-formation-positions (2026-09-28): the data widget excludes orgUnitId/normfunctieId since Related resolves both; four stat tiles show this place's budgeted, filled, vacant and net FTE through endpointSource on GET /api/formation/occupancy?formatieplaatsId (computed on read, built-in widgets only per ADR-049); the object-list names the contracts that fill the place. No lifecycleActions: status is a plain enum.",
 				"layout": [
 					{
 						"gridHeight": 5,
@@ -3415,19 +3415,43 @@
 						"widgetId": "related"
 					},
 					{
-						"gridHeight": 4,
-						"gridWidth": 6,
+						"gridHeight": 2,
+						"gridWidth": 3,
 						"gridX": 0,
 						"gridY": 5,
 						"id": 3,
-						"widgetId": "formation"
+						"widgetId": "occupancy-budgetedFte"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 3,
+						"gridY": 5,
+						"id": 4,
+						"widgetId": "occupancy-filledFte"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 6,
+						"gridY": 5,
+						"id": 5,
+						"widgetId": "occupancy-vacantFte"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 9,
+						"gridY": 5,
+						"id": 6,
+						"widgetId": "occupancy-netFte"
 					},
 					{
 						"gridHeight": 4,
-						"gridWidth": 6,
-						"gridX": 6,
-						"gridY": 5,
-						"id": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 7,
+						"id": 7,
 						"widgetId": "object-list"
 					}
 				],
@@ -3463,12 +3487,87 @@
 					},
 					{
 						"content": {
-							"title": "Occupancy"
+							"endpointSource": {
+								"params": {
+									"formatieplaatsId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/formation/occupancy"
+							},
+							"format": {
+								"decimals": 2,
+								"style": "number"
+							},
+							"icon": "CalculatorVariantOutline",
+							"label": "Budgeted FTE",
+							"valueField": "total.budgetedFte"
 						},
-						"icon": "ChartBar",
-						"id": "formation",
-						"title": "Occupancy",
-						"type": "formation"
+						"icon": "CalculatorVariantOutline",
+						"id": "occupancy-budgetedFte",
+						"title": "Budgeted FTE",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"formatieplaatsId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/formation/occupancy"
+							},
+							"format": {
+								"decimals": 2,
+								"style": "number"
+							},
+							"icon": "AccountCheckOutline",
+							"label": "Filled FTE",
+							"valueField": "total.filledFte"
+						},
+						"icon": "AccountCheckOutline",
+						"id": "occupancy-filledFte",
+						"title": "Filled FTE",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"formatieplaatsId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/formation/occupancy"
+							},
+							"format": {
+								"decimals": 2,
+								"style": "number"
+							},
+							"icon": "AccountQuestionOutline",
+							"label": "Vacant FTE",
+							"valueField": "total.vacantFte"
+						},
+						"icon": "AccountQuestionOutline",
+						"id": "occupancy-vacantFte",
+						"title": "Vacant FTE",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"formatieplaatsId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/formation/occupancy"
+							},
+							"format": {
+								"decimals": 2,
+								"style": "number"
+							},
+							"icon": "AccountClockOutline",
+							"label": "Net FTE",
+							"valueField": "total.netFte"
+						},
+						"icon": "AccountClockOutline",
+						"id": "occupancy-netFte",
+						"title": "Net FTE",
+						"type": "stat"
 					},
 					{
 						"content": {
@@ -5895,7 +5994,7 @@
 		},
 		{
 			"config": {
-				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab. people-formation-positions (2026-09-28): a 'formation' host widget (src/widgets/FormationWidget.vue) shows budgeted, filled, vacant and net FTE per formation place from GET /api/formation/occupancy, computed on read; a stat tile cannot, because filled and net FTE cross three schemas and are weighted by absence per day. Beside it an object-list of the unit's Formatieplaats records.",
+				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab. people-formation-positions (2026-09-28): four stat tiles (budgeted, filled, vacant, net FTE for the unit) and an object-table of the unit's places, all bound through endpointSource to GET /api/formation/occupancy, which computes them on read; built-in widgets only (ADR-049), the endpoint does the cross-schema, absence-weighted count.",
 				"layout": [
 					{
 						"gridHeight": 6,
@@ -5930,20 +6029,44 @@
 						"widgetId": "object-list-2"
 					},
 					{
-						"gridHeight": 5,
-						"gridWidth": 8,
+						"gridHeight": 2,
+						"gridWidth": 3,
 						"gridX": 0,
 						"gridY": 10,
 						"id": 5,
-						"widgetId": "formation"
+						"widgetId": "formation-budgetedFte"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 3,
+						"gridY": 10,
+						"id": 6,
+						"widgetId": "formation-filledFte"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 6,
+						"gridY": 10,
+						"id": 7,
+						"widgetId": "formation-vacantFte"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 3,
+						"gridX": 9,
+						"gridY": 10,
+						"id": 8,
+						"widgetId": "formation-netFte"
 					},
 					{
 						"gridHeight": 5,
-						"gridWidth": 4,
-						"gridX": 8,
-						"gridY": 10,
-						"id": 6,
-						"widgetId": "object-list-3"
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 12,
+						"id": 9,
+						"widgetId": "formation-places"
 					}
 				],
 				"register": "humaniq",
@@ -6062,50 +6185,130 @@
 					},
 					{
 						"content": {
-							"title": "Formation"
+							"endpointSource": {
+								"params": {
+									"orgUnitId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/formation/occupancy"
+							},
+							"format": {
+								"decimals": 2,
+								"style": "number"
+							},
+							"icon": "CalculatorVariantOutline",
+							"label": "Budgeted FTE",
+							"valueField": "total.budgetedFte"
 						},
-						"icon": "AccountGroupOutline",
-						"id": "formation",
-						"title": "Formation",
-						"type": "formation"
+						"icon": "CalculatorVariantOutline",
+						"id": "formation-budgetedFte",
+						"title": "Budgeted FTE",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"orgUnitId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/formation/occupancy"
+							},
+							"format": {
+								"decimals": 2,
+								"style": "number"
+							},
+							"icon": "AccountCheckOutline",
+							"label": "Filled FTE",
+							"valueField": "total.filledFte"
+						},
+						"icon": "AccountCheckOutline",
+						"id": "formation-filledFte",
+						"title": "Filled FTE",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"orgUnitId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/formation/occupancy"
+							},
+							"format": {
+								"decimals": 2,
+								"style": "number"
+							},
+							"icon": "AccountQuestionOutline",
+							"label": "Vacant FTE",
+							"valueField": "total.vacantFte"
+						},
+						"icon": "AccountQuestionOutline",
+						"id": "formation-vacantFte",
+						"title": "Vacant FTE",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"orgUnitId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/formation/occupancy"
+							},
+							"format": {
+								"decimals": 2,
+								"style": "number"
+							},
+							"icon": "AccountClockOutline",
+							"label": "Net FTE",
+							"valueField": "total.netFte"
+						},
+						"icon": "AccountClockOutline",
+						"id": "formation-netFte",
+						"title": "Net FTE",
+						"type": "stat"
 					},
 					{
 						"content": {
 							"columns": [
 								{
+									"cellClass": "cn-cell--strong",
 									"key": "title",
-									"label": "Name"
+									"label": "Formation place"
 								},
 								{
 									"key": "budgetedFte",
 									"label": "Budgeted FTE"
 								},
 								{
-									"key": "status",
-									"label": "Status"
+									"key": "filledFte",
+									"label": "Filled FTE"
+								},
+								{
+									"key": "vacantFte",
+									"label": "Vacant FTE"
+								},
+								{
+									"key": "netFte",
+									"label": "Net FTE"
+								},
+								{
+									"key": "overfilled",
+									"label": "Overfilled"
 								}
 							],
 							"emptyText": "No formation places yet",
-							"filter": {
-								"orgUnitId": "@objectId"
+							"endpointSource": {
+								"params": {
+									"orgUnitId": "@objectId"
+								},
+								"responsePath": "places",
+								"url": "/apps/humaniq/api/formation/occupancy"
 							},
-							"limit": 25,
-							"register": "humaniq",
-							"rowRoute": "FormatieplaatsDetail",
-							"schema": "Formatieplaats",
-							"sort": {
-								"dir": "asc",
-								"field": "title"
-							},
-							"viewAllQuery": {
-								"orgUnitId": "@objectId"
-							},
-							"viewAllRoute": "Formatieplaatsen"
+							"rowRoute": "FormatieplaatsDetail"
 						},
-						"icon": "AccountGroupOutline",
-						"id": "object-list-3",
-						"title": "Formation places",
-						"type": "object-list"
+						"id": "formation-places",
+						"title": "Formation",
+						"type": "object-table"
 					}
 				]
 			},

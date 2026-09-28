@@ -8,7 +8,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "Formatieplaats",
-				"_note": "people-formation-positions (2026-09-28): the data widget excludes orgUnitId/normfunctieId since Related resolves both; the formation widget shows this one place's budgeted, filled, vacant and net FTE (objectType Formatieplaats); the object-list names the contracts that fill the place. No lifecycleActions: status is a plain enum (design.md, declarative-vs-imperative table).",
+				"_note": "people-formation-positions (2026-09-28): the data widget excludes orgUnitId/normfunctieId since Related resolves both; four stat tiles show this place's budgeted, filled, vacant and net FTE through endpointSource on GET /api/formation/occupancy?formatieplaatsId (computed on read, built-in widgets only per ADR-049); the object-list names the contracts that fill the place. No lifecycleActions: status is a plain enum.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -38,12 +38,87 @@
 						}
 					},
 					{
-						"id": "formation",
-						"type": "formation",
-						"title": "Occupancy",
-						"icon": "ChartBar",
+						"id": "occupancy-budgetedFte",
+						"type": "stat",
+						"title": "Budgeted FTE",
+						"icon": "CalculatorVariantOutline",
 						"content": {
-							"title": "Occupancy"
+							"label": "Budgeted FTE",
+							"icon": "CalculatorVariantOutline",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/formation/occupancy",
+								"params": {
+									"formatieplaatsId": "@objectId"
+								}
+							},
+							"valueField": "total.budgetedFte"
+						}
+					},
+					{
+						"id": "occupancy-filledFte",
+						"type": "stat",
+						"title": "Filled FTE",
+						"icon": "AccountCheckOutline",
+						"content": {
+							"label": "Filled FTE",
+							"icon": "AccountCheckOutline",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/formation/occupancy",
+								"params": {
+									"formatieplaatsId": "@objectId"
+								}
+							},
+							"valueField": "total.filledFte"
+						}
+					},
+					{
+						"id": "occupancy-vacantFte",
+						"type": "stat",
+						"title": "Vacant FTE",
+						"icon": "AccountQuestionOutline",
+						"content": {
+							"label": "Vacant FTE",
+							"icon": "AccountQuestionOutline",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/formation/occupancy",
+								"params": {
+									"formatieplaatsId": "@objectId"
+								}
+							},
+							"valueField": "total.vacantFte"
+						}
+					},
+					{
+						"id": "occupancy-netFte",
+						"type": "stat",
+						"title": "Net FTE",
+						"icon": "AccountClockOutline",
+						"content": {
+							"label": "Net FTE",
+							"icon": "AccountClockOutline",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/formation/occupancy",
+								"params": {
+									"formatieplaatsId": "@objectId"
+								}
+							},
+							"valueField": "total.netFte"
 						}
 					},
 					{
@@ -108,18 +183,42 @@
 					},
 					{
 						"id": 3,
-						"widgetId": "formation",
+						"widgetId": "occupancy-budgetedFte",
 						"gridX": 0,
 						"gridY": 5,
-						"gridWidth": 6,
-						"gridHeight": 4
+						"gridWidth": 3,
+						"gridHeight": 2
 					},
 					{
 						"id": 4,
-						"widgetId": "object-list",
+						"widgetId": "occupancy-filledFte",
+						"gridX": 3,
+						"gridY": 5,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 5,
+						"widgetId": "occupancy-vacantFte",
 						"gridX": 6,
 						"gridY": 5,
-						"gridWidth": 6,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 6,
+						"widgetId": "occupancy-netFte",
+						"gridX": 9,
+						"gridY": 5,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 7,
+						"widgetId": "object-list",
+						"gridX": 0,
+						"gridY": 7,
+						"gridWidth": 12,
 						"gridHeight": 4
 					}
 				]

@@ -21,7 +21,7 @@
 ## 3. Pages
 
 - [x] 3.1 Add `src/manifest.d/hr-formation.json` (`Formatieplaatsen`,
-      `FormatieplaatsDetail`) and the `FormationSection` on `OrgUnitDetail`. Verify:
+      `FormatieplaatsDetail`) and the endpoint-bound stat tiles and object-table on `OrgUnitDetail`. Verify:
       `npm run check:manifest` exits 0.
 
 ## 4. Verification

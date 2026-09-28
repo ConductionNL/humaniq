@@ -109,6 +109,19 @@
                 "validFrom": "2026-01-01",
                 "status": "actief",
                 "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Formatieplaats",
+                    "slug": "formatieplaats-consultancy-consultant"
+                },
+                "orgUnitId": "@ref:orgunit-consultancy",
+                "title": "Consultant",
+                "budgetedFte": 3.0,
+                "validFrom": "2026-01-01",
+                "status": "actief",
+                "administrationId": "ADM-001"
             }
         ]
     }
