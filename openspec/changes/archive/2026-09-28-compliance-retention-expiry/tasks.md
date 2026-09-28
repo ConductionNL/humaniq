@@ -1,6 +1,6 @@
 ## 1. Release and mark
 
-- [x] 1.1 Add `PayrollRetentionGuardService::releaseLapsedFloorHold()`: release a lapsed
+- [x] 1.1 Add `RetentionExpiryService::releaseLapsedFloorHold()`: release a lapsed
       humaniq floor hold and mark the record. Verify: red tests that a lapsed humaniq hold is
       released and marked, a future one is kept, and a hold with another reason is kept.
 - [x] 1.2 Add `RetentionExpiryService` walking the payroll family and ended employees.
