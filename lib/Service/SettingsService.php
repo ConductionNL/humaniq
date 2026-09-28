@@ -434,6 +434,22 @@ class SettingsService {
 	}//end isLeaveAccrualEnabled()
 
 	/**
+	 * Whether `RetentionExpiryJob` may release lapsed humaniq floor holds and
+	 * mark expired records for OpenRegister's destruction list
+	 * (compliance-retention-expiry D4), configurable via app config key
+	 * `retention_expiry_enabled`. Defaults to `false`: deleting personnel
+	 * data is irreversible, so an existing installation does nothing until an
+	 * admin switches it on; while off the job only logs what it would do.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/personnel-retention-expiry/spec.md#REQ-RET-002
+	 */
+	public function isRetentionExpiryEnabled(): bool {
+		return $this->appConfig->getValueBool(Application::APP_ID, 'retention_expiry_enabled', false);
+	}//end isRetentionExpiryEnabled()
+
+	/**
 	 * The annual bovenwettelijk (above-statutory) leave hours LeaveAccrualJob
 	 * accrues 1/12 of per month (leave-accrual-job design.md D3), configurable
 	 * via app config key `leave_bovenwettelijk_annual_hours`. Defaults to `0`

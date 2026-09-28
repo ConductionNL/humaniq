@@ -58,10 +58,10 @@ the record forever.
 
 ## Impact
 
-- `lib/Service/PayrollRetentionGuardService.php`: release a lapsed floor hold and mark the
-  record for destruction.
-- `lib/Service/RetentionExpiryService.php` (new): walks the retained schemas.
-- `lib/BackgroundJob/RetentionHoldReleaseJob.php` (new), registered in `appinfo/info.xml`.
+- `lib/Service/PayrollRetentionGuardService.php`: a shared marker for its own hold reasons.
+- `lib/Service/RetentionExpiryService.php` (new): walks the retained schemas, releases a lapsed
+  floor hold and marks the record for destruction.
+- `lib/BackgroundJob/RetentionExpiryJob.php` (new), registered in `appinfo/info.xml`.
 - Admin settings: one switch, off by default.
 
 ## Cross-app dependencies

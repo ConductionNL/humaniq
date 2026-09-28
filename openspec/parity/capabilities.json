@@ -6050,7 +6050,7 @@
    "id": "cmp-retention",
    "area": "compliance",
    "name": "Delete personnel data automatically when its retention period ends.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "partial",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -6066,18 +6066,19 @@
     "personio": "https://support.personio.de/hc/en-us/articles/34037381245853-Create-and-manage-data-retention-policies: retention policies flag documents for review after a key event such as termination and notify admins, who choose to delete or keep each; candidate data can be anonymized automatically (https://support.personio.de/hc/en-us/articles/28193735632541-Summary-of-steps-to-complete-before-posting-your-first-job); automatic deletion of employee records is not described."
    },
    "built": {
-    "state": "building",
-    "evidence": "lib/Service/PayrollRetentionGuardService.php places an OpenRegister legal hold to PREVENT premature erasure of a retention-locked payroll object; its docblock states 'A hold, once placed, is never auto-released here, releasing it is a deliberate HR/finance action once the retention window has genuinely lapsed'; appinfo/info.xml:104,112 registers only LeaveAccrualJob and PollCalendarSubscriptionsJob as BackgroundJobs, no retention-expiry deletion job exists Missing half specified in openspec/changes/compliance-retention-expiry on 2026-09-28.",
-    "reachedOn": "nothing automatically deletes data on retention expiry; NlDossierRetentionChecks (nl-bewaartermijn-verstreken) only flags the moment via occ humaniq:rules:audit, it does not act on it",
-    "owner": "ConductionNL/humaniq",
-    "change": "compliance-retention-expiry"
+    "state": "built",
+    "change": "2026-09-28-compliance-retention-expiry",
+    "evidence": "lib/BackgroundJob/RetentionExpiryJob.php (registered in appinfo/info.xml) runs lib/Service/RetentionExpiryService.php daily; PayrollRetentionGuardService::releaseLapsedFloorHold() releases a humaniq statutory floor hold whose date has passed and writes archiefnominatie vernietigen plus the floor date as archiefactiedatum, the fields OpenRegister's RetentionService::isEligibleForDestruction() reads; markEndedEmployee() marks an employee 7 full years after the end year. Off until the app config key retention_expiry_enabled is true. Tests: tests/Unit/Service/RetentionExpiryTest.php.",
+    "reachedOn": "OpenRegister's destruction list (DestructionCheckJob), approved by an archivist, then DestructionExecutionJob deletes; humaniq side runs as a background job, no page",
+    "readOn": "2026-09-28",
+    "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
    "feature": "data-retention-automation",
    "featureConfidence": "high",
    "source": "competitor",
-   "note": "humaniq only guards AGAINST premature deletion (a legal hold that blocks erasure while retention is active); nothing in the app deletes data automatically once the retention period ends, so the row as asked (automatic deletion) is not built."
+   "note": "Built 2026-09-28 by compliance-retention-expiry. Deletion itself stays OpenRegister's, behind an archivist's approval of the destruction list; humaniq's part is off by default."
   },
   {
    "id": "cmp-audit-trail",

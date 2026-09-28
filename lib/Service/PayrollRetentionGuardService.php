@@ -33,11 +33,12 @@
  * (`RetentionService::placeLegalHold()`) so the guarded erase actually
  * refuses the object. `syncLegalHold()` itself computes no retention
  * duration -- it only reads an existing date and syncs OpenRegister's
- * enforcement primitive to it. A hold, once placed, is never auto-released
- * here -- releasing it is a deliberate HR/finance action once the retention
- * window has genuinely lapsed (see `NlDossierRetentionChecks
- * ::nl-bewaartermijn-verstreken`, which flags that moment without acting on
- * it).
+ * enforcement primitive to it. A hold is released only by
+ * `RetentionExpiryService::releaseLapsedFloorHold()`, only when its floor
+ * date has passed, and only when an admin has switched retention expiry on
+ * (compliance-retention-expiry, run by `RetentionExpiryJob`); the record is
+ * then marked for OpenRegister's destruction list, where an archivist still
+ * approves every deletion.
  *
  * REGRESSION FOUND AND FIXED post-review (hrmq#99, second pass): a plain NL
  * `Payslip` carries NEITHER a populated `retainedUntil` (that field is
@@ -146,6 +147,16 @@ class PayrollRetentionGuardService {
 	 * @var string
 	 */
 	private const HOLD_REASON_PREFIX = 'Statutaire bewaarplicht (hrmq#99) tot ';
+
+	/**
+	 * The start every statutory floor hold this service places shares (both
+	 * `syncLegalHold()` and `placeStatutoryFloorHold()` reasons), so a hold
+	 * with any other reason is recognisably not humaniq's to release
+	 * (compliance-retention-expiry D3).
+	 *
+	 * @var string
+	 */
+	public const HOLD_REASON_MARKER = 'Statutaire bewaarplicht (hrmq#99)';
 
 	/**
 	 * The FQCN of OpenRegister's object mapper, resolved via the DI container
