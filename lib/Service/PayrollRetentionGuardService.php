@@ -33,11 +33,11 @@
  * (`RetentionService::placeLegalHold()`) so the guarded erase actually
  * refuses the object. `syncLegalHold()` itself computes no retention
  * duration -- it only reads an existing date and syncs OpenRegister's
- * enforcement primitive to it. A hold, once placed, is never auto-released
- * here -- releasing it is a deliberate HR/finance action once the retention
- * window has genuinely lapsed (see `NlDossierRetentionChecks
- * ::nl-bewaartermijn-verstreken`, which flags that moment without acting on
- * it).
+ * enforcement primitive to it. A hold is released only by
+ * `releaseLapsedFloorHold()`, only when its floor date has passed, and only
+ * when an admin has switched retention expiry on (compliance-retention-expiry,
+ * run by `RetentionExpiryJob`); the record is then marked for OpenRegister's
+ * destruction list, where an archivist still approves every deletion.
  *
  * REGRESSION FOUND AND FIXED post-review (hrmq#99, second pass): a plain NL
  * `Payslip` carries NEITHER a populated `retainedUntil` (that field is
@@ -146,6 +146,24 @@ class PayrollRetentionGuardService {
 	 * @var string
 	 */
 	private const HOLD_REASON_PREFIX = 'Statutaire bewaarplicht (hrmq#99) tot ';
+
+	/**
+	 * The start every statutory floor hold this service places shares (both
+	 * `syncLegalHold()` and `placeStatutoryFloorHold()` reasons), so a hold
+	 * with any other reason is recognisably not humaniq's to release
+	 * (compliance-retention-expiry D3).
+	 *
+	 * @var string
+	 */
+	public const HOLD_REASON_MARKER = 'Statutaire bewaarplicht (hrmq#99)';
+
+	/**
+	 * The appraisal OpenRegister's destruction check reads as destroy
+	 * (`Appraisal::DESTROY_ALIASES`).
+	 *
+	 * @var string
+	 */
+	private const DESTROY_APPRAISAL = 'vernietigen';
 
 	/**
 	 * The FQCN of OpenRegister's object mapper, resolved via the DI container
@@ -367,6 +385,164 @@ class PayrollRetentionGuardService {
 
 		return $this->persist(held: $held, schema: $schema);
 	}//end inheritLegalHold()
+
+	/**
+	 * Release a humaniq statutory floor hold whose floor date has passed, and
+	 * mark the record for OpenRegister's destruction list with that date
+	 * (compliance-retention-expiry D2, D3). Only a hold whose reason starts
+	 * with `HOLD_REASON_MARKER` and names a `tot YYYY-MM-DD` floor before
+	 * `$today` is released; any other hold (placed by a person, or inherited
+	 * by a generated document) is left alone and the record is not marked.
+	 * With `$apply` false nothing is changed and the result says what would
+	 * have happened (the default-off switch, D4).
+	 *
+	 * @param mixed             $object The OpenRegister ObjectEntity.
+	 * @param string            $schema The schema name (for the warning log message only).
+	 * @param DateTimeImmutable $today  The day the job runs.
+	 * @param bool              $apply  Whether to write, or only report.
+	 *
+	 * @return array{eligible: bool, released: bool, floor: string|null}
+	 *
+	 * @spec openspec/changes/compliance-retention-expiry/specs/personnel-retention-expiry/spec.md#REQ-RET-002
+	 */
+	public function releaseLapsedFloorHold(mixed $object, string $schema, DateTimeImmutable $today, bool $apply): array {
+		$none = ['eligible' => false, 'released' => false, 'floor' => null];
+		if (is_object($object) === false) {
+			return $none;
+		}
+
+		$floor = $this->lapsedHumaniqFloor($object, $today);
+		if ($floor === null) {
+			return $none;
+		}
+
+		if ($apply === false) {
+			return ['eligible' => true, 'released' => false, 'floor' => $floor];
+		}
+
+		$released = $this->retentionService()->releaseLegalHold(
+			object: $object,
+			reason: 'Statutaire bewaartermijn verstreken op ' . $floor . ' (compliance-retention-expiry).'
+		);
+		$this->markForDestruction($released, $floor);
+
+		return ['eligible' => true, 'released' => $this->persist(held: $released, schema: $schema), 'floor' => $floor];
+	}//end releaseLapsedFloorHold()
+
+	/**
+	 * Mark an ended employee's record for OpenRegister's destruction list once
+	 * 31 December of (end year + 7) has passed (compliance-retention-expiry
+	 * D2). A record under an active legal hold, one without an `endDate`, or
+	 * one that already carries an appraisal is left alone.
+	 *
+	 * @param mixed             $object The OpenRegister ObjectEntity of an Employee.
+	 * @param DateTimeImmutable $today  The day the job runs.
+	 * @param bool              $apply  Whether to write, or only report.
+	 *
+	 * @return array{eligible: bool, marked: bool, floor: string|null}
+	 *
+	 * @spec openspec/changes/compliance-retention-expiry/specs/personnel-retention-expiry/spec.md#REQ-RET-001
+	 */
+	public function markEndedEmployee(mixed $object, DateTimeImmutable $today, bool $apply): array {
+		$none = ['eligible' => false, 'marked' => false, 'floor' => null];
+		if (is_object($object) === false) {
+			return $none;
+		}
+
+		[$endYear] = $this->extractPeriodYear($object, 'endDate');
+		if ($endYear === null) {
+			return $none;
+		}
+
+		$floor = sprintf('%04d-12-31', ($endYear + self::AWR_RETENTION_YEARS));
+		if ($floor >= $today->format('Y-m-d')
+			|| $this->hasAppraisal($object) === true
+			|| $this->retentionService()->hasActiveLegalHold(object: $object) === true
+		) {
+			return $none;
+		}
+
+		if ($apply === false) {
+			return ['eligible' => true, 'marked' => false, 'floor' => $floor];
+		}
+
+		$this->markForDestruction($object, $floor);
+
+		return ['eligible' => true, 'marked' => $this->persist(held: $object, schema: 'Employee'), 'floor' => $floor];
+	}//end markEndedEmployee()
+
+	/**
+	 * The floor date of an active humaniq statutory hold on `$object` when it
+	 * lies before `$today`, else null.
+	 *
+	 * @param mixed             $object The OpenRegister ObjectEntity.
+	 * @param DateTimeImmutable $today  The day the job runs.
+	 *
+	 * @return string|null
+	 */
+	private function lapsedHumaniqFloor(mixed $object, DateTimeImmutable $today): ?string {
+		try {
+			$retention = ($object->getRetention() ?? []);
+		} catch (\Throwable $e) {
+			return null;
+		}
+
+		$hold = ($retention['legalHold'] ?? []);
+		if (is_array($hold) === false || ($hold['active'] ?? false) !== true) {
+			return null;
+		}
+
+		$reason = (string)($hold['reason'] ?? '');
+		if (str_starts_with($reason, self::HOLD_REASON_MARKER) === false
+			|| preg_match('/tot (\d{4}-\d{2}-\d{2})/', $reason, $matches) !== 1
+		) {
+			return null;
+		}
+
+		if ($matches[1] >= $today->format('Y-m-d')) {
+			return null;
+		}
+
+		return $matches[1];
+	}//end lapsedHumaniqFloor()
+
+	/**
+	 * Whether the record's retention block already carries an appraisal.
+	 *
+	 * @param mixed $object The OpenRegister ObjectEntity.
+	 *
+	 * @return bool
+	 */
+	private function hasAppraisal(mixed $object): bool {
+		try {
+			$retention = ($object->getRetention() ?? []);
+		} catch (\Throwable $e) {
+			return true;
+		}
+
+		return trim((string)($retention['archiefnominatie'] ?? '')) !== '';
+	}//end hasAppraisal()
+
+	/**
+	 * Write the appraisal `vernietigen` and `$floor` as action date into the
+	 * record's retention block, the two fields OpenRegister's destruction
+	 * check reads, unless an appraisal is already recorded (it wins).
+	 *
+	 * @param mixed  $object The OpenRegister ObjectEntity.
+	 * @param string $floor  The floor date, YYYY-MM-DD.
+	 *
+	 * @return void
+	 */
+	private function markForDestruction(mixed $object, string $floor): void {
+		if ($this->hasAppraisal($object) === true) {
+			return;
+		}
+
+		$retention = ($object->getRetention() ?? []);
+		$retention['archiefnominatie'] = self::DESTROY_APPRAISAL;
+		$retention['archiefactiedatum'] = $floor;
+		$object->setRetention($retention);
+	}//end markForDestruction()
 
 	/**
 	 * Resolve the authoritative, already-known retention ceiling for an

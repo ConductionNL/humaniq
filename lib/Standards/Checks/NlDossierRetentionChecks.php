@@ -18,8 +18,9 @@
  * deliberately the SAME ceiling `Archival\DestructionService
  * ::findEligibleObjects()` already reads to list destruction candidates; this
  * check surfaces the fact at audit time (`occ humaniq:rules:audit`), it does
- * not act on it -- no automated destruction job exists here (a materially
- * different, materially riskier capability, out of scope).
+ * not act on it. Acting on it is `RetentionExpiryJob`'s job
+ * (compliance-retention-expiry): off by default, it releases humaniq's lapsed
+ * floor holds and marks the record for OpenRegister's destruction list.
  *
  * Scoped to the payroll/loonadministratie schema family (the same set the
  * now-deleted `AvgDsrRetentionClassifier` covered) plus `GeneratedDocument`

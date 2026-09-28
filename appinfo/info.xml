@@ -110,6 +110,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
             down does not make somebody look free all week.
         -->
         <job>OCA\Humaniq\BackgroundJob\PollCalendarSubscriptionsJob</job>
+        <!--
+            compliance-retention-expiry: releases humaniq's lapsed statutory
+            floor holds and marks expired records for OpenRegister's
+            destruction list, where an archivist approves every deletion.
+            Off until retention_expiry_enabled is set.
+        -->
+        <job>OCA\Humaniq\BackgroundJob\RetentionExpiryJob</job>
     </background-jobs>
 
     <repair-steps>
