@@ -51,6 +51,7 @@
  *
  * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-006
  * @spec openspec/specs/comp-cycles/spec.md#REQ-COMP-007
+ * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-003
  */
 
 declare(strict_types=1);
@@ -221,11 +222,16 @@ class CompAdjustmentService {
 
 		$newGrossMonthlySalary = $this->euros($proposedSalaryCents);
 
+		$contractChange = $this->contractChange($adjustment);
+		if ($contractChange === false) {
+			return $this->outcome($adjustmentId, 'refused-contract-unresolvable', 'Het gekoppelde contract kon niet worden geladen; het uurloon of de trede kan niet worden bijgewerkt.');
+		}
+
 		if ($dryRun === true) {
 			$outcome = $this->outcome($adjustmentId, 'would-apply', 'Zou grossMonthlySalary bijwerken naar ' . $newGrossMonthlySalary . ' en de aanpassing effectief maken (dry-run: niets geschreven).');
 			$outcome['employeeId'] = $employeeId;
 			$outcome['newGrossMonthlySalary'] = $newGrossMonthlySalary;
-			return $outcome;
+			return $this->withContractChange($outcome, $contractChange);
 		}
 
 		try {
@@ -244,6 +250,22 @@ class CompAdjustmentService {
 		} catch (\Throwable $e) {
 			$this->logger->error('CompAdjustmentService: kon grossMonthlySalary niet bijwerken voor ' . $employeeId . ': ' . $e->getMessage());
 			return $this->outcome($adjustmentId, 'failed', 'Bijwerken van het brutomaandsalaris is mislukt: ' . $e->getMessage());
+		}
+
+		if ($contractChange !== null) {
+			try {
+				$this->objectService()->saveObject(
+					object: $contractChange['contract'],
+					register: $this->register(),
+					schema: 'EmploymentContract',
+					uuid: (string)$contractChange['contractId'],
+					_rbac: false,
+					_multitenancy: false
+				);
+			} catch (\Throwable $e) {
+				$this->logger->error('CompAdjustmentService: kon contract ' . (string)$contractChange['contractId'] . ' niet bijwerken: ' . $e->getMessage());
+				return $this->outcome($adjustmentId, 'failed', 'Salaris is bijgewerkt, maar het uurloon of de trede op het contract niet: ' . $e->getMessage());
+			}
 		}
 
 		try {
@@ -269,8 +291,73 @@ class CompAdjustmentService {
 		$outcome['employeeId'] = $employeeId;
 		$outcome['newGrossMonthlySalary'] = $newGrossMonthlySalary;
 
-		return $outcome;
+		return $this->withContractChange($outcome, $contractChange);
 	}//end effectuate()
+
+	/**
+	 * The contract write a step or hourly adjustment carries: the contract
+	 * with `hourlyWage` from `proposedHourlyWage`, and `salaryStep` from
+	 * `toStep` with `stepDate` one year on. Null when the adjustment carries
+	 * neither; false when it does but the contract cannot be loaded.
+	 *
+	 * @param array<string, mixed> $adjustment The CompAdjustment.
+	 *
+	 * @return array{contractId: string, contract: array<string, mixed>, hourlyWage: float|null, salaryStep: int|null}|false|null
+	 *
+	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-003
+	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-004
+	 */
+	private function contractChange(array $adjustment): array|false|null {
+		$hourlyWage = ($adjustment['proposedHourlyWage'] ?? null);
+		$toStep = ($adjustment['toStep'] ?? null);
+		$hourlyWage = (is_numeric($hourlyWage) === true ? round((float)$hourlyWage, 2) : null);
+		$toStep = (is_numeric($toStep) === true ? (int)$toStep : null);
+		if ($hourlyWage === null && $toStep === null) {
+			return null;
+		}
+
+		$contractId = trim((string)($adjustment['contractId'] ?? ''));
+		$contract = ($contractId === '' ? null : $this->findById('EmploymentContract', $contractId));
+		if ($contract === null) {
+			return false;
+		}
+
+		unset($contract['@self']);
+		if ($hourlyWage !== null) {
+			$contract['hourlyWage'] = $hourlyWage;
+		}
+
+		if ($toStep !== null) {
+			$contract['salaryStep'] = $toStep;
+			$stepDate = trim((string)($contract['stepDate'] ?? ''));
+			$next = ($stepDate === '' ? false : strtotime($stepDate . ' +1 year'));
+			if ($next !== false) {
+				$contract['stepDate'] = gmdate('Y-m-d', $next);
+			}
+		}
+
+		return ['contractId' => $contractId, 'contract' => $contract, 'hourlyWage' => $hourlyWage, 'salaryStep' => $toStep];
+	}//end contractChange()
+
+	/**
+	 * Name the contract change in an outcome, so the preview shows it too.
+	 *
+	 * @param array<string, mixed> $outcome The outcome.
+	 * @param array<string, mixed>|null $contractChange The change, or null.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withContractChange(array $outcome, ?array $contractChange): array {
+		if ($contractChange === null) {
+			return $outcome;
+		}
+
+		$outcome['contractId'] = $contractChange['contractId'];
+		$outcome['newHourlyWage'] = $contractChange['hourlyWage'];
+		$outcome['newSalaryStep'] = $contractChange['salaryStep'];
+
+		return $outcome;
+	}//end withContractChange()
 
 	/**
 	 * The comp-adjustment-within-band predicate, evaluated inline (belt and

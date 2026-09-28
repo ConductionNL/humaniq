@@ -269,6 +269,78 @@ class CompAdjustmentServiceTest extends TestCase {
 	}//end testApprovedDueWithinBandWritesSalaryAndBecomesEffective()
 
 	/**
+	 * A step effectuation sets the contract's salaryStep to toStep and moves
+	 * its stepDate one year on, next to the salary write.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-004
+	 */
+	public function testAStepEffectuationMovesTheStepAndTheStepDate(): void {
+		$rows = $this->fixture(['adjustmentKind' => 'step-increase', 'fromStep' => 2, 'toStep' => 3]);
+		$rows['EmploymentContract'] = [
+			['id' => 'contract-1', 'employeeId' => 'emp-1', 'hourlyWage' => 21.15, 'salaryBandId' => 'band-a', 'salaryStep' => 2, 'stepDate' => '2026-03-01'],
+		];
+		[$service, $fake] = $this->service($rows);
+
+		$result = $service->effectuateOne('adj-1');
+
+		$this->assertSame('applied', $result['status']);
+		$contractSaves = array_values(array_filter($fake->saved, static fn (array $s): bool => $s['schema'] === 'EmploymentContract'));
+		$this->assertCount(1, $contractSaves);
+		$this->assertSame(3, $contractSaves[0]['object']['salaryStep']);
+		$this->assertSame('2027-03-01', $contractSaves[0]['object']['stepDate']);
+		$this->assertSame(21.15, $contractSaves[0]['object']['hourlyWage'], 'A step change leaves the hourly wage alone when none is proposed.');
+		$this->assertSame(3, $result['newSalaryStep']);
+
+	}//end testAStepEffectuationMovesTheStepAndTheStepDate()
+
+	/**
+	 * A collective percentage raise also writes the contract's hourly wage.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-003
+	 */
+	public function testAnHourlyRaiseIsWrittenOntoTheContract(): void {
+		$rows = $this->fixture(['adjustmentKind' => 'collective', 'proposedHourlyWage' => 24.85, 'targetBandId' => null]);
+		$rows['EmploymentContract'] = [
+			['id' => 'contract-1', 'employeeId' => 'emp-1', 'hourlyWage' => 24.36],
+		];
+		[$service, $fake] = $this->service($rows);
+
+		$preview = $service->effectuateCycle('cycle-1', null, true);
+		$this->assertSame(24.85, $preview[0]['newHourlyWage'], 'The preview names the hourly wage it will write.');
+		$this->assertSame([], $fake->saved);
+
+		$result = $service->effectuateOne('adj-1');
+
+		$this->assertSame('applied', $result['status']);
+		$contractSaves = array_values(array_filter($fake->saved, static fn (array $s): bool => $s['schema'] === 'EmploymentContract'));
+		$this->assertCount(1, $contractSaves);
+		$this->assertSame(24.85, $contractSaves[0]['object']['hourlyWage']);
+		$this->assertArrayNotHasKey('salaryStep', $contractSaves[0]['object']);
+
+	}//end testAnHourlyRaiseIsWrittenOntoTheContract()
+
+	/**
+	 * An adjustment that is neither a step nor an hourly change leaves the
+	 * contract alone, as before.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/comp-collective-raise-and-step-increase/spec.md#REQ-CRS-003
+	 */
+	public function testAPlainRaiseDoesNotTouchTheContract(): void {
+		[$service, $fake] = $this->service($this->fixture());
+
+		$service->effectuateOne('adj-1');
+
+		$this->assertSame([], array_values(array_filter($fake->saved, static fn (array $s): bool => $s['schema'] === 'EmploymentContract')));
+
+	}//end testAPlainRaiseDoesNotTouchTheContract()
+
+	/**
 	 * A non-approved adjustment (e.g. still `proposed`) is refused and
 	 * writes nothing.
 	 *
