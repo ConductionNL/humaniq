@@ -39,6 +39,7 @@ use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
+use OCA\Humaniq\Listener\FrequentAbsenceListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
 use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
@@ -427,6 +428,7 @@ class Application extends App implements IBootstrap {
 		$this->registerHoursListeners($dispatcher);
 
 		$this->registerLeaveListeners($dispatcher);
+		$this->registerAbsenceListeners($dispatcher);
 
 	}//end boot()
 
@@ -571,5 +573,30 @@ class Application extends App implements IBootstrap {
 		}
 
 	}//end registerLeaveListeners()
+
+	/**
+	 * Register the frequent-absence listener (absence-deadlines-and-signals
+	 * D4): a created or reopened SickLeaveCase is counted against the
+	 * administration's threshold. It writes only the case it was given, under
+	 * InternalWriteMarker, so its own update is not counted again.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-003
+	 */
+	private function registerAbsenceListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: FrequentAbsenceListener::class,
+				registers: null,
+				schemas: [FrequentAbsenceListener::SICKLEAVECASE_SLUG]
+			);
+		}
+
+	}//end registerAbsenceListeners()
 
 }//end class

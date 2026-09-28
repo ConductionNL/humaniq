@@ -528,7 +528,8 @@
                                 "condition": {
                                     "field": "frequentAbsence",
                                     "operator": "equals",
-                                    "value": true
+                                    "value": true,
+                                    "from": false
                                 }
                             },
                             "enabled": true,
@@ -549,7 +550,7 @@
                                 "nl": "De drempel van de administratie is bereikt. Plan een gesprek.",
                                 "en": "The administration's threshold is reached. Plan a conversation."
                             },
-                            "_note": "absence-deadlines-and-signals D4 (REQ-ADS-003): FrequentAbsenceListener sets frequentAbsence on the case that reaches the threshold, once; later updates of that case carry frequentAbsence true as well, so the listener writes the flag only on the triggering case and never flips it back and forth."
+                            "_note": "absence-deadlines-and-signals D4 (REQ-ADS-003): FrequentAbsenceListener sets frequentAbsence on the case that reaches the threshold, once; the condition's from: false makes it fire on the false to true change only, so later edits of the case send nothing."
                         }
                     },
                     "x-openregister-lifecycle": {
