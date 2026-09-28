@@ -1230,5 +1230,205 @@
     "reason": "Approval state on TimeEntry. Shillinq change sales-time-and-expense-billing (merged) reads approved, billable hours per project and period through hours-to-humaniq and needs an approval state on the hour; humaniq keeps it only on the parent Timesheet.status, and the archived typed event 2026-09-06-humaniq-timesheet-approved-typed-event carries one billable flag per timesheet, true only when every entry is billable. No humaniq change puts the state on the entry. Build: a half a merged sibling change depends on.",
     "change": "time-entry-approval-state",
     "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "tim-geofence",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "pln-leave-in-roster",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "Existing change: agenda-rostering-and-resource-booking puts approved leave on the agenda beside rostered shifts and subtracts it from the availability a roster reads, which is the row's capability.",
+    "change": "agenda-rostering-and-resource-booking",
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "exp-policy",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "exp-card-feed",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "pay-loans",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (afas), no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "fil-cbs",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "tal-skills-matrix",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (hr2day), no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "tal-career-paths",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "tal-recognition",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "ess-hr-inbox",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "rep-benchmark",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (loket), no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "cmp-works-council",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "cmp-whistleblowing",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (personio), no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "dm-lock-leave-periods",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (afas), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "dm-commute-deduct-mileage",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (afas), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "dm-lkv",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (visma-raet), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "dm-leave-nudge",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): roadmap demand but no competitor rated yes, outside the core area (people, hiring). Reversible when a second signal appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "dm-parental-leave-pay",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (hr2day), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "dm-sickness-around-pregnancy",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (hr2day), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "dm-own-pension-rules",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (loket), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "dm-permission-overview",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (personio), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "dm-ai-feedback-summary",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (personio), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "dm-survey-benchmark",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-28 by the build-all rule (defer retired): roadmap demand but no competitor rated yes, outside the core area (people, hiring). Reversible when a second signal appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "fil-correction",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 4 competitors rate yes (afas, visma-raet, hr2day, loket); the row was building with no change directory, so the missing half is specified.",
+    "change": "filings-correction-message",
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "cmp-retention",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate yes (hr2day, loket); the row was building with no change directory, so the missing half is specified.",
+    "change": "compliance-retention-expiry",
+    "decidedOn": "2026-09-28"
   }
 ]
