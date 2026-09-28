@@ -13,6 +13,7 @@ record already carries an appraisal.
 Rows: `cmp-retention` (humaniq matrix).
 
 #### Scenario: An employee who left in 2017 is marked
+@e2e exclude a daily background job with no screen; covered by RetentionExpiryTest::testAnEmployeeWhoLeftIn2017IsMarkedWithTheEndOf2024
 - **GIVEN** retention expiry is switched on and an employee whose `endDate` is 2017-05-31
 - **WHEN** the daily job runs in 2026
 - **THEN** the employee's retention block carries the appraisal `vernietigen` and the action
@@ -28,16 +29,19 @@ approve. While the switch is off the job SHALL release nothing.
 Rows: `cmp-retention` (humaniq matrix).
 
 #### Scenario: An eight year old payslip is listed for destruction
+@e2e exclude a daily background job with no screen; covered by RetentionExpiryTest::testTheWalkReleasesAndMarksWhenSwitchedOn and ::testALapsedHumaniqFloorHoldIsReleasedAndMarkedForDestruction
 - **GIVEN** retention expiry is switched on and a payslip whose floor hold ran out last year
 - **WHEN** the daily jobs have run
 - **THEN** the hold is released and the payslip is on a destruction list awaiting approval
 
 #### Scenario: A hold for a dispute stays
+@e2e exclude a daily background job with no screen; covered by RetentionExpiryTest::testAHoldAPersonPlacedStaysAndThePayslipIsNotMarked
 - **GIVEN** a payslip past its floor whose hold an HR officer replaced with one for a dispute
 - **WHEN** the daily job runs
 - **THEN** the hold stays active and the payslip is not marked for destruction
 
 #### Scenario: Nothing happens until an admin says so
+@e2e exclude a daily background job with no screen; covered by RetentionExpiryTest::testNothingChangesWhileTheSwitchIsOff
 - **GIVEN** retention expiry is switched off
 - **WHEN** the daily job runs
 - **THEN** no hold is released and the log names the holds it would have released

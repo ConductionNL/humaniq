@@ -403,7 +403,7 @@ class PayrollRetentionGuardService {
 	 *
 	 * @return array{eligible: bool, released: bool, floor: string|null}
 	 *
-	 * @spec openspec/changes/compliance-retention-expiry/specs/personnel-retention-expiry/spec.md#REQ-RET-002
+	 * @spec openspec/specs/personnel-retention-expiry/spec.md#REQ-RET-002
 	 */
 	public function releaseLapsedFloorHold(mixed $object, string $schema, DateTimeImmutable $today, bool $apply): array {
 		$none = ['eligible' => false, 'released' => false, 'floor' => null];
@@ -441,7 +441,7 @@ class PayrollRetentionGuardService {
 	 *
 	 * @return array{eligible: bool, marked: bool, floor: string|null}
 	 *
-	 * @spec openspec/changes/compliance-retention-expiry/specs/personnel-retention-expiry/spec.md#REQ-RET-001
+	 * @spec openspec/specs/personnel-retention-expiry/spec.md#REQ-RET-001
 	 */
 	public function markEndedEmployee(mixed $object, DateTimeImmutable $today, bool $apply): array {
 		$none = ['eligible' => false, 'marked' => false, 'floor' => null];

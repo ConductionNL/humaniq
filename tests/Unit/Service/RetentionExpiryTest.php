@@ -27,7 +27,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/compliance-retention-expiry/specs/personnel-retention-expiry/spec.md
+ * @spec openspec/specs/personnel-retention-expiry/spec.md
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for retention expiry.
  *
- * @spec openspec/changes/compliance-retention-expiry/specs/personnel-retention-expiry/spec.md
+ * @spec openspec/specs/personnel-retention-expiry/spec.md
  */
 class RetentionExpiryTest extends TestCase {
 

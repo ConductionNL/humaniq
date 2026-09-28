@@ -443,7 +443,7 @@ class SettingsService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/compliance-retention-expiry/specs/personnel-retention-expiry/spec.md#REQ-RET-002
+	 * @spec openspec/specs/personnel-retention-expiry/spec.md#REQ-RET-002
 	 */
 	public function isRetentionExpiryEnabled(): bool {
 		return $this->appConfig->getValueBool(Application::APP_ID, 'retention_expiry_enabled', false);

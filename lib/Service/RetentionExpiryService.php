@@ -24,7 +24,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/compliance-retention-expiry/specs/personnel-retention-expiry/spec.md
+ * @spec openspec/specs/personnel-retention-expiry/spec.md
  */
 
 declare(strict_types=1);
@@ -78,7 +78,7 @@ class RetentionExpiryService {
 	 *
 	 * @return array{enabled: bool, released: int, marked: int, wouldRelease: int, wouldMark: int}
 	 *
-	 * @spec openspec/changes/compliance-retention-expiry/specs/personnel-retention-expiry/spec.md#REQ-RET-002
+	 * @spec openspec/specs/personnel-retention-expiry/spec.md#REQ-RET-002
 	 */
 	public function run(DateTimeImmutable $today): array {
 		$apply = $this->settingsService->isRetentionExpiryEnabled();
