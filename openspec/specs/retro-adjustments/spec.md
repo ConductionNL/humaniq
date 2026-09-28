@@ -107,12 +107,25 @@ builds the draft run for period P, it SHALL sum every `applied` PayrollAdjustmen
 terugvordering line) and fold it into `nettoPay`. Only `applied` adjustments SHALL surface (a `draft`
 adjustment is computed-but-unsettled and affects no run); applying an adjustment SHALL stamp its
 `settlementPayrollRunId`. The sealed historical payslip SHALL NOT be modified to carry the delta.
+The run totals SHALL carry the cost side of the same payout (humaniq#514): the adjustment's
+`deltaGross` into `totalGross`, `deltaLoonheffing` into `totalLoonheffing` and `totalWithholdings`,
+and `deltaZvw + deltaWerknemersverzekeringen` into `totalEmployerCharges`, so the GL journal books
+the payout as wage cost and a large delta cannot leave the run unpostable. An adjustment without a
+numeric `deltaGross` SHALL book `deltaNet + deltaLoonheffing` as its gross.
 
 #### Scenario: An applied adjustment lands in the current draft run's payslip
 - **GIVEN** an `applied` PayrollAdjustment with `settlementPeriod` 2026-04 and a positive net delta
 - **WHEN** the 2026-04 draft run is generated for that employee
 - **THEN** the 2026-04 payslip's `retroAdjustment` carries the delta as a nabetaling and its
   `nettoPay` includes it, while the original sealed payslip is unchanged
+
+#### Scenario: An applied adjustment reaches the cost side of the journal
+@e2e exclude a run-totals and journal arithmetic assertion with no screen of its own; covered by PayrollRunServiceTest::testRetroAndLeaveFoldsReachTheCostSideOfTheJournal and ::testALargeRetroDeltaNoLongerMakesTheRunUnpostable
+- **GIVEN** an `applied` PayrollAdjustment settling into 2026-04 with `deltaGross` 250.00,
+  `deltaLoonheffing` 48.83 and `deltaNet` 201.17
+- **WHEN** the 2026-04 run is generated and its journal is built
+- **THEN** `totalGross` includes the 250.00 and `totalLoonheffing` the 48.83, and the net wages
+  liability holds only net pay plus employer charges
 
 #### Scenario: A draft (unsettled) adjustment does not affect any run
 - **GIVEN** a `draft` PayrollAdjustment for settlement period 2026-04

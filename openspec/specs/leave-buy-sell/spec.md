@@ -25,10 +25,11 @@ the reused `NoSelfApprovalGuard`, and the `PayrollRunService` current-run fold p
   `settlementPeriod`, and a new corpus rule (`nl-verlof-bovenwettelijk-niet-negatief`,
   `lib/Standards/rules/labour.json`, `RuleCatalogue::VERSION` bumped) plus a `NlLeaveChecks` predicate
   audit-back-stop `bovenwettelijkHours >= 0` independently. The settled euro amount surfaces as a
-  **current-run payroll input** — `PayrollRunService.generate()` folds every `settled` transaction
-  whose `settlementPeriod` equals the draft run's period into a new nullable `Payslip.leaveBuySell`
-  field and `nettoPay`, mirroring the existing `retroAdjustment` fold exactly; `PayrollCalculator` is
-  never invoked to (re)compute it. One occ command (`humaniq:leave:settle --id`) and ONE guarded endpoint
+  **current-run payroll input** — `PayrollRunService.generate()` adds every `settled` transaction
+  whose `settlementPeriod` equals the draft run's period to the gross it feeds `PayrollCalculator`,
+  so wage tax is withheld on it, and names it in a new nullable `Payslip.leaveBuySell` field
+  (settled before tax since humaniq#513; it was previously added onto `nettoPay` after tax);
+  `PayrollCalculator` is never invoked to (re)compute `settledAmount` itself. One occ command (`humaniq:leave:settle --id`) and ONE guarded endpoint
   (`POST /api/leave/settle`, `LeaveController::settle`, RBAC-resolve-first → 404) are the only settle
   paths — `settle` is deliberately never a bare `lifecycleActions` button (the `CompAdjustmentDetail`
   orphaned-capability precedent). ADR-001 Rule 6 surfaces: an `EmployeeDetail` dossier row
@@ -172,29 +173,34 @@ only settle path is a guarded `api-call` action, mirroring the `CompAdjustmentDe
 - **THEN** the balance's `bovenwettelijkHours` becomes `12`, `entitledHours`/`usedHours` are
   unchanged, and the transaction's `settledAmount` is `200.00`
 
-### Requirement: The settled amount SHALL surface as a current-run payroll input on Payslip, never an engine recompute (REQ-BUYSELL-005)
+### Requirement: The settled amount SHALL enter the current run's taxable gross before tax, never an engine recompute of the amount (REQ-BUYSELL-005)
 
 `PayrollRunService.generate()` SHALL sum every `settled` `LeaveTransaction` whose `settlementPeriod`
-equals the draft run's period into each employee's Payslip `leaveBuySell` component (a new nullable
-`Payslip` field, mirroring the existing `retroAdjustment` field): sold transactions contribute a
-positive amount (a payment), bought transactions contribute a negative amount (a deduction); the
-sum is folded into `nettoPay`, mirroring the existing `retroAdjustment` fold exactly. No settled
-transaction for an employee/period ⇒ `leaveBuySell` stays `null` and the payslip is byte-identical
-to before this change. `PayrollCalculator` SHALL NOT be invoked to compute or verify a
-`settledAmount` — the figure is read as-is from the already-settled `LeaveTransaction`.
+equals the draft run's period, per employee, and add that sum to the gross it feeds
+`PayrollCalculator`, BEFORE the calculator runs. Sold transactions contribute a positive amount
+(taxable wage added), bought transactions contribute a negative amount (wage given up). The
+payslip's `grossPay`, `loonheffing` and `nettoPay` therefore carry the amount, and wage tax is
+withheld on it; the amount SHALL NOT be added onto `nettoPay` after the calculator has run. The sum
+SHALL also be named on the payslip in its `leaveBuySell` component (a nullable `Payslip` field), and
+the stored `engineInputSnapshot` gross SHALL include it, so `humaniq:payroll:reproduce` recomputes
+the same figures without folding `leaveBuySell` a second time. No settled transaction for an
+employee/period ⇒ `leaveBuySell` stays `null` and the payslip is byte-identical to before this
+change. `PayrollCalculator` SHALL NOT be invoked to compute or verify a `settledAmount` — the figure
+is read as-is from the already-settled `LeaveTransaction`.
 
-#### Scenario: A settled sell adds to nettoPay
+#### Scenario: A settled sell is taxed as gross wage
 - **GIVEN** a `LeaveTransaction` settled with `settledAmount: 200.00`, `transactionType: sell`,
-  `settlementPeriod: 2026-06` for an employee
+  `settlementPeriod: 2026-06` for an employee earning `3800.00` a month
 - **WHEN** `occ humaniq:payroll:run --period 2026-06` generates that employee's payslip
-- **THEN** `leaveBuySell` is `200.00` and `nettoPay` includes it, added on top of the engine's
-  computed net
+- **THEN** `leaveBuySell` is `200.00`, `grossPay` is `4000.00`, and `loonheffing` and `nettoPay`
+  equal the engine's figures for a `4000.00` gross, so `nettoPay` rises by less than `200.00`
 
-#### Scenario: A settled buy deducts from nettoPay
+#### Scenario: A settled buy reduces the taxable gross
 - **GIVEN** a `LeaveTransaction` settled with `settledAmount: 150.00`, `transactionType: buy`,
-  `settlementPeriod: 2026-06` for an employee
+  `settlementPeriod: 2026-06` for an employee earning `3800.00` a month
 - **WHEN** the same run generates
-- **THEN** `leaveBuySell` is `-150.00` and `nettoPay` is reduced by that amount
+- **THEN** `leaveBuySell` is `-150.00`, `grossPay` is `3650.00`, and `loonheffing` and `nettoPay`
+  equal the engine's figures for a `3650.00` gross
 
 #### Scenario: No settled transaction leaves the payslip unchanged
 - **GIVEN** an employee with no `settled` `LeaveTransaction` for the run's period

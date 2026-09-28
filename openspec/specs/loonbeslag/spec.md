@@ -121,8 +121,9 @@ new call sites and zero diff for this change; the deduction is entirely post-tax
 - **GIVEN** an employee with an applied retro-adjustment, a settled leave-buy-sell transaction, AND
   an `actief` Loonbeslag all settling into the same period
 - **WHEN** the payslip generates
-- **THEN** the garnishment's floor-clamp arithmetic uses `nettoPay` AFTER retroAdjustment and
-  leaveBuySell are already added, not the bare engine-computed `nettoPay`
+- **THEN** the garnishment's floor-clamp arithmetic uses `nettoPay` AFTER retroAdjustment is added
+  and the leave-buy-sell amount has been taxed inside the engine net (humaniq#513), not the bare
+  engine-computed `nettoPay` of the salary alone
 
 ### Requirement: The garnishment fold SHALL be idempotent per (loonbeslagId, period); the MVP SHALL handle at most one active beslag per employee-period (REQ-BESLAG-005)
 

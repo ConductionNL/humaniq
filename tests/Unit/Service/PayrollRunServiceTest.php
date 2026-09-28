@@ -44,10 +44,12 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Payroll\SickPayCalculator;
+use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
+use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -819,13 +821,40 @@ class PayrollRunServiceTest extends TestCase {
 	}//end testDraftAdjustmentDoesNotAffectTheRun()
 
 	/**
-	 * leave-buy-sell REQ-BUYSELL-005: a settled `sell` LeaveTransaction whose
-	 * settlementPeriod equals the draft run's period adds its settledAmount
-	 * as a positive `leaveBuySell` component, folded into nettoPay.
+	 * The payslip the engine produces for the anchor employee at a given
+	 * monthly salary, with nothing folded (humaniq#513 reference figures).
+	 *
+	 * @param float $grossMonthlySalary The monthly salary to compute.
+	 *
+	 * @return array<string, mixed> The saved payslip.
+	 */
+	private function plainPayslipAt(float $grossMonthlySalary): array {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['grossMonthlySalary' => $grossMonthlySalary])],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$service->runFor('2026-02');
+
+		return $this->savedFor($fake, 'Payslip')[0];
+
+	}//end plainPayslipAt()
+
+	/**
+	 * leave-buy-sell REQ-BUYSELL-005 (humaniq#513): a settled `sell`
+	 * LeaveTransaction is taxable wage. It enters the engine's gross BEFORE
+	 * the calculator runs, so loonheffing is withheld on it, instead of the
+	 * full gross amount being added to nettoPay after tax. Selling EUR 200 on
+	 * the EUR 3.800 anchor yields exactly the engine figures of a EUR 4.000
+	 * salary.
 	 *
 	 * @return void
 	 */
-	public function testSettledSellLeaveTransactionAddsToNettoPay(): void {
+	public function testSettledSellLeaveTransactionIsTaxedAsGrossWageBeforeTheCalculator(): void {
 		[$service, $fake] = $this->service(
 			[
 				'Employee' => [$this->employee()],
@@ -844,21 +873,32 @@ class PayrollRunServiceTest extends TestCase {
 
 		$payslips = $this->savedFor($fake, 'Payslip');
 		$this->assertCount(1, $payslips);
+		$payslip = $payslips[0];
 
-		// Anchor net 3081.17 + settled sell 200.00 = 3281.17.
-		$this->assertSame(200.00, $payslips[0]['leaveBuySell'], 'The settled sell surfaces as a leaveBuySell component.');
-		$this->assertSame(3281.17, $payslips[0]['nettoPay'], 'nettoPay includes the leaveBuySell delta.');
-		$this->assertSame(3281.17, $result['totals']['totalNet']);
+		$anchor = $this->plainPayslipAt(3800.00);
+		$reference = $this->plainPayslipAt(4000.00);
 
-	}//end testSettledSellLeaveTransactionAddsToNettoPay()
+		$this->assertSame(200.00, $payslip['leaveBuySell'], 'The settled sell still surfaces as a leaveBuySell component.');
+		$this->assertSame(4000.00, $payslip['grossPay'], 'The sale is gross wage: grossPay includes it.');
+		$this->assertSame(400000, $payslip['engineInputSnapshot']['grossMonthlySalaryCents'], 'The calculator received the sale as part of its gross input.');
+		$this->assertGreaterThan($anchor['loonheffing'], $payslip['loonheffing'], 'Wage tax is withheld on the sale.');
+		$this->assertSame($reference['loonheffing'], $payslip['loonheffing']);
+		$this->assertSame($reference['nettoPay'], $payslip['nettoPay'], 'nettoPay is the engine net over salary plus sale, not the old net plus the gross sale.');
+		$this->assertLessThan(($anchor['nettoPay'] + 200.00), $payslip['nettoPay'], 'The full gross sale is never added to net untaxed.');
+		$this->assertSame($reference['nettoPay'], $result['totals']['totalNet']);
+		$this->assertSame(4000.00, $result['totals']['totalGross'], 'The run total gross carries the sale.');
+
+	}//end testSettledSellLeaveTransactionIsTaxedAsGrossWageBeforeTheCalculator()
 
 	/**
-	 * leave-buy-sell REQ-BUYSELL-005: a settled `buy` LeaveTransaction
-	 * deducts its settledAmount from nettoPay (negative leaveBuySell).
+	 * leave-buy-sell REQ-BUYSELL-005 (humaniq#513): a settled `buy`
+	 * LeaveTransaction reduces the taxable gross before the calculator runs.
+	 * Buying EUR 150 on the EUR 3.800 anchor yields exactly the engine
+	 * figures of a EUR 3.650 salary.
 	 *
 	 * @return void
 	 */
-	public function testSettledBuyLeaveTransactionDeductsFromNettoPay(): void {
+	public function testSettledBuyLeaveTransactionReducesTheTaxableGrossBeforeTheCalculator(): void {
 		[$service, $fake] = $this->service(
 			[
 				'Employee' => [$this->employee()],
@@ -875,12 +915,18 @@ class PayrollRunServiceTest extends TestCase {
 
 		$payslips = $this->savedFor($fake, 'Payslip');
 		$this->assertCount(1, $payslips);
+		$payslip = $payslips[0];
 
-		// Anchor net 3081.17 - settled buy 150.00 = 2931.17.
-		$this->assertSame(-150.00, $payslips[0]['leaveBuySell']);
-		$this->assertSame(2931.17, $payslips[0]['nettoPay']);
+		$reference = $this->plainPayslipAt(3650.00);
 
-	}//end testSettledBuyLeaveTransactionDeductsFromNettoPay()
+		$this->assertSame(-150.00, $payslip['leaveBuySell']);
+		$this->assertSame(3650.00, $payslip['grossPay'], 'The purchase is taken off the gross wage.');
+		$this->assertSame(365000, $payslip['engineInputSnapshot']['grossMonthlySalaryCents']);
+		$this->assertSame($reference['loonheffing'], $payslip['loonheffing']);
+		$this->assertSame($reference['nettoPay'], $payslip['nettoPay'], 'nettoPay is the engine net over the reduced gross.');
+		$this->assertSame($reference['nettoPay'], $result['totals']['totalNet']);
+
+	}//end testSettledBuyLeaveTransactionReducesTheTaxableGrossBeforeTheCalculator()
 
 	/**
 	 * leave-buy-sell REQ-BUYSELL-005: an unsettled (approved) or
@@ -912,6 +958,120 @@ class PayrollRunServiceTest extends TestCase {
 		$this->assertSame(3081.17, $payslips[0]['nettoPay']);
 
 	}//end testUnsettledOrWrongPeriodLeaveTransactionDoesNotFold()
+
+	/**
+	 * The run totals PayrollRunService stamps for 2026-02, and the journal
+	 * PayrollGLPostService builds from them (humaniq#514).
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $extraRows Extra seed rows (adjustments, leave transactions).
+	 *
+	 * @return array{0: array<string, mixed>, 1: array<string, float>, 2: array<string, mixed>} `[run, amount per account, buildLines result]`.
+	 */
+	private function runAndJournal(array $extraRows): array {
+		[$service, $fake] = $this->service(
+			array_merge(
+				[
+					'Employee' => [$this->employee()],
+					'EmploymentContract' => [$this->contract()],
+					'PayrollRun' => [],
+					'Payslip' => [],
+				],
+				$extraRows
+			)
+		);
+
+		$this->assertSame('calculated', $service->runFor('2026-02')['status']);
+		$run = $fake->rowsBySchema['PayrollRun'][0];
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getGlPostAccountGross')->willReturn('4001');
+		$settings->method('getGlPostAccountEmployerCharges')->willReturn('4002');
+		$settings->method('getGlPostAccountWageTaxLiability')->willReturn('1701');
+		$settings->method('getGlPostAccountNetWagesLiability')->willReturn('1702');
+
+		$glPost = new PayrollGLPostService(
+			$this->createMock(ContainerInterface::class),
+			$this->createMock(IAppManager::class),
+			$settings,
+			$this->createMock(LoggerInterface::class)
+		);
+		$built = $glPost->buildLines($run);
+
+		$byAccount = [];
+		foreach ($built['lines'] as $line) {
+			$byAccount[$line['accountNumber']] = $line['amount'];
+		}
+
+		return [$run, $byAccount, $built];
+
+	}//end runAndJournal()
+
+	/**
+	 * humaniq#514: a retro nabetaling and a leave sale are paid out in net, so
+	 * the journal must book them as wage cost. Against the same run without
+	 * them, the gross cost line grows by the retro gross delta plus the sale,
+	 * the wage tax line by the tax on both, and the net wages liability holds
+	 * only net pay plus employer charges: no folded amount is left for the
+	 * remainder to absorb.
+	 *
+	 * @return void
+	 */
+	public function testRetroAndLeaveFoldsReachTheCostSideOfTheJournal(): void {
+		[$plainRun, $plain] = $this->runAndJournal([]);
+		[$run, $journal, $built] = $this->runAndJournal(
+			[
+				'PayrollAdjustment' => [
+					['id' => 'adj-1', 'employeeId' => 'emp-1', 'originalPeriod' => '2026-01', 'correctionRef' => 't1', 'status' => 'applied', 'settlementPeriod' => '2026-02', 'settlementLine' => 'nabetaling', 'deltaGross' => 250.00, 'deltaLoonheffing' => 48.83, 'deltaNet' => 201.17, 'deltaZvw' => 16.00, 'deltaWerknemersverzekeringen' => 20.00],
+				],
+				'LeaveTransaction' => [
+					['id' => 'txn-1', 'employeeId' => 'emp-1', 'transactionType' => 'sell', 'status' => 'settled', 'settlementPeriod' => '2026-02', 'settledAmount' => 200.00],
+				],
+			]
+		);
+
+		$this->assertNull($built['error']);
+
+		// The sale is inside the engine gross (humaniq#513); the retro gross
+		// delta must join it on the cost side.
+		$this->assertEqualsWithDelta(($plain['4001'] + 250.00 + 200.00), $journal['4001'], 0.001, 'The gross cost line books the retro gross delta and the leave sale.');
+		// The sale's own employer charges come from the engine: reference is
+		// the plain run at salary plus sale.
+		[$saleRun] = $this->runAndJournal(['Employee' => [$this->employee(['grossMonthlySalary' => 4000.00])]]);
+		$this->assertEqualsWithDelta(($saleRun['totalEmployerCharges'] + 36.00), $run['totalEmployerCharges'], 0.001, 'The retro employer charge deltas reach the run total.');
+		$this->assertGreaterThan(($plain['1701'] + 48.83), $journal['1701'], 'The wage tax line carries the retro tax delta and the tax on the sale.');
+
+		// Nothing folded is left for the remainder: the net wages liability is
+		// exactly net pay plus employer charges, as for a run without folds.
+		$this->assertEqualsWithDelta($plainRun['totalEmployerCharges'], ($plain['1702'] - $plainRun['totalNet']), 0.001, 'Control: without folds the remainder is the employer charges.');
+		$this->assertEqualsWithDelta($run['totalEmployerCharges'], ($journal['1702'] - $run['totalNet']), 0.001, 'With folds the remainder is still the employer charges only.');
+
+		$debit = ($journal['4001'] + $journal['4002']);
+		$credit = ($journal['1701'] + $journal['1702']);
+		$this->assertEqualsWithDelta($debit, $credit, 0.001);
+
+	}//end testRetroAndLeaveFoldsReachTheCostSideOfTheJournal()
+
+	/**
+	 * humaniq#514: a back-pay delta larger than the employer charges used to
+	 * push the journal remainder below zero, so the whole run could not be
+	 * posted ("Inconsistente runtotalen"). With the retro gross and tax on the
+	 * cost side, the run posts.
+	 *
+	 * @return void
+	 */
+	public function testALargeRetroDeltaNoLongerMakesTheRunUnpostable(): void {
+		[, $journal, $built] = $this->runAndJournal(
+			[
+				'PayrollAdjustment' => [
+					['id' => 'adj-1', 'employeeId' => 'emp-1', 'originalPeriod' => '2026-01', 'correctionRef' => 't1', 'status' => 'applied', 'settlementPeriod' => '2026-02', 'settlementLine' => 'nabetaling', 'deltaGross' => 2500.00, 'deltaLoonheffing' => 500.00, 'deltaNet' => 2000.00, 'deltaZvw' => 0.0, 'deltaWerknemersverzekeringen' => 0.0],
+				],
+			]
+		);
+
+		$this->assertNull($built['error'], 'A run with a large nabetaling still posts.');
+		$this->assertEqualsWithDelta(6300.00, $journal['4001'], 0.001);
+
+	}//end testALargeRetroDeltaNoLongerMakesTheRunUnpostable()
 
 	/**
 	 * The loonbeslag fixture: an `actief` Loonbeslag covering 2026-02 for the
@@ -1077,10 +1237,12 @@ class PayrollRunServiceTest extends TestCase {
 	 * nabetaling widens the garnishable headroom instead of the bare
 	 * engine-computed nettoPay being clamped in isolation.
 	 *
-	 * Anchor net €3.081,17 + retro nabetaling €100,00 + leave-buy-sell sell
-	 * €50,00 = €3.231,17 folded-so-far; beslagvrijeVoet €2.950,00 and
-	 * orderedAmount €800,00 -> headroom €281,17 (< orderedAmount) so the
-	 * deduction is clamped at €281,17, landing nettoPay EXACTLY on the voet.
+	 * The €50,00 leave sale is wage, so it enters the engine gross
+	 * (humaniq#513): the engine net is the net of a €3.850,00 salary. That net
+	 * + retro nabetaling €100,00 is the folded-so-far figure; beslagvrijeVoet
+	 * €2.950,00 and orderedAmount €800,00 -> the headroom above the voet is
+	 * below orderedAmount, so the deduction is clamped at that headroom,
+	 * landing nettoPay EXACTLY on the voet.
 	 *
 	 * @return void
 	 */
@@ -1113,9 +1275,12 @@ class PayrollRunServiceTest extends TestCase {
 
 		$this->assertSame(100.00, $payslip['retroAdjustment']);
 		$this->assertSame(50.00, $payslip['leaveBuySell']);
-		// 3081.17 + 100.00 + 50.00 = 3231.17 folded-so-far; headroom above
-		// 2950.00 is 281.17 (< 800.00 ordered) -> clamped deduction 281.17.
-		$this->assertSame(281.17, $payslip['loonbeslag'], 'The floor-clamp arithmetic uses nettoPay AFTER retroAdjustment/leaveBuySell, not the bare engine figure.');
+		// Engine net over 3850.00 + 100.00 = folded-so-far; the headroom
+		// above 2950.00 is below the 800.00 ordered -> clamped deduction.
+		$reference = $this->plainPayslipAt(3850.00);
+		$expectedDeduction = round((($reference['nettoPay'] + 100.00) - 2950.00), 2);
+		$this->assertLessThan(800.00, $expectedDeduction);
+		$this->assertSame($expectedDeduction, $payslip['loonbeslag'], 'The floor-clamp arithmetic uses nettoPay AFTER retroAdjustment and the taxed leave sale, not the bare engine figure.');
 		$this->assertSame(2950.00, $payslip['nettoPay'], 'nettoPay lands exactly on the beslagvrije voet.');
 		$this->assertSame(2950.00, $result['totals']['totalNet']);
 
