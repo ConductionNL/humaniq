@@ -2347,7 +2347,7 @@
    "id": "abs-rate",
    "area": "absence",
    "name": "See the absence rate and frequency per department over time.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -2363,9 +2363,11 @@
     "personio": "https://support.personio.de/hc/en-us/articles/19296003063709-Access-key-insights-in-the-Metrics-tab: Time Off Rate shows how frequently employees are absent over time, with Time Off Rate by Department and by Type."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/reporting-department-figures on 2026-09-27 for the missing half: the per-department breakdown and the absence frequency trend; the overall rate over time is built. Before: lib/Service/AbsenceRateService.php computes the CBS-style FTE-weighted verzuimpercentage over a period from SickLeaveCase.absenceProgression and EmploymentContract availability, exposed via guarded AnalyticsController::trends() (metric absence-rate); its own docblock states 'frequency/duration trends' are a named non-goal; grep -n 'department|OrgUnit|groupBy' lib/Service/AbsenceRateService.php: no hits, and src/manifest.json AbsenceReport (route /reports/absence) widgets carry no department dimension",
-    "reachedOn": "Dashboard /dashboard 'Absence rate' KPI/trend and AbsenceReport /reports/absence (menu Leave & Absence > Absence report)",
+    "state": "built",
+    "change": "2026-09-29-reporting-department-figures",
+    "evidence": "lib/Service/UnitTrends.php and lib/Service/DepartmentFigures.php: GET /api/analytics/trends?orgUnitId= computes the absence rate for the people placed in a unit or its children per period, and metric absence-frequency counts sick reports per employee per year; GET /api/analytics/units (DepartmentFiguresController) compares units side by side. Tests: tests/Unit/Service/AnalyticsServiceTest.php (testAUnitsAbsenceRateCountsOnlyItsOwnPeople, testAbsenceFrequencyIsAMetric), tests/Unit/Service/DepartmentFiguresServiceTest.php, tests/Unit/Service/DepartmentFiguresTest.php.",
+    "reachedOn": "AbsenceReport /reports/absence ('Absence rate per department' and 'Sick reports per employee per year, per department' charts), Dashboard /dashboard absence rate trend, MijnAfdelingUnit /my-department/:id",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -5681,7 +5683,7 @@
    "id": "rep-wage-costs",
    "area": "reporting",
    "name": "See total wage costs per period and department.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -5697,9 +5699,11 @@
     "personio": "https://support.personio.de/hc/en-us/articles/19300731976093-Summary-of-templates-available-for-reporting: Last month compensation costs per employee (gross salary, one-time and recurring compensation, total payout) and Compensation costs by legal entity over the previous year; reports can be segmented in the builder (https://support.personio.de/hc/en-us/articles/15718133638685-Create-a-report)."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/reporting-department-figures on 2026-09-27 for the missing half: the per-department breakdown; the total per period is built. Before: lib/Service/AnalyticsService.php:219-242 payrollCostSeries() sums totalGross+totalEmployerCharges per period from finalised PayrollRuns, with a null (never 0) bucket when nothing ran; no department/orgUnit breakdown anywhere in the method (grep 'department|orgUnit' in payrollCostSeries: no hits); rendered as the Dashboard's kpi-payroll-cost tile and a chart widget",
-    "reachedOn": "Dashboard, Payroll cost per period widget (main landing page)",
+    "state": "built",
+    "change": "2026-09-29-reporting-department-figures",
+    "evidence": "lib/Service/DepartmentFigures.php wageCost(): a unit's payslip gross plus the run's employer charge share; GET /api/analytics/trends?metric=payroll-cost&orgUnitId= per unit, and GET /api/analytics/units splits a period's wage cost over units with the remainder as notPlaced, adding up to the total. Tests: tests/Unit/Service/DepartmentFiguresServiceTest.php::testTheUnitsWageCostsAddUpToTheAdministrationTotal, tests/Unit/Service/DepartmentFiguresTest.php.",
+    "reachedOn": "Dashboard /dashboard ('Wage cost per department' chart and 'Payroll cost per period'), MijnAfdelingUnit /my-department/:id",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -7041,7 +7045,7 @@
    "id": "td-manager-dashboard",
    "area": "reporting",
    "name": "Show a manager a dashboard of their own department's absence, occupancy, vacancies and wage costs.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -7057,9 +7061,11 @@
     "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmDashboardPlugin/components/MyActionSummaryWidget.vue:127 a manager sees pending team actions and who is on leave today (EmployeesOnLeaveWidget.vue:91); no department absence rate, occupancy, vacancies or wage costs"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/reporting-department-figures on 2026-09-27 for the missing half: a dashboard scoped to the manager's own department. Before: src/manifest.json:400 Dashboard carries org-wide steering tiles (absence rate, billable ratio, payroll cost) from /apps/humaniq/api/analytics/trends with no department or manager parameter; src/manifest.d/personal-dashboard.json:71 MijnHr has a te-beoordelen widget for the manager's own approvals; no dashboard scoped to the manager's department figures",
-    "reachedOn": "Dashboard /dashboard (org-wide), MijnHr /mijn",
+    "state": "built",
+    "change": "2026-09-29-reporting-department-figures",
+    "evidence": "src/manifest.d/department-figures.json MijnAfdeling and MijnAfdelingUnit; GET /api/analytics/my-units and /api/analytics/unit-figures (DepartmentFiguresController) give a manager the absence rate, frequency, wage cost and open vacancies of the units they lead, plus formation from /api/formation/occupancy; lib/Service/AnalyticsAccess.php admits a manager for their own units only and withholds figures of a unit under department_figures_minimum_members (default 5). Tests: tests/Unit/Controller/AnalyticsControllerTest.php, tests/Unit/Controller/DepartmentFiguresControllerTest.php, tests/Unit/Service/DepartmentFiguresServiceTest.php.",
+    "reachedOn": "My HR > My department /my-department, MijnAfdelingUnit /my-department/:id",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
