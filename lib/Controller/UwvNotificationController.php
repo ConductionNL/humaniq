@@ -88,7 +88,7 @@ class UwvNotificationController extends Controller {
 			return new JSONResponse(['error' => 'Ziektegeval niet gevonden.'], Http::STATUS_NOT_FOUND);
 		}
 
-		if ($this->groupManager->isAdmin($uid) === false && $this->administrationService->getActiveAdministrationRole($uid) !== 'hr') {
+		if ($this->mayGenerate($uid) === false) {
 			return new JSONResponse(['error' => 'Alleen HR of een beheerder kan de 42-wekenmelding maken.'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -104,5 +104,20 @@ class UwvNotificationController extends Controller {
 
 		return new JSONResponse($result);
 	}//end generate()
+
+	/**
+	 * Whether the caller is a Nextcloud administrator or HR in their active
+	 * administration. HR is a role per administration, not admin, so this is
+	 * not an admin-only endpoint.
+	 *
+	 * @param string $uid The caller.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-002
+	 */
+	private function mayGenerate(string $uid): bool {
+		return $this->groupManager->isAdmin($uid) === true || $this->administrationService->getActiveAdministrationRole($uid) === 'hr';
+	}//end mayGenerate()
 
 }//end class
