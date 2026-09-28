@@ -104,6 +104,7 @@ import { CnActionButtons, CnDeltaWidget, CnStatWidget } from '@conduction/nextcl
 import AdministrationSwitcher from './views/AdministrationSwitcher.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
+import EmployeeHistoryWidget from './widgets/EmployeeHistoryWidget.vue'
 import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
 import TrendChartWidget from './widgets/TrendChartWidget.vue'
 
@@ -143,6 +144,17 @@ export default {
 		allowedSlots: ['body', 'sidebar'],
 		propsSchema: null,
 		_note: 'Explicit override for the library\'s CnDeltaWidget, for exactly the reason `stat` needs one — see the module docblock above. CnDeltaWidget self-registers its key through the same bare side-effect import that gets tree-shaken out of Humaniq\'s bundle, so without this entry every `type:"delta"` placement resolves to nothing and renders blank. Manifest widgets already pass the { title, icon, content } shape it expects, so no wrapper is needed.',
+	},
+	// @custom-widget-ratchet exclude no built-in widget key renders a dated timeline whose rows each link to a different detail page; object-table's rowRoute is one static route for every row, and CnTimelineView has no widget key of its own
+	'employee-history': {
+		kind: 'widget',
+		component: EmployeeHistoryWidget,
+		defaultSize: { w: 12, h: 5 },
+		minSize: { w: 4, h: 3 },
+		maxSize: { w: 12, h: 10 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'people-employment-history REQ-EHI-001/003: the employee history (CnTimelineView over GET /api/employees/{id}/history, each event linking to its own record) and the concurrent-employments block (GET /api/employees/{id}/employments). Composed and filtered server side; the widget only renders. Built-ins cannot: object-table rowRoute is a single static route, and CnTimelineView has no widget key.',
 	},
 	chart: {
 		kind: 'widget',

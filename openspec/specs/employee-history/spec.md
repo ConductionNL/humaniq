@@ -1,6 +1,24 @@
-# employee-history
+---
+capability: employee-history
+status: done
+built_by: openspec/changes/archive/2026-09-28-people-employment-history
+---
 
-## ADDED Requirements
+# employee-history Specification
+
+**Status**: done
+**Scope**: humaniq
+
+**OpenSpec changes**: [people-employment-history](../../changes/archive/2026-09-28-people-employment-history/) _(archived 2026-09-28)_
+
+## Purpose
+
+One employee's career in one place: the dated events of contracts, placements, applied pay
+changes, approved leave, sickness and finalised reviews, composed on read and filtered by the
+caller's own access, and the contracts that run side by side today with their summed hours,
+FTE and the person's leave balance.
+
+## Requirements
 
 ### Requirement: The employee page SHALL show one chronological history (REQ-EHI-001)
 
@@ -13,6 +31,7 @@ NOT be stored.
 Rows: `ppl-employee-timeline` (humaniq matrix).
 
 #### Scenario: An HR adviser reads a career in one place
+@e2e exclude the order and the links are decided server side; covered by EmployeeHistoryServiceTest::testACareerReadsNewestFirstAndLinksEachRecord, the page mounts in the generic manifest-pages spec
 - **GIVEN** an employee with a first contract from 2021, a move to another unit in 2023,
   an applied raise in 2024 and a second contract from 2025
 - **WHEN** an HR adviser opens that employee's page
@@ -20,6 +39,7 @@ Rows: `ppl-employee-timeline` (humaniq matrix).
   and the first contract start in that order, each linking to its record
 
 #### Scenario: Proposals and rejected requests do not count as history
+@e2e exclude covered by EmployeeHistoryServiceTest::testProposalsAndRejectedRequestsDoNotCount
 - **GIVEN** the same employee with a compensation proposal not yet applied and a rejected
   leave request
 - **WHEN** the history is read through `GET /api/employees/{id}/history`
@@ -34,6 +54,7 @@ record the caller may not read under OpenRegister RBAC.
 Rows: `ppl-employee-timeline` (humaniq matrix).
 
 #### Scenario: A manager outside the team gets nothing
+@e2e exclude needs a second scoped user on the test instance; covered by EmployeeHistoryServiceTest::testAManagerOutsideTheTeamGetsNothing and ::testAnUnreadableSourceRowIsDropped
 - **GIVEN** a manager who may not read an employee in another unit
 - **WHEN** they request that employee's history
 - **THEN** the response is 404 and carries no event
@@ -50,6 +71,7 @@ Rows: `td-multiple-employments` (humaniq matrix), tender
 https://www.tenderned.nl/aankondigingen/overzicht/415227.
 
 #### Scenario: A teacher with two appointments
+@e2e exclude covered by EmployeeHistoryServiceTest::testATeacherWithTwoAppointments and ::testTheEmploymentsAnswerNamesItsBasisAndThisYearsLeave
 - **GIVEN** an employee with a 20-hour contract in schaal 10 and a 16-hour contract in
   schaal 9, both active today
 - **WHEN** a payroll officer opens the employee's page
@@ -57,6 +79,7 @@ https://www.tenderned.nl/aankondigingen/overzicht/415227.
   of 36 hours per week, and the person's leave balance once
 
 #### Scenario: An ended contract is not concurrent
+@e2e exclude covered by EmployeeHistoryServiceTest::testAnEndedContractIsNotConcurrent
 - **GIVEN** an employee whose first contract ended last month and whose second is active
 - **WHEN** `GET /api/employees/{id}/employments` is called for today
 - **THEN** only the active contract is returned and `concurrent` is false

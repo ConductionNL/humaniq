@@ -80,8 +80,11 @@ summed hours and an `fte` of `hoursPerWeek / fullTimeHoursWeek`. The full-time w
 same figure the absence rate divides by, `AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK`
 (40) unless the caller's administration overrides it, and the response names which one it
 used (`normSource`). `AbsenceRateService` already sums overlapping contracts per employee
-(`fteByEmployee()`, `AbsenceRateService.php:478`); the new service calls the same helper,
-made public, rather than a second formula. The response carries `concurrent: true` when
+(`fteByEmployee()`, `AbsenceRateService.php:478`); the new service was planned to call the same
+helper, made public. Built (2026-09-28): the service divides `hoursPerWeek` by the same
+`DEFAULT_FULL_TIME_HOURS_PER_WEEK` constant inline, because `fteByEmployee()` sums per
+employee over a period and cannot return the per-contract figures this block shows; the
+test asserts the same 0.9 FTE the absence rate would count for 36 hours. The response carries `concurrent: true` when
 more than one contract is active.
 
 ### D4. Leave shown once, per person
@@ -92,7 +95,8 @@ would contradict how `leave-accrual-job` accrues and is out of scope.
 
 ### D5. One host section, library view
 
-A registered host section `EmployeeHistorySection` (kind `section` in `src/registry.js`)
+A registered host widget `employee-history` (kind `widget` in `src/registry.js`, with the
+custom-widget ratchet's exclude marker because no built-in widget renders per-row routes)
 calls the two endpoints and hands the events to `CnTimelineView` and the contracts to the
 library table. It holds no business logic; ordering and filtering happen server side.
 
