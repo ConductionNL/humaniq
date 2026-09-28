@@ -146,10 +146,10 @@
 						"id": "formation-filledFte",
 						"type": "stat",
 						"title": "Filled FTE",
-						"icon": "AccountCheckOutline",
+						"icon": "AccountMultipleOutline",
 						"content": {
 							"label": "Filled FTE",
-							"icon": "AccountCheckOutline",
+							"icon": "AccountMultipleOutline",
 							"format": {
 								"style": "number",
 								"decimals": 2
@@ -167,10 +167,10 @@
 						"id": "formation-vacantFte",
 						"type": "stat",
 						"title": "Vacant FTE",
-						"icon": "AccountQuestionOutline",
+						"icon": "AccountPlusOutline",
 						"content": {
 							"label": "Vacant FTE",
-							"icon": "AccountQuestionOutline",
+							"icon": "AccountPlusOutline",
 							"format": {
 								"style": "number",
 								"decimals": 2

@@ -3518,11 +3518,11 @@
 								"decimals": 2,
 								"style": "number"
 							},
-							"icon": "AccountCheckOutline",
+							"icon": "AccountMultipleOutline",
 							"label": "Filled FTE",
 							"valueField": "total.filledFte"
 						},
-						"icon": "AccountCheckOutline",
+						"icon": "AccountMultipleOutline",
 						"id": "occupancy-filledFte",
 						"title": "Filled FTE",
 						"type": "stat"
@@ -3539,11 +3539,11 @@
 								"decimals": 2,
 								"style": "number"
 							},
-							"icon": "AccountQuestionOutline",
+							"icon": "AccountPlusOutline",
 							"label": "Vacant FTE",
 							"valueField": "total.vacantFte"
 						},
-						"icon": "AccountQuestionOutline",
+						"icon": "AccountPlusOutline",
 						"id": "occupancy-vacantFte",
 						"title": "Vacant FTE",
 						"type": "stat"
@@ -6216,11 +6216,11 @@
 								"decimals": 2,
 								"style": "number"
 							},
-							"icon": "AccountCheckOutline",
+							"icon": "AccountMultipleOutline",
 							"label": "Filled FTE",
 							"valueField": "total.filledFte"
 						},
-						"icon": "AccountCheckOutline",
+						"icon": "AccountMultipleOutline",
 						"id": "formation-filledFte",
 						"title": "Filled FTE",
 						"type": "stat"
@@ -6237,11 +6237,11 @@
 								"decimals": 2,
 								"style": "number"
 							},
-							"icon": "AccountQuestionOutline",
+							"icon": "AccountPlusOutline",
 							"label": "Vacant FTE",
 							"valueField": "total.vacantFte"
 						},
-						"icon": "AccountQuestionOutline",
+						"icon": "AccountPlusOutline",
 						"id": "formation-vacantFte",
 						"title": "Vacant FTE",
 						"type": "stat"
