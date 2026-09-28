@@ -1015,7 +1015,7 @@
    "id": "ppl-employee-timeline",
    "area": "people",
    "name": "See an employee's history of contracts, placements and changes on one timeline.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "partial",
    "hr2day": "partial",
@@ -1031,9 +1031,11 @@
     "personio": "https://support.personio.de/hc/en-us/articles/36539231813661-Summary-of-Employee-profile-and-Employment-details-permissions-New-experience: the History tab in the employee profile shows a record of all data changes made to an employee's attributes."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-employment-history on 2026-09-27 for the missing half: one chronological timeline on the employee page. Before: lib/Service/EmployeeTimeline.php:65 place() buckets raw Employee rows by startDate/endDate for headcount counting; grep -rln EmployeeTimeline lib/ shows its only caller is lib/Service/AnalyticsService.php, which feeds the Dashboard's 'Headcount & turnover' trend widget, not a per-employee view; EmployeeDetail (src/manifest.d/hr-objects.json) instead shows Contracts, Payslips, Expenses, Timesheets, Assignments, Reviews, Goals & OKRs, Compensation adjustments, Buy/sell leave and Generated documents as SEPARATE object-list panels, with no merged chronological timeline widget anywhere",
-    "reachedOn": "EmployeeTimeline itself reaches the Dashboard's aggregate Headcount & turnover chart, not EmployeeDetail; a user reads an individual employee's history by opening several separate list panels on EmployeeDetail /employees/:id, not one timeline",
+    "state": "built",
+    "change": "2026-09-28-people-employment-history",
+    "evidence": "lib/Service/EmployeeHistoryService.php::historyFor() composes contract, placement, applied pay change, approved leave, sickness and finalised review events newest first; GET /api/employees/{id}/history (EmployeeHistoryController, 404 for an unreadable employee, unreadable source rows dropped); src/widgets/EmployeeHistoryWidget.vue renders them in CnTimelineView, each event linking to its record. Tests: tests/Unit/Service/EmployeeHistoryServiceTest.php.",
+    "reachedOn": "EmployeeDetail /employees/:id (Employments and History blocks)",
+    "readOn": "2026-09-28",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6837,7 +6839,7 @@
    "id": "td-multiple-employments",
    "area": "people",
    "name": "Hold several concurrent employments for one person, each with its own scale and hours, and see them together.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -6853,9 +6855,11 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmPimPlugin/entity/Employee.php:197 one job title, one employment status and one salary grade per employee record; no concurrent employments"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-employment-history on 2026-09-27 for the missing half: one combined view of concurrent employments, including leave across them. Before: EmploymentContract.employeeId $ref Employee (lib/Settings/register.d/hr-objects.json) allows several contracts per person, each with its own salary and hours; src/manifest.d/hr-objects.json:150 EmployeeDetail object-list of EmploymentContract filtered to the employee, rowRoute EmploymentContractDetail (:181); lib/Service/AbsenceRateService.php:481 sums overlapping contracts' FTE; no combined leave overview across employments (LeaveBalance is per employee and leave type)",
-    "reachedOn": "EmployeeDetail /employees/:id contracts list; EmploymentContracts /contracts",
+    "state": "built",
+    "change": "2026-09-28-people-employment-history",
+    "evidence": "EmployeeHistoryService::activeEmploymentsOn() returns the contracts active on a date with scale, hours, CAO and type, summed hours and FTE (40-hour week, named in the response); GET /api/employees/{id}/employments adds the year's leave balances once. Tests: EmployeeHistoryServiceTest::testATeacherWithTwoAppointments.",
+    "reachedOn": "EmployeeDetail /employees/:id (Employments and History blocks)",
+    "readOn": "2026-09-28",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
