@@ -149,6 +149,17 @@ if (interface_exists('OCA\\OpenRegister\\Lifecycle\\LifecycleGuardInterface') ==
 	require __DIR__ . '/stubs/OpenRegisterLifecycleStub.php';
 }
 
+// The notification recipient seam (absence-deadlines-and-signals D2): the
+// CaseManagerResolver implements it. It takes an ObjectEntity, so the object
+// events stub (which carries ObjectEntity) is loaded first.
+if (interface_exists('OCA\\OpenRegister\\Service\\Notification\\RecipientResolverInterface') === false) {
+	if (class_exists('OCA\\OpenRegister\\Db\\ObjectEntity') === false) {
+		require_once __DIR__ . '/stubs/OpenRegisterObjectEventsStub.php';
+	}
+
+	require __DIR__ . '/stubs/OpenRegisterRecipientResolverStub.php';
+}
+
 // Same rule, different class. Five classes establish OpenRegister's
 // availability with class_exists() instead of SettingsService (they do not
 // inject it — see the stub's header). Without the name present, that guard
@@ -210,7 +221,7 @@ if (class_exists('OCA\\OpenRegister\\Db\\RegisterMapper') === false) {
 if (class_exists('OCA\\OpenRegister\\Event\\ObjectCreatingEvent') === false
 	|| class_exists('OCA\\OpenRegister\\Event\\ObjectUpdatedEvent') === false
 ) {
-	require __DIR__ . '/stubs/OpenRegisterObjectEventsStub.php';
+	require_once __DIR__ . '/stubs/OpenRegisterObjectEventsStub.php';
 }
 
 // Same rule, different classes: the payroll flow nodes (lib/Flow/) implement
