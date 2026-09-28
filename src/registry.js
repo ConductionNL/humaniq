@@ -101,12 +101,14 @@
  */
 
 import { CnActionButtons, CnDeltaWidget, CnStatWidget } from '@conduction/nextcloud-vue'
+import CompCycleRunDialog from './dialogs/CompCycleRunDialog.vue'
 import AdministrationSwitcher from './views/AdministrationSwitcher.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
 import EmployeeHistoryWidget from './widgets/EmployeeHistoryWidget.vue'
 import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
 import TrendChartWidget from './widgets/TrendChartWidget.vue'
+import { proposeRaiseForSelection } from './dialogs/proposeRaiseForSelection.js'
 
 export default {
 	// --- Flows (ADR-110 Decision 4). Only the SIDEBAR is an app component;
@@ -114,6 +116,21 @@ export default {
 	//     manifest page types. CnFlowSidebar has to mount in the NC app
 	//     sidebar for the canvas to keep full width. ---
 	FlowDetailSidebar: { kind: 'page', component: FlowDetailSidebar },
+
+	// comp-collective-raise-and-step-increase: run a compensation cycle step
+	// for many people, with a dry-run preview first. Opened by the three
+	// open-modal header actions on CompReviewCycleDetail.
+	CompCycleRunDialog: {
+		kind: 'modal',
+		component: CompCycleRunDialog,
+		_note: 'api-call cannot show what it will write before it writes, and the cycle steps touch every employee in scope; the dialog posts a dry run, shows it, and only then posts for real.',
+	},
+	// The Employees list's "Propose a raise" bulk action. A handler, not an
+	// open-modal bulk action: see proposeRaiseForSelection.js for why.
+	proposeRaiseForSelection: {
+		kind: 'handler',
+		handler: proposeRaiseForSelection,
+	},
 
 	ProformaPayslip: {
 		kind: 'page',
