@@ -40,6 +40,13 @@ The check SHALL keep the never-throw posture `rostering` already specifies, and 
 run in the same act as the working-time check, so `occ humaniq:roster:check` and
 `POST /api/roster/check` still answer the whole question in one call.
 
+Publishing SHALL refuse a roster with a `competence` finding (humaniq#512). The Roster
+`publiceren` transition SHALL require `OCA\Humaniq\Lifecycle\RosterCompetenceGuard`,
+which runs this same check and denies the transition while any assignment on the roster
+lacks a required competence on its date, naming the employee, the date and the
+competence. The guard SHALL fail closed: a roster it cannot identify or check does not
+publish. Working-time findings stay a report and do not block publishing.
+
 #### Scenario: A roster with an unqualified assignment does not publish clean
 @e2e exclude covered by AgendaAndAvailabilityTest::testAnExpiredCompetenceProducesAFindingOnItsOwnDate through RosterCheckService's competence cross-check
 - **GIVEN** a concept roster with one assignment putting an employee without
@@ -47,6 +54,14 @@ run in the same act as the working-time check, so `occ humaniq:roster:check` and
 - **WHEN** `occ humaniq:roster:check` runs
 - **THEN** it reports one `competence` finding naming the employee, the date and
   `boa-domein-1`
+
+#### Scenario: Publishing a roster with an unqualified assignment is refused
+@e2e exclude a lifecycle-guard refusal asserted from the guard with the real RosterCheckService; covered by RosterCompetenceGuardTest::testPublishingARosterWithAnUnqualifiedAssignmentIsRefused, with ::testPublishingARosterWhoseAssignmentsAreQualifiedIsAllowed as the control and LifecycleGuardRegistrationTest proving the publiceren wiring
+- **GIVEN** a concept roster with one assignment putting an employee without
+  `boa-domein-1` on a shift that requires it
+- **WHEN** a planner runs the `publiceren` transition
+- **THEN** the transition is refused with a message naming the employee, the date and
+  `boa-domein-1`, and the roster stays `concept`
 
 #### Scenario: The two kinds of finding stay apart
 @e2e exclude covered by AgendaAndAvailabilityTest::testAnExpiredCompetenceProducesAFindingOnItsOwnDate, which asserts the finding's own kind, and by RosterCheckService tagging every working-time violation with the other kind

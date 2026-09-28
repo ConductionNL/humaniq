@@ -9,6 +9,8 @@
 - [x] 1.4 Extend `occ humaniq:roster:check` and `POST /api/roster/check` to report
       the new finding kind without a second call.
 - [x] 1.5 Manifest pages for competences, under the existing menu group.
+- [x] 1.6 Refuse `publiceren` on a roster with a competence finding through
+      `RosterCompetenceGuard`, registered in `Application.php` (humaniq#512).
 
 ## 2. Resources and bookings
 

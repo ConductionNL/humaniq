@@ -44,6 +44,7 @@
                             "publiceren": {
                                 "from": ["concept"],
                                 "to": "gepubliceerd",
+                                "requires": "OCA\\Humaniq\\Lifecycle\\RosterCompetenceGuard",
                                 "description": "Freeze the plan and make it the team's roster. Its RosterAssignments join the standing occ humaniq:rules:audit ATW cross-check once published (design D4)."
                             },
                             "intrekken": {

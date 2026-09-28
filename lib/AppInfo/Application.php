@@ -36,6 +36,7 @@ use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
+use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
 use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
@@ -51,6 +52,7 @@ use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\JurisdictionPackService;
+use OCA\Humaniq\Service\RosterCheckService;
 use OCA\Humaniq\Service\TimeEntryEventService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
@@ -222,6 +224,21 @@ class Application extends App implements IBootstrap {
 			LeaveSettlementPeriodGuard::class,
 			static function ($c): LeaveSettlementPeriodGuard {
 				return new LeaveSettlementPeriodGuard();
+			}
+		);
+
+		// OpenRegister lifecycle guard for the Roster `publiceren` transition
+		// (REQ-ROST-C02, humaniq#512): a roster that puts someone on a shift
+		// they are not qualified for on that date does not publish. It reuses
+		// RosterCheckService's competence cross-check, so the refusal and
+		// `occ humaniq:roster:check` read the same findings. Keyed by its FQCN
+		// so OpenRegister's LifecycleGuardRegistry resolves the `requires` tag.
+		$context->registerService(
+			RosterCompetenceGuard::class,
+			static function ($c): RosterCompetenceGuard {
+				return new RosterCompetenceGuard(
+					rosterCheck: $c->get(RosterCheckService::class)
+				);
 			}
 		);
 
