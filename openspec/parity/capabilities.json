@@ -2983,8 +2983,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360007584818-Track-your-working-hours: organizations can enable location tracking when clocking in; https://support.personio.de/hc/en-us/articles/6619817395485-Frequently-Asked-Questions-Time-off-and-attendance advises a larger geofencing radius for workplaces; no page states clock-in outside the location is blocked."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'geofenc' lib/ src/ openspec/: no hits; AttendanceRecord carries a 'location' filter/field but nothing enforces or checks it against a work-site boundary",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rniF 'geofenc' lib/ src/ openspec/: no hits; AttendanceRecord carries a 'location' filter/field but nothing enforces or checks it against a work-site boundary",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -3389,10 +3389,11 @@
     "personio": "https://developer.personio.de/docs/key-points-for-implementing-shift-planning-integration-with-personio-hris: shift planning partners consume approved absences from Personio for accurate shift planning; the roster itself lives in the partner app."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -niF leave lib/Service/RosterCheckService.php lib/Standards/Checks/NlRosterChecks.php lib/Controller/RosterController.php: no hits; RosterAssignmentProjectionService.php only composes a Shift's start/end times, not leave; RosterAssignments/RosterDetail manifest pages show no leave column",
+    "state": "specified",
+    "evidence": "Specified in openspec/changes/agenda-rostering-and-resource-booking (REQ agenda and availability: approved leave and open sick leave appear on the person's agenda and are taken out of availability for rostering), matched 2026-09-28. Before: grep -niF leave lib/Service/RosterCheckService.php lib/Standards/Checks/NlRosterChecks.php lib/Controller/RosterController.php: no hits; RosterAssignmentProjectionService.php only composes a Shift's start/end times, not leave; RosterAssignments/RosterDetail manifest pages show no leave column",
     "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "agenda-rostering-and-resource-booking"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3517,8 +3518,8 @@
     "personio": "not checked: not settled: no expense article among the 629 help centre articles, and https://www.marketplace.personio.com/category/travel-expense-management/ only lists partner apps without stating policy checks."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'expense.*policy|policy.*expense|spending.*limit|declaratie.*beleid' lib/ src/manifest.d src/manifest.json openspec: no hits; Expense.submit carries no requires guard at all (see hr-expense.json lifecycle above), so nothing checks a claim against any policy before or at approval",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rniF 'expense.*policy|policy.*expense|spending.*limit|declaratie.*beleid' lib/ src/manifest.d src/manifest.json openspec: no hits; Expense.submit carries no requires guard at all (see hr-expense.json lifecycle above), so nothing checks a claim against any policy before or at approval",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -3705,8 +3706,8 @@
     "personio": "not checked: not settled: https://www.marketplace.personio.com/category/travel-expense-management/ (browser read 2026-09-26) lists card and spend partners such as Pleo, Ramp, Spendesk and Moss, but no page states card transactions are imported into Personio as expenses."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'card feed|creditcard|company card|corporate card|bank feed|transaction import' lib/ src/manifest.d src/manifest.json openspec: no hits anywhere",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rniF 'card feed|creditcard|company card|corporate card|bank feed|transaction import' lib/ src/manifest.d src/manifest.json openspec: no hits anywhere",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -4256,8 +4257,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/13632466245661-Personio-Payroll-About lists advance payments as a supported salary type and https://support.personio.de/hc/en-us/articles/34386992832541-Manage-wage-types-in-Personio-Payroll has an advance loan deduction wage type, in German payroll only; instalment scheduling is not described."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'loan|voorschot|advance' lib openspec (excluding archive): no hits; Payslip/Loonbeslag schemas carry no loan or advance-instalment field",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (afas), no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rniF 'loan|voorschot|advance' lib openspec (excluding archive): no hits; Payslip/Loonbeslag schemas carry no loan or advance-instalment field",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -4577,10 +4578,11 @@
    },
    "built": {
     "state": "building",
-    "evidence": "lib/Settings/register.d/hr-objects.json LoonaangifteFiling x-openregister-lifecycle 'corrigeren' description: 'A sent filing can be superseded by a correction ... this transition's reset-to-concept semantics are a simplified placeholder: full correctie-berichten (VL/IB-correcties) are a future spec.' The transition only resets a sent filing to concept and builds no correctiebericht. Corrected 2026-09-26: the earlier claim that the lifecycle button never renders is refuted. At @conduction/nextcloud-vue 2.40.0 CnPageRenderer.vue:586-591 builds the body grid only from page-level widgets; humaniq moved its widgets to config.widgets (hrmq#115), so CnDetailPage mounts and renders config.lifecycleActions (CnDetailPage.vue:101-117). A live check that the button shows on the filing detail page is still owed.",
+    "evidence": "lib/Settings/register.d/hr-objects.json LoonaangifteFiling x-openregister-lifecycle 'corrigeren' description: 'A sent filing can be superseded by a correction ... this transition's reset-to-concept semantics are a simplified placeholder: full correctie-berichten (VL/IB-correcties) are a future spec.' The transition only resets a sent filing to concept and builds no correctiebericht. Corrected 2026-09-26: the earlier claim that the lifecycle button never renders is refuted. At @conduction/nextcloud-vue 2.40.0 CnPageRenderer.vue:586-591 builds the body grid only from page-level widgets; humaniq moved its widgets to config.widgets (hrmq#115), so CnDetailPage mounts and renders config.lifecycleActions (CnDetailPage.vue:101-117). A live check that the button shows on the filing detail page is still owed. Missing half specified in openspec/changes/filings-correction-message on 2026-09-28.",
     "reachedOn": "nothing reaches a real correction message; the corrigeren transition only resets status to concept, it builds no correctiebericht",
     "readOn": "2026-09-26",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "filings-correction-message"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4774,8 +4776,8 @@
     "personio": "not checked: not settled: the help centre says Personio Payroll is Germany only (https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll, updated 2026-09-25) and Dutch pay is run in Loket (https://support.personio.de/hc/en-us/articles/35527380801053-Run-your-monthly-payroll-with-the-Loket-integration), while https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26) announces 'Personio Payroll, powered by Loket', managed payroll delivery for the Netherlands; no page states whether CBS wage statistics are delivered."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF '\\bcbs\\b' lib src openspec (excluding archive): no hits anywhere",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rniF '\\bcbs\\b' lib src openspec (excluding archive): no hits anywhere",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -5150,8 +5152,8 @@
     "personio": "not checked: not settled: searched help centre for skills matrix; career frameworks (https://support.personio.de/hc/en-us/articles/30454790101789-Set-up-career-frameworks) define competencies per job, but no team skills matrix view is described."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rliF 'skills-matrix|skillsmatrix|SkillsMatrix' lib src openspec: no hits; no spec folder under openspec/specs/ either",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (hr2day), no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rliF 'skills-matrix|skillsmatrix|SkillsMatrix' lib src openspec: no hits; no spec folder under openspec/specs/ either",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -5181,8 +5183,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/30454790101789-Set-up-career-frameworks: career frameworks show competencies per job, expectations per level and how employees can grow, visible to employees; no succession planning for key positions is described."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rliF career lib src openspec: hits only in recruiting/ATS specs (a candidate-facing career page for job postings) and the performance-reviews-mvp design.md non-goals ('career/functie frameworks and competency matrices ... separate draft territory'); no CareerPath/Succession schema or page",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rliF career lib src openspec: hits only in recruiting/ATS specs (a candidate-facing career page for job postings) and the performance-reviews-mvp design.md non-goals ('career/functie frameworks and competency matrices ... separate draft territory'); no CareerPath/Succession schema or page",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -5243,8 +5245,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/7419366846237-Give-and-request-feedback: all employees can send and request continuous feedback at any time, which https://support.personio.de/hc/en-us/articles/33585575395485-First-steps-with-Performance-Development says helps improve recognition; no dedicated peer recognition or kudos feature is described."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rliF recognition lib src openspec: hits only in receipt-ocr (text 'recognition', OCR) and expense schemas, both unrelated; no Recognition/Kudos schema or page",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rliF recognition lib src openspec: hits only in receipt-ocr (text 'recognition', OCR) and expense schemas, both unrelated; no Recognition/Kudos schema or page",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -5462,8 +5464,8 @@
     "loket": "https://loket.nl/functionaliteiten/hr-buddy/ and https://loket.nl/mijnloket/: the digital HR-buddy answers employee questions 24/7 and hands over to requests such as leave or a declaration; routing a question to HR as a tracked request is not described."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF 'hr inbox|hr.request|helpdesk|ticket|vraag aan hr|support request' lib/Settings/register.d src/manifest.d openspec/specs: no hits anywhere",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rniF 'hr inbox|hr.request|helpdesk|ticket|vraag aan hr|support request' lib/Settings/register.d src/manifest.d openspec/specs: no hits anywhere",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -5877,8 +5879,8 @@
     "personio": "not checked: not settled: searched help centre for benchmark; https://support.personio.de/hc/en-us/articles/38900337558685-Measure-your-organization-s-AI-fluency lists benchmarks against other organizations for one survey template as coming soon, and nothing compares HR figures with a sector benchmark."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniF benchmark lib/ src/ openspec/specs openspec/changes: no hits outside archive",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (loket), no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rniF benchmark lib/ src/ openspec/specs openspec/changes: no hits outside archive",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -6065,9 +6067,10 @@
    },
    "built": {
     "state": "building",
-    "evidence": "lib/Service/PayrollRetentionGuardService.php places an OpenRegister legal hold to PREVENT premature erasure of a retention-locked payroll object; its docblock states 'A hold, once placed, is never auto-released here, releasing it is a deliberate HR/finance action once the retention window has genuinely lapsed'; appinfo/info.xml:104,112 registers only LeaveAccrualJob and PollCalendarSubscriptionsJob as BackgroundJobs, no retention-expiry deletion job exists",
+    "evidence": "lib/Service/PayrollRetentionGuardService.php places an OpenRegister legal hold to PREVENT premature erasure of a retention-locked payroll object; its docblock states 'A hold, once placed, is never auto-released here, releasing it is a deliberate HR/finance action once the retention window has genuinely lapsed'; appinfo/info.xml:104,112 registers only LeaveAccrualJob and PollCalendarSubscriptionsJob as BackgroundJobs, no retention-expiry deletion job exists Missing half specified in openspec/changes/compliance-retention-expiry on 2026-09-28.",
     "reachedOn": "nothing automatically deletes data on retention expiry; NlDossierRetentionChecks (nl-bewaartermijn-verstreken) only flags the moment via occ humaniq:rules:audit, it does not act on it",
-    "owner": "ConductionNL/humaniq"
+    "owner": "ConductionNL/humaniq",
+    "change": "compliance-retention-expiry"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6191,8 +6194,8 @@
     "personio": "not checked: not settled: https://support.personio.de/hc/en-us/articles/360002389597-Best-Practice-Involving-the-Works-Council gives advice on involving the works council when introducing Personio, but no feature records works council consent for changes."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rliF 'works.council|ondernemingsraad|WOR' lib src openspec: no hits",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): no competitor rated yes, no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rliF 'works.council|ondernemingsraad|WOR' lib src openspec: no hits",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -6222,8 +6225,8 @@
     "personio": "https://support.personio.de/hc/en-us/articles/12955259279517-Overview-of-Personio-Whistleblowing: a safe and anonymous reporting channel for employees and external individuals, reviewed only by designated case managers, as the separate Whistleblowing app."
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rliF 'whistleblow|klokkenluid' lib src openspec: no hits",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (personio), no demand, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rliF 'whistleblow|klokkenluid' lib src openspec: no hits",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -7736,8 +7739,8 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmLeavePlugin/entity/LeavePeriodHistory.php defines only the leave period start; grep -riE 'lock|clos' on that entity and Service/LeavePeriodService.php and grep -riE 'lock.*leave.?period|leave.?period.*(lock|close)' src/plugins src/client/src: no match"
    },
    "built": {
-    "state": "none",
-    "evidence": "not settled: LeaveBalance and LeaveTransaction (lib/Settings/register.d/hr-leave.json) carry no period lock field, but whether a recalculation can rewrite a past period was not traced",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (afas), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: not settled: LeaveBalance and LeaveTransaction (lib/Settings/register.d/hr-leave.json) carry no period lock field, but whether a recalculation can rewrite a past period was not traced",
     "reachedOn": "not traced",
     "owner": "ConductionNL/humaniq"
    },
@@ -7767,8 +7770,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'mileage|kilomet|commut' src/plugins src/client/src: no match; src/plugins/orangehrmClaimPlugin/entity/ClaimExpense.php:59 a claim expense is an amount with a type, date and note only"
    },
    "built": {
-    "state": "none",
-    "evidence": "lib/Settings/register.d/hr-expense.json:211-227 travelType is business or commute per claim and distanceKm is typed by the employee; nothing subtracts the commuting distance (grep -rniE 'deduct|aftrek' lib/Settings/register.d/hr-expense.json lib/Standards/Checks/NlTravelExpenseChecks.php: no hits)",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (afas), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: lib/Settings/register.d/hr-expense.json:211-227 travelType is business or commute per claim and distanceKm is typed by the employee; nothing subtracts the commuting distance (grep -rniE 'deduct|aftrek' lib/Settings/register.d/hr-expense.json lib/Standards/Checks/NlTravelExpenseChecks.php: no hits)",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -7955,8 +7958,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'target.?group|wage.?cost|subsid|payroll' src/plugins src/client/src: no match; no payroll or wage subsidy handling"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'lkv|loonkostenvoordeel|doelgroep' lib src: no hits",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (visma-raet), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rniE 'lkv|loonkostenvoordeel|doelgroep' lib src: no hits",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -7986,8 +7989,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'nudge|reminder' src/plugins src/client/src: no match; leave notifications in orangehrmLeavePlugin are sent only on request actions"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'nudge|remind' lib/Settings/register.d/hr-leave.json lib/Service: no balance based reminder; lve-expiry covers statutory expiry only",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): roadmap demand but no competitor rated yes, outside the core area (people, hiring). Reversible when a second signal appears. Before: grep -rniE 'nudge|remind' lib/Settings/register.d/hr-leave.json lib/Service: no balance based reminder; lve-expiry covers statutory expiry only",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -8079,8 +8082,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'parental|maternity|pregnan|payroll' src/plugins src/client/src: no match; leave types in orangehrmLeavePlugin have no pay components"
    },
    "built": {
-    "state": "none",
-    "evidence": "lib/Settings/register.d/hr-leave.json:66 parental is a leave kind; grep -rniE 'parental|ouderschap' lib/Service/PayrollRunService.php lib/Payroll: no hits, so approved parental leave produces no pay component",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (hr2day), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: lib/Settings/register.d/hr-leave.json:66 parental is a leave kind; grep -rniE 'parental|ouderschap' lib/Service/PayrollRunService.php lib/Payroll: no hits, so approved parental leave produces no pay component",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -8111,8 +8114,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'parental|maternity|pregnan' src/plugins src/client/src: no match; sickness is only a configurable leave type with no linking rules"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'zwangerschap|pregnan|wazo' lib src: no hits; SickLeaveCase (lib/Settings/register.d/hr-verzuim.json) has no link to a pregnancy leave period",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (hr2day), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rniE 'zwangerschap|pregnan|wazo' lib src: no hits; SickLeaveCase (lib/Settings/register.d/hr-verzuim.json) has no link to a pregnancy leave period",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -8235,8 +8238,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'pension|payroll' src/plugins src/client/src: no match"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'pensioengrondslag|pensionBase|franchise' lib src: no editable pension base rules; PensionFiling (lib/Settings/register.d/hr-pension.json) records deliveries only",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (loket), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rniE 'pensioengrondslag|pensionBase|franchise' lib src: no editable pension base rules; PensionFiling (lib/Settings/register.d/hr-pension.json) records deliveries only",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -8360,8 +8363,8 @@
     "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmAdminPlugin/pages/systemUser/SystemUser.vue:34 and :237 list every system user with its user role, filterable by role; there is no per entity or legal entity permission overview"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'permission.?overview|grantOverview' lib src: no page lists grants; access sits in Nextcloud groups and OpenRegister RBAC outside humaniq, and lib/Settings/register.d/hr-integrations.json:23 grantedSchemas is a record of intent only",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (personio), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rniE 'permission.?overview|grantOverview' lib src: no page lists grants; access sits in Nextcloud groups and OpenRegister RBAC outside humaniq, and lib/Settings/register.d/hr-integrations.json:23 grantedSchemas is a record of intent only",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -8391,8 +8394,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'openai|\\bllm\\b|\\bgpt\\b|\\bai\\b' src/plugins/orangehrmPerformancePlugin src/client/src/orangehrmPerformancePlugin: no match; src/client/src/orangehrmPerformancePlugin/components/ReviewSummary.vue:24 is a header showing the reviewer's own final rating and comments, not a generated summary"
    },
    "built": {
-    "state": "none",
-    "evidence": "grep -rniE 'summar|hermiq|llm' lib/Settings/register.d/hr-performance.json lib/Service: no generated summary on PerformanceReview",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): single competitor (personio), a changelog entry only, which is not demand under the rule, outside the core area (people, hiring). Reversible: rerun the rule when a tender or feature request names it. Before: grep -rniE 'summar|hermiq|llm' lib/Settings/register.d/hr-performance.json lib/Service: no generated summary on PerformanceReview",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -8485,8 +8488,8 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'benchmark|survey' src/plugins src/client/src: no match"
    },
    "built": {
-    "state": "none",
-    "evidence": "no survey exists (tal-surveys: grep -rliF survey lib src finds no Survey schema or page) and nothing benchmarks (rep-benchmark)",
+    "state": "decided-no",
+    "evidence": "Decided no on 2026-09-28 by the build-all rule (defer retired): roadmap demand but no competitor rated yes, outside the core area (people, hiring). Reversible when a second signal appears. Before: no survey exists (tal-surveys: grep -rliF survey lib src finds no Survey schema or page) and nothing benchmarks (rep-benchmark)",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
