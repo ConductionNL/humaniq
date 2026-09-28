@@ -516,6 +516,63 @@ class HrDocumentServiceTest extends TestCase {
 	}//end testGenerateAssemblesDataRefsAndAdHocDataWithoutFlatteningObjectFields()
 
 	/**
+	 * The 42-week notification is rendered from the case with its D3 fields
+	 * as ad-hoc data, filed as an HrGeneratedDocument linked to the case.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-002
+	 */
+	public function testTheFortyTwoWeekNotificationIsFiledOnTheCase(): void {
+		$documentService = $this->fakeDocumentService();
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee()],
+				'EmploymentContract' => [$this->contract()],
+				'SickLeaveCase' => [['id' => 'case-1', 'employeeId' => 'emp-1', 'firstSickDay' => '2025-12-22', 'status' => 'gemeld', 'administrationId' => 'ADM-001', 'currentAbsencePercentage' => 50, 'absenceProgression' => [['effectiveFrom' => '2026-06-01', 'absencePercentage' => 50]]]],
+				'hrAdministration' => [['id' => 'adm', 'administrationId' => 'ADM-001', 'name' => 'Demo B.V.', 'loonheffingennummer' => '000000000L01', 'kvkNumber' => '12345678']],
+			],
+			documentService: $documentService,
+			configuredTemplateId: 'T42'
+		);
+
+		$result = $service->generateUwvNotification('case-1', 'hr-adviseur');
+
+		$this->assertSame('generated', $result['status']);
+		$melding = $documentService->calls[0]['options']['adHocData']['uwvMelding'];
+		$this->assertSame('2025-12-22', $melding['case']['firstSickDay']);
+		$this->assertSame(50, $melding['case']['resumption'][0]['absencePercentage']);
+		$this->assertSame('Demo B.V.', $melding['employer']['name']);
+		$docs = array_values(array_filter($fake->saved, static fn (array $s): bool => $s['schema'] === 'HrGeneratedDocument'));
+		$this->assertSame('case-1', $docs[0]['object']['sickLeaveCaseId']);
+		$this->assertSame('uwv-melding-42-weken', $docs[0]['object']['documentType']);
+
+	}//end testTheFortyTwoWeekNotificationIsFiledOnTheCase()
+
+	/**
+	 * A recovered case has nothing to notify: refused, no document created.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-002
+	 */
+	public function testARecoveredCaseHasNothingToNotify(): void {
+		$documentService = $this->fakeDocumentService();
+		[$service, $fake] = $this->service(
+			['Employee' => [$this->employee()], 'SickLeaveCase' => [['id' => 'case-1', 'employeeId' => 'emp-1', 'firstSickDay' => '2025-12-22', 'status' => 'hersteld']]],
+			documentService: $documentService,
+			configuredTemplateId: 'T42'
+		);
+
+		$result = $service->generateUwvNotification('case-1', 'hr-adviseur');
+
+		$this->assertSame('refused-recovered', $result['status']);
+		$this->assertSame([], $documentService->calls);
+		$this->assertSame([], $fake->saved);
+
+	}//end testARecoveredCaseHasNothingToNotify()
+
+	/**
 	 * @return void
 	 */
 	public function testGenerateOmitsContractRefWhenContractIdIsNull(): void {
