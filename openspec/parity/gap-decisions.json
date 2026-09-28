@@ -1214,5 +1214,21 @@
     "reason": "Owned by nextcloud/server: passkey sign-in is Nextcloud WebAuthn, outside the fleet; decided no for humaniq per the openspec pass addendum.",
     "change": null,
     "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sales-time-and-expense-billing",
+    "matrix": "shillinq",
+    "decision": "existing",
+    "reason": "Billable flag on TimeEntry. Shillinq change sales-time-and-expense-billing (merged) needs a billable marker on the hour, through hours-to-humaniq. TimeEntry.billable exists in lib/Settings/register.d/hr-timesheet.json ('Whether these hours are billable to a client or project'), specified by the archived change 2026-08-22-hrmq-hours-process-redesign.",
+    "change": "2026-08-22-hrmq-hours-process-redesign",
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "sales-time-and-expense-billing",
+    "matrix": "shillinq",
+    "decision": "build",
+    "reason": "Approval state on TimeEntry. Shillinq change sales-time-and-expense-billing (merged) reads approved, billable hours per project and period through hours-to-humaniq and needs an approval state on the hour; humaniq keeps it only on the parent Timesheet.status, and the archived typed event 2026-09-06-humaniq-timesheet-approved-typed-event carries one billable flag per timesheet, true only when every entry is billable. No humaniq change puts the state on the entry. Build: a half a merged sibling change depends on.",
+    "change": "time-entry-approval-state",
+    "decidedOn": "2026-09-28"
   }
 ]
