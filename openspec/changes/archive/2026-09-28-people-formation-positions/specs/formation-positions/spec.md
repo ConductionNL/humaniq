@@ -12,6 +12,7 @@ recruits for.
 Rows: `ppl-position-management` (humaniq matrix).
 
 #### Scenario: HR records the budget of a team
+@e2e exclude a formation place is a plain register object created through the generic index page; the vacancy it opens with is covered by FormationOccupancyServiceTest::testANewPlaceIsFullyVacant, and the page itself mounts in the generic manifest-pages spec
 - **GIVEN** an HR adviser on `Formatieplaatsen`
 - **WHEN** they add a place "Medewerker burgerzaken" of 4.0 FTE to Team Burgerzaken
 - **THEN** the place is listed on the unit with 4.0 budgeted FTE and 4.0 vacant FTE until
@@ -26,11 +27,13 @@ overfilled. The figures SHALL be computed from the records on read and SHALL NOT
 Rows: `ppl-position-management` (humaniq matrix).
 
 #### Scenario: A partly filled place shows its vacancy
+@e2e exclude the figures come from the endpoint the widget renders verbatim; covered by FormationOccupancyServiceTest::testAPartlyFilledPlaceShowsItsVacancy and ::testTheEndpointCountsAReadableUnitsActivePlaces
 - **GIVEN** a 4.0 FTE place filled by contracts totalling 3.6 FTE
 - **WHEN** a manager opens `OrgUnitDetail` for the unit
 - **THEN** the formation block shows 3.6 filled and 0.4 vacant for that place
 
 #### Scenario: An overfilled place is shown, not refused
+@e2e exclude covered by FormationOccupancyServiceTest::testAnOverfilledPlaceIsShownNotRefused
 - **GIVEN** a 1.0 FTE place and two active contracts of 0.8 FTE naming it
 - **WHEN** the occupancy is read through `GET /api/formation/occupancy`
 - **THEN** filled is 1.6, vacant is 0 and the place is marked overfilled
@@ -47,12 +50,14 @@ Rows: `td-net-fte` (humaniq matrix), tender
 https://www.tenderned.nl/aankondigingen/overzicht/415227.
 
 #### Scenario: Parental leave and long sickness lower the net figure
+@e2e exclude needs leave and sickness fixtures on seeded people; covered by FormationOccupancyServiceTest::testParentalLeaveAndLongSicknessLowerTheNetFigure
 - **GIVEN** a unit with 4.6 filled FTE, one 1.0 FTE occupant on parental leave two of five
   days, and one 0.8 FTE occupant sick for ten weeks at 50 percent
 - **WHEN** an HR adviser reads the unit's occupancy averaged over a full week in that period
 - **THEN** the net FTE is 4.6 minus 0.4 minus 0.4, which is 3.8
 
 #### Scenario: A short sickness does not count
+@e2e exclude covered by FormationOccupancyServiceTest::testAShortSicknessDoesNotCount
 - **GIVEN** an occupant sick for two weeks
 - **WHEN** the net FTE is read with the default threshold
 - **THEN** that occupant's FTE is not subtracted
