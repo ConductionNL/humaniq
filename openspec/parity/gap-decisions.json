@@ -1430,5 +1430,13 @@
     "reason": "Build: 2 competitors rate yes (hr2day, loket); the row was building with no change directory, so the missing half is specified.",
     "change": "compliance-retention-expiry",
     "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "pay-multi-jurisdiction",
+    "matrix": "humaniq",
+    "decision": "decided-no",
+    "reason": "Decided no on 2026-09-29 by the build-all rule (building row with no change for its missing half): no competitor rates it yes (afas and personio partial, both through outside bureaus), no tender, feature request or roadmap names it, and payroll is outside the core area (people, hiring). The Dutch payroll this app sells is unaffected. Reversible: rerun the rule when a tender or customer names a second country.",
+    "change": null,
+    "decidedOn": "2026-09-29"
   }
 ]
