@@ -1412,7 +1412,7 @@
         "The document supporting this request, when its kind of leave needs one.": "The document supporting this request, when its kind of leave needs one.",
         "The earlier run this report compares against. Empty for a first run, when there is nothing to compare with.": "The earlier run this report compares against. Empty for a first run, when there is nothing to compare with.",
         "The earlier wage period being compared against (YYYY-MM). Empty for a first run.": "The earlier wage period being compared against (YYYY-MM). Empty for a first run.",
-        "The effect of bought or sold leave settled in this period: positive for hours sold, negative for hours bought. Included in the net pay.": "The effect of bought or sold leave settled in this period: positive for hours sold, negative for hours bought. Included in the net pay.",
+        "The effect of bought or sold leave settled in this period: positive for hours sold, negative for hours bought. Counted in the taxable gross pay.": "The effect of bought or sold leave settled in this period: positive for hours sold, negative for hours bought. Counted in the taxable gross pay.",
         "The effective payroll tax rate applied. 52 when the anonymous rate is in force.": "The effective payroll tax rate applied. 52 when the anonymous rate is in force.",
         "The employee asked this employer to apply the payroll tax credit. Only one employer may apply it at a time.": "The employee asked this employer to apply the payroll tax credit. Only one employer may apply it at a time.",
         "The employee asking for the leave. Someone cannot approve their own request.": "The employee asking for the leave. Someone cannot approve their own request.",

@@ -15,11 +15,14 @@
  *
  * `PayrollCalculator` is never modified and stays pure (design.md, this
  * service only calls its existing public `calculate()`); post-tax folds this
- * service is not the engine's business (`retroAdjustment`/`leaveBuySell`/
- * `loonbeslag`) are read back from the SEALED payslip itself — they are
+ * service is not the engine's business (`retroAdjustment`/`loonbeslag`) are
+ * read back from the SEALED payslip itself — they are
  * independently-settled figures the engine never computed and an Employee/
  * Contract edit cannot affect, so folding them back onto the recomputed
- * engine net is the correct like-for-like comparison, not a shortcut.
+ * engine net is the correct like-for-like comparison, not a shortcut. A
+ * settled leave buy/sell (`leaveBuySell`) is NOT a post-tax fold: it entered
+ * the engine's gross (humaniq#513), so the stored snapshot already carries it
+ * and adding it onto net again would double it.
  *
  * @category Service
  * @package  OCA\Humaniq\Service
@@ -294,12 +297,13 @@ final class PayrollReproduceService {
 	 * `nettoPay` included.
 	 *
 	 * `nettoPay` folds the already-sealed, engine-independent post-tax
-	 * components (`retroAdjustment`/`leaveBuySell`/`loonbeslag`) back onto
-	 * the recomputed engine net — those deltas are settled elsewhere
-	 * (PayrollAdjustment/LeaveTransaction/Loonbeslag), never affected by an
+	 * components (`retroAdjustment`/`loonbeslag`) back onto the recomputed
+	 * engine net — those deltas are settled elsewhere
+	 * (PayrollAdjustment/Loonbeslag), never affected by an
 	 * Employee/Contract edit, so re-adding the SAME stored deltas is the
 	 * correct like-for-like comparison, not a shortcut around the
-	 * reproducibility check.
+	 * reproducibility check. `leaveBuySell` is not re-added: it is part of
+	 * the snapshot's gross (humaniq#513), so the recomputed net carries it.
 	 *
 	 * @param array<string, mixed> $payslip The Payslip row (for the post-tax fold amounts).
 	 * @param CalculationResult $result The freshly recomputed result.
@@ -315,7 +319,6 @@ final class PayrollReproduceService {
 		$expected['nettoPay'] = $this->euros(
 			$result->nettoPayCents
 				+ $this->centsOf($payslip['retroAdjustment'] ?? null)
-				+ $this->centsOf($payslip['leaveBuySell'] ?? null)
 				- $this->centsOf($payslip['loonbeslag'] ?? null)
 		);
 
@@ -343,7 +346,7 @@ final class PayrollReproduceService {
 	/**
 	 * A stored euro amount as integer cents, treating null/non-numeric as 0
 	 * (the payslip's own null-means-not-applicable convention for
-	 * retroAdjustment/leaveBuySell/loonbeslag).
+	 * retroAdjustment/loonbeslag).
 	 *
 	 * @param mixed $value The stored field value.
 	 *
