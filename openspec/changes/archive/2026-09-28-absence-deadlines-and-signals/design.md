@@ -95,6 +95,31 @@ and the manager once. `EmployeeDetail` shows the latest count.
 Alternative considered: an aggregation with a `threshold` trigger. Rejected: a threshold
 fires on a schema-wide aggregate, and the signal is per employee.
 
+## As built (2026-09-28)
+
+- HR is not a Nextcloud group in humaniq; it is the `hr` role on an `AdministrationAccess` row per
+  administration. So there is no "HR group" recipient: `CaseManagerResolver` returns the HR
+  accounts of the case's administration and the employee's managers, and every rule addresses
+  that one resolver. The employee is never a recipient.
+- Each milestone has a rule at 14 days (`calculatedChange`, `condition lte 14`, `previously gt 14`)
+  and one when overdue (`lt 0` after `gte 0`), eight rules in all. The days left are
+  `diffDays(due, today)` with today truncated to a date, empty when done, recovered or without a
+  due date; checked with OpenRegister's `CalculationEvaluator` (due in 10 days reads 10). They
+  are materialised in `configuration.x-openregister-calculations`, which is what OpenRegister's
+  temporal sweep recomputes, and declared again as plain read-only properties so the case page
+  shows them. A property-level `calculation` would not be swept.
+- The subject names the employee through `{{employeeId}}`, which OpenRegister renders as the
+  related object's display name.
+- The frequent-absence rule is `updated` with `{field: frequentAbsence, operator: equals,
+  value: true, from: false}`, so later edits of a flagged case send nothing.
+- The 42-week notification's fields are picked by a pure `UwvNotificationData`; the route lives on
+  its own `UwvNotificationController` (not `DocumentController`) with the same guard. A generated
+  document keys on `sickLeaveCaseId`, so a second case for the same employee gets its own.
+- `EmployeeDetail` shows the employee's sickness cases with their count and flag.
+- No humaniq page edits an `hrAdministration` today, so the threshold and window are set on the
+  administration's OpenRegister object; unset, the defaults 3 in 12 months apply. A page for
+  administration settings is a follow-up, not part of this change.
+
 ## Declarative-vs-imperative decision (ADR-031)
 
 | behaviour | path | why |

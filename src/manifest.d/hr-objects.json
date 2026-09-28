@@ -559,6 +559,44 @@
 						"content": {
 							"view": "history"
 						}
+					},
+					{
+						"id": "object-list-11",
+						"type": "object-list",
+						"title": "Sickness cases",
+						"icon": "EmoticonSickOutline",
+						"content": {
+							"register": "humaniq",
+							"schema": "SickLeaveCase",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "firstSickDay",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "firstSickDay",
+									"label": "First sick day"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "episodesInWindow",
+									"label": "Cases in window"
+								},
+								{
+									"key": "frequentAbsence",
+									"label": "Frequent absence"
+								}
+							],
+							"limit": 10,
+							"rowRoute": "SickLeaveCaseDetail",
+							"emptyText": "No sickness cases"
+						}
 					}
 				],
 				"layout": [
@@ -713,6 +751,14 @@
 						"gridY": 56,
 						"gridWidth": 12,
 						"gridHeight": 6
+					},
+					{
+						"id": 20,
+						"widgetId": "object-list-11",
+						"gridX": 0,
+						"gridY": 62,
+						"gridWidth": 12,
+						"gridHeight": 4
 					}
 				]
 			}

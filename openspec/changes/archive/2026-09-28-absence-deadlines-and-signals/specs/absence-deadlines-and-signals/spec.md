@@ -13,12 +13,14 @@ date is filled or the case is recovered, and SHALL NOT carry any medical detail.
 Rows: `abs-gatekeeper-reminders` (humaniq matrix).
 
 #### Scenario: Week 42 does not slip
+@e2e exclude a reminder needs OpenRegister's daily temporal sweep and a second account; covered by SickLeaveReminderDeclarationTest (rules, calculation and resolver, checked against OpenRegister's validators and evaluator) and CaseManagerResolverTest::testHrOfTheAdministrationAndTheManager
 - **GIVEN** an open case whose 42-week notification is due in 14 days and not done
 - **WHEN** the days left reach 14
 - **THEN** the HR adviser and the employee's manager receive a notification naming the
   employee, the 42-week notification and its due date
 
 #### Scenario: A done milestone is quiet
+@e2e exclude covered by SickLeaveReminderDeclarationTest::testEveryMilestoneIsRemindedAndGoesQuietWhenDone: the days left are empty once the done date is filled, so no crossing fires
 - **GIVEN** the same case with `uwv42WeekMeldingDone` filled
 - **WHEN** the due date passes
 - **THEN** no overdue reminder is sent
@@ -35,6 +37,7 @@ medical data and SHALL NOT transmit anything. It SHALL be available to admins an
 Rows: `abs-uwv-reporting` (humaniq matrix).
 
 #### Scenario: The adviser files from a generated form
+@e2e exclude rendering needs filinq and a configured template on the test instance; covered by HrDocumentServiceTest::testTheFortyTwoWeekNotificationIsFiledOnTheCase, UwvNotificationDataTest and UwvNotificationControllerTest
 - **GIVEN** an open case in week 40 for an employee on a 32-hour contract, 50 percent back
   at work
 - **WHEN** an HR adviser presses `Generate 42-week notification`
@@ -42,6 +45,7 @@ Rows: `abs-uwv-reporting` (humaniq matrix).
   hours is attached to the case, and the adviser records the filing date after submitting it
 
 #### Scenario: A recovered case has nothing to notify
+@e2e exclude covered by HrDocumentServiceTest::testARecoveredCaseHasNothingToNotify and UwvNotificationControllerTest::testHrGeneratesAndARefusalIs400
 - **GIVEN** a case with status `hersteld`
 - **WHEN** the notification is requested
 - **THEN** it is refused and no document is created
@@ -56,6 +60,7 @@ the case, SHALL notify the HR group and the manager once, and SHALL show the cou
 Rows: `td-frequent-absence` (humaniq matrix), tender https://www.tenderned.nl/aankondigingen/overzicht/415705.
 
 #### Scenario: The third absence in a year
+@e2e exclude the count runs in a post-save listener; covered by FrequentAbsenceListenerTest::testTheThirdAbsenceInAYearIsSignalled and SickLeaveReminderDeclarationTest (the signal fires on false to true only)
 - **GIVEN** an administration with threshold 3 in 12 months and an employee with two cases
   since January
 - **WHEN** an HR adviser records a third case in October
@@ -63,6 +68,7 @@ Rows: `td-frequent-absence` (humaniq matrix), tender https://www.tenderned.nl/aa
   once, and `EmployeeDetail` shows 3 cases in 12 months
 
 #### Scenario: A relapse is not a new episode
+@e2e exclude covered by FrequentAbsenceListenerTest::testARelapseIsNotANewEpisode
 - **GIVEN** the employee's second case recovered two weeks ago
 - **WHEN** the case is reopened
 - **THEN** the count stays 2 and no signal is raised

@@ -79,6 +79,8 @@ return [
         ['name' => 'compCycle#proposeCollective', 'url' => '/api/comp/cycles/propose', 'verb' => 'POST'],
         ['name' => 'compCycle#approveCycle', 'url' => '/api/comp/cycles/approve', 'verb' => 'POST'],
         ['name' => 'compCycle#effectuateCycle', 'url' => '/api/comp/cycles/effectuate', 'verb' => 'POST'],
+        // absence-deadlines-and-signals D3: the 42-week notification to UWV, generated from the case.
+        ['name' => 'uwvNotification#generate', 'url' => '/api/sick-leave/{id}/uwv-notification', 'verb' => 'POST'],
         // multi-administratie — guarded per-user active-administration
         // selection + context for the switcher (design.md D4/D5). BEFORE the
         // SPA catch-all per REQ-MULTI-003.

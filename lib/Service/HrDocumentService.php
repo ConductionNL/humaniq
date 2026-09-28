@@ -83,6 +83,9 @@ use RuntimeException;
 
 /**
  * Renders standard HR documents via docudesk and stores the result.
+ *
+ * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
+ * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-002
  */
 class HrDocumentService {
 
@@ -206,6 +209,7 @@ class HrDocumentService {
 	 * @param SettingsService $settingsService Register slug, template config, and employer block.
 	 * @param PayrollRetentionGuardService $retentionGuard Reads a source's already-known retention ceiling and inherits a legal hold onto a generated PDF (hrmq#99 hole #1).
 	 * @param LoggerInterface $logger Logger.
+	 * @param UwvNotificationData $uwvData The 42-week notification's fields.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -213,6 +217,7 @@ class HrDocumentService {
 		private readonly SettingsService $settingsService,
 		private readonly PayrollRetentionGuardService $retentionGuard,
 		private readonly LoggerInterface $logger,
+		private readonly UwvNotificationData $uwvData = new UwvNotificationData(),
 	) {
 
 	}//end __construct()
@@ -481,6 +486,47 @@ class HrDocumentService {
 	}//end generateJaaropgaaf()
 
 	/**
+	 * Generate the 42-week notification to UWV for one sickness case
+	 * (absence-deadlines-and-signals design.md D3): the case, the employee,
+	 * the contract covering the first sick day and the administration are
+	 * reduced to the notification's fields by UwvNotificationData and handed
+	 * to the renderer as ad-hoc data; the document is filed as an
+	 * HrGeneratedDocument linked to the case. A recovered case, or one whose
+	 * notification is already done, is refused and nothing is created.
+	 * Nothing is transmitted.
+	 *
+	 * @param string $caseId The SickLeaveCase id; the caller has resolved it under its own RBAC.
+	 * @param string|null $userId The acting Nextcloud user id.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 *
+	 * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-002
+	 */
+	public function generateUwvNotification(string $caseId, ?string $userId = null): array {
+		$type = UwvNotificationData::DOCUMENT_TYPE;
+		$case = ($this->rowById('SickLeaveCase', $caseId) ?? []);
+		$refusal = $this->uwvData->refusal($case);
+		if ($refusal !== null) {
+			return $this->outcome((string)($case['employeeId'] ?? ''), null, $type, $refusal['status'], $refusal['message']);
+		}
+
+		$employeeId = trim((string)$case['employeeId']);
+		$contracts = array_values(array_filter($this->loadAll(self::CONTRACT_SCHEMA), static fn (array $row): bool => trim((string)($row['employeeId'] ?? '')) === $employeeId));
+		$contract = $this->uwvData->coveringContract($contracts, (string)$case['firstSickDay']);
+		$administration = [];
+		foreach ($this->loadAll('hrAdministration') as $row) {
+			if ((string)($row['administrationId'] ?? '') === trim((string)($case['administrationId'] ?? ''))) {
+				$administration = $row;
+			}
+		}
+
+		$data = $this->uwvData->build($case, ($this->rowById(self::EMPLOYEE_SCHEMA, $employeeId) ?? []), $contract, $administration);
+		$contractId = ($contract === null ? null : (string)($contract['id'] ?? ''));
+
+		return $this->generateInternal($employeeId, $contractId, null, null, $type, $userId, ['sickLeaveCaseId' => $caseId, 'adHocData' => ['uwvMelding' => $data]]);
+	}//end generateUwvNotification()
+
+	/**
 	 * The shared generation pipeline for every documentType (design.md
 	 * D2-D6, payslip-pdf-docudesk design.md D3/D6): idempotency pre-check
 	 * (keyed per documentType family), duck-typed availability probe,
@@ -495,6 +541,7 @@ class HrDocumentService {
 	 * @param string|null $jaaropgaafId The Jaaropgaaf a jaaropgaaf renders, or null.
 	 * @param string $documentType The document type.
 	 * @param string|null $userId The acting Nextcloud user id, or null for 'system' (occ context).
+	 * @param array<string, mixed> $extra `sickLeaveCaseId` (the 42-week notification's key) and `adHocData` merged into the render data.
 	 *
 	 * @return array<string, mixed> Outcome: {employeeId, contractId, documentType, status, message, generatedDocumentId}.
 	 *
@@ -505,6 +552,7 @@ class HrDocumentService {
 	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-006
 	 * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
 	 * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-003
+	 * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-002
 	 */
 	private function generateInternal(
 		string $employeeId,
@@ -513,15 +561,17 @@ class HrDocumentService {
 		?string $jaaropgaafId,
 		string $documentType,
 		?string $userId,
+		array $extra = [],
 	): array {
 		$employeeId = trim($employeeId);
+		$sickLeaveCaseId = ($extra['sickLeaveCaseId'] ?? null);
 		$contractId = ($contractId !== null && trim($contractId) !== '') ? trim($contractId) : null;
 
 		if ($employeeId === '') {
 			return $this->outcome($employeeId, $contractId, $documentType, 'failed', 'Geen employeeId opgegeven; genereren is geweigerd.');
 		}
 
-		$active = $this->activeDocumentFor($employeeId, $contractId, $payslipId, $jaaropgaafId, $documentType);
+		$active = $this->activeDocumentFor($employeeId, $contractId, $payslipId, $jaaropgaafId, $documentType, $sickLeaveCaseId);
 		if ($active !== null) {
 			if ((string)($active['status'] ?? '') === 'generated') {
 				return $this->outcome(
@@ -549,6 +599,7 @@ class HrDocumentService {
 					'contractId' => $contractId,
 					'payslipId' => $payslipId,
 					'jaaropgaafId' => $jaaropgaafId,
+					'sickLeaveCaseId' => $sickLeaveCaseId,
 					'status' => 'skipped-no-docudesk',
 					'errorMessage' => 'Docudesk is niet geïnstalleerd of de renderer kon niet worden geladen; deze poging kan later opnieuw worden uitgevoerd.',
 				]
@@ -566,6 +617,7 @@ class HrDocumentService {
 					'contractId' => $contractId,
 					'payslipId' => $payslipId,
 					'jaaropgaafId' => $jaaropgaafId,
+					'sickLeaveCaseId' => $sickLeaveCaseId,
 					'status' => 'failed',
 					'errorMessage' => $selected['error'],
 				]
@@ -581,6 +633,7 @@ class HrDocumentService {
 				'contractId' => $contractId,
 				'payslipId' => $payslipId,
 				'jaaropgaafId' => $jaaropgaafId,
+				'sickLeaveCaseId' => $sickLeaveCaseId,
 				'templateRef' => $selected['templateId'],
 				'status' => 'pending',
 			]
@@ -588,6 +641,7 @@ class HrDocumentService {
 
 		$dataRefs = $this->buildDataRefs($employeeId, $contractId, $payslipId, $jaaropgaafId);
 		$options = $this->buildOptions($documentType, $userId);
+		$options['adHocData'] = array_merge($options['adHocData'], ($extra['adHocData'] ?? []));
 
 		try {
 			$rendered = $this->documentService()->generateDocument($selected['templateId'], $dataRefs, $options);
@@ -666,15 +720,26 @@ class HrDocumentService {
 	 * @return array<string, mixed>|null
 	 */
 	private function findPayslip(string $payslipId): ?array {
-		foreach ($this->loadAll(self::PAYSLIP_SCHEMA) as $payslip) {
-			$id = (string)($payslip['id'] ?? $payslip['@self']['id'] ?? '');
-			if ($id === $payslipId) {
-				return $payslip;
+		return $this->rowById(self::PAYSLIP_SCHEMA, $payslipId);
+	}//end findPayslip()
+
+	/**
+	 * One row of a schema by id, as a plain array, or null.
+	 *
+	 * @param string $schema The schema.
+	 * @param string $id The object id.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function rowById(string $schema, string $id): ?array {
+		foreach ($this->loadAll($schema) as $row) {
+			if ((string)($row['id'] ?? $row['@self']['id'] ?? '') === $id) {
+				return $row;
 			}
 		}
 
 		return null;
-	}//end findPayslip()
+	}//end rowById()
 
 	/**
 	 * hrmq#99 hole #1: when the single named source object (a Payslip) is
@@ -932,6 +997,7 @@ class HrDocumentService {
 	 * @param string|null $payslipId The Payslip id (loonstrook key), or null.
 	 * @param string|null $jaaropgaafId The Jaaropgaaf id (jaaropgaaf key), or null.
 	 * @param string $documentType The document type.
+	 * @param string|null $sickLeaveCaseId The sickness case (the 42-week notification's key), or null.
 	 *
 	 * @return array<string, mixed>|null
 	 */
@@ -941,13 +1007,17 @@ class HrDocumentService {
 		?string $payslipId,
 		?string $jaaropgaafId,
 		string $documentType,
+		?string $sickLeaveCaseId = null,
 	): ?array {
 		foreach ($this->loadAll(self::GENERATED_DOCUMENT_SCHEMA) as $row) {
 			if ((string)($row['documentType'] ?? '') !== $documentType) {
 				continue;
 			}
 
-			if ($this->rowMatchesKey($row, $employeeId, $contractId, $payslipId, $jaaropgaafId) === false) {
+			$matches = ($sickLeaveCaseId !== null)
+				? trim((string)($row['sickLeaveCaseId'] ?? '')) === $sickLeaveCaseId
+				: $this->rowMatchesKey($row, $employeeId, $contractId, $payslipId, $jaaropgaafId);
+			if ($matches === false) {
 				continue;
 			}
 

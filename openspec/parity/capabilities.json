@@ -2189,7 +2189,7 @@
    "id": "abs-gatekeeper-reminders",
    "area": "absence",
    "name": "Get reminded before a Gatekeeper deadline such as the week 42 notification is due.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -2205,9 +2205,11 @@
     "loket": "https://loket.nl/functionaliteiten/verzuim/: no missed deadlines, Loket reminds you automatically of important moments in the Poortwachter process."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/absence-deadlines-and-signals on 2026-09-27. Before: grep -rniF notification lib/Listener lib/BackgroundJob lib/Command: no hits tied to WVP/gatekeeper milestones; appinfo/info.xml background-jobs registers only LeaveAccrualJob and PollCalendarSubscriptionsJob, neither of which touches SickLeaveCase; the Poortwachter dates are stored and displayed (SickLeaveCaseDetail) but nothing proactively reminds anyone before a deadline",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "change": "2026-09-28-absence-deadlines-and-signals",
+    "evidence": "SickLeaveCase declares a materialised days-left calculation per Poortwachter milestone and two x-openregister-notifications rules each (calculatedChange at 14 days and when overdue), addressed to lib/Notification/CaseManagerResolver.php (HR accounts of the case's administration plus the employee's managers); quiet once the done date is filled or the case is hersteld. Tests: tests/Unit/Settings/SickLeaveReminderDeclarationTest.php, tests/Unit/Notification/CaseManagerResolverTest.php.",
+    "reachedOn": "SickLeaveCaseDetail /sick-leave/:id (days left per milestone); Nextcloud notifications for HR and the manager",
+    "readOn": "2026-09-28",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -2408,7 +2410,7 @@
    "id": "abs-uwv-reporting",
    "area": "absence",
    "name": "Produce the notifications the benefits agency needs for long-term sickness.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -2424,9 +2426,11 @@
     "personio": "not checked: not settled: searched help centre for UWV, ziekmelding and Dutch sickness notifications; sickness notifications documented are German EEL and eAU procedures in Personio Payroll (https://support.personio.de/hc/en-us/articles/33488673631005-Electronic-Income-Replacement-Benefits-EEL-in-Personio-Payroll-manage), nothing on the Dutch benefits agency."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/absence-deadlines-and-signals on 2026-09-27 for the missing half: producing the 42-week notification content from the case; deadline tracking is built. Before: lib/Settings/register.d/hr-verzuim.json uwv42WeekMeldingDue/uwv42WeekMeldingDone fields; x-notes states plainly 'Recorded here only: this app does not send it' / 'no UWV wire integration'; no document generation or export command found for the 42-wekenmelding (grep -rniF uwv lib/Command: no dedicated command); DocumentsGenerateCommand covers arbeidsovereenkomst/aanbiedingsbrief/werkgeversverklaring/getuigschrift only, not UWV filings",
-    "reachedOn": "SickLeaveCaseDetail 'Poortwachter milestones' widget shows the due/done dates and lets HR tick 'done' by hand; nothing produces the actual notification document or transmits it",
+    "state": "built",
+    "change": "2026-09-28-absence-deadlines-and-signals",
+    "evidence": "POST /api/sick-leave/{id}/uwv-notification (UwvNotificationController: 404 unreadable, 403 not HR or admin, 400 recovered or already done) renders the 42-week notification through filinq from the case, employee, covering contract and administration (UwvNotificationData picks the fields by name, no medical data) and files it as an HrGeneratedDocument with sickLeaveCaseId; nothing is transmitted. Tests: HrDocumentServiceTest::testTheFortyTwoWeekNotificationIsFiledOnTheCase, UwvNotificationDataTest, UwvNotificationControllerTest.",
+    "reachedOn": "SickLeaveCaseDetail /sick-leave/:id (Generate 42-week notification)",
+    "readOn": "2026-09-28",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -7069,7 +7073,7 @@
    "id": "td-frequent-absence",
    "area": "absence",
    "name": "Get a signal when an employee reports sick often, at a threshold you set.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -7085,9 +7089,11 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(sick|frequent)\\b' src/plugins src/client/src hits only leave test fixtures where sick is a leave type name; no threshold signal"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/absence-deadlines-and-signals on 2026-09-27. Before: lib/Service/AbsenceRateService.php:12 docblock names frequency and duration trends a non-goal; grep -rniE 'frequen|sickCount' lib/Settings lib/Service: no absence frequency signal or threshold",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "change": "2026-09-28-absence-deadlines-and-signals",
+    "evidence": "hrAdministration.frequentAbsenceThreshold and frequentAbsenceWindowMonths (defaults 3 and 12); lib/Listener/FrequentAbsenceListener.php counts a created or reopened SickLeaveCase with FrequentAbsenceService (a relapse counts once) and stamps episodesInWindow and frequentAbsence under InternalWriteMarker; a declared rule notifies HR and the manager on the false to true change. Tests: tests/Unit/Listener/FrequentAbsenceListenerTest.php.",
+    "reachedOn": "SickLeaveCaseDetail /sick-leave/:id; EmployeeDetail /employees/:id (Sickness cases with the count and the flag); the threshold and window are fields on the hrAdministration record (OpenRegister object; no humaniq page edits administrations yet, defaults 3 in 12 months)",
+    "readOn": "2026-09-28",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",

@@ -5,7 +5,7 @@
             "SickLeaveCase": {
                 "slug": "SickLeaveCase",
                 "icon": "EmoticonSickOutline",
-                "version": "0.4.0",
+                "version": "0.5.0",
                 "title": "Sick leave case",
                 "description": "An administrative sickness case (ziekmelding) tracking the Wet verbetering poortwachter (WVP) re-integration process and statutory loondoorbetaling. It never holds medical data. Per the AVG and the Autoriteit Persoonsgegevens beleidsregels \"De zieke werknemer\", an employer may record that an employee is sick, how long, and the re-integration process facts, but never the nature or cause of the illness: this schema declares no diagnosis, symptom, cause, or medical-note field of any kind (leave-verzuim-mvp). The gemeld<->hersteld lifecycle is fully declarative; a relapse within 4 weeks of recovery reopens the same case rather than starting a new one (samengesteld ziektegeval, BW 7:629 lid 10). The four WVP milestone due dates (probleemanalyse week 6, plan van aanpak week 8, UWV 42-wekenmelding week 42, eerstejaarsevaluatie week 52) are derived from firstSickDay but stored rather than computed on the fly, following the loonaangifte-filing-lifecycle deadline precedent, so the dossier shows the clock actually worked against and a UWV-granted deferral stays editable. Derivation correctness is enforced by the nl-wvp-milestone-derivation rule check (lib/Standards/rules/labour.json), not recomputed away.",
                 "type": "object",
@@ -15,6 +15,544 @@
                     "status"
                 ],
                 "configuration": {
+                    "x-openregister-calculations": {
+                        "probleemanalyseDaysLeft": {
+                            "type": "number",
+                            "materialise": true,
+                            "title": "Days left: problem analysis",
+                            "description": "Days from today until the problem analysis is due. Empty once it is done or the employee has recovered.",
+                            "expression": {
+                                "if": [
+                                    {
+                                        "or": [
+                                            {
+                                                "ne": [
+                                                    {
+                                                        "coalesce": [
+                                                            {
+                                                                "prop": "probleemanalyseDone"
+                                                            },
+                                                            ""
+                                                        ]
+                                                    },
+                                                    ""
+                                                ]
+                                            },
+                                            {
+                                                "eq": [
+                                                    {
+                                                        "prop": "status"
+                                                    },
+                                                    "hersteld"
+                                                ]
+                                            },
+                                            {
+                                                "eq": [
+                                                    {
+                                                        "coalesce": [
+                                                            {
+                                                                "prop": "probleemanalyseDue"
+                                                            },
+                                                            ""
+                                                        ]
+                                                    },
+                                                    ""
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    null,
+                                    {
+                                        "diffDays": [
+                                            {
+                                                "prop": "probleemanalyseDue"
+                                            },
+                                            {
+                                                "formatDate": [
+                                                    {
+                                                        "now": []
+                                                    },
+                                                    "Y-m-d"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        "planVanAanpakDaysLeft": {
+                            "type": "number",
+                            "materialise": true,
+                            "title": "Days left: action plan",
+                            "description": "Days from today until the action plan is due. Empty once it is done or the employee has recovered.",
+                            "expression": {
+                                "if": [
+                                    {
+                                        "or": [
+                                            {
+                                                "ne": [
+                                                    {
+                                                        "coalesce": [
+                                                            {
+                                                                "prop": "planVanAanpakDone"
+                                                            },
+                                                            ""
+                                                        ]
+                                                    },
+                                                    ""
+                                                ]
+                                            },
+                                            {
+                                                "eq": [
+                                                    {
+                                                        "prop": "status"
+                                                    },
+                                                    "hersteld"
+                                                ]
+                                            },
+                                            {
+                                                "eq": [
+                                                    {
+                                                        "coalesce": [
+                                                            {
+                                                                "prop": "planVanAanpakDue"
+                                                            },
+                                                            ""
+                                                        ]
+                                                    },
+                                                    ""
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    null,
+                                    {
+                                        "diffDays": [
+                                            {
+                                                "prop": "planVanAanpakDue"
+                                            },
+                                            {
+                                                "formatDate": [
+                                                    {
+                                                        "now": []
+                                                    },
+                                                    "Y-m-d"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        "uwv42WeekMeldingDaysLeft": {
+                            "type": "number",
+                            "materialise": true,
+                            "title": "Days left: 42-week notification to UWV",
+                            "description": "Days from today until the 42-week notification to UWV is due. Empty once it is done or the employee has recovered.",
+                            "expression": {
+                                "if": [
+                                    {
+                                        "or": [
+                                            {
+                                                "ne": [
+                                                    {
+                                                        "coalesce": [
+                                                            {
+                                                                "prop": "uwv42WeekMeldingDone"
+                                                            },
+                                                            ""
+                                                        ]
+                                                    },
+                                                    ""
+                                                ]
+                                            },
+                                            {
+                                                "eq": [
+                                                    {
+                                                        "prop": "status"
+                                                    },
+                                                    "hersteld"
+                                                ]
+                                            },
+                                            {
+                                                "eq": [
+                                                    {
+                                                        "coalesce": [
+                                                            {
+                                                                "prop": "uwv42WeekMeldingDue"
+                                                            },
+                                                            ""
+                                                        ]
+                                                    },
+                                                    ""
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    null,
+                                    {
+                                        "diffDays": [
+                                            {
+                                                "prop": "uwv42WeekMeldingDue"
+                                            },
+                                            {
+                                                "formatDate": [
+                                                    {
+                                                        "now": []
+                                                    },
+                                                    "Y-m-d"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        "eerstejaarsevaluatieDaysLeft": {
+                            "type": "number",
+                            "materialise": true,
+                            "title": "Days left: first-year evaluation",
+                            "description": "Days from today until the first-year evaluation is due. Empty once it is done or the employee has recovered.",
+                            "expression": {
+                                "if": [
+                                    {
+                                        "or": [
+                                            {
+                                                "ne": [
+                                                    {
+                                                        "coalesce": [
+                                                            {
+                                                                "prop": "eerstejaarsevaluatieDone"
+                                                            },
+                                                            ""
+                                                        ]
+                                                    },
+                                                    ""
+                                                ]
+                                            },
+                                            {
+                                                "eq": [
+                                                    {
+                                                        "prop": "status"
+                                                    },
+                                                    "hersteld"
+                                                ]
+                                            },
+                                            {
+                                                "eq": [
+                                                    {
+                                                        "coalesce": [
+                                                            {
+                                                                "prop": "eerstejaarsevaluatieDue"
+                                                            },
+                                                            ""
+                                                        ]
+                                                    },
+                                                    ""
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    null,
+                                    {
+                                        "diffDays": [
+                                            {
+                                                "prop": "eerstejaarsevaluatieDue"
+                                            },
+                                            {
+                                                "formatDate": [
+                                                    {
+                                                        "now": []
+                                                    },
+                                                    "Y-m-d"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "x-openregister-notifications": {
+                        "probleemanalyseDueSoon": {
+                            "trigger": {
+                                "type": "calculatedChange",
+                                "field": "probleemanalyseDaysLeft",
+                                "condition": {
+                                    "lte": 14
+                                },
+                                "previously": {
+                                    "gt": 14
+                                }
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "expression",
+                                    "resolver": "OCA\\Humaniq\\Notification\\CaseManagerResolver"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Poortwachter: probleemanalyse voor {{employeeId}} uiterlijk {{probleemanalyseDue}}",
+                                "en": "Gatekeeper: problem analysis for {{employeeId}} due by {{probleemanalyseDue}}"
+                            },
+                            "message": {
+                                "nl": "Nog {{probleemanalyseDaysLeft}} dagen. Vul de datum in zodra het gedaan is.",
+                                "en": "{{probleemanalyseDaysLeft}} days left. Fill in the date once it is done."
+                            },
+                            "_note": "absence-deadlines-and-signals D1 (REQ-ADS-001): fires when the days left cross to 14 or below, matching NlAbsenceChecks::ALERT_WINDOW_DAYS. Quiet once the done date is filled or the case is hersteld, because the calculation is then empty. No medical detail."
+                        },
+                        "probleemanalyseOverdue": {
+                            "trigger": {
+                                "type": "calculatedChange",
+                                "field": "probleemanalyseDaysLeft",
+                                "condition": {
+                                    "lt": 0
+                                },
+                                "previously": {
+                                    "gte": 0
+                                }
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "expression",
+                                    "resolver": "OCA\\Humaniq\\Notification\\CaseManagerResolver"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Poortwachter: probleemanalyse voor {{employeeId}} is te laat",
+                                "en": "Gatekeeper: problem analysis for {{employeeId}} is overdue"
+                            },
+                            "message": {
+                                "nl": "De uiterste datum was {{probleemanalyseDue}}.",
+                                "en": "It was due on {{probleemanalyseDue}}."
+                            },
+                            "_note": "absence-deadlines-and-signals D1 (REQ-ADS-001): fires once when the days left drop below zero."
+                        },
+                        "planVanAanpakDueSoon": {
+                            "trigger": {
+                                "type": "calculatedChange",
+                                "field": "planVanAanpakDaysLeft",
+                                "condition": {
+                                    "lte": 14
+                                },
+                                "previously": {
+                                    "gt": 14
+                                }
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "expression",
+                                    "resolver": "OCA\\Humaniq\\Notification\\CaseManagerResolver"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Poortwachter: plan van aanpak voor {{employeeId}} uiterlijk {{planVanAanpakDue}}",
+                                "en": "Gatekeeper: action plan for {{employeeId}} due by {{planVanAanpakDue}}"
+                            },
+                            "message": {
+                                "nl": "Nog {{planVanAanpakDaysLeft}} dagen. Vul de datum in zodra het gedaan is.",
+                                "en": "{{planVanAanpakDaysLeft}} days left. Fill in the date once it is done."
+                            },
+                            "_note": "absence-deadlines-and-signals D1 (REQ-ADS-001): fires when the days left cross to 14 or below, matching NlAbsenceChecks::ALERT_WINDOW_DAYS. Quiet once the done date is filled or the case is hersteld, because the calculation is then empty. No medical detail."
+                        },
+                        "planVanAanpakOverdue": {
+                            "trigger": {
+                                "type": "calculatedChange",
+                                "field": "planVanAanpakDaysLeft",
+                                "condition": {
+                                    "lt": 0
+                                },
+                                "previously": {
+                                    "gte": 0
+                                }
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "expression",
+                                    "resolver": "OCA\\Humaniq\\Notification\\CaseManagerResolver"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Poortwachter: plan van aanpak voor {{employeeId}} is te laat",
+                                "en": "Gatekeeper: action plan for {{employeeId}} is overdue"
+                            },
+                            "message": {
+                                "nl": "De uiterste datum was {{planVanAanpakDue}}.",
+                                "en": "It was due on {{planVanAanpakDue}}."
+                            },
+                            "_note": "absence-deadlines-and-signals D1 (REQ-ADS-001): fires once when the days left drop below zero."
+                        },
+                        "uwv42WeekMeldingDueSoon": {
+                            "trigger": {
+                                "type": "calculatedChange",
+                                "field": "uwv42WeekMeldingDaysLeft",
+                                "condition": {
+                                    "lte": 14
+                                },
+                                "previously": {
+                                    "gt": 14
+                                }
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "expression",
+                                    "resolver": "OCA\\Humaniq\\Notification\\CaseManagerResolver"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Poortwachter: 42-wekenmelding aan UWV voor {{employeeId}} uiterlijk {{uwv42WeekMeldingDue}}",
+                                "en": "Gatekeeper: 42-week notification to UWV for {{employeeId}} due by {{uwv42WeekMeldingDue}}"
+                            },
+                            "message": {
+                                "nl": "Nog {{uwv42WeekMeldingDaysLeft}} dagen. Vul de datum in zodra het gedaan is.",
+                                "en": "{{uwv42WeekMeldingDaysLeft}} days left. Fill in the date once it is done."
+                            },
+                            "_note": "absence-deadlines-and-signals D1 (REQ-ADS-001): fires when the days left cross to 14 or below, matching NlAbsenceChecks::ALERT_WINDOW_DAYS. Quiet once the done date is filled or the case is hersteld, because the calculation is then empty. No medical detail."
+                        },
+                        "uwv42WeekMeldingOverdue": {
+                            "trigger": {
+                                "type": "calculatedChange",
+                                "field": "uwv42WeekMeldingDaysLeft",
+                                "condition": {
+                                    "lt": 0
+                                },
+                                "previously": {
+                                    "gte": 0
+                                }
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "expression",
+                                    "resolver": "OCA\\Humaniq\\Notification\\CaseManagerResolver"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Poortwachter: 42-wekenmelding aan UWV voor {{employeeId}} is te laat",
+                                "en": "Gatekeeper: 42-week notification to UWV for {{employeeId}} is overdue"
+                            },
+                            "message": {
+                                "nl": "De uiterste datum was {{uwv42WeekMeldingDue}}.",
+                                "en": "It was due on {{uwv42WeekMeldingDue}}."
+                            },
+                            "_note": "absence-deadlines-and-signals D1 (REQ-ADS-001): fires once when the days left drop below zero."
+                        },
+                        "eerstejaarsevaluatieDueSoon": {
+                            "trigger": {
+                                "type": "calculatedChange",
+                                "field": "eerstejaarsevaluatieDaysLeft",
+                                "condition": {
+                                    "lte": 14
+                                },
+                                "previously": {
+                                    "gt": 14
+                                }
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "expression",
+                                    "resolver": "OCA\\Humaniq\\Notification\\CaseManagerResolver"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Poortwachter: eerstejaarsevaluatie voor {{employeeId}} uiterlijk {{eerstejaarsevaluatieDue}}",
+                                "en": "Gatekeeper: first-year evaluation for {{employeeId}} due by {{eerstejaarsevaluatieDue}}"
+                            },
+                            "message": {
+                                "nl": "Nog {{eerstejaarsevaluatieDaysLeft}} dagen. Vul de datum in zodra het gedaan is.",
+                                "en": "{{eerstejaarsevaluatieDaysLeft}} days left. Fill in the date once it is done."
+                            },
+                            "_note": "absence-deadlines-and-signals D1 (REQ-ADS-001): fires when the days left cross to 14 or below, matching NlAbsenceChecks::ALERT_WINDOW_DAYS. Quiet once the done date is filled or the case is hersteld, because the calculation is then empty. No medical detail."
+                        },
+                        "eerstejaarsevaluatieOverdue": {
+                            "trigger": {
+                                "type": "calculatedChange",
+                                "field": "eerstejaarsevaluatieDaysLeft",
+                                "condition": {
+                                    "lt": 0
+                                },
+                                "previously": {
+                                    "gte": 0
+                                }
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "expression",
+                                    "resolver": "OCA\\Humaniq\\Notification\\CaseManagerResolver"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Poortwachter: eerstejaarsevaluatie voor {{employeeId}} is te laat",
+                                "en": "Gatekeeper: first-year evaluation for {{employeeId}} is overdue"
+                            },
+                            "message": {
+                                "nl": "De uiterste datum was {{eerstejaarsevaluatieDue}}.",
+                                "en": "It was due on {{eerstejaarsevaluatieDue}}."
+                            },
+                            "_note": "absence-deadlines-and-signals D1 (REQ-ADS-001): fires once when the days left drop below zero."
+                        },
+                        "frequentAbsenceSignal": {
+                            "trigger": {
+                                "type": "updated",
+                                "condition": {
+                                    "field": "frequentAbsence",
+                                    "operator": "equals",
+                                    "value": true,
+                                    "from": false
+                                }
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "expression",
+                                    "resolver": "OCA\\Humaniq\\Notification\\CaseManagerResolver"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Frequent verzuim: {{employeeId}} heeft {{episodesInWindow}} ziekmeldingen",
+                                "en": "Frequent absence: {{employeeId}} has {{episodesInWindow}} sickness cases"
+                            },
+                            "message": {
+                                "nl": "De drempel van de administratie is bereikt. Plan een gesprek.",
+                                "en": "The administration's threshold is reached. Plan a conversation."
+                            },
+                            "_note": "absence-deadlines-and-signals D4 (REQ-ADS-003): FrequentAbsenceListener sets frequentAbsence on the case that reaches the threshold, once; the condition's from: false makes it fire on the false to true change only, so later edits of the case send nothing."
+                        }
+                    },
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "gemeld",
@@ -184,6 +722,54 @@
                         "nullable": true,
                         "title": "Administration",
                         "description": "Which administration this case belongs to. Normally the same as the employee's.", "x-notes": "Denormalized administratie key this SickLeaveCase is scoped to (multi-administratie, REQ-MULTI-001). Optional, nullable plain string -- NOT a $ref (ADR-062 rule 7), mirroring its employee's administrationId; maintained by HR/back-office and audited for drift by nl-administratie-scope-consistency (REQ-MULTI-007). The implicit page scoping (REQ-MULTI-004) filters on it."
+                    },
+                    "probleemanalyseDaysLeft": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Days left: problem analysis",
+                        "description": "Days from today until the problem analysis is due. Empty once it is done or the employee has recovered.",
+                        "x-notes": "absence-deadlines-and-signals D1: the display declaration of the materialised calculation of the same name in configuration.x-openregister-calculations, which OpenRegister's temporal sweep recomputes daily. Plain property, no calculation key, so it is not a second declaration."
+                    },
+                    "planVanAanpakDaysLeft": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Days left: action plan",
+                        "description": "Days from today until the action plan is due. Empty once it is done or the employee has recovered.",
+                        "x-notes": "absence-deadlines-and-signals D1: the display declaration of the materialised calculation of the same name in configuration.x-openregister-calculations, which OpenRegister's temporal sweep recomputes daily. Plain property, no calculation key, so it is not a second declaration."
+                    },
+                    "uwv42WeekMeldingDaysLeft": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Days left: 42-week notification to UWV",
+                        "description": "Days from today until the 42-week notification to UWV is due. Empty once it is done or the employee has recovered.",
+                        "x-notes": "absence-deadlines-and-signals D1: the display declaration of the materialised calculation of the same name in configuration.x-openregister-calculations, which OpenRegister's temporal sweep recomputes daily. Plain property, no calculation key, so it is not a second declaration."
+                    },
+                    "eerstejaarsevaluatieDaysLeft": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Days left: first-year evaluation",
+                        "description": "Days from today until the first-year evaluation is due. Empty once it is done or the employee has recovered.",
+                        "x-notes": "absence-deadlines-and-signals D1: the display declaration of the materialised calculation of the same name in configuration.x-openregister-calculations, which OpenRegister's temporal sweep recomputes daily. Plain property, no calculation key, so it is not a second declaration."
+                    },
+                    "episodesInWindow": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true,
+                        "title": "Sickness cases in the window",
+                        "description": "How many sickness cases this employee had in the administration's window, this one included. A relapse counts once.",
+                        "x-notes": "absence-deadlines-and-signals D4: stamped by FrequentAbsenceListener when the case is created or reopened, under InternalWriteMarker::runInternal()."
+                    },
+                    "frequentAbsence": {
+                        "type": "boolean",
+                        "default": false,
+                        "readOnly": true,
+                        "title": "Frequent absence",
+                        "description": "Set when this case brought the employee to the administration's threshold for frequent absence.",
+                        "x-notes": "Set once, on the triggering case, by FrequentAbsenceListener. The frequentAbsenceSignal rule notifies HR and the manager."
                     }
                 }
             }

@@ -58,6 +58,7 @@
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\RegisterLeafProvidersEvent"/>
                 <referencedClass name="OCA\OpenRegister\Service\Integration\LeafDescriptor"/>
+                <referencedClass name="OCA\OpenRegister\Service\Notification\RecipientResolverInterface"/>
                 <referencedClass name="OCA\OpenRegister\Exception\FolderAccessDeniedException"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatingEvent"/>
                 <referencedClass name="OCA\OpenRegister\Lifecycle\GuardResult"/>
