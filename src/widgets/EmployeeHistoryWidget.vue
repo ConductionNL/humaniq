@@ -133,7 +133,13 @@ export default {
 	},
 
 	computed: {
-		/** Which view the manifest asked for. */
+		/**
+		 * Which view the manifest asked for: `employments` or `history`.
+		 *
+		 * @return {string}
+		 *
+		 * @spec openspec/specs/employee-history/spec.md#REQ-EHI-001
+		 */
 		view() {
 			return this.content?.view === 'employments' ? 'employments' : 'history'
 		},
