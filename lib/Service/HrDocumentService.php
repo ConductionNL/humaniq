@@ -83,6 +83,9 @@ use RuntimeException;
 
 /**
  * Renders standard HR documents via docudesk and stores the result.
+ *
+ * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
+ * @spec openspec/specs/absence-deadlines-and-signals/spec.md#REQ-ADS-002
  */
 class HrDocumentService {
 
