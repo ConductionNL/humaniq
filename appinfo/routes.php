@@ -59,6 +59,8 @@ return [
         // transitions stay the ones LeaveRequest already declares.
         ['name' => 'leaveSchedule#schedule', 'url' => '/api/leave/schedule', 'verb' => 'GET'],
         ['name' => 'leaveSchedule#coverage', 'url' => '/api/leave/coverage', 'verb' => 'GET'],
+        // people-formation-positions REQ-FRM-002: occupancy of a unit's formation places, computed on read.
+        ['name' => 'formation#occupancy', 'url' => '/api/formation/occupancy', 'verb' => 'GET'],
         // agenda-rostering-and-resource-booking — the agenda for one subject
         // (REQ-AGD-001), who is free in a window and for how many hours
         // (REQ-AGD-002), and planned against contracted forward from a date

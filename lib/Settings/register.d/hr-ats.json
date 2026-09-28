@@ -5,7 +5,7 @@
             "Vacancy": {
                 "slug": "Vacancy",
                 "icon": "AccountBoxOutline",
-                "version": "0.2.1",
+                "version": "0.3.0",
                 "title": "Vacancy",
                 "description": "A job vacancy (vacature) published by the employer. Models the ADR-001 menu-6 'Onboarding & ATS' recruiting surface (recruiting-ats-basic): a declarative concept -> gepubliceerd -> gesloten publish lifecycle, no external multiposting (werk.nl/LinkedIn is an OpenConnector follow-up) and no public career page (portaliq per ADR-046). Applications reference this Vacancy via Application.vacancyId.",
                 "type": "object",
@@ -105,6 +105,15 @@
                         "nullable": true,
                         "title": "Closing date",
                         "description": "The application deadline. For information only: it does not close the vacancy by itself.", "x-notes": "Application deadline. Informational only in the MVP — it does not drive the sluiten transition."
+                    },
+                    "formatieplaatsId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Formatieplaats",
+                        "nullable": true,
+                        "title": "Formation place",
+                        "description": "The formation place this vacancy recruits for. Leave empty for a vacancy outside the formation.",
+                        "x-notes": "people-formation-positions D1: links recruitment to the budget it fills; the hire's contract names the same place."
                     },
                     "administrationId": {
                         "type": "string",

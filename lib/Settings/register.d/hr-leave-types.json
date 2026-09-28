@@ -139,6 +139,19 @@
                 "requiresReason": false,
                 "requiresDocument": true,
                 "active": true
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveType",
+                    "slug": "leavetype-zwangerschap"
+                },
+                "code": "zwangerschap",
+                "label": "Pregnancy and childbirth leave",
+                "drawsFromBalance": false,
+                "requiresReason": false,
+                "requiresDocument": true,
+                "active": true
             }
         ]
     }

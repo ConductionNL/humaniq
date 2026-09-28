@@ -76,6 +76,10 @@
 		"route": "/expenses/:id"
 	},
 	{
+		"id": "FormatieplaatsDetail",
+		"route": "/formation-places/:id"
+	},
+	{
 		"id": "LeaveRequestDetail",
 		"route": "/leave-requests/:id"
 	},
@@ -290,6 +294,10 @@
 	{
 		"id": "Expenses",
 		"route": "/expenses"
+	},
+	{
+		"id": "Formatieplaatsen",
+		"route": "/formation-places"
 	},
 	{
 		"id": "PayrollGLPosts",

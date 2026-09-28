@@ -761,7 +761,7 @@
    "id": "ppl-position-management",
    "area": "people",
    "name": "Manage formation: budgeted positions and which are filled or vacant.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "partial",
@@ -777,9 +777,11 @@
     "loket": "not checked: not settled: searched loket.nl feature pages, the API reference tag list (https://developer.loket.nl/ApiDocs) and the roadmap for formatie, budgeted positions or vacancies; nothing covers formation management."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-formation-positions on 2026-09-27. Before: grep -nie formatieplaats -e budgeted -e 'vacant position' lib/Settings/ src/manifest.d/ openspec/specs/: no hits; only OrgUnit (department/team, no headcount fields) and Normfunctie (job-grading catalogue, no headcount fields) exist; neither schema tracks a budgeted number of positions or whether one is filled or vacant",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "change": "2026-09-28-people-formation-positions",
+    "evidence": "lib/Settings/register.d/hr-formation.json Formatieplaats (orgUnitId, normfunctieId, budgetedFte, validFrom, validUntil, status); EmploymentContract.formatieplaatsId and Vacancy.formatieplaatsId; lib/Service/FormationOccupancyService.php computes budgeted, filled, vacant and overfilled per place on read; GET /api/formation/occupancy (FormationController, RBAC-checked unit or place). Tests: tests/Unit/Service/FormationOccupancyServiceTest.php.",
+    "reachedOn": "OrgUnitDetail /org-units/:id (budgeted, filled, vacant and net FTE tiles and the Formation table), Formatieplaatsen /formation-places, FormatieplaatsDetail /formation-places/:id",
+    "readOn": "2026-09-28",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6995,7 +6997,7 @@
    "id": "td-net-fte",
    "area": "reporting",
    "name": "See net occupancy in FTE after subtracting parental, pregnancy and long-term sick leave.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -7011,9 +7013,11 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\bfte\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-formation-positions on 2026-09-27. Before: grep -rniE 'netFte|nettoBezetting|occupancy' lib src: no hits; lib/Service/AbsenceRateService.php computes an absence percentage, not occupancy in FTE, and there is no formation to measure against",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "change": "2026-09-28-people-formation-positions",
+    "evidence": "lib/Service/FormationAbsence.php and FormationOccupancyService::occupancy() subtract, per occupant and working day, FTE times the fraction away on approved leave of the types in formation_net_fte_leave_types (default parental, zwangerschap) or on sickness past formation_long_term_sick_weeks (default 6, weighted by AbsenceProgression). Tests: FormationOccupancyServiceTest::testParentalLeaveAndLongSicknessLowerTheNetFigure.",
+    "reachedOn": "OrgUnitDetail /org-units/:id (budgeted, filled, vacant and net FTE tiles and the Formation table), Formatieplaatsen /formation-places, FormatieplaatsDetail /formation-places/:id",
+    "readOn": "2026-09-28",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",

@@ -73,11 +73,14 @@ schema change.
 
 ### D5. Surfaces
 
-- `OrgUnitDetail` gains a `bodyWidgets` host section `FormationSection` bound to
-  `GET /api/formation/occupancy`.
+- `OrgUnitDetail` gains four built-in `stat` tiles (budgeted, filled, vacant and net FTE
+  for the unit) and a built-in `object-table` of its places, all bound through
+  `endpointSource` to `GET /api/formation/occupancy`. Changed while building: a host
+  section was planned, and the custom-widget ratchet (ADR-049, built-in first) refuses one
+  when the built-ins can bind an endpoint, which they can.
 - `Formatieplaatsen` (index) and `FormatieplaatsDetail` (detail, with an `object-list` of
   the contracts on the place) as declarative pages; the detail page also shows the
-  occupancy figures for that one place through the same section.
+  occupancy figures for that one place through the same four tiles.
 - The endpoint is `#[NoAdminRequired]` and answers only for units the caller may read
   through `RbacObjectReader`.
 
@@ -91,10 +94,14 @@ schema change.
 
 ## Seed data
 
-- Unit "Team Burgerzaken" of a municipality: places "Medewerker burgerzaken" 4.0 FTE and
-  "Teamleider" 1.0 FTE. Four contracts fill 3.6 FTE of the first place (so 0.4 vacant);
-  one occupant is on parental leave two days a week; one is sick for ten weeks at 50 percent.
-- The `zwangerschap` leave type.
+- Built (2026-09-28): two places on the seeded unit Backoffice, "Medewerker backoffice" 2.0 FTE
+  and "Teamleider backoffice" 1.0 FTE, both vacant until a contract names them, and the
+  `zwangerschap` leave type. The fuller Burgerzaken example (four occupants, parental leave,
+  long sickness) lives in `FormationOccupancyServiceTest` instead of the seed, because seeded
+  sickness and leave on seeded people would fire the absence rules on every demo instance.
+- Not built in this change: `includeChildren` (a unit summed with its child units) and the count
+  of active contracts in a unit that name no place. Neither is a requirement in the spec; both
+  are named here so a follow-up can pick them up.
 
 ## Risks / Trade-offs
 

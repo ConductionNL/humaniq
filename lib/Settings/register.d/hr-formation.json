@@ -1,0 +1,128 @@
+{
+    "x-humaniq-fragment": "hr-formation",
+    "components": {
+        "schemas": {
+            "Formatieplaats": {
+                "slug": "Formatieplaats",
+                "icon": "AccountGroupOutline",
+                "version": "0.1.0",
+                "title": "Formation place",
+                "description": "A budgeted place in a unit's formation: a number of FTE for one function, filled by the contracts that name it or vacant. Occupancy is computed on read, never stored (people-formation-positions).",
+                "type": "object",
+                "required": [
+                    "orgUnitId",
+                    "title",
+                    "budgetedFte",
+                    "validFrom"
+                ],
+                "properties": {
+                    "orgUnitId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "OrgUnit",
+                        "title": "Unit",
+                        "description": "The unit this place belongs to.",
+                        "x-notes": "people-formation-positions D1. Required: a place outside a unit has no budget holder."
+                    },
+                    "normfunctieId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Normfunctie",
+                        "nullable": true,
+                        "title": "Reference job",
+                        "description": "The reference job this place is budgeted for. Leave empty when the place is not tied to one.",
+                        "x-notes": "people-formation-positions D1: a tender asks for the formation per function."
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "What the place is called, for example Medewerker burgerzaken."
+                    },
+                    "budgetedFte": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Budgeted FTE",
+                        "description": "How many FTE the budget allows on this place. One FTE is a full-time working week of 40 hours.",
+                        "x-notes": "Same 40-hour full-time week as AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK, so filled and budgeted FTE are counted in one unit."
+                    },
+                    "validFrom": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Valid from",
+                        "description": "The first day the place is in the formation."
+                    },
+                    "validUntil": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Valid until",
+                        "description": "The last day the place is in the formation. Leave empty while it lasts."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "actief",
+                            "opgeheven"
+                        ],
+                        "x-enum-labels": {
+                            "actief": "Active",
+                            "opgeheven": "Discontinued"
+                        },
+                        "default": "actief",
+                        "title": "Status",
+                        "description": "Whether the place is still part of the formation. A discontinued place no longer counts in the unit.",
+                        "x-notes": "people-formation-positions D1: a plain enum, no lifecycle; two states and no guarded transition."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration this place belongs to.",
+                        "x-notes": "Multi-administratie scoping, as on OrgUnit."
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Formatieplaats",
+                    "slug": "formatieplaats-backoffice-medewerker"
+                },
+                "orgUnitId": "@ref:orgunit-backoffice",
+                "title": "Medewerker backoffice",
+                "budgetedFte": 2.0,
+                "validFrom": "2026-01-01",
+                "status": "actief",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Formatieplaats",
+                    "slug": "formatieplaats-backoffice-teamleider"
+                },
+                "orgUnitId": "@ref:orgunit-backoffice",
+                "title": "Teamleider backoffice",
+                "budgetedFte": 1.0,
+                "validFrom": "2026-01-01",
+                "status": "actief",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Formatieplaats",
+                    "slug": "formatieplaats-consultancy-consultant"
+                },
+                "orgUnitId": "@ref:orgunit-consultancy",
+                "title": "Consultant",
+                "budgetedFte": 3.0,
+                "validFrom": "2026-01-01",
+                "status": "actief",
+                "administrationId": "ADM-001"
+            }
+        ]
+    }
+}
