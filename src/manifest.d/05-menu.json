@@ -76,6 +76,12 @@
 							"eq": "dga_single_person"
 						}
 					}
+				},
+				{
+					"id": "MijnAfdeling",
+					"label": "My department",
+					"icon": "SitemapOutline",
+					"route": "MijnAfdeling"
 				}
 			]
 		},

@@ -77,7 +77,8 @@ class DepartmentFiguresServiceTest extends TestCase {
 	/**
 	 * "A controller splits the wage cost": June cost 400,000, split over the
 	 * two units with the remainder for people placed nowhere, and the parts
-	 * add up to the whole.
+	 * add up to the whole. With a single top unit, the comparison defaults
+	 * to the units under it.
 	 *
 	 * @return void
 	 */
@@ -100,7 +101,8 @@ class DepartmentFiguresServiceTest extends TestCase {
 
 		$this->assertSame('2026-06-01', $result['from']);
 		$this->assertSame('2026-06-30', $result['to']);
-		$this->assertSame(['Gemeente'], array_column($result['units'], 'name'));
+		$this->assertSame('gemeente', $result['parentUnitId']);
+		$this->assertSame(['Burgerzaken', 'Belastingen'], array_column($result['units'], 'name'));
 
 		$children = $service->compare('ADM-001', '2026-06', 'gemeente');
 		$byName = array_column($children['units'], 'wageCost', 'name');

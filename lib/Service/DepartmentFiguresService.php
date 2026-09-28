@@ -122,7 +122,7 @@ class DepartmentFiguresService {
 	 *
 	 * @param string      $administrationId The authorised administration.
 	 * @param string      $period           `quarter`, `half-year`, `year` or one month `YYYY-MM`.
-	 * @param string|null $parentUnitId     Compare this unit's children, or the top units when null.
+	 * @param string|null $parentUnitId     Compare this unit's children; when null, the top units, or the units under the top when there is one.
 	 *
 	 * @return array<string, mixed>
 	 *
@@ -134,7 +134,7 @@ class DepartmentFiguresService {
 		$window = $this->window($period);
 		$data = $this->load($administrationId);
 
-		$parent = trim((string)$parentUnitId);
+		$parent = $this->comparedParent($data['OrgUnit'], trim((string)$parentUnitId));
 		$rows = [];
 		foreach ($data['OrgUnit'] as $unit) {
 			if (trim((string)($unit['parentUnitId'] ?? '')) === $parent) {
@@ -152,6 +152,7 @@ class DepartmentFiguresService {
 
 		return [
 			'period' => $period,
+			'parentUnitId' => ($parent === '') ? null : $parent,
 			'from' => $window['from']->format('Y-m-d'),
 			'to' => $window['to']->format('Y-m-d'),
 			'units' => $rows,
@@ -159,6 +160,32 @@ class DepartmentFiguresService {
 			'total' => ['wageCost' => $total],
 		];
 	}//end compare()
+
+	/**
+	 * The unit whose children are compared. Without one, the top of the
+	 * organisation; when that is a single unit (a directie over every
+	 * department), its children, because comparing one bar with itself
+	 * answers nothing.
+	 *
+	 * @param list<array<string, mixed>> $units     OrgUnit rows.
+	 * @param string                     $requested The requested parent, or ''.
+	 *
+	 * @return string The parent, or '' for the top units.
+	 */
+	private function comparedParent(array $units, string $requested): string {
+		if ($requested !== '') {
+			return $requested;
+		}
+
+		$roots = [];
+		foreach ($units as $unit) {
+			if (trim((string)($unit['parentUnitId'] ?? '')) === '') {
+				$roots[] = $this->membership->rowId($unit);
+			}
+		}
+
+		return (count($roots) === 1) ? $roots[0] : '';
+	}//end comparedParent()
 
 	/**
 	 * The figures of every unit the user manages, under the small-unit rule.
