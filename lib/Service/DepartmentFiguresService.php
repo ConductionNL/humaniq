@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
+use InvalidArgumentException;
 
 /**
  * Unit figures for the comparison, the manager's units and one unit.
@@ -412,7 +413,7 @@ class DepartmentFiguresService {
 	private function window(string $period): array {
 		$months = (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $period) === 1) ? [$period] : array_values($this->periods->keys($period));
 		if ($months === []) {
-			throw new \InvalidArgumentException('Unknown period: '.$period);
+			throw new InvalidArgumentException('Unknown period: '.$period);
 		}
 
 		$from = new DateTimeImmutable($months[0] . '-01');
