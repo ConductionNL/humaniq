@@ -64,7 +64,19 @@ final class RegisterSchemaValidator {
 	 * @return array<string, mixed>
 	 */
 	public static function errors(string $schemaName, array $payload): array {
-		$declared = self::schema($schemaName);
+		return self::errorsAgainst(self::schema($schemaName), $payload);
+	}//end errors()
+
+	/**
+	 * The validation errors for a payload against a declared schema, for a
+	 * sibling app's schema kept as a fixture.
+	 *
+	 * @param array<string, mixed> $declared The schema as a register fragment declares it.
+	 * @param array<string, mixed> $payload The object as the service would save it.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function errorsAgainst(array $declared, array $payload): array {
 		$jsonSchema = self::translate(
 			[
 				'type' => 'object',
@@ -82,7 +94,7 @@ final class RegisterSchemaValidator {
 		}
 
 		return (new ErrorFormatter())->format($result->error());
-	}//end errors()
+	}//end errorsAgainst()
 
 	/**
 	 * Apply OpenRegister's relation and nullable translations recursively.

@@ -118,6 +118,21 @@
 				"label": "My department",
 				"icon": "SitemapOutline",
 				"route": "MijnAfdeling"
+			},
+			{
+				"id": "MijnGoedkeuringen",
+				"label": "My approvals",
+				"icon": "ClipboardCheckOutline",
+				"route": "MijnGoedkeuringen"
+			},
+			{
+				"id": "MijnVervangers",
+				"label": "My deputies",
+				"icon": "AccountKeyOutline",
+				"route": "ManagerDeputies",
+				"query": {
+					"managerUserId": "@me"
+				}
 			}
 		],
 		"route": "MijnHr"
@@ -151,6 +166,12 @@
 				"label": "Contracts",
 				"icon": "FileSign",
 				"route": "EmploymentContracts"
+			},
+			{
+				"id": "OnCallAverages",
+				"label": "On-call hours",
+				"icon": "CalendarClock",
+				"route": "OnCallAverages"
 			},
 			{
 				"id": "Stagiairs",

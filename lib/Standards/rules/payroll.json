@@ -1331,6 +1331,18 @@
       "sourceUrl": null
     },
     {
+      "id": "nl-hr21-vervallen-functie",
+      "domain": "pay",
+      "jurisdiction": "NL",
+      "framework": "hr21",
+      "source": "HR-administration control (functiehuis onderhoud): a function is retired, never deleted",
+      "statement": "A live EmploymentContract whose normfunctieId points at a Normfunctie with status vervallen shall be flagged, so HR assigns a current function. Vacuous when the contract has no function, the function does not resolve, or the contract has ended.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": null,
+      "sourceUrl": null
+    },
+    {
       "id": "nl-hr21-schaal-consistentie",
       "domain": "pay",
       "jurisdiction": "NL",

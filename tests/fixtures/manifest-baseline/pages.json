@@ -44,6 +44,10 @@
 		"route": "/features-roadmap"
 	},
 	{
+		"id": "MijnGoedkeuringen",
+		"route": "/my-approvals"
+	},
+	{
 		"id": "MijnAfdeling",
 		"route": "/my-department"
 	},
@@ -88,12 +92,20 @@
 		"route": "/expenses/:id"
 	},
 	{
+		"id": "OnCallAverages",
+		"route": "/contracts/on-call"
+	},
+	{
 		"id": "FormatieplaatsDetail",
 		"route": "/formation-places/:id"
 	},
 	{
 		"id": "FormationScenarioDetail",
 		"route": "/formation-scenarios/:id"
+	},
+	{
+		"id": "NormfunctieDetail",
+		"route": "/normfuncties/:id"
 	},
 	{
 		"id": "LeaveRequestDetail",
@@ -126,6 +138,10 @@
 	{
 		"id": "WkrAssessmentDetail",
 		"route": "/wkr-assessments/:id"
+	},
+	{
+		"id": "EmploymentContractDetail",
+		"route": "/contracts/:id"
 	},
 	{
 		"id": "ObjectiveDetail",
@@ -170,6 +186,14 @@
 	{
 		"id": "MijnHr",
 		"route": "/mijn"
+	},
+	{
+		"id": "ManagerDeputies",
+		"route": "/manager-deputies"
+	},
+	{
+		"id": "ManagerDeputyDetail",
+		"route": "/manager-deputies/:id"
 	},
 	{
 		"id": "MijnUrenstaten",
@@ -396,10 +420,6 @@
 		"route": "/normfuncties"
 	},
 	{
-		"id": "NormfunctieDetail",
-		"route": "/normfuncties/:id"
-	},
-	{
 		"id": "IntegrationAccounts",
 		"route": "/configuratie/integraties"
 	},
@@ -450,10 +470,6 @@
 	{
 		"id": "EmploymentContracts",
 		"route": "/contracts"
-	},
-	{
-		"id": "EmploymentContractDetail",
-		"route": "/contracts/:id"
 	},
 	{
 		"id": "Payslips",

@@ -68,9 +68,12 @@ namespace OCA\OpenRegister\Event {
 namespace OCA\Humaniq\Tests\Unit\AppInfo {
 
 	use OCA\Humaniq\AppInfo\Application;
+	use OCA\Humaniq\Listener\ApprovalDecisionStampListener;
 	use OCA\Humaniq\Listener\ChangeRequestListener;
+	use OCA\Humaniq\Listener\ManagerDeputyListener;
 	use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
 	use OCA\Humaniq\Listener\FieldAccessListener;
+	use OCA\Humaniq\Listener\HrLifecycleEventListener;
 	use OCA\Humaniq\Listener\RightToWorkCheckListener;
 	use OCA\Humaniq\Listener\ScenarioMutationListener;
 	use OCA\Humaniq\Listener\SideActivityListener;
@@ -236,6 +239,63 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
 			self::assertStringContainsString('$this->registerScenarioMutationListener($dispatcher);', $boot);
 		}//end testTheScenarioMutationListenerIsSubscribed()
+
+		/**
+		 * REQ-API-001/002: a deputy record is judged before it is saved, and
+		 * the three approvable schemas without their own stamp listener are
+		 * stamped on update.
+		 *
+		 * @return void
+		 */
+		public function testTheApprovalsInboxListenersAreSubscribed(): void {
+			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
+				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
+			}
+
+			ObjectEventSubscription::$recorded = [];
+			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+			$method = new \ReflectionMethod(Application::class, 'registerApprovalsInboxListeners');
+			$method->invoke($app, $this->createMock(IEventDispatcher::class));
+
+			$byListener = [];
+			foreach (ObjectEventSubscription::$recorded as $entry) {
+				$byListener[$entry['listener']][] = $entry;
+			}
+
+			self::assertSame(
+				['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\OpenRegister\Event\ObjectUpdatingEvent'],
+				array_column($byListener[ManagerDeputyListener::class], 'event')
+			);
+			self::assertSame(['managerdeputy'], $byListener[ManagerDeputyListener::class][0]['schemas']);
+			self::assertSame(['OCA\OpenRegister\Event\ObjectUpdatingEvent'], array_column($byListener[ApprovalDecisionStampListener::class], 'event'));
+			self::assertSame(['leaverequest', 'expense', 'leavetransaction'], $byListener[ApprovalDecisionStampListener::class][0]['schemas']);
+
+			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+			self::assertStringContainsString('$this->registerApprovalsInboxListeners($dispatcher);', $boot);
+		}//end testTheApprovalsInboxListenersAreSubscribed()
+
+		/**
+		 * REQ-HLE-001: the lifecycle listener hears every save of the six schemas that mark an HR moment.
+		 *
+		 * @return void
+		 */
+		public function testTheHrLifecycleEventListenerIsSubscribed(): void {
+			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
+				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
+			}
+
+			ObjectEventSubscription::$recorded = [];
+			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+			$method = new \ReflectionMethod(Application::class, 'registerHrLifecycleEventListener');
+			$method->invoke($app, $this->createMock(IEventDispatcher::class));
+
+			self::assertSame(['OCA\OpenRegister\Event\ObjectCreatedEvent', 'OCA\OpenRegister\Event\ObjectUpdatedEvent'], array_column(ObjectEventSubscription::$recorded, 'event'));
+			self::assertSame([HrLifecycleEventListener::class], array_values(array_unique(array_column(ObjectEventSubscription::$recorded, 'listener'))));
+			self::assertSame(['employmentcontract', 'onboarding', 'offboarding', 'orgassignment', 'leaverequest', 'sickleavecase'], ObjectEventSubscription::$recorded[0]['schemas']);
+
+			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+			self::assertStringContainsString('$this->registerHrLifecycleEventListener($dispatcher);', $boot);
+		}//end testTheHrLifecycleEventListenerIsSubscribed()
 
 	}//end class
 }

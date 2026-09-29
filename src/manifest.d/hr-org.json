@@ -207,7 +207,7 @@
 					},
 					{
 						"id": "formation-places",
-						"type": "object-table",
+						"type": "endpoint-table",
 						"title": "Formation",
 						"content": {
 							"endpointSource": {

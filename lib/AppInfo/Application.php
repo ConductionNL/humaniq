@@ -41,12 +41,15 @@ use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Humaniq\Lifecycle\RightToWorkGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
+use OCA\Humaniq\Listener\ApprovalDecisionStampListener;
 use OCA\Humaniq\Listener\ChangeRequestListener;
 use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
 use OCA\Humaniq\Listener\FieldAccessListener;
 use OCA\Humaniq\Listener\FrequentAbsenceListener;
+use OCA\Humaniq\Listener\HrLifecycleEventListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
+use OCA\Humaniq\Listener\ManagerDeputyListener;
 use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
 use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
@@ -63,8 +66,10 @@ use OCA\Humaniq\Listener\TravelAmountListener;
 use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Service\HrLifecycleEventService;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\JurisdictionPackService;
+use OCA\Humaniq\Service\ManagerDeputies;
 use OCA\Humaniq\Service\RosterCheckService;
 use OCA\Humaniq\Service\SideActivityRegister;
 use OCA\Humaniq\Service\TimeEntryEventService;
@@ -475,6 +480,8 @@ class Application extends App implements IBootstrap {
 		$this->registerScenarioMutationListener($dispatcher);
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
+		$this->registerApprovalsInboxListeners($dispatcher);
+		$this->registerHrLifecycleEventListener($dispatcher);
 
 	}//end boot()
 
@@ -760,6 +767,64 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerSideActivityListeners()
+
+	/**
+	 * self-service-approvals-inbox D1 and D2: a deputy record is judged before
+	 * it is saved, and a leave request, expense claim or leave trade is
+	 * stamped with its submit and decision moments so the inbox can show
+	 * what a manager decided.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/approvals-inbox/spec.md#REQ-API-001
+	 * @spec openspec/specs/approvals-inbox/spec.md#REQ-API-002
+	 */
+	private function registerApprovalsInboxListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: ManagerDeputyListener::class,
+				registers: null,
+				schemas: [ManagerDeputies::SLUG]
+			);
+		}
+
+		$this->registerFilteredObjectListener(
+			dispatcher: $dispatcher,
+			event: ObjectUpdatingEvent::class,
+			listener: ApprovalDecisionStampListener::class,
+			registers: null,
+			schemas: ApprovalDecisionStampListener::SLUGS
+		);
+
+	}//end registerApprovalsInboxListeners()
+
+	/**
+	 * platform-hr-lifecycle-events D1: after a contract, onboarding or
+	 * offboarding case, placement, leave request or sickness case is saved,
+	 * the HR moments it marks are sent as CloudEvents and typed events.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/hr-lifecycle-events/spec.md#REQ-HLE-001
+	 */
+	private function registerHrLifecycleEventListener(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: HrLifecycleEventListener::class,
+				registers: null,
+				schemas: HrLifecycleEventService::SLUGS
+			);
+		}
+
+	}//end registerHrLifecycleEventListener()
 
 	/**
 	 * reporting-personnel-budget-and-scenarios D4: a fixed formation scenario

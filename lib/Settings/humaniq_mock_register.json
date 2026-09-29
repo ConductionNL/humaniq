@@ -1835,14 +1835,16 @@
               "temporary",
               "agency",
               "minijob",
-              "bbl"
+              "bbl",
+              "oproep"
             ],
             "x-enum-labels": {
               "permanent": "Permanent",
               "temporary": "Fixed-term",
               "agency": "Agency",
               "minijob": "Mini-job",
-              "bbl": "BBL apprenticeship"
+              "bbl": "BBL apprenticeship",
+              "oproep": "On-call"
             },
             "title": "Contract type",
             "description": "The kind of contract. This drives the unemployment-fund rate, and for an apprenticeship how the pay is processed.",
@@ -1950,6 +1952,22 @@
             "title": "Non-renewal notice given on",
             "description": "The date you told the employee in writing whether a fixed-term contract will continue. Due at least one month before the end date.",
             "x-notes": "NL: date the written aanzegging (BW 7:668 lid 1) was sent to the employee, informing whether a fixed-term contract of six months or longer will be continued. Must be on or before endDate minus one month to satisfy nl-aanzegtermijn-bewaking."
+          },
+          "vasteUrenAanbodOp": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "title": "Fixed-hours offer made on",
+            "description": "For an on-call contract: the date you offered the employee a fixed number of hours. Due after twelve months.",
+            "x-notes": "NL: BW 7:628a lid 5 (Wet arbeidsmarkt in balans). Within one month after an on-call worker has worked twelve months, the employer offers a fixed number of hours, at least the average worked over those twelve months. Empty on a running oproep contract past twelve months raises nl-signaal-oproep-vaste-uren."
+          },
+          "vasteUrenAanbodUren": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "title": "Fixed hours offered per week",
+            "description": "For an on-call contract: the hours per week you offered. The on-call overview shows the twelve-month average the offer should at least equal.",
+            "x-notes": "NL: BW 7:628a lid 5. The offered arbeidsomvang, hours per week."
           },
           "administrationId": {
             "title": "Administration ID",
@@ -3852,6 +3870,52 @@
             "title": "Collective agreement scale source",
             "description": "Which source confirms this mapping, or why it was marked verified.",
             "x-notes": "Human-readable note naming the authority to confirm this mapping against (e.g. 'HR21/VNG functieboek -- not yet independently confirmed'), or explaining why a specific row was flipped to verified for illustrative/demonstration purposes only."
+          },
+          "bron": {
+            "type": "string",
+            "enum": [
+              "hr21",
+              "eigen"
+            ],
+            "x-enum-labels": {
+              "hr21": "HR21 reference",
+              "eigen": "Own function"
+            },
+            "default": "eigen",
+            "title": "Source",
+            "description": "Where the function comes from: the HR21 reference library or your own catalogue.",
+            "x-notes": "people-job-framework-maintenance D2: hr21 for rows taken over from the VNG HR21 library, eigen for employer functions."
+          },
+          "functiefamilie": {
+            "type": "string",
+            "nullable": true,
+            "title": "Function family",
+            "description": "The family the function belongs to, for example Informatie or Beleid.",
+            "x-notes": "people-job-framework-maintenance D2: free text grouping, beside the HR21 functiegroep."
+          },
+          "salaryBandId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "$ref": "SalaryBand",
+            "title": "Salary band",
+            "description": "The salary band this function is graded in, if any.",
+            "x-notes": "people-job-framework-maintenance D2: optional link to the SalaryBand the comp-cycles machinery uses."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "actief",
+              "vervallen"
+            ],
+            "x-enum-labels": {
+              "actief": "Active",
+              "vervallen": "Retired"
+            },
+            "default": "actief",
+            "title": "Status",
+            "description": "Retire a function instead of deleting it: contracts that point at it keep their meaning, and the rules audit asks you to give those contracts a current function.",
+            "x-notes": "people-job-framework-maintenance D1/D4: retire, never delete; nl-hr21-vervallen-functie flags a live contract on a vervallen function."
           }
         }
       },
@@ -13525,6 +13589,45 @@
         "title": "Voorbeeld Title 3",
         "note": "Voorbeeld Note 3",
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ManagerDeputy",
+          "slug": "managerdeputy-managerdeputy-1-1"
+        },
+        "deputyUserId": "Voorbeeld Deputyuserid 1",
+        "from": "2026-03-01",
+        "until": "2026-03-01",
+        "managerUserId": "Voorbeeld Manageruserid 1",
+        "administrationId": "Voorbeeld Administrationid 1",
+        "note": "Voorbeeld Note 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ManagerDeputy",
+          "slug": "managerdeputy-managerdeputy-2-2"
+        },
+        "deputyUserId": "Voorbeeld Deputyuserid 2",
+        "from": "2026-03-02",
+        "until": "2026-03-02",
+        "managerUserId": "Voorbeeld Manageruserid 2",
+        "administrationId": "Voorbeeld Administrationid 2",
+        "note": "Voorbeeld Note 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ManagerDeputy",
+          "slug": "managerdeputy-managerdeputy-3-3"
+        },
+        "deputyUserId": "Voorbeeld Deputyuserid 3",
+        "from": "2026-03-03",
+        "until": "2026-03-03",
+        "managerUserId": "Voorbeeld Manageruserid 3",
+        "administrationId": "Voorbeeld Administrationid 3",
+        "note": "Voorbeeld Note 3"
       }
     ]
   }

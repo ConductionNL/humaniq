@@ -196,14 +196,12 @@ class TimeEntryEventService {
 			$time = $this->now();
 		}
 
-		return [
-			'specversion' => '1.0',
-			'type' => self::EVENT_TYPE,
-			'source' => self::EVENT_SOURCE,
-			'id' => $uuid,
-			'time' => $time,
-			'datacontenttype' => 'application/json',
-			'data' => [
+		return (new CloudEventEnvelope())->build(
+			type: self::EVENT_TYPE,
+			source: self::EVENT_SOURCE,
+			eventId: $uuid,
+			time: $time,
+			data: [
 				'timesheetId' => $uuid,
 				'employeeId' => (string)($timeEntry['employeeId'] ?? ''),
 				'period' => (string)($timeEntry['period'] ?? ''),
@@ -215,8 +213,8 @@ class TimeEntryEventService {
 				'description' => (string)($timeEntry['description'] ?? ''),
 				'approvedBy' => (string)($timeEntry['approvedBy'] ?? ''),
 				'approvedAt' => $approvedAt,
-			],
-		];
+			]
+		);
 
 	}//end buildApprovedEvent()
 

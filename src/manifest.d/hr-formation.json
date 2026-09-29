@@ -322,7 +322,7 @@
 					},
 					{
 						"id": "budget-lines",
-						"type": "object-table",
+						"type": "endpoint-table",
 						"title": "Budget per place",
 						"content": {
 							"endpointSource": {
@@ -376,7 +376,7 @@
 					},
 					{
 						"id": "budget-compare",
-						"type": "object-table",
+						"type": "endpoint-table",
 						"title": "Against the baseline",
 						"content": {
 							"endpointSource": {

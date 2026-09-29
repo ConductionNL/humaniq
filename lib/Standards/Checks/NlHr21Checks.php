@@ -65,6 +65,8 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 		return [
 			'EmploymentContract' => [
 				'nl-hr21-schaal-consistentie' => static fn (array $contract, array $context): bool => self::schaalConsistentieSatisfied($contract, $context),
+				// people-job-framework-maintenance D4: a live contract on a retired function.
+				'nl-hr21-vervallen-functie' => static fn (array $contract, array $context): bool => self::vervallenFunctieSatisfied($contract, $context),
 			],
 		];
 
@@ -103,6 +105,8 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 					'caoSchaal' => '6',
 					'caoSchaalVerified' => false,
 					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+					'bron' => 'hr21',
+					'status' => 'actief',
 				],
 				[
 					'functiecode' => 'HR21-002',
@@ -111,6 +115,8 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 					'caoSchaal' => '10',
 					'caoSchaalVerified' => true,
 					'caoSchaalSource' => 'Illustrative proof-case only — flipped to verified:true so the nl-hr21-schaal-consistentie check has one resolvable mapping to demonstrate against; NOT an actual VNG/HR21 confirmation.',
+					'bron' => 'hr21',
+					'status' => 'actief',
 				],
 				[
 					'functiecode' => 'HR21-003',
@@ -119,6 +125,8 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 					'caoSchaal' => '9',
 					'caoSchaalVerified' => false,
 					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+					'bron' => 'hr21',
+					'status' => 'actief',
 				],
 				[
 					'functiecode' => 'HR21-004',
@@ -127,6 +135,8 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 					'caoSchaal' => '11',
 					'caoSchaalVerified' => false,
 					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+					'bron' => 'hr21',
+					'status' => 'actief',
 				],
 				[
 					'functiecode' => 'HR21-005',
@@ -135,11 +145,40 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 					'caoSchaal' => '13',
 					'caoSchaalVerified' => false,
 					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+					'bron' => 'hr21',
+					'status' => 'actief',
 				],
 			],
 		];
 
 	}//end seedObjects()
+
+	/**
+	 * The `nl-hr21-vervallen-functie` predicate (REQ-JFM-002): false only for a
+	 * contract that runs today (started, and no end date or one not yet
+	 * passed) whose function resolves in `hr21.normfunctiesById` with status
+	 * `vervallen`.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param array<string, mixed> $context  Evaluation context; reads `hr21.normfunctiesById`.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/functiehuis-hr21/spec.md#REQ-JFM-002
+	 */
+	private static function vervallenFunctieSatisfied(array $contract, array $context): bool {
+		$normfunctieId = trim((string)($contract['normfunctieId'] ?? ''));
+		$status = ($context['hr21']['normfunctiesById'][$normfunctieId]['status'] ?? null);
+		if ($normfunctieId === '' || $status !== 'vervallen') {
+			return true;
+		}
+
+		$today = date('Y-m-d');
+		$start = substr((string)($contract['startDate'] ?? ''), 0, 10);
+		$end = substr((string)($contract['endDate'] ?? ''), 0, 10);
+
+		return ($start !== '' && $start > $today) || ($end !== '' && $end < $today);
+	}//end vervallenFunctieSatisfied()
 
 	/**
 	 * The `nl-hr21-schaal-consistentie` predicate (spec.md REQ-HR21-003):

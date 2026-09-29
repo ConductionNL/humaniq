@@ -1,0 +1,58 @@
+{
+    "x-humaniq-fragment": "hr-deputy",
+    "components": {
+        "schemas": {
+            "ManagerDeputy": {
+                "slug": "ManagerDeputy",
+                "icon": "AccountKeyOutline",
+                "version": "0.1.0",
+                "title": "Manager deputy",
+                "description": "A colleague who stands in for a manager for a period: during it, the manager's waiting requests also reach the deputy's approvals inbox, and the deputy is told when one is submitted.",
+                "x-notes": "self-service-approvals-inbox D2 (REQ-API-002). Nothing is stamped on the requests: the inbox (ApprovalsInboxService) and the submit notifications (ManagerOrDeputyRecipientResolver) resolve the active deputy when they read. ManagerDeputyListener refuses a record whose deputy is the manager, whose last day comes before its first, or that a writer files for another manager without being HR; a record filed without a manager is the writer's own. A deputy approves under the same OpenRegister rights as anyone else: this record scopes the inbox, it grants nothing.",
+                "type": "object",
+                "required": [
+                    "deputyUserId",
+                    "from",
+                    "until"
+                ],
+                "properties": {
+                    "managerUserId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Manager",
+                        "description": "The account of the manager who is away. Left empty, it is yours."
+                    },
+                    "deputyUserId": {
+                        "type": "string",
+                        "title": "Deputy",
+                        "description": "The account of the colleague who stands in."
+                    },
+                    "from": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "First day",
+                        "description": "The first day the deputy stands in."
+                    },
+                    "until": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Last day",
+                        "description": "The last day the deputy stands in. From the day after, the deputy no longer sees the requests."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration the manager works in."
+                    },
+                    "note": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Note",
+                        "description": "Why the manager is away, or what the deputy should know."
+                    }
+                }
+            }
+        }
+    }
+}

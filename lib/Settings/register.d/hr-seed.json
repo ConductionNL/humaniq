@@ -1418,6 +1418,218 @@
             {
                 "@self": {
                     "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-meijer"
+                },
+                "employeeNumber": "EMP-0031",
+                "firstName": "Sanne",
+                "lastName": "Meijer",
+                "dateOfBirth": "1996-04-22",
+                "startDate": "2024-03-01",
+                "grossMonthlySalary": 3100.0,
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "land": "NL",
+                "administrationId": "ADM-001",
+                "_note": "people-flex-contract-rules: three fixed-term contracts, each following the last within two months (contract-meijer-1..3). The third is 3 of 3 in its chain and raises nl-signaal-ketenregeling while it runs; renewing it makes the contract permanent from 2027-01-01."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-meijer-1"
+                },
+                "employeeId": "@ref:employee-meijer",
+                "type": "temporary",
+                "startDate": "2024-03-01",
+                "endDate": "2024-12-31",
+                "aanzegdOn": "2024-11-15",
+                "writtenContract": true,
+                "hoursPerWeek": 32,
+                "hourlyWage": 19.5,
+                "cao": null,
+                "normfunctieId": null,
+                "awfTariff": "high",
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-meijer-2"
+                },
+                "employeeId": "@ref:employee-meijer",
+                "type": "temporary",
+                "startDate": "2025-02-01",
+                "endDate": "2025-12-31",
+                "aanzegdOn": "2025-11-14",
+                "writtenContract": true,
+                "hoursPerWeek": 32,
+                "hourlyWage": 19.5,
+                "cao": null,
+                "normfunctieId": null,
+                "awfTariff": "high",
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-meijer-3"
+                },
+                "employeeId": "@ref:employee-meijer",
+                "type": "temporary",
+                "startDate": "2026-01-01",
+                "endDate": "2026-12-31",
+                "aanzegdOn": null,
+                "writtenContract": true,
+                "hoursPerWeek": 32,
+                "hourlyWage": 19.5,
+                "cao": null,
+                "normfunctieId": null,
+                "awfTariff": "high",
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Employee",
+                    "slug": "employee-elidrissi"
+                },
+                "employeeNumber": "EMP-0032",
+                "firstName": "Ahmed",
+                "lastName": "El Idrissi",
+                "dateOfBirth": "2001-09-03",
+                "startDate": "2025-06-01",
+                "taxTableColor": "wit",
+                "identityDocumentVerified": true,
+                "loonheffingenVerklaringOnFile": true,
+                "land": "NL",
+                "administrationId": "ADM-001",
+                "_note": "people-flex-contract-rules: an on-call worker since 2025-06-01 with no fixed-hours offer recorded, so nl-signaal-oproep-vaste-uren flags contract-elidrissi-oproep. His August 2026 hours (timesheet-elidrissi-2026-08) feed the on-call overview once that timesheet is approved: the import stamps every seeded timesheet draft (see timeentry-jansen-2026-05-04), so approve it before reading the average."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmploymentContract",
+                    "slug": "contract-elidrissi-oproep"
+                },
+                "employeeId": "@ref:employee-elidrissi",
+                "type": "oproep",
+                "startDate": "2025-06-01",
+                "endDate": null,
+                "vasteUrenAanbodOp": null,
+                "vasteUrenAanbodUren": null,
+                "writtenContract": true,
+                "hoursPerWeek": 0,
+                "hourlyWage": 15.0,
+                "cao": null,
+                "normfunctieId": null,
+                "awfTariff": "high",
+                "workingTimeDocumented": true,
+                "overtimeMultiplier": 1.5,
+                "ftePartOfYearMinijob": false,
+                "dpaeFiledBeforeStart": true,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Timesheet",
+                    "slug": "timesheet-elidrissi-2026-08"
+                },
+                "employeeId": "@ref:employee-elidrissi",
+                "period": "2026-08",
+                "hours": 72,
+                "entryCount": 4,
+                "description": "Oproepuren augustus 2026.",
+                "billable": false,
+                "status": "approved",
+                "submittedAt": "2026-09-01T08:00:00Z",
+                "approvedBy": "manager-pietersen",
+                "approvedAt": "2026-09-02T09:00:00Z",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-elidrissi-2026-08-03"
+                },
+                "employeeId": "@ref:employee-elidrissi",
+                "timesheetId": "@ref:timesheet-elidrissi-2026-08",
+                "date": "2026-08-03",
+                "breakMinutes": 0,
+                "hours": 18.0,
+                "description": "Oproepdienst.",
+                "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-elidrissi-2026-08-10"
+                },
+                "employeeId": "@ref:employee-elidrissi",
+                "timesheetId": "@ref:timesheet-elidrissi-2026-08",
+                "date": "2026-08-10",
+                "breakMinutes": 0,
+                "hours": 18.0,
+                "description": "Oproepdienst.",
+                "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-elidrissi-2026-08-17"
+                },
+                "employeeId": "@ref:employee-elidrissi",
+                "timesheetId": "@ref:timesheet-elidrissi-2026-08",
+                "date": "2026-08-17",
+                "breakMinutes": 0,
+                "hours": 18.0,
+                "description": "Oproepdienst.",
+                "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TimeEntry",
+                    "slug": "timeentry-elidrissi-2026-08-24"
+                },
+                "employeeId": "@ref:employee-elidrissi",
+                "timesheetId": "@ref:timesheet-elidrissi-2026-08",
+                "date": "2026-08-24",
+                "breakMinutes": 0,
+                "hours": 18.0,
+                "description": "Oproepdienst.",
+                "billable": false,
+                "administrationId": "ADM-001",
+                "origin": "manual"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
                     "schema": "EmploymentContract",
                     "slug": "contract-devries-tijdelijk"
                 },
@@ -1605,8 +1817,28 @@
                 "@self": {
                     "register": "humaniq",
                     "schema": "Normfunctie",
+                    "slug": "normfunctie-eigen-informatiebeheer"
+                },
+                "functiecode": "EIG-001",
+                "naam": "Adviseur informatiebeheer",
+                "functiegroep": "Informatie",
+                "functiefamilie": "Informatie",
+                "caoSchaal": "10",
+                "caoSchaalVerified": false,
+                "caoSchaalSource": "Own function, graded by the employer.",
+                "bron": "eigen",
+                "status": "actief",
+                "salaryBandId": "@ref:salaryband-a",
+                "_note": "people-job-framework-maintenance: an employer function beside the five HR21 rows, linked to a seeded salary band."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-001"
                 },
+                "bron": "hr21",
+                "status": "actief",
                 "functiecode": "HR21-001",
                 "naam": "Medewerker Beheer",
                 "functiegroep": "Beheer",
@@ -1620,6 +1852,8 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-002"
                 },
+                "bron": "hr21",
+                "status": "actief",
                 "functiecode": "HR21-002",
                 "naam": "Senior Beleidsmedewerker",
                 "functiegroep": "Beleid",
@@ -1633,6 +1867,8 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-003"
                 },
+                "bron": "hr21",
+                "status": "actief",
                 "functiecode": "HR21-003",
                 "naam": "Beleidsmedewerker",
                 "functiegroep": "Beleid",
@@ -1646,6 +1882,8 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-004"
                 },
+                "bron": "hr21",
+                "status": "actief",
                 "functiecode": "HR21-004",
                 "naam": "Teammanager",
                 "functiegroep": "Management",
@@ -1659,6 +1897,8 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-005"
                 },
+                "bron": "hr21",
+                "status": "actief",
                 "functiecode": "HR21-005",
                 "naam": "Afdelingsmanager",
                 "functiegroep": "Management",
@@ -2468,6 +2708,20 @@
                 "effectiveDate": "2027-03-01",
                 "note": "Meer capaciteit voor de dienstverlening.",
                 "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ManagerDeputy",
+                    "slug": "manager-deputy-zomer-2026"
+                },
+                "managerUserId": "admin",
+                "deputyUserId": "hr-demo",
+                "from": "2026-07-14",
+                "until": "2026-08-01",
+                "note": "Zomervakantie van de leidinggevende.",
+                "administrationId": "ADM-001",
+                "_note": "self-service-approvals-inbox (2026-09-29): the spec's summer scenario. admin leads Directie and Consultancy (Sam Jansen's placements); hr-demo stands in from 14 July to 1 August 2026. A fixed period rather than the current month, because a seed cannot move with the calendar: shorten or move it on its page to try it today."
             }
         ]
     }

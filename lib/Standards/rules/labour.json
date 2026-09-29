@@ -357,6 +357,39 @@
       }
     },
     {
+      "id": "nl-signaal-ketenregeling",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-signals",
+      "source": "BW art. 7:668a (ketenregeling)",
+      "statement": "A live fixed-term contract that is the third in its chain (fixed-term contracts following each other with gaps of at most six months), or whose chain will pass 36 months within the next 60 days, shall be signalled for HR before renewal: the next contract, or the contract running past 36 months, is permanent by law.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": "2020-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290",
+      "parameters": {
+        "maxContracts": 3,
+        "maxMonths": 36,
+        "maxGapMonths": 6,
+        "windowDays": 60
+      }
+    },
+    {
+      "id": "nl-signaal-oproep-vaste-uren",
+      "domain": "labour",
+      "jurisdiction": "NL",
+      "framework": "hr-signals",
+      "source": "BW art. 7:628a lid 5 (aanbod vaste arbeidsomvang oproepkracht)",
+      "statement": "An on-call contract that has run for twelve months shall have a recorded offer of fixed hours, equal to at least the average worked over those twelve months; a running on-call contract past twelve months without vasteUrenAanbodOp is signalled for HR.",
+      "severity": "recommended",
+      "machineCheckable": true,
+      "effectiveDate": "2020-01-01",
+      "sourceUrl": "https://wetten.overheid.nl/BWBR0005290",
+      "parameters": {
+        "months": 12
+      }
+    },
+    {
       "id": "nl-aanzegtermijn-bewaking",
       "domain": "labour",
       "jurisdiction": "NL",

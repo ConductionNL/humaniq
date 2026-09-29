@@ -1,0 +1,82 @@
+{
+	"pages": [
+		{
+			"id": "MijnGoedkeuringen",
+			"route": "/my-approvals",
+			"type": "dashboard",
+			"title": "My approvals",
+			"config": {
+				"description": "Every request that waits for your decision, and what you decided in the last 90 days.",
+				"_note": "self-service-approvals-inbox REQ-API-001/002 (design.md D1, D4). One inbox across processes: leave requests, timesheets, expense claims and leave trades waiting for the caller as manager, or as the deputy of a manager today (ManagerDeputy). Both widgets read GET /api/approvals, which composes the rows under the caller's own rights. Approve and reject post OpenRegister's lifecycle transition, the same one the detail pages post, so NoSelfApprovalGuard and every other guard still applies. The three team approval pages stay until this inbox has been used for a while.",
+				"widgets": [
+					{
+						"id": "approvals-open",
+						"type": "approvals-inbox",
+						"title": "Waiting for you",
+						"content": {
+							"state": "open"
+						}
+					},
+					{
+						"id": "approvals-decided",
+						"type": "approvals-inbox",
+						"title": "Decided by you",
+						"content": {
+							"state": "decided"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "approvals-open",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 7
+					},
+					{
+						"id": 2,
+						"widgetId": "approvals-decided",
+						"gridX": 0,
+						"gridY": 7,
+						"gridWidth": 12,
+						"gridHeight": 6
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "ManagerDeputy",
+			"params": {
+				"id": "ManagerDeputies",
+				"route": "/manager-deputies",
+				"title": "Deputies",
+				"columns": ["managerUserId", "deputyUserId", "from", "until", "note"],
+				"sort": {"field": "from", "order": "desc"},
+				"filters": ["managerUserId", "deputyUserId"],
+				"description": "Colleagues who stand in for a manager for a period. During it they see the manager's waiting requests and are told when one is submitted.",
+				"note": "self-service-approvals-inbox (2026-09-29): REQ-API-002. My HR > My deputies is a preset on this page (managerUserId = @me), not a second index. ManagerDeputyListener makes a record without a manager the writer's own, lets only the manager or HR write one, and refuses a self-deputy or a last day before the first."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "ManagerDeputy",
+			"params": {
+				"id": "ManagerDeputyDetail",
+				"route": "/manager-deputies/:id",
+				"title": "Deputy",
+				"dataTitle": "Deputy",
+				"dataIcon": "AccountKeyOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 6,
+				"note": "self-service-approvals-inbox (2026-09-29): D2. Shorten the period to end a deputy early; from the day after the last day the deputy no longer sees the requests."
+			}
+		}
+	]
+}

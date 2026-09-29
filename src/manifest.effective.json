@@ -343,6 +343,21 @@
 					"id": "MijnAfdeling",
 					"label": "My department",
 					"route": "MijnAfdeling"
+				},
+				{
+					"icon": "ClipboardCheckOutline",
+					"id": "MijnGoedkeuringen",
+					"label": "My approvals",
+					"route": "MijnGoedkeuringen"
+				},
+				{
+					"icon": "AccountKeyOutline",
+					"id": "MijnVervangers",
+					"label": "My deputies",
+					"query": {
+						"managerUserId": "@me"
+					},
+					"route": "ManagerDeputies"
 				}
 			],
 			"icon": "Account",
@@ -376,6 +391,12 @@
 					"id": "EmploymentContracts",
 					"label": "Contracts",
 					"route": "EmploymentContracts"
+				},
+				{
+					"icon": "CalendarClock",
+					"id": "OnCallAverages",
+					"label": "On-call hours",
+					"route": "OnCallAverages"
 				},
 				{
 					"icon": "SchoolOutline",
@@ -2721,6 +2742,52 @@
 		},
 		{
 			"config": {
+				"_note": "self-service-approvals-inbox REQ-API-001/002 (design.md D1, D4). One inbox across processes: leave requests, timesheets, expense claims and leave trades waiting for the caller as manager, or as the deputy of a manager today (ManagerDeputy). Both widgets read GET /api/approvals, which composes the rows under the caller's own rights. Approve and reject post OpenRegister's lifecycle transition, the same one the detail pages post, so NoSelfApprovalGuard and every other guard still applies. The three team approval pages stay until this inbox has been used for a while.",
+				"description": "Every request that waits for your decision, and what you decided in the last 90 days.",
+				"layout": [
+					{
+						"gridHeight": 7,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "approvals-open"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 7,
+						"id": 2,
+						"widgetId": "approvals-decided"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"state": "open"
+						},
+						"id": "approvals-open",
+						"title": "Waiting for you",
+						"type": "approvals-inbox"
+					},
+					{
+						"content": {
+							"state": "decided"
+						},
+						"id": "approvals-decided",
+						"title": "Decided by you",
+						"type": "approvals-inbox"
+					}
+				]
+			},
+			"id": "MijnGoedkeuringen",
+			"route": "/my-approvals",
+			"title": "My approvals",
+			"type": "dashboard"
+		},
+		{
+			"config": {
 				"_note": "department-figures REQ-DPF-002 (design.md D3/D4). A manager's own dashboard, reached from the My HR group. One row per unit the caller manages (OrgUnit.managerId is the caller's Employee), from GET /api/analytics/my-units, which answers an empty list to someone who manages nothing and never a figure per person. A unit with fewer people than the small-unit threshold (app config department_figures_minimum_members, default 5) shows its size and open vacancies but no absence or wage cost. A row opens MijnAfdelingUnit for that unit, which is how a manager of several units picks one.",
 				"description": "The departments you lead: absence, wage cost and open vacancies, as totals for the team.",
 				"layout": [
@@ -4113,6 +4180,34 @@
 		},
 		{
 			"config": {
+				"_note": "people-flex-contract-rules D4 (REQ-FLX-002): the average approved hours of every on-call contract over a period HR picks, per week and per month, for the fixed-hours offer of BW 7:628a lid 5, with a CSV download. A dashboard with one host widget (on-call-averages, OnCallAverages.vue): no built-in widget takes a from and to date and re-reads an endpoint with them. Reads GET /api/contracts/on-call-averages, HR only.",
+				"description": "The average approved hours of every on-call worker over a period you pick, for the fixed-hours offer after twelve months.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "on-call-averages"
+					}
+				],
+				"widgets": [
+					{
+						"content": {},
+						"id": "on-call-averages",
+						"title": "On-call hours",
+						"type": "on-call-averages"
+					}
+				]
+			},
+			"id": "OnCallAverages",
+			"route": "/contracts/on-call",
+			"title": "On-call hours",
+			"type": "dashboard"
+		},
+		{
+			"config": {
 				"_note": "people-formation-positions (2026-09-28): the data widget excludes orgUnitId/normfunctieId since Related resolves both; four stat tiles show this place's budgeted, filled, vacant and net FTE through endpointSource on GET /api/formation/occupancy?formatieplaatsId (computed on read, built-in widgets only per ADR-049); the object-list names the contracts that fill the place. No lifecycleActions: status is a plain enum.",
 				"layout": [
 					{
@@ -4542,7 +4637,7 @@
 						},
 						"id": "budget-lines",
 						"title": "Budget per place",
-						"type": "object-table"
+						"type": "endpoint-table"
 					},
 					{
 						"content": {
@@ -4586,13 +4681,64 @@
 						},
 						"id": "budget-compare",
 						"title": "Against the baseline",
-						"type": "object-table"
+						"type": "endpoint-table"
 					}
 				]
 			},
 			"id": "FormationScenarioDetail",
 			"route": "/formation-scenarios/:id",
 			"title": "Formation scenario",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "functiehuis-hr21 (2026-07-18): read-only HR21 normfunctie reference detail (the CaoDetail allowCreate:false shape). The 'Normfunctie' data widget carries every field (functiecode/naam/functiegroep/caoSchaal/caoSchaalVerified/caoSchaalSource) -- no Related widget, since no other schema in humaniq references Normfunctie's own object identity here (EmploymentContract.normfunctieId points AT a Normfunctie, not the reverse). No lifecycleActions (Normfunctie has no x-openregister-lifecycle). No create/edit affordances (seeded reference data). Audit history is a sidebar tab. people-job-framework-maintenance (2026-09-29): moved out of singleDataScaffold to switch Edit on (showEditAction) and show source, family, salary band and status. HR retires a function by setting status to vervallen; there is no delete.",
+				"allowCreate": false,
+				"layout": [
+					{
+						"gridHeight": 7,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					}
+				],
+				"register": "humaniq",
+				"schema": "Normfunctie",
+				"showEditAction": true,
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"include": [
+								"functiecode",
+								"naam",
+								"functiegroep",
+								"functiefamilie",
+								"caoSchaal",
+								"caoSchaalVerified",
+								"caoSchaalSource",
+								"bron",
+								"salaryBandId",
+								"status"
+							],
+							"title": "Job profile"
+						},
+						"icon": "BriefcaseOutline",
+						"id": "data",
+						"title": "Job profile",
+						"type": "data"
+					}
+				]
+			},
+			"id": "NormfunctieDetail",
+			"route": "/normfuncties/:id",
+			"title": "Job profile",
 			"type": "detail"
 		},
 		{
@@ -5807,7 +5953,7 @@
 						},
 						"id": "dossier-status",
 						"title": "Dossier status",
-						"type": "object-table"
+						"type": "endpoint-table"
 					},
 					{
 						"content": {
@@ -6833,6 +6979,125 @@
 		},
 		{
 			"config": {
+				"_note": "Leaf compliance record: no other schema in humaniq references EmploymentContract by FK, so the page is a simple two-panel layout -- the data widget (type/writtenContract/dates/hoursPerWeek/hourlyWage/cao/caoSchaal/awfTariff plus the jurisdiction-specific fields: workingTimeDocumented, overtimeMultiplier, ftePartOfYearMinijob, dpaeFiledBeforeStart) at 8-wide, excluding employeeId since the Related panel already resolves and links the owning Employee by name -- and Related at 4-wide for that one meaningful outbound ref. cao-library (2026-07-14): the ct-data widget excludes only employeeId, so the contract's cao (the referenced CAO library id) and caoSchaal (its pay scale) render here for free -- no widget change needed. No child lists (nothing points at a contract), no files/calendar/comms leaves (no linkedType or document field evidence on this schema), no lifecycleActions (EmploymentContract has no x-openregister-lifecycle). Audit history is a sidebar tab. functiehuis-hr21 (2026-07-18): the ct-data widget now also excludes normfunctieId (the new $ref, the employeeId precedent) -- the Related panel resolves and links the assigned Normfunctie by name for free, confirmed rendering the contract's HR21 function assignment. people-flex-contract-rules (2026-09-29): moved out of simpleDetailScaffold to add the fixed-term chain section (GET /api/contracts/{id}/chain, REQ-FLX-001): position in the chain, contracts allowed, months counted and the date the chain turns permanent. An endpoint-table, because on a detail page object-table ignores endpointSource. A contract outside any chain shows the empty text.",
+				"headerActions": [
+					{
+						"confirm": true,
+						"errorMessage": "Generating the employment contract failed.",
+						"icon": "FileDocumentPlusOutline",
+						"id": "generate-arbeidsovereenkomst",
+						"label": "Generate employment contract",
+						"method": "POST",
+						"params": {
+							"contractId": "@objectId",
+							"documentType": "arbeidsovereenkomst"
+						},
+						"successMessage": "The employment contract is being generated.",
+						"type": "api-call",
+						"url": "/api/documents/generate"
+					}
+				],
+				"layout": [
+					{
+						"gridHeight": 7,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 7,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					},
+					{
+						"gridHeight": 3,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 7,
+						"id": 3,
+						"widgetId": "chain"
+					}
+				],
+				"register": "humaniq",
+				"schema": "EmploymentContract",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"normfunctieId"
+							],
+							"title": "Contract"
+						},
+						"icon": "FileSign",
+						"id": "data",
+						"title": "Contract",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "position",
+									"label": "Position in chain"
+								},
+								{
+									"key": "maxContracts",
+									"label": "Contracts allowed"
+								},
+								{
+									"key": "startsOn",
+									"label": "Chain started"
+								},
+								{
+									"key": "monthsCounted",
+									"label": "Months counted"
+								},
+								{
+									"key": "turnsPermanentOn",
+									"label": "Permanent from"
+								}
+							],
+							"emptyText": "Not part of a fixed-term chain",
+							"endpointSource": {
+								"responsePath": "rows",
+								"url": "/apps/humaniq/api/contracts/@objectId/chain"
+							},
+							"title": "Fixed-term chain"
+						},
+						"icon": "FileSign",
+						"id": "chain",
+						"title": "Fixed-term chain",
+						"type": "endpoint-table"
+					}
+				]
+			},
+			"id": "EmploymentContractDetail",
+			"route": "/contracts/:id",
+			"title": "Contract",
+			"type": "detail"
+		},
+		{
+			"config": {
 				"_note": "goals-okr (2026-07-15): the measurable, cross-review sibling of PerformanceReviewDetail (ADR-001 Rule 6 — the primary surface is the EmployeeDetail emp-objectives row / ReviewCycleDetail rc-objectives row; this page is a routed detail, reached from those rows or the deepLink, and is deliberately NOT a menu child, the PerformanceReviewDetail/TimesheetDetail convention). The 'Objective' data widget carries title/ownerType/period/status/uitkomst/progress, excluding employeeId/orgUnitId/cycleId (Related resolves and links all three by name) and userId (the internal @me self-service field, not a display fact). The 'Key results' object-list (KeyResult.objectiveId = @objectId) lists this objective's measurable children, rowRoute to KeyResultDetail. lifecycleActions expose exactly activeren/afsluiten (concept->actief->afgesloten, hr-okr.json) -- no guard, no re-open edge, a closed objective is history (the ReviewCycle no-resurrection precedent). Audit history is a sidebar tab.",
 				"layout": [
 					{
@@ -7662,7 +7927,7 @@
 						},
 						"id": "formation-places",
 						"title": "Formation",
-						"type": "object-table"
+						"type": "endpoint-table"
 					}
 				]
 			},
@@ -8768,6 +9033,87 @@
 			"route": "/mijn",
 			"title": "My HR",
 			"type": "dashboard"
+		},
+		{
+			"config": {
+				"_note": "self-service-approvals-inbox (2026-09-29): REQ-API-002. My HR > My deputies is a preset on this page (managerUserId = @me), not a second index. ManagerDeputyListener makes a record without a manager the writer's own, lets only the manager or HR write one, and refuses a self-deputy or a last day before the first.",
+				"columns": [
+					"managerUserId",
+					"deputyUserId",
+					"from",
+					"until",
+					"note"
+				],
+				"description": "Colleagues who stand in for a manager for a period. During it they see the manager's waiting requests and are told when one is submitted.",
+				"filters": [
+					"managerUserId",
+					"deputyUserId"
+				],
+				"register": "humaniq",
+				"schema": "ManagerDeputy",
+				"sort": {
+					"field": "from",
+					"order": "desc"
+				}
+			},
+			"id": "ManagerDeputies",
+			"route": "/manager-deputies",
+			"title": "Deputies",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "self-service-approvals-inbox (2026-09-29): D2. Shorten the period to end a deputy early; from the day after the last day the deputy no longer sees the requests.",
+				"layout": [
+					{
+						"gridHeight": 6,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "ManagerDeputy",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"title": "Deputy"
+						},
+						"icon": "AccountKeyOutline",
+						"id": "data",
+						"title": "Deputy",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "ManagerDeputyDetail",
+			"route": "/manager-deputies/:id",
+			"title": "Deputy",
+			"type": "detail"
 		},
 		{
 			"config": {
@@ -10734,7 +11080,7 @@
 		},
 		{
 			"config": {
-				"_note": "avg-dsr (2026-07-16): guarded api-call actions, NOT lifecycleActions -- DsrRequest.status carries no x-openregister-lifecycle map (design.md D3/D5): every transition requires a caller-role check (admin-ONLY, deliberately never widened to isAdminOrHr -- DsarService::assertPrivileged() hard-requires actual IGroupManager::isAdmin()) plus an explicitly-established DsarService-privileged session plus, for verwijdering, the statutory-retention guard (REQ-DSR-005) -- a retention-locked object (e.g. a Payslip inside its AWR 7-year window) is NEVER erased, always reported labelled 'retained (wettelijke bewaarplicht)'. Bevestig verwijdering REQUIRES a prior Voorbeeld verwijdering recorded on the SAME request (REQ-DSR-006). The Rectificeer action's `changes` payload is not yet collected via a prompt (the manifest v2 api-call action type has no free-text field-map prompt) -- the LoonbeslagDetail withdraw `reason` precedent; a prompt-collecting modal is a named fast-follow (README). Admin-only surface -- one notch stricter than the Payroll group's admin/HR posture. Audit history is a sidebar tab.",
+				"_note": "avg-dsr (2026-07-16): guarded api-call actions, NOT lifecycleActions -- DsrRequest.status carries no x-openregister-lifecycle map (design.md D3/D5): every transition requires a caller-role check (admin-ONLY, deliberately never widened to isAdminOrHr -- DsarService::assertPrivileged() hard-requires actual IGroupManager::isAdmin()) plus an explicitly-established DsarService-privileged session plus, for verwijdering, the statutory-retention guard (REQ-DSR-005) -- a retention-locked object (e.g. a Payslip inside its AWR 7-year window) is NEVER erased, always reported labelled 'retained (wettelijke bewaarplicht)'. Bevestig verwijdering REQUIRES a prior Voorbeeld verwijdering recorded on the SAME request (REQ-DSR-006). The Rectify action sends the request's own requestedChanges as `changes` (compliance-dsr-rectify-form D1): HR enters the corrections on the request's edit form, reviews them, then presses Rectify; a request without requestedChanges is blocked client side, and a field outside AvgDsrController::RECTIFIABLE_FIELDS is refused with 400. Admin-only surface -- one notch stricter than the Payroll group's admin/HR posture. Audit history is a sidebar tab.",
 				"headerActions": [
 					{
 						"confirm": false,
@@ -10790,6 +11136,7 @@
 						"label": "Rectify",
 						"method": "POST",
 						"params": {
+							"changes": "@object.requestedChanges",
 							"dsrRequestId": "@objectId",
 							"employeeId": "@object.employeeId"
 						},
@@ -11520,28 +11867,35 @@
 		},
 		{
 			"config": {
-				"_note": "functiehuis-hr21 (2026-07-18): read-only HR21 (VNG municipal functiewaarderingssysteem) normfunctie reference index (ADR-001 Rule 1 sub-page under the existing Personeel menu, sibling of CAO's/Salarisschalen — the Caos allowCreate:false + actionToggles shape). Illustrative subset seeded by NlHr21Checks::seedObjects() -- explicitly NOT a claimed-complete ~150-function library (proposal.md 'Honesty about verification'). Rows navigate to NormfunctieDetail.",
+				"_note": "functiehuis-hr21 (2026-07-18): read-only HR21 (VNG municipal functiewaarderingssysteem) normfunctie reference index (ADR-001 Rule 1 sub-page under the existing Personeel menu, sibling of CAO's/Salarisschalen — the Caos allowCreate:false + actionToggles shape). Illustrative subset seeded by NlHr21Checks::seedObjects() -- explicitly NOT a claimed-complete ~150-function library (proposal.md 'Honesty about verification'). Rows navigate to NormfunctieDetail. people-job-framework-maintenance (2026-09-29): maintainable. HR adds and edits functions (own ones beside HR21), mass import loads a catalogue, the list opens on status actief, and delete stays off: a function is retired (status vervallen), never deleted, so contracts keep pointing at it.",
 				"actionToggles": {
-					"showAdd": false,
+					"showAdd": true,
 					"showCopyAction": false,
 					"showDeleteAction": false,
-					"showEditAction": false,
-					"showFormDialog": false,
+					"showEditAction": true,
+					"showFormDialog": true,
 					"showMassCopy": false,
 					"showMassDelete": false,
-					"showMassImport": false
+					"showMassImport": true
 				},
-				"allowCreate": false,
+				"allowCreate": true,
 				"columns": [
 					"functiecode",
 					"naam",
 					"functiegroep",
+					"functiefamilie",
 					"caoSchaal",
-					"caoSchaalVerified"
+					"bron",
+					"status"
 				],
-				"description": "HR21 job profiles and their linked Cao Gemeenten scale (illustrative subset, not a complete library). Read-only reference data.",
+				"defaultFilters": {
+					"status": "actief"
+				},
+				"description": "Your job functions: the HR21 reference functions and your own, each with its Cao Gemeenten scale. Retire a function instead of deleting it.",
 				"filters": [
-					"functiegroep"
+					"functiegroep",
+					"bron",
+					"status"
 				],
 				"register": "humaniq",
 				"schema": "Normfunctie",
@@ -11554,52 +11908,6 @@
 			"route": "/normfuncties",
 			"title": "Job framework",
 			"type": "index"
-		},
-		{
-			"config": {
-				"_note": "functiehuis-hr21 (2026-07-18): read-only HR21 normfunctie reference detail (the CaoDetail allowCreate:false shape). The 'Normfunctie' data widget carries every field (functiecode/naam/functiegroep/caoSchaal/caoSchaalVerified/caoSchaalSource) -- no Related widget, since no other schema in humaniq references Normfunctie's own object identity here (EmploymentContract.normfunctieId points AT a Normfunctie, not the reverse). No lifecycleActions (Normfunctie has no x-openregister-lifecycle). No create/edit affordances (seeded reference data). Audit history is a sidebar tab.",
-				"allowCreate": false,
-				"layout": [
-					{
-						"gridHeight": 7,
-						"gridWidth": 12,
-						"gridX": 0,
-						"gridY": 0,
-						"id": 1,
-						"widgetId": "data"
-					}
-				],
-				"register": "humaniq",
-				"schema": "Normfunctie",
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				},
-				"widgets": [
-					{
-						"content": {
-							"columns": 2,
-							"include": [
-								"functiecode",
-								"naam",
-								"functiegroep",
-								"caoSchaal",
-								"caoSchaalVerified",
-								"caoSchaalSource"
-							],
-							"title": "Job profile"
-						},
-						"icon": "BriefcaseOutline",
-						"id": "data",
-						"title": "Job profile",
-						"type": "data"
-					}
-				]
-			},
-			"id": "NormfunctieDetail",
-			"route": "/normfuncties/:id",
-			"title": "Job profile",
-			"type": "detail"
 		},
 		{
 			"actions": [
@@ -12112,81 +12420,6 @@
 			"route": "/contracts",
 			"title": "Contracts",
 			"type": "index"
-		},
-		{
-			"config": {
-				"_note": "Leaf compliance record: no other schema in humaniq references EmploymentContract by FK, so the page is a simple two-panel layout -- the data widget (type/writtenContract/dates/hoursPerWeek/hourlyWage/cao/caoSchaal/awfTariff plus the jurisdiction-specific fields: workingTimeDocumented, overtimeMultiplier, ftePartOfYearMinijob, dpaeFiledBeforeStart) at 8-wide, excluding employeeId since the Related panel already resolves and links the owning Employee by name -- and Related at 4-wide for that one meaningful outbound ref. cao-library (2026-07-14): the ct-data widget excludes only employeeId, so the contract's cao (the referenced CAO library id) and caoSchaal (its pay scale) render here for free -- no widget change needed. No child lists (nothing points at a contract), no files/calendar/comms leaves (no linkedType or document field evidence on this schema), no lifecycleActions (EmploymentContract has no x-openregister-lifecycle). Audit history is a sidebar tab. functiehuis-hr21 (2026-07-18): the ct-data widget now also excludes normfunctieId (the new $ref, the employeeId precedent) -- the Related panel resolves and links the assigned Normfunctie by name for free, confirmed rendering the contract's HR21 function assignment.",
-				"headerActions": [
-					{
-						"confirm": true,
-						"errorMessage": "Generating the employment contract failed.",
-						"icon": "FileDocumentPlusOutline",
-						"id": "generate-arbeidsovereenkomst",
-						"label": "Generate employment contract",
-						"method": "POST",
-						"params": {
-							"contractId": "@objectId",
-							"documentType": "arbeidsovereenkomst"
-						},
-						"successMessage": "The employment contract is being generated.",
-						"type": "api-call",
-						"url": "/api/documents/generate"
-					}
-				],
-				"layout": [
-					{
-						"gridHeight": 7,
-						"gridWidth": 8,
-						"gridX": 0,
-						"gridY": 0,
-						"id": 1,
-						"widgetId": "data"
-					},
-					{
-						"gridHeight": 7,
-						"gridWidth": 4,
-						"gridX": 8,
-						"gridY": 0,
-						"id": 2,
-						"widgetId": "related"
-					}
-				],
-				"register": "humaniq",
-				"schema": "EmploymentContract",
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				},
-				"widgets": [
-					{
-						"content": {
-							"columns": 2,
-							"exclude": [
-								"employeeId",
-								"normfunctieId"
-							],
-							"title": "Contract"
-						},
-						"icon": "FileSign",
-						"id": "data",
-						"title": "Contract",
-						"type": "data"
-					},
-					{
-						"content": {
-							"title": "Related"
-						},
-						"icon": "LinkVariant",
-						"id": "related",
-						"title": "Related",
-						"type": "related"
-					}
-				]
-			},
-			"id": "EmploymentContractDetail",
-			"route": "/contracts/:id",
-			"title": "Contract",
-			"type": "detail"
 		},
 		{
 			"config": {
