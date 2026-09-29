@@ -700,7 +700,7 @@
    "id": "ppl-org-chart",
    "area": "people",
    "name": "See an organisation chart of who reports to whom.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -716,10 +716,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360017540757-Overview-of-the-Org-chart: the chart shows the company hierarchy, reporting chains and employee relationships by employee, department or team."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-org-chart-view on 2026-09-27 for the missing half: a visual chart of the hierarchy; walking it one level at a time is built. Before: openspec/specs/org-chart-basic/spec.md: 'The interactive D3 tree, exports, snapshots and reorg tooling from the round-0 draft are explicitly out of scope ... org-chart-visualization (nc-vue first) and snapshot materialisation are declared follow-ups'; lib/Settings/register.d/hr-org.json OrgUnit.parentUnitId/managerId resolve through the Related widget, and OrgUnitDetail's Child units object-list lets a user walk the tree one level at a time",
-    "reachedOn": "OrgUnitDetail /org-units/:id (Child units object-list, Related parent/manager links); no dedicated chart view exists anywhere in src/manifest.d",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/OrgChartService.php chart() composes the active units of the administration with manager names, headcounts of placements live on the date, optional readable people, orphans as roots, and a top-down layout; lib/Controller/OrgChartController.php serves GET /api/org/chart?rootId&date&withPeople (people only where RbacObjectReader allows); src/widgets/OrgChartWidget.vue shows it as CnTreeView and CnRelationshipGraph. Tests: tests/Unit/Service/OrgChartServiceTest.php, tests/Unit/Controller/OrgChartControllerTest.php.",
+    "reachedOn": "Organisation chart /org/chart (menu entry after Organisational units): list or drawn chart, root unit, date, Show people",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-people-org-chart-view",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

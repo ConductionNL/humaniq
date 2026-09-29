@@ -135,6 +135,8 @@ class OrgChartController extends Controller {
 	 * @param array<int, array<string, mixed>> $assignments The placements.
 	 *
 	 * @return array<int, string>
+	 *
+	 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-002
 	 */
 	private function readableEmployees(array $assignments): array {
 		$ids = array_unique(array_map(static fn (array $row): string => (string)($row['employeeId'] ?? ''), $assignments));

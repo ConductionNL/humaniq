@@ -83,3 +83,17 @@ date picker shows a difference.
 ## Open Questions
 
 - None.
+
+## Changes made while building (2026-09-29)
+
+- **Units are not dated.** `OrgUnit` has an `active` flag, no start or end date, so the date
+  moves placements (`OrgAssignment`) only; inactive units are left out on every date.
+- **The page is a dashboard** with one host widget (`org-chart`, `OrgChartWidget.vue`), not
+  a `type: custom` host view: gate 69 ratchets custom pages. The widget holds the root
+  picker, the date, "Show people" and the switch between list and drawing.
+- **Scope.** The chart covers the caller's active administration (rows without an
+  `administrationId` included); a caller without one gets 403.
+- **Layout.** `x` is the position among the leaves (a parent centred between its first and
+  last child), `y` the depth; the widget scales both into the graph's square.
+- **Seed.** No seed change: the existing placements show the headcounts; moving one would
+  change other pages' live checks.

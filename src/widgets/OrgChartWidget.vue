@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <!--
- OrgChartWidget (people-org-chart-view D4, REQ-OCV-001 and REQ-OCV-002).
+ OrgChartWidget (people-org-chart-view D4, REQ-OCV-001).
 
  The organisation chart of the caller's administration on a date, from
  GET /api/org/chart, in two views of the same payload: an expandable list
@@ -115,7 +115,7 @@ export default {
 		 * The drawn chart's square size, growing with the widest level.
 		 *
 		 * @return {number}
-		 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-002
+		 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-001
 		 */
 		graphSize() {
 			return Math.max(400, Math.max(this.width, this.depth) * 120)
@@ -126,7 +126,7 @@ export default {
 		 * y from the depth, each centred in its cell.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-002
+		 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-001
 		 */
 		graphNodes() {
 			const size = this.graphSize
@@ -182,7 +182,7 @@ export default {
 		 * Show a unit chosen in the list.
 		 *
 		 * @param {object} node The tree node.
-		 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-002
+		 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-001
 		 */
 		select(node) {
 			this.selected = node
@@ -192,7 +192,7 @@ export default {
 		 * Show a unit clicked in the drawn chart.
 		 *
 		 * @param {object} node The graph node.
-		 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-002
+		 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-001
 		 */
 		selectById(node) {
 			this.selected = this.find(node.id)
@@ -203,7 +203,7 @@ export default {
 		 *
 		 * @param {string} id The unit id.
 		 * @return {object|null}
-		 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-002
+		 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-001
 		 */
 		find(id) {
 			const walk = (list) => {
