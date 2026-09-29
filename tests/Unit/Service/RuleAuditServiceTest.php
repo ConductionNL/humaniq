@@ -1633,4 +1633,37 @@ class RuleAuditServiceTest extends TestCase {
 
 	}//end testBblContractReportsBumpedCatalogueVersionAndRuleEnforceable()
 
+	/**
+	 * A live contract on a retired function is flagged through the audit's
+	 * own Normfunctie index; one on an active function is not.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/functiehuis-hr21/spec.md#REQ-JFM-002
+	 */
+	public function testAContractOnARetiredFunctionIsFlaggedThroughTheAudit(): void {
+		$function = ['functiegroep' => 'Informatie', 'caoSchaal' => '10', 'caoSchaalVerified' => false];
+		$contract = ['employeeId' => 'employee-x', 'type' => 'permanent', 'writtenContract' => true, 'startDate' => '2024-01-01', 'endDate' => null, 'hoursPerWeek' => 36, 'hourlyWage' => 25.0, 'awfTariff' => 'low', 'caoSchaal' => '10'];
+		$service = $this->serviceWithRows(
+			[
+				'Normfunctie'        => [
+					array_merge($function, ['id' => 'nf-old', 'functiecode' => 'EIG-001', 'naam' => 'Archiefmedewerker', 'status' => 'vervallen']),
+					array_merge($function, ['id' => 'nf-new', 'functiecode' => 'EIG-002', 'naam' => 'Adviseur informatiebeheer', 'status' => 'actief']),
+				],
+				'EmploymentContract' => [
+					array_merge($contract, ['id' => 'c-old', 'normfunctieId' => 'nf-old']),
+					array_merge($contract, ['id' => 'c-new', 'normfunctieId' => 'nf-new']),
+				],
+			]
+		);
+
+		$byRule = [];
+		foreach ($service->audit(['jurisdiction' => 'NL'])['topViolatedRules'] as $entry) {
+			$byRule[$entry['ruleId']] = $entry['count'];
+		}
+
+		$this->assertSame(1, ($byRule['nl-hr21-vervallen-functie'] ?? 0));
+
+	}//end testAContractOnARetiredFunctionIsFlaggedThroughTheAudit()
+
 }//end class

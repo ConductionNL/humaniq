@@ -286,4 +286,43 @@ class NlHr21ChecksTest extends TestCase {
 
 	}//end testSeedObjectsIsIdempotentAcrossCalls()
 
+	/**
+	 * A live contract on a retired function is flagged, as recommended.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/functiehuis-hr21/spec.md#REQ-JFM-002
+	 */
+	public function testALiveContractOnARetiredFunctionIsFlagged(): void {
+		$contract = ['normfunctieId' => 'nf-1', 'startDate' => date('Y-m-d', strtotime('-1 year')), 'endDate' => null];
+		$context = ['hr21' => ['normfunctiesById' => ['nf-1' => ['caoSchaal' => '8', 'caoSchaalVerified' => false, 'status' => 'vervallen']]]];
+		$violations = RuleEngine::evaluate('EmploymentContract', $contract, $context);
+
+		$this->assertTrue($this->hasViolation($violations, 'nl-hr21-vervallen-functie'));
+		foreach ($violations as $violation) {
+			if ($violation->ruleId === 'nl-hr21-vervallen-functie') {
+				$this->assertSame('recommended', $violation->severity);
+			}
+		}
+
+	}//end testALiveContractOnARetiredFunctionIsFlagged()
+
+	/**
+	 * An active function, an ended contract and a function without a status pass.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/functiehuis-hr21/spec.md#REQ-JFM-002
+	 */
+	public function testActiveFunctionsAndEndedContractsPass(): void {
+		$live = ['normfunctieId' => 'nf-1', 'startDate' => '2020-01-01', 'endDate' => null];
+		$ended = ['normfunctieId' => 'nf-1', 'startDate' => '2020-01-01', 'endDate' => date('Y-m-d', strtotime('-1 day'))];
+		$retired = ['hr21' => ['normfunctiesById' => ['nf-1' => ['caoSchaal' => '8', 'status' => 'vervallen']]]];
+
+		$this->assertFalse($this->hasViolation(RuleEngine::evaluate('EmploymentContract', $live, ['hr21' => ['normfunctiesById' => ['nf-1' => ['caoSchaal' => '8', 'status' => 'actief']]]]), 'nl-hr21-vervallen-functie'));
+		$this->assertFalse($this->hasViolation(RuleEngine::evaluate('EmploymentContract', $live, ['hr21' => ['normfunctiesById' => ['nf-1' => ['caoSchaal' => '8']]]]), 'nl-hr21-vervallen-functie'));
+		$this->assertFalse($this->hasViolation(RuleEngine::evaluate('EmploymentContract', $ended, $retired), 'nl-hr21-vervallen-functie'));
+
+	}//end testActiveFunctionsAndEndedContractsPass()
+
 }//end class

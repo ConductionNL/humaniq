@@ -943,6 +943,7 @@ class RuleAuditService {
 			$normfunctiesById[$id] = [
 				'caoSchaal' => ($normfunctie['caoSchaal'] ?? null),
 				'caoSchaalVerified' => ($normfunctie['caoSchaalVerified'] ?? false),
+				'status' => ($normfunctie['status'] ?? null),
 			];
 		}
 
