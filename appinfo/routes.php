@@ -25,6 +25,9 @@ return [
         ['name' => 'document#generate', 'url' => '/api/documents/generate', 'verb' => 'POST'],
         // payroll-annual-statement-action: queue a finished year's annual statements (HR or payroll).
         ['name' => 'document#queueJaaropgaven', 'url' => '/api/documents/jaaropgaven', 'verb' => 'POST'],
+        // reporting-pay-transparency: the gender pay gap report (HR and accountants), and its CSV.
+        ['name' => 'payTransparency#report', 'url' => '/api/reports/pay-transparency', 'verb' => 'GET'],
+        ['name' => 'payTransparency#export', 'url' => '/api/reports/pay-transparency/export', 'verb' => 'POST'],
         // payroll-core-engine — guarded trigger for the PayrollRunDetail
         // "(Her)berekenen" manifest api-call action (design.md D6).
         ['name' => 'payroll#calculate', 'url' => '/api/payroll/calculate', 'verb' => 'POST'],
