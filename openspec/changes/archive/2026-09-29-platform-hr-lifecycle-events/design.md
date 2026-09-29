@@ -111,3 +111,6 @@ Read against `development` 82dd772d plus humaniq#560 and #561 while building.
   sent.
 - **Docs.** `docs/people/hr-events.md` is the event catalogue. The docs site was not built
   here (its dependencies are not installed in this lane).
+- **Detection and sending are two classes.** `HrLifecycleMoments` finds the moments;
+  `HrLifecycleEventService` builds the envelopes and sends both kinds of event. One class
+  holding both went over the complexity limit.
