@@ -44,6 +44,10 @@
 		"route": "/features-roadmap"
 	},
 	{
+		"id": "MijnGoedkeuringen",
+		"route": "/my-approvals"
+	},
+	{
 		"id": "MijnAfdeling",
 		"route": "/my-department"
 	},
@@ -170,6 +174,14 @@
 	{
 		"id": "MijnHr",
 		"route": "/mijn"
+	},
+	{
+		"id": "ManagerDeputies",
+		"route": "/manager-deputies"
+	},
+	{
+		"id": "ManagerDeputyDetail",
+		"route": "/manager-deputies/:id"
 	},
 	{
 		"id": "MijnUrenstaten",
