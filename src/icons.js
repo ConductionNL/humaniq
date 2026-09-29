@@ -16,6 +16,7 @@ import Account from "vue-material-design-icons/Account.vue";
 import AccountArrowRightOutline from "vue-material-design-icons/AccountArrowRightOutline.vue";
 import AccountBoxOutline from "vue-material-design-icons/AccountBoxOutline.vue";
 import AccountClockOutline from "vue-material-design-icons/AccountClockOutline.vue";
+import AccountEditOutline from "vue-material-design-icons/AccountEditOutline.vue";
 import AccountGroupOutline from "vue-material-design-icons/AccountGroupOutline.vue";
 import AccountKeyOutline from "vue-material-design-icons/AccountKeyOutline.vue";
 import AccountMinus from "vue-material-design-icons/AccountMinus.vue";
@@ -131,6 +132,7 @@ export default {
 	Account,
 	AccountArrowRightOutline,
 	AccountBoxOutline,
+	AccountEditOutline,
 	AccountClockOutline,
 	AccountGroupOutline,
 	AccountKeyOutline,
