@@ -268,6 +268,27 @@ class NlDossierRetentionChecksTest extends TestCase {
 	}//end testEmployeeIsVacuousOnAnUnparseableDate()
 
 	/**
+	 * Scenario: an old warning is flagged for removal. A closed relations case
+	 * kept past its retention date violates; an open one, one without a date
+	 * or one still inside it does not.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/employee-relations-cases/spec.md#REQ-ERC-003
+	 */
+	public function testAClosedRelationsCaseKeptPastItsDateIsFlagged(): void {
+		$check = $this->checkFor('EmployeeRelationsCase');
+		$past = (new \DateTimeImmutable('today'))->modify('-1 day')->format('Y-m-d');
+		$future = (new \DateTimeImmutable('today'))->modify('+1 day')->format('Y-m-d');
+
+		$this->assertFalse($check(['status' => 'afgesloten', 'retainedUntil' => $past]));
+		$this->assertTrue($check(['status' => 'afgesloten', 'retainedUntil' => $future]));
+		$this->assertTrue($check(['status' => 'in-behandeling', 'retainedUntil' => $past]));
+		$this->assertTrue($check(['status' => 'afgesloten']));
+		$this->assertTrue($check(['status' => 'afgesloten', 'retainedUntil' => 'not-a-date']));
+	}//end testAClosedRelationsCaseKeptPastItsDateIsFlagged()
+
+	/**
 	 * Resolve the `nl-bewaartermijn-verstreken` predicate for one schema.
 	 *
 	 * @param string $schema The schema name.
