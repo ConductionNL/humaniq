@@ -104,6 +104,7 @@ import { CnActionButtons, CnDeltaWidget, CnStatWidget } from '@conduction/nextcl
 import CompCycleRunDialog from './dialogs/CompCycleRunDialog.vue'
 import AdministrationSwitcher from './views/AdministrationSwitcher.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
+import OnCallAverages from './views/OnCallAverages.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
 import ApprovalsInboxWidget from './widgets/ApprovalsInboxWidget.vue'
 import EmployeeHistoryWidget from './widgets/EmployeeHistoryWidget.vue'
@@ -145,6 +146,11 @@ export default {
 		handler: registerTrainingNotAttended,
 	},
 
+	OnCallAverages: {
+		kind: 'page',
+		component: OnCallAverages,
+		_note: 'people-flex-contract-rules D4 (REQ-FLX-002): the on-call average hours over a period HR picks, with a CSV download. An index page cannot take a from and to date and show a computed average; host-app SFC calling GET /api/contracts/on-call-averages.',
+	},
 	ProformaPayslip: {
 		kind: 'page',
 		component: ProformaPayslip,

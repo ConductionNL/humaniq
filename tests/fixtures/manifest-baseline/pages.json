@@ -92,6 +92,10 @@
 		"route": "/expenses/:id"
 	},
 	{
+		"id": "OnCallAverages",
+		"route": "/contracts/on-call"
+	},
+	{
 		"id": "FormatieplaatsDetail",
 		"route": "/formation-places/:id"
 	},
@@ -130,6 +134,10 @@
 	{
 		"id": "WkrAssessmentDetail",
 		"route": "/wkr-assessments/:id"
+	},
+	{
+		"id": "EmploymentContractDetail",
+		"route": "/contracts/:id"
 	},
 	{
 		"id": "ObjectiveDetail",
@@ -462,10 +470,6 @@
 	{
 		"id": "EmploymentContracts",
 		"route": "/contracts"
-	},
-	{
-		"id": "EmploymentContractDetail",
-		"route": "/contracts/:id"
 	},
 	{
 		"id": "Payslips",

@@ -168,6 +168,12 @@
 				"route": "EmploymentContracts"
 			},
 			{
+				"id": "OnCallAverages",
+				"label": "On-call hours",
+				"icon": "CalendarClock",
+				"route": "OnCallAverages"
+			},
+			{
 				"id": "Stagiairs",
 				"label": "Interns",
 				"icon": "SchoolOutline",

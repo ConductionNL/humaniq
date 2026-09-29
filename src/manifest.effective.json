@@ -393,6 +393,12 @@
 					"route": "EmploymentContracts"
 				},
 				{
+					"icon": "CalendarClock",
+					"id": "OnCallAverages",
+					"label": "On-call hours",
+					"route": "OnCallAverages"
+				},
+				{
 					"icon": "SchoolOutline",
 					"id": "Stagiairs",
 					"label": "Interns",
@@ -4173,6 +4179,14 @@
 			"type": "detail"
 		},
 		{
+			"_note": "people-flex-contract-rules D4 (REQ-FLX-002): the average approved hours of every on-call contract over a period HR picks, per week and per month, for the fixed-hours offer of BW 7:628a lid 5, with a CSV download. A host-app SFC (OnCallAverages.vue, the ProformaPayslip precedent): an index page cannot take a from and to date and show a computed average. Reads GET /api/contracts/on-call-averages, HR only.",
+			"component": "OnCallAverages",
+			"id": "OnCallAverages",
+			"route": "/contracts/on-call",
+			"title": "On-call hours",
+			"type": "custom"
+		},
+		{
 			"config": {
 				"_note": "people-formation-positions (2026-09-28): the data widget excludes orgUnitId/normfunctieId since Related resolves both; four stat tiles show this place's budgeted, filled, vacant and net FTE through endpointSource on GET /api/formation/occupancy?formatieplaatsId (computed on read, built-in widgets only per ADR-049); the object-list names the contracts that fill the place. No lifecycleActions: status is a plain enum.",
 				"layout": [
@@ -6890,6 +6904,125 @@
 			"id": "WkrAssessmentDetail",
 			"route": "/wkr-assessments/:id",
 			"title": "WKR assessment",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "Leaf compliance record: no other schema in humaniq references EmploymentContract by FK, so the page is a simple two-panel layout -- the data widget (type/writtenContract/dates/hoursPerWeek/hourlyWage/cao/caoSchaal/awfTariff plus the jurisdiction-specific fields: workingTimeDocumented, overtimeMultiplier, ftePartOfYearMinijob, dpaeFiledBeforeStart) at 8-wide, excluding employeeId since the Related panel already resolves and links the owning Employee by name -- and Related at 4-wide for that one meaningful outbound ref. cao-library (2026-07-14): the ct-data widget excludes only employeeId, so the contract's cao (the referenced CAO library id) and caoSchaal (its pay scale) render here for free -- no widget change needed. No child lists (nothing points at a contract), no files/calendar/comms leaves (no linkedType or document field evidence on this schema), no lifecycleActions (EmploymentContract has no x-openregister-lifecycle). Audit history is a sidebar tab. functiehuis-hr21 (2026-07-18): the ct-data widget now also excludes normfunctieId (the new $ref, the employeeId precedent) -- the Related panel resolves and links the assigned Normfunctie by name for free, confirmed rendering the contract's HR21 function assignment. people-flex-contract-rules (2026-09-29): moved out of simpleDetailScaffold to add the fixed-term chain section (GET /api/contracts/{id}/chain, REQ-FLX-001): position in the chain, contracts allowed, months counted and the date the chain turns permanent. An endpoint-table, because on a detail page object-table ignores endpointSource. A contract outside any chain shows the empty text.",
+				"headerActions": [
+					{
+						"confirm": true,
+						"errorMessage": "Generating the employment contract failed.",
+						"icon": "FileDocumentPlusOutline",
+						"id": "generate-arbeidsovereenkomst",
+						"label": "Generate employment contract",
+						"method": "POST",
+						"params": {
+							"contractId": "@objectId",
+							"documentType": "arbeidsovereenkomst"
+						},
+						"successMessage": "The employment contract is being generated.",
+						"type": "api-call",
+						"url": "/api/documents/generate"
+					}
+				],
+				"layout": [
+					{
+						"gridHeight": 7,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 7,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					},
+					{
+						"gridHeight": 3,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 7,
+						"id": 3,
+						"widgetId": "chain"
+					}
+				],
+				"register": "humaniq",
+				"schema": "EmploymentContract",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"normfunctieId"
+							],
+							"title": "Contract"
+						},
+						"icon": "FileSign",
+						"id": "data",
+						"title": "Contract",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "position",
+									"label": "Position in chain"
+								},
+								{
+									"key": "maxContracts",
+									"label": "Contracts allowed"
+								},
+								{
+									"key": "startsOn",
+									"label": "Chain started"
+								},
+								{
+									"key": "monthsCounted",
+									"label": "Months counted"
+								},
+								{
+									"key": "turnsPermanentOn",
+									"label": "Permanent from"
+								}
+							],
+							"emptyText": "Not part of a fixed-term chain",
+							"endpointSource": {
+								"responsePath": "rows",
+								"url": "/apps/humaniq/api/contracts/@objectId/chain"
+							},
+							"title": "Fixed-term chain"
+						},
+						"icon": "FileSign",
+						"id": "chain",
+						"title": "Fixed-term chain",
+						"type": "endpoint-table"
+					}
+				]
+			},
+			"id": "EmploymentContractDetail",
+			"route": "/contracts/:id",
+			"title": "Contract",
 			"type": "detail"
 		},
 		{
@@ -12255,81 +12388,6 @@
 			"route": "/contracts",
 			"title": "Contracts",
 			"type": "index"
-		},
-		{
-			"config": {
-				"_note": "Leaf compliance record: no other schema in humaniq references EmploymentContract by FK, so the page is a simple two-panel layout -- the data widget (type/writtenContract/dates/hoursPerWeek/hourlyWage/cao/caoSchaal/awfTariff plus the jurisdiction-specific fields: workingTimeDocumented, overtimeMultiplier, ftePartOfYearMinijob, dpaeFiledBeforeStart) at 8-wide, excluding employeeId since the Related panel already resolves and links the owning Employee by name -- and Related at 4-wide for that one meaningful outbound ref. cao-library (2026-07-14): the ct-data widget excludes only employeeId, so the contract's cao (the referenced CAO library id) and caoSchaal (its pay scale) render here for free -- no widget change needed. No child lists (nothing points at a contract), no files/calendar/comms leaves (no linkedType or document field evidence on this schema), no lifecycleActions (EmploymentContract has no x-openregister-lifecycle). Audit history is a sidebar tab. functiehuis-hr21 (2026-07-18): the ct-data widget now also excludes normfunctieId (the new $ref, the employeeId precedent) -- the Related panel resolves and links the assigned Normfunctie by name for free, confirmed rendering the contract's HR21 function assignment.",
-				"headerActions": [
-					{
-						"confirm": true,
-						"errorMessage": "Generating the employment contract failed.",
-						"icon": "FileDocumentPlusOutline",
-						"id": "generate-arbeidsovereenkomst",
-						"label": "Generate employment contract",
-						"method": "POST",
-						"params": {
-							"contractId": "@objectId",
-							"documentType": "arbeidsovereenkomst"
-						},
-						"successMessage": "The employment contract is being generated.",
-						"type": "api-call",
-						"url": "/api/documents/generate"
-					}
-				],
-				"layout": [
-					{
-						"gridHeight": 7,
-						"gridWidth": 8,
-						"gridX": 0,
-						"gridY": 0,
-						"id": 1,
-						"widgetId": "data"
-					},
-					{
-						"gridHeight": 7,
-						"gridWidth": 4,
-						"gridX": 8,
-						"gridY": 0,
-						"id": 2,
-						"widgetId": "related"
-					}
-				],
-				"register": "humaniq",
-				"schema": "EmploymentContract",
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				},
-				"widgets": [
-					{
-						"content": {
-							"columns": 2,
-							"exclude": [
-								"employeeId",
-								"normfunctieId"
-							],
-							"title": "Contract"
-						},
-						"icon": "FileSign",
-						"id": "data",
-						"title": "Contract",
-						"type": "data"
-					},
-					{
-						"content": {
-							"title": "Related"
-						},
-						"icon": "LinkVariant",
-						"id": "related",
-						"title": "Related",
-						"type": "related"
-					}
-				]
-			},
-			"id": "EmploymentContractDetail",
-			"route": "/contracts/:id",
-			"title": "Contract",
-			"type": "detail"
 		},
 		{
 			"config": {

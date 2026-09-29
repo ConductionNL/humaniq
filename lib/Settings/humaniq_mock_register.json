@@ -1835,14 +1835,16 @@
               "temporary",
               "agency",
               "minijob",
-              "bbl"
+              "bbl",
+              "oproep"
             ],
             "x-enum-labels": {
               "permanent": "Permanent",
               "temporary": "Fixed-term",
               "agency": "Agency",
               "minijob": "Mini-job",
-              "bbl": "BBL apprenticeship"
+              "bbl": "BBL apprenticeship",
+              "oproep": "On-call"
             },
             "title": "Contract type",
             "description": "The kind of contract. This drives the unemployment-fund rate, and for an apprenticeship how the pay is processed.",
@@ -1950,6 +1952,22 @@
             "title": "Non-renewal notice given on",
             "description": "The date you told the employee in writing whether a fixed-term contract will continue. Due at least one month before the end date.",
             "x-notes": "NL: date the written aanzegging (BW 7:668 lid 1) was sent to the employee, informing whether a fixed-term contract of six months or longer will be continued. Must be on or before endDate minus one month to satisfy nl-aanzegtermijn-bewaking."
+          },
+          "vasteUrenAanbodOp": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "title": "Fixed-hours offer made on",
+            "description": "For an on-call contract: the date you offered the employee a fixed number of hours. Due after twelve months.",
+            "x-notes": "NL: BW 7:628a lid 5 (Wet arbeidsmarkt in balans). Within one month after an on-call worker has worked twelve months, the employer offers a fixed number of hours, at least the average worked over those twelve months. Empty on a running oproep contract past twelve months raises nl-signaal-oproep-vaste-uren."
+          },
+          "vasteUrenAanbodUren": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "title": "Fixed hours offered per week",
+            "description": "For an on-call contract: the hours per week you offered. The on-call overview shows the twelve-month average the offer should at least equal.",
+            "x-notes": "NL: BW 7:628a lid 5. The offered arbeidsomvang, hours per week."
           },
           "administrationId": {
             "title": "Administration ID",
