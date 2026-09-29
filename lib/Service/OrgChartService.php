@@ -65,31 +65,10 @@ final class OrgChartService {
 	 * @spec openspec/specs/org-chart-view/spec.md#REQ-OCV-001
 	 */
 	public function chart(array $units, array $assignments, array $employeesById, string $date, ?string $rootId=null, ?array $readableEmployeeIds=null): array {
-		$active = [];
-		foreach ($units as $unit) {
-			$unitId = (string)($unit['id'] ?? '');
-			if ($unitId !== '' && ($unit['active'] ?? true) !== false) {
-				$active[$unitId] = $unit;
-			}
-		}
-
-		$children = [];
-		$roots = [];
-		foreach ($active as $unitId => $unit) {
-			$parentId = (string)($unit['parentUnitId'] ?? '');
-			if ($parentId !== '' && isset($active[$parentId]) === true && $parentId !== $unitId) {
-				$children[$parentId][] = $unitId;
-				continue;
-			}
-
-			$roots[] = $unitId;
-		}
-
+		$active = $this->activeUnits(units: $units);
+		[$roots, $children] = $this->hierarchy(active: $active);
 		if ($rootId !== null && $rootId !== '') {
-			$roots = [];
-			if (isset($active[$rootId]) === true) {
-				$roots = [$rootId];
-			}
+			$roots = array_values(array_intersect([$rootId], array_keys($active)));
 		}
 
 		$placed = $this->placedOn(assignments: $assignments, date: $date);
@@ -111,6 +90,49 @@ final class OrgChartService {
 
 		return ['tree' => $tree, 'nodes' => $state['nodes'], 'edges' => $state['edges'], 'width' => $state['leaf'], 'depth' => $state['depth']];
 	}//end chart()
+
+	/**
+	 * The active units by id.
+	 *
+	 * @param array<int, array<string, mixed>> $units OrgUnit rows.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function activeUnits(array $units): array {
+		$active = [];
+		foreach ($units as $unit) {
+			$unitId = (string)($unit['id'] ?? '');
+			if ($unitId !== '' && ($unit['active'] ?? true) !== false) {
+				$active[$unitId] = $unit;
+			}
+		}
+
+		return $active;
+	}//end activeUnits()
+
+	/**
+	 * The roots and the children per unit. A unit whose parent is missing or
+	 * inactive is a root.
+	 *
+	 * @param array<string, array<string, mixed>> $active The active units by id.
+	 *
+	 * @return array{0: array<int, string>, 1: array<string, array<int, string>>}
+	 */
+	private function hierarchy(array $active): array {
+		$children = [];
+		$roots = [];
+		foreach ($active as $unitId => $unit) {
+			$parentId = (string)($unit['parentUnitId'] ?? '');
+			if ($parentId !== '' && isset($active[$parentId]) === true && $parentId !== (string)$unitId) {
+				$children[$parentId][] = (string)$unitId;
+				continue;
+			}
+
+			$roots[] = (string)$unitId;
+		}
+
+		return [$roots, $children];
+	}//end hierarchy()
 
 	/**
 	 * One unit with its subtree, laid out depth first.
