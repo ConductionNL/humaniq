@@ -35,13 +35,13 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\ReceiptExtractionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -58,7 +58,7 @@ class ExpenseController extends Controller {
 	 * @param ReceiptExtractionService $receiptExtractionService The receipt-extraction service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param IUserSession $userSession The current user session (acting/owning userId).
-	 * @param IGroupManager $groupManager To check the admin group (isAdminOrHr precedent).
+	 * @param HumaniqRoles $roles Whether the caller is HR, payroll or an administrator.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -67,7 +67,7 @@ class ExpenseController extends Controller {
 		private readonly ReceiptExtractionService $receiptExtractionService,
 		private readonly SettingsService $settingsService,
 		private readonly IUserSession $userSession,
-		private readonly IGroupManager $groupManager,
+		private readonly HumaniqRoles $roles,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -105,7 +105,7 @@ class ExpenseController extends Controller {
 		$uid = $this->userSession->getUser()?->getUID();
 		if ($this->isAdminOrOwner($uid, $expense) === false) {
 			return new JSONResponse(
-				['error' => 'Alleen beheerders/HR of de indiener mogen de receipt-extractie starten.'],
+				['error' => 'Alleen HR, beheerders of de indiener mogen de receipt-extractie starten.'],
 				Http::STATUS_FORBIDDEN
 			);
 		}
@@ -160,8 +160,8 @@ class ExpenseController extends Controller {
 
 	/**
 	 * The explicit ownership check applied AFTER the object is confirmed to
-	 * exist and resolve under the caller's RBAC: a Nextcloud admin (the
-	 * `PayrollController::isAdminOrHr()` "no dedicated HR group yet" gate) OR
+	 * exist and resolve under the caller's RBAC: HR or a Nextcloud
+	 * administrator (`HumaniqRoles::isHr()`) OR
 	 * the caller's own claim (`Expense.userId` equals the caller's Nextcloud
 	 * user id, the `MijnDeclaraties` self-service convention).
 	 *
@@ -175,7 +175,7 @@ class ExpenseController extends Controller {
 			return false;
 		}
 
-		if ($this->groupManager->isAdmin($uid) === true) {
+		if ($this->roles->isHr($uid) === true) {
 			return true;
 		}
 

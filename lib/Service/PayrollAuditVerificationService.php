@@ -243,7 +243,12 @@ final class PayrollAuditVerificationService {
 	 */
 	private function loadAll(string $schema): array {
 		try {
-			$rows = $this->objectService()->setRegister($this->register())->setSchema($schema)->findAll(['limit' => self::LIMIT]);
+			// Read past the per-field strip (compliance-roles-and-field-access
+			// D6): an audit that is shown no BSN, salary or payslip amount would
+			// report them all missing, and under occ there is no user to show
+			// them to. Rows are unaffected: no humaniq schema declares
+			// object-level authorization.
+			$rows = $this->objectService()->setRegister($this->register())->setSchema($schema)->findAll(['limit' => self::LIMIT], false);
 		} catch (\Throwable $e) {
 			$this->logger->warning('PayrollAuditVerificationService: kon ' . $schema . ' niet laden: ' . $e->getMessage());
 			return [];

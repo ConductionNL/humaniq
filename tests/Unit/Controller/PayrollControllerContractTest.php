@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\PayrollController;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\PayrollMutationService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\ProformaPayslipService;
@@ -72,6 +73,46 @@ class PayrollControllerContractTest extends TestCase {
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 
 	}//end testMutationsRefusesANonPrivilegedCaller()
+
+	/**
+	 * REQ-RFA-001: an HR adviser outside the payroll group may not calculate a
+	 * payroll run; the refusal comes before any lookup.
+	 *
+	 * @return void
+	 */
+	public function testCalculateRefusesAnHrAdviserOutsidePayroll(): void {
+		$response = $this->buildController(isPrivileged: false, groups: ['humaniq-hr'])->calculate('run-1');
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+
+	}//end testCalculateRefusesAnHrAdviserOutsidePayroll()
+
+	/**
+	 * REQ-RFA-001: a payroll member who is not an administrator passes the
+	 * role check and reaches the run lookup (which this hostile register
+	 * answers with not found).
+	 *
+	 * @return void
+	 */
+	public function testCalculateLetsAPayrollMemberReachTheRun(): void {
+		$response = $this->buildController(isPrivileged: false, groups: ['humaniq-payroll'])->calculate('run-1');
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+
+	}//end testCalculateLetsAPayrollMemberReachTheRun()
+
+	/**
+	 * REQ-RFA-001: a payroll member reaches the mutation report's own input
+	 * checks rather than the role refusal.
+	 *
+	 * @return void
+	 */
+	public function testMutationsLetsAPayrollMemberThrough(): void {
+		$response = $this->buildController(isPrivileged: false, groups: ['humaniq-payroll'])->mutations('');
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+
+	}//end testMutationsLetsAPayrollMemberThrough()
 
 	/**
 	 * An empty toRunId is a 400, not a lookup for the empty string.
@@ -124,11 +165,12 @@ class PayrollControllerContractTest extends TestCase {
 	/**
 	 * Builds the controller with every collaborator mocked.
 	 *
-	 * @param bool $isPrivileged Whether the caller is in the admin group.
+	 * @param bool $isPrivileged Whether the caller is a Nextcloud administrator.
+	 * @param list<string> $groups The groups the caller is a member of.
 	 *
 	 * @return PayrollController
 	 */
-	private function buildController(bool $isPrivileged): PayrollController {
+	private function buildController(bool $isPrivileged, array $groups = []): PayrollController {
 		$request = $this->createMock(IRequest::class);
 
 		// Deliberately hostile: every call is a failure. These endpoints must
@@ -166,7 +208,7 @@ class PayrollControllerContractTest extends TestCase {
 
 		$groupManager = $this->createMock(IGroupManager::class);
 		$groupManager->method('isAdmin')->willReturn($isPrivileged);
-		$groupManager->method('isInGroup')->willReturn($isPrivileged);
+		$groupManager->method('isInGroup')->willReturnCallback(fn (string $uid, string $gid): bool => in_array($gid, $groups, true));
 
 		return new PayrollController(
 			$request,
@@ -178,7 +220,7 @@ class PayrollControllerContractTest extends TestCase {
 			$this->createMock(WkrService::class),
 			$settings,
 			$userSession,
-			$groupManager,
+			new HumaniqRoles($groupManager),
 			$this->createMock(LoggerInterface::class)
 		);
 

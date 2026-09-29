@@ -37,6 +37,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\PayrollController;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\PayrollMutationService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\ProformaPayslipService;
@@ -283,7 +284,7 @@ class PayrollControllerDgaStatusTest extends TestCase {
 		$groupManager = $this->createMock(IGroupManager::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return new PayrollController($request, $container, $payrollRunService, $payrollMutationService, $proformaService, $retroAdjustmentService, $wkrService, $settings, $userSession, $groupManager, $logger);
+		return new PayrollController($request, $container, $payrollRunService, $payrollMutationService, $proformaService, $retroAdjustmentService, $wkrService, $settings, $userSession, new HumaniqRoles($groupManager), $logger);
 	}//end buildController()
 
 }//end class

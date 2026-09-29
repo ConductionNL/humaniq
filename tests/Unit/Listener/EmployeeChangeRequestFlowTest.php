@@ -39,6 +39,7 @@ use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
 use OCA\Humaniq\Service\ChangeApprovalRules;
 use OCA\Humaniq\Service\ChangeRequestApplier;
 use OCA\Humaniq\Service\ChangeRequestService;
+use OCA\Humaniq\Service\FieldReadAccess;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\OrgResolutionService;
@@ -172,7 +173,7 @@ class EmployeeChangeRequestFlowTest extends TestCase {
 		$service = new ChangeRequestService(gateway: $gateway, rules: $rules, userSession: $session, time: $time);
 		$applier = new ChangeRequestApplier(gateway: $gateway, marker: $this->marker, time: $time);
 		$this->requests = new ChangeRequestListener(gateway: $gateway, service: $service, applier: $applier, logger: new NullLogger());
-		$this->guard = new EmployeeGuardedFieldListener(gateway: $gateway, rules: $rules, marker: $this->marker, logger: new NullLogger());
+		$this->guard = new EmployeeGuardedFieldListener(gateway: $gateway, rules: $rules, marker: $this->marker, logger: new NullLogger(), access: new FieldReadAccess(new FakeContainer([]), new NullLogger()));
 	}//end wire()
 
 	/**
@@ -392,6 +393,24 @@ class EmployeeChangeRequestFlowTest extends TestCase {
 		$this->marker->runInternal(fn () => $this->guard->handle($internal));
 		self::assertFalse($internal->isPropagationStopped());
 	}//end testAGuardedFieldCannotBeSavedAroundTheRequest()
+
+	/**
+	 * REQ-RFA-002: a bank account and salary the writer was never shown
+	 * arrive empty on a save; that is no change to guard, and the field
+	 * access listener carries the stored values forward.
+	 *
+	 * @return void
+	 */
+	public function testAFieldTheWriterWasNotShownIsNoChange(): void {
+		$old = $this->employee();
+		// OpenRegister fills every property the save omits with null.
+		$new = array_merge($old, ['a1CertificateNumber' => 'A1-2026-001', 'iban' => null, 'grossMonthlySalary' => null]);
+
+		$event = new ObjectUpdatingEvent($this->entity(self::EMPLOYEE, $new, 'Employee'), $this->entity(self::EMPLOYEE, $old, 'Employee'));
+		$this->guard->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testAFieldTheWriterWasNotShownIsNoChange()
 
 	/**
 	 * When the rules cannot be read, a change to an employee is refused.

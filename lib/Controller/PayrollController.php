@@ -85,6 +85,7 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\PayrollMutationService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\ProformaPayslipService;
@@ -96,7 +97,6 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -129,7 +129,7 @@ class PayrollController extends Controller {
 	 * @param WkrService $wkrService The WKR vrije-ruimte assessment roll-up service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param IUserSession $userSession The current user session (admin/HR check).
-	 * @param IGroupManager $groupManager To check the caller's admin membership (admin/HR gate).
+	 * @param HumaniqRoles $roles Whether the caller is HR, payroll or an administrator.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -142,7 +142,7 @@ class PayrollController extends Controller {
 		private readonly WkrService $wkrService,
 		private readonly SettingsService $settingsService,
 		private readonly IUserSession $userSession,
-		private readonly IGroupManager $groupManager,
+		private readonly HumaniqRoles $roles,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -150,19 +150,25 @@ class PayrollController extends Controller {
 	}//end __construct()
 
 	/**
-	 * `POST /api/payroll/calculate` — recalculate one draft PayrollRun. The
+	 * `POST /api/payroll/calculate` — recalculate one draft PayrollRun. Only
+	 * payroll staff or an administrator may (403 otherwise). The
 	 * posted `runId` must resolve through ObjectService under the caller's
 	 * RBAC before anything computes (unknown/unauthorized -> 404); non-draft
 	 * runs are refused (400) before the service is invoked.
 	 *
 	 * @param string|null $runId The PayrollRun id (row-scoped, `@objectId` from the manifest action).
 	 *
-	 * @return JSONResponse The recalculation outcome, 400 on a missing runId or non-draft run, 404 when the run does not resolve.
+	 * @return JSONResponse The recalculation outcome, 400 on a missing runId or non-draft run, 403 for a caller outside payroll, 404 when the run does not resolve.
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-008
+	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
 	 */
 	#[NoAdminRequired]
 	public function calculate(?string $runId = null): JSONResponse {
+		if ($this->isPayrollStaff() === false) {
+			return new JSONResponse(['error' => 'Alleen de salarisadministratie en beheerders mogen een loonrun berekenen.'], Http::STATUS_FORBIDDEN);
+		}
+
 		$runId = trim((string)$runId);
 		if ($runId === '') {
 			return new JSONResponse(['error' => 'runId is verplicht.'], Http::STATUS_BAD_REQUEST);
@@ -214,8 +220,8 @@ class PayrollController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function mutations(?string $toRunId = null, ?string $fromRunId = null): JSONResponse {
-		if ($this->isAdminOrHr() === false) {
-			return new JSONResponse(['error' => 'Alleen beheerders/HR mogen mutatierapporten genereren.'], Http::STATUS_FORBIDDEN);
+		if ($this->isPayrollStaff() === false) {
+			return new JSONResponse(['error' => 'Alleen de salarisadministratie en beheerders mogen mutatierapporten genereren.'], Http::STATUS_FORBIDDEN);
 		}
 
 		$toRunId = trim((string)$toRunId);
@@ -248,26 +254,24 @@ class PayrollController extends Controller {
 	}//end mutations()
 
 	/**
-	 * Whether the current caller is a Nextcloud admin — the admin/HR gate for
-	 * `mutations()` (design.md D6: payroll figures are sensitive, so this
-	 * endpoint additionally requires the caller be an admin/HR principal,
-	 * unlike `calculate()`). No dedicated "HR" Nextcloud group exists in this
-	 * app yet, so the gate is the standard admin-group check; introducing a
-	 * separate HR group is a named fast-follow, not a blocker for this
-	 * change.
+	 * Whether the caller may take payroll actions: a member of the
+	 * `humaniq-payroll` group or a Nextcloud administrator
+	 * (compliance-roles-and-field-access D2). Gates `calculate()`,
+	 * `mutations()` and `wkrAssess()`; payroll figures are sensitive, so an HR
+	 * adviser outside the payroll group is refused here too.
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/specs/payroll-mutation-reports/spec.md#REQ-MUT-008
+	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
 	 */
-	private function isAdminOrHr(): bool {
+	private function isPayrollStaff(): bool {
 		$uid = $this->userSession->getUser()?->getUID();
 		if ($uid === null || $uid === '') {
 			return false;
 		}
 
-		return $this->groupManager->isAdmin($uid);
-	}//end isAdminOrHr()
+		return $this->roles->isPayroll($uid);
+	}//end isPayrollStaff()
 
 	/**
 	 * `POST /api/payroll/proforma` — the persist-nothing "Simuleer
@@ -565,8 +569,8 @@ class PayrollController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function wkrAssess(?string $assessmentId = null): JSONResponse {
-		if ($this->isAdminOrHr() === false) {
-			return new JSONResponse(['error' => 'Alleen beheerders/HR mogen WKR-beoordelingen (her)berekenen.'], Http::STATUS_FORBIDDEN);
+		if ($this->isPayrollStaff() === false) {
+			return new JSONResponse(['error' => 'Alleen de salarisadministratie en beheerders mogen WKR-beoordelingen (her)berekenen.'], Http::STATUS_FORBIDDEN);
 		}
 
 		$assessmentId = trim((string)$assessmentId);

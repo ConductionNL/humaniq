@@ -6136,7 +6136,7 @@
    "id": "cmp-roles",
    "area": "compliance",
    "name": "Give HR, payroll, managers and employees different permissions.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -6152,9 +6152,11 @@
     "personio": "https://support.personio.de/hc/en-us/articles/360000040389-Set-up-permissions-and-employee-roles and https://support.personio.de/hc/en-us/articles/36424006279453-Set-up-and-manage-employee-roles-and-permissions-New-experience: employee roles with distinct permissions for admins, supervisors, payroll and employees."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/compliance-roles-and-field-access on 2026-09-27 for the missing half: distinct HR, payroll, manager and employee roles instead of the admin or non-admin split. Before: lib/Controller/AvgDsrController.php:274-281 isAdmin() via IGroupManager::isAdmin(); the same admin-only guard pattern repeats in OfferController.php:135, PayrollController.php:269, JurisdictionPackController.php:110/148, ExpenseController.php:178, InterviewController.php:126, LoonbeslagController.php:261; manager-scoping via a denormalized managerUserId field (mss-team-scope spec) filters the Team*goedkeuring pages; self-service @me filters gate the Mijn* pages (MijnBeoordelingen, MijnLoonstroken)",
-    "reachedOn": "admin-only pages (DsrRequests, JurisdictionPacks, payroll runs); Team*goedkeuring pages scoped to managerUserId=@me; self-service Mijn* pages scoped to userId=@me",
+    "state": "built",
+    "change": "2026-09-29-compliance-roles-and-field-access",
+    "evidence": "lib/Repair/EnsureRoleGroups.php creates the Nextcloud groups humaniq-hr and humaniq-payroll on install and upgrade; lib/Service/HumaniqRoles.php answers isHr/isPayroll (an administrator holds both) and gates OfferController, LoonbeslagController, InterviewController, ExpenseController (HR) and PayrollController calculate/mutations/wkrAssess (payroll); managers stay defined by managerUserId and employees by their own account. Tests: tests/Unit/Service/HumaniqRolesTest.php, tests/Unit/Repair/EnsureRoleGroupsTest.php, tests/Unit/Controller/LoonbeslagControllerTest.php, tests/Unit/Controller/PayrollControllerContractTest.php.",
+    "reachedOn": "LoonbeslagDetail activate/settle/withdraw and the offer, interview and receipt actions for humaniq-hr; PayrollRunDetail calculate, the mutation report and the WKR assessment for humaniq-payroll",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6168,7 +6170,7 @@
    "id": "cmp-field-rbac",
    "area": "compliance",
    "name": "Hide sensitive fields such as salary or BSN from roles that do not need them.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "partial",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -6184,9 +6186,11 @@
     "personio": "https://support.personio.de/hc/en-us/articles/36459341835037-Summary-of-permissions-New-experience: permissions per profile section and data group, with salary information and salary band as separate permissions that can be withheld from a role."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/compliance-roles-and-field-access on 2026-09-27. Before: no x-property-rbac anywhere in humaniq's register tree (grep -rliF 'rbac|x-property-rbac' lib/Settings/register.d/: no hits, matching a fact another reader already confirmed); grep -rn 'visible.*false' lib/Settings/register.d/*.json: 0 hits; salary/BSN fields sit on the same Employee data widget for every viewer who can open the page at all, gated only by page-level admin checks, never hidden per-field per-role",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "change": "2026-09-29-compliance-roles-and-field-access",
+    "evidence": "Property authorization in lib/Settings/register.d/hr-objects.json (register 0.26.0): Employee bsn, dateOfBirth, identity document fields, iban, tenaamstelling, grossMonthlySalary; EmploymentContract.hourlyWage; every Payslip amount and engineInputSnapshot, readable by humaniq-hr, humaniq-payroll and the subject (nextcloudUserId or userId), enforced by OpenRegister's PropertyRbacHandler on every read. lib/Listener/FieldAccessListener.php stamps EmploymentContract.userId and keeps a hidden value a full save would null (openregister#4170). Tests: tests/Unit/Settings/FieldAuthorizationDeclarationTest.php, tests/Unit/Listener/FieldAccessListenerTest.php.",
+    "reachedOn": "EmployeeDetail, EmploymentContractDetail, PayslipDetail and the objects API: a manager or colleague gets the record without the governed fields",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -7187,7 +7191,7 @@
    "id": "td-review-progress-private",
    "area": "talent",
    "name": "Let HR track whether appraisal conversations took place without reading what was said.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -7203,9 +7207,11 @@
     "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmPerformancePlugin/pages/ReviewList.vue:44 HR can filter reviews by status, but the admin can also open and evaluate the content (src/plugins/orangehrmPerformancePlugin/config/routes.yaml:135), so status is not separated from what was said"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/compliance-roles-and-field-access on 2026-09-27 for the missing half: hiding the review content from HR while showing progress. Before: src/manifest.d/hr-performance.json ReviewCycleDetail lists the cycle's reviews with their status, so HR sees progress; lib/Settings/register.d/hr-performance.json:100 PerformanceReview declares no property-level authorization, so the content is not hidden from HR",
-    "reachedOn": "ReviewCycles /review-cycles, ReviewCycleDetail /review-cycles/:id",
+    "state": "built",
+    "change": "2026-09-29-compliance-roles-and-field-access",
+    "evidence": "lib/Settings/register.d/hr-performance.json PerformanceReview 0.3.0: rating, sterktes, ontwikkelpunten, afspraken and goals are read and updated only by the reviewed employee (userId) and the reviewer (reviewerUserId, stamped by lib/Listener/FieldAccessListener.php); status, besprokenOp and vastgesteldDoor stay readable, so HR follows the cycle. Tests: tests/Unit/Settings/FieldAuthorizationDeclarationTest.php::testReviewContentStaysBetweenEmployeeAndReviewer, tests/Unit/Listener/FieldAccessListenerTest.php.",
+    "reachedOn": "ReviewCycleDetail shows each review's status and date to HR; a review opened by HR shows no agreements or rating",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",

@@ -33,13 +33,13 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -56,7 +56,7 @@ class OfferController extends Controller {
 	 * @param OfferEsignService $offerEsignService The offer-letter + e-signature service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param IUserSession $userSession The current user session (acting userId + admin/HR check).
-	 * @param IGroupManager $groupManager To check the caller's admin membership (admin/HR gate).
+	 * @param HumaniqRoles $roles Whether the caller is HR, payroll or an administrator.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -65,7 +65,7 @@ class OfferController extends Controller {
 		private readonly OfferEsignService $offerEsignService,
 		private readonly SettingsService $settingsService,
 		private readonly IUserSession $userSession,
-		private readonly IGroupManager $groupManager,
+		private readonly HumaniqRoles $roles,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -88,7 +88,7 @@ class OfferController extends Controller {
 	#[NoAdminRequired]
 	public function requestSignature(?string $applicationId = null): JSONResponse {
 		if ($this->isAdminOrHr() === false) {
-			return new JSONResponse(['error' => 'Alleen beheerders/HR mogen een aanbiedingsbrief/e-handtekening aanvragen.'], Http::STATUS_FORBIDDEN);
+			return new JSONResponse(['error' => 'Alleen HR en beheerders mogen een aanbiedingsbrief/e-handtekening aanvragen.'], Http::STATUS_FORBIDDEN);
 		}
 
 		$applicationId = trim((string)$applicationId);
@@ -120,11 +120,12 @@ class OfferController extends Controller {
 	}//end requestSignature()
 
 	/**
-	 * Whether the current caller is a Nextcloud admin -- the admin/HR gate
-	 * (the `PayrollController::isAdminOrHr()` precedent; no dedicated "HR"
-	 * Nextcloud group exists yet).
+	 * Whether the caller may take HR actions: a member of the `humaniq-hr`
+	 * group or a Nextcloud administrator (compliance-roles-and-field-access D2).
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
 	 */
 	private function isAdminOrHr(): bool {
 		$uid = $this->userSession->getUser()?->getUID();
@@ -132,7 +133,7 @@ class OfferController extends Controller {
 			return false;
 		}
 
-		return $this->groupManager->isAdmin($uid);
+		return $this->roles->isHr($uid);
 	}//end isAdminOrHr()
 
 	/**

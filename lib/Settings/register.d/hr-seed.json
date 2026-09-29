@@ -1445,6 +1445,7 @@
                     "slug": "contract-jansen-vast"
                 },
                 "employeeId": "@ref:employee-jansen",
+                "userId": "admin",
                 "type": "permanent",
                 "writtenContract": true,
                 "startDate": "2024-01-01",
@@ -1696,6 +1697,7 @@
                     "slug": "contract-hr21-jansen-schaal-mismatch"
                 },
                 "employeeId": "@ref:employee-jansen",
+                "userId": "admin",
                 "type": "permanent",
                 "writtenContract": true,
                 "startDate": "2024-01-01",

@@ -41,7 +41,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl.
     ]]></description>
-    <version>0.2.12-unstable.20260913072835</version>
+    <version>0.2.13-unstable.20260929100000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Humaniq</namespace>
@@ -252,6 +252,9 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  unmodified v1 import; open drafts and edited graphs are
                  reported and left alone. Idempotent; fails soft. -->
             <step>OCA\Humaniq\Repair\RepublishLoonrunFlow</step>
+            <!-- compliance-roles-and-field-access D1: the HR and payroll groups
+                 the register's property authorization names. Idempotent. -->
+            <step>OCA\Humaniq\Repair\EnsureRoleGroups</step>
         </post-migration>
         <install>
             <!-- SAME steps as post-migration, and that duplication is the point.
@@ -343,6 +346,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
                  enabling the new app id IS the fresh install that upgrades an
                  instance whose flow store still carries the v1 publish. -->
             <step>OCA\Humaniq\Repair\RepublishLoonrunFlow</step>
+            <step>OCA\Humaniq\Repair\EnsureRoleGroups</step>
         </install>
     </repair-steps>
 

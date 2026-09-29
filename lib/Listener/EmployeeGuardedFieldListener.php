@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Listener;
 
 use OCA\Humaniq\Service\ChangeApprovalRules;
+use OCA\Humaniq\Service\FieldReadAccess;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
@@ -60,12 +61,14 @@ class EmployeeGuardedFieldListener implements IEventListener {
 	 * @param ChangeApprovalRules  $rules   The rule per kind of change.
 	 * @param InternalWriteMarker  $marker  Tells humaniq's own writes apart.
 	 * @param LoggerInterface      $logger  Logger.
+	 * @param FieldReadAccess      $access  The protected values a save carries forward, which are no change.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly ChangeApprovalRules $rules,
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,
+		private readonly FieldReadAccess $access,
 	) {
 
 	}//end __construct()
@@ -78,6 +81,7 @@ class EmployeeGuardedFieldListener implements IEventListener {
 	 * @return void
 	 *
 	 * @spec openspec/specs/employee-change-approval/spec.md#REQ-ECR-002
+	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-002
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectUpdatingEvent) === false || $this->marker->isInternal() === true) {
@@ -91,7 +95,10 @@ class EmployeeGuardedFieldListener implements IEventListener {
 
 		$new = ($entity->getObject() ?? []);
 		$old = ($event->getOldObject()?->getObject() ?? ($this->gateway->findObjectData((string)$entity->getUuid(), 'Employee') ?? []));
-		$changed = $this->changedFields(old: $old, new: $new);
+		// A protected field the writer was never shown arrives empty and is
+		// carried forward by FieldAccessListener: that is no change to guard.
+		$carried = $this->access->carriedForward(schemaId: (string)$entity->getSchema(), old: $old, new: $new);
+		$changed = array_values(array_diff($this->changedFields(old: $old, new: $new), array_keys($carried)));
 		if ($changed === []) {
 			return;
 		}
