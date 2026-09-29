@@ -26,7 +26,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-002
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-002
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use DateTimeImmutable;
 /**
  * Computes the completeness of one personnel file.
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-002
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-002
  */
 class DossierCompletenessService {
 
@@ -76,7 +76,7 @@ class DossierCompletenessService {
 	 *
 	 * @return array<int, array<string, mixed>> requirementCode, label, status, evidence, issuedOn, validUntil.
 	 *
-	 * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-002
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-002
 	 */
 	public function statusFor(string $employeeId, string $date, array $rows): array {
 		$day = ($this->progression->date(value: $date) ?? new DateTimeImmutable('today'))->setTime(0, 0);
@@ -110,7 +110,7 @@ class DossierCompletenessService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-002
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-002
 	 */
 	public function hasGap(array $status): bool {
 		foreach ($status as $row) {

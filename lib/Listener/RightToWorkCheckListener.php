@@ -26,7 +26,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Psr\Log\LoggerInterface;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
  */
 class RightToWorkCheckListener implements IEventListener {
 
@@ -81,7 +81,7 @@ class RightToWorkCheckListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
 	 */
 	public function handle(Event $event): void {
 		if ($this->marker->isInternal() === true) {

@@ -29,7 +29,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use DateTimeImmutable;
 /**
  * Applies the right-to-work rule to one document.
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
  */
 class RightToWorkService {
 
@@ -71,7 +71,7 @@ class RightToWorkService {
 	 *
 	 * @return array<string, mixed> result, reasonCode, reason, method and the fields the decision used.
 	 *
-	 * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
 	 */
 	public function decide(array $input): array {
 		$facts = [
@@ -109,7 +109,7 @@ class RightToWorkService {
 	 *
 	 * @return string One digit.
 	 *
-	 * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
 	 */
 	public function checkDigit(string $field): string {
 		$weights = [7, 3, 1];

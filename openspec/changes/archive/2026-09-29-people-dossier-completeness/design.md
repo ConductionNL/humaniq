@@ -141,3 +141,44 @@ an audit that runs after day one is exactly the gap.
 
 - Should an expired ID on an active employee (not only a new hire) raise a separate
   right-to-work re-check for non-EU nationals whose residence document lapses?
+
+## Build-time changes (2026-09-29)
+
+Read against `development` 2b5711c4 while building; each change is in the code of this PR.
+
+- **Flat requirement fields.** D1's nested `appliesTo` and `evidence` objects became flat
+  properties (`scope`, `scopeValues`, `evidenceKind`, `documentType`, `competenceCode`), so
+  the generated create form edits them without a nested-object editor.
+- **The EEA table lives in `lib/Standards/reference/`**, not `lib/Standards/tables/`:
+  `TaxTables::availableIds()` globs every file in `tables/` as a tax-year table, and a
+  nationality list there would have been offered as one.
+- **No filinq extraction.** filinq (checked at `docudesk` development 38818eeb) has no
+  identity-document or machine-readable-zone extraction, so a duck-typed call would have
+  been a silent no-op. HR pastes the zone lines into the check's `mrz` field instead; humaniq
+  verifies the ICAO 9303 check digits itself (method `extractie`) and clears the field
+  before the save, so no document number is stored. Without a zone the method is
+  `handmatig`. When filinq gains an identity reader, it can fill the same field.
+- **The check is decided on save, not by a POST route.** `RightToWorkCheckListener` runs
+  the D4 rule on every create and update of a `RightToWorkCheck` (so a result typed by hand
+  never survives), refuses anyone outside HR, and after a pass ticks `widCheckDone` and
+  `widCheckDate` on the case and files a residence document that allows work as a
+  `PersonnelDocument` with its expiry (`RightToWorkRecorder`). HR adds the check from the
+  Right-to-work checks list on `OnboardingDetail`. `POST /api/onboarding/{id}/right-to-work`
+  was not added: the objects API is that route, with the same rule behind it.
+- **The guard re-applies the rule.** `RightToWorkGuard` takes the newest check by
+  `checkedOn`, refuses when it is later than `startDate` or failed, and re-runs the rule on
+  the stored facts, so a check forced to `geslaagd` past the listener is still refused.
+- **Expiry notifications are declared here** (platform-notifications is not built):
+  `PersonnelDocument` carries materialised `daysUntilExpiry` and `daysUntilWarning`
+  (`warnDaysBefore`, default 60, on the document) and two `calculatedChange` rules to the
+  `humaniq-hr` group. Checked with OpenRegister's `NotificationAnnotationValidator`,
+  `CalculationAnnotationValidator` and `CalculationEvaluator` (0 errors; 30 days out with
+  a 60-day window reads -30).
+- **The incomplete list names gaps, not documents.** `GET /api/dossier/incomplete` lists
+  readable employees with each gap's requirement and status; the evidence ids are only on
+  the per-employee answer, where each evidence row is read under the caller's RBAC.
+- **Seeds.** ID for everyone and a VOG for the Backoffice unit are active; De Vries's VOG
+  expired on 2026-08-31 and Visser has no ID. The arbeidsovereenkomst and BIG requirements
+  are seeded inactive: the seed holds no generated contracts and no care reference job.
+  Jansen has a passing check (Dutch passport); Visser's check fails (residence document
+  without work endorsement), so `onboarding-visser` cannot be marked ready.

@@ -31,7 +31,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-004
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-004
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 /**
  * Refuses the first working day without a passing right-to-work check.
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-004
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-004
  */
 final class RightToWorkGuard implements LifecycleGuardInterface {
 
@@ -75,7 +75,7 @@ final class RightToWorkGuard implements LifecycleGuardInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only static allow()/deny() factories.
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action/$userId belong to the interface; the rule does not depend on them.
 	 *
-	 * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-004
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-004
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		$employeeId = trim((string)($object['employeeId'] ?? ''));

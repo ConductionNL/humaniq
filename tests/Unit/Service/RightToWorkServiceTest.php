@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for the right-to-work rule.
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
  */
 class RightToWorkServiceTest extends TestCase {
 

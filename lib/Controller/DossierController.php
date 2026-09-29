@@ -23,7 +23,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-002
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-002
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ use OCP\IRequest;
 /**
  * Serves personnel-file completeness.
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-002
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-002
  */
 class DossierController extends Controller {
 
@@ -81,7 +81,7 @@ class DossierController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-002
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-002
 	 */
 	#[NoAdminRequired]
 	public function status(string $id, ?string $date = null): JSONResponse {
@@ -120,7 +120,7 @@ class DossierController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-002
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-002
 	 */
 	#[NoAdminRequired]
 	public function incomplete(?string $date = null): JSONResponse {

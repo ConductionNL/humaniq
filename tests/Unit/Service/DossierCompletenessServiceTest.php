@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-002
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-002
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for dossier completeness.
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-002
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-002
  */
 class DossierCompletenessServiceTest extends TestCase {
 

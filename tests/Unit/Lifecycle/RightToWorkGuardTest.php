@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-004
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-004
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for the right-to-work hard stop.
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-004
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-004
  */
 class RightToWorkGuardTest extends TestCase {
 

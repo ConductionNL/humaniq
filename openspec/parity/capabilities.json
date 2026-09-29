@@ -6829,7 +6829,7 @@
    "id": "td-dossier-validation",
    "area": "people",
    "name": "Get a signal when a mandatory document such as an ID, certificate of conduct or professional registration is missing or expired in a personnel file.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -6845,10 +6845,12 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmPimPlugin/entity/EmployeeLicense.php:63 licenses carry an expiry date, but no job reads it for a signal; the only scheduled signals are BIRTHDAY and LEAVE_TODAY (src/plugins/orangehrmWorkspaceNotificationsPlugin/entity/WorkspaceNotificationRegistration.php:33)"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-dossier-completeness on 2026-09-27 for the missing half: a mandatory-document list per employee with a signal when one is missing or expired. Before: lib/Settings/register.d/hr-agenda.json:21 EmployeeCompetence.validUntil holds a professional registration or certificate with an expiry, checked only when rostering by lib/Service/CompetenceCheckService.php:149; no schema lists mandatory dossier documents (ID, contract, certificate of conduct) and nothing checks their presence periodically (grep -rniE 'identiteitsbewijs|\\bvog\\b|requiredDocument' lib/Settings src/manifest.d: no hits outside a payroll rule source label)",
-    "reachedOn": "EmployeeCompetences /bevoegdheden (expiry per competence); nothing reaches a dossier completeness check",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-dossier.json DossierRequirement (scope all, contract type, reference job or unit; proof a PersonnelDocument, a generated document or an EmployeeCompetence) and PersonnelDocument (materialised daysUntilExpiry/daysUntilWarning with two calculatedChange notifications to humaniq-hr); lib/Service/DossierCompletenessService.php answers aanwezig, ontbreekt, verlopen, verloopt-binnenkort or te-oud-bij-start per requirement; lib/Controller/DossierController.php serves one file and the incomplete list under the caller's RBAC. Tests: tests/Unit/Service/DossierCompletenessServiceTest.php, tests/Unit/Controller/DossierControllerTest.php.",
+    "reachedOn": "People > Incomplete personnel files /incomplete-files, the Dossier status and Personnel documents widgets on EmployeeDetail, People > Personnel documents and Dossier requirements",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-people-dossier-completeness",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -7737,7 +7739,7 @@
    "id": "dm-right-to-work-check",
    "area": "hiring",
    "name": "Check a new hire's identity document and right to work during onboarding, with a hard stop when the check fails.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -7753,10 +7755,12 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmPimPlugin/entity/EmployeeImmigrationRecord.php:68 and :103 store passport or visa number and I9 status, entered in src/client/src/orangehrmPimPlugin/components/SaveImmigration.vue:41 under the PIM Immigration menu (Service/PIMLeftMenuService.php:68); recorded only, no onboarding check or hard stop (grep -riE 'right.?to.?work' src/plugins src/client/src: no match)"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-dossier-completeness on 2026-09-27 for the missing half: a check of the identity document with a hard stop when it fails; the checklist tick is built. Before: lib/Settings/register.d/hr-onboarding.json:46 the onboarding case cannot move to ready until widCheckDone is true (:119, a checkbox the HR user ticks after seeing the document); the check itself is manual, nothing reads or verifies the document",
-    "reachedOn": "OnboardingDetail /onboardings/:id checklist gate",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-dossier.json RightToWorkCheck (no document number stored); lib/Service/RightToWorkService.php applies the stated rule (EU/EEA/Swiss from lib/Standards/reference/eea-nationalities.json, residence endorsement, current TWV) and verifies ICAO 9303 check digits of a pasted zone; lib/Listener/RightToWorkCheckListener.php decides every save, HR only, and a pass ticks Onboarding.widCheckDone; lib/Lifecycle/RightToWorkGuard.php is required on Onboarding gereed_melden and starten. Tests: tests/Unit/Service/RightToWorkServiceTest.php, tests/Unit/Listener/RightToWorkCheckListenerTest.php, tests/Unit/Lifecycle/RightToWorkGuardTest.php.",
+    "reachedOn": "OnboardingDetail > Right-to-work checks (add one; Mark ready is refused until one passes), People > Right-to-work checks",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-people-dossier-completeness",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

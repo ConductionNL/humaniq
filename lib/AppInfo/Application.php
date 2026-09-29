@@ -708,7 +708,7 @@ class Application extends App implements IBootstrap {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
 	 */
 	private function registerDossierListeners(IEventDispatcher $dispatcher): void {
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class, ObjectCreatedEvent::class, ObjectUpdatedEvent::class] as $event) {

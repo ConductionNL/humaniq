@@ -24,7 +24,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ namespace OCA\Humaniq\Service;
 /**
  * Stamps and follows up a right-to-work check.
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
  */
 class RightToWorkRecorder {
 
@@ -65,7 +65,7 @@ class RightToWorkRecorder {
 	 *
 	 * @return array<string, mixed> The fields to set.
 	 *
-	 * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
 	 */
 	public function stamp(array $check, string $userId, string $today): array {
 		$onboarding = $this->onboardingOf(check: $check);
@@ -105,7 +105,7 @@ class RightToWorkRecorder {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
 	 */
 	public function recordPass(array $check): void {
 		if (($check['result'] ?? '') !== RightToWorkService::RESULT_PASS) {

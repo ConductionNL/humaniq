@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use Psr\Log\NullLogger;
 /**
  * Tests for the right-to-work check listener.
  *
- * @spec openspec/changes/people-dossier-completeness/specs/dossier-completeness/spec.md#REQ-DCP-003
+ * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
  */
 class RightToWorkCheckListenerTest extends TestCase {
 
