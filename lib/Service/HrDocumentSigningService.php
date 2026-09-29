@@ -155,14 +155,13 @@ class HrDocumentSigningService {
 	 * @spec openspec/specs/hr-document-signing/spec.md#REQ-HDS-003
 	 */
 	public function syncSignatures(?string $documentId): array {
+		$targets = array_filter(
+			$this->register->loadAll(self::DOCUMENT_SCHEMA),
+			static fn (array $doc): bool => in_array(($doc['signingStatus'] ?? ''), self::ACTIVE, true) === true
+		);
 		if ($documentId !== null && $documentId !== '') {
 			$one = $this->register->findObjectData($documentId, self::DOCUMENT_SCHEMA);
 			$targets = ($one === null ? [] : [$one]);
-		} else {
-			$targets = array_filter(
-				$this->register->loadAll(self::DOCUMENT_SCHEMA),
-				static fn (array $doc): bool => in_array(($doc['signingStatus'] ?? ''), self::ACTIVE, true) === true
-			);
 		}
 
 		$results = [];
