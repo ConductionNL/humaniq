@@ -160,6 +160,10 @@
 		"route": "/org-units/:id"
 	},
 	{
+		"id": "Organogram",
+		"route": "/org/chart"
+	},
+	{
 		"id": "ReviewCycleDetail",
 		"route": "/review-cycles/:id"
 	},

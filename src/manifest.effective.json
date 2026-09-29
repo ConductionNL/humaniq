@@ -440,6 +440,12 @@
 					}
 				},
 				{
+					"icon": "SitemapOutline",
+					"id": "Organogram",
+					"label": "Organisation chart",
+					"route": "Organogram"
+				},
+				{
 					"icon": "AccountGroupOutline",
 					"id": "Formatieplaatsen",
 					"label": "Formation places",
@@ -7935,6 +7941,34 @@
 			"route": "/org-units/:id",
 			"title": "Organisational unit",
 			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "people-org-chart-view D4 (REQ-OCV-001/002): a dashboard with one host widget (org-chart, OrgChartWidget.vue) over GET /api/org/chart: an expandable list (CnTreeView) and a drawn chart (CnRelationshipGraph, manual layout computed by OrgChartService). A dashboard, not type custom, because gate 69 ratchets custom pages.",
+				"description": "Your organisation on a date: every unit, its manager and how many people are placed in it.",
+				"layout": [
+					{
+						"gridHeight": 10,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "org-chart"
+					}
+				],
+				"widgets": [
+					{
+						"content": {},
+						"id": "org-chart",
+						"title": "Organisation chart",
+						"type": "org-chart"
+					}
+				]
+			},
+			"id": "Organogram",
+			"route": "/org/chart",
+			"title": "Organisation chart",
+			"type": "dashboard"
 		},
 		{
 			"config": {

@@ -2722,7 +2722,21 @@
         "The salary band this function is graded in, if any.": "The salary band this function is graded in, if any.",
         "Where the function comes from: the HR21 reference library or your own catalogue.": "Where the function comes from: the HR21 reference library or your own catalogue.",
         "Your job functions: the HR21 reference functions and your own, each with its Cao Gemeenten scale. Retire a function instead of deleting it.": "Your job functions: the HR21 reference functions and your own, each with its Cao Gemeenten scale. Retire a function instead of deleting it.",
-        "A job function in your catalogue: a function from the HR21 reference library (VNG) or one of your own, mapped to a Cao Gemeenten schaal and optionally to a salary band. Retire a function instead of deleting it, so contracts that point at it keep their meaning.": "A job function in your catalogue: a function from the HR21 reference library (VNG) or one of your own, mapped to a Cao Gemeenten schaal and optionally to a salary band. Retire a function instead of deleting it, so contracts that point at it keep their meaning."
+        "A job function in your catalogue: a function from the HR21 reference library (VNG) or one of your own, mapped to a Cao Gemeenten schaal and optionally to a salary band. Retire a function instead of deleting it, so contracts that point at it keep their meaning.": "A job function in your catalogue: a function from the HR21 reference library (VNG) or one of your own, mapped to a Cao Gemeenten schaal and optionally to a salary band. Retire a function instead of deleting it, so contracts that point at it keep their meaning.",
+        "Collapse": "Collapse",
+        "Drawn chart": "Drawn chart",
+        "Expand": "Expand",
+        "Manager: {name}": "Manager: {name}",
+        "No units on this date": "No units on this date",
+        "On date": "On date",
+        "Organisation chart": "Organisation chart",
+        "Show people": "Show people",
+        "Start from unit": "Start from unit",
+        "The organisation chart could not be read.": "The organisation chart could not be read.",
+        "The whole organisation": "The whole organisation",
+        "Your organisation on a date: every unit, its manager and how many people are placed in it.": "Your organisation on a date: every unit, its manager and how many people are placed in it.",
+        "none": "none",
+        "People placed: {count}": "People placed: {count}"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

@@ -202,6 +202,12 @@
 					}
 				},
 				{
+					"id": "Organogram",
+					"label": "Organisation chart",
+					"icon": "SitemapOutline",
+					"route": "Organogram"
+				},
+				{
 					"id": "Formatieplaatsen",
 					"label": "Formation places",
 					"icon": "AccountGroupOutline",
