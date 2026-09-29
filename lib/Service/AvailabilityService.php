@@ -217,7 +217,7 @@ class AvailabilityService {
 
 		$perDay = [];
 		foreach ($entries as $entry) {
-			if (in_array($entry['kind'], ['shift', 'leave', 'absent', 'booking', 'busy', 'interview'], true) === false) {
+			if (in_array($entry['kind'], ['shift', 'leave', 'absent', 'booking', 'busy', 'interview', 'secondment'], true) === false) {
 				continue;
 			}
 
@@ -229,7 +229,7 @@ class AvailabilityService {
 
 			$perDay = $this->spreadOverDays(
 				perDay: $perDay,
-				kind: (string)$entry['kind'],
+				share: $this->dayShare(entry: $entry, employeeId: $employeeId, sources: $sources, from: $from),
 				start: $start,
 				end: $end,
 				from: $from,
@@ -248,7 +248,7 @@ class AvailabilityService {
 	 * day cannot commit more time than the person has.
 	 *
 	 * @param array<string, float> $perDay Committed hours so far, by ISO date.
-	 * @param string $kind The entry kind.
+	 * @param float|null $share The share of each working day a whole-day entry commits, null for a timed one.
 	 * @param int $start The entry's start timestamp.
 	 * @param int $end The entry's end timestamp.
 	 * @param DateTimeImmutable $from First day.
@@ -261,7 +261,7 @@ class AvailabilityService {
 	 */
 	private function spreadOverDays(
 		array $perDay,
-		string $kind,
+		?float $share,
 		int $start,
 		int $end,
 		DateTimeImmutable $from,
@@ -287,7 +287,7 @@ class AvailabilityService {
 			}
 
 			$overlapHours = $this->dayHours(
-				kind: $kind,
+				share: $share,
 				start: $start,
 				end: $end,
 				dayStart: $dayStart,
@@ -304,10 +304,11 @@ class AvailabilityService {
 	/**
 	 * What one entry commits on one day.
 	 *
-	 * A whole-day absence costs the contracted day, whatever the clock says: a
-	 * 0.6 fte on leave loses 4.8 hours, not 24.
+	 * A whole-day entry costs its share of the contracted day, whatever the
+	 * clock says: a 0.6 fte on leave loses 4.8 hours, not 24, and a 16-hour
+	 * secondment in a 36-hour week costs 16/36 of each working day.
 	 *
-	 * @param string $kind The entry kind.
+	 * @param float|null $share The share of the day, null for a timed entry.
 	 * @param int $start The entry's start timestamp.
 	 * @param int $end The entry's end timestamp.
 	 * @param int $dayStart Midnight at the start of the day.
@@ -319,19 +320,60 @@ class AvailabilityService {
 	 * @spec openspec/specs/agenda-and-resource-booking/spec.md#REQ-AGD-002
 	 */
 	private function dayHours(
-		string $kind,
+		?float $share,
 		int $start,
 		int $end,
 		int $dayStart,
 		int $dayEnd,
 		float $contracted
 	): float {
-		if (in_array($kind, ['leave', 'absent'], true) === true) {
-			return $contracted;
+		if ($share !== null) {
+			return ($contracted * $share);
 		}
 
 		return ((min($end, $dayEnd) - max($start, $dayStart)) / 3600);
 	}//end dayHours()
+
+	/**
+	 * The share of each working day an entry commits: all of it for leave and
+	 * sickness, hours per week over the contracted week for a secondment, and
+	 * null for a timed entry.
+	 *
+	 * @param array<string, mixed> $entry The agenda entry.
+	 * @param string $employeeId The employee.
+	 * @param array<string, mixed> $sources The source rows.
+	 * @param DateTimeImmutable $from First day of the window.
+	 *
+	 * @return float|null
+	 *
+	 * @spec openspec/specs/secondment-and-side-activities/spec.md#REQ-SEC-002
+	 */
+	private function dayShare(array $entry, string $employeeId, array $sources, DateTimeImmutable $from): ?float {
+		if (in_array($entry['kind'], ['leave', 'absent'], true) === true) {
+			return 1.0;
+		}
+
+		if ($entry['kind'] !== 'secondment') {
+			return null;
+		}
+
+		$week = 0.0;
+		for ($day = 0; $day < 7; $day++) {
+			$week += $this->workingHours->contractedHoursOn(
+				employeeId: $employeeId,
+				date: $from->modify('+' . $day . ' days'),
+				patterns: ($sources['workingPatterns'] ?? []),
+				nonWorkingTimes: [],
+				nonWorkingDates: []
+			)['hours'];
+		}
+
+		if ($week <= 0.0) {
+			return 0.0;
+		}
+
+		return min(1.0, ((float)($entry['hoursPerWeek'] ?? 0) / $week));
+	}//end dayShare()
 
 	/**
 	 * Whether one employee holds every required competence on every day of the

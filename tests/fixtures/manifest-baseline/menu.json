@@ -67,6 +67,15 @@
 				}
 			},
 			{
+				"id": "MijnNevenwerkzaamheden",
+				"label": "My side activities",
+				"icon": "BriefcaseOutline",
+				"route": "SideActivities",
+				"query": {
+					"userId": "@me"
+				}
+			},
+			{
 				"id": "MijnAanwezigheid",
 				"label": "My attendance",
 				"icon": "ClockOutline",
@@ -205,6 +214,18 @@
 						"eq": "standard"
 					}
 				}
+			},
+			{
+				"id": "Secondments",
+				"label": "Secondments",
+				"icon": "AccountArrowRightOutline",
+				"route": "Secondments"
+			},
+			{
+				"id": "SideActivities",
+				"label": "Side activities",
+				"icon": "BriefcaseOutline",
+				"route": "SideActivities"
 			},
 			{
 				"id": "GeneratedDocuments",

@@ -370,6 +370,35 @@ class AgendaAndAvailabilityTest extends TestCase {
 	}//end testApprovedLeaveCostsTheContractedDay()
 
 	/**
+	 * REQ-SEC-002: a 36-hour employee with an active 16-hour secondment has at
+	 * most 20 hours free in a week, the agenda shows the secondment, and a
+	 * draft secondment commits nothing.
+	 *
+	 * @return void
+	 */
+	public function testAnActiveSecondmentCommitsItsHours(): void {
+		$secondment = ['id' => 'sec-1', 'employeeId' => 'emp-1', 'receivingOrganisation' => 'Veiligheidsregio Fryslan', 'startDate' => '2026-09-01', 'endDate' => '2027-02-28', 'hoursPerWeek' => 16, 'status' => 'actief'];
+		$sources = [
+			'workingPatterns' => [$this->pattern('emp-1', 7.2)],
+			'secondments' => [$secondment],
+			'nonWorkingDates' => [],
+		];
+
+		$answer = $this->availability->availability(employeeIds: ['emp-1'], from: new DateTimeImmutable('2026-09-07'), to: new DateTimeImmutable('2026-09-13'), sources: $sources);
+		$this->assertEqualsWithDelta(16.0, $answer[0]['committedHours'], 0.01);
+		$this->assertEqualsWithDelta(20.0, $answer[0]['freeHours'], 0.01);
+
+		$entries = $this->agenda->compose(sources: $sources, subjectType: 'employee', subjectId: 'emp-1', from: '2026-09-07', to: '2026-09-13');
+		$this->assertSame(['secondment'], array_values(array_unique(array_column($entries, 'kind'))));
+		$this->assertSame('Secondment', $entries[0]['sourceType']);
+		$this->assertSame('sec-1', $entries[0]['sourceId']);
+
+		$sources['secondments'][0]['status'] = 'concept';
+		$draft = $this->availability->availability(employeeIds: ['emp-1'], from: new DateTimeImmutable('2026-09-07'), to: new DateTimeImmutable('2026-09-13'), sources: $sources);
+		$this->assertEqualsWithDelta(0.0, $draft[0]['committedHours'], 0.01);
+	}//end testAnActiveSecondmentCommitsItsHours()
+
+	/**
 	 * A part-timer is measured against their own week, not the instance's
 	 * full-time one.
 	 *

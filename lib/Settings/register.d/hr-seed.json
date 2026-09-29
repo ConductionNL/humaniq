@@ -2396,6 +2396,39 @@
                 "checkedOn": "2026-06-20",
                 "administrationId": "ADM-001",
                 "_note": "people-dossier-completeness (2026-09-29): a residence document without work endorsement fails, so onboarding-visser (gegevens_gevalideerd) cannot be marked ready: RightToWorkGuard refuses gereed_melden."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Secondment",
+                    "slug": "secondment-jansen-veiligheidsregio"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "receivingOrganisation": "Veiligheidsregio Fryslân",
+                "receivingKvkNumber": null,
+                "startDate": "2026-09-01",
+                "endDate": "2027-02-28",
+                "hoursPerWeek": 16,
+                "status": "actief",
+                "administrationId": "ADM-001",
+                "_note": "people-secondment-and-side-activities (2026-09-29): 16 hours a week elsewhere: the agenda shows a secondment entry and availability commits 16 of the contracted hours each week. KvK left empty rather than invented."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "SideActivity",
+                    "slug": "side-activity-doornbos-woningcorporatie"
+                },
+                "employeeId": "@ref:employee-ambtenaar-eed-ontbreekt",
+                "description": "Bestuurslid woningcorporatie",
+                "organisation": "Woningcorporatie Noord",
+                "paid": true,
+                "hoursPerWeek": 2,
+                "startDate": "2026-01-01",
+                "status": "gemeld",
+                "publish": false,
+                "administrationId": "ADM-001",
+                "_note": "people-secondment-and-side-activities (2026-09-29): a civil servant's paid board seat awaiting the manager's decision; her nevenwerkzaamhedenGemeld stays true because the register now holds a report."
             }
         ]
     }

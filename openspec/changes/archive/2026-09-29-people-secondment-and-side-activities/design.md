@@ -91,3 +91,29 @@ Rejected: the rule, its seed and its audit history read it.
 
 - Which functions must have their side activities published is employer policy; this design
   records a per-activity `publish` flag rather than a function list.
+
+## Build-time changes (2026-09-29)
+
+Read against `development` bbe065fe while building.
+
+- **Secondment share.** `AvailabilityService` commits `hoursPerWeek` over the employee's
+  contracted week (the pattern hours of the seven days from the window start) as a share
+  of each working day: 16 hours in a 36-hour week costs 16/36 of each day. The agenda entry
+  spans the secondment's days in the window and carries `hoursPerWeek`. `ForwardCapacityService`
+  inherits it. No `agreementFile` property: the signed agreement goes in the detail page's
+  files widget, like every other humaniq document.
+- **One listener for the register.** `SideActivityListener` (not `SideActivityAttestationListener`)
+  places a new report on its employee (from the reporter's account when `employeeId` is left
+  empty; only HR may report for someone else; a report needs a description or `noneToReport`),
+  keeps `nevenwerkzaamhedenGemeld` in step after every create, update or delete, and puts
+  the register's value back when someone changes that flag by hand on the employee.
+  `SideActivityRegister` holds the rules.
+- **The conflict reason is `decisionReason`**, so the existing `DecisionReasonGuard` refuses
+  a refusal without one and, through `NoSelfApprovalGuard`, a decision by the employee.
+- **Existing attestations stay** until the flag is edited or a report changes: the three
+  seeded civil servants keep their `true`.
+- **Seeds** use the seed's own people: Sam Jansen seconded 16 hours a week to
+  Veiligheidsregio Fryslân (KvK left empty rather than invented), and Ingrid Doornbos
+  (Ambtenarenwet) with a paid board seat awaiting a decision.
+- **My side activities** is a menu preset on `SideActivities` (`userId = @me`), not a second
+  index page (gate 68).

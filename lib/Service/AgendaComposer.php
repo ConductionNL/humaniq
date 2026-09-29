@@ -58,15 +58,17 @@ class AgendaComposer {
 	 *
 	 * @var array<int, string>
 	 */
-	public const KINDS = ['shift', 'leave', 'absent', 'interview', 'booking', 'busy'];
+	public const KINDS = ['shift', 'leave', 'absent', 'interview', 'booking', 'busy', 'secondment'];
 
 	/**
 	 * Constructor.
 	 *
 	 * @param AgendaBookingEntries $bookings Builds the booking and busy-time entries.
+	 * @param AgendaSecondmentEntries $secondments Builds the secondment entries.
 	 */
 	public function __construct(
 		private readonly AgendaBookingEntries $bookings = new AgendaBookingEntries(),
+		private readonly AgendaSecondmentEntries $secondments = new AgendaSecondmentEntries(),
 	) {
 
 	}//end __construct()
@@ -105,6 +107,7 @@ class AgendaComposer {
 			$this->leaveEntries(sources: $sources, employees: $employees, from: $from, to: $to),
 			$this->absenceEntries(sources: $sources, employees: $employees, from: $from, to: $to),
 			$this->interviewEntries(sources: $sources, employees: $employees, from: $from, to: $to),
+			$this->secondments->entries(sources: $sources, employees: $employees, from: $from, to: $to),
 			$this->bookings->bookingEntries(
 				sources: $sources,
 				employees: $employees,

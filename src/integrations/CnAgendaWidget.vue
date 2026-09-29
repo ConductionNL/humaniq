@@ -128,6 +128,8 @@ export default {
 		 * @param {string} kind The entry kind.
 		 *
 		 * @return {string} The label.
+		 *
+		 * @spec openspec/specs/secondment-and-side-activities/spec.md#REQ-SEC-002
 		 */
 		kindLabel(kind) {
 			const labels = {
@@ -137,6 +139,7 @@ export default {
 				interview: this.t('humaniq', 'Interview'),
 				booking: this.t('humaniq', 'Booking'),
 				busy: this.t('humaniq', 'Busy'),
+				secondment: this.t('humaniq', 'Seconded'),
 			}
 
 			return labels[kind] || kind

@@ -1,0 +1,271 @@
+{
+    "x-humaniq-fragment": "hr-secondment",
+    "components": {
+        "schemas": {
+            "Secondment": {
+                "slug": "Secondment",
+                "icon": "AccountArrowRightOutline",
+                "version": "0.1.0",
+                "title": "Secondment",
+                "description": "A period in which an employee works for another organisation for a number of hours a week while staying on the payroll (people-secondment-and-side-activities D1).",
+                "type": "object",
+                "required": [
+                    "employeeId",
+                    "receivingOrganisation",
+                    "startDate",
+                    "hoursPerWeek"
+                ],
+                "x-openregister-lifecycle": {
+                    "field": "status",
+                    "initial": "concept",
+                    "terminal": [
+                        "beeindigd"
+                    ],
+                    "transitions": {
+                        "activeren": {
+                            "from": [
+                                "concept"
+                            ],
+                            "to": "actief",
+                            "description": "The secondment starts counting: its hours are committed in the agenda and in availability."
+                        },
+                        "beeindigen": {
+                            "from": [
+                                "actief"
+                            ],
+                            "to": "beeindigd",
+                            "description": "The secondment has ended."
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Who is seconded."
+                    },
+                    "receivingOrganisation": {
+                        "type": "string",
+                        "title": "Receiving organisation",
+                        "description": "The organisation the employee works for during the secondment."
+                    },
+                    "receivingKvkNumber": {
+                        "type": "string",
+                        "nullable": true,
+                        "pattern": "^[0-9]{8}$",
+                        "title": "Chamber of Commerce number",
+                        "description": "The receiving organisation's eight-digit KvK number."
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Start date",
+                        "description": "The first day of the secondment."
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "End date",
+                        "description": "The last day of the secondment. Leave empty while it has no end."
+                    },
+                    "hoursPerWeek": {
+                        "type": "number",
+                        "minimum": 0,
+                        "title": "Hours per week",
+                        "description": "How many hours a week the employee works for the receiving organisation."
+                    },
+                    "agreedHourlyRate": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Agreed hourly rate",
+                        "description": "The rate agreed with the receiving organisation, for settling the secondment."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "concept",
+                            "actief",
+                            "beeindigd"
+                        ],
+                        "default": "concept",
+                        "title": "Status",
+                        "description": "Draft, active or ended. Only an active secondment counts in planning.",
+                        "x-enum-labels": {
+                            "concept": "Draft",
+                            "actief": "Active",
+                            "beeindigd": "Ended"
+                        }
+                    },
+                    "note": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Note",
+                        "description": "Anything worth knowing about this secondment. Attach the signed agreement on the secondment's page."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration of the employee."
+                    }
+                }
+            },
+            "SideActivity": {
+                "slug": "SideActivity",
+                "icon": "BriefcaseOutline",
+                "version": "0.1.0",
+                "title": "Side activity",
+                "description": "An activity an employee does next to their job, or a report that there is none, and the employer's decision on it (people-secondment-and-side-activities D3; Ambtenarenwet 2017 art. 9).",
+                "type": "object",
+                "required": [],
+                "x-openregister-lifecycle": {
+                    "field": "status",
+                    "initial": "gemeld",
+                    "terminal": [
+                        "afgewezen",
+                        "beeindigd"
+                    ],
+                    "transitions": {
+                        "akkoord": {
+                            "from": [
+                                "gemeld"
+                            ],
+                            "to": "akkoord",
+                            "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
+                            "description": "The manager or HR agrees to the activity. The employee cannot decide on their own report."
+                        },
+                        "afwijzen": {
+                            "from": [
+                                "gemeld"
+                            ],
+                            "to": "afgewezen",
+                            "requires": "OCA\\Humaniq\\Lifecycle\\DecisionReasonGuard",
+                            "inputs": [
+                                {
+                                    "field": "decisionReason",
+                                    "required": true
+                                }
+                            ],
+                            "description": "The activity conflicts with the job. Refused without a reason; the employee cannot decide on their own report."
+                        },
+                        "beeindigen": {
+                            "from": [
+                                "gemeld",
+                                "akkoord"
+                            ],
+                            "to": "beeindigd",
+                            "description": "The activity has stopped."
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Whose side activity this is. Left empty, it is your own."
+                    },
+                    "noneToReport": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Nothing to report",
+                        "description": "Tick this to report that you have no side activities."
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Activity",
+                        "description": "What you do, such as board member of a housing association."
+                    },
+                    "organisation": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "For whom",
+                        "description": "The organisation you do it for."
+                    },
+                    "paid": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Paid",
+                        "description": "Whether you are paid for it."
+                    },
+                    "hoursPerWeek": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Hours per week",
+                        "description": "How many hours a week it takes."
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Start date",
+                        "description": "When the activity started."
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "End date",
+                        "description": "When it ends, if you know."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "gemeld",
+                            "akkoord",
+                            "afgewezen",
+                            "beeindigd"
+                        ],
+                        "default": "gemeld",
+                        "title": "Status",
+                        "description": "Reported, agreed, refused or ended.",
+                        "x-enum-labels": {
+                            "gemeld": "Reported",
+                            "akkoord": "Agreed",
+                            "afgewezen": "Refused",
+                            "beeindigd": "Ended"
+                        }
+                    },
+                    "decisionReason": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 2000,
+                        "title": "Conflict of interest",
+                        "description": "Why the activity conflicts with the job. Needed to refuse it."
+                    },
+                    "publish": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Publish",
+                        "description": "Whether this activity belongs on the list the employer publishes."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Employee account",
+                        "description": "The employee's Nextcloud account. Filled in automatically."
+                    },
+                    "managerUserId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Manager account",
+                        "description": "The manager who decides. Filled in automatically."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration of the employee."
+                    }
+                }
+            }
+        }
+    }
+}
