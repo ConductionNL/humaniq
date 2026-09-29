@@ -87,6 +87,19 @@ class LeaveAllocationCalculator {
 			$this->place(buckets: $buckets, result: $result, balances: $balances, use: $use);
 		}
 
+		return $this->tally(buckets: $buckets, result: $result, today: $today);
+	}//end allocate()
+
+	/**
+	 * The hours used from the buckets of each balance, and what lapsed by today.
+	 *
+	 * @param array<int, array<string, mixed>>    $buckets The consumed buckets.
+	 * @param array<string, array<string, mixed>> $result  The per-balance result so far (overdrafts).
+	 * @param string                              $today   The date the lapse is measured on.
+	 *
+	 * @return array<string, array{usedStatutoryHours: float, usedBovenwettelijkHours: float, usedHours: float, expiredHours: float, bovenwettelijkExpiryDate: string}>
+	 */
+	private function tally(array $buckets, array $result, string $today): array {
 		foreach ($buckets as $bucket) {
 			$key = ($bucket['statutory'] === true ? 'usedStatutoryHours' : 'usedBovenwettelijkHours');
 			$result[$bucket['balance']][$key] += $bucket['used'];
@@ -104,7 +117,7 @@ class LeaveAllocationCalculator {
 		}
 
 		return $result;
-	}//end allocate()
+	}//end tally()
 
 	/**
 	 * Place one use in the buckets valid on its day, soonest lapse first.
@@ -118,15 +131,7 @@ class LeaveAllocationCalculator {
 	 */
 	private function place(array &$buckets, array &$result, array $balances, array $use): void {
 		$left = (float)$use['hours'];
-		$order = [];
-		foreach ($buckets as $index => $bucket) {
-			if ($bucket['year'] <= (int)$use['year'] && $bucket['lapses'] >= (string)$use['date'] && $bucket['hours'] > $bucket['used']) {
-				$order[$index] = $bucket['lapses'] . ($bucket['statutory'] === true ? '0' : '1') . sprintf('%04d', $index);
-			}
-		}
-
-		asort($order);
-		foreach (array_keys($order) as $index) {
+		foreach ($this->eligible(buckets: $buckets, use: $use) as $index) {
 			$take = min($left, $buckets[$index]['hours'] - $buckets[$index]['used']);
 			$buckets[$index]['used'] += $take;
 			$left -= $take;
@@ -146,6 +151,104 @@ class LeaveAllocationCalculator {
 			}
 		}
 	}//end place()
+
+	/**
+	 * The indexes of the buckets a use may draw from, soonest lapse first and
+	 * statutory first on a tie: its year is not after the leave year, it has
+	 * not lapsed on the leave day and it has hours left.
+	 *
+	 * @param array<int, array<string, mixed>> $buckets The buckets.
+	 * @param array{date: string, year: int, hours: float} $use The use.
+	 *
+	 * @return array<int, int>
+	 */
+	private function eligible(array $buckets, array $use): array {
+		$order = [];
+		foreach ($buckets as $index => $bucket) {
+			if ($bucket['year'] <= (int)$use['year'] && $bucket['lapses'] >= (string)$use['date'] && $bucket['hours'] > $bucket['used']) {
+				$order[$index] = $bucket['lapses'] . ($bucket['statutory'] === true ? '0' : '1') . sprintf('%04d', $index);
+			}
+		}
+
+		asort($order);
+		return array_keys($order);
+	}//end eligible()
+
+	/**
+	 * The hours each approved request of this employee and type takes, per
+	 * calendar year it touches, dated on its first day in that year.
+	 *
+	 * @param array<int, array<string, mixed>> $requests   Every LeaveRequest.
+	 * @param array<int, array<string, mixed>> $balances   The employee's balances of this type.
+	 * @param string                           $employeeId The employee.
+	 * @param string                           $leaveType  The leave type.
+	 *
+	 * @return array{uses: array<int, array{date: string, year: int, hours: float}>, underivable: array<int, string>}
+	 *
+	 * @spec openspec/specs/leave-expiry-and-carry-over/spec.md#Requirement:-Leave-taken-SHALL-draw-from-the-hours-that-lapse-first-(REQ-LEX-001)
+	 */
+	public function usesFrom(array $requests, array $balances, string $employeeId, string $leaveType): array {
+		$contractHours = [];
+		foreach ($balances as $balance) {
+			if (($balance['contractHoursPerWeek'] ?? null) !== null) {
+				$contractHours[(int)($balance['year'] ?? 0)] = (float)$balance['contractHoursPerWeek'];
+			}
+		}
+
+		$uses = [];
+		$underivable = [];
+		foreach ($requests as $request) {
+			if ((string)($request['status'] ?? '') !== 'approved'
+				|| (string)($request['employeeId'] ?? '') !== $employeeId
+				|| (string)($request['leaveType'] ?? '') !== $leaveType
+			) {
+				continue;
+			}
+
+			foreach ($this->requestUses(request: $request, contractHours: $contractHours) as $use) {
+				if ($use === null) {
+					$underivable[] = (string)($request['id'] ?? ($request['@self']['id'] ?? 'unknown'));
+					continue;
+				}
+
+				$uses[] = $use;
+			}
+		}
+
+		return ['uses' => $uses, 'underivable' => array_values(array_unique($underivable))];
+	}//end usesFrom()
+
+	/**
+	 * The uses of one request, one per year it touches; null for a year whose hours cannot be derived.
+	 *
+	 * @param array<string, mixed> $request       The LeaveRequest.
+	 * @param array<int, float>    $contractHours Contract hours per week by balance year.
+	 *
+	 * @return array<int, array{date: string, year: int, hours: float}|null>
+	 */
+	private function requestUses(array $request, array $contractHours): array {
+		$start = substr((string)($request['startDate'] ?? ''), 0, 10);
+		$startYear = (int)substr($start, 0, 4);
+		$endYear = max($startYear, (int)substr((string)($request['endDate'] ?? ''), 0, 4));
+		$out = [];
+		// The hours per year are LeaveHoursCalculator's, the rule the balance
+		// projection has always used; referenced as a callable to keep this
+		// class free of static access.
+		$requestHours = [LeaveHoursCalculator::class, 'requestHours'];
+		for ($year = $startYear; $startYear > 0 && $year <= $endYear; $year++) {
+			$resolved = $requestHours($request, ($contractHours[$year] ?? null), $year);
+			if ($resolved['derivable'] === false) {
+				$out[] = null;
+				continue;
+			}
+
+			if ($resolved['hours'] > 0) {
+				$out[] = ['date' => max($start, $year . '-01-01'), 'year' => $year, 'hours' => (float)$resolved['hours']];
+			}
+		}
+
+		return $out;
+	}//end requestUses()
 
 	/**
 	 * The buckets of one balance.

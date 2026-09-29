@@ -212,9 +212,10 @@ class LeaveBalanceProjectionService {
 			return 0;
 		}
 
-		$allocation = (new LeaveAllocationCalculator())->allocate(
+		$calculator = new LeaveAllocationCalculator();
+		$allocation = $calculator->allocate(
 			balances: $balances,
-			uses: $this->usesOf(requests: $allRequests, balances: $balances, employeeId: $employeeId, leaveType: $leaveType),
+			uses: $this->usesOf(calculator: $calculator, requests: $allRequests, balances: $balances, employeeId: $employeeId, leaveType: $leaveType),
 			leaveType: $type,
 			today: $today
 		);
@@ -231,9 +232,10 @@ class LeaveBalanceProjectionService {
 	}//end recompute()
 
 	/**
-	 * The hours each approved request of this employee and type takes, per
-	 * calendar year it touches, dated on its first day in that year.
+	 * The hours taken per request per year, naming the requests whose hours
+	 * cannot be derived.
 	 *
+	 * @param LeaveAllocationCalculator $calculator The calculator.
 	 * @param array<int, array<string, mixed>> $requests Every LeaveRequest.
 	 * @param array<int, array<string, mixed>> $balances The employee's balances of this type.
 	 * @param string $employeeId The employee.
@@ -241,53 +243,21 @@ class LeaveBalanceProjectionService {
 	 *
 	 * @return array<int, array{date: string, year: int, hours: float}>
 	 */
-	private function usesOf(array $requests, array $balances, string $employeeId, string $leaveType): array {
-		$contractHours = [];
-		foreach ($balances as $balance) {
-			if (($balance['contractHoursPerWeek'] ?? null) !== null) {
-				$contractHours[(int)($balance['year'] ?? 0)] = (float)$balance['contractHoursPerWeek'];
-			}
-		}
-
-		$uses = [];
-		$underivable = [];
-		foreach ($requests as $request) {
-			if ((string)($request['status'] ?? '') !== 'approved'
-				|| (string)($request['employeeId'] ?? '') !== $employeeId
-				|| (string)($request['leaveType'] ?? '') !== $leaveType
-			) {
-				continue;
-			}
-
-			$start = substr((string)($request['startDate'] ?? ''), 0, 10);
-			$startYear = (int)substr($start, 0, 4);
-			$endYear = max($startYear, (int)substr((string)($request['endDate'] ?? ''), 0, 4));
-			for ($year = $startYear; $startYear > 0 && $year <= $endYear; $year++) {
-				$resolved = LeaveHoursCalculator::requestHours($request, ($contractHours[$year] ?? null), $year);
-				if ($resolved['derivable'] === false) {
-					$underivable[] = (string)($request['id'] ?? ($request['@self']['id'] ?? 'unknown'));
-					continue;
-				}
-
-				if ($resolved['hours'] > 0) {
-					$uses[] = ['date' => max($start, $year . '-01-01'), 'year' => $year, 'hours' => (float)$resolved['hours']];
-				}
-			}
-		}//end foreach
-
-		if ($underivable !== []) {
+	private function usesOf(LeaveAllocationCalculator $calculator, array $requests, array $balances, string $employeeId, string $leaveType): array {
+		$found = $calculator->usesFrom(requests: $requests, balances: $balances, employeeId: $employeeId, leaveType: $leaveType);
+		if ($found['underivable'] !== []) {
 			$this->logger->warning(
 				sprintf(
 					'humaniq: %d leave request(s) carry no hours and no contract hours per week, so they counted as zero against employee %s type %s: %s',
-					count($underivable),
+					count($found['underivable']),
 					$employeeId,
 					$leaveType,
-					implode(', ', array_unique($underivable))
+					implode(', ', $found['underivable'])
 				)
 			);
 		}
 
-		return $uses;
+		return $found['uses'];
 	}//end usesOf()
 
 	/**
