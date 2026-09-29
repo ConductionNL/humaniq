@@ -2452,7 +2452,10 @@
         "Whose record this change is for. Left empty, it is your own record.": "Voor wiens dossier deze wijziging is. Leeg gelaten is het je eigen dossier.",
         "Why the approved values were not written, for example because the record changed after the request was made. Make a new request.": "Waarom de goedgekeurde waarden niet zijn doorgevoerd, bijvoorbeeld omdat het dossier is gewijzigd nadat het verzoek werd gedaan. Doe een nieuw verzoek.",
         "Why the request was rejected.": "Waarom het verzoek is afgewezen.",
-        "Changes to employee records. Open one to see the current and the proposed values side by side. Add one to ask for a change of your own address or bank account; your record is filled in for you.": "Wijzigingen in medewerkergegevens. Open er een om de huidige en de voorgestelde waarden naast elkaar te zien. Voeg er een toe om een wijziging van je eigen adres of bankrekening aan te vragen; je dossier wordt voor je ingevuld."
+        "Changes to employee records. Open one to see the current and the proposed values side by side. Add one to ask for a change of your own address or bank account; your record is filled in for you.": "Wijzigingen in medewerkergegevens. Open er een om de huidige en de voorgestelde waarden naast elkaar te zien. Voeg er een toe om een wijziging van je eigen adres of bankrekening aan te vragen; je dossier wordt voor je ingevuld.",
+        "The employee's own Nextcloud account. Filled in automatically from the employee, so they can see their own hourly wage.": "Het eigen Nextcloud-account van de medewerker. Wordt automatisch ingevuld vanuit de medewerker, zodat die het eigen uurloon kan zien.",
+        "Reviewer account": "Account van de beoordelaar",
+        "The reviewer's Nextcloud account. Filled in automatically from the reviewer.": "Het Nextcloud-account van de beoordelaar. Wordt automatisch ingevuld vanuit de beoordelaar."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

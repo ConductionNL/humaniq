@@ -53,6 +53,8 @@ class EnsureRoleGroups implements IRepairStep {
 	 * The step's name.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
 	 */
 	public function getName(): string {
 		return 'Create the humaniq HR and payroll groups';

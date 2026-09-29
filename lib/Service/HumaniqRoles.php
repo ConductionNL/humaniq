@@ -90,19 +90,6 @@ class HumaniqRoles {
 	}//end isPayroll()
 
 	/**
-	 * Whether the user may take HR or payroll actions.
-	 *
-	 * @param string|null $uid The user.
-	 *
-	 * @return bool
-	 *
-	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
-	 */
-	public function isHrOrPayroll(?string $uid): bool {
-		return $this->isHr($uid) === true || $this->isPayroll($uid) === true;
-	}//end isHrOrPayroll()
-
-	/**
 	 * Whether the user is an administrator or in the group.
 	 *
 	 * @param string|null $uid   The user.

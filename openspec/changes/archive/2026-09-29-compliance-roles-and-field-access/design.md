@@ -54,7 +54,7 @@ OpenRegister's `authorization` blocks match Nextcloud groups, not objects in a r
 
 ### D2. `HumaniqRoles`
 
-`isHr(uid)`, `isPayroll(uid)`, `isHrOrPayroll(uid)`, each true for an administrator too. The
+`isHr(uid)` and `isPayroll(uid)`, each true for an administrator too. The
 controller checks call it; behaviour for an administrator is unchanged. HR actions, for the
 HR group: offers (`OfferController`), wage garnishments (`LoonbeslagController`), interview
 sync (`InterviewController`), receipt extraction for someone else's expense

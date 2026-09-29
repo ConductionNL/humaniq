@@ -68,8 +68,9 @@ class FieldReadAccess {
 			$handler = $this->container->get('OCA\OpenRegister\Service\PropertyRbacHandler');
 			$unreadable = [];
 			foreach (array_keys($schema->getPropertiesWithAuthorization()) as $property) {
-				if ($handler->canReadProperty($schema, (string)$property, $object) === false) {
-					$unreadable[] = (string)$property;
+				$property = strval($property);
+				if ($handler->canReadProperty($schema, $property, $object) === false) {
+					$unreadable[] = $property;
 				}
 			}
 

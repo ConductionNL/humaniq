@@ -60,8 +60,8 @@ class HumaniqRolesTest extends TestCase {
 		$this->assertFalse($roles->isPayroll('hr-demo'));
 		$this->assertFalse($roles->isHr('payroll-demo'));
 		$this->assertTrue($roles->isPayroll('payroll-demo'));
-		$this->assertTrue($roles->isHrOrPayroll('payroll-demo'));
-		$this->assertFalse($roles->isHrOrPayroll('employee-demo'));
+		$this->assertFalse($roles->isHr('employee-demo'));
+		$this->assertFalse($roles->isPayroll('employee-demo'));
 	}//end testEachRoleAnswersForItsOwnGroupAndAnAdministratorForAll()
 
 	/**

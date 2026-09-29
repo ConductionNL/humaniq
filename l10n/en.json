@@ -2452,7 +2452,10 @@
         "Whose record this change is for. Left empty, it is your own record.": "Whose record this change is for. Left empty, it is your own record.",
         "Why the approved values were not written, for example because the record changed after the request was made. Make a new request.": "Why the approved values were not written, for example because the record changed after the request was made. Make a new request.",
         "Why the request was rejected.": "Why the request was rejected.",
-        "Changes to employee records. Open one to see the current and the proposed values side by side. Add one to ask for a change of your own address or bank account; your record is filled in for you.": "Changes to employee records. Open one to see the current and the proposed values side by side. Add one to ask for a change of your own address or bank account; your record is filled in for you."
+        "Changes to employee records. Open one to see the current and the proposed values side by side. Add one to ask for a change of your own address or bank account; your record is filled in for you.": "Changes to employee records. Open one to see the current and the proposed values side by side. Add one to ask for a change of your own address or bank account; your record is filled in for you.",
+        "The employee's own Nextcloud account. Filled in automatically from the employee, so they can see their own hourly wage.": "The employee's own Nextcloud account. Filled in automatically from the employee, so they can see their own hourly wage.",
+        "Reviewer account": "Reviewer account",
+        "The reviewer's Nextcloud account. Filled in automatically from the reviewer.": "The reviewer's Nextcloud account. Filled in automatically from the reviewer."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
