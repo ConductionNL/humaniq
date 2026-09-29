@@ -69,6 +69,8 @@ return [
         // people-dossier-completeness REQ-DCP-002: one personnel file's completeness, and every readable file with a gap.
         ['name' => 'dossier#status', 'url' => '/api/employees/{id}/dossier-status', 'verb' => 'GET'],
         ['name' => 'dossier#incomplete', 'url' => '/api/dossier/incomplete', 'verb' => 'GET'],
+        // self-service-approvals-inbox REQ-API-001/002: the caller's approvals inbox, open or decided.
+        ['name' => 'approvals#index', 'url' => '/api/approvals', 'verb' => 'GET'],
         ['name' => 'employeeHistory#employments', 'url' => '/api/employees/{id}/employments', 'verb' => 'GET'],
         // talent-training-and-lms REQ-TRN-002: the people feed a learning platform reads, filtered by the caller's RBAC.
         ['name' => 'learning#people', 'url' => '/api/learning/people', 'verb' => 'GET'],

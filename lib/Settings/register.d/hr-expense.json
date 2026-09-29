@@ -5,7 +5,7 @@
             "Expense": {
                 "slug": "Expense",
                 "icon": "ReceiptOutline",
-                "version": "0.7.0",
+                "version": "0.8.0",
                 "title": "Expense",
                 "description": "An employee expense-reimbursement claim (onkostendeclaratie / declaratie). An employee submits a claim (amount, category, date, receipt), a manager approves or rejects it, and once approved the amount is reimbursed to the employee. The submit → approve → reimburse lifecycle is owned here in humaniq, the HR/labour app: re-homing the Expenses feature that previously lived in pipelinq. The pipelinq-specific Shillinq accounts-payable sync coupling is intentionally NOT ported: reimbursement here is the HR-side claim workflow; any downstream AP/GL posting is a separate integration concern that OpenConnector/shillinq own.",
                 "type": "object",
@@ -16,6 +16,35 @@
                     "status"
                 ],
                 "configuration": {
+                    "x-openregister-notifications": {
+                        "expense-submitted": {
+                            "trigger": {
+                                "type": "transition",
+                                "action": "submit"
+                            },
+                            "enabled": true,
+                            "originApp": "humaniq",
+                            "channels": [
+                                "nc-notification",
+                                "email"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "expression",
+                                    "resolver": "OCA\\Humaniq\\Notification\\ManagerOrDeputyRecipientResolver"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Een declaratie wacht op je goedkeuring",
+                                "en": "An expense claim waits for your approval"
+                            },
+                            "message": {
+                                "nl": "{{title}}: {{amount}} {{currency}}. Je vindt het bij Mijn goedkeuringen.",
+                                "en": "{{title}}: {{amount}} {{currency}}. You find it under My approvals."
+                            },
+                            "_note": "self-service-approvals-inbox D3 (REQ-API-002), with the key and channels of platform-notifications D1/D2: the request's manager (managerUserId, or the org chart when nothing stamped one) and every deputy standing in for that manager today. One expression recipient rather than a field recipient plus the resolver, so a manager is never told twice. Declarative only, never an imperative dispatch (gate-18, ADR-031)."
+                        }
+                    },
                     "x-openregister-mcp": {
                         "enabled": true,
                         "tools": {
