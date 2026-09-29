@@ -14,8 +14,8 @@
  * render/store to `HrDocumentService::generate()` /
  * `HrDocumentService::generateLoonstrook()`. Since
  * payroll-annual-statement-action, `jaaropgaaf` resolves the posted
- * `jaaropgaafId` the same way and `POST /api/documents/jaaropgaven` queues a
- * year's statements for HR or payroll as a background job.
+ * `jaaropgaafId` the same way; a year's batch is queued by
+ * AnnualStatementBatchController.
  *
  * @category Controller
  * @package  OCA\Humaniq\Controller
@@ -32,7 +32,6 @@
  * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
  * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
  * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-001
- * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-002
  */
 
 declare(strict_types=1);
@@ -40,16 +39,12 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
-use OCA\Humaniq\BackgroundJob\JaaropgaafYearJob;
 use OCA\Humaniq\Service\HrDocumentService;
-use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\BackgroundJob\IJobList;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -67,9 +62,6 @@ class DocumentController extends Controller {
 	 * @param HrDocumentService $hrDocumentService The document-generation service.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param IUserSession $userSession The current user session (acting userId).
-	 * @param HumaniqRoles $roles Who may queue a year's statements.
-	 * @param IJobList $jobList Queues the year batch.
-	 * @param ITimeFactory $timeFactory The clock that decides whether a year is over.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -78,9 +70,6 @@ class DocumentController extends Controller {
 		private readonly HrDocumentService $hrDocumentService,
 		private readonly SettingsService $settingsService,
 		private readonly IUserSession $userSession,
-		private readonly HumaniqRoles $roles,
-		private readonly IJobList $jobList,
-		private readonly ITimeFactory $timeFactory,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -166,38 +155,6 @@ class DocumentController extends Controller {
 
 		return new JSONResponse($result);
 	}//end generate()
-
-	/**
-	 * `POST /api/documents/jaaropgaven` -- queue the annual statements of a
-	 * finished year for every employee with payslips in it
-	 * (payroll-annual-statement-action D2). HR, payroll or an administrator
-	 * only; the year defaults to the previous calendar year and must be over.
-	 * Answers 202 with the number of employees the job will cover.
-	 *
-	 * @param int|null $year The year, or null for the previous calendar year.
-	 *
-	 * @return JSONResponse 202 {year, queued}, 400 for a year that is not over, 403 outside HR and payroll.
-	 *
-	 * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-002
-	 */
-	#[NoAdminRequired]
-	public function queueJaaropgaven(?int $year = null): JSONResponse {
-		$userId = $this->userSession->getUser()?->getUID();
-		if ($this->roles->isHr($userId) === false && $this->roles->isPayroll($userId) === false) {
-			return new JSONResponse(['error' => 'Only HR or payroll can generate a year of annual statements.'], Http::STATUS_FORBIDDEN);
-		}
-
-		$currentYear = (int)$this->timeFactory->now()->format('Y');
-		$year = $year ?? ($currentYear - 1);
-		if ($year >= $currentYear || $year < 1900) {
-			return new JSONResponse(['error' => sprintf('The year %d is not over yet.', $year)], Http::STATUS_BAD_REQUEST);
-		}
-
-		$queued = count($this->hrDocumentService->jaaropgaafEmployeeIds($year));
-		$this->jobList->add(JaaropgaafYearJob::class, ['year' => $year, 'userId' => $userId]);
-
-		return new JSONResponse(['year' => $year, 'queued' => $queued], Http::STATUS_ACCEPTED);
-	}//end queueJaaropgaven()
 
 	/**
 	 * Resolve one Jaaropgaaf under the caller's RBAC, then render it for its
