@@ -6965,7 +6965,7 @@
    "id": "td-personnel-budget",
    "area": "reporting",
    "name": "Draw up next year's personnel budget from the formation and current staff, per team, job and cost centre.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "partial",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -6981,10 +6981,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\bbudget' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/reporting-personnel-budget-and-scenarios on 2026-09-27. Before: grep -rniE 'personeelsbegroting|personnelBudget|formatiebudget|budgetFte' lib src: no hits; ppl-position-management is also no (no budgeted positions exist to budget from)",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/PersonnelBudgetService.php computes per place and month occupied cost (own salary, approved raise from its date, share over contracts), vacant cost at the reference job's scale minimum (flagged unpriced when not sourced), CAO raise, 8% holiday allowance and employer charges from the last twelve finalised runs, rolled up per unit, reference job and cost centre; lib/Controller/FormationBudgetController.php serves it to HR and accountants only. Tests: tests/Unit/Service/PersonnelBudgetServiceTest.php, tests/Unit/Controller/FormationBudgetControllerTest.php.",
+    "reachedOn": "People > Formation scenarios > a scenario: Total personnel cost and Budget per place",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-reporting-personnel-budget-and-scenarios",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6997,7 +6999,7 @@
    "id": "td-formation-scenarios",
    "area": "reporting",
    "name": "Model formation scenarios such as growth or cuts in FTE per department.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -7013,10 +7015,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\bfte\\b' src/plugins src/client/src finds no match; grep -riE '\\b(scenario|formation)\\b' src/plugins src/client/src hits only two test fixtures"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/reporting-personnel-budget-and-scenarios on 2026-09-27. Before: grep -rniE 'scenario|formatieplan' lib/Settings src/manifest.d lib/Service: only seed notes and rule-check comments; no formation model exists (see ppl-position-management)",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-formation.json FormationScenario (concept -> vastgesteld) and ScenarioMutation (FTE delta on a place or a new place from a date); PersonnelBudgetService::compare() answers baseline, A and B per unit; lib/Listener/ScenarioMutationListener.php refuses changes to a fixed scenario. Tests: PersonnelBudgetServiceTest::testTheGrowthScenarioDiffersFromTheBaselineFromMarch, ScenarioMutationListenerTest.",
+    "reachedOn": "People > Formation scenarios /formation-scenarios, FormationScenarioDetail (Changes, Against the baseline, Fix), Scenario changes",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-reporting-personnel-budget-and-scenarios",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
