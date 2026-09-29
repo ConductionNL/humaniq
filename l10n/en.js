@@ -2779,7 +2779,19 @@ OC.L10N.register(
         "Woman": "Woman",
         "Man": "Man",
         "Functions in the same pay category count as equal work or work of equal value in the pay transparency report.": "Functions in the same pay category count as equal work or work of equal value in the pay transparency report.",
-        "My settings": "My settings"
+        "My settings": "My settings",
+        "Make": "Make",
+        "The make of a vehicle, as the vehicle register records it.": "The make of a vehicle, as the vehicle register records it.",
+        "Model": "Model",
+        "The model of a vehicle, as the vehicle register records it.": "The model of a vehicle, as the vehicle register records it.",
+        "First admission date": "First admission date",
+        "The date the vehicle was first admitted to the road, which sets how long its company-car tax rate holds.": "The date the vehicle was first admitted to the road, which sets how long its company-car tax rate holds.",
+        "Legal basis for the BRP": "Legal basis for the BRP",
+        "The legal basis on which this employer may consult the population register (BRP). Leave it empty unless you have one: without it the population register is never consulted.": "The legal basis on which this employer may consult the population register (BRP). Leave it empty unless you have one: without it the population register is never consulted.",
+        "Fill from RDW": "Fill from RDW",
+        "Fill from BRP": "Fill from BRP",
+        "Filled the empty fields from the vehicle register. Fields you had already filled were kept.": "Filled the empty fields from the vehicle register. Fields you had already filled were kept.",
+        "Filled the empty fields from the population register. Fields you had already filled were kept.": "Filled the empty fields from the population register. Fields you had already filled were kept."
     },
     "nplurals=2; plural=(n != 1);"
 )

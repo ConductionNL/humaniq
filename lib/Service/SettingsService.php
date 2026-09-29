@@ -546,6 +546,21 @@ class SettingsService {
 	}//end getRouteDistanceSource()
 
 	/**
+	 * The integriq source uuid a base register is called through
+	 * (people-register-prefill D1): app config `prefill_rdw_source` or
+	 * `prefill_brp_source`. Empty when not configured.
+	 *
+	 * @param string $register The register key: `rdw` or `brp`.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/register-prefill/spec.md#REQ-RPF-001
+	 */
+	public function getRegisterPrefillSource(string $register): string {
+		return trim($this->appConfig->getValueString(Application::APP_ID, 'prefill_' . $register . '_source', ''));
+	}//end getRegisterPrefillSource()
+
+	/**
 	 * The annual bovenwettelijk (above-statutory) leave hours LeaveAccrualJob
 	 * accrues 1/12 of per month (leave-accrual-job design.md D3), configurable
 	 * via app config key `leave_bovenwettelijk_annual_hours`. Defaults to `0`

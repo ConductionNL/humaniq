@@ -164,6 +164,9 @@ return [
         ['name' => 'departmentFigures#unitFigures', 'url' => '/api/analytics/unit-figures', 'verb' => 'GET'],
         // expenses-travel-calculation: a commuting distance from the route planner, and the yearly mobility figures.
         ['name' => 'travel#routeDistance', 'url' => '/api/travel/route-distance', 'verb' => 'POST'],
+        // people-register-prefill: fill a company car from the RDW and an employee from the BRP (HR or admin).
+        ['name' => 'registerPrefill#vehicle', 'url' => '/api/prefill/vehicle/{assetId}', 'verb' => 'POST'],
+        ['name' => 'registerPrefill#employee', 'url' => '/api/prefill/employee/{employeeId}', 'verb' => 'POST'],
         ['name' => 'travel#wpmReport', 'url' => '/api/travel/wpm-report', 'verb' => 'POST'],
         // hours-leaf-for-any-object — the three timer endpoints behind the hours
         // leaf. ONE constraint, no CRUD (ADR-022): entries are read and written

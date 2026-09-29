@@ -3303,6 +3303,23 @@
 		{
 			"config": {
 				"_note": "asset-management-mvp (2026-07-13), field/enum names renamed to English and three vehicle-only fiscal fields added by hrmq-asset-fleet-merge (2026-08-19): a company-owned item with a guarded custody lifecycle (available -> issued -> checkedIn -> available, or available/checkedIn -> writtenOff, terminal -- the Expense precedent). The data widget shows every field including the three fiscal ones (listPrice/fuelType/companyCarTaxCategory) absorbed from the retired Vehicle schema, with hideEmpty so a non-vehicle Asset's detail page does not render them as empty (design.md D3); lifecycleActions expose exactly the four fragment transitions (issue/checkIn/release/writeOff), never invented. An FK-scoped 'Uitgiftes' object-list (AssetAssignment.assetId = @objectId) is the inbound-relation direction (D2) -- who has held this asset, ordered most-recent-first, rowRoute to AssetAssignmentDetail. The Files widget (signed uitgiftebonnen) runs full-width after the domain cards, the ExpenseDetail receipt placement. Audit history is a sidebar tab.",
+				"headerActions": [
+					{
+						"confirm": false,
+						"icon": "CarOutline",
+						"id": "prefill-rdw",
+						"label": "Fill from RDW",
+						"method": "POST",
+						"successMessage": "Filled the empty fields from the vehicle register. Fields you had already filled were kept.",
+						"type": "api-call",
+						"url": "/api/prefill/vehicle/@objectId",
+						"visibleWhen": {
+							"field": "category",
+							"op": "eq",
+							"value": "vehicle"
+						}
+					}
+				],
 				"layout": [
 					{
 						"gridHeight": 6,
@@ -3391,6 +3408,9 @@
 								"category",
 								"serialNumber",
 								"licencePlate",
+								"make",
+								"model",
+								"firstAdmissionDate",
 								"purchaseDate",
 								"purchaseValue",
 								"status",
@@ -5107,6 +5127,29 @@
 		{
 			"config": {
 				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history. talent-training-and-lms (2026-09-29): a Trainings object-list (TrainingRecord.employeeId = @objectId) lists every training on the personnel file with its status, validity and source (REQ-TRN-001). people-dossier-completeness (2026-09-29): a Dossier status table over GET /api/employees/{id}/dossier-status names each required document as present, missing, expired, expiring or too old at start (REQ-DCP-002), and a Personnel documents object-list (PersonnelDocument.employeeId = @objectId) holds the supplied documents. people-secondment-and-side-activities (2026-09-29): Secondments (Secondment.employeeId = @objectId, REQ-SEC-001) and Side activities (SideActivity.employeeId = @objectId, REQ-SEC-003) object-lists side by side.",
+				"headerActions": [
+					{
+						"confirm": false,
+						"icon": "AccountBoxOutline",
+						"id": "prefill-brp",
+						"label": "Fill from BRP",
+						"method": "POST",
+						"successMessage": "Filled the empty fields from the population register. Fields you had already filled were kept.",
+						"type": "api-call",
+						"url": "/api/prefill/employee/@objectId",
+						"visibleWhen": {
+							"field": "brpGrondslag",
+							"op": "notEmpty",
+							"source": {
+								"filter": {
+									"administrationId": "@object.administrationId"
+								},
+								"register": "humaniq",
+								"schema": "hrAdministration"
+							}
+						}
+					}
+				],
 				"layout": [
 					{
 						"gridHeight": 6,
