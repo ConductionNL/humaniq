@@ -5,7 +5,7 @@
             "HrGeneratedDocument": {
                 "slug": "HrGeneratedDocument",
                 "icon": "FileDocumentOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Generated document",
                 "description": "The humaniq-side record of one attempt to render a standard HR document (arbeidsovereenkomst, aanbiedingsbrief, werkgeversverklaring, getuigschrift, loonstrook, jaaropgaaf) via docudesk's template/rendering engine and store the returned PDF (humaniq-docudesk-documents, extended by payslip-pdf-docudesk). Humaniq owns no template or PDF machinery of its own (design.md D1): this schema is a log of the handoff. Which template, for whom, the outcome, and where the file landed. Never the rendering itself. `skipped-no-docudesk` and `failed` are retryable outcomes: a later `occ humaniq:documents:generate` invocation (or the EmploymentContractDetail/PayslipDetail page action) can supersede them (design.md D6). At most one GeneratedDocument per idempotency key may be `pending`/`generated` at a time: the four letter types key on (contractId|employeeId, documentType), loonstrook keys on (payslipId, documentType), jaaropgaaf keys on (jaaropgaafId, documentType). Enforced by HrDocumentService and audited by the nl-contract-schriftelijk / nl-loonstrook-verplicht corpus rules.",
                 "type": "object",
@@ -108,7 +108,10 @@
                         "nullable": true,
                         "title": "Generated at",
                         "description": "When the PDF was produced and filed.", "x-notes": "When the PDF was produced by docudesk and stored on this object's folder."
-                    }
+                    },
+                    "signingRequestId": {"type": "string", "nullable": true, "title": "Signing request", "description": "The signing request in the document app. Filled in automatically.", "x-notes": "people-esign-hr-documents D3."},
+                    "signingStatus": {"type": "string", "nullable": true, "enum": ["PENDING", "IN_PROGRESS", "COMPLETED", "DECLINED", "CANCELLED", "EXPIRED", "skipped-no-docudesk", "failed"], "x-enum-labels": {"PENDING": "Waiting for signatures", "IN_PROGRESS": "Being signed", "COMPLETED": "Signed", "DECLINED": "Declined", "CANCELLED": "Cancelled", "EXPIRED": "Expired", "skipped-no-docudesk": "Skipped (no document app)", "failed": "Failed"}, "title": "Signing status", "description": "Where the electronic signature stands. A new request can be sent after a decline, cancellation, expiry or failure.", "x-notes": "people-esign-hr-documents D3: the six filinq states plus skipped-no-docudesk and failed. PENDING or IN_PROGRESS: a new request answers the existing one; COMPLETED is final."},
+                    "signingCompletedAt": {"type": "string", "format": "date-time", "nullable": true, "title": "Signed at", "description": "When the last signer signed.", "x-notes": "people-esign-hr-documents D5: stamped by occ humaniq:documents:sync-signatures on COMPLETED."}
                 }
             },
             "Jaaropgaaf": {

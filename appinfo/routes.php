@@ -25,6 +25,8 @@ return [
         ['name' => 'document#generate', 'url' => '/api/documents/generate', 'verb' => 'POST'],
         // payroll-annual-statement-action: queue a finished year's annual statements (HR or payroll).
         ['name' => 'annualStatementBatch#queueJaaropgaven', 'url' => '/api/documents/jaaropgaven', 'verb' => 'POST'],
+        // people-esign-hr-documents: send a generated HR document for signature (HR or admin).
+        ['name' => 'documentSigning#requestSignature', 'url' => '/api/documents/{id}/request-signature', 'verb' => 'POST'],
         // reporting-pay-transparency: the gender pay gap report (HR and accountants), and its CSV.
         ['name' => 'payTransparency#report', 'url' => '/api/reports/pay-transparency', 'verb' => 'GET'],
         ['name' => 'payTransparency#export', 'url' => '/api/reports/pay-transparency/export', 'verb' => 'POST'],
