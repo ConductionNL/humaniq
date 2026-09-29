@@ -130,19 +130,7 @@ class PersonnelBudgetService {
 			'b' => $this->budget(scenario: $b, rows: $rows, year: $year)['byUnit'],
 		];
 
-		$units = [];
-		foreach (array_unique(array_merge(array_keys($budgets['baseline']), array_keys($budgets['a']), array_keys($budgets['b']))) as $unitId) {
-			$unit = ['orgUnitId' => (string)$unitId, 'name' => ''];
-			foreach ($budgets as $which => $byUnit) {
-				$row = ($byUnit[$unitId] ?? ['name' => '', 'total' => 0.0, 'fteByMonth' => array_fill(0, 12, 0.0)]);
-				$unit['name'] = ($unit['name'] !== '' ? $unit['name'] : (string)$row['name']);
-				$unit[$which] = ['cost' => (float)$row['total'], 'fteByMonth' => $row['fteByMonth']];
-			}
-
-			$unit['diffA'] = ['cost' => round(($unit['a']['cost'] - $unit['baseline']['cost']), 2)];
-			$unit['diffB'] = ['cost' => round(($unit['b']['cost'] - $unit['baseline']['cost']), 2)];
-			$units[(string)$unitId] = $unit;
-		}
+		$units = $this->totals->compareUnits(byUnit: $budgets);
 
 		return ['year' => $year, 'a' => (string)($a['id'] ?? ''), 'b' => (string)($b['id'] ?? ''), 'units' => $units];
 	}//end compare()

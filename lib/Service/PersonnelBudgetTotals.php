@@ -145,4 +145,39 @@ class PersonnelBudgetTotals {
 		return $out;
 	}//end rollUp()
 
+	/**
+	 * Merge the per-unit roll-ups of the baseline and two scenarios, with the differences.
+	 *
+	 * @param array<string, array<string, array<string, mixed>>> $byUnit baseline, a and b, each keyed by unit id.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/personnel-budget/spec.md#REQ-PBS-002
+	 */
+	public function compareUnits(array $byUnit): array {
+		$ids = [];
+		foreach ($byUnit as $rows) {
+			foreach (array_keys($rows) as $unitId) {
+				$ids[strval($unitId)] = true;
+			}
+		}
+
+		$units = [];
+		foreach (array_keys($ids) as $unitId) {
+			$unitId = strval($unitId);
+			$unit = ['orgUnitId' => $unitId, 'name' => ''];
+			foreach ($byUnit as $which => $rows) {
+				$row = ($rows[$unitId] ?? ['name' => '', 'total' => 0.0, 'fteByMonth' => array_fill(0, 12, 0.0)]);
+				$unit['name'] = ($unit['name'] !== '' ? $unit['name'] : strval($row['name'] ?? ''));
+				$unit[$which] = ['cost' => floatval($row['total'] ?? 0), 'fteByMonth' => ($row['fteByMonth'] ?? [])];
+			}
+
+			$unit['diffA'] = ['cost' => round(($unit['a']['cost'] - $unit['baseline']['cost']), 2)];
+			$unit['diffB'] = ['cost' => round(($unit['b']['cost'] - $unit['baseline']['cost']), 2)];
+			$units[$unitId] = $unit;
+		}
+
+		return $units;
+	}//end compareUnits()
+
 }//end class
