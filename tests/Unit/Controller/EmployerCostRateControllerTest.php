@@ -21,10 +21,13 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\EmployerCostRateController;
+use OCA\Humaniq\Service\CostRateAccess;
 use OCA\Humaniq\Service\EmployeeCostRateService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -61,18 +64,32 @@ class EmployerCostRateControllerTest extends TestCase {
 	/**
 	 * Build the controller with a stubbed ObjectService.
 	 *
+	 * The ObjectService double declares OpenRegister's real `findAll(array $config, bool $_rbac, bool $_multitenancy)`
+	 * signature: a double that accepted any arguments hid a lookup that could never run.
+	 *
 	 * @param mixed $employee The row ObjectService::find returns, or a Throwable to throw.
 	 * @param EmployeeCostRateService|null $rates Optional cost-rate service double.
+	 * @param array<int, array<string, mixed>> $contracts EmploymentContract rows the caller may read.
+	 * @param CostRateAccess|null $access Optional access double (project-manager path).
 	 *
 	 * @return EmployerCostRateController The controller.
 	 */
-	private function controller(mixed $employee, ?EmployeeCostRateService $rates = null): EmployerCostRateController {
-		$objectService = new class($employee) {
+	private function controller(mixed $employee, ?EmployeeCostRateService $rates = null, array $contracts = [], ?CostRateAccess $access = null): EmployerCostRateController {
+		$objectService = new class($employee, $contracts) {
+			/**
+			 * The schema last set.
+			 *
+			 * @var string
+			 */
+			private string $schema = '';
+
 			/**
 			 * @param mixed $employee The stubbed row or Throwable.
+			 * @param array<int, array<string, mixed>> $contracts The contract rows.
 			 */
 			public function __construct(
 				private mixed $employee,
+				private array $contracts,
 			) {
 			}
 
@@ -90,10 +107,33 @@ class EmployerCostRateControllerTest extends TestCase {
 			}
 
 			/**
-			 * @return array<int, mixed> No contracts; the override path is used instead.
+			 * @param string $register The register.
+			 *
+			 * @return static
 			 */
-			public function findAll(...$args): array {
-				return [];
+			public function setRegister(string $register): static {
+				return $this;
+			}
+
+			/**
+			 * @param string $schema The schema.
+			 *
+			 * @return static
+			 */
+			public function setSchema(string $schema): static {
+				$this->schema = $schema;
+				return $this;
+			}
+
+			/**
+			 * @param array<string, mixed> $config The query.
+			 * @param bool $_rbac Apply RBAC.
+			 * @param bool $_multitenancy Apply multitenancy.
+			 *
+			 * @return array<int, array<string, mixed>> The contracts, for the EmploymentContract schema.
+			 */
+			public function findAll(array $config=[], bool $_rbac=true, bool $_multitenancy=true): array {
+				return $this->schema === 'EmploymentContract' ? $this->contracts : [];
 			}
 		};
 
@@ -107,13 +147,117 @@ class EmployerCostRateControllerTest extends TestCase {
 		// guard trips and the test fails on a missing app, not on its subject.
 		$settings->method('isOpenRegisterAvailable')->willReturn(true);
 
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('pm');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+
 		return new EmployerCostRateController(
 			$this->createMock(IRequest::class),
 			$container,
 			($rates ?? $this->createMock(EmployeeCostRateService::class)),
 			$settings,
+			($access ?? $this->access(null)),
+			$session,
 			$this->createMock(LoggerInterface::class)
 		);
+	}
+
+	/**
+	 * An access double: the contract choice is real, the project-manager reads are stubbed.
+	 *
+	 * @param array<string, mixed>|null $managed The employee a project manager is given, or null.
+	 * @param array<string, mixed>|null $contract The contract the system read returns.
+	 *
+	 * @return CostRateAccess
+	 */
+	private function access(?array $managed, ?array $contract = null): CostRateAccess {
+		$access = $this->getMockBuilder(CostRateAccess::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['employeeManagedBy', 'contractFor'])
+			->getMock();
+		$access->method('employeeManagedBy')->willReturn($managed);
+		$access->method('contractFor')->willReturn($contract);
+
+		return $access;
+	}
+
+	/**
+	 * The active contract the caller may read is found and handed to the service.
+	 *
+	 * @return void
+	 */
+	public function testTheActiveContractIsFoundAndCostedOn(): void {
+		$contract = ['id' => 'c-1', 'employeeId' => 'emp-1', 'startDate' => '2026-01-01', 'hoursPerWeek' => 36];
+		$rates = $this->createMock(EmployeeCostRateService::class);
+		$rates->expects(self::once())
+			->method('resolve')
+			->with(self::anything(), self::identicalTo($contract), self::identicalTo('2026-08'), self::anything())
+			->willReturn(self::RATE);
+
+		$res = $this->controller(['id' => 'emp-1'], $rates, [['id' => 'c-0', 'employeeId' => 'emp-1', 'startDate' => '2020-01-01', 'endDate' => '2024-12-31'], $contract])
+			->show(employeeId: 'emp-1', period: '2026-08');
+
+		self::assertSame(Http::STATUS_OK, $res->getStatus());
+	}
+
+	/**
+	 * A project manager whose salary view is empty gets the derived rate and nothing of the salary.
+	 *
+	 * @return void
+	 */
+	public function testAProjectManagerGetsTheDerivedRateWithoutTheSalary(): void {
+		$full = ['id' => 'emp-1', 'grossMonthlySalary' => 4200];
+		$contract = ['id' => 'c-1', 'employeeId' => 'emp-1', 'hoursPerWeek' => 36];
+		$rates = $this->createMock(EmployeeCostRateService::class);
+		$rates->method('resolve')->willReturnCallback(
+			fn (array $employee, ?array $c = null): ?array => ($c === $contract && ($employee['grossMonthlySalary'] ?? null) === 4200) ? self::RATE : null
+		);
+
+		// The caller reads the employee with the salary stripped and no contract.
+		$res = $this->controller(['id' => 'emp-1'], $rates, [], $this->access($full, $contract))
+			->show(employeeId: 'emp-1', period: '2026-08');
+		$body = $res->getData();
+
+		self::assertSame(Http::STATUS_OK, $res->getStatus());
+		self::assertSame('project-manager', $body['access']);
+		self::assertSame(6250, $body['totalCentsPerHour']);
+		self::assertSame(4500, $body['wageCostCents']);
+		foreach (['grossMonthlySalary', 'wageBasis', 'wageSource', 'contract', 'hoursPerWeek'] as $hidden) {
+			self::assertArrayNotHasKey($hidden, $body, $hidden . ' must not reach a project manager');
+		}
+		self::assertStringNotContainsString('4200', json_encode($body));
+	}
+
+	/**
+	 * A project manager of an employee they cannot read at all still gets the rate.
+	 *
+	 * @return void
+	 */
+	public function testAProjectManagerGetsTheRateOfAnEmployeeOutsideTheirRead(): void {
+		$rates = $this->createMock(EmployeeCostRateService::class);
+		$rates->method('resolve')->willReturn(self::RATE);
+
+		$res = $this->controller(new \RuntimeException('forbidden'), $rates, [], $this->access(['id' => 'emp-1'], ['id' => 'c-1']))
+			->show(employeeId: 'emp-1', period: '2026-08');
+
+		self::assertSame(Http::STATUS_OK, $res->getStatus());
+		self::assertSame('project-manager', $res->getData()['access']);
+	}
+
+	/**
+	 * A caller who manages no project of the employee keeps the 409.
+	 *
+	 * @return void
+	 */
+	public function testSomeoneWhoManagesNoProjectOfTheEmployeeKeepsTheConflict(): void {
+		$rates = $this->createMock(EmployeeCostRateService::class);
+		$rates->expects(self::once())->method('resolve')->willReturn(null);
+
+		$res = $this->controller(['id' => 'emp-1'], $rates, [], $this->access(null, ['id' => 'c-1']))->show(employeeId: 'emp-1');
+
+		self::assertSame(Http::STATUS_CONFLICT, $res->getStatus());
+		self::assertArrayNotHasKey('totalCentsPerHour', $res->getData());
 	}
 
 	/**
