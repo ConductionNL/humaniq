@@ -290,6 +290,10 @@
 					"required": false
 				},
 				{
+					"name": "headerActions",
+					"required": false
+				},
+				{
 					"name": "lifecycleActions",
 					"required": false
 				}
@@ -308,6 +312,7 @@
 						"showMetadata": true,
 						"hiddenTabs": "{{hiddenTabs}}"
 					},
+					"headerActions": "{{headerActions}}",
 					"lifecycleActions": "{{lifecycleActions}}",
 					"widgets": [
 						{

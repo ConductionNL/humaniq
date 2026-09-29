@@ -2086,6 +2086,7 @@
                 "frequentAbsenceThreshold": 3,
                 "frequentAbsenceWindowMonths": 12,
                 "abpAansluitingsplichtig": true,
+                "signatoryUserId": "admin",
                 "_note": "abp-aansluiting (design.md Seed Data): flipped to true -- ADM-001's existing approved 2026-05/2026-06 NL PayrollRuns already each carry a fund:abp PensionFiling (pension-filing-upa-mvp REQ-PFU-007), so nl-abp-fund-required reports zero violations for ADM-001 with no new filing seeds."
             },
             {

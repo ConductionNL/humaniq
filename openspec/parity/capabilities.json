@@ -989,7 +989,7 @@
    "id": "ppl-esign-documents",
    "area": "people",
    "name": "Have an HR document signed electronically.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -1005,10 +1005,12 @@
     "loket": "https://loket.nl/functionaliteiten/digitaal-dossier/: sign documents securely and legally valid, generate, send and sign in one flow; https://developer.loket.nl/ApiDocs#tag/Sign-document: initiate signature for an employment and download the signing report."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-esign-hr-documents on 2026-09-27 for the missing half: e-signature for generated HR documents about an existing employee; offer letters are built. Before: lib/Service/OfferEsignService.php:117 DOCUMENT_APP='filinq' via FleetAppId (same correctly-handled rename path as ppl-generate-documents); openspec/specs/offer-esign/spec.md scope line: 'offer-letter generation + e-signature request for recruiting Applications at the aanbod stage'; grep -rniF 'signingservice|signature|esign' lib/Service/HrDocumentService.php lib/Controller/DocumentController.php: no hits, confirming no esign path exists for any OTHER HR document type (arbeidsovereenkomst, getuigschrift, werkgeversverklaring)",
-    "reachedOn": "ApplicationDetail /applications/:id, 'request-offer-signature' action, POST /api/offer/request-signature; there is no esign action anywhere on EmployeeDetail, EmploymentContractDetail or GeneratedDocumentDetail",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/HrDocumentSigningService.php raises a filinq signing request through lib/Service/FilinqSigningGateway.php (shared with OfferEsignService): signatory then employee for an arbeidsovereenkomst, signatory only for a werkgeversverklaring or getuigschrift, loonstrook and jaaropgaaf refused, one running request per document; POST /api/documents/{id}/request-signature in lib/Controller/DocumentSigningController.php (404 unreadable, 403 outside HR); occ humaniq:documents:sync-signatures writes the status back and sets EmploymentContract.writtenContract on a completed contract. Tests: tests/Unit/Service/HrDocumentSigningServiceTest.php, tests/Unit/Controller/DocumentSigningControllerTest.php, tests/Unit/Service/OfferEsignServiceTest.php unchanged.",
+    "reachedOn": "GeneratedDocumentDetail /documents/:id header action Request signature; occ humaniq:documents:sync-signatures",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-people-esign-hr-documents",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
