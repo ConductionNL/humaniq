@@ -105,6 +105,7 @@ import CompCycleRunDialog from './dialogs/CompCycleRunDialog.vue'
 import AdministrationSwitcher from './views/AdministrationSwitcher.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ProformaPayslip from './views/ProformaPayslip.vue'
+import ApprovalsInboxWidget from './widgets/ApprovalsInboxWidget.vue'
 import EmployeeHistoryWidget from './widgets/EmployeeHistoryWidget.vue'
 import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
 import TrendChartWidget from './widgets/TrendChartWidget.vue'
@@ -172,6 +173,17 @@ export default {
 		allowedSlots: ['body', 'sidebar'],
 		propsSchema: null,
 		_note: 'Explicit override for the library\'s CnDeltaWidget, for exactly the reason `stat` needs one — see the module docblock above. CnDeltaWidget self-registers its key through the same bare side-effect import that gets tree-shaken out of Humaniq\'s bundle, so without this entry every `type:"delta"` placement resolves to nothing and renders blank. Manifest widgets already pass the { title, icon, content } shape it expects, so no wrapper is needed.',
+	},
+	// @custom-widget-ratchet exclude no built-in widget renders endpoint rows on a dashboard with a per-row decision: object-table resolves to CnObjectListWidget, which reads register/schema and ignores endpointSource in nextcloud-vue 2.57.1, rowRoute is one static route while inbox rows open four different detail pages, and api-call row actions carry no row token for the transition
+	'approvals-inbox': {
+		kind: 'widget',
+		component: ApprovalsInboxWidget,
+		defaultSize: { w: 12, h: 6 },
+		minSize: { w: 6, h: 4 },
+		maxSize: { w: 12, h: 12 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'self-service-approvals-inbox REQ-API-001/002: the My approvals inbox over GET /api/approvals, open (waiting for the caller as manager or deputy, approve and reject in place through the OpenRegister transition) or decided (the last 90 days with each timeline). Composed server side under the caller\'s own rights; the widget only renders and posts the transition.',
 	},
 	// @custom-widget-ratchet exclude no built-in widget key renders a dated timeline whose rows each link to a different detail page; object-table's rowRoute is one static route for every row, and CnTimelineView has no widget key of its own
 	'employee-history': {
