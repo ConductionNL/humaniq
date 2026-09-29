@@ -100,8 +100,7 @@ class TrainingRecordListenerTest extends TestCase {
 
 		$this->listener = new TrainingRecordListener(
 			gateway: $gateway,
-			writer: new TrainingCompetenceWriter($gateway),
-			time: $time,
+			writer: new TrainingCompetenceWriter($gateway, $time),
 			logger: new NullLogger()
 		);
 	}//end setUp()

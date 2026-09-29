@@ -163,7 +163,8 @@ class LearniqCredentialListener implements IEventListener {
 	 * @return string|null
 	 */
 	private function learniqRegisterOf(string $registerId): ?string {
-		if ($registerId === '') {
+		// ADR-083: establish availability before reaching into OpenRegister.
+		if ($registerId === '' || class_exists('OCA\OpenRegister\Db\RegisterMapper') === false) {
 			return null;
 		}
 

@@ -29,6 +29,9 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
+use DateTimeImmutable;
+use OCP\AppFramework\Utility\ITimeFactory;
+
 /**
  * Grants or extends the competence of a followed training.
  *
@@ -47,12 +50,64 @@ class TrainingCompetenceWriter {
 	 * Constructor.
 	 *
 	 * @param HoursRegisterGateway $gateway Reads and writes humaniq's register.
+	 * @param ITimeFactory         $time    Today, when no date was given.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
+		private readonly ITimeFactory $time,
 	) {
 
 	}//end __construct()
+
+	/**
+	 * The fields to fill in before a training record is saved: the
+	 * administration from the employee and, on an attended record, the
+	 * completion date (the planned day, or today) and the validity
+	 * (completion date plus `validityMonths`).
+	 *
+	 * @param array<string, mixed> $record The record as it will be saved.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/training-and-lms-sync/spec.md#REQ-TRN-001
+	 */
+	public function stamps(array $record): array {
+		$stamps = $this->administrationStamp($record);
+		if (($record['status'] ?? null) !== 'gevolgd') {
+			return $stamps;
+		}
+
+		$completedOn = $this->textOrNull($record['completedOn'] ?? null);
+		if ($completedOn === null) {
+			$completedOn = $this->textOrNull($record['plannedOn'] ?? null) ?? $this->time->getDateTime()->format('Y-m-d');
+			$stamps['completedOn'] = $completedOn;
+		}
+
+		$months = ($record['validityMonths'] ?? null);
+		if ($this->textOrNull($record['validUntil'] ?? null) === null && is_numeric($months) === true && (int)$months > 0) {
+			$stamps['validUntil'] = (new DateTimeImmutable($completedOn))->modify('+' . (int)$months . ' months')->format('Y-m-d');
+		}
+
+		return $stamps;
+	}//end stamps()
+
+	/**
+	 * The employee's administration when the record has none.
+	 *
+	 * @param array<string, mixed> $record The record.
+	 *
+	 * @return array<string, string>
+	 */
+	private function administrationStamp(array $record): array {
+		$employeeId = $this->textOrNull($record['employeeId'] ?? null);
+		if ($this->textOrNull($record['administrationId'] ?? null) !== null || $employeeId === null) {
+			return [];
+		}
+
+		$administrationId = $this->textOrNull($this->gateway->findObjectData($employeeId, 'Employee')['administrationId'] ?? null);
+
+		return $administrationId === null ? [] : ['administrationId' => $administrationId];
+	}//end administrationStamp()
 
 	/**
 	 * Grant or extend the competence of one training record.

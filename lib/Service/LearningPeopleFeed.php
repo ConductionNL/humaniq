@@ -81,28 +81,49 @@ class LearningPeopleFeed {
 				continue;
 			}
 
-			$rows[] = [
-				'id' => $employeeId,
-				'firstName' => $this->textOrNull($employee['firstName'] ?? null),
-				'lastName' => $this->textOrNull($employee['lastName'] ?? null),
-				'nextcloudUserId' => $this->textOrNull($employee['nextcloudUserId'] ?? null),
-				'orgUnit' => $unit === null ? null : ['id' => (string)$unit['id'], 'name' => $this->textOrNull($unit['name'] ?? null)],
-				'role' => $placement === null ? null : $this->textOrNull($placement['role'] ?? null),
-				'managerUserIds' => $this->orgResolution->resolveManagerUserIds(
-					employeeId: $employeeId,
-					assignmentsByEmployeeId: $assignmentsByEmployeeId,
-					unitsById: $unitsById,
-					employeesById: $employeesById,
-					onDate: $today
-				),
-				'startDate' => $this->textOrNull($employee['startDate'] ?? null),
-				'endDate' => $this->textOrNull($employee['endDate'] ?? null),
-				'modified' => $modified,
-			];
-		}//end foreach
+			$rows[] = $this->row($employeeId, $employee, $placement, $unit, $modified, $assignmentsByEmployeeId, $unitsById, $employeesById, $today);
+		}
 
 		return $rows;
 	}//end people()
+
+	/**
+	 * One feed row.
+	 *
+	 * @param string                                          $employeeId              The employee.
+	 * @param array<string, mixed>                            $employee                The employee record.
+	 * @param array<string, mixed>|null                       $placement               The current placement.
+	 * @param array<string, mixed>|null                       $unit                    The placement's unit.
+	 * @param string|null                                     $modified                When any of the three last changed.
+	 * @param array<string, list<array<string, mixed>>>       $assignmentsByEmployeeId Placements per employee.
+	 * @param array<string, array<string, mixed>>             $unitsById               Units.
+	 * @param array<string, array<string, mixed>>             $employeesById           Employees.
+	 * @param string                                          $today                   The day.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) The row is a projection over the three indexes people() already built; passing them avoids reloading them per employee.
+	 */
+	private function row(string $employeeId, array $employee, ?array $placement, ?array $unit, ?string $modified, array $assignmentsByEmployeeId, array $unitsById, array $employeesById, string $today): array {
+		return [
+			'id' => $employeeId,
+			'firstName' => $this->textOrNull($employee['firstName'] ?? null),
+			'lastName' => $this->textOrNull($employee['lastName'] ?? null),
+			'nextcloudUserId' => $this->textOrNull($employee['nextcloudUserId'] ?? null),
+			'orgUnit' => $unit === null ? null : ['id' => (string)$unit['id'], 'name' => $this->textOrNull($unit['name'] ?? null)],
+			'role' => $placement === null ? null : $this->textOrNull($placement['role'] ?? null),
+			'managerUserIds' => $this->orgResolution->resolveManagerUserIds(
+				employeeId: $employeeId,
+				assignmentsByEmployeeId: $assignmentsByEmployeeId,
+				unitsById: $unitsById,
+				employeesById: $employeesById,
+				onDate: $today
+			),
+			'startDate' => $this->textOrNull($employee['startDate'] ?? null),
+			'endDate' => $this->textOrNull($employee['endDate'] ?? null),
+			'modified' => $modified,
+		];
+	}//end row()
 
 	/**
 	 * The placement active on the day that started last.
