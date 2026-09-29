@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\ExpenseController;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\ReceiptExtractionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Http;
@@ -245,7 +246,7 @@ class ExpenseControllerTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		return [
-			new ExpenseController($request, $container, $receiptExtractionService, $settings, $userSession, $groupManager, $logger),
+			new ExpenseController($request, $container, $receiptExtractionService, $settings, $userSession, new HumaniqRoles($groupManager), $logger),
 			$fake,
 			$receiptExtractionService,
 		];

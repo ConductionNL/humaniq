@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\LoonbeslagController;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
@@ -94,6 +95,38 @@ class LoonbeslagControllerTest extends TestCase {
 		$this->assertSame([], $fake->saved);
 
 	}//end testNonAdminCallerIsRefusedBeforeAnyResolve()
+
+	/**
+	 * REQ-RFA-001: an HR adviser who is not a Nextcloud administrator
+	 * activates a wage garnishment.
+	 *
+	 * @return void
+	 */
+	public function testAnHrAdviserWhoIsNotAnAdministratorActivates(): void {
+		[$controller, $fake] = $this->buildController(isAdmin: false, loonbeslagRow: $this->loonbeslag(['status' => 'concept']), groups: ['humaniq-hr']);
+
+		$response = $controller->activate('lb-1');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('actief', $fake->saved[0]['status']);
+
+	}//end testAnHrAdviserWhoIsNotAnAdministratorActivates()
+
+	/**
+	 * REQ-RFA-001: a payroll member outside the HR group may not transition a
+	 * wage garnishment, and nothing is read.
+	 *
+	 * @return void
+	 */
+	public function testAPayrollMemberOutsideHrIsRefused(): void {
+		[$controller, $fake] = $this->buildController(isAdmin: false, loonbeslagRow: $this->loonbeslag(['status' => 'concept']), groups: ['humaniq-payroll']);
+
+		$response = $controller->activate('lb-1');
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertFalse($fake->findCalled);
+
+	}//end testAPayrollMemberOutsideHrIsRefused()
 
 	/**
 	 * REQ-BESLAG-006 Scenario 2 — an unknown/unauthorized loonbeslagId never
@@ -258,12 +291,13 @@ class LoonbeslagControllerTest extends TestCase {
 	 * simulating unknown/unauthorized) and `saveObject()` records every
 	 * write.
 	 *
-	 * @param bool $isAdmin Whether the fake caller is an admin/HR principal.
+	 * @param bool $isAdmin Whether the fake caller is a Nextcloud administrator.
 	 * @param array<string, mixed>|null $loonbeslagRow The row `find()` should return.
+	 * @param list<string> $groups The groups the fake caller is a member of.
 	 *
 	 * @return array{0: LoonbeslagController, 1: object}
 	 */
-	private function buildController(bool $isAdmin, ?array $loonbeslagRow): array {
+	private function buildController(bool $isAdmin, ?array $loonbeslagRow, array $groups = []): array {
 		$request = $this->createMock(IRequest::class);
 
 		$fake = new class($loonbeslagRow) {
@@ -350,10 +384,11 @@ class LoonbeslagControllerTest extends TestCase {
 
 		$groupManager = $this->createMock(IGroupManager::class);
 		$groupManager->method('isAdmin')->willReturn($isAdmin);
+		$groupManager->method('isInGroup')->willReturnCallback(fn (string $uid, string $gid): bool => in_array($gid, $groups, true));
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new LoonbeslagController($request, $container, $settings, $userSession, $groupManager, $logger), $fake];
+		return [new LoonbeslagController($request, $container, $settings, $userSession, new HumaniqRoles($groupManager), $logger), $fake];
 	}//end buildController()
 
 }//end class

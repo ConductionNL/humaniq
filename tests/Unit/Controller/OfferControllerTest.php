@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\OfferController;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\OfferEsignService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Http;
@@ -260,7 +261,7 @@ class OfferControllerTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		return [
-			new OfferController($request, $container, $offerEsignService, $settings, $userSession, $groupManager, $logger),
+			new OfferController($request, $container, $offerEsignService, $settings, $userSession, new HumaniqRoles($groupManager), $logger),
 			$fake,
 			$offerEsignService,
 		];

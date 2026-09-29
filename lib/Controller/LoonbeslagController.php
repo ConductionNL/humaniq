@@ -39,12 +39,12 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -61,7 +61,7 @@ class LoonbeslagController extends Controller {
 	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param IUserSession $userSession The current user session (admin/HR check + stamped by/at fields).
-	 * @param IGroupManager $groupManager To check the caller's admin membership (admin/HR gate).
+	 * @param HumaniqRoles $roles Whether the caller is HR, payroll or an administrator.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -69,7 +69,7 @@ class LoonbeslagController extends Controller {
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
 		private readonly IUserSession $userSession,
-		private readonly IGroupManager $groupManager,
+		private readonly HumaniqRoles $roles,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -138,7 +138,7 @@ class LoonbeslagController extends Controller {
 	#[NoAdminRequired]
 	public function withdraw(?string $loonbeslagId = null, ?string $reason = null): JSONResponse {
 		if ($this->isAdminOrHr() === false) {
-			return new JSONResponse(['error' => 'Alleen beheerders/HR mogen loonbeslagen intrekken.'], Http::STATUS_FORBIDDEN);
+			return new JSONResponse(['error' => 'Alleen HR en beheerders mogen loonbeslagen intrekken.'], Http::STATUS_FORBIDDEN);
 		}
 
 		$loonbeslagId = trim((string)$loonbeslagId);
@@ -207,7 +207,7 @@ class LoonbeslagController extends Controller {
 		string $successMessage,
 	): JSONResponse {
 		if ($this->isAdminOrHr() === false) {
-			return new JSONResponse(['error' => 'Alleen beheerders/HR mogen loonbeslagen wijzigen.'], Http::STATUS_FORBIDDEN);
+			return new JSONResponse(['error' => 'Alleen HR en beheerders mogen loonbeslagen wijzigen.'], Http::STATUS_FORBIDDEN);
 		}
 
 		$loonbeslagId = trim((string)$loonbeslagId);
@@ -242,15 +242,13 @@ class LoonbeslagController extends Controller {
 	}//end transition()
 
 	/**
-	 * Whether the current caller is a Nextcloud admin -- the admin/HR gate
-	 * (the `PayrollController::isAdminOrHr()` precedent). No dedicated "HR"
-	 * Nextcloud group exists in this app yet, so the gate is the standard
-	 * admin-group check; introducing a separate HR group is a named
-	 * fast-follow shared across every admin/HR-gated endpoint in this app.
+	 * Whether the caller may take HR actions: a member of the `humaniq-hr`
+	 * group or a Nextcloud administrator (compliance-roles-and-field-access D2).
 	 *
 	 * @return bool
 	 *
 	 * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-006
+	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-001
 	 */
 	private function isAdminOrHr(): bool {
 		$uid = $this->userSession->getUser()?->getUID();
@@ -258,7 +256,7 @@ class LoonbeslagController extends Controller {
 			return false;
 		}
 
-		return $this->groupManager->isAdmin($uid);
+		return $this->roles->isHr($uid);
 	}//end isAdminOrHr()
 
 	/**

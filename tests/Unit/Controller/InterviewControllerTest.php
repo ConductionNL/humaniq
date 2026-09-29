@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\InterviewController;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\InterviewCalendarService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Http;
@@ -241,7 +242,7 @@ class InterviewControllerTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		return [
-			new InterviewController($request, $container, $interviewCalendarService, $settings, $userSession, $groupManager, $logger),
+			new InterviewController($request, $container, $interviewCalendarService, $settings, $userSession, new HumaniqRoles($groupManager), $logger),
 			$fake,
 			$interviewCalendarService,
 		];
