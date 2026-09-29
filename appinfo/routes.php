@@ -64,6 +64,8 @@ return [
         // people-employment-history REQ-EHI-001/003: one employee's history and concurrent employments, composed on read.
         ['name' => 'employeeHistory#history', 'url' => '/api/employees/{id}/history', 'verb' => 'GET'],
         ['name' => 'employeeHistory#employments', 'url' => '/api/employees/{id}/employments', 'verb' => 'GET'],
+        // talent-training-and-lms REQ-TRN-002: the people feed a learning platform reads, filtered by the caller's RBAC.
+        ['name' => 'learning#people', 'url' => '/api/learning/people', 'verb' => 'GET'],
         // agenda-rostering-and-resource-booking — the agenda for one subject
         // (REQ-AGD-001), who is free in a window and for how many hours
         // (REQ-AGD-002), and planned against contracted forward from a date
