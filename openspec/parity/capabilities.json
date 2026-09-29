@@ -796,7 +796,7 @@
    "id": "ppl-job-framework",
    "area": "people",
    "name": "Keep a job framework of standard functions with their grading, such as HR21.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "partial",
@@ -812,10 +812,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/18286680534813-Overview-of-the-Job-architecture-in-Personio: a job catalog with standardized job name, job family, track, level and salary band, assigned to employees."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-job-framework-maintenance on 2026-09-27 for the missing half: maintaining the normfunctie library in the app; the seeded subset is built. Before: lib/Settings/register.d/hr-hr21.json Normfunctie schema (functiecode, naam, functiegroep, caoSchaal, caoSchaalVerified, caoSchaalSource) with its own description: 'Seeded illustrative subset only (allowCreate:false). NOT a claimed-complete ~150-function library'; src/manifest.d/hr-hr21.json:26,51 allowCreate:false on both the Normfuncties index and NormfunctieDetail; EmploymentContract.normfunctieId links a contract to one, HR-set, never derived",
-    "reachedOn": "Normfuncties /normfuncties (menu Personeel), NormfunctieDetail /normfuncties/:id, read-only reference data",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-hr21.json Normfunctie 0.2.0: bron (hr21, eigen), functiefamilie, salaryBandId ($ref SalaryBand), status (actief, vervallen); src/manifest.d/hr-hr21.json Normfuncties with add, edit and mass import on, delete off, default filter status actief; NormfunctieDetail with showEditAction; lib/Standards/rules/payroll.json nl-hr21-vervallen-functie and its predicate in lib/Standards/Checks/NlHr21Checks.php flag a live contract on a retired function. Tests: tests/Unit/Standards/NlHr21ChecksTest.php::testALiveContractOnARetiredFunctionIsFlagged, tests/Unit/Service/RuleAuditServiceTest.php::testAContractOnARetiredFunctionIsFlaggedThroughTheAudit.",
+    "reachedOn": "Normfuncties /normfuncties (Job framework): Add, Edit, Mass import, Status filter; NormfunctieDetail Edit; occ humaniq:rules:audit raises nl-hr21-vervallen-functie",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-people-job-framework-maintenance",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

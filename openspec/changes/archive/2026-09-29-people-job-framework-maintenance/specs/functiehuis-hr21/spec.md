@@ -18,11 +18,15 @@ Rows: `ppl-job-framework` (humaniq matrix).
 - **THEN** the function is listed beside the HR21 functions and can be chosen on an
   employment contract
 
+@e2e exclude create, edit and mass import are the library's index and detail actions switched on in the manifest; covered by npm run check:manifest and the live check in the PR
+
 #### Scenario: A retired function keeps its contracts readable
 - **GIVEN** a function linked from two live contracts
 - **WHEN** HR retires it
 - **THEN** it disappears from the default list, both contracts still show it, and it cannot
   be deleted
+
+@e2e exclude the default filter and the missing delete are manifest toggles, and contracts keep their normfunctieId; covered by npm run check:manifest and the live check in the PR
 
 ### Requirement: A contract on a retired function SHALL be flagged (REQ-JFM-002)
 
@@ -35,3 +39,5 @@ Rows: `ppl-job-framework` (humaniq matrix).
 - **GIVEN** a live contract on a retired function
 - **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** the contract is flagged under `nl-hr21-vervallen-functie`
+
+@e2e exclude the flag is a rule predicate; covered by NlHr21ChecksTest::testALiveContractOnARetiredFunctionIsFlagged and RuleAuditServiceTest::testAContractOnARetiredFunctionIsFlaggedThroughTheAudit

@@ -78,3 +78,14 @@ a `vervallen` function is flagged, so HR reassigns it.
 ## Open Questions
 
 - None.
+
+## Changes made while building (2026-09-29)
+
+- **Edit on the detail page.** `NormfunctieDetail` left `singleDataScaffold`, which has no
+  edit toggle, to set `showEditAction`. D3's role gate: the pages offer create and edit to
+  whoever may write `Normfunctie` in OpenRegister; the schema declares no property
+  authorization of its own, so the existing register permissions apply.
+- **Rule placement.** `nl-hr21-vervallen-functie` sits beside `nl-hr21-schaal-consistentie`
+  in `lib/Standards/rules/payroll.json` (domain `pay`, framework `hr21`), and the audit's
+  `hr21.normfunctiesById` index now carries each function's `status`.
+- **Seed band.** The employer function links to `salaryband-a`, the seeded band there is.
