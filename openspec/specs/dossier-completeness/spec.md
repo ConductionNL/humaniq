@@ -1,6 +1,9 @@
-# dossier-completeness
+# dossier-completeness Specification
 
-## ADDED Requirements
+## Purpose
+A personnel file lists the documents its employee must hold and says per document whether it is present, missing, expired, expiring or too old at the start of employment; a new hire's identity document and right to work are checked by a stated rule, and the onboarding case cannot reach the first working day without a passing check. Built by people-dossier-completeness (archived 2026-09-29).
+
+## Requirements
 
 ### Requirement: HR SHALL state which documents a group of employees must have (REQ-DCP-001)
 
@@ -18,6 +21,8 @@ Rows: `td-dossier-validation` (humaniq matrix), tender https://www.tenderned.nl/
 - **WHEN** they open an administrative employee's file and a Begeleider's file
 - **THEN** only the Begeleider's file lists the VOG requirement
 
+@e2e exclude the rule is decided server-side (a listener, a guard and an endpoint); covered by DossierCompletenessServiceTest::testARequirementAppliesOnlyToItsGroup
+
 ### Requirement: Every personnel file SHALL show which required documents are present, missing, expired or expiring (REQ-DCP-002)
 
 For one employee and a date, humaniq SHALL answer per applicable requirement whether it is
@@ -33,16 +38,22 @@ Rows: `td-dossier-validation` (humaniq matrix), tender https://www.tenderned.nl/
 - **WHEN** an HR adviser opens `Onvolledige dossiers`
 - **THEN** the Begeleider is listed with the VOG as `verlopen`
 
+@e2e exclude the rule is decided server-side (a listener, a guard and an endpoint); covered by DossierControllerTest::testIncompleteListsOnlyReadableEmployeesWithAGap and DossierCompletenessServiceTest::testExpiredAndExpiring
+
 #### Scenario: A BIG registration held as a competence counts
 - **GIVEN** a nurse with a current `EmployeeCompetence` `big-verpleegkundige` valid for
   another year and a BIG requirement pointing at that code
 - **WHEN** the nurse's dossier status is read
 - **THEN** the BIG requirement is `aanwezig` and names the competence as evidence
 
+@e2e exclude the rule is decided server-side (a listener, a guard and an endpoint); covered by DossierCompletenessServiceTest::testABigRegistrationHeldAsACompetenceCounts
+
 #### Scenario: A manager sees only their own people
 - **GIVEN** a manager who may read the employees of one unit
 - **WHEN** they request `GET /api/dossier/incomplete`
 - **THEN** no employee outside that unit is returned
+
+@e2e exclude the rule is decided server-side (a listener, a guard and an endpoint); covered by DossierControllerTest::testIncompleteListsOnlyReadableEmployeesWithAGap and ::testAnUnreadableEmployeeIsNotFound
 
 ### Requirement: A right-to-work check SHALL decide by a stated rule (REQ-DCP-003)
 
@@ -63,10 +74,14 @@ Rows: `dm-right-to-work-check` (humaniq matrix), changelog https://klant.afas.nl
 - **THEN** the check reads `mislukt` with the reason "no permission to work", and
   `widCheckDone` stays false
 
+@e2e exclude the rule is decided server-side (a listener, a guard and an endpoint); covered by RightToWorkCheckListenerTest::testAResidencePermitWithoutWorkEndorsementFails
+
 #### Scenario: A Dutch passport passes
 - **GIVEN** a new hire with a Dutch passport valid for five more years
 - **WHEN** the check runs
 - **THEN** it reads `geslaagd` and the onboarding checklist shows the WID check done today
+
+@e2e exclude the rule is decided server-side (a listener, a guard and an endpoint); covered by RightToWorkCheckListenerTest::testADutchPassportPassesAndTicksTheWidCheck
 
 ### Requirement: An onboarding case SHALL NOT reach the first working day without a passing check (REQ-DCP-004)
 
@@ -82,3 +97,5 @@ Rows: `dm-right-to-work-check` (humaniq matrix).
 - **WHEN** an HR adviser presses `Mark ready` on `OnboardingDetail`
 - **THEN** the transition is refused with the check's reason and the case stays at
   `gegevens_gevalideerd`
+
+@e2e exclude the rule is decided server-side (a listener, a guard and an endpoint); covered by RightToWorkGuardTest::testAFailedCheckRefusesWithItsReason and ::testAHandSetPassThatTheRuleRefusesIsRefused

@@ -13144,6 +13144,183 @@
         ],
         "approverRole": "manager",
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "DossierRequirement",
+          "slug": "dossierrequirement-dossierrequirement-1-1"
+        },
+        "code": "Voorbeeld Code 1",
+        "label": "Voorbeeld Label 1",
+        "scope": "all",
+        "evidenceKind": "personnel-document",
+        "scopeValues": [
+          "Voorbeeld Scopevalues 1"
+        ],
+        "documentType": "Voorbeeld Documenttype 1",
+        "competenceCode": "Voorbeeld Competencecode 1",
+        "expires": false,
+        "warnDaysBefore": 0,
+        "maxAgeDaysAtStart": 0,
+        "active": true,
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "DossierRequirement",
+          "slug": "dossierrequirement-dossierrequirement-2-2"
+        },
+        "code": "Voorbeeld Code 2",
+        "label": "Voorbeeld Label 2",
+        "scope": "contractType",
+        "evidenceKind": "generated-document",
+        "scopeValues": [
+          "Voorbeeld Scopevalues 2"
+        ],
+        "documentType": "Voorbeeld Documenttype 2",
+        "competenceCode": "Voorbeeld Competencecode 2",
+        "expires": false,
+        "warnDaysBefore": 1,
+        "maxAgeDaysAtStart": 1,
+        "active": true,
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "DossierRequirement",
+          "slug": "dossierrequirement-dossierrequirement-3-3"
+        },
+        "code": "Voorbeeld Code 3",
+        "label": "Voorbeeld Label 3",
+        "scope": "normfunctie",
+        "evidenceKind": "competence",
+        "scopeValues": [
+          "Voorbeeld Scopevalues 3"
+        ],
+        "documentType": "Voorbeeld Documenttype 3",
+        "competenceCode": "Voorbeeld Competencecode 3",
+        "expires": false,
+        "warnDaysBefore": 2,
+        "maxAgeDaysAtStart": 2,
+        "active": true,
+        "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PersonnelDocument",
+          "slug": "personneldocument-personneldocument-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "requirementCode": "Voorbeeld Requirementcode 1",
+        "issuedOn": "2026-03-01",
+        "validUntil": "2026-03-01",
+        "warnDaysBefore": 60,
+        "verifiedBy": "Voorbeeld Verifiedby 1",
+        "verifiedOn": "2026-03-01",
+        "note": "Voorbeeld Note 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PersonnelDocument",
+          "slug": "personneldocument-personneldocument-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "requirementCode": "Voorbeeld Requirementcode 2",
+        "issuedOn": "2026-03-02",
+        "validUntil": "2026-03-02",
+        "warnDaysBefore": 60,
+        "verifiedBy": "Voorbeeld Verifiedby 2",
+        "verifiedOn": "2026-03-02",
+        "note": "Voorbeeld Note 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PersonnelDocument",
+          "slug": "personneldocument-personneldocument-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "requirementCode": "Voorbeeld Requirementcode 3",
+        "issuedOn": "2026-03-03",
+        "validUntil": "2026-03-03",
+        "warnDaysBefore": 60,
+        "verifiedBy": "Voorbeeld Verifiedby 3",
+        "verifiedOn": "2026-03-03",
+        "note": "Voorbeeld Note 3",
+        "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "RightToWorkCheck",
+          "slug": "righttoworkcheck-righttoworkcheck-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "result": "geslaagd",
+        "checkedOn": "2026-03-01",
+        "onboardingId": "00000000-0000-4000-8000-000000000000",
+        "documentType": "paspoort",
+        "nationality": "Voorbeeld Nationality 1",
+        "documentExpiry": "2026-03-01",
+        "endorsement": "Voorbeeld Endorsement 1",
+        "twvValidUntil": "2026-03-01",
+        "mrz": "Voorbeeld Mrz 1",
+        "method": "extractie",
+        "reasonCode": "Voorbeeld Reasoncode 1",
+        "reason": "Voorbeeld Reason 1",
+        "checkedBy": "Voorbeeld Checkedby 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "RightToWorkCheck",
+          "slug": "righttoworkcheck-righttoworkcheck-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "result": "mislukt",
+        "checkedOn": "2026-03-02",
+        "onboardingId": "00000000-0000-4000-8000-000000000001",
+        "documentType": "identiteitskaart",
+        "nationality": "Voorbeeld Nationality 2",
+        "documentExpiry": "2026-03-02",
+        "endorsement": "Voorbeeld Endorsement 2",
+        "twvValidUntil": "2026-03-02",
+        "mrz": "Voorbeeld Mrz 2",
+        "method": "handmatig",
+        "reasonCode": "Voorbeeld Reasoncode 2",
+        "reason": "Voorbeeld Reason 2",
+        "checkedBy": "Voorbeeld Checkedby 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "RightToWorkCheck",
+          "slug": "righttoworkcheck-righttoworkcheck-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "result": "geslaagd",
+        "checkedOn": "2026-03-03",
+        "onboardingId": "00000000-0000-4000-8000-000000000002",
+        "documentType": "verblijfsdocument",
+        "nationality": "Voorbeeld Nationality 3",
+        "documentExpiry": "2026-03-03",
+        "endorsement": "Voorbeeld Endorsement 3",
+        "twvValidUntil": "2026-03-03",
+        "mrz": "Voorbeeld Mrz 3",
+        "method": "extractie",
+        "reasonCode": "Voorbeeld Reasoncode 3",
+        "reason": "Voorbeeld Reason 3",
+        "checkedBy": "Voorbeeld Checkedby 3",
+        "administrationId": "Voorbeeld Administrationid 3"
       }
     ]
   }

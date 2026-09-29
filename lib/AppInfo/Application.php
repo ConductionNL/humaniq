@@ -38,6 +38,7 @@ use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
+use OCA\Humaniq\Lifecycle\RightToWorkGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
 use OCA\Humaniq\Listener\ChangeRequestListener;
@@ -49,6 +50,7 @@ use OCA\Humaniq\Listener\LeaveApprovalListener;
 use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
 use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
+use OCA\Humaniq\Listener\RightToWorkCheckListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimeEstimateListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
@@ -260,6 +262,20 @@ class Application extends App implements IBootstrap {
 			}
 		);
 
+		// people-dossier-completeness D5: an onboarding case does not reach the
+		// first working day (gereed_melden, starten) without a passing
+		// right-to-work check dated on or before its start date. Keyed by its
+		// FQCN for the `requires` tag on those Onboarding transitions.
+		$context->registerService(
+			RightToWorkGuard::class,
+			static function ($c): RightToWorkGuard {
+				return new RightToWorkGuard(
+					gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class),
+					rule: $c->get(\OCA\Humaniq\Service\RightToWorkService::class)
+				);
+			}
+		);
+
 		// OpenRegister lifecycle guard for the Roster `publiceren` transition
 		// (REQ-ROST-C02, humaniq#512): a roster that puts someone on a shift
 		// they are not qualified for on that date does not publish. It reuses
@@ -451,6 +467,7 @@ class Application extends App implements IBootstrap {
 		$this->registerAbsenceListeners($dispatcher);
 		$this->registerTravelListeners($dispatcher);
 		$this->registerTrainingListeners($dispatcher);
+		$this->registerDossierListeners($dispatcher);
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
 
@@ -681,6 +698,30 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerTrainingListeners()
+
+	/**
+	 * people-dossier-completeness D4: a right-to-work check is decided by the
+	 * stated rule before it is saved, and a pass ticks the onboarding case's
+	 * WID check after.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
+	 */
+	private function registerDossierListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class, ObjectCreatedEvent::class, ObjectUpdatedEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: RightToWorkCheckListener::class,
+				registers: null,
+				schemas: [RightToWorkCheckListener::CHECK_SLUG]
+			);
+		}
+
+	}//end registerDossierListeners()
 
 	/**
 	 * people-record-change-approval D1, D3 and D4: a change request is placed,

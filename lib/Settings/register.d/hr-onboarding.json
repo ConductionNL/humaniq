@@ -5,9 +5,9 @@
             "Onboarding": {
                 "slug": "Onboarding",
                 "icon": "AccountPlus",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Onboarding case",
-                "description": "A deterministic onboarding case (one per hire): the concrete legal gates for a new employee's first week. Contract signed, WID identity check, BSN/IBAN validated, IT provisioned, pensioen aangemeld. As checklist boolean/date fields, governed by a simplified six-state declarative lifecycle (onboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/onboarding-wizard draft's 13-state machine and 15-step wizard stepper: no OnboardingStep/WIDCheck/BSNValidatie/Reminder side entities, no wizard stepper UI (follow-up nc-vue widget, design.md D6), no BSN elfproef/IBAN modulus-97 validation services, no IT auto-provisioning, no reminder/escalation engine. The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOnboardingChecks.php), NOT by write-time guard classes. Guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2).",
+                "description": "A deterministic onboarding case (one per hire): the concrete legal gates for a new employee's first week. Contract signed, WID identity check, BSN/IBAN validated, IT provisioned, pensioen aangemeld. As checklist boolean/date fields, governed by a simplified six-state declarative lifecycle (onboarding-wizard-mvp). MVP-scoped from the 2026-05 spec/onboarding-wizard draft's 13-state machine and 15-step wizard stepper: no OnboardingStep/WIDCheck/BSNValidatie/Reminder side entities, no wizard stepper UI (follow-up nc-vue widget, design.md D6), no BSN elfproef/IBAN modulus-97 validation services, no IT auto-provisioning, no reminder/escalation engine. The checklist gates named on each lifecycle transition are enforced by audit rules (lib/Standards/Checks/NlOnboardingChecks.php), except the right-to-work check, which RightToWorkGuard enforces at write time on gereed_melden and starten (people-dossier-completeness). Guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2).",
                 "type": "object",
                 "x-schema-org": "schema:Action",
                 "required": [
@@ -43,14 +43,16 @@
                                     "gegevens_gevalideerd"
                                 ],
                                 "to": "gereed_eerste_werkdag",
-                                "description": "The case is ready for the first workday. Checklist gate: widCheckDone = true (WID check on or before startDate, Wet op de identificatieplicht art. 15 jo. Wet LB 1964 art. 28 lid 1 onder f), itProvisioned = true, pensioenAangemeld = true (audit-enforced)."
+                                "requires": "OCA\\Humaniq\\Lifecycle\\RightToWorkGuard",
+                                "description": "The case is ready for the first workday. Hard stop: the employee needs a passing right-to-work check dated on or before startDate (RightToWorkGuard, people-dossier-completeness D5; Wet op de identificatieplicht art. 15 jo. Wet LB 1964 art. 28 lid 1 onder f, Wet arbeid vreemdelingen art. 2). Checklist gates itProvisioned = true and pensioenAangemeld = true stay audit-enforced."
                             },
                             "starten": {
                                 "from": [
                                     "gereed_eerste_werkdag"
                                 ],
                                 "to": "proeftijd_lopend",
-                                "description": "startDate has been reached; the proeftijd clock now runs against proeftijdEndDate (BW 7:652)."
+                                "requires": "OCA\\Humaniq\\Lifecycle\\RightToWorkGuard",
+                                "description": "startDate has been reached; the proeftijd clock now runs against proeftijdEndDate (BW 7:652). Refused without a passing right-to-work check dated on or before startDate (RightToWorkGuard)."
                             },
                             "afronden": {
                                 "from": [

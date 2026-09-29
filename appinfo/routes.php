@@ -63,6 +63,9 @@ return [
         ['name' => 'formation#occupancy', 'url' => '/api/formation/occupancy', 'verb' => 'GET'],
         // people-employment-history REQ-EHI-001/003: one employee's history and concurrent employments, composed on read.
         ['name' => 'employeeHistory#history', 'url' => '/api/employees/{id}/history', 'verb' => 'GET'],
+        // people-dossier-completeness REQ-DCP-002: one personnel file's completeness, and every readable file with a gap.
+        ['name' => 'dossier#status', 'url' => '/api/employees/{id}/dossier-status', 'verb' => 'GET'],
+        ['name' => 'dossier#incomplete', 'url' => '/api/dossier/incomplete', 'verb' => 'GET'],
         ['name' => 'employeeHistory#employments', 'url' => '/api/employees/{id}/employments', 'verb' => 'GET'],
         // talent-training-and-lms REQ-TRN-002: the people feed a learning platform reads, filtered by the caller's RBAC.
         ['name' => 'learning#people', 'url' => '/api/learning/people', 'verb' => 'GET'],

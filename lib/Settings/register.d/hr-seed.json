@@ -2242,6 +2242,160 @@
                 "reviewedAt": "2026-06-15T09:00:00Z",
                 "createdAt": "2026-01-10T08:00:00Z",
                 "_note": "hris-api-public: a fictitious payroll-partner integration demonstrating the IntegrationAccount catalog shape. grantedSchemas stays within humaniq-mcp-adoption's six-schema recommended default (Vacancy, OrgUnit), so purpose needs no special justification. This record grants NOTHING on its own -- the real access is an OpenRegister RBAC grant + a Nextcloud app password on the integration-payrollpartner account, configured outside humaniq (design.md D2)."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "DossierRequirement",
+                    "slug": "dossier-requirement-id"
+                },
+                "code": "id",
+                "label": "Identity document",
+                "scope": "all",
+                "evidenceKind": "personnel-document",
+                "expires": true,
+                "warnDaysBefore": 60,
+                "active": true,
+                "_note": "people-dossier-completeness (2026-09-29): everyone needs a valid ID; HR is warned 60 days before it expires."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "DossierRequirement",
+                    "slug": "dossier-requirement-vog"
+                },
+                "code": "vog",
+                "label": "Certificate of conduct (VOG)",
+                "scope": "orgUnit",
+                "scopeValues": [
+                    "@ref:orgunit-backoffice"
+                ],
+                "evidenceKind": "personnel-document",
+                "expires": true,
+                "warnDaysBefore": 60,
+                "maxAgeDaysAtStart": 180,
+                "active": true,
+                "_note": "people-dossier-completeness (2026-09-29): the Backoffice handles personal data, so its people need a VOG no older than 180 days at hire. De Vries's VOG expired on 2026-08-31, so she is listed on Incomplete personnel files."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "DossierRequirement",
+                    "slug": "dossier-requirement-arbeidsovereenkomst"
+                },
+                "code": "arbeidsovereenkomst",
+                "label": "Signed employment contract",
+                "scope": "all",
+                "evidenceKind": "generated-document",
+                "documentType": "arbeidsovereenkomst",
+                "expires": false,
+                "active": false,
+                "_note": "people-dossier-completeness (2026-09-29): proven by an arbeidsovereenkomst humaniq generated (HrGeneratedDocument status generated). Seeded inactive: the seed holds no generated contracts, so activating it lists every employee."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "DossierRequirement",
+                    "slug": "dossier-requirement-big"
+                },
+                "code": "big",
+                "label": "BIG registration",
+                "scope": "normfunctie",
+                "scopeValues": [],
+                "evidenceKind": "competence",
+                "competenceCode": "big-verpleegkundige",
+                "expires": true,
+                "warnDaysBefore": 90,
+                "active": false,
+                "_note": "people-dossier-completeness (2026-09-29): proven by a current EmployeeCompetence big-verpleegkundige. Seeded inactive: the seed has no care reference job to scope it to; add the nurse's normfunctie id to scopeValues and activate it."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "PersonnelDocument",
+                    "slug": "personnel-document-jansen-id"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "requirementCode": "id",
+                "issuedOn": "2021-05-01",
+                "validUntil": "2031-05-01",
+                "warnDaysBefore": 60,
+                "verifiedBy": "admin",
+                "verifiedOn": "2023-12-28",
+                "administrationId": "ADM-001",
+                "_note": "people-dossier-completeness (2026-09-29): Jansen's file is complete."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "PersonnelDocument",
+                    "slug": "personnel-document-devries-id"
+                },
+                "employeeId": "@ref:employee-devries",
+                "requirementCode": "id",
+                "issuedOn": "2020-01-10",
+                "validUntil": "2030-01-10",
+                "warnDaysBefore": 60,
+                "verifiedBy": "admin",
+                "verifiedOn": "2025-02-20",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "PersonnelDocument",
+                    "slug": "personnel-document-devries-vog"
+                },
+                "employeeId": "@ref:employee-devries",
+                "requirementCode": "vog",
+                "issuedOn": "2025-01-20",
+                "validUntil": "2026-08-31",
+                "warnDaysBefore": 60,
+                "verifiedBy": "admin",
+                "verifiedOn": "2025-02-20",
+                "administrationId": "ADM-001",
+                "_note": "people-dossier-completeness (2026-09-29): expired last month: De Vries shows VOG verlopen."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "RightToWorkCheck",
+                    "slug": "right-to-work-check-jansen"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "onboardingId": "@ref:onboarding-jansen",
+                "documentType": "paspoort",
+                "nationality": "NLD",
+                "documentExpiry": "2031-05-01",
+                "method": "handmatig",
+                "result": "geslaagd",
+                "reasonCode": "eer-onderdaan",
+                "reason": "EU, EEA or Swiss national with a valid document.",
+                "checkedBy": "admin",
+                "checkedOn": "2023-12-28",
+                "administrationId": "ADM-001",
+                "_note": "people-dossier-completeness (2026-09-29): a Dutch passport passes."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "RightToWorkCheck",
+                    "slug": "right-to-work-check-visser"
+                },
+                "employeeId": "@ref:employee-visser",
+                "onboardingId": "@ref:onboarding-visser",
+                "documentType": "verblijfsdocument",
+                "nationality": "SYR",
+                "documentExpiry": "2029-05-01",
+                "endorsement": "Arbeid niet toegestaan.",
+                "method": "handmatig",
+                "result": "mislukt",
+                "reasonCode": "geen-arbeidstoestemming",
+                "reason": "No permission to work: the residence document does not allow work and there is no work permit covering the start date.",
+                "checkedBy": "admin",
+                "checkedOn": "2026-06-20",
+                "administrationId": "ADM-001",
+                "_note": "people-dossier-completeness (2026-09-29): a residence document without work endorsement fails, so onboarding-visser (gegevens_gevalideerd) cannot be marked ready: RightToWorkGuard refuses gereed_melden."
             }
         ]
     }
