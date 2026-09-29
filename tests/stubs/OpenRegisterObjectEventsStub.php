@@ -109,6 +109,27 @@ namespace OCA\OpenRegister\Db {
 				return $this->uuid;
 			}//end getUuid()
 
+			/**
+			 * @var string|null
+			 */
+			private ?string $register = null;
+
+			/**
+			 * @param string|null $register The register id.
+			 *
+			 * @return void
+			 */
+			public function setRegister(?string $register): void {
+				$this->register = $register;
+			}//end setRegister()
+
+			/**
+			 * @return string|null
+			 */
+			public function getRegister(): ?string {
+				return $this->register;
+			}//end getRegister()
+
 		}//end class
 	}//end if
 }//end namespace

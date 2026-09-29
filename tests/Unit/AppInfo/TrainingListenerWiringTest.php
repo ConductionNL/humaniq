@@ -1,11 +1,13 @@
 <?php
 
 /**
- * TravelListenerWiringTest
+ * TrainingListenerWiringTest
  *
- * The caller side of TravelAmountListener: Application subscribes it to the
- * create and update pre-save events of both schemas it stamps. Without this
- * the listener's own tests would stay green while nothing ever called it.
+ * The caller side of TrainingRecordListener and LearniqCredentialListener:
+ * Application subscribes the first to every create and update event of a
+ * TrainingRecord, and the second to created credentials in learniq's
+ * register. Without this the listeners' own tests would stay green while
+ * nothing ever called them.
  *
  * @category Tests
  * @package  OCA\Humaniq\Tests\Unit\AppInfo
@@ -19,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
+ * @spec openspec/specs/training-and-lms-sync/spec.md#REQ-TRN-003
  */
 
 declare(strict_types=1);
@@ -66,40 +68,55 @@ namespace OCA\OpenRegister\Event {
 namespace OCA\Humaniq\Tests\Unit\AppInfo {
 
 	use OCA\Humaniq\AppInfo\Application;
-	use OCA\Humaniq\Listener\TravelAmountListener;
+	use OCA\Humaniq\Listener\LearniqCredentialListener;
+	use OCA\Humaniq\Listener\TrainingRecordListener;
 	use OCA\OpenRegister\Event\ObjectEventSubscription;
 	use OCP\EventDispatcher\IEventDispatcher;
 	use PHPUnit\Framework\TestCase;
 
 	/**
-	 * Application subscribes the travel listener.
+	 * Application wires both training listeners.
 	 */
-	class TravelListenerWiringTest extends TestCase {
+	class TrainingListenerWiringTest extends TestCase {
 
 		/**
-		 * Both pre-save events, both schemas.
+		 * The training listener hears every write of a record, the credential
+		 * listener only created credentials in learniq's register.
 		 *
 		 * @return void
 		 */
-		public function testTheTravelListenerIsSubscribedForClaimsAndArrangements(): void {
+		public function testBothTrainingListenersAreSubscribed(): void {
 			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
 				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
 			}
 
 			ObjectEventSubscription::$recorded = [];
 			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
-			$method = new \ReflectionMethod(Application::class, 'registerTravelListeners');
+			$method = new \ReflectionMethod(Application::class, 'registerTrainingListeners');
 			$method->invoke($app, $this->createMock(IEventDispatcher::class));
 
-			$events = [];
+			$byListener = [];
 			foreach (ObjectEventSubscription::$recorded as $entry) {
-				self::assertSame(TravelAmountListener::class, $entry['listener']);
-				self::assertSame(['expense', 'commutearrangement'], $entry['schemas']);
-				$events[] = $entry['event'];
+				$byListener[$entry['listener']][] = $entry;
 			}
 
-			self::assertSame(['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\OpenRegister\Event\ObjectUpdatingEvent'], $events);
-		}//end testTheTravelListenerIsSubscribedForClaimsAndArrangements()
+			self::assertSame(
+				[
+					'OCA\OpenRegister\Event\ObjectCreatingEvent',
+					'OCA\OpenRegister\Event\ObjectUpdatingEvent',
+					'OCA\OpenRegister\Event\ObjectCreatedEvent',
+					'OCA\OpenRegister\Event\ObjectUpdatedEvent',
+				],
+				array_column($byListener[TrainingRecordListener::class], 'event')
+			);
+			self::assertSame([['trainingrecord']], array_values(array_unique(array_column($byListener[TrainingRecordListener::class], 'schemas'), SORT_REGULAR)));
+
+			$credential = $byListener[LearniqCredentialListener::class];
+			self::assertCount(1, $credential);
+			self::assertSame('OCA\OpenRegister\Event\ObjectCreatedEvent', $credential[0]['event']);
+			self::assertSame(['learniq', 'scholiq'], $credential[0]['registers']);
+			self::assertSame(['credential'], $credential[0]['schemas']);
+		}//end testBothTrainingListenersAreSubscribed()
 
 	}//end class
 }

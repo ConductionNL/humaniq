@@ -40,6 +40,7 @@ use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
 use OCA\Humaniq\Listener\FrequentAbsenceListener;
+use OCA\Humaniq\Listener\LearniqCredentialListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
 use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
@@ -628,8 +629,9 @@ class Application extends App implements IBootstrap {
 	}//end registerTravelListeners()
 
 	/**
-	 * talent-training-and-lms D1 and D2: an attended training gets its dates
-	 * and administration before it is saved, and grants its competence after.
+	 * talent-training-and-lms D1, D2 and D4: an attended training gets its
+	 * dates and administration before it is saved and grants its competence
+	 * after, and a learniq credential becomes a training record.
 	 *
 	 * @param IEventDispatcher $dispatcher The live event dispatcher.
 	 *
@@ -647,6 +649,17 @@ class Application extends App implements IBootstrap {
 				schemas: [TrainingRecordListener::TRAINING_SLUG]
 			);
 		}
+
+		// D4: a credential learniq issues comes back as a training record.
+		// Scoped to learniq's register, so humaniq never hears another app's
+		// credentials, and a no-op on an instance without learniq.
+		$this->registerFilteredObjectListener(
+			dispatcher: $dispatcher,
+			event: ObjectCreatedEvent::class,
+			listener: LearniqCredentialListener::class,
+			registers: LearniqCredentialListener::LEARNIQ_REGISTERS,
+			schemas: [LearniqCredentialListener::CREDENTIAL_SLUG]
+		);
 
 	}//end registerTrainingListeners()
 
