@@ -3,35 +3,6 @@
 		{
 			"templateRef": "indexScaffold",
 			"register": "humaniq",
-			"schema": "Employee",
-			"params": {
-				"id": "MijnGegevens",
-				"route": "/my-details",
-				"title": "My details",
-				"columns": [
-					"firstName",
-					"lastName",
-					"straat",
-					"huisnummer",
-					"postcode",
-					"woonplaats",
-					"iban"
-				],
-				"filter": {
-					"nextcloudUserId": "@me"
-				},
-				"allowCreate": false,
-				"description": "Your own record. To change your address or bank account, add a request under My change requests. An address change applies at once; a bank account change waits for HR.",
-				"note": "people-record-change-approval (2026-09-29): REQ-ECR-003. The Employee list scoped by the base filter nextcloudUserId = @me, so an employee only ever sees their own row (and OpenRegister RBAC still decides what they may read). No create: the record is HR's; a change goes through EmployeeChangeRequest on MijnWijzigingsverzoeken.",
-				"sort": {
-					"field": "lastName",
-					"order": "asc"
-				}
-			}
-		},
-		{
-			"templateRef": "indexScaffold",
-			"register": "humaniq",
 			"schema": "EmployeeChangeRequest",
 			"params": {
 				"id": "ChangeRequests",

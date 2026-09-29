@@ -54,13 +54,6 @@ class ChangeRequestService {
 	public const FORM_FIELDS = ['straat', 'huisnummer', 'postcode', 'woonplaats', 'land', 'iban', 'tenaamstelling'];
 
 	/**
-	 * The request schema.
-	 *
-	 * @var string
-	 */
-	private const SCHEMA = 'EmployeeChangeRequest';
-
-	/**
 	 * Constructor.
 	 *
 	 * @param HoursRegisterGateway $gateway     Reads and writes humaniq's register.

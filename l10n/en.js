@@ -2453,7 +2453,6 @@ OC.L10N.register(
         "Whose record this change is for. Left empty, it is your own record.": "Whose record this change is for. Left empty, it is your own record.",
         "Why the approved values were not written, for example because the record changed after the request was made. Make a new request.": "Why the approved values were not written, for example because the record changed after the request was made. Make a new request.",
         "Why the request was rejected.": "Why the request was rejected.",
-        "Your own record. To change your address or bank account, add a request under My change requests. An address change applies at once; a bank account change waits for HR.": "Your own record. To change your address or bank account, add a request under My change requests. An address change applies at once; a bank account change waits for HR.",
         "Changes to employee records. Open one to see the current and the proposed values side by side. Add one to ask for a change of your own address or bank account; your record is filled in for you.": "Changes to employee records. Open one to see the current and the proposed values side by side. Add one to ask for a change of your own address or bank account; your record is filled in for you."
     },
     "nplurals=2; plural=(n != 1);"

@@ -277,7 +277,10 @@
 					"icon": "AccountBoxOutline",
 					"id": "MijnGegevens",
 					"label": "My details",
-					"route": "MijnGegevens"
+					"query": {
+						"nextcloudUserId": "@me"
+					},
+					"route": "Employees"
 				},
 				{
 					"icon": "PencilOutline",
@@ -9136,35 +9139,6 @@
 			"id": "Caos",
 			"route": "/caos",
 			"title": "Collective agreements",
-			"type": "index"
-		},
-		{
-			"config": {
-				"_note": "people-record-change-approval (2026-09-29): REQ-ECR-003. The Employee list scoped by the base filter nextcloudUserId = @me, so an employee only ever sees their own row (and OpenRegister RBAC still decides what they may read). No create: the record is HR's; a change goes through EmployeeChangeRequest on MijnWijzigingsverzoeken.",
-				"allowCreate": false,
-				"columns": [
-					"firstName",
-					"lastName",
-					"straat",
-					"huisnummer",
-					"postcode",
-					"woonplaats",
-					"iban"
-				],
-				"description": "Your own record. To change your address or bank account, add a request under My change requests. An address change applies at once; a bank account change waits for HR.",
-				"filter": {
-					"nextcloudUserId": "@me"
-				},
-				"register": "humaniq",
-				"schema": "Employee",
-				"sort": {
-					"field": "lastName",
-					"order": "asc"
-				}
-			},
-			"id": "MijnGegevens",
-			"route": "/my-details",
-			"title": "My details",
 			"type": "index"
 		},
 		{

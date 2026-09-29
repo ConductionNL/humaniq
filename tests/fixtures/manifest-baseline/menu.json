@@ -52,7 +52,10 @@
 				"id": "MijnGegevens",
 				"label": "My details",
 				"icon": "AccountBoxOutline",
-				"route": "MijnGegevens"
+				"route": "Employees",
+				"query": {
+					"nextcloudUserId": "@me"
+				}
 			},
 			{
 				"id": "MijnWijzigingsverzoeken",
