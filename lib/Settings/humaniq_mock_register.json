@@ -13321,6 +13321,120 @@
         "reason": "Voorbeeld Reason 3",
         "checkedBy": "Voorbeeld Checkedby 3",
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "Secondment",
+          "slug": "secondment-secondment-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "receivingOrganisation": "Voorbeeld Receivingorganisation 1",
+        "startDate": "2026-03-01",
+        "hoursPerWeek": 0.0,
+        "receivingKvkNumber": "01234567",
+        "endDate": "2026-03-01",
+        "agreedHourlyRate": 0.0,
+        "status": "concept",
+        "note": "Voorbeeld Note 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "Secondment",
+          "slug": "secondment-secondment-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "receivingOrganisation": "Voorbeeld Receivingorganisation 2",
+        "startDate": "2026-03-02",
+        "hoursPerWeek": 1.0,
+        "receivingKvkNumber": "12345678",
+        "endDate": "2026-03-02",
+        "agreedHourlyRate": 1.0,
+        "status": "actief",
+        "note": "Voorbeeld Note 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "Secondment",
+          "slug": "secondment-secondment-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "receivingOrganisation": "Voorbeeld Receivingorganisation 3",
+        "startDate": "2026-03-03",
+        "hoursPerWeek": 2.0,
+        "receivingKvkNumber": "23456789",
+        "endDate": "2026-03-03",
+        "agreedHourlyRate": 2.0,
+        "status": "beeindigd",
+        "note": "Voorbeeld Note 3",
+        "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "SideActivity",
+          "slug": "sideactivity-sideactivity-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "noneToReport": false,
+        "description": "Voorbeeld Description 1",
+        "organisation": "Voorbeeld Organisation 1",
+        "paid": false,
+        "hoursPerWeek": 0.0,
+        "startDate": "2026-03-01",
+        "endDate": "2026-03-01",
+        "status": "gemeld",
+        "decisionReason": "Voorbeeld Decisionreason 1",
+        "publish": false,
+        "userId": "Voorbeeld Userid 1",
+        "managerUserId": "Voorbeeld Manageruserid 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "SideActivity",
+          "slug": "sideactivity-sideactivity-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "noneToReport": false,
+        "description": "Voorbeeld Description 2",
+        "organisation": "Voorbeeld Organisation 2",
+        "paid": false,
+        "hoursPerWeek": 1.0,
+        "startDate": "2026-03-02",
+        "endDate": "2026-03-02",
+        "status": "akkoord",
+        "decisionReason": "Voorbeeld Decisionreason 2",
+        "publish": false,
+        "userId": "Voorbeeld Userid 2",
+        "managerUserId": "Voorbeeld Manageruserid 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "SideActivity",
+          "slug": "sideactivity-sideactivity-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "noneToReport": false,
+        "description": "Voorbeeld Description 3",
+        "organisation": "Voorbeeld Organisation 3",
+        "paid": false,
+        "hoursPerWeek": 2.0,
+        "startDate": "2026-03-03",
+        "endDate": "2026-03-03",
+        "status": "afgewezen",
+        "decisionReason": "Voorbeeld Decisionreason 3",
+        "publish": false,
+        "userId": "Voorbeeld Userid 3",
+        "managerUserId": "Voorbeeld Manageruserid 3",
+        "administrationId": "Voorbeeld Administrationid 3"
       }
     ]
   }

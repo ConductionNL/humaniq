@@ -292,6 +292,15 @@
 					"route": "ChangeRequests"
 				},
 				{
+					"icon": "BriefcaseOutline",
+					"id": "MijnNevenwerkzaamheden",
+					"label": "My side activities",
+					"query": {
+						"userId": "@me"
+					},
+					"route": "SideActivities"
+				},
+				{
 					"icon": "ClockOutline",
 					"id": "MijnAanwezigheid",
 					"label": "My attendance",
@@ -430,6 +439,18 @@
 							"eq": "standard"
 						}
 					}
+				},
+				{
+					"icon": "AccountArrowRightOutline",
+					"id": "Secondments",
+					"label": "Secondments",
+					"route": "Secondments"
+				},
+				{
+					"icon": "BriefcaseOutline",
+					"id": "SideActivities",
+					"label": "Side activities",
+					"route": "SideActivities"
 				},
 				{
 					"icon": "FileDocumentMultipleOutline",
@@ -4651,7 +4672,7 @@
 		},
 		{
 			"config": {
-				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history. talent-training-and-lms (2026-09-29): a Trainings object-list (TrainingRecord.employeeId = @objectId) lists every training on the personnel file with its status, validity and source (REQ-TRN-001). people-dossier-completeness (2026-09-29): a Dossier status table over GET /api/employees/{id}/dossier-status names each required document as present, missing, expired, expiring or too old at start (REQ-DCP-002), and a Personnel documents object-list (PersonnelDocument.employeeId = @objectId) holds the supplied documents.",
+				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history. talent-training-and-lms (2026-09-29): a Trainings object-list (TrainingRecord.employeeId = @objectId) lists every training on the personnel file with its status, validity and source (REQ-TRN-001). people-dossier-completeness (2026-09-29): a Dossier status table over GET /api/employees/{id}/dossier-status names each required document as present, missing, expired, expiring or too old at start (REQ-DCP-002), and a Personnel documents object-list (PersonnelDocument.employeeId = @objectId) holds the supplied documents. people-secondment-and-side-activities (2026-09-29): Secondments (Secondment.employeeId = @objectId, REQ-SEC-001) and Side activities (SideActivity.employeeId = @objectId, REQ-SEC-003) object-lists side by side.",
 				"layout": [
 					{
 						"gridHeight": 6,
@@ -4836,6 +4857,22 @@
 						"gridY": 75,
 						"id": 23,
 						"widgetId": "object-list-13"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 79,
+						"id": 24,
+						"widgetId": "object-list-14"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 6,
+						"gridY": 79,
+						"id": 25,
+						"widgetId": "object-list-15"
 					}
 				],
 				"register": "humaniq",
@@ -5546,6 +5583,94 @@
 						"icon": "FileAccountOutline",
 						"id": "object-list-13",
 						"title": "Personnel documents",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "receivingOrganisation",
+									"label": "Receiving organisation"
+								},
+								{
+									"key": "startDate",
+									"label": "Start date"
+								},
+								{
+									"key": "endDate",
+									"label": "End date"
+								},
+								{
+									"key": "hoursPerWeek",
+									"label": "Hours per week"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"emptyText": "No secondments",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"limit": 10,
+							"register": "humaniq",
+							"rowRoute": "SecondmentDetail",
+							"schema": "Secondment",
+							"sort": {
+								"dir": "desc",
+								"field": "startDate"
+							},
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"viewAllRoute": "Secondments"
+						},
+						"icon": "AccountArrowRightOutline",
+						"id": "object-list-14",
+						"title": "Secondments",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "description",
+									"label": "Activity"
+								},
+								{
+									"key": "organisation",
+									"label": "For whom"
+								},
+								{
+									"key": "paid",
+									"label": "Paid"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"emptyText": "No side activities reported",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"limit": 10,
+							"register": "humaniq",
+							"rowRoute": "SideActivityDetail",
+							"schema": "SideActivity",
+							"sort": {
+								"dir": "desc",
+								"field": "startDate"
+							},
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"viewAllRoute": "SideActivities"
+						},
+						"icon": "BriefcaseOutline",
+						"id": "object-list-15",
+						"title": "Side activities",
 						"type": "object-list"
 					}
 				]
@@ -12867,6 +12992,246 @@
 			"id": "RosterAssignmentDetail",
 			"route": "/roster-assignments/:id",
 			"title": "Roster assignment",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "people-secondment-and-side-activities (2026-09-29): REQ-SEC-001/002. AgendaComposer turns an actief secondment into a secondment entry and AvailabilityService commits hoursPerWeek over the contracted week.",
+				"columns": [
+					"employeeId",
+					"receivingOrganisation",
+					"startDate",
+					"endDate",
+					"hoursPerWeek",
+					"status"
+				],
+				"description": "Employees who work for another organisation for part of their week while staying on the payroll. An active secondment's hours count as taken in planning.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"status",
+					"employeeId"
+				],
+				"register": "humaniq",
+				"schema": "Secondment",
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				}
+			},
+			"id": "Secondments",
+			"route": "/secondments",
+			"title": "Secondments",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "people-secondment-and-side-activities (2026-09-29): D1. The files widget holds the signed agreement. lifecycleActions mirror the schema: activeren and beeindigen.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "activeren",
+							"from": [
+								"concept"
+							],
+							"label": "Activate",
+							"to": "actief"
+						},
+						{
+							"action": "beeindigen",
+							"from": [
+								"actief"
+							],
+							"label": "End",
+							"to": "beeindigd"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "Secondment",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"status": {
+									"editable": false
+								}
+							},
+							"title": "Secondment"
+						},
+						"icon": "AccountArrowRightOutline",
+						"id": "data",
+						"title": "Secondment",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "SecondmentDetail",
+			"route": "/secondments/:id",
+			"title": "Secondment",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "people-secondment-and-side-activities (2026-09-29): REQ-SEC-003. My HR > My side activities is a preset on this page (userId = @me), not a second index. SideActivityListener fills in the employee from the reporter's account and keeps Employee.nevenwerkzaamhedenGemeld in step with the register.",
+				"columns": [
+					"employeeId",
+					"description",
+					"organisation",
+					"paid",
+					"hoursPerWeek",
+					"status",
+					"publish"
+				],
+				"description": "Activities employees do next to their job, and the decision on each. Add one to report your own side activity, or to report that you have none.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"status",
+					"paid",
+					"publish",
+					"employeeId"
+				],
+				"register": "humaniq",
+				"schema": "SideActivity",
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				}
+			},
+			"id": "SideActivities",
+			"route": "/side-activities",
+			"title": "Side activities",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "people-secondment-and-side-activities (2026-09-29): D3. Agree is guarded by NoSelfApprovalGuard, refuse by DecisionReasonGuard (a conflict reason is required, and the employee cannot decide on their own report).",
+				"layout": [
+					{
+						"gridHeight": 9,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 9,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "akkoord",
+							"from": [
+								"gemeld"
+							],
+							"label": "Agree",
+							"to": "akkoord"
+						},
+						{
+							"action": "afwijzen",
+							"from": [
+								"gemeld"
+							],
+							"label": "Refuse",
+							"to": "afgewezen"
+						},
+						{
+							"action": "beeindigen",
+							"from": [
+								"gemeld",
+								"akkoord"
+							],
+							"label": "End",
+							"to": "beeindigd"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "SideActivity",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"managerUserId": {
+									"editable": false
+								},
+								"status": {
+									"editable": false
+								},
+								"userId": {
+									"editable": false
+								}
+							},
+							"title": "Side activity"
+						},
+						"icon": "BriefcaseOutline",
+						"id": "data",
+						"title": "Side activity",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "SideActivityDetail",
+			"route": "/side-activities/:id",
+			"title": "Side activity",
 			"type": "detail"
 		},
 		{

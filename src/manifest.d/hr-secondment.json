@@ -1,0 +1,166 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "Secondment",
+			"params": {
+				"id": "Secondments",
+				"route": "/secondments",
+				"title": "Secondments",
+				"columns": [
+					"employeeId",
+					"receivingOrganisation",
+					"startDate",
+					"endDate",
+					"hoursPerWeek",
+					"status"
+				],
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"employeeId"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Employees who work for another organisation for part of their week while staying on the payroll. An active secondment's hours count as taken in planning.",
+				"note": "people-secondment-and-side-activities (2026-09-29): REQ-SEC-001/002. AgendaComposer turns an actief secondment into a secondment entry and AvailabilityService commits hoursPerWeek over the contracted week."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "Secondment",
+			"params": {
+				"id": "SecondmentDetail",
+				"route": "/secondments/:id",
+				"title": "Secondment",
+				"dataTitle": "Secondment",
+				"dataIcon": "AccountArrowRightOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"overrides": {
+					"status": {
+						"editable": false
+					}
+				},
+				"note": "people-secondment-and-side-activities (2026-09-29): D1. The files widget holds the signed agreement. lifecycleActions mirror the schema: activeren and beeindigen.",
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "activeren",
+							"from": [
+								"concept"
+							],
+							"to": "actief",
+							"label": "Activate"
+						},
+						{
+							"action": "beeindigen",
+							"from": [
+								"actief"
+							],
+							"to": "beeindigd",
+							"label": "End"
+						}
+					]
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "SideActivity",
+			"params": {
+				"id": "SideActivities",
+				"route": "/side-activities",
+				"title": "Side activities",
+				"columns": [
+					"employeeId",
+					"description",
+					"organisation",
+					"paid",
+					"hoursPerWeek",
+					"status",
+					"publish"
+				],
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"paid",
+					"publish",
+					"employeeId"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Activities employees do next to their job, and the decision on each. Add one to report your own side activity, or to report that you have none.",
+				"note": "people-secondment-and-side-activities (2026-09-29): REQ-SEC-003. My HR > My side activities is a preset on this page (userId = @me), not a second index. SideActivityListener fills in the employee from the reporter's account and keeps Employee.nevenwerkzaamhedenGemeld in step with the register."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "SideActivity",
+			"params": {
+				"id": "SideActivityDetail",
+				"route": "/side-activities/:id",
+				"title": "Side activity",
+				"dataTitle": "Side activity",
+				"dataIcon": "BriefcaseOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 9,
+				"overrides": {
+					"status": {
+						"editable": false
+					},
+					"userId": {
+						"editable": false
+					},
+					"managerUserId": {
+						"editable": false
+					}
+				},
+				"note": "people-secondment-and-side-activities (2026-09-29): D3. Agree is guarded by NoSelfApprovalGuard, refuse by DecisionReasonGuard (a conflict reason is required, and the employee cannot decide on their own report).",
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "akkoord",
+							"from": [
+								"gemeld"
+							],
+							"to": "akkoord",
+							"label": "Agree"
+						},
+						{
+							"action": "afwijzen",
+							"from": [
+								"gemeld"
+							],
+							"to": "afgewezen",
+							"label": "Refuse"
+						},
+						{
+							"action": "beeindigen",
+							"from": [
+								"gemeld",
+								"akkoord"
+							],
+							"to": "beeindigd",
+							"label": "End"
+						}
+					]
+				}
+			}
+		}
+	]
+}

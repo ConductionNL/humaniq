@@ -548,6 +548,22 @@
 		"route": "/roster-assignments/:id"
 	},
 	{
+		"id": "Secondments",
+		"route": "/secondments"
+	},
+	{
+		"id": "SecondmentDetail",
+		"route": "/secondments/:id"
+	},
+	{
+		"id": "SideActivities",
+		"route": "/side-activities"
+	},
+	{
+		"id": "SideActivityDetail",
+		"route": "/side-activities/:id"
+	},
+	{
 		"id": "Stagiairs",
 		"route": "/stagiairs"
 	},
