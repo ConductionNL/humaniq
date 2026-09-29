@@ -186,6 +186,7 @@
 					"entitledHours",
 					"bovenwettelijkHours",
 					"usedHours",
+					"expiredHours",
 					"remainingHours",
 					"expiryDate"
 				],

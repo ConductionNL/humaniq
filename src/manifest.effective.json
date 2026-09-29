@@ -649,6 +649,16 @@
 					"route": "LeaveBalances"
 				},
 				{
+					"icon": "CalendarRemoveOutline",
+					"id": "VerlofVervaltBinnenkort",
+					"label": "Leave that lapses soon",
+					"query": {
+						"_order": "[{\"key\":\"expiryDate\",\"order\":\"asc\"}]",
+						"statutoryExpiresSoon": "true"
+					},
+					"route": "LeaveBalances"
+				},
+				{
 					"icon": "EmoticonSickOutline",
 					"id": "SickLeaveCases",
 					"label": "Sick leave cases",
@@ -12575,6 +12585,7 @@
 					"entitledHours",
 					"bovenwettelijkHours",
 					"usedHours",
+					"expiredHours",
 					"remainingHours",
 					"expiryDate"
 				],

@@ -424,6 +424,16 @@
 				"route": "LeaveBalances"
 			},
 			{
+				"id": "VerlofVervaltBinnenkort",
+				"label": "Leave that lapses soon",
+				"icon": "CalendarRemoveOutline",
+				"route": "LeaveBalances",
+				"query": {
+					"_order": "[{\"key\":\"expiryDate\",\"order\":\"asc\"}]",
+					"statutoryExpiresSoon": "true"
+				}
+			},
+			{
 				"id": "SickLeaveCases",
 				"label": "Sick leave cases",
 				"icon": "EmoticonSickOutline",
