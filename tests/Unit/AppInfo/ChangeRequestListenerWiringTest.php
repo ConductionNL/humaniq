@@ -72,6 +72,7 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 	use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
 	use OCA\Humaniq\Listener\FieldAccessListener;
 	use OCA\Humaniq\Listener\RightToWorkCheckListener;
+	use OCA\Humaniq\Listener\SideActivityListener;
 	use OCA\OpenRegister\Event\ObjectEventSubscription;
 	use OCP\EventDispatcher\IEventDispatcher;
 	use PHPUnit\Framework\TestCase;
@@ -174,6 +175,43 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
 			self::assertStringContainsString('$this->registerDossierListeners($dispatcher);', $boot);
 		}//end testTheRightToWorkListenerIsSubscribed()
+
+		/**
+		 * REQ-SEC-003: the side activity listener hears every new report, every
+		 * saved or deleted one, and every employee update before it is saved.
+		 *
+		 * @return void
+		 */
+		public function testTheSideActivityListenerIsSubscribed(): void {
+			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
+				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
+			}
+
+			ObjectEventSubscription::$recorded = [];
+			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+			$method = new \ReflectionMethod(Application::class, 'registerSideActivityListeners');
+			$method->invoke($app, $this->createMock(IEventDispatcher::class));
+
+			$bySchema = [];
+			foreach (ObjectEventSubscription::$recorded as $entry) {
+				self::assertSame(SideActivityListener::class, $entry['listener']);
+				$bySchema[$entry['schemas'][0]][] = $entry['event'];
+			}
+
+			self::assertSame(
+				[
+					'OCA\OpenRegister\Event\ObjectCreatingEvent',
+					'OCA\OpenRegister\Event\ObjectCreatedEvent',
+					'OCA\OpenRegister\Event\ObjectUpdatedEvent',
+					'OCA\OpenRegister\Event\ObjectDeletedEvent',
+				],
+				$bySchema['sideactivity']
+			);
+			self::assertSame(['OCA\OpenRegister\Event\ObjectUpdatingEvent'], $bySchema['employee']);
+
+			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+			self::assertStringContainsString('$this->registerSideActivityListeners($dispatcher);', $boot);
+		}//end testTheSideActivityListenerIsSubscribed()
 
 	}//end class
 }

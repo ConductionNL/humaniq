@@ -137,6 +137,7 @@ export default {
 				interview: this.t('humaniq', 'Interview'),
 				booking: this.t('humaniq', 'Booking'),
 				busy: this.t('humaniq', 'Busy'),
+				secondment: this.t('humaniq', 'Seconded'),
 			}
 
 			return labels[kind] || kind

@@ -51,6 +51,7 @@ use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
 use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
 use OCA\Humaniq\Listener\RightToWorkCheckListener;
+use OCA\Humaniq\Listener\SideActivityListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimeEstimateListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
@@ -64,6 +65,7 @@ use OCA\Humaniq\Payroll\PayrollCalculator;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\JurisdictionPackService;
 use OCA\Humaniq\Service\RosterCheckService;
+use OCA\Humaniq\Service\SideActivityRegister;
 use OCA\Humaniq\Service\TimeEntryEventService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
@@ -468,6 +470,7 @@ class Application extends App implements IBootstrap {
 		$this->registerTravelListeners($dispatcher);
 		$this->registerTrainingListeners($dispatcher);
 		$this->registerDossierListeners($dispatcher);
+		$this->registerSideActivityListeners($dispatcher);
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
 
@@ -722,6 +725,39 @@ class Application extends App implements IBootstrap {
 		}
 
 	}//end registerDossierListeners()
+
+	/**
+	 * people-secondment-and-side-activities D3 and D4: a side activity report
+	 * is placed on its employee before it is saved, every change keeps the
+	 * employee's attestation in step with the register, and a hand edit of
+	 * that attestation is put back.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/secondment-and-side-activities/spec.md#REQ-SEC-003
+	 */
+	private function registerSideActivityListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectCreatedEvent::class, ObjectUpdatedEvent::class, ObjectDeletedEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: SideActivityListener::class,
+				registers: null,
+				schemas: [SideActivityRegister::ACTIVITY_SLUG]
+			);
+		}
+
+		$this->registerFilteredObjectListener(
+			dispatcher: $dispatcher,
+			event: ObjectUpdatingEvent::class,
+			listener: SideActivityListener::class,
+			registers: null,
+			schemas: [SideActivityRegister::EMPLOYEE_SLUG]
+		);
+
+	}//end registerSideActivityListeners()
 
 	/**
 	 * people-record-change-approval D1, D3 and D4: a change request is placed,

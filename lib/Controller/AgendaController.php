@@ -237,6 +237,7 @@ class AgendaController extends Controller {
 			'leaveRequests' => $this->gateway->loadAll('LeaveRequest'),
 			'sickLeaveCases' => $this->gateway->loadAll('SickLeaveCase'),
 			'interviews' => $this->gateway->loadAll('Interview'),
+			'secondments' => $this->gateway->loadAll('Secondment'),
 			'bookings' => $this->gateway->loadAll('ResourceBooking'),
 			'subscriptions' => $this->gateway->loadAll('CalendarSubscription'),
 			'workingPatterns' => $this->gateway->loadAll('WorkingPattern'),
