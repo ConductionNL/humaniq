@@ -8610,14 +8610,20 @@
               "properties": {
                 "transportMode": {
                   "type": "string",
-                  "nullable": true
+                  "nullable": true,
+                  "title": "Transport mode",
+                  "description": "How the kilometres were travelled."
                 },
                 "fuelType": {
                   "type": "string",
-                  "nullable": true
+                  "nullable": true,
+                  "title": "Fuel type",
+                  "description": "The fuel of the vehicle, empty for other ways of travelling."
                 },
                 "km": {
-                  "type": "number"
+                  "type": "number",
+                  "title": "Kilometres",
+                  "description": "The kilometres counted for this transport mode and fuel."
                 }
               }
             }
@@ -8631,14 +8637,20 @@
               "properties": {
                 "transportMode": {
                   "type": "string",
-                  "nullable": true
+                  "nullable": true,
+                  "title": "Transport mode",
+                  "description": "How the kilometres were travelled."
                 },
                 "fuelType": {
                   "type": "string",
-                  "nullable": true
+                  "nullable": true,
+                  "title": "Fuel type",
+                  "description": "The fuel of the vehicle, empty for other ways of travelling."
                 },
                 "km": {
-                  "type": "number"
+                  "type": "number",
+                  "title": "Kilometres",
+                  "description": "The kilometres counted for this transport mode and fuel."
                 }
               }
             }
@@ -8665,17 +8677,25 @@
               "type": "object",
               "properties": {
                 "schema": {
-                  "type": "string"
+                  "type": "string",
+                  "title": "Record type",
+                  "description": "Whether this is a claim or a commuting arrangement."
                 },
                 "id": {
-                  "type": "string"
+                  "type": "string",
+                  "title": "Record",
+                  "description": "The claim or arrangement that names no transport mode."
                 },
                 "title": {
                   "type": "string",
-                  "nullable": true
+                  "nullable": true,
+                  "title": "Title",
+                  "description": "The title of the claim, if it has one."
                 },
                 "km": {
-                  "type": "number"
+                  "type": "number",
+                  "title": "Kilometres",
+                  "description": "The kilometres that were not counted."
                 }
               }
             }
