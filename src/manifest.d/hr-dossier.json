@@ -1,0 +1,226 @@
+{
+	"pages": [
+		{
+			"id": "IncompleteDossiers",
+			"route": "/incomplete-files",
+			"type": "dashboard",
+			"title": "Incomplete personnel files",
+			"config": {
+				"description": "Every employee whose personnel file misses a required document, or holds one that has expired, expires soon or was too old at the start of employment.",
+				"_note": "people-dossier-completeness (2026-09-29): REQ-DCP-002 (design D3). One row per employee with a gap, from GET /api/dossier/incomplete, which judges every active DossierRequirement on read and lists only employees the caller may read, so a manager sees only their own people. A row opens the employee, whose Dossier status widget names each requirement and its evidence.",
+				"widgets": [
+					{
+						"id": "incomplete-files",
+						"type": "object-table",
+						"title": "Incomplete personnel files",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/dossier/incomplete",
+								"responsePath": "employees"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Employee",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "employeeNumber",
+									"label": "Employee number"
+								},
+								{
+									"key": "gapCount",
+									"label": "Gaps"
+								},
+								{
+									"key": "gaps",
+									"label": "What is missing or expired"
+								}
+							],
+							"rowRoute": "EmployeeDetail",
+							"emptyText": "Every personnel file is complete"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "incomplete-files",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 8
+					}
+				]
+			}
+		}
+	],
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "DossierRequirement",
+			"params": {
+				"id": "DossierRequirements",
+				"route": "/dossier-requirements",
+				"title": "Dossier requirements",
+				"columns": [
+					"code",
+					"label",
+					"scope",
+					"evidenceKind",
+					"expires",
+					"warnDaysBefore",
+					"maxAgeDaysAtStart",
+					"active"
+				],
+				"sort": {
+					"field": "code",
+					"order": "asc"
+				},
+				"filters": [
+					"scope",
+					"evidenceKind",
+					"active"
+				],
+				"description": "The documents a personnel file must hold, who must have each one, and what counts as proof.",
+				"note": "people-dossier-completeness (2026-09-29): D1. Administered data, not code. A requirement proven by a document added to the file matches PersonnelDocument.requirementCode; one proven by a generated document matches HrGeneratedDocument.documentType with status generated; one proven by a competence matches EmployeeCompetence.competenceCode."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "DossierRequirement",
+			"params": {
+				"id": "DossierRequirementDetail",
+				"route": "/dossier-requirements/:id",
+				"title": "Dossier requirement",
+				"dataTitle": "Dossier requirement",
+				"dataIcon": "ClipboardCheckOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"note": "people-dossier-completeness (2026-09-29): D1. A plain configuration record, no lifecycle."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "PersonnelDocument",
+			"params": {
+				"id": "PersonnelDocuments",
+				"route": "/personnel-documents",
+				"title": "Personnel documents",
+				"columns": [
+					"employeeId",
+					"requirementCode",
+					"issuedOn",
+					"validUntil",
+					"daysUntilExpiry",
+					"verifiedBy",
+					"verifiedOn"
+				],
+				"sort": {
+					"field": "validUntil",
+					"order": "asc"
+				},
+				"filters": [
+					"requirementCode",
+					"employeeId"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Documents employees supplied for their personnel file, such as an ID or a certificate of conduct, with their expiry dates. Attach the file itself on the document's page.",
+				"note": "people-dossier-completeness (2026-09-29): D2. HR is notified when a document enters its warning window and when it expires (x-openregister-notifications on the schema, materialised daysUntilWarning and daysUntilExpiry)."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "PersonnelDocument",
+			"params": {
+				"id": "PersonnelDocumentDetail",
+				"route": "/personnel-documents/:id",
+				"title": "Personnel document",
+				"dataTitle": "Personnel document",
+				"dataIcon": "FileAccountOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"overrides": {
+					"daysUntilExpiry": {
+						"editable": false
+					},
+					"daysUntilWarning": {
+						"editable": false
+					}
+				},
+				"note": "people-dossier-completeness (2026-09-29): D2. The files widget holds the scan of the document; nothing is copied elsewhere."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "RightToWorkCheck",
+			"params": {
+				"id": "RightToWorkChecks",
+				"route": "/right-to-work-checks",
+				"title": "Right-to-work checks",
+				"columns": [
+					"employeeId",
+					"onboardingId",
+					"documentType",
+					"documentExpiry",
+					"method",
+					"result",
+					"checkedOn"
+				],
+				"sort": {
+					"field": "checkedOn",
+					"order": "desc"
+				},
+				"filters": [
+					"result",
+					"documentType",
+					"employeeId"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Checks of a new hire's identity document and right to work. Add one with the document's details, or paste its machine-readable zone; the rule decides the result when you save.",
+				"note": "people-dossier-completeness (2026-09-29): D4. RightToWorkCheckListener decides result, reason and method on every save (a result typed by hand does not survive), clears the pasted zone so no document number is stored, and refuses anyone outside HR. A pass ticks the onboarding case's WID check; RightToWorkGuard then lets the case reach the first working day."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "RightToWorkCheck",
+			"params": {
+				"id": "RightToWorkCheckDetail",
+				"route": "/right-to-work-checks/:id",
+				"title": "Right-to-work check",
+				"dataTitle": "Right-to-work check",
+				"dataIcon": "ShieldCheckOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 10,
+				"overrides": {
+					"result": {
+						"editable": false
+					},
+					"reasonCode": {
+						"editable": false
+					},
+					"reason": {
+						"editable": false
+					},
+					"method": {
+						"editable": false
+					},
+					"checkedBy": {
+						"editable": false
+					}
+				},
+				"note": "people-dossier-completeness (2026-09-29): D4. Result, reason and method are the rule's answer and read-only here."
+			}
+		}
+	]
+}

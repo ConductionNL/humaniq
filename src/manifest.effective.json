@@ -438,6 +438,24 @@
 					"route": "GeneratedDocuments"
 				},
 				{
+					"icon": "ClipboardCheckOutline",
+					"id": "IncompleteDossiers",
+					"label": "Incomplete personnel files",
+					"route": "IncompleteDossiers"
+				},
+				{
+					"icon": "FileAccountOutline",
+					"id": "PersonnelDocuments",
+					"label": "Personnel documents",
+					"route": "PersonnelDocuments"
+				},
+				{
+					"icon": "ClipboardCheckOutline",
+					"id": "DossierRequirements",
+					"label": "Dossier requirements",
+					"route": "DossierRequirements"
+				},
+				{
 					"icon": "CalendarSyncOutline",
 					"id": "ReviewCycles",
 					"label": "Review cycles",
@@ -448,6 +466,12 @@
 					"id": "Onboardings",
 					"label": "Onboardings",
 					"route": "Onboardings"
+				},
+				{
+					"icon": "ShieldCheckOutline",
+					"id": "RightToWorkChecks",
+					"label": "Right-to-work checks",
+					"route": "RightToWorkChecks"
 				},
 				{
 					"icon": "AccountBoxOutline",
@@ -3756,6 +3780,60 @@
 		},
 		{
 			"config": {
+				"_note": "people-dossier-completeness (2026-09-29): REQ-DCP-002 (design D3). One row per employee with a gap, from GET /api/dossier/incomplete, which judges every active DossierRequirement on read and lists only employees the caller may read, so a manager sees only their own people. A row opens the employee, whose Dossier status widget names each requirement and its evidence.",
+				"description": "Every employee whose personnel file misses a required document, or holds one that has expired, expires soon or was too old at the start of employment.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "incomplete-files"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Employee"
+								},
+								{
+									"key": "employeeNumber",
+									"label": "Employee number"
+								},
+								{
+									"key": "gapCount",
+									"label": "Gaps"
+								},
+								{
+									"key": "gaps",
+									"label": "What is missing or expired"
+								}
+							],
+							"emptyText": "Every personnel file is complete",
+							"endpointSource": {
+								"responsePath": "employees",
+								"url": "/apps/humaniq/api/dossier/incomplete"
+							},
+							"rowRoute": "EmployeeDetail"
+						},
+						"id": "incomplete-files",
+						"title": "Incomplete personnel files",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "IncompleteDossiers",
+			"route": "/incomplete-files",
+			"title": "Incomplete personnel files",
+			"type": "dashboard"
+		},
+		{
+			"config": {
 				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab. receipt-ocr (2026-07-16): page-level action \"Extract receipt data\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/expenses/extract-receipt with {expenseId: @objectId}, guarded server-side by ExpenseController::authorizeExpense() (resolve-first RBAC) then an admin-or-owner ownership check. expenses-travel-calculation (2026-09-29): a 'Travel' data widget at gridY 6 shows the trip (travelType, distanceKm, transportMode, fuelType) and what humaniq calculated from it (ratePerKm, taxFreeAmount, taxableAmount, amountSource, read-only: TravelAmountListener stamps them on save). Approval moves to gridY 10, the receipt to gridY 14, and Related grows to 12 rows to match the left column.",
 				"headerActions": [
 					{
@@ -4573,7 +4651,7 @@
 		},
 		{
 			"config": {
-				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history. talent-training-and-lms (2026-09-29): a Trainings object-list (TrainingRecord.employeeId = @objectId) lists every training on the personnel file with its status, validity and source (REQ-TRN-001).",
+				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history. talent-training-and-lms (2026-09-29): a Trainings object-list (TrainingRecord.employeeId = @objectId) lists every training on the personnel file with its status, validity and source (REQ-TRN-001). people-dossier-completeness (2026-09-29): a Dossier status table over GET /api/employees/{id}/dossier-status names each required document as present, missing, expired, expiring or too old at start (REQ-DCP-002), and a Personnel documents object-list (PersonnelDocument.employeeId = @objectId) holds the supplied documents.",
 				"layout": [
 					{
 						"gridHeight": 6,
@@ -4742,6 +4820,22 @@
 						"gridY": 66,
 						"id": 21,
 						"widgetId": "object-list-12"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 70,
+						"id": 22,
+						"widgetId": "dossier-status"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 75,
+						"id": 23,
+						"widgetId": "object-list-13"
 					}
 				],
 				"register": "humaniq",
@@ -5379,6 +5473,79 @@
 						"icon": "SchoolOutline",
 						"id": "object-list-12",
 						"title": "Trainings",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "label",
+									"label": "Document"
+								},
+								{
+									"key": "statusLabel",
+									"label": "Status"
+								},
+								{
+									"key": "issuedOn",
+									"label": "Issued on"
+								},
+								{
+									"key": "validUntil",
+									"label": "Valid until"
+								}
+							],
+							"emptyText": "No document is required for this employee",
+							"endpointSource": {
+								"responsePath": "requirements",
+								"url": "/apps/humaniq/api/employees/@objectId/dossier-status"
+							}
+						},
+						"id": "dossier-status",
+						"title": "Dossier status",
+						"type": "object-table"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "requirementCode",
+									"label": "Requirement"
+								},
+								{
+									"key": "issuedOn",
+									"label": "Issued on"
+								},
+								{
+									"key": "validUntil",
+									"label": "Valid until"
+								},
+								{
+									"key": "verifiedBy",
+									"label": "Checked by"
+								}
+							],
+							"emptyText": "No personnel documents yet",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"limit": 25,
+							"register": "humaniq",
+							"rowRoute": "PersonnelDocumentDetail",
+							"schema": "PersonnelDocument",
+							"sort": {
+								"dir": "asc",
+								"field": "validUntil"
+							},
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"viewAllRoute": "PersonnelDocuments"
+						},
+						"icon": "FileAccountOutline",
+						"id": "object-list-13",
+						"title": "Personnel documents",
 						"type": "object-list"
 					}
 				]
@@ -6410,7 +6577,7 @@
 		},
 		{
 			"config": {
-				"_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), NOT write-time guards: no transition here blocks on an unmet checklist field -- guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2). Audit history is a sidebar tab.",
+				"_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), except the right-to-work check: people-dossier-completeness (2026-09-29) adds RightToWorkGuard on gereed_melden and starten (REQ-DCP-004) and a Right-to-work checks object-list (RightToWorkCheck.onboardingId = @objectId) where HR records the check; a pass ticks widCheckDone. Audit history is a sidebar tab.",
 				"layout": [
 					{
 						"gridHeight": 5,
@@ -6440,9 +6607,17 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 13,
+						"gridY": 17,
 						"id": 4,
 						"widgetId": "files"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 13,
+						"id": 5,
+						"widgetId": "object-list"
 					}
 				],
 				"lifecycleActions": {
@@ -6564,6 +6739,48 @@
 						"id": "files",
 						"title": "Contract & ID documents",
 						"type": "files"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "documentType",
+									"label": "Document"
+								},
+								{
+									"key": "result",
+									"label": "Result"
+								},
+								{
+									"key": "reason",
+									"label": "Reason"
+								},
+								{
+									"key": "checkedOn",
+									"label": "Checked on"
+								}
+							],
+							"emptyText": "No right-to-work check yet. Mark ready is refused until one passes.",
+							"filter": {
+								"onboardingId": "@objectId"
+							},
+							"limit": 10,
+							"register": "humaniq",
+							"rowRoute": "RightToWorkCheckDetail",
+							"schema": "RightToWorkCheck",
+							"sort": {
+								"dir": "desc",
+								"field": "checkedOn"
+							},
+							"viewAllQuery": {
+								"onboardingId": "@objectId"
+							},
+							"viewAllRoute": "RightToWorkChecks"
+						},
+						"icon": "ShieldCheckOutline",
+						"id": "object-list",
+						"title": "Right-to-work checks",
+						"type": "object-list"
 					}
 				]
 			},
@@ -9813,6 +10030,289 @@
 			"id": "JaaropgaafDetail",
 			"route": "/jaaropgaven/:id",
 			"title": "Annual statement",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "people-dossier-completeness (2026-09-29): D1. Administered data, not code. A requirement proven by a document added to the file matches PersonnelDocument.requirementCode; one proven by a generated document matches HrGeneratedDocument.documentType with status generated; one proven by a competence matches EmployeeCompetence.competenceCode.",
+				"columns": [
+					"code",
+					"label",
+					"scope",
+					"evidenceKind",
+					"expires",
+					"warnDaysBefore",
+					"maxAgeDaysAtStart",
+					"active"
+				],
+				"description": "The documents a personnel file must hold, who must have each one, and what counts as proof.",
+				"filters": [
+					"scope",
+					"evidenceKind",
+					"active"
+				],
+				"register": "humaniq",
+				"schema": "DossierRequirement",
+				"sort": {
+					"field": "code",
+					"order": "asc"
+				}
+			},
+			"id": "DossierRequirements",
+			"route": "/dossier-requirements",
+			"title": "Dossier requirements",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "people-dossier-completeness (2026-09-29): D1. A plain configuration record, no lifecycle.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "DossierRequirement",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"title": "Dossier requirement"
+						},
+						"icon": "ClipboardCheckOutline",
+						"id": "data",
+						"title": "Dossier requirement",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "DossierRequirementDetail",
+			"route": "/dossier-requirements/:id",
+			"title": "Dossier requirement",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "people-dossier-completeness (2026-09-29): D2. HR is notified when a document enters its warning window and when it expires (x-openregister-notifications on the schema, materialised daysUntilWarning and daysUntilExpiry).",
+				"columns": [
+					"employeeId",
+					"requirementCode",
+					"issuedOn",
+					"validUntil",
+					"daysUntilExpiry",
+					"verifiedBy",
+					"verifiedOn"
+				],
+				"description": "Documents employees supplied for their personnel file, such as an ID or a certificate of conduct, with their expiry dates. Attach the file itself on the document's page.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"requirementCode",
+					"employeeId"
+				],
+				"register": "humaniq",
+				"schema": "PersonnelDocument",
+				"sort": {
+					"field": "validUntil",
+					"order": "asc"
+				}
+			},
+			"id": "PersonnelDocuments",
+			"route": "/personnel-documents",
+			"title": "Personnel documents",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "people-dossier-completeness (2026-09-29): D2. The files widget holds the scan of the document; nothing is copied elsewhere.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "PersonnelDocument",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"daysUntilExpiry": {
+									"editable": false
+								},
+								"daysUntilWarning": {
+									"editable": false
+								}
+							},
+							"title": "Personnel document"
+						},
+						"icon": "FileAccountOutline",
+						"id": "data",
+						"title": "Personnel document",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "PersonnelDocumentDetail",
+			"route": "/personnel-documents/:id",
+			"title": "Personnel document",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "people-dossier-completeness (2026-09-29): D4. RightToWorkCheckListener decides result, reason and method on every save (a result typed by hand does not survive), clears the pasted zone so no document number is stored, and refuses anyone outside HR. A pass ticks the onboarding case's WID check; RightToWorkGuard then lets the case reach the first working day.",
+				"columns": [
+					"employeeId",
+					"onboardingId",
+					"documentType",
+					"documentExpiry",
+					"method",
+					"result",
+					"checkedOn"
+				],
+				"description": "Checks of a new hire's identity document and right to work. Add one with the document's details, or paste its machine-readable zone; the rule decides the result when you save.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"result",
+					"documentType",
+					"employeeId"
+				],
+				"register": "humaniq",
+				"schema": "RightToWorkCheck",
+				"sort": {
+					"field": "checkedOn",
+					"order": "desc"
+				}
+			},
+			"id": "RightToWorkChecks",
+			"route": "/right-to-work-checks",
+			"title": "Right-to-work checks",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "people-dossier-completeness (2026-09-29): D4. Result, reason and method are the rule's answer and read-only here.",
+				"layout": [
+					{
+						"gridHeight": 10,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 10,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "RightToWorkCheck",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"checkedBy": {
+									"editable": false
+								},
+								"method": {
+									"editable": false
+								},
+								"reason": {
+									"editable": false
+								},
+								"reasonCode": {
+									"editable": false
+								},
+								"result": {
+									"editable": false
+								}
+							},
+							"title": "Right-to-work check"
+						},
+						"icon": "ShieldCheckOutline",
+						"id": "data",
+						"title": "Right-to-work check",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "RightToWorkCheckDetail",
+			"route": "/right-to-work-checks/:id",
+			"title": "Right-to-work check",
 			"type": "detail"
 		},
 		{

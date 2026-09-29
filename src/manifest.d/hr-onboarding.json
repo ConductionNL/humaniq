@@ -8,7 +8,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "Onboarding",
-				"_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), NOT write-time guards: no transition here blocks on an unmet checklist field -- guard wiring for compliance-checked schemas is owned by the active humaniq-rule-compliance-enforcement change (design.md D2). Audit history is a sidebar tab.",
+				"_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), except the right-to-work check: people-dossier-completeness (2026-09-29) adds RightToWorkGuard on gereed_melden and starten (REQ-DCP-004) and a Right-to-work checks object-list (RightToWorkCheck.onboardingId = @objectId) where HR records the check; a pass ticks widCheckDone. Audit history is a sidebar tab.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -69,6 +69,48 @@
 						"type": "files",
 						"title": "Contract & ID documents",
 						"icon": "FolderOutline"
+					},
+					{
+						"id": "object-list",
+						"type": "object-list",
+						"title": "Right-to-work checks",
+						"icon": "ShieldCheckOutline",
+						"content": {
+							"register": "humaniq",
+							"schema": "RightToWorkCheck",
+							"filter": {
+								"onboardingId": "@objectId"
+							},
+							"sort": {
+								"field": "checkedOn",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "documentType",
+									"label": "Document"
+								},
+								{
+									"key": "result",
+									"label": "Result"
+								},
+								{
+									"key": "reason",
+									"label": "Reason"
+								},
+								{
+									"key": "checkedOn",
+									"label": "Checked on"
+								}
+							],
+							"limit": 10,
+							"rowRoute": "RightToWorkCheckDetail",
+							"viewAllRoute": "RightToWorkChecks",
+							"viewAllQuery": {
+								"onboardingId": "@objectId"
+							},
+							"emptyText": "No right-to-work check yet. Mark ready is refused until one passes."
+						}
 					}
 				],
 				"layout": [
@@ -99,6 +141,14 @@
 					{
 						"id": 4,
 						"widgetId": "files",
+						"gridX": 0,
+						"gridY": 17,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 5,
+						"widgetId": "object-list",
 						"gridX": 0,
 						"gridY": 13,
 						"gridWidth": 12,

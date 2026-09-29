@@ -80,6 +80,10 @@
 		"route": "/comp-review-cycles/:id"
 	},
 	{
+		"id": "IncompleteDossiers",
+		"route": "/incomplete-files"
+	},
+	{
 		"id": "ExpenseDetail",
 		"route": "/expenses/:id"
 	},
@@ -298,6 +302,30 @@
 	{
 		"id": "JaaropgaafDetail",
 		"route": "/jaaropgaven/:id"
+	},
+	{
+		"id": "DossierRequirements",
+		"route": "/dossier-requirements"
+	},
+	{
+		"id": "DossierRequirementDetail",
+		"route": "/dossier-requirements/:id"
+	},
+	{
+		"id": "PersonnelDocuments",
+		"route": "/personnel-documents"
+	},
+	{
+		"id": "PersonnelDocumentDetail",
+		"route": "/personnel-documents/:id"
+	},
+	{
+		"id": "RightToWorkChecks",
+		"route": "/right-to-work-checks"
+	},
+	{
+		"id": "RightToWorkCheckDetail",
+		"route": "/right-to-work-checks/:id"
 	},
 	{
 		"id": "DsrRequests",

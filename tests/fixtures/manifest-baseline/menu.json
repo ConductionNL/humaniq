@@ -213,6 +213,24 @@
 				"route": "GeneratedDocuments"
 			},
 			{
+				"id": "IncompleteDossiers",
+				"label": "Incomplete personnel files",
+				"icon": "ClipboardCheckOutline",
+				"route": "IncompleteDossiers"
+			},
+			{
+				"id": "PersonnelDocuments",
+				"label": "Personnel documents",
+				"icon": "FileAccountOutline",
+				"route": "PersonnelDocuments"
+			},
+			{
+				"id": "DossierRequirements",
+				"label": "Dossier requirements",
+				"icon": "ClipboardCheckOutline",
+				"route": "DossierRequirements"
+			},
+			{
 				"id": "ReviewCycles",
 				"label": "Review cycles",
 				"icon": "CalendarSyncOutline",
@@ -223,6 +241,12 @@
 				"label": "Onboardings",
 				"icon": "AccountPlusOutline",
 				"route": "Onboardings"
+			},
+			{
+				"id": "RightToWorkChecks",
+				"label": "Right-to-work checks",
+				"icon": "ShieldCheckOutline",
+				"route": "RightToWorkChecks"
 			},
 			{
 				"id": "Vacancies",
