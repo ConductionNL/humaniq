@@ -34,6 +34,7 @@ parameters:
         - lib/Lifecycle/ChangeApproverRoleGuard.php
         - lib/Lifecycle/CompEffectiveDateGuard.php
         - lib/Notification/CaseManagerResolver.php
+        - lib/Notification/ManagerOrDeputyRecipientResolver.php
         - lib/Lifecycle/DecisionReasonGuard.php
         - lib/Lifecycle/LeaveBuySellApprovalGuard.php
         - lib/Lifecycle/LeaveSettlementPeriodGuard.php

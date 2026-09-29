@@ -66,14 +66,14 @@ class ManagerDeputyListener implements IEventListener {
 	 * @spec openspec/specs/approvals-inbox/spec.md#REQ-API-002
 	 */
 	public function handle(Event $event): void {
-		$stored = [];
-		if ($event instanceof ObjectCreatingEvent) {
-			$entity = $event->getObject();
-		} else if ($event instanceof ObjectUpdatingEvent) {
-			$entity = $event->getNewObject();
-			$stored = ($event->getOldObject()?->getObject() ?? []);
-		} else {
+		if (($event instanceof ObjectCreatingEvent) === false && ($event instanceof ObjectUpdatingEvent) === false) {
 			return;
+		}
+
+		$stored = [];
+		$entity = ($event instanceof ObjectUpdatingEvent) ? $event->getNewObject() : $event->getObject();
+		if ($event instanceof ObjectUpdatingEvent) {
+			$stored = ($event->getOldObject()?->getObject() ?? []);
 		}
 
 		$record = ($entity->getObject() ?? []);
