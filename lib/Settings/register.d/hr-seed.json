@@ -2468,6 +2468,20 @@
                 "effectiveDate": "2027-03-01",
                 "note": "Meer capaciteit voor de dienstverlening.",
                 "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ManagerDeputy",
+                    "slug": "manager-deputy-zomer-2026"
+                },
+                "managerUserId": "admin",
+                "deputyUserId": "hr-demo",
+                "from": "2026-07-14",
+                "until": "2026-08-01",
+                "note": "Zomervakantie van de leidinggevende.",
+                "administrationId": "ADM-001",
+                "_note": "self-service-approvals-inbox (2026-09-29): the spec's summer scenario. admin leads Directie and Consultancy (Sam Jansen's placements); hr-demo stands in from 14 July to 1 August 2026. A fixed period rather than the current month, because a seed cannot move with the calendar: shorten or move it on its page to try it today."
             }
         ]
     }

@@ -13525,6 +13525,45 @@
         "title": "Voorbeeld Title 3",
         "note": "Voorbeeld Note 3",
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ManagerDeputy",
+          "slug": "managerdeputy-managerdeputy-1-1"
+        },
+        "deputyUserId": "Voorbeeld Deputyuserid 1",
+        "from": "2026-03-01",
+        "until": "2026-03-01",
+        "managerUserId": "Voorbeeld Manageruserid 1",
+        "administrationId": "Voorbeeld Administrationid 1",
+        "note": "Voorbeeld Note 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ManagerDeputy",
+          "slug": "managerdeputy-managerdeputy-2-2"
+        },
+        "deputyUserId": "Voorbeeld Deputyuserid 2",
+        "from": "2026-03-02",
+        "until": "2026-03-02",
+        "managerUserId": "Voorbeeld Manageruserid 2",
+        "administrationId": "Voorbeeld Administrationid 2",
+        "note": "Voorbeeld Note 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ManagerDeputy",
+          "slug": "managerdeputy-managerdeputy-3-3"
+        },
+        "deputyUserId": "Voorbeeld Deputyuserid 3",
+        "from": "2026-03-03",
+        "until": "2026-03-03",
+        "managerUserId": "Voorbeeld Manageruserid 3",
+        "administrationId": "Voorbeeld Administrationid 3",
+        "note": "Voorbeeld Note 3"
       }
     ]
   }
