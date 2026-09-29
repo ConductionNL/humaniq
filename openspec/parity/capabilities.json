@@ -49,9 +49,9 @@
      "TenderNed 434384: Suite voor bedrijfsvoeringsapplicaties (2026-07-23, awarded to Afas Software B.V.)",
      "TenderNed 424566: Openbare Europese aanbesteding Salaris-, HR- en Klantvolgsysteem voor de EMCO Groep (2026-05-12, awarded to Afas Software B.V.)",
      "TenderNed 418951: eHRM applicatie (2026-04-08, awarded to Afas Software B.V.)",
-     "TenderNed 418529: Openbare Europese aanbestedingsprocedure HR- en cliëntvolgsysteem geïntegreerd met salaris (2026-04-03, awarded to Afas Software B.V.)",
-     "TenderNed 417931: Geïntegreerd Financieel, Inkoop, Verkoop, HRM en salarisadministratie systeem (2026-03-31, awarded to Afas Software B.V.)",
-     "TenderNed 416997: Aankondiging van vrijwillige transparantie vooraf geïntegreerd softwarepakket e-HRM en Fin (2026-03-24, awarded to AFAS Software B.V.)",
+     "TenderNed 418529: Openbare Europese aanbestedingsprocedure HR- en cli\u00ebntvolgsysteem ge\u00efntegreerd met salaris (2026-04-03, awarded to Afas Software B.V.)",
+     "TenderNed 417931: Ge\u00efntegreerd Financieel, Inkoop, Verkoop, HRM en salarisadministratie systeem (2026-03-31, awarded to Afas Software B.V.)",
+     "TenderNed 416997: Aankondiging van vrijwillige transparantie vooraf ge\u00efntegreerd softwarepakket e-HRM en Fin (2026-03-24, awarded to AFAS Software B.V.)",
      "TenderNed 415693: Gemeente Leusden - Implementatie en beschikbaar stellen  e-HRM systeem (2026-03-14, awarded to Afas Software B.V.)",
      "TenderNed 415227: Vervanging e-HRM applicatie (2026-03-11, awarded to Afas Software B.V.)",
      "and 37 more awarded HRM tenders in the intelligence database (tenders.category_slug = hrm, winner match), read 2026-09-26"
@@ -539,7 +539,7 @@
    "id": "ppl-chain-rule",
    "area": "people",
    "name": "Get warned before a series of fixed-term contracts turns into a permanent one.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -555,10 +555,12 @@
     "personio": "not checked: not settled: searched help centre articles for fixed-term, chain, successive contracts and ketenregeling; https://support.personio.de/hc/en-us/articles/34554225234845-Manage-employment-changes covers contract type changes but no warning about a run of fixed-term contracts becoming permanent."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-flex-contract-rules on 2026-09-27. Before: grep -rniF ketenregeling . (excluding _lane): only hits are openspec/specs/hr-signals/spec.md and openspec/changes/archive/2026-07-13-hr-signals/{proposal,design}.md, all naming ketenregeling chain counting as explicitly out of scope; no PHP class or rule id implements it",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/ContractChainService.php chainFor() composes the BW 7:668a chain (temporary, oproep and minijob contracts with an end date, gaps of at most six months; permanent with the fourth contract or past 36 months); lib/Standards/rules/labour.json nl-signaal-ketenregeling and its predicate in lib/Standards/Checks/NlSignalChecks.php flag a live third contract or a chain turning permanent within 60 days; lib/Controller/FlexContractController.php chain() serves GET /api/contracts/{id}/chain. Tests: tests/Unit/Service/ContractChainServiceTest.php, tests/Unit/Standards/Checks/NlFlexContractSignalsTest.php, tests/Unit/Controller/FlexContractControllerTest.php.",
+    "reachedOn": "EmploymentContractDetail /contracts/:id: the Fixed-term chain section (position, contracts allowed, months counted, permanent from); occ humaniq:rules:audit raises nl-signaal-ketenregeling",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-people-flex-contract-rules",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -4457,7 +4459,7 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(payroll|payslips?|pay run|net pay)\\b' src/plugins src/client/src hits only dashboard and time test fixtures (a customer named payroll); none of the 23 plugins in src/plugins is a payroll module",
     "visma-raet": "not checked: not settled: searched youforce.nl; the platform targets Dutch organisations and no foreign payroll is described",
     "hr2day": "not checked: not settled: searched the 382 hr2day.com sitemap pages and public maglr release notes 2020 to 2026 for foreign payroll and other countries; only Dutch payroll is described.",
-    "loket": "not checked: not settled: searched loket.nl feature pages, roadmap, FAQ and the API tag list for buitenland, België, Duitsland and foreign payroll; nothing describes payroll under another country's rules.",
+    "loket": "not checked: not settled: searched loket.nl feature pages, roadmap, FAQ and the API tag list for buitenland, Belgi\u00eb, Duitsland and foreign payroll; nothing describes payroll under another country's rules.",
     "personio": "Personio Payroll is Germany only per https://support.personio.de/hc/en-us/articles/115005907749-Overview-of-Preliminary-payroll; other countries run through payroll integrations such as Loket for the Netherlands (https://support.personio.de/hc/en-us/articles/34406718265373-Overview-of-the-Loket-integration), a3innuva for Spain (https://support.personio.de/hc/en-us/articles/18225927374493-Set-up-the-a3innuva-Nomina-integration) and Xero (https://support.personio.de/hc/en-us/articles/17475536553885-Set-up-the-Xero-integration), not through jurisdiction packs."
    },
    "built": {
@@ -4488,7 +4490,7 @@
     "visma-raet": "https://youforce.nl/uitbesteding-salarisadministratie: Youforce offers uitbesteding salarisadministratie, taking the payroll processing over.",
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(payroll|payslips?|pay run|net pay)\\b' src/plugins src/client/src hits only dashboard and time test fixtures (a customer named payroll); none of the 23 plugins in src/plugins is a payroll module; no connector to an external payroll service either",
     "afas": "https://www.afas.nl/outsourcing/hr-payroll: to outsource HR and payroll you still take the AFAS software yourself and one of AFAS's certified partners handles the daily processing in the same system; https://help.afas.nl/help/NL/SE/124959.htm Payroll Cloud lets an accountant run payroll for clients. No page offers processing by AFAS itself.",
-    "hr2day": "not checked: not settled: https://www.hr2day.com/nieuws/nieuws-hr2day-as-works-partnerschap/ describes outsourcing by partner a·s WORKS, not by HR2day itself; no page states a vendor payroll service.",
+    "hr2day": "not checked: not settled: https://www.hr2day.com/nieuws/nieuws-hr2day-as-works-partnerschap/ describes outsourcing by partner a\u00b7s WORKS, not by HR2day itself; no page states a vendor payroll service.",
     "loket": "not checked: not settled: https://loket.nl/oplossingen-voor/maximaal-ontzorgd/ describes AI and workflows that take work off your hands, and https://loket.nl/dienstverlening/ covers support; no page offers payroll processing by Loket's own staff, payroll is run by the customer or its accountancy firm.",
     "personio": "https://www.personio.com/whats-new-q2-26/ (browser read 2026-09-26): 'Personio Payroll, powered by Loket. Managed payroll delivery for the Netherlands, combining Personio's HR workflows with compliant, local payroll expertise'; for Germany https://support.personio.de/hc/en-us/articles/24333241923485-About-the-Personio-Payroll-Expert-plan adds support from Personio's tax consulting partners."
    },
@@ -4947,7 +4949,7 @@
    },
    "built": {
     "state": "decided-no",
-    "evidence": "grep -rniF 360|feedback lib src: no hits beyond unrelated numeric matches; openspec/changes/archive/2026-07-13-performance-reviews-mvp/design.md:22, 'No 360°/peer feedback, no self-assessment entity, a single review object per employee per cycle', named a Non-Goal alongside OKR/9-box/kalibratie",
+    "evidence": "grep -rniF 360|feedback lib src: no hits beyond unrelated numeric matches; openspec/changes/archive/2026-07-13-performance-reviews-mvp/design.md:22, 'No 360\u00b0/peer feedback, no self-assessment entity, a single review object per employee per cycle', named a Non-Goal alongside OKR/9-box/kalibratie",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq"
    },
@@ -5191,7 +5193,7 @@
    "personio": "partial",
    "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: rating dropped from the 2026-05-20 database basis because no public page read on 2026-09-26 settles it (the kept rating was not evidence); searched: searched the help.afas.nl sitemap for opvolging, succession, loopbaan, carrièrepad and talentpool; https://help.afas.nl/help/NL/SE/136006.htm assesses potential with HR3P or 9-GRID but no page shows career paths or succession; prior basis: comp-features.tsv#2382 (AFAS HRM, 2026-03-27): Talentmanagement, succession planning.",
+    "afas": "not checked: rating dropped from the 2026-05-20 database basis because no public page read on 2026-09-26 settles it (the kept rating was not evidence); searched: searched the help.afas.nl sitemap for opvolging, succession, loopbaan, carri\u00e8repad and talentpool; https://help.afas.nl/help/NL/SE/136006.htm assesses potential with HR3P or 9-GRID but no page shows career paths or succession; prior basis: comp-features.tsv#2382 (AFAS HRM, 2026-03-27): Talentmanagement, succession planning.",
     "orangehrm": "orangehrm@v5.9 grep -riE 'succession|career' src/plugins src/client/src finds no match; the only related string in the repo is a vacancy succession report help note (installer/Migration/V5_2_0/lang-string/notes.yaml:583); no career plugin",
     "visma-raet": "https://youforce.nl/product/het-goede-gesprek: 9-grid for a vlootschouw maps employee potential to retain talent; career paths and succession per key position are not described.",
     "hr2day": "https://www.hr2day.com/features/portfolio/: transparent career planning and identifying employees with growth potential; no page describes succession for key positions.",
@@ -6150,7 +6152,7 @@
     "afas": "https://help.afas.nl/help/NL/SE/Hrm_Conf_Privacy_Law_WBP.htm and https://help.afas.nl/help/NL/SE/App_Auth_Hrm_OrgCht_OU.htm: access is set per user group in the autorisatie tool, with filter authorisation so managers see only their own employees.",
     "visma-raet": "https://youforce.nl/security: after login you get the functions you are authorised for, managers, employees, HR staff and administrators have different rights.",
     "hr2day": "https://www.hr2day.com/nieuws/nieuwe-release-kiwi/: scopes on roles give users access to specific actions such as entering absence or approving processes; https://www.hr2day.com/data-veiligheid/informatiebeveiliging/: least privilege, employees see their own data and managers their team.",
-    "loket": "https://developer.loket.nl/ApiDocs#tag/Authorization-group: authorization groups with authorizations, employers and users; https://loket.nl/roadmap/ (Werkgeversrollen definiëren en beheren, launched Q1 2025).",
+    "loket": "https://developer.loket.nl/ApiDocs#tag/Authorization-group: authorization groups with authorizations, employers and users; https://loket.nl/roadmap/ (Werkgeversrollen defini\u00ebren en beheren, launched Q1 2025).",
     "personio": "https://support.personio.de/hc/en-us/articles/360000040389-Set-up-permissions-and-employee-roles and https://support.personio.de/hc/en-us/articles/36424006279453-Set-up-and-manage-employee-roles-and-permissions-New-experience: employee roles with distinct permissions for admins, supervisors, payroll and employees."
    },
    "built": {
@@ -7544,7 +7546,7 @@
    "evidence": {
     "afas": "https://help.afas.nl/content/NL/SE/99386.htm the standard leave request workflow routes to the direct manager and back to the employee ('Op basis van onze ervaring adviseren wij onderstaand workflowschema'), and the workflow editor lets you add statuses; an HR second step is not shipped as standard",
     "visma-raet": "not checked: not settled: searched the YouServe Self Service release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases for leave approval routing; Self Service forms can pass manager (Goedkeuren MGR) and payroll (Fiatteren SA) steps per https://www.ssc-ons.nl/content/uploads/2024/07/Handleiding-Mijn-Youforce-1.pdf, but no page shows an HR second step on leave requests",
-    "hr2day": "https://www.hr2day.com/features/slimme-workflows/ says 'Voeg meerdere goedkeurders toe per workflow. Instelbare hiërarchische goedkeuringsstappen' and https://www.hr2day.com/features/verlof/ lists 'Instelbare verlofsoorten en flows'; no page states an HR step after the manager for leave specifically",
+    "hr2day": "https://www.hr2day.com/features/slimme-workflows/ says 'Voeg meerdere goedkeurders toe per workflow. Instelbare hi\u00ebrarchische goedkeuringsstappen' and https://www.hr2day.com/features/verlof/ lists 'Instelbare verlofsoorten en flows'; no page states an HR step after the manager for leave specifically",
     "loket": "https://loket.nl/functionaliteiten/verlof/ says 'Wil je dat de afdelingsmanager aanvragen goedkeurt, of juist de werkgever? Of mag goedkeuren automatisch gebeuren?', so one configurable approver; https://loket.nl/roadmap/ lists 'Verlof aansluiten op workflow editor' (Q1 2026) without a Gerealiseerd mark, and the extra fiatteur of Workflow Editor Pro is not stated for leave",
     "personio": "https://support.personio.de/hc/en-us/articles/26385271786653-Set-up-time-off-approval-rules says 'If your approval process has multiple steps, they trigger in the order you set. Approvers only receive tasks after the previous step is approved', with roles assignable as approvers",
     "orangehrm": "orangehrm@v5.9 installer/Migration/V3_3_3/dbscript-2.sql:546 the leave workflow has one approval step per request; issue open since 2023-04-28 with no replies (origin https://github.com/orangehrm/orangehrm/issues/1676)"
@@ -8140,7 +8142,7 @@
     "afas": "https://help.afas.nl/help/NL/SE/Pay_WgImpl_Pregnt.htm standard wage components exist for paid and unpaid parental leave but hours are booked as a fixed wage mutation, and 'Profit past geen gewogen berekening toe' when leave starts mid period, so booking is manual",
     "visma-raet": "https://youforce.nl/product/verlof employees request birth and parental leave in Youforce and 'Jij als werkgever wordt ondersteund door een naadloze integratie met het UWV'; automatic conversion into pay components per leave period is not stated",
     "hr2day": "https://data.maglr.com/1697/issues/66612/785294/index.html (Llama, March 2026): after approval a button processes the parental leave request into the employment relation by adding wage components per leave period.",
-    "loket": "https://loket.nl/roadmap/ marks 'Doorontwikkeling betaald ouderschapsverlof' Gerealiseerd: the 70 percent paid parental leave can be topped up automatically (suppletie); 'WAZO-uitkeringen verlonen binnen één dienstverband' (Q2 2026) is not marked Gerealiseerd and turning an approved leave request into pay per period is not described",
+    "loket": "https://loket.nl/roadmap/ marks 'Doorontwikkeling betaald ouderschapsverlof' Gerealiseerd: the 70 percent paid parental leave can be topped up automatically (suppletie); 'WAZO-uitkeringen verlonen binnen \u00e9\u00e9n dienstverband' (Q2 2026) is not marked Gerealiseerd and turning an approved leave request into pay per period is not described",
     "personio": "https://support.personio.de/hc/en-us/articles/36912637873309-The-transition-to-managing-long-term-leaves-in-time-off-policies: time off policies for long-term leave such as parental leave have a configurable compensation proration setting and follow the approval workflow; turning leave into Dutch benefit pay components is not described; Personio Payroll is German (https://support.personio.de/hc/en-us/articles/34084487430685-Year-to-date-implementation-of-Personio-Payroll says \"Personio Payroll (Germany)\") and Dutch payroll runs through the Loket integration (https://support.personio.de/hc/en-us/articles/24665026109853-Set-up-the-Loket-integration), so the Dutch rule is not settled by Personio docs",
     "orangehrm": "orangehrm@v5.9 grep -riE 'parental|maternity|pregnan|payroll' src/plugins src/client/src: no match; leave types in orangehrmLeavePlugin have no pay components"
    },
@@ -8223,7 +8225,7 @@
    "id": "dm-oncall-average-hours",
    "area": "people",
    "name": "See the average hours worked by an on-call worker over a chosen period, to decide on the statutory offer of fixed hours.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -8239,10 +8241,12 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmAttendancePlugin/Dao/AttendanceDao.php:380 sums punched hours per employee between a from and to date for the attendance summary report (src/plugins/orangehrmTimePlugin/Report/AttendanceReport.php:206 'Time (Hours)'); totals only, no average and no on-call contract type"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-flex-contract-rules on 2026-09-27. Before: grep -rniE 'oproep|onCall|nuluren|zero.?hours' lib src: no on-call contract type or average-hours calculation (EmploymentContract.type enum in lib/Settings/register.d/hr-objects.json has no on-call value)",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-objects.json EmploymentContract.type oproep, vasteUrenAanbodOp, vasteUrenAanbodUren; lib/Service/OnCallAverageService.php averages() over approved TimeEntry hours per week and per month for a chosen window; lib/Controller/FlexContractController.php onCallAverages() (HR only, JSON or format=csv); nl-signaal-oproep-vaste-uren flags an on-call contract past twelve months without an offer. Tests: tests/Unit/Service/OnCallAverageServiceTest.php, tests/Unit/Controller/FlexContractControllerTest.php, tests/Unit/Standards/Checks/NlFlexContractSignalsTest.php.",
+    "reachedOn": "On-call hours page /contracts/on-call (menu entry after Contracts): from and to dates, the averages table and Download CSV",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-people-flex-contract-rules",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8480,7 +8484,7 @@
    "personio": "partial",
    "orangehrm": "no",
    "evidence": {
-    "afas": "https://klant.afas.nl/thema/ai-integratie 'Op dit moment worden de mogelijkheden onderzocht om een officiële AFAS MCP-server aan te bieden', and as of June 2026 no AI integration is certified",
+    "afas": "https://klant.afas.nl/thema/ai-integratie 'Op dit moment worden de mogelijkheden onderzocht om een offici\u00eble AFAS MCP-server aan te bieden', and as of June 2026 no AI integration is certified",
     "visma-raet": "not checked: not settled: https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/2 Self Service November 2025 notes add a Toelichting field in the Menu API that an AI agent can use, which is not an MCP server; web search for a Youforce MCP server found none",
     "hr2day": "not checked: not settled: searched the cached hr2day.com pages and HR2day release notes on data.maglr.com (Albatross to ZomerBonus 2026, incl. Kiwi and Llama) for MCP and Model Context Protocol; no hit",
     "loket": "not checked: not settled: searched the cached loket.nl pages, the roadmap https://loket.nl/roadmap/ and the API reference https://developer.loket.nl/ApiDocs for MCP and Model Context Protocol; no hit",
@@ -8514,8 +8518,8 @@
    "evidence": {
     "afas": "https://help.afas.nl/help/NL/SE/Ins_Wrkflw_View_Differ.htm 'Alle taken' lists every workflow task the user may handle and https://help.afas.nl/help/NL/SE/121828.htm adds the current destination to InSite overviews; the timeline sits per item in the workflow history, not in the list",
     "visma-raet": "https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases/page/3: Self Service notes add status filters (niet behandeld, in behandeling, behandeld, blokkerend) and a default 3-month period to the workflow overview; one list of all approval requests with a timeline across processes is not described.",
-    "hr2day": "https://www.hr2day.com/features/slimme-workflows/ says 'Eén overzicht voor alle lopende workflows', 'Persoonlijk dashboard met actieve taken en statusupdates', filterable by workflow type; release notes show a progress bar and approval history per process (https://data.maglr.com/1697/issues/49954/605654/index.html)",
-    "loket": "https://loket.nl/roadmap/ marks Gerealiseerd 'Procesbeheer functie' ('op één centrale plek een overzicht ... van de lopende en afgeronde statussen van de workflows') and 'Nieuwe flowweergave voor workflows' (Q3 2026) showing per step who is responsible and the current status",
+    "hr2day": "https://www.hr2day.com/features/slimme-workflows/ says 'E\u00e9n overzicht voor alle lopende workflows', 'Persoonlijk dashboard met actieve taken en statusupdates', filterable by workflow type; release notes show a progress bar and approval history per process (https://data.maglr.com/1697/issues/49954/605654/index.html)",
+    "loket": "https://loket.nl/roadmap/ marks Gerealiseerd 'Procesbeheer functie' ('op \u00e9\u00e9n centrale plek een overzicht ... van de lopende en afgeronde statussen van de workflows') and 'Nieuwe flowweergave voor workflows' (Q3 2026) showing per step who is responsible and the current status",
     "personio": "https://support.personio.de/hc/en-us/articles/36278272594077-Approvals-dashboard-Beta-access-overview (help centre release article created 2026-05-22): the dashboard shows each approval's status and timeline including delegation and rerouting; in beta, and requests cannot be approved or rejected from the dashboard.",
     "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmDashboardPlugin/components/MyActionSummaryWidget.vue:26 'My Actions' fed by src/plugins/orangehrmDashboardPlugin/Api/EmployeeActionSummaryAPI.php:89 to :96 shows counts of pending leave requests, timesheets, reviews and candidates; counts per group, no single list with timeline"
    },
@@ -8545,7 +8549,7 @@
    "personio": "no",
    "orangehrm": "no",
    "evidence": {
-    "afas": "not checked: not settled: https://help.afas.nl/help/NL/SE/Crm_Survey.htm describes employee surveys in InSite with own results; no page in the help sitemap (searched benchmark, enquête, tevredenheid) compares results with other organisations",
+    "afas": "not checked: not settled: https://help.afas.nl/help/NL/SE/Crm_Survey.htm describes employee surveys in InSite with own results; no page in the help sitemap (searched benchmark, enqu\u00eate, tevredenheid) compares results with other organisations",
     "visma-raet": "not checked: not settled: searched the YouServe release notes (YouServe release boards pages 1 to 3, Sep 2025 to Sep 2026, rendered with a private headless Chrome on 2026-09-26) at https://community.visma.com/t5/Releases-YouServe/tkb-p/nl_ys_vismayouserve_releases; the engagement add-on is not covered there and https://youforce.nl/product/engagement names no cross-organisation comparison",
     "hr2day": "not checked: not settled: read https://www.hr2day.com/features/surveys/ (custom surveys, anonymity, dashboards and trends); no comparison with other organisations using the same survey",
     "loket": "not checked: not settled: searched the cached loket.nl pages, the roadmap https://loket.nl/roadmap/ and the API reference https://developer.loket.nl/ApiDocs for surveys and benchmarks; Loket offers a salary benchmark (Salarisbenchmark) but no employee survey with a cross-organisation comparison",

@@ -103,3 +103,24 @@ lid 5) is violated when an `oproep` contract started more than 12 months ago and
 - Should the overview also show the average in days per week (Loket offers both)? The
   service can return days from `TimeEntry.date`; this design shows hours per week and per
   month only.
+
+## Changes made while building (2026-09-29)
+
+- **Chain links.** Links are fixed-term contracts (an end date) of type `temporary`,
+  `oproep` or `minijob`. `agency` contracts stay out (their own phase system under the
+  uitzendbeding) and so do `bbl` contracts (BW 7:668a lid 10). Open-ended contracts are no
+  link.
+- **Turns permanent on.** For a chain of three or more it is the day after the contract
+  ends (a renewal is the fourth contract), unless the chain passes 36 months earlier; for a
+  shorter chain it is the day the chain passes 36 months.
+- **The chain section** is an `endpoint-table` widget, not a `bodyWidgets` host section:
+  on a detail page `object-table` ignores `endpointSource` in nextcloud-vue 2.57.1
+  (ConductionNL/nextcloud-vue#1281). `EmploymentContractDetail` moved out of
+  `simpleDetailScaffold` to carry it. A contract outside any chain shows the empty text.
+- **CSV** comes from the same endpoint (`format=csv`), a `DataDisplayResponse` with an
+  attachment header, so the download carries the figures the page shows. The link passes
+  the request token in the query.
+- **Seed names.** "Sanne Bakker" became Sanne Meijer, because `employee-bakker` already
+  exists in the seed. The import stamps every seeded timesheet draft, so Ahmed El
+  Idrissi's August hours count once that timesheet is approved.
+- **Open question answered.** Hours per week and per month only; days per week stays out.
