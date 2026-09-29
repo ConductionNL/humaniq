@@ -33,8 +33,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
-use OCA\Humaniq\Service\HoursRegisterGateway;
-use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\RightToWorkRecorder;
 use OCP\EventDispatcher\Event;
@@ -51,22 +49,18 @@ use Psr\Log\LoggerInterface;
  */
 class RightToWorkCheckListener implements IEventListener {
 
-	public const CHECK_SLUG = 'righttoworkcheck';
+	public const CHECK_SLUG = RightToWorkRecorder::CHECK_SLUG;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Schema slug resolution.
-	 * @param RightToWorkRecorder $recorder The stamp and the follow-up.
-	 * @param HumaniqRoles $roles Whether the caller is HR.
+	 * @param RightToWorkRecorder $recorder The schema test, the HR check, the stamp and the follow-up.
 	 * @param IUserSession $userSession The caller.
 	 * @param InternalWriteMarker $marker humaniq's own writes are not re-decided.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly HoursRegisterGateway $gateway,
 		private readonly RightToWorkRecorder $recorder,
-		private readonly HumaniqRoles $roles,
 		private readonly IUserSession $userSession,
 		private readonly InternalWriteMarker $marker,
 		private readonly LoggerInterface $logger,
@@ -89,7 +83,7 @@ class RightToWorkCheckListener implements IEventListener {
 		}
 
 		$entity = $this->entityOf(event: $event);
-		if ($entity === null || strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) !== self::CHECK_SLUG) {
+		if ($entity === null || $this->recorder->isCheckSchema((string)$entity->getSchema()) === false) {
 			return;
 		}
 
@@ -116,7 +110,7 @@ class RightToWorkCheckListener implements IEventListener {
 	 */
 	private function beforeSave(object $event, array $data): void {
 		$uid = trim((string)($this->userSession->getUser()?->getUID() ?? ''));
-		if ($uid !== '' && $this->roles->isHr($uid) === false) {
+		if ($this->recorder->mayRecord($uid) === false) {
 			$event->setErrors(['message' => 'Only HR can record a right-to-work check.']);
 			$event->stopPropagation();
 			return;

@@ -245,9 +245,7 @@ class RightToWorkCheckListenerTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		return new RightToWorkCheckListener(
-			gateway: $gateway,
-			recorder: new RightToWorkRecorder(gateway: $gateway, rule: new RightToWorkService()),
-			roles: new HumaniqRoles($groups),
+			recorder: new RightToWorkRecorder(gateway: $gateway, rule: new RightToWorkService(), roles: new HumaniqRoles($groups)),
 			userSession: $session,
 			marker: new InternalWriteMarker(),
 			logger: new NullLogger()

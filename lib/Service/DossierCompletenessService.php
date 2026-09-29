@@ -57,6 +57,15 @@ class DossierCompletenessService {
 	public const PRESENT = 'aanwezig';
 
 	/**
+	 * Per kind of evidence: its schema, the field matched, the requirement field it must equal, and its issue date.
+	 */
+	private const EVIDENCE = [
+		'personnel-document' => ['PersonnelDocument', 'requirementCode', 'code', 'issuedOn'],
+		'generated-document' => ['HrGeneratedDocument', 'documentType', 'documentType', 'generatedAt'],
+		'competence' => ['EmployeeCompetence', 'competenceCode', 'competenceCode', 'issuedOn'],
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param AbsenceProgression $progression The shared date parser.
@@ -178,7 +187,7 @@ class DossierCompletenessService {
 	private function evidence(array $requirement, array $rows): ?array {
 		$kind = (string)($requirement['evidenceKind'] ?? 'personnel-document');
 		$candidates = [];
-		foreach ($this->candidates(kind: $kind, evidence: $requirement, code: (string)($requirement['code'] ?? ''), rows: $rows) as [$schema, $row, $issued]) {
+		foreach ($this->candidates(kind: $kind, requirement: $requirement, rows: $rows) as [$schema, $row, $issued]) {
 			$candidates[] = [
 				'schema' => $schema,
 				'id' => (string)($row['id'] ?? ($row['uuid'] ?? '')),
@@ -204,37 +213,19 @@ class DossierCompletenessService {
 	 * The rows that could be evidence for one requirement, with their issue date.
 	 *
 	 * @param string $kind personnel-document, generated-document or competence.
-	 * @param array<string, mixed> $evidence The requirement, whose documentType or competenceCode names the evidence.
-	 * @param string $code The requirement code.
+	 * @param array<string, mixed> $requirement The requirement, whose code, documentType or competenceCode names the evidence.
 	 * @param array<string, array<int, array<string, mixed>>> $rows The employee's rows.
 	 *
 	 * @return array<int, array{0: string, 1: array<string, mixed>, 2: mixed}>
 	 */
-	private function candidates(string $kind, array $evidence, string $code, array $rows): array {
+	private function candidates(string $kind, array $requirement, array $rows): array {
+		[$schema, $rowField, $requirementField, $issuedField] = (self::EVIDENCE[$kind] ?? self::EVIDENCE['personnel-document']);
+		$wanted = (string)($requirement[$requirementField] ?? '');
 		$out = [];
-		if ($kind === 'generated-document') {
-			foreach ($rows['HrGeneratedDocument'] as $row) {
-				if ((string)($row['documentType'] ?? '') === (string)($evidence['documentType'] ?? '') && ($row['status'] ?? '') === 'generated') {
-					$out[] = ['HrGeneratedDocument', $row, ($row['generatedAt'] ?? null)];
-				}
-			}
-
-			return $out;
-		}
-
-		if ($kind === 'competence') {
-			foreach ($rows['EmployeeCompetence'] as $row) {
-				if ((string)($row['competenceCode'] ?? '') === (string)($evidence['competenceCode'] ?? '')) {
-					$out[] = ['EmployeeCompetence', $row, ($row['issuedOn'] ?? null)];
-				}
-			}
-
-			return $out;
-		}
-
-		foreach ($rows['PersonnelDocument'] as $row) {
-			if ((string)($row['requirementCode'] ?? '') === $code) {
-				$out[] = ['PersonnelDocument', $row, ($row['issuedOn'] ?? null)];
+		foreach ($rows[$schema] as $row) {
+			$generatedOnly = ($schema === 'HrGeneratedDocument' && ($row['status'] ?? '') !== 'generated');
+			if ($generatedOnly === false && (string)($row[$rowField] ?? '') === $wanted) {
+				$out[] = [$schema, $row, ($row[$issuedField] ?? null)];
 			}
 		}
 
@@ -289,9 +280,7 @@ class DossierCompletenessService {
 			return 'verlopen';
 		}
 
-		$maxAge = $requirement['maxAgeDaysAtStart'] ?? null;
-		$issued = $this->progression->date(value: $evidence['issuedOn']);
-		if (is_numeric($maxAge) === true && $start !== null && $issued !== null && $issued < $start->modify('-' . (int)$maxAge . ' days')) {
+		if ($this->tooOldAtStart(requirement: $requirement, issuedOn: $evidence['issuedOn'], start: $start) === true) {
 			return 'te-oud-bij-start';
 		}
 
@@ -302,6 +291,25 @@ class DossierCompletenessService {
 
 		return self::PRESENT;
 	}//end statusOf()
+
+	/**
+	 * Whether the evidence was issued longer before the start than the requirement allows.
+	 *
+	 * @param array<string, mixed> $requirement The requirement.
+	 * @param string|null $issuedOn The evidence's issue date.
+	 * @param DateTimeImmutable|null $start The employment start.
+	 *
+	 * @return bool
+	 */
+	private function tooOldAtStart(array $requirement, ?string $issuedOn, ?DateTimeImmutable $start): bool {
+		$maxAge = $requirement['maxAgeDaysAtStart'] ?? null;
+		$issued = $this->progression->date(value: $issuedOn);
+		if (is_numeric($maxAge) === false || $start === null || $issued === null) {
+			return false;
+		}
+
+		return $issued < $start->modify('-' . (int)$maxAge . ' days');
+	}//end tooOldAtStart()
 
 	/**
 	 * The employment start: the employee's startDate, else the earliest contract start.

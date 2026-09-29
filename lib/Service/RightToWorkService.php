@@ -56,6 +56,17 @@ class RightToWorkService {
 	private const FREE_WORK_PHRASES = ['arbeid vrij toegestaan', 'twv niet vereist'];
 
 	/**
+	 * Constructor.
+	 *
+	 * @param MachineReadableZone $zone Reads a pasted zone and checks its digits.
+	 */
+	public function __construct(
+		private readonly MachineReadableZone $zone = new MachineReadableZone(),
+	) {
+
+	}//end __construct()
+
+	/**
 	 * The EEA table, loaded once.
 	 *
 	 * @var array{codes: array<int, string>, aliases: array<string, string>}|null
@@ -86,7 +97,7 @@ class RightToWorkService {
 		$lines = $this->mrzLines(value: ($input['mrz'] ?? null));
 		if ($lines !== []) {
 			$facts['method'] = 'extractie';
-			$zone = $this->readZone(lines: $lines);
+			$zone = $this->zone->read(lines: $lines);
 			if ($zone['error'] !== null) {
 				return $this->answer(facts: $facts, result: self::RESULT_FAIL, code: 'controlecijfer-onjuist', reason: $zone['error']);
 			}
@@ -101,25 +112,6 @@ class RightToWorkService {
 
 		return $this->apply(facts: $facts, start: $start);
 	}//end decide()
-
-	/**
-	 * The ICAO 9303 check digit of a zone field (weights 7, 3, 1).
-	 *
-	 * @param string $field The field as printed in the zone.
-	 *
-	 * @return string One digit.
-	 *
-	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
-	 */
-	public function checkDigit(string $field): string {
-		$weights = [7, 3, 1];
-		$sum = 0;
-		foreach (str_split(strtoupper($field)) as $index => $char) {
-			$sum += ($this->charValue(char: $char) * $weights[$index % 3]);
-		}
-
-		return (string)($sum % 10);
-	}//end checkDigit()
 
 	/**
 	 * Apply steps 1 to 5 to the facts.
@@ -164,82 +156,6 @@ class RightToWorkService {
 			reason: 'No permission to work: the residence document does not allow work and there is no work permit covering the start date.'
 		);
 	}//end apply()
-
-	/**
-	 * Read a TD3 (passport, two lines of 44) or TD1 (card, three lines of 30) zone.
-	 *
-	 * @param array<int, string> $lines The zone lines.
-	 *
-	 * @return array{error: string|null, documentType: string, nationality: string, documentExpiry: string}
-	 */
-	private function readZone(array $lines): array {
-		$out = ['error' => null, 'documentType' => '', 'nationality' => '', 'documentExpiry' => ''];
-		if (count($lines) === 2 && strlen($lines[0]) === 44 && strlen($lines[1]) === 44) {
-			$line = $lines[1];
-			$fields = [
-				'document number' => [substr($line, 0, 9), $line[9]],
-				'birth date' => [substr($line, 13, 6), $line[19]],
-				'expiry date' => [substr($line, 21, 6), $line[27]],
-			];
-			$type = 'paspoort';
-			$nationality = substr($line, 10, 3);
-		} else if (count($lines) === 3 && strlen($lines[0]) === 30 && strlen($lines[1]) === 30) {
-			$fields = [
-				'document number' => [substr($lines[0], 5, 9), $lines[0][14]],
-				'birth date' => [substr($lines[1], 0, 6), $lines[1][6]],
-				'expiry date' => [substr($lines[1], 8, 6), $lines[1][14]],
-			];
-			$type = $this->cardType(code: substr($lines[0], 0, 2));
-			$nationality = substr($lines[1], 15, 3);
-		} else {
-			$out['error'] = 'The machine-readable zone could not be read: expected two lines of 44 or three lines of 30 characters.';
-			return $out;
-		}//end if
-
-		foreach ($fields as $name => [$value, $digit]) {
-			if ($this->checkDigit(field: $value) !== $digit) {
-				$out['error'] = 'A check digit in the machine-readable zone is wrong (' . $name . ').';
-				return $out;
-			}
-		}
-
-		$out['documentType'] = $type;
-		$out['nationality'] = rtrim($nationality, '<');
-		$out['documentExpiry'] = $this->zoneDate(value: $fields['expiry date'][0]);
-
-		return $out;
-	}//end readZone()
-
-	/**
-	 * The document type a TD1 card code names: I-R (residence) or an ID card.
-	 *
-	 * @param string $code The first two characters of the card zone.
-	 *
-	 * @return string The documentType value.
-	 */
-	private function cardType(string $code): string {
-		if ($code === 'IR' || $code === 'AR' || $code === 'CR') {
-			return 'verblijfsdocument';
-		}
-
-		return 'identiteitskaart';
-	}//end cardType()
-
-	/**
-	 * An expiry date in the zone (YYMMDD), always in this century.
-	 *
-	 * @param string $value Six digits.
-	 *
-	 * @return string Y-m-d, or '' when it is not a date.
-	 */
-	private function zoneDate(string $value): string {
-		$parsed = DateTimeImmutable::createFromFormat('!Ymd', '20' . $value);
-		if ($parsed === false) {
-			return '';
-		}
-
-		return $parsed->format('Y-m-d');
-	}//end zoneDate()
 
 	/**
 	 * Whether the endorsement allows work without a work permit.
@@ -315,25 +231,6 @@ class RightToWorkService {
 	}//end mrzLines()
 
 	/**
-	 * The numeric value of one zone character.
-	 *
-	 * @param string $char One character.
-	 *
-	 * @return int
-	 */
-	private function charValue(string $char): int {
-		if (ctype_digit($char) === true) {
-			return (int)$char;
-		}
-
-		if (ctype_upper($char) === true) {
-			return (ord($char) - 55);
-		}
-
-		return 0;
-	}//end charValue()
-
-	/**
 	 * A trimmed string, '' for null or a non-scalar.
 	 *
 	 * @param mixed $value The value.
@@ -357,16 +254,11 @@ class RightToWorkService {
 	 */
 	private function date(mixed $value): ?DateTimeImmutable {
 		$text = $this->text(value: $value);
-		if (preg_match('/^\d{4}-\d{2}-\d{2}/', $text) !== 1) {
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $text, $parts) !== 1 || checkdate((int)$parts[2], (int)$parts[3], (int)$parts[1]) === false) {
 			return null;
 		}
 
-		$parsed = DateTimeImmutable::createFromFormat('!Y-m-d', substr($text, 0, 10));
-		if ($parsed === false) {
-			return null;
-		}
-
-		return $parsed;
+		return new DateTimeImmutable(substr($text, 0, 10));
 	}//end date()
 
 	/**

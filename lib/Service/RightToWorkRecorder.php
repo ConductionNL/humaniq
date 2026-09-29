@@ -44,17 +44,50 @@ class RightToWorkRecorder {
 	public const RESIDENCE_REQUIREMENT = 'verblijfsdocument';
 
 	/**
+	 * The RightToWorkCheck schema slug, lower case.
+	 */
+	public const CHECK_SLUG = 'righttoworkcheck';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param HoursRegisterGateway $gateway Register reads and writes, past RBAC.
 	 * @param RightToWorkService $rule The stated rule.
+	 * @param HumaniqRoles $roles Who may record a check.
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
 		private readonly RightToWorkService $rule,
+		private readonly HumaniqRoles $roles,
 	) {
 
 	}//end __construct()
+
+	/**
+	 * Whether a schema id is the RightToWorkCheck schema.
+	 *
+	 * @param string $schemaId The entity's schema id.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
+	 */
+	public function isCheckSchema(string $schemaId): bool {
+		return strtolower($this->gateway->resolveSchemaSlug($schemaId)) === self::CHECK_SLUG;
+	}//end isCheckSchema()
+
+	/**
+	 * Whether this caller may record a check: HR, an administrator, or a system write with no user.
+	 *
+	 * @param string $userId The caller, '' for a system write.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/dossier-completeness/spec.md#REQ-DCP-003
+	 */
+	public function mayRecord(string $userId): bool {
+		return $userId === '' || $this->roles->isHr($userId) === true;
+	}//end mayRecord()
 
 	/**
 	 * The fields to stamp on a check before it is saved.
@@ -119,6 +152,17 @@ class RightToWorkRecorder {
 			$this->gateway->save($onboarding, 'Onboarding', (string)$onboarding['id']);
 		}
 
+		$this->fileResidenceDocument(check: $check);
+	}//end recordPass()
+
+	/**
+	 * File a residence document that allows work as a PersonnelDocument, once.
+	 *
+	 * @param array<string, mixed> $check The saved, passing check.
+	 *
+	 * @return void
+	 */
+	private function fileResidenceDocument(array $check): void {
 		$employeeId = (string)($check['employeeId'] ?? '');
 		$expiry = (string)($check['documentExpiry'] ?? '');
 		if (($check['reasonCode'] ?? '') !== 'verblijf-arbeid-vrij' || $employeeId === '' || $expiry === '') {
@@ -143,7 +187,7 @@ class RightToWorkRecorder {
 			],
 			'PersonnelDocument'
 		);
-	}//end recordPass()
+	}//end fileResidenceDocument()
 
 	/**
 	 * The onboarding case the check names, with its id.

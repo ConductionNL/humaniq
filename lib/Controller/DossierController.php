@@ -217,8 +217,7 @@ class DossierController extends Controller {
 			return (new DateTimeImmutable('today'))->format('Y-m-d');
 		}
 
-		$parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $date);
-		if ($parsed === false || $parsed->format('Y-m-d') !== $date) {
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $parts) !== 1 || checkdate((int)$parts[2], (int)$parts[3], (int)$parts[1]) === false) {
 			return null;
 		}
 
