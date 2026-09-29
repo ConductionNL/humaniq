@@ -47,7 +47,11 @@ Read at `development` af702f78.
 `status` (`gepland`, `gevolgd`, `niet-gevolgd`, with an `x-openregister-lifecycle`:
 `registreren-gevolgd`, `registreren-niet-gevolgd`), `completedOn`, `validUntil`,
 `competenceCode`, `costEur`, `studiekostenbeding` (boolean), `terugbetalingsregeling`
-(text), `source` (`hr`, `learniq`, `lms`), `sourceRef`. One record per employee per
+(text), `source` (`hr`, `learniq`, `lms`), `sourceRef`, `administrationId`. Added at build
+time: `validityMonths`, because a group course is planned knowing its validity in months, not
+its end date; `TrainingRecordListener` fills `completedOn` (the planned day, or today) and
+`validUntil` (`completedOn` plus `validityMonths`) on the write that makes a record
+`gevolgd`, and the administration from the employee. One record per employee per
 training; a group course is planned as one record per participant from the `Trainingen`
 index with the library's mass actions.
 
@@ -56,7 +60,8 @@ administration, and humaniq's job is what the personnel file must show.
 
 ### D2. A followed training with a code writes the competence
 
-`TrainingCompetenceWriter` runs after a `TrainingRecord` reaches `gevolgd` with a
+`TrainingCompetenceWriter` runs (from `TrainingRecordListener` on OpenRegister's created and
+updated events) after a `TrainingRecord` reaches `gevolgd` with a
 `competenceCode`: it creates an `EmployeeCompetence` with `issuedOn = completedOn` and
 `validUntil`, or extends the existing one for the same code when the new validity is later.
 It never shortens or deletes a competence.
@@ -78,8 +83,15 @@ every field of `Employee`, including BSN and salary.
 ### D4. Credentials come back through a listener on learniq's object events
 
 `LearniqCredentialListener` handles OpenRegister's `ObjectCreatedEvent` when the object's
-register is learniq's (resolved through `FleetAppId`) and its schema is `credential`. It
-resolves the learner's `ncUserId` to the `Employee` with that `nextcloudUserId`, and writes
+register is learniq's and its schema is `credential`. Checked at build time against learniq's
+`development` (806b755): learniq emits no credential event class of its own;
+`CredentialIssuanceHandler` saves the `credential` object through `ObjectService`, so
+OpenRegister's `ObjectCreatedEvent` is the signal. The subscription is scoped to the register
+slugs `FleetAppId` lists for learniq (`learniq`, `scholiq`), and the listener checks the
+register id again through `RegisterMapper::findIdsBySlugs`. `Credential.learnerId` is a
+`LearnerProfile` id, so the listener reads that profile's `ncUserId` and the `Course.name`
+for the title from learniq's register (read only). It resolves the learner's `ncUserId` to
+the `Employee` with that `nextcloudUserId`, and writes
 a `TrainingRecord` with `status` `gevolgd`, `completedOn = issuedAt`,
 `validUntil = expiresAt`, `source` `learniq`, `sourceRef` the credential id. A second event
 for the same credential finds the existing record and does nothing. Without learniq the
