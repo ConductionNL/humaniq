@@ -22,7 +22,10 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\CostRateAccess;
 use OCA\Humaniq\Service\HoursRegisterGateway;
+use OCA\Humaniq\Service\SettingsService;
 use OCP\App\IAppManager;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -120,7 +123,16 @@ class CostRateAccessTest extends TestCase {
 			fn (string $schema, array $filters): array => ($schema === 'TimeEntry' && $filters === ['employeeId' => 'emp-1']) ? $timeEntries : []
 		);
 
-		return new CostRateAccess($apps, $container, $gateway, $this->createMock(LoggerInterface::class));
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('pm');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getRegisterSlug')->willReturn('humaniq');
+		$settings->method('isOpenRegisterAvailable')->willReturn(true);
+
+		return new CostRateAccess($apps, $container, $gateway, $settings, $session, $this->createMock(LoggerInterface::class));
 	}
 
 	/**
@@ -129,7 +141,7 @@ class CostRateAccessTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheOwnerOfAProjectWithTheEmployeeAsMemberManagesThem(): void {
-		$employee = $this->access([['id' => 'p-1', 'owner' => 'pm', 'members' => ['jansen']]])->employeeManagedBy('pm', 'emp-1');
+		$employee = $this->access([['id' => 'p-1', 'owner' => 'pm', 'members' => ['jansen']]])->employeeManagedByCaller('emp-1');
 
 		self::assertSame('emp-1', $employee['id'] ?? null);
 	}

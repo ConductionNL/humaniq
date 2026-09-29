@@ -23,6 +23,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Service;
 
 use OCP\App\IAppManager;
+use OCP\IUserSession;
+use RuntimeException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -60,6 +62,8 @@ class CostRateAccess {
 	 * @param IAppManager          $appManager Whether planninq is installed.
 	 * @param ContainerInterface   $container  Resolves OpenRegister's ObjectService.
 	 * @param HoursRegisterGateway $gateway    System reads of humaniq objects.
+	 * @param SettingsService      $settings   Register slug and OpenRegister availability.
+	 * @param IUserSession         $userSession The caller.
 	 * @param LoggerInterface      $logger     Logger.
 	 *
 	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md#Requirement:-A-project-manager-gets-the-derived-rate-of-the-people-on-the-project,-never-their-salary-(REQ-ECR-PM)
@@ -68,9 +72,141 @@ class CostRateAccess {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly HoursRegisterGateway $gateway,
+		private readonly SettingsService $settings,
+		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
+
+	/**
+	 * Look the employee up under the caller's ambient RBAC.
+	 *
+	 * NAMED AS A LOOKUP, NOT A GUARD, BECAUSE THAT IS WHAT IT IS. This method
+	 * makes no authorization decision — `ObjectService` does, by resolving (or
+	 * refusing to resolve) the id under the caller's own RBAC. Calling it
+	 * `authorizeEmployee` claimed a decision it does not make, and gate-8
+	 * flagged the resulting `catch (\Throwable) { return null; }` in an
+	 * auth-named method as a possible fail-open resolver.
+	 *
+	 * That gate is right to be suspicious of the shape. The defect it exists
+	 * for is decidesk's `getAuthorizationService()`, which returned null on
+	 * Throwable while its caller wrote `if ($auth !== null) { check }` — so an
+	 * unavailable service silently meant NO CHECK.
+	 *
+	 * ⚠️ THE CONTRACT HERE IS THE OPPOSITE, AND CALLERS MUST KEEP IT THAT WAY:
+	 * null means DENY. The only caller answers 404 on null, before any
+	 * salary-derived figure is produced. A future caller that treats null as
+	 * "skip the lookup and carry on" would turn this into the very fail-open
+	 * the gate is named after.
+	 *
+	 * @param string $employeeId The Employee object id.
+	 *
+	 * @return array<string, mixed>|null The employee, or null when absent OR unauthorised — the two are deliberately indistinguishable.
+	 *
+	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md
+	 */
+	public function employeeForCaller(string $employeeId): ?array {
+		try {
+			$employee = $this->objectService()->find(
+				id: $employeeId,
+				register: $this->settings->getRegisterSlug(),
+				schema: 'Employee'
+			);
+		} catch (\Throwable $e) {
+			$this->logger->info('humaniq cost rate: employee ' . $employeeId . ' not retrievable: ' . $e->getMessage());
+			return null;
+		}
+
+		if ($employee === null) {
+			return null;
+		}
+
+		return $this->toArray(row: $employee);
+	}//end employeeForCaller()
+
+	/**
+	 * Find the employee's EmploymentContract that runs in the period, under the
+	 * caller's RBAC, if any.
+	 *
+	 * Returns null rather than throwing when none is found: the service then
+	 * falls back to a reasoned override, and answers null itself if there is
+	 * no wage base at all. Resolving the contract HERE rather than letting the
+	 * service pick one is deliberate — the service's own docblock notes that
+	 * taking the contract from the caller stops it silently costing against a
+	 * different contract than the caller believes it is using.
+	 *
+	 * The lookup uses OpenRegister's real `findAll(array $config, ...)`
+	 * signature. It used to pass named `register`/`schema`/`filters`
+	 * arguments that method does not have, and filtered on `employee` and
+	 * `status`, which the contract schema does not carry: the error was caught
+	 * and no contract-derived rate was ever produced.
+	 *
+	 * @param array<string, mixed> $employee The employee.
+	 * @param string $period Costing period `YYYY-MM`.
+	 *
+	 * @return array<string, mixed>|null The contract, or null.
+	 *
+	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md
+	 */
+	public function contractForCaller(array $employee, string $period): ?array {
+		$employeeId = (string)($employee['id'] ?? '');
+		if ($employeeId === '') {
+			return null;
+		}
+
+		try {
+			$found = $this->objectService()
+				->setRegister($this->settings->getRegisterSlug())
+				->setSchema('EmploymentContract')
+				->findAll(['limit' => 100, 'filters' => ['employeeId' => $employeeId]]);
+		} catch (\Throwable $e) {
+			$this->logger->info('humaniq cost rate: no contract for ' . $employeeId . ': ' . $e->getMessage());
+			return null;
+		}
+
+		$rows = array_map(fn (mixed $row): array => $this->toArray(row: $row), (is_array($found) === true ? $found : []));
+
+		return $this->pickActive(rows: array_values($rows), employeeId: $employeeId, period: $period);
+	}//end contractForCaller()
+
+	/**
+	 * The OpenRegister ObjectService, under the caller's ambient RBAC.
+	 *
+	 * @return mixed The ObjectService.
+	 *
+	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md
+	 */
+	private function objectService(): mixed {
+		// ADR-083: establish availability before reaching. Unguarded, an
+		// instance without OpenRegister gets a container exception naming a
+		// class the admin has never heard of; guarded, it is told which app to
+		// install — which is rule 3's promise that the app still explains
+		// itself.
+		if ($this->settings->isOpenRegisterAvailable() === false) {
+			throw new RuntimeException(
+				'humaniq requires the OpenRegister app, which is not installed on this instance.'
+			);
+		}
+
+		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+	}//end objectService()
+
+	/**
+	 * The employee, read without the caller's field access, when the signed-in
+	 * caller runs a project the employee works on; otherwise null.
+	 *
+	 * @param string $employeeId The Employee object id.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md#Requirement:-A-project-manager-gets-the-derived-rate-of-the-people-on-the-project,-never-their-salary-(REQ-ECR-PM)
+	 */
+	public function employeeManagedByCaller(string $employeeId): ?array {
+		return $this->employeeManagedBy(
+			uid: (string)($this->userSession->getUser()?->getUID() ?? ''),
+			employeeId: $employeeId
+		);
+	}//end employeeManagedByCaller()
 
 	/**
 	 * The employee, read without the caller's field access, when the caller
@@ -98,22 +234,43 @@ class CostRateAccess {
 			return null;
 		}
 
-		$employeeUid = trim((string)($employee['nextcloudUserId'] ?? ''));
-		foreach ($projects as $project) {
-			if ($employeeUid !== '' && in_array($employeeUid, (array)($project['members'] ?? []), true) === true) {
-				return $employee;
-			}
-		}
-
-		$projectIds = array_filter(array_map(fn (array $p): string => (string)($p['id'] ?? ($p['@self']['id'] ?? '')), $projects));
-		foreach ($this->gateway->findFiltered('TimeEntry', ['employeeId' => $employeeId]) as $entry) {
-			if (in_array((string)($entry['projectId'] ?? ''), $projectIds, true) === true) {
-				return $employee;
-			}
+		if ($this->worksOn(employee: $employee, employeeId: $employeeId, projects: $projects) === true) {
+			return $employee;
 		}
 
 		return null;
 	}//end employeeManagedBy()
+
+	/**
+	 * Whether the employee works on one of the projects: their user is a
+	 * member, or one of their time entries names the project.
+	 *
+	 * @param array<string, mixed>             $employee   The employee.
+	 * @param string                           $employeeId The Employee object id.
+	 * @param array<int, array<string, mixed>> $projects   The projects.
+	 *
+	 * @return bool
+	 */
+	private function worksOn(array $employee, string $employeeId, array $projects): bool {
+		$employeeUid = trim((string)($employee['nextcloudUserId'] ?? ''));
+		$projectIds = [];
+		foreach ($projects as $project) {
+			if ($employeeUid !== '' && in_array($employeeUid, (array)($project['members'] ?? []), true) === true) {
+				return true;
+			}
+
+			$projectIds[] = (string)($project['id'] ?? ($project['@self']['id'] ?? ''));
+		}
+
+		$projectIds = array_filter($projectIds);
+		foreach ($this->gateway->findFiltered('TimeEntry', ['employeeId' => $employeeId]) as $entry) {
+			if (in_array((string)($entry['projectId'] ?? ''), $projectIds, true) === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end worksOn()
 
 	/**
 	 * The employee's contract for the period, read without the caller's field access.

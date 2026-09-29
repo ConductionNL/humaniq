@@ -29,16 +29,12 @@ namespace OCA\Humaniq\Controller;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\CostRateAccess;
 use OCA\Humaniq\Service\EmployeeCostRateService;
-use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 
 /**
  * Serve one employee's loaded employer cost per hour.
@@ -64,11 +60,8 @@ class EmployerCostRateController extends Controller {
 	 * Wire collaborators.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ContainerInterface $container DI container, for the RBAC-guarded ObjectService resolve.
 	 * @param EmployeeCostRateService $costRates The cost-rate resolver.
-	 * @param SettingsService $settings Register-slug lookup.
-	 * @param CostRateAccess $access The project-manager path and the contract choice.
-	 * @param IUserSession $userSession The caller.
+	 * @param CostRateAccess $access The employee and contract a rate is computed from, under the caller's access or as their project manager.
 	 * @param LoggerInterface $logger PSR logger.
 	 *
 	 * @return void
@@ -77,11 +70,8 @@ class EmployerCostRateController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly EmployeeCostRateService $costRates,
-		private readonly SettingsService $settings,
 		private readonly CostRateAccess $access,
-		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -120,7 +110,7 @@ class EmployerCostRateController extends Controller {
 		// any cost figure is produced. A salary-derived rate is exactly the
 		// kind of value an unguarded id would leak, so an unresolvable or
 		// unauthorised id must be indistinguishable from a missing one.
-		$employee = $this->findEmployeeForCaller($employeeId);
+		$employee = $this->access->employeeForCaller(employeeId: $employeeId);
 		$period = ($period ?? date('Y-m'));
 
 		try {
@@ -128,7 +118,7 @@ class EmployerCostRateController extends Controller {
 			if ($employee !== null) {
 				$rate = $this->costRates->resolve(
 					employee: $employee,
-					contract: $this->activeContract(employee: $employee, period: $period),
+					contract: $this->access->contractForCaller(employee: $employee, period: $period),
 					period: $period,
 					extraAdditions: $additions
 				);
@@ -182,52 +172,6 @@ class EmployerCostRateController extends Controller {
 	}//end show()
 
 	/**
-	 * Look the employee up under the caller's ambient RBAC.
-	 *
-	 * NAMED AS A LOOKUP, NOT A GUARD, BECAUSE THAT IS WHAT IT IS. This method
-	 * makes no authorization decision — `ObjectService` does, by resolving (or
-	 * refusing to resolve) the id under the caller's own RBAC. Calling it
-	 * `authorizeEmployee` claimed a decision it does not make, and gate-8
-	 * flagged the resulting `catch (\Throwable) { return null; }` in an
-	 * auth-named method as a possible fail-open resolver.
-	 *
-	 * That gate is right to be suspicious of the shape. The defect it exists
-	 * for is decidesk's `getAuthorizationService()`, which returned null on
-	 * Throwable while its caller wrote `if ($auth !== null) { check }` — so an
-	 * unavailable service silently meant NO CHECK.
-	 *
-	 * ⚠️ THE CONTRACT HERE IS THE OPPOSITE, AND CALLERS MUST KEEP IT THAT WAY:
-	 * null means DENY. The only caller answers 404 on null, before any
-	 * salary-derived figure is produced. A future caller that treats null as
-	 * "skip the lookup and carry on" would turn this into the very fail-open
-	 * the gate is named after.
-	 *
-	 * @param string $employeeId The Employee object id.
-	 *
-	 * @return array<string, mixed>|null The employee, or null when absent OR unauthorised — the two are deliberately indistinguishable.
-	 *
-	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md
-	 */
-	private function findEmployeeForCaller(string $employeeId): ?array {
-		try {
-			$employee = $this->objectService()->find(
-				id: $employeeId,
-				register: $this->settings->getRegisterSlug(),
-				schema: 'Employee'
-			);
-		} catch (\Throwable $e) {
-			$this->logger->info('EmployerCostRateController: employee ' . $employeeId . ' not retrievable: ' . $e->getMessage());
-			return null;
-		}
-
-		if ($employee === null) {
-			return null;
-		}
-
-		return $this->toArray($employee);
-	}//end findEmployeeForCaller()
-
-	/**
 	 * The reduced answer for a project manager of a project the employee works
 	 * on, or null when the caller is not one or no wage base exists.
 	 *
@@ -245,8 +189,7 @@ class EmployerCostRateController extends Controller {
 	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md#Requirement:-A-project-manager-gets-the-derived-rate-of-the-people-on-the-project,-never-their-salary-(REQ-ECR-PM)
 	 */
 	private function projectManagerRate(string $employeeId, string $period, array $additions): ?array {
-		$uid = (string)($this->userSession->getUser()?->getUID() ?? '');
-		$employee = $this->access->employeeManagedBy(uid: $uid, employeeId: $employeeId);
+		$employee = $this->access->employeeManagedByCaller(employeeId: $employeeId);
 		if ($employee === null) {
 			return null;
 		}
@@ -271,92 +214,4 @@ class EmployerCostRateController extends Controller {
 			'additions' => $rate['additions'],
 		];
 	}//end projectManagerRate()
-
-	/**
-	 * Find the employee's EmploymentContract that runs in the period, under the
-	 * caller's RBAC, if any.
-	 *
-	 * Returns null rather than throwing when none is found: the service then
-	 * falls back to a reasoned override, and answers null itself if there is
-	 * no wage base at all. Resolving the contract HERE rather than letting the
-	 * service pick one is deliberate — the service's own docblock notes that
-	 * taking the contract from the caller stops it silently costing against a
-	 * different contract than the caller believes it is using.
-	 *
-	 * The lookup uses OpenRegister's real `findAll(array $config, ...)`
-	 * signature. It used to pass named `register`/`schema`/`filters`
-	 * arguments that method does not have, and filtered on `employee` and
-	 * `status`, which the contract schema does not carry: the error was caught
-	 * and no contract-derived rate was ever produced.
-	 *
-	 * @param array<string, mixed> $employee The employee.
-	 * @param string $period Costing period `YYYY-MM`.
-	 *
-	 * @return array<string, mixed>|null The contract, or null.
-	 *
-	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md
-	 */
-	private function activeContract(array $employee, string $period): ?array {
-		$employeeId = (string)($employee['id'] ?? '');
-		if ($employeeId === '') {
-			return null;
-		}
-
-		try {
-			$found = $this->objectService()
-				->setRegister($this->settings->getRegisterSlug())
-				->setSchema('EmploymentContract')
-				->findAll(['limit' => 100, 'filters' => ['employeeId' => $employeeId]]);
-		} catch (\Throwable $e) {
-			$this->logger->info('EmployerCostRateController: no contract for ' . $employeeId . ': ' . $e->getMessage());
-			return null;
-		}
-
-		$rows = array_map(fn (mixed $row): array => $this->toArray($row), (is_array($found) === true ? $found : []));
-
-		return $this->access->pickActive(rows: array_values($rows), employeeId: $employeeId, period: $period);
-	}//end activeContract()
-
-	/**
-	 * The OpenRegister ObjectService, under the caller's ambient RBAC.
-	 *
-	 * @return mixed The ObjectService.
-	 *
-	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md
-	 */
-	private function objectService(): mixed {
-		// ADR-083: establish availability before reaching. Unguarded, an
-		// instance without OpenRegister gets a container exception naming a
-		// class the admin has never heard of; guarded, it is told which app to
-		// install — which is rule 3's promise that the app still explains
-		// itself.
-		if ($this->settings->isOpenRegisterAvailable() === false) {
-			throw new RuntimeException(
-				'humaniq requires the OpenRegister app, which is not installed on this instance.'
-			);
-		}
-
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-	}//end objectService()
-
-	/**
-	 * Normalise an ObjectService row to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed> The row as an array.
-	 *
-	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			return (array)$row->jsonSerialize();
-		}
-
-		return (array)$row;
-	}//end toArray()
 }//end class
