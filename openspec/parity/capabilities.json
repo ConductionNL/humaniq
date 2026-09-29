@@ -7135,7 +7135,7 @@
    "id": "td-manager-deputy",
    "area": "self-service",
    "name": "Let a manager hand approvals for their team to a deputy for a period.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -7151,10 +7151,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(delegat\\w*|deputy)\\b' src/plugins src/client/src finds no match; approval rights follow report-to lines only (src/plugins/orangehrmCorePlugin/Authorization/UserRole/SupervisorUserRole.php:91)"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/self-service-approvals-inbox on 2026-09-27. Before: grep -rniE 'deputy|vervanger|plaatsvervang|substitute' lib/Settings src/manifest.d lib/Service: no hits for manager substitution; managerUserId is stamped from the org chart (ess-manager-team) with no temporary delegate",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-deputy.json ManagerDeputy (manager, deputy, first and last day); lib/Listener/ManagerDeputyListener.php refuses a self-deputy, a reversed period and a writer who is neither the manager nor HR; lib/Service/ManagerDeputies.php resolves the active deputy on read; lib/Notification/ManagerOrDeputyRecipientResolver.php on the leave-submitted, timesheet-submitted, expense-submitted and leave-transaction-submitted rules. Tests: tests/Unit/Service/ManagerDeputiesTest.php, tests/Unit/Listener/ManagerDeputyListenerTest.php, tests/Unit/Notification/ManagerOrDeputyRecipientResolverTest.php, tests/Unit/Service/ApprovalsInboxServiceTest.php::testADeputySeesTheManagersRequestsOnlyDuringThePeriod.",
+    "reachedOn": "My HR > My deputies (preset managerUserId = @me on /manager-deputies) and ManagerDeputyDetail; the deputy's My approvals",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-self-service-approvals-inbox",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8498,7 +8500,7 @@
    "id": "dm-approvals-dashboard",
    "area": "platform",
    "name": "Track every approval request across processes in one list with its timeline and current status.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "partial",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -8514,10 +8516,12 @@
     "orangehrm": "orangehrm@v5.9 src/client/src/orangehrmDashboardPlugin/components/MyActionSummaryWidget.vue:26 'My Actions' fed by src/plugins/orangehrmDashboardPlugin/Api/EmployeeActionSummaryAPI.php:89 to :96 shows counts of pending leave requests, timesheets, reviews and candidates; counts per group, no single list with timeline"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/self-service-approvals-inbox on 2026-09-27 for the missing half: one list across hours, leave and expense approvals with each request's timeline. Before: src/manifest.d/05-menu.json:242, :287, :369 three separate team approval pages (hours, leave, expenses) filtered to the manager; src/manifest.d/personal-dashboard.json:71 MijnHr te-beoordelen widget; no single cross-process list with a timeline",
-    "reachedOn": "TeamUrengoedkeuring, TeamVerlofgoedkeuring, TeamDeclaratiegoedkeuring, MijnHr /mijn",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/ApprovalsInboxService.php composes every submitted LeaveRequest, Timesheet, Expense and LeaveTransaction waiting for the caller (as manager, or as deputy today) under the caller's own rights, and what the caller decided in the last 90 days with each timeline; lib/Controller/ApprovalsController.php GET /api/approvals?state=open|decided&kind=; lib/Listener/ApprovalDecisionStampListener.php stamps submittedAt, approvedBy and approvedAt on the three schemas Timesheet's own listener does not cover; src/widgets/ApprovalsInboxWidget.vue approves and rejects through the OpenRegister transition. Tests: tests/Unit/Service/ApprovalsInboxServiceTest.php, tests/Unit/Controller/ApprovalsControllerTest.php, tests/Unit/Listener/ApprovalDecisionStampListenerTest.php.",
+    "reachedOn": "My HR > My approvals (/my-approvals): Waiting for you and Decided by you",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-self-service-approvals-inbox",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

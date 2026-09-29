@@ -1,6 +1,9 @@
-# approvals-inbox
+# approvals-inbox Specification
 
-## ADDED Requirements
+## Purpose
+A manager, or a deputy standing in for one, sees every waiting leave request, timesheet, expense claim and leave trade in one inbox and decides on it there, and can look back at what they decided with each request's timeline. Built by self-service-approvals-inbox (archived 2026-09-29).
+
+## Requirements
 
 ### Requirement: A manager SHALL have one inbox for every waiting request (REQ-API-001)
 
@@ -17,10 +20,14 @@ Rows: `dm-approvals-dashboard` (humaniq matrix).
 - **THEN** all six are listed oldest first, and approving one there applies the same
   transition as on the team page
 
+@e2e exclude the inbox is composed server side under the caller's rights; covered by ApprovalsInboxServiceTest::testAManagerSeesAllSixWaitingRequestsOldestFirst and ApprovalsControllerTest, the page by check:manifest
+
 #### Scenario: Looking back at a decision
 - **GIVEN** a leave request the manager rejected last week
 - **WHEN** they open the decided view
 - **THEN** the request shows when it was submitted, when it was rejected, by whom and why
+
+@e2e exclude the timeline is composed server side from the decision stamps; covered by ApprovalsInboxServiceTest::testTheDecidedViewShowsWhenWhoAndWhy and ApprovalDecisionStampListenerTest::testARejectionStampsWhoDecidedAndWhen
 
 ### Requirement: A manager SHALL be able to hand their approvals to a deputy for a period (REQ-API-002)
 
@@ -37,3 +44,5 @@ https://www.tenderned.nl/aankondigingen/overzicht/415705.
 - **WHEN** an employee of the team submits leave on 20 July
 - **THEN** the deputy is notified and sees the request in their inbox, and on 2 August the
   deputy no longer sees the manager's requests
+
+@e2e exclude the deputy period is resolved server side on every read and notification; covered by ApprovalsInboxServiceTest::testADeputySeesTheManagersRequestsOnlyDuringThePeriod and ManagerOrDeputyRecipientResolverTest::testTheActiveDeputyIsNotifiedAndTheExpiredOneIsNot

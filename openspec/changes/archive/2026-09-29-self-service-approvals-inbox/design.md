@@ -83,3 +83,41 @@ pages, so `NoSelfApprovalGuard` and every other guard still applies.
 
 - Should HR be able to set a deputy for a manager who is off sick? Yes by default in this design,
   since HR may create the record.
+
+## Build-time changes (2026-09-29)
+
+Read against `development` 82dd772d plus humaniq#560 while building.
+
+- **Decisions are stamped, not read from the audit trail.** No listener stamped `approvedBy`
+  or `approvedAt` on `LeaveRequest`, `Expense` or `LeaveTransaction`, so the decided view had
+  nothing to read. `ApprovalDecisionStampListener` stamps `submittedAt` on a submit (and
+  clears an earlier verdict), and `approvedBy` and `approvedAt` on an approve or reject, on
+  those three. `Timesheet` keeps its own `TimesheetProcessStampListener`. A decision made
+  before this change carries no stamp and does not show in the decided view.
+- **The submit rules are declared here.** `platform-notifications` is not built, so this
+  change declares the four submitted rules itself, with that change's keys and channels:
+  `leave-submitted`, `timesheet-submitted`, `expense-submitted` and
+  `leave-transaction-submitted`, each `{type: transition, action: submit}` on
+  `nc-notification` and `email`. Each has one recipient,
+  `ManagerOrDeputyRecipientResolver`, which returns the manager and the active deputies.
+  One recipient rather than a field recipient plus the resolver, so a manager is not told
+  twice. `platform-notifications` keeps the decision and payslip rules.
+- **A request without a stamped manager.** `LeaveTransaction` has no `managerUserId`, and
+  older claims may lack one. `ManagerDeputies::managersOf()` then takes the employee's unique
+  manager from the org chart on the day of the read. The requester's own account is never
+  an approver.
+- **Who may write a deputy record.** `ManagerDeputyListener` also refuses a writer who is
+  neither the record's manager nor HR, and fills in the writer as manager when the field is
+  empty. Without that check, anyone could make themselves a manager's deputy and receive the
+  submit notifications.
+- **The inbox is a dashboard with a host widget, not a custom page.** Gate 69 forbids a new
+  `type: custom` page. The library's `object-table` resolves to `CnObjectListWidget`, which
+  ignores `endpointSource` in nextcloud-vue 2.57.1, has one static `rowRoute`, and its
+  `api-call` row actions carry no row token. So `MijnGoedkeuringen` is a dashboard with two
+  `approvals-inbox` widgets (`state: open`, `state: decided`), registered with a
+  `@custom-widget-ratchet exclude` reason. The widget posts the OpenRegister transition.
+- **My deputies** is a menu preset on the `ManagerDeputies` index (`managerUserId = @me`),
+  not a second index page. The warning for a deputy who cannot read the manager's team is
+  not built: a row the deputy may not read is simply absent.
+- **Seed.** A fixed period, 14 July to 1 August 2026, with `hr-demo` standing in for `admin`,
+  rather than the current month, because a seed cannot move with the calendar.
