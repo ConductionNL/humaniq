@@ -75,3 +75,22 @@ the analytics endpoint).
 
 - The Dutch act may fix reporting thresholds by employer size; the report works for any size and
   the obligation dates are the employer's to follow.
+
+## Changes during the build (2026-09-29)
+
+- **Variable pay** is what a payslip pays above the employee's `grossMonthlySalary`. The payslip
+  carries no component split (the engine snapshot is not a stable contract), so D1's "components
+  that are not base salary" is read as pay above the monthly salary.
+- **Gender** is `woman`, `man`, `other` or empty (nullable enum, default null). Readable by HR,
+  payroll and the employee, updated by HR, like `bsn`.
+- **Rows** are read with RBAC off (`HoursRegisterGateway`), filtered to the caller's active
+  administration. An accountant cannot read `gender` field by field, but the report only shows
+  group figures at or above the threshold.
+- **Suppression** applies to the whole administration too: below the threshold the overall
+  figures and the quartiles are empty. The threshold is app config
+  `pay_transparency_minimum_group` (default 5).
+- **Page**: `PayTransparencyReport` (type dashboard) under a new Reports category "Pay", with a
+  year page filter (`last` means the previous calendar year). The CSV is a header action that
+  always exports the previous calendar year: CnDashboardPage passes header actions no workspace
+  context, so the action cannot read the filter. Another year is `POST
+  /api/reports/pay-transparency/export {year}`.

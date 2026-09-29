@@ -17,6 +17,8 @@ Rows: `dm-pay-transparency` (humaniq matrix).
 - **WHEN** an HR adviser opens the "Pay transparency" report for 2026
 - **THEN** it shows the overall mean and median gap and the gap per category, and exports to CSV
 
+@e2e exclude the indicators are computed server-side and shown by library widgets; covered by PayTransparencyServiceTest::testTheGapsOfASmallAdministrationByHand and PayTransparencyControllerTest::testHrReadsLastYearOfItsOwnAdministration and ::testTheExportIsACsv
+
 ### Requirement: Small groups SHALL NOT be reported as figures (REQ-PTR-002)
 
 A category with fewer women or men than the threshold (by default five) SHALL be reported as too
@@ -28,3 +30,5 @@ Rows: `dm-pay-transparency` (humaniq matrix).
 - **GIVEN** a category with four women and twelve men
 - **WHEN** the report is read
 - **THEN** that category shows "too small to report" and no gap
+
+@e2e exclude suppression and access are decided server-side; covered by PayTransparencyServiceTest::testACategoryOfFourWomenIsTooSmall and PayTransparencyControllerTest::testAnyoneElseIsRefused

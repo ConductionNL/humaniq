@@ -7697,7 +7697,7 @@
    "id": "dm-pay-transparency",
    "area": "reporting",
    "name": "Compare the pay of employees doing equal work, by job category and gender, to prepare the pay gap report the pay transparency law requires.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "partial",
    "visma-raet": "unknown",
    "hr2day": "yes",
@@ -7713,10 +7713,12 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmCorePlugin/Report/FilterField/JobTitle.php:34 the PIM report builder filters employees by job title, and src/plugins/orangehrmCorePlugin/Report/DisplayField/EntityAliasMapping.php:40 plus Report/DisplayField/Personal/EmployeeGender.php let it show salary and gender side by side; no gap calculation (grep -riE 'pay.?gap|pay.?transparen|gender.*(salary|pay)' src/plugins src/client/src: no match)"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/reporting-pay-transparency on 2026-09-27. Before: grep -rniE 'pay.?gap|loonkloof|loontransparan|gender' lib src: no hits; SalaryBand (lib/Settings/register.d/hr-comp.json) checks pay against a band but nothing compares groups",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/PayTransparencyService.php report() computes per administration and year the mean and median gap in hourly pay (gross pay over hours paid, from the payslips) overall and per Normfunctie.payCategory, the gap in variable pay and the share of each gender receiving it, and the gender split per pay quartile; a group under pay_transparency_minimum_group women or men (default 5) is tooSmall without figures. lib/Controller/PayTransparencyController.php serves GET /api/reports/pay-transparency and POST /api/reports/pay-transparency/export (CSV) to HR and accountants. Employee.gender and Normfunctie.payCategory carry the inputs. Tests: tests/Unit/Service/PayTransparencyServiceTest.php, tests/Unit/Controller/PayTransparencyControllerTest.php.",
+    "reachedOn": "Reports /reports > Pay transparency (/reports/pay-transparency): year filter, gap stats, per-category table, quartiles, CSV download",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-reporting-pay-transparency",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
