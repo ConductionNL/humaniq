@@ -128,6 +128,8 @@ export default {
 		 * @param {string} kind The entry kind.
 		 *
 		 * @return {string} The label.
+		 *
+		 * @spec openspec/specs/secondment-and-side-activities/spec.md#REQ-SEC-002
 		 */
 		kindLabel(kind) {
 			const labels = {

@@ -64,9 +64,11 @@ class AgendaComposer {
 	 * Constructor.
 	 *
 	 * @param AgendaBookingEntries $bookings Builds the booking and busy-time entries.
+	 * @param AgendaSecondmentEntries $secondments Builds the secondment entries.
 	 */
 	public function __construct(
 		private readonly AgendaBookingEntries $bookings = new AgendaBookingEntries(),
+		private readonly AgendaSecondmentEntries $secondments = new AgendaSecondmentEntries(),
 	) {
 
 	}//end __construct()
@@ -105,7 +107,7 @@ class AgendaComposer {
 			$this->leaveEntries(sources: $sources, employees: $employees, from: $from, to: $to),
 			$this->absenceEntries(sources: $sources, employees: $employees, from: $from, to: $to),
 			$this->interviewEntries(sources: $sources, employees: $employees, from: $from, to: $to),
-			$this->secondmentEntries(sources: $sources, employees: $employees, from: $from, to: $to),
+			$this->secondments->entries(sources: $sources, employees: $employees, from: $from, to: $to),
 			$this->bookings->bookingEntries(
 				sources: $sources,
 				employees: $employees,
@@ -290,52 +292,6 @@ class AgendaComposer {
 
 		return $entries;
 	}//end absenceEntries()
-
-	/**
-	 * Active secondments as agenda entries (people-secondment-and-side-activities D2).
-	 *
-	 * One entry over the secondment's days inside the window, carrying its
-	 * hours per week, so availability can commit that share of each working day.
-	 *
-	 * @param array<string, mixed> $sources The source rows.
-	 * @param array<int, string> $employees The subject's employees.
-	 * @param string $from First day (ISO date).
-	 * @param string $to Last day (ISO date).
-	 *
-	 * @return array<int, array<string, mixed>> The entries.
-	 *
-	 * @spec openspec/specs/secondment-and-side-activities/spec.md#REQ-SEC-002
-	 */
-	private function secondmentEntries(array $sources, array $employees, string $from, string $to): array {
-		$entries = [];
-		foreach (($sources['secondments'] ?? []) as $secondment) {
-			$employeeId = trim((string)($secondment['employeeId'] ?? ''));
-			if (in_array($employeeId, $employees, true) === false || trim((string)($secondment['status'] ?? '')) !== 'actief') {
-				continue;
-			}
-
-			$start = max($from, substr(trim((string)($secondment['startDate'] ?? '')), 0, 10));
-			$endDate = substr(trim((string)($secondment['endDate'] ?? '')), 0, 10);
-			$end = ($endDate === '') ? $to : min($to, $endDate);
-			if ($start === '' || $start > $end) {
-				continue;
-			}
-
-			$entries[] = [
-				'kind' => 'secondment',
-				'subjectType' => 'employee',
-				'subjectId' => $employeeId,
-				'start' => ($start . 'T00:00:00'),
-				'end' => ($end . 'T23:59:59'),
-				'label' => 'Gedetacheerd: ' . trim((string)($secondment['receivingOrganisation'] ?? '')),
-				'hoursPerWeek' => (float)($secondment['hoursPerWeek'] ?? 0),
-				'sourceType' => 'Secondment',
-				'sourceId' => trim((string)($secondment['id'] ?? '')),
-			];
-		}
-
-		return $entries;
-	}//end secondmentEntries()
 
 	/**
 	 * Interviews as agenda entries.

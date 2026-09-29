@@ -109,7 +109,7 @@ class SideActivityRegister {
 				'employeeId' => $employeeId,
 				'userId' => ($own !== '' ? $own : null),
 				'managerUserId' => $this->gateway->uniqueManagerUserIdFor($employeeId, $today),
-				'administrationId' => (($report['administrationId'] ?? null) ?? ($employee['administrationId'] ?? null)),
+				'administrationId' => ($report['administrationId'] ?? ($employee['administrationId'] ?? null)),
 			],
 			'error' => null,
 		];
