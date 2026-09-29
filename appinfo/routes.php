@@ -165,6 +165,7 @@ return [
         // expenses-travel-calculation: a commuting distance from the route planner, and the yearly mobility figures.
         ['name' => 'travel#routeDistance', 'url' => '/api/travel/route-distance', 'verb' => 'POST'],
         // people-register-prefill: fill a company car from the RDW and an employee from the BRP (HR or admin).
+        ['name' => 'registerPrefill#brpAvailable', 'url' => '/api/prefill/brp-available', 'verb' => 'GET'],
         ['name' => 'registerPrefill#vehicle', 'url' => '/api/prefill/vehicle/{assetId}', 'verb' => 'POST'],
         ['name' => 'registerPrefill#employee', 'url' => '/api/prefill/employee/{employeeId}', 'verb' => 'POST'],
         ['name' => 'travel#wpmReport', 'url' => '/api/travel/wpm-report', 'verb' => 'POST'],
