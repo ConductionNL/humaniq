@@ -40,6 +40,18 @@
 					"route": "MijnLoonstroken"
 				},
 				{
+					"id": "MijnGegevens",
+					"label": "My details",
+					"icon": "AccountBoxOutline",
+					"route": "MijnGegevens"
+				},
+				{
+					"id": "MijnWijzigingsverzoeken",
+					"label": "My change requests",
+					"icon": "PencilOutline",
+					"route": "MijnWijzigingsverzoeken"
+				},
+				{
 					"id": "MijnAanwezigheid",
 					"label": "My attendance",
 					"icon": "ClockOutline",
@@ -93,6 +105,18 @@
 					"label": "Employees",
 					"icon": "AccountTieOutline",
 					"route": "Employees"
+				},
+				{
+					"id": "ChangeRequests",
+					"label": "Change requests",
+					"icon": "PencilOutline",
+					"route": "ChangeRequests"
+				},
+				{
+					"id": "ChangeApprovalRules",
+					"label": "Change approval rules",
+					"icon": "ShieldAccountOutline",
+					"route": "ChangeApprovalRules"
 				},
 				{
 					"id": "EmploymentContracts",

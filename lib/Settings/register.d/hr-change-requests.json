@@ -4,7 +4,7 @@
         "schemas": {
             "EmployeeChangeRequest": {
                 "slug": "EmployeeChangeRequest",
-                "icon": "AccountEditOutline",
+                "icon": "PencilOutline",
                 "version": "0.1.0",
                 "title": "Change request",
                 "description": "A proposed change to one employee record that waits for the role set for its kind of change. Approving it writes the proposed values to the employee; rejecting it writes nothing (people-record-change-approval D1).",

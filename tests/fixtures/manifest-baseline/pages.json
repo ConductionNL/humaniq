@@ -252,6 +252,26 @@
 		"route": "/caos"
 	},
 	{
+		"id": "MijnWijzigingsverzoeken",
+		"route": "/my-change-requests"
+	},
+	{
+		"id": "ChangeRequests",
+		"route": "/change-requests"
+	},
+	{
+		"id": "ChangeRequestDetail",
+		"route": "/change-requests/:id"
+	},
+	{
+		"id": "ChangeApprovalRules",
+		"route": "/change-approval-rules"
+	},
+	{
+		"id": "ChangeApprovalRuleDetail",
+		"route": "/change-approval-rules/:id"
+	},
+	{
 		"id": "SalaryBands",
 		"route": "/salary-bands"
 	},

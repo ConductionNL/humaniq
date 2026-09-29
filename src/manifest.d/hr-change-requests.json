@@ -97,7 +97,7 @@
 				"route": "/change-requests/:id",
 				"title": "Change request",
 				"dataTitle": "Change request",
-				"dataIcon": "AccountEditOutline",
+				"dataIcon": "PencilOutline",
 				"relatedTitle": "Related",
 				"gridHeight": 10,
 				"note": "people-record-change-approval (2026-09-29): REQ-ECR-001. The data widget shows previousValues (Current values) next to changes (Proposed values); every stamped field is read-only because ChangeRequestService fills it. lifecycleActions mirror the schema: goedkeuren and afwijzen, both guarded by ChangeApproverRoleGuard; a rejection needs rejectionReason (refused otherwise).",
