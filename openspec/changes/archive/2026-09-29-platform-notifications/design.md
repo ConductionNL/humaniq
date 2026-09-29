@@ -98,3 +98,14 @@ No new objects. The seeded leave request of an employee with a `managerUserId` p
 
 - Should `web-push` be added to the decision rules? It needs the engine's VAPID setup on the
   instance; left out until an administration asks.
+
+## Changes during the build (2026-09-29)
+
+- The four submitted rules already existed (self-service-approvals-inbox, #561): they reach the
+  manager or a deputy through `ManagerOrDeputyRecipientResolver` instead of the plain
+  `managerUserId` field. This change adds the decision and payslip rules only.
+- Rules live under each schema's `configuration.x-openregister-notifications`, like the existing
+  ones, and are mirrored into the mock register.
+- D3: `CnAppRoot` already mounts `CnNotificationPreferences` as the default of its
+  `#user-settings` slot, scoped by `cnAppId`. humaniq had no way to open that dialog, so the menu
+  gains "My settings" (`section: settings`, `action: user-settings`). No component of our own.

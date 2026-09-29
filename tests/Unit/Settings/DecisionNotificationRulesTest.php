@@ -20,8 +20,8 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/specs/humaniq-notifications/spec.md#REQ-NTF-001
  * @spec openspec/specs/humaniq-notifications/spec.md#REQ-NTF-002
+ * @spec openspec/specs/humaniq-notifications/spec.md#REQ-NTF-003
  */
 
 declare(strict_types=1);
@@ -68,7 +68,7 @@ class DecisionNotificationRulesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/humaniq-notifications/spec.md#REQ-NTF-001
+	 * @spec openspec/specs/humaniq-notifications/spec.md#REQ-NTF-002
 	 */
 	#[DataProvider('rules')]
 	public function testTheDecisionReachesTheRequester(string $schema, string $key, ?string $action, ?string $field): void {
@@ -101,7 +101,7 @@ class DecisionNotificationRulesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/humaniq-notifications/spec.md#REQ-NTF-002
+	 * @spec openspec/specs/humaniq-notifications/spec.md#REQ-NTF-003
 	 */
 	public function testThePayslipRuleShipsSwitchedOff(): void {
 		foreach (self::rules() as [$schema, $key]) {
@@ -115,7 +115,7 @@ class DecisionNotificationRulesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/humaniq-notifications/spec.md#REQ-NTF-002
+	 * @spec openspec/specs/humaniq-notifications/spec.md#REQ-NTF-003
 	 */
 	public function testTheMenuOpensTheUserSettings(): void {
 		$menu = json_decode((string)file_get_contents(__DIR__ . '/../../../src/manifest.d/05-menu.json'), true)['menu'];

@@ -5443,7 +5443,7 @@
    "id": "ess-notifications",
    "area": "self-service",
    "name": "Get notified when something you submitted is approved or rejected.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -5459,10 +5459,12 @@
     "loket": "https://loket.nl/functionaliteiten/verlof/: employees follow the status of their leave request; https://loket.nl/functionaliteiten/workflows/: notifications and tasks go automatically to the right people; https://loket.nl/roadmap/ (Duidelijke status na goedkeuring van declaraties) says approved claims long showed only In behandeling; an explicit approved or rejected notice to the submitter is not described."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/platform-notifications on 2026-09-27. Before: grep -rln 'INotification|NotificationManager|x-openregister-notifications' lib/: no hits anywhere in the app",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d: x-openregister-notifications rules leave-submitted, timesheet-submitted, expense-submitted, leave-transaction-submitted (to the manager or deputy) and leave-/timesheet-/expense-/leave-transaction- approved and rejected, expense-reimbursed, review-finalised, payslip-ready (to userId; payslip off by default), originApp humaniq, dispatched by OpenRegister's engine. Tests: tests/Unit/Settings/DecisionNotificationRulesTest.php, tests/Unit/Notification/ManagerOrDeputyRecipientResolverTest.php.",
+    "reachedOn": "Nextcloud notifications for the requester after a decision; for the approver after a submit (and by email)",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-platform-notifications",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6526,7 +6528,7 @@
    "id": "plt-configurable-notifications",
    "area": "platform",
    "name": "Choose per workflow step whether a notification is sent.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -6542,10 +6544,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/16599105162909-Summary-of-workflow-components: workflow actions include Assign a task, Send a notification, Send an email and Add a participant, added per step in the chosen order."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/platform-notifications on 2026-09-27. Before: grep -rliF x-openregister-notifications lib/Settings/register.d/*.json: no hits; grep -rniF notification lib/Settings/register.d/*.json: only date-field labels (UWV 42-week notification due/done in hr-verzuim.json:122-130) and an FR statutory field, none a send/suppress toggle; notifications/reminders are named an app-wide ADR-031/gate-18 deferral in openspec/changes/archive/2026-07-13-performance-reviews-mvp/design.md's non-goals",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "Each humaniq notification is a separate declared rule with enabled as the employer default (payslip-ready ships off); src/manifest.d/05-menu.json My settings (action user-settings) opens CnAppRoot's settings dialog, whose CnNotificationPreferences lists humaniq's rules and switches each per user through OpenRegister's notification preferences. Test: tests/Unit/Settings/DecisionNotificationRulesTest.php.",
+    "reachedOn": "My settings (navigation settings section) > notification preferences, one switch per humaniq rule",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-platform-notifications",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

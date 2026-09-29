@@ -1,6 +1,9 @@
-# humaniq-notifications
+# humaniq-notifications Specification
 
-## ADDED Requirements
+## Purpose
+Declared notification rules for submissions, decisions and new payslips, switchable per rule by the employer and per user. Built by platform-notifications (archived 2026-09-29); the submitted rules came with self-service-approvals-inbox.
+
+## Requirements
 
 ### Requirement: A submitted request SHALL notify its approver (REQ-NTF-001)
 
@@ -15,6 +18,8 @@ Rows: `ess-notifications` (humaniq matrix).
 - **WHEN** the employee submits it on `MijnVerlof`
 - **THEN** the manager receives a notification that a leave request waits, which opens the
   request
+
+@e2e exclude a notification is dispatched by OpenRegister's engine from the declared rule; the rule is covered by the self-service-approvals-inbox tests (ManagerOrDeputyRecipientResolverTest) and validated with OpenRegister's NotificationAnnotationValidator
 
 ### Requirement: A decision SHALL notify the requester (REQ-NTF-002)
 
@@ -31,6 +36,8 @@ Rows: `ess-notifications` (humaniq matrix).
 - **THEN** the employee receives a notification that the claim was rejected, showing "receipt
   missing"
 
+@e2e exclude dispatched by OpenRegister's engine; covered by DecisionNotificationRulesTest::testTheDecisionReachesTheRequester (expense rejected carries {{rejectionReason}}) and OpenRegister's NotificationAnnotationValidator
+
 ### Requirement: Every notification SHALL be switchable per rule (REQ-NTF-003)
 
 Each notification SHALL be a separate declared rule with a default the employer sets, and each
@@ -45,7 +52,11 @@ Rows: `plt-configurable-notifications` (humaniq matrix).
 - **THEN** the next submitted claim in their queue produces no notification for them, and
   another manager still receives theirs
 
+@e2e exclude the per-user switch is OpenRegister's notification preferences, rendered by the library's CnNotificationPreferences; covered by DecisionNotificationRulesTest::testTheMenuOpensTheUserSettings
+
 #### Scenario: The settings show only humaniq's rules
 - **GIVEN** a user with access to several apps' schemas
 - **WHEN** they open the notification settings in humaniq
 - **THEN** only humaniq's rules are listed
+
+@e2e exclude scoping by cnAppId is library behaviour (CnNotificationPreferences filters on application); every humaniq rule carries originApp humaniq, asserted by DecisionNotificationRulesTest
