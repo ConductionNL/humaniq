@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\BackgroundJob;
 
 use OCA\Humaniq\BackgroundJob\LeaveAccrualJob;
+use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCA\Humaniq\Standards\RuleEngine;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -182,7 +183,7 @@ class LeaveAccrualJobTest extends TestCase {
 	 *
 	 * @return array{0: LeaveAccrualJob, 1: object}
 	 */
-	private function job(array $rowsBySchema = [], string $now = '2026-07-15', bool $enabled = true, float $annualBovenwettelijk = 0.0): array {
+	private function job(array $rowsBySchema = [], string $now = '2026-07-15', bool $enabled = true, float $annualBovenwettelijk = 0.0, ?LeaveBalanceProjectionService $projection = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -202,7 +203,7 @@ class LeaveAccrualJobTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new LeaveAccrualJob($time, $container, $settings, $logger), $fake];
+		return [new LeaveAccrualJob($time, $container, $settings, $logger, ($projection ?? $this->createMock(LeaveBalanceProjectionService::class))), $fake];
 	}//end job()
 
 	/**
@@ -658,4 +659,20 @@ class LeaveAccrualJobTest extends TestCase {
 
 	}//end testStampingNeverTurnsANoOpIntoAWrite()
 
-}//end class
+
+	/**
+	 * The daily run applies the lapses due today, even with accrual switched off.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-expiry-and-carry-over/spec.md#Requirement:-Statutory-hours-SHALL-lapse-on-their-expiry-date-unless-HR-waives-it-(REQ-LEX-003)
+	 */
+	public function testTheDailyRunAppliesTheLapsesDueToday(): void {
+		$projection = $this->createMock(LeaveBalanceProjectionService::class);
+		$projection->expects($this->once())->method('recomputeAll')->with('2026-07-02')->willReturn(3);
+
+		[$job] = $this->job([], '2026-07-02T03:00:00', false, 0.0, $projection);
+		$run = new \ReflectionMethod($job, 'run');
+		$run->invoke($job, null);
+	}//end testTheDailyRunAppliesTheLapsesDueToday()
+}

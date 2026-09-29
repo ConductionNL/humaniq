@@ -247,7 +247,7 @@
             "LeaveBalance": {
                 "slug": "LeaveBalance",
                 "icon": "ScaleBalance",
-                "version": "0.3.1",
+                "version": "0.4.0",
                 "title": "Leave balance",
                 "description": "Per-employee, per-year, per-leave-type entitlement and usage ledger (verlofsaldo): the statutory plus bovenwettelijk hours granted for a year, the hours used, and a declaratively calculated remaining balance (x-openregister-calculations). Read by the nl-verlof-wettelijk-minimum / nl-verlof-saldo-niet-negatief / nl-verlof-vervaltermijn rule checks (lib/Standards/rules/labour.json, leave-verzuim-mvp). UsedHours is recomputed from the approved LeaveRequests behind it by LeaveApprovalListener, so approving, correcting or reversing a request restates the balance.",
                 "type": "object",
@@ -263,7 +263,7 @@
                             "type": "number",
                             "materialise": false,
                             "title": "Remaining hours",
-                            "description": "entitledHours + bovenwettelijkHours − usedHours, worked out when the balance is read. Declared only here, never as a stored property, so it can never shadow a stored field.",
+                            "description": "entitledHours + bovenwettelijkHours − usedHours − expiredHours, worked out when the balance is read. Declared only here, never as a stored property, so it can never shadow a stored field.",
                             "expression": {
                                 "-": [
                                     {
@@ -272,9 +272,56 @@
                                             { "prop": "bovenwettelijkHours" }
                                         ]
                                     },
-                                    { "prop": "usedHours" }
+                                    { "prop": "usedHours" },
+                                    { "coalesce": [{ "prop": "expiredHours" }, 0] }
                                 ]
                             }
+                        },
+                        "remainingStatutoryHours": {
+                            "type": "number",
+                            "materialise": true,
+                            "title": "Remaining statutory hours",
+                            "description": "Statutory hours of this balance not yet taken and not lapsed.",
+                            "expression": { "if": [{ "and": [{ "not": [{ "eq": [{ "coalesce": [{ "prop": "expiryWaived" }, false] }, true] }] }, { "ne": [{ "coalesce": [{ "prop": "expiryDate" }, ""] }, ""] }, { "lt": [{ "diffDays": [{ "prop": "expiryDate" }, { "formatDate": [{ "now": [] }, "Y-m-d"] }] }, 0] }] }, 0, { "max": [0, { "-": [{ "coalesce": [{ "prop": "entitledHours" }, 0] }, { "coalesce": [{ "prop": "usedStatutoryHours" }, 0] }] }] }] }
+                        },
+                        "daysUntilStatutoryLapse": {
+                            "type": "number",
+                            "materialise": true,
+                            "title": "Days until the statutory hours lapse",
+                            "description": "Days from today until the statutory hours left on this balance lapse. Empty when none are left.",
+                            "expression": { "if": [{ "or": [{ "eq": [{ "coalesce": [{ "prop": "expiryDate" }, ""] }, ""] }, { "lte": [{ "if": [{ "and": [{ "not": [{ "eq": [{ "coalesce": [{ "prop": "expiryWaived" }, false] }, true] }] }, { "ne": [{ "coalesce": [{ "prop": "expiryDate" }, ""] }, ""] }, { "lt": [{ "diffDays": [{ "prop": "expiryDate" }, { "formatDate": [{ "now": [] }, "Y-m-d"] }] }, 0] }] }, 0, { "max": [0, { "-": [{ "coalesce": [{ "prop": "entitledHours" }, 0] }, { "coalesce": [{ "prop": "usedStatutoryHours" }, 0] }] }] }] }, 0] }] }, null, { "diffDays": [{ "prop": "expiryDate" }, { "formatDate": [{ "now": [] }, "Y-m-d"] }] }] }
+                        },
+                        "statutoryExpiresSoon": {
+                            "type": "boolean",
+                            "materialise": true,
+                            "title": "Statutory hours lapse soon",
+                            "description": "True when statutory hours are left and lapse within 90 days.",
+                            "expression": { "and": [{ "gt": [{ "if": [{ "and": [{ "not": [{ "eq": [{ "coalesce": [{ "prop": "expiryWaived" }, false] }, true] }] }, { "ne": [{ "coalesce": [{ "prop": "expiryDate" }, ""] }, ""] }, { "lt": [{ "diffDays": [{ "prop": "expiryDate" }, { "formatDate": [{ "now": [] }, "Y-m-d"] }] }, 0] }] }, 0, { "max": [0, { "-": [{ "coalesce": [{ "prop": "entitledHours" }, 0] }, { "coalesce": [{ "prop": "usedStatutoryHours" }, 0] }] }] }] }, 0] }, { "gte": [{ "coalesce": [{ "if": [{ "or": [{ "eq": [{ "coalesce": [{ "prop": "expiryDate" }, ""] }, ""] }, { "lte": [{ "if": [{ "and": [{ "not": [{ "eq": [{ "coalesce": [{ "prop": "expiryWaived" }, false] }, true] }] }, { "ne": [{ "coalesce": [{ "prop": "expiryDate" }, ""] }, ""] }, { "lt": [{ "diffDays": [{ "prop": "expiryDate" }, { "formatDate": [{ "now": [] }, "Y-m-d"] }] }, 0] }] }, 0, { "max": [0, { "-": [{ "coalesce": [{ "prop": "entitledHours" }, 0] }, { "coalesce": [{ "prop": "usedStatutoryHours" }, 0] }] }] }] }, 0] }] }, null, { "diffDays": [{ "prop": "expiryDate" }, { "formatDate": [{ "now": [] }, "Y-m-d"] }] }] }, -1] }, 0] }, { "lte": [{ "coalesce": [{ "if": [{ "or": [{ "eq": [{ "coalesce": [{ "prop": "expiryDate" }, ""] }, ""] }, { "lte": [{ "if": [{ "and": [{ "not": [{ "eq": [{ "coalesce": [{ "prop": "expiryWaived" }, false] }, true] }] }, { "ne": [{ "coalesce": [{ "prop": "expiryDate" }, ""] }, ""] }, { "lt": [{ "diffDays": [{ "prop": "expiryDate" }, { "formatDate": [{ "now": [] }, "Y-m-d"] }] }, 0] }] }, 0, { "max": [0, { "-": [{ "coalesce": [{ "prop": "entitledHours" }, 0] }, { "coalesce": [{ "prop": "usedStatutoryHours" }, 0] }] }] }] }, 0] }] }, null, { "diffDays": [{ "prop": "expiryDate" }, { "formatDate": [{ "now": [] }, "Y-m-d"] }] }] }, -1] }, 90] }] }
+                        }
+                    },
+                    "x-openregister-notifications": {
+                        "statutory-leave-lapses-soon": {
+                            "trigger": {
+                                "type": "calculatedChange",
+                                "field": "daysUntilStatutoryLapse",
+                                "condition": { "lte": 60 },
+                                "previously": { "gt": 60 }
+                            },
+                            "enabled": true,
+                            "channels": ["nc-notification"],
+                            "recipients": [
+                                { "kind": "field", "field": "userId" },
+                                { "kind": "groups", "groups": ["humaniq-hr"] }
+                            ],
+                            "subject": {
+                                "nl": "{{remainingStatutoryHours}} uur wettelijk verlof vervalt op {{expiryDate}}",
+                                "en": "{{remainingStatutoryHours}} hours of statutory leave lapse on {{expiryDate}}"
+                            },
+                            "message": {
+                                "nl": "Neem het verlof op voor {{expiryDate}}, anders vervalt het.",
+                                "en": "Take the leave before {{expiryDate}}, or it lapses."
+                            },
+                            "_note": "leave-expiry-and-carry-over D4 (REQ-LEX-004): fires once when the lapse is 60 days away. A calculatedChange on a materialised field, the dialect people-dossier-completeness uses, rather than the scheduled filter the design first named."
                         }
                     }
                 },
@@ -321,6 +368,46 @@
                         "default": 0,
                         "title": "Used hours",
                         "description": "Hours of this leave type already taken this year.", "x-notes": "Hours of this leave type used/taken so far in the year. Never written by hand: LeaveApprovalListener recomputes it as the SUM of the approved LeaveRequests for this employee/year/leaveType, so it is idempotent and self-healing (leave-approval-posts-to-the-balance REQ-LEAVE-POST-001). A request with no explicit `hours` is derived as working days x contractHoursPerWeek/5; public holidays are not subtracted, so a week containing one overstates usage by a day. Checked against the total entitlement by nl-verlof-saldo-niet-negatief."
+                    },
+                    "usedStatutoryHours": {
+                        "type": "number",
+                        "default": 0,
+                        "title": "Used statutory hours",
+                        "description": "Statutory hours of this balance already taken. Worked out from the approved leave requests.",
+                        "x-notes": "leave-expiry-and-carry-over REQ-LEX-001: written by LeaveBalanceProjectionService from LeaveAllocationCalculator, which draws each request from the hours that lapse first. usedHours = usedStatutoryHours + usedBovenwettelijkHours. An overdraft beyond every bucket lands here on the leave year's balance."
+                    },
+                    "usedBovenwettelijkHours": {
+                        "type": "number",
+                        "default": 0,
+                        "title": "Used above-statutory hours",
+                        "description": "Above-statutory hours of this balance already taken. Worked out from the approved leave requests."
+                    },
+                    "bovenwettelijkExpiryDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Above-statutory expiry date",
+                        "description": "When the above-statutory hours of this balance lapse: 31 December, five years after the year unless the leave type says otherwise.",
+                        "x-notes": "leave-expiry-and-carry-over REQ-LEX-002: filled by LeaveBalanceProjectionService from LeaveType.bovenwettelijkExpiryYears (default 5, BW art. 7:642). With carryOverRule none the hours lapse on 31 December of the year whatever this date says; with capped only carryOverCapHours carry to this date."
+                    },
+                    "expiredHours": {
+                        "type": "number",
+                        "default": 0,
+                        "title": "Lapsed hours",
+                        "description": "Hours of this balance that lapsed unused. Subtracted from the remaining hours.",
+                        "x-notes": "leave-expiry-and-carry-over REQ-LEX-003: recomputed daily by LeaveExpiryService (run from LeaveAccrualJob), never accumulated, so a request approved later for a date before the expiry lowers it."
+                    },
+                    "expiryWaived": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Lapse waived",
+                        "description": "HR keeps the hours usable after their expiry date, for an employee who could not take the leave."
+                    },
+                    "expiryWaivedReason": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Reason for the waiver",
+                        "description": "Why the hours stay usable, for example long-term sickness."
                     },
                     "contractHoursPerWeek": {
                         "type": "number",

@@ -51,6 +51,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\BackgroundJob;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Service\LeaveBalanceProjectionService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJob;
@@ -94,12 +95,14 @@ class LeaveAccrualJob extends TimedJob {
 	 * @param ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param SettingsService $settingsService Register slug + `leave_accrual_enabled`/`leave_bovenwettelijk_annual_hours` config.
 	 * @param LoggerInterface $logger Logger.
+	 * @param LeaveBalanceProjectionService $projection Recomputes every balance, applying the lapses due today.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
+		private readonly LeaveBalanceProjectionService $projection,
 	) {
 		parent::__construct(time: $time);
 
@@ -118,6 +121,7 @@ class LeaveAccrualJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 *
 	 * @spec openspec/specs/leave-accrual-job/spec.md#REQ-ACCR-001
+	 * @spec openspec/specs/leave-expiry-and-carry-over/spec.md#Requirement:-Statutory-hours-SHALL-lapse-on-their-expiry-date-unless-HR-waives-it-(REQ-LEX-003)
 	 */
 	protected function run($argument): void {
 		$summary = $this->runAccrual();
@@ -132,6 +136,14 @@ class LeaveAccrualJob extends TimedJob {
 				'skipped' => count($summary['skipped']),
 			]
 		);
+
+		// leave-expiry-and-carry-over REQ-LEX-003: the lapse is recomputed
+		// daily from every balance and its requests, whether or not accrual
+		// is switched on, so hours lapse on the day after their expiry date.
+		$lapsed = $this->projection->recomputeAll(
+			(new DateTimeImmutable())->setTimestamp($this->time->getTime())->format('Y-m-d')
+		);
+		$this->logger->info('LeaveAccrualJob: leave balances recomputed for lapses', ['written' => $lapsed]);
 
 	}//end run()
 
