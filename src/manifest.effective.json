@@ -4692,6 +4692,57 @@
 		},
 		{
 			"config": {
+				"_note": "functiehuis-hr21 (2026-07-18): read-only HR21 normfunctie reference detail (the CaoDetail allowCreate:false shape). The 'Normfunctie' data widget carries every field (functiecode/naam/functiegroep/caoSchaal/caoSchaalVerified/caoSchaalSource) -- no Related widget, since no other schema in humaniq references Normfunctie's own object identity here (EmploymentContract.normfunctieId points AT a Normfunctie, not the reverse). No lifecycleActions (Normfunctie has no x-openregister-lifecycle). No create/edit affordances (seeded reference data). Audit history is a sidebar tab. people-job-framework-maintenance (2026-09-29): moved out of singleDataScaffold to switch Edit on (showEditAction) and show source, family, salary band and status. HR retires a function by setting status to vervallen; there is no delete.",
+				"allowCreate": false,
+				"layout": [
+					{
+						"gridHeight": 7,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					}
+				],
+				"register": "humaniq",
+				"schema": "Normfunctie",
+				"showEditAction": true,
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"include": [
+								"functiecode",
+								"naam",
+								"functiegroep",
+								"functiefamilie",
+								"caoSchaal",
+								"caoSchaalVerified",
+								"caoSchaalSource",
+								"bron",
+								"salaryBandId",
+								"status"
+							],
+							"title": "Job profile"
+						},
+						"icon": "BriefcaseOutline",
+						"id": "data",
+						"title": "Job profile",
+						"type": "data"
+					}
+				]
+			},
+			"id": "NormfunctieDetail",
+			"route": "/normfuncties/:id",
+			"title": "Job profile",
+			"type": "detail"
+		},
+		{
+			"config": {
 				"_note": "leave-verzuim-mvp (2026-07-12): drives the EXISTING LeaveRequest lifecycle from portal-schemas (submit -> approve/reject, guarded server-side by NoSelfApprovalGuard) -- nothing on the schema changes here, only its UI. TimesheetDetail pattern: the data widget is SPLIT into 'Request' (leaveType/startDate/endDate/hours/reason -- what is being requested) and 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason -- the workflow trail), both excluding employeeId since Related already resolves and links the requesting Employee by name. Files sits full-width below for supporting documents (e.g. a bijzonder-verlof invitation). NO stat KPI tile: unlike Timesheet's hours-sum or Expense's amount-sum, a leave request has no single numeric headline worth a dedicated stat (hours is optional and nullable). lifecycleActions expose exactly submit/approve/reject -- no invented cancel/withdraw edge (PayrollRunDetail _note precedent: never claim a transition the backend does not guard). Audit history is a sidebar tab.",
 				"layout": [
 					{
@@ -11816,28 +11867,35 @@
 		},
 		{
 			"config": {
-				"_note": "functiehuis-hr21 (2026-07-18): read-only HR21 (VNG municipal functiewaarderingssysteem) normfunctie reference index (ADR-001 Rule 1 sub-page under the existing Personeel menu, sibling of CAO's/Salarisschalen — the Caos allowCreate:false + actionToggles shape). Illustrative subset seeded by NlHr21Checks::seedObjects() -- explicitly NOT a claimed-complete ~150-function library (proposal.md 'Honesty about verification'). Rows navigate to NormfunctieDetail.",
+				"_note": "functiehuis-hr21 (2026-07-18): read-only HR21 (VNG municipal functiewaarderingssysteem) normfunctie reference index (ADR-001 Rule 1 sub-page under the existing Personeel menu, sibling of CAO's/Salarisschalen — the Caos allowCreate:false + actionToggles shape). Illustrative subset seeded by NlHr21Checks::seedObjects() -- explicitly NOT a claimed-complete ~150-function library (proposal.md 'Honesty about verification'). Rows navigate to NormfunctieDetail. people-job-framework-maintenance (2026-09-29): maintainable. HR adds and edits functions (own ones beside HR21), mass import loads a catalogue, the list opens on status actief, and delete stays off: a function is retired (status vervallen), never deleted, so contracts keep pointing at it.",
 				"actionToggles": {
-					"showAdd": false,
+					"showAdd": true,
 					"showCopyAction": false,
 					"showDeleteAction": false,
-					"showEditAction": false,
-					"showFormDialog": false,
+					"showEditAction": true,
+					"showFormDialog": true,
 					"showMassCopy": false,
 					"showMassDelete": false,
-					"showMassImport": false
+					"showMassImport": true
 				},
-				"allowCreate": false,
+				"allowCreate": true,
 				"columns": [
 					"functiecode",
 					"naam",
 					"functiegroep",
+					"functiefamilie",
 					"caoSchaal",
-					"caoSchaalVerified"
+					"bron",
+					"status"
 				],
-				"description": "HR21 job profiles and their linked Cao Gemeenten scale (illustrative subset, not a complete library). Read-only reference data.",
+				"defaultFilters": {
+					"status": "actief"
+				},
+				"description": "Your job functions: the HR21 reference functions and your own, each with its Cao Gemeenten scale. Retire a function instead of deleting it.",
 				"filters": [
-					"functiegroep"
+					"functiegroep",
+					"bron",
+					"status"
 				],
 				"register": "humaniq",
 				"schema": "Normfunctie",
@@ -11850,52 +11908,6 @@
 			"route": "/normfuncties",
 			"title": "Job framework",
 			"type": "index"
-		},
-		{
-			"config": {
-				"_note": "functiehuis-hr21 (2026-07-18): read-only HR21 normfunctie reference detail (the CaoDetail allowCreate:false shape). The 'Normfunctie' data widget carries every field (functiecode/naam/functiegroep/caoSchaal/caoSchaalVerified/caoSchaalSource) -- no Related widget, since no other schema in humaniq references Normfunctie's own object identity here (EmploymentContract.normfunctieId points AT a Normfunctie, not the reverse). No lifecycleActions (Normfunctie has no x-openregister-lifecycle). No create/edit affordances (seeded reference data). Audit history is a sidebar tab.",
-				"allowCreate": false,
-				"layout": [
-					{
-						"gridHeight": 7,
-						"gridWidth": 12,
-						"gridX": 0,
-						"gridY": 0,
-						"id": 1,
-						"widgetId": "data"
-					}
-				],
-				"register": "humaniq",
-				"schema": "Normfunctie",
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				},
-				"widgets": [
-					{
-						"content": {
-							"columns": 2,
-							"include": [
-								"functiecode",
-								"naam",
-								"functiegroep",
-								"caoSchaal",
-								"caoSchaalVerified",
-								"caoSchaalSource"
-							],
-							"title": "Job profile"
-						},
-						"icon": "BriefcaseOutline",
-						"id": "data",
-						"title": "Job profile",
-						"type": "data"
-					}
-				]
-			},
-			"id": "NormfunctieDetail",
-			"route": "/normfuncties/:id",
-			"title": "Job profile",
-			"type": "detail"
 		},
 		{
 			"actions": [

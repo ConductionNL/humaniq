@@ -3870,6 +3870,52 @@
             "title": "Collective agreement scale source",
             "description": "Which source confirms this mapping, or why it was marked verified.",
             "x-notes": "Human-readable note naming the authority to confirm this mapping against (e.g. 'HR21/VNG functieboek -- not yet independently confirmed'), or explaining why a specific row was flipped to verified for illustrative/demonstration purposes only."
+          },
+          "bron": {
+            "type": "string",
+            "enum": [
+              "hr21",
+              "eigen"
+            ],
+            "x-enum-labels": {
+              "hr21": "HR21 reference",
+              "eigen": "Own function"
+            },
+            "default": "eigen",
+            "title": "Source",
+            "description": "Where the function comes from: the HR21 reference library or your own catalogue.",
+            "x-notes": "people-job-framework-maintenance D2: hr21 for rows taken over from the VNG HR21 library, eigen for employer functions."
+          },
+          "functiefamilie": {
+            "type": "string",
+            "nullable": true,
+            "title": "Function family",
+            "description": "The family the function belongs to, for example Informatie or Beleid.",
+            "x-notes": "people-job-framework-maintenance D2: free text grouping, beside the HR21 functiegroep."
+          },
+          "salaryBandId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "$ref": "SalaryBand",
+            "title": "Salary band",
+            "description": "The salary band this function is graded in, if any.",
+            "x-notes": "people-job-framework-maintenance D2: optional link to the SalaryBand the comp-cycles machinery uses."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "actief",
+              "vervallen"
+            ],
+            "x-enum-labels": {
+              "actief": "Active",
+              "vervallen": "Retired"
+            },
+            "default": "actief",
+            "title": "Status",
+            "description": "Retire a function instead of deleting it: contracts that point at it keep their meaning, and the rules audit asks you to give those contracts a current function.",
+            "x-notes": "people-job-framework-maintenance D1/D4: retire, never delete; nl-hr21-vervallen-functie flags a live contract on a vervallen function."
           }
         }
       },

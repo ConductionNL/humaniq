@@ -104,6 +104,10 @@
 		"route": "/formation-scenarios/:id"
 	},
 	{
+		"id": "NormfunctieDetail",
+		"route": "/normfuncties/:id"
+	},
+	{
 		"id": "LeaveRequestDetail",
 		"route": "/leave-requests/:id"
 	},
@@ -414,10 +418,6 @@
 	{
 		"id": "Normfuncties",
 		"route": "/normfuncties"
-	},
-	{
-		"id": "NormfunctieDetail",
-		"route": "/normfuncties/:id"
 	},
 	{
 		"id": "IntegrationAccounts",

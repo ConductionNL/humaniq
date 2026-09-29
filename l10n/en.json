@@ -2712,7 +2712,17 @@
         "On-call": "On-call",
         "Permanent from": "Permanent from",
         "Position in chain": "Position in chain",
-        "The average approved hours of every on-call worker over a period you pick, for the fixed-hours offer after twelve months.": "The average approved hours of every on-call worker over a period you pick, for the fixed-hours offer after twelve months."
+        "The average approved hours of every on-call worker over a period you pick, for the fixed-hours offer after twelve months.": "The average approved hours of every on-call worker over a period you pick, for the fixed-hours offer after twelve months.",
+        "Function family": "Function family",
+        "HR21 reference": "HR21 reference",
+        "Own function": "Own function",
+        "Retire a function instead of deleting it: contracts that point at it keep their meaning, and the rules audit asks you to give those contracts a current function.": "Retire a function instead of deleting it: contracts that point at it keep their meaning, and the rules audit asks you to give those contracts a current function.",
+        "Retired": "Retired",
+        "The family the function belongs to, for example Informatie or Beleid.": "The family the function belongs to, for example Informatie or Beleid.",
+        "The salary band this function is graded in, if any.": "The salary band this function is graded in, if any.",
+        "Where the function comes from: the HR21 reference library or your own catalogue.": "Where the function comes from: the HR21 reference library or your own catalogue.",
+        "Your job functions: the HR21 reference functions and your own, each with its Cao Gemeenten scale. Retire a function instead of deleting it.": "Your job functions: the HR21 reference functions and your own, each with its Cao Gemeenten scale. Retire a function instead of deleting it.",
+        "A job function in your catalogue: a function from the HR21 reference library (VNG) or one of your own, mapped to a Cao Gemeenten schaal and optionally to a salary band. Retire a function instead of deleting it, so contracts that point at it keep their meaning.": "A job function in your catalogue: a function from the HR21 reference library (VNG) or one of your own, mapped to a Cao Gemeenten schaal and optionally to a salary band. Retire a function instead of deleting it, so contracts that point at it keep their meaning."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

@@ -2713,7 +2713,17 @@ OC.L10N.register(
         "On-call": "Oproep",
         "Permanent from": "Vast vanaf",
         "Position in chain": "Positie in de keten",
-        "The average approved hours of every on-call worker over a period you pick, for the fixed-hours offer after twelve months.": "De gemiddelde goedgekeurde uren van elke oproepkracht over een periode die je kiest, voor het aanbod van vaste uren na twaalf maanden."
+        "The average approved hours of every on-call worker over a period you pick, for the fixed-hours offer after twelve months.": "De gemiddelde goedgekeurde uren van elke oproepkracht over een periode die je kiest, voor het aanbod van vaste uren na twaalf maanden.",
+        "Function family": "Functiefamilie",
+        "HR21 reference": "HR21-referentie",
+        "Own function": "Eigen functie",
+        "Retire a function instead of deleting it: contracts that point at it keep their meaning, and the rules audit asks you to give those contracts a current function.": "Laat een functie vervallen in plaats van haar te verwijderen: contracten die ernaar verwijzen houden hun betekenis, en de regelcontrole vraagt je die contracten een actuele functie te geven.",
+        "Retired": "Vervallen",
+        "The family the function belongs to, for example Informatie or Beleid.": "De familie waartoe de functie hoort, bijvoorbeeld Informatie of Beleid.",
+        "The salary band this function is graded in, if any.": "De salarisband waarin deze functie is ingedeeld, als die er is.",
+        "Where the function comes from: the HR21 reference library or your own catalogue.": "Waar de functie vandaan komt: de HR21-referentiebibliotheek of je eigen functieboek.",
+        "Your job functions: the HR21 reference functions and your own, each with its Cao Gemeenten scale. Retire a function instead of deleting it.": "Je functies: de HR21-referentiefuncties en je eigen functies, elk met de schaal uit de Cao Gemeenten. Laat een functie vervallen in plaats van haar te verwijderen.",
+        "A job function in your catalogue: a function from the HR21 reference library (VNG) or one of your own, mapped to a Cao Gemeenten schaal and optionally to a salary band. Retire a function instead of deleting it, so contracts that point at it keep their meaning.": "Een functie in je functieboek: een functie uit de HR21-referentiebibliotheek (VNG) of een eigen functie, gekoppeld aan een schaal uit de Cao Gemeenten en eventueel aan een salarisband. Laat een functie vervallen in plaats van haar te verwijderen, zodat contracten die ernaar verwijzen hun betekenis houden."
     },
     "nplurals=2; plural=(n != 1);"
 )

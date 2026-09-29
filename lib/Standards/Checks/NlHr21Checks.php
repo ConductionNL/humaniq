@@ -105,6 +105,8 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 					'caoSchaal' => '6',
 					'caoSchaalVerified' => false,
 					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+					'bron' => 'hr21',
+					'status' => 'actief',
 				],
 				[
 					'functiecode' => 'HR21-002',
@@ -113,6 +115,8 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 					'caoSchaal' => '10',
 					'caoSchaalVerified' => true,
 					'caoSchaalSource' => 'Illustrative proof-case only — flipped to verified:true so the nl-hr21-schaal-consistentie check has one resolvable mapping to demonstrate against; NOT an actual VNG/HR21 confirmation.',
+					'bron' => 'hr21',
+					'status' => 'actief',
 				],
 				[
 					'functiecode' => 'HR21-003',
@@ -121,6 +125,8 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 					'caoSchaal' => '9',
 					'caoSchaalVerified' => false,
 					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+					'bron' => 'hr21',
+					'status' => 'actief',
 				],
 				[
 					'functiecode' => 'HR21-004',
@@ -129,6 +135,8 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 					'caoSchaal' => '11',
 					'caoSchaalVerified' => false,
 					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+					'bron' => 'hr21',
+					'status' => 'actief',
 				],
 				[
 					'functiecode' => 'HR21-005',
@@ -137,6 +145,8 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 					'caoSchaal' => '13',
 					'caoSchaalVerified' => false,
 					'caoSchaalSource' => 'HR21/VNG functieboek — mapping not yet independently confirmed against a primary source.',
+					'bron' => 'hr21',
+					'status' => 'actief',
 				],
 			],
 		];

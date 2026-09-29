@@ -1817,8 +1817,28 @@
                 "@self": {
                     "register": "humaniq",
                     "schema": "Normfunctie",
+                    "slug": "normfunctie-eigen-informatiebeheer"
+                },
+                "functiecode": "EIG-001",
+                "naam": "Adviseur informatiebeheer",
+                "functiegroep": "Informatie",
+                "functiefamilie": "Informatie",
+                "caoSchaal": "10",
+                "caoSchaalVerified": false,
+                "caoSchaalSource": "Own function, graded by the employer.",
+                "bron": "eigen",
+                "status": "actief",
+                "salaryBandId": "@ref:salaryband-a",
+                "_note": "people-job-framework-maintenance: an employer function beside the five HR21 rows, linked to a seeded salary band."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-001"
                 },
+                "bron": "hr21",
+                "status": "actief",
                 "functiecode": "HR21-001",
                 "naam": "Medewerker Beheer",
                 "functiegroep": "Beheer",
@@ -1832,6 +1852,8 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-002"
                 },
+                "bron": "hr21",
+                "status": "actief",
                 "functiecode": "HR21-002",
                 "naam": "Senior Beleidsmedewerker",
                 "functiegroep": "Beleid",
@@ -1845,6 +1867,8 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-003"
                 },
+                "bron": "hr21",
+                "status": "actief",
                 "functiecode": "HR21-003",
                 "naam": "Beleidsmedewerker",
                 "functiegroep": "Beleid",
@@ -1858,6 +1882,8 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-004"
                 },
+                "bron": "hr21",
+                "status": "actief",
                 "functiecode": "HR21-004",
                 "naam": "Teammanager",
                 "functiegroep": "Management",
@@ -1871,6 +1897,8 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-005"
                 },
+                "bron": "hr21",
+                "status": "actief",
                 "functiecode": "HR21-005",
                 "naam": "Afdelingsmanager",
                 "functiegroep": "Management",
