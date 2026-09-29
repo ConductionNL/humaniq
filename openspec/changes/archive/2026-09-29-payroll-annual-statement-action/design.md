@@ -107,3 +107,5 @@ instance once the year is over, and the single action works on any seeded `Jaaro
   text, so the page confirms the queue without the number.
 - `HrDocumentService::jaaropgaafEmployeeIds()` is the one place that lists a year's employees;
   the backlog and the count both use it.
+- The batch endpoint lives in its own `AnnualStatementBatchController` (phpmd coupling limit on
+  `DocumentController`); the route stays `POST /api/documents/jaaropgaven`.

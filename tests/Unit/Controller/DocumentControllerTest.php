@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocumentController test: the annual statement triggers
+ * DocumentController test: one annual statement from its page
  *
  * The single statement resolves under the caller's RBAC before anything is
  * rendered, and the year batch refuses a caller outside HR and payroll, a
@@ -22,23 +22,16 @@
  * @link https://conduction.nl
  *
  * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-001
- * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-002
  */
 
 declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
-use DateTimeImmutable;
-use OCA\Humaniq\BackgroundJob\JaaropgaafYearJob;
 use OCA\Humaniq\Controller\DocumentController;
 use OCA\Humaniq\Service\HrDocumentService;
-use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Http;
-use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\BackgroundJob\IJobList;
-use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -58,11 +51,6 @@ class DocumentControllerTest extends TestCase {
 	private HrDocumentService $service;
 
 	/**
-	 * @var IJobList&MockObject
-	 */
-	private IJobList $jobList;
-
-	/**
 	 * The fake ObjectService handed out by the container.
 	 *
 	 * @var object
@@ -73,11 +61,10 @@ class DocumentControllerTest extends TestCase {
 	 * Build the controller.
 	 *
 	 * @param array<string, mixed>|null $row    The row find() answers, null for unreadable.
-	 * @param array<string, bool>       $groups Group memberships of the caller (admin, humaniq-hr, humaniq-payroll).
 	 *
 	 * @return DocumentController
 	 */
-	private function controller(?array $row = null, array $groups = []): DocumentController {
+	private function controller(?array $row = null): DocumentController {
 		$this->store = new class($row) {
 
 			/**
@@ -117,17 +104,7 @@ class DocumentControllerTest extends TestCase {
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
-		$groupManager = $this->createMock(IGroupManager::class);
-		$groupManager->method('isAdmin')->willReturn($groups['admin'] ?? false);
-		$groupManager->method('isInGroup')->willReturnCallback(
-			static fn (string $uid, string $gid): bool => $groups[$gid] ?? false
-		);
-
-		$time = $this->createMock(ITimeFactory::class);
-		$time->method('now')->willReturn(new DateTimeImmutable('2027-01-12T09:00:00Z'));
-
 		$this->service = $this->createMock(HrDocumentService::class);
-		$this->jobList = $this->createMock(IJobList::class);
 
 		return new DocumentController(
 			$this->createMock(IRequest::class),
@@ -135,9 +112,6 @@ class DocumentControllerTest extends TestCase {
 			$this->service,
 			$settings,
 			$session,
-			new HumaniqRoles($groupManager),
-			$this->jobList,
-			$time,
 			$this->createMock(LoggerInterface::class),
 		);
 	}//end controller()
@@ -194,71 +168,5 @@ class DocumentControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 		$this->assertSame([], $this->store->finds);
 	}//end testAStatementRequestWithoutAnIdIs400()
-
-	/**
-	 * An employee cannot queue the year batch.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-002
-	 */
-	public function testAnEmployeeCannotQueueTheYear(): void {
-		$controller = $this->controller();
-		$this->jobList->expects($this->never())->method('add');
-
-		$response = $controller->queueJaaropgaven();
-
-		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
-	}//end testAnEmployeeCannotQueueTheYear()
-
-	/**
-	 * The current year is refused because it is not over.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-002
-	 */
-	public function testTheCurrentYearIsRefused(): void {
-		$controller = $this->controller(groups: ['humaniq-hr' => true]);
-		$this->jobList->expects($this->never())->method('add');
-
-		$response = $controller->queueJaaropgaven(year: 2027);
-
-		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
-	}//end testTheCurrentYearIsRefused()
-
-	/**
-	 * HR queues last year by default and is told how many employees it covers.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-002
-	 */
-	public function testHrQueuesLastYearWithTheCount(): void {
-		$controller = $this->controller(groups: ['humaniq-hr' => true]);
-		$this->service->method('jaaropgaafEmployeeIds')->with(2026)->willReturn(array_map(static fn (int $i): string => 'emp-' . $i, range(1, 14)));
-		$this->jobList->expects($this->once())->method('add')
-			->with(JaaropgaafYearJob::class, ['year' => 2026, 'userId' => 'caller']);
-
-		$response = $controller->queueJaaropgaven();
-
-		$this->assertSame(Http::STATUS_ACCEPTED, $response->getStatus());
-		$this->assertSame(['year' => 2026, 'queued' => 14], $response->getData());
-	}//end testHrQueuesLastYearWithTheCount()
-
-	/**
-	 * Payroll may queue the year too.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-002
-	 */
-	public function testPayrollMayQueueTheYear(): void {
-		$controller = $this->controller(groups: ['humaniq-payroll' => true]);
-		$this->service->method('jaaropgaafEmployeeIds')->willReturn(['emp-1']);
-		$this->jobList->expects($this->once())->method('add');
-
-		$this->assertSame(Http::STATUS_ACCEPTED, $controller->queueJaaropgaven(year: 2025)->getStatus());
-	}//end testPayrollMayQueueTheYear()
 
 }//end class

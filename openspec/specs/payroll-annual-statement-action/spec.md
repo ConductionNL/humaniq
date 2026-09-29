@@ -45,18 +45,18 @@ Rows: `pay-annual-statement` (humaniq matrix).
 - **THEN** the request answers 202 with 14 queued, the page confirms the queue, and after the job
   has run the documents list shows 14 statements for 2026
 
-@e2e exclude a queued background job cannot be observed from the page; covered by DocumentControllerTest::testHrQueuesLastYearWithTheCount and JaaropgaafYearJobTest::testTheJobRunsTheBacklogForItsYear
+@e2e exclude a queued background job cannot be observed from the page; covered by AnnualStatementBatchControllerTest::testHrQueuesLastYearWithTheCount and JaaropgaafYearJobTest::testTheJobRunsTheBacklogForItsYear
 
 #### Scenario: An employee cannot start the batch
 - **GIVEN** a user outside the HR and payroll groups
 - **WHEN** they post to `/api/documents/jaaropgaven`
 - **THEN** the response is 403 and no job is queued
 
-@e2e exclude access is decided server-side; covered by DocumentControllerTest::testAnEmployeeCannotQueueTheYear
+@e2e exclude access is decided server-side; covered by AnnualStatementBatchControllerTest::testAnEmployeeCannotQueueTheYear
 
 #### Scenario: The current year is refused
 - **GIVEN** a date in 2027
 - **WHEN** an HR adviser posts year 2027
 - **THEN** the response is 400 because the year is not over
 
-@e2e exclude the year check is server-side; covered by DocumentControllerTest::testTheCurrentYearIsRefused
+@e2e exclude the year check is server-side; covered by AnnualStatementBatchControllerTest::testTheCurrentYearIsRefused
