@@ -136,3 +136,28 @@ The commuting half needs date arithmetic across two schemas, so it stays in the 
 
 - Should the employer's rate per kilometre be per administration rather than per instance?
   This design starts per instance.
+
+## As built (2026-09-29)
+
+- `Expense.amount` left `required`: OpenRegister validates before the pre-save event fires, so a
+  travel claim without an amount would have been rejected before `TravelAmountListener` could fill
+  it in. The listener now refuses any other claim without an amount, so the rule still holds.
+- The employer's rate is app config `mileage_rate_per_km` (empty: the tax-free rate). The tax-free
+  rate is read through `NlTravelExpenseChecks::taxFreeRatePerKm()`, the corpus's one reader. The
+  audit rule `nl-reiskosten-onbelast-tarief` now holds only the tax-free part to the rate, so a
+  claim paid above it with its excess recorded as `taxableAmount` no longer flags.
+- Approved and reimbursed claims and ended arrangements are not recalculated on a later save.
+- D3 as built: the integriq source is app config `route_distance_source` (a source uuid) with the
+  path `route_distance_endpoint`; humaniq calls `EnvironmentService::resolveSource()` and
+  `CallService::call(GET, {from, to})` through `FleetAppId` and reads `distanceKm` from the JSON
+  body, which an integriq mapping can shape from any planner. The employee may fill the distance
+  only while the arrangement is a draft or rejected; afterwards HR or an administrator does.
+- D5 changed: `wpmBusinessKm` is declared on `Expense` for dashboards, but `WpmReportService` sums
+  the claims itself. The named aggregation takes no year window and no list of statuses, and the
+  report needs both. It reads through `HoursRegisterGateway`, whose lookups stop at 500 rows per
+  schema, the dev-stage limit every gateway read shares.
+- Pages: `CommuteArrangements` (`/commute-arrangements`) and `CommuteArrangementDetail` with
+  "Calculate distance", `WpmReports` (`/mobility-reports`, create a year) and `WpmReportDetail`
+  with "Compile", both under the Expenses menu group; a "Travel" block on `ExpenseDetail`.
+- Task 5.2 (live check on a dev instance) is left to the live-check pass; the recipe is in the PR.
+
