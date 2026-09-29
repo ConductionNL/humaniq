@@ -274,6 +274,24 @@
 					"route": "MijnLoonstroken"
 				},
 				{
+					"icon": "AccountBoxOutline",
+					"id": "MijnGegevens",
+					"label": "My details",
+					"query": {
+						"nextcloudUserId": "@me"
+					},
+					"route": "Employees"
+				},
+				{
+					"icon": "PencilOutline",
+					"id": "MijnWijzigingsverzoeken",
+					"label": "My change requests",
+					"query": {
+						"userId": "@me"
+					},
+					"route": "ChangeRequests"
+				},
+				{
 					"icon": "ClockOutline",
 					"id": "MijnAanwezigheid",
 					"label": "My attendance",
@@ -331,6 +349,18 @@
 					"id": "Employees",
 					"label": "Employees",
 					"route": "Employees"
+				},
+				{
+					"icon": "PencilOutline",
+					"id": "ChangeRequests",
+					"label": "Change requests",
+					"route": "ChangeRequests"
+				},
+				{
+					"icon": "ShieldAccountOutline",
+					"id": "ChangeApprovalRules",
+					"label": "Change approval rules",
+					"route": "ChangeApprovalRules"
 				},
 				{
 					"icon": "FileSign",
@@ -9110,6 +9140,237 @@
 			"route": "/caos",
 			"title": "Collective agreements",
 			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "people-record-change-approval (2026-09-29): REQ-ECR-001. The approval queue; ChangeApproverRoleGuard decides who may approve or reject each one. My HR > My change requests is a menu preset on this page (userId = @me), not a second index (ADR-097 Decision 5); its create form is the self-service request: employeeId is not required, ChangeRequestService fills it from the requester's own account, merges the flat address and bank fields into changes, and applies an address change at once (approver none, own record).",
+				"columns": [
+					"employeeId",
+					"changeKind",
+					"status",
+					"approverRole",
+					"requestedBy",
+					"decidedBy",
+					"decidedAt"
+				],
+				"description": "Changes to employee records. Open one to see the current and the proposed values side by side. Add one to ask for a change of your own address or bank account; your record is filled in for you.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"status",
+					"changeKind",
+					"approverRole",
+					"employeeId"
+				],
+				"register": "humaniq",
+				"schema": "EmployeeChangeRequest",
+				"sort": {
+					"field": "decidedAt",
+					"order": "asc"
+				}
+			},
+			"id": "ChangeRequests",
+			"route": "/change-requests",
+			"title": "Change requests",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "people-record-change-approval (2026-09-29): REQ-ECR-001. The data widget shows previousValues (Current values) next to changes (Proposed values); every stamped field is read-only because ChangeRequestService fills it. lifecycleActions mirror the schema: goedkeuren and afwijzen, both guarded by ChangeApproverRoleGuard; a rejection needs rejectionReason (refused otherwise).",
+				"layout": [
+					{
+						"gridHeight": 10,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 10,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "goedkeuren",
+							"from": [
+								"ingediend"
+							],
+							"label": "Approve",
+							"to": "goedgekeurd"
+						},
+						{
+							"action": "afwijzen",
+							"from": [
+								"ingediend"
+							],
+							"label": "Reject",
+							"to": "afgewezen"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "EmployeeChangeRequest",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"straat",
+								"huisnummer",
+								"postcode",
+								"woonplaats",
+								"land",
+								"iban",
+								"tenaamstelling"
+							],
+							"overrides": {
+								"appliedAt": {
+									"editable": false
+								},
+								"applyError": {
+									"editable": false
+								},
+								"approverRole": {
+									"editable": false
+								},
+								"decidedAt": {
+									"editable": false
+								},
+								"decidedBy": {
+									"editable": false
+								},
+								"managerUserId": {
+									"editable": false
+								},
+								"previousValues": {
+									"editable": false
+								},
+								"requestedBy": {
+									"editable": false
+								},
+								"status": {
+									"editable": false
+								},
+								"userId": {
+									"editable": false
+								}
+							},
+							"title": "Change request"
+						},
+						"icon": "PencilOutline",
+						"id": "data",
+						"title": "Change request",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "ChangeRequestDetail",
+			"route": "/change-requests/:id",
+			"title": "Change request",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "people-record-change-approval (2026-09-29): D2. Administered data, not code: the five seeded rules (adres none, bankrekening hr, persoonsgegevens hr, salaris accountant, contractvoorwaarden hr) apply to every administration without rules of its own.",
+				"columns": [
+					"changeKind",
+					"approverRole",
+					"fields",
+					"administrationId"
+				],
+				"description": "Who approves each kind of change to an employee record. A field covered by a rule with an approver can only change through a change request.",
+				"filters": [
+					"changeKind",
+					"approverRole"
+				],
+				"register": "humaniq",
+				"schema": "ChangeApprovalRule",
+				"sort": {
+					"field": "changeKind",
+					"order": "asc"
+				}
+			},
+			"id": "ChangeApprovalRules",
+			"route": "/change-approval-rules",
+			"title": "Change approval rules",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "people-record-change-approval (2026-09-29): D2. A plain configuration record, no lifecycle.",
+				"layout": [
+					{
+						"gridHeight": 5,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "ChangeApprovalRule",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"title": "Change approval rule"
+						},
+						"icon": "ShieldAccountOutline",
+						"id": "data",
+						"title": "Change approval rule",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "ChangeApprovalRuleDetail",
+			"route": "/change-approval-rules/:id",
+			"title": "Change approval rule",
+			"type": "detail"
 		},
 		{
 			"config": {

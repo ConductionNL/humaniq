@@ -47,6 +47,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\AvgDsrService;
+use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -330,7 +331,7 @@ class AvgDsrServiceTest extends TestCase {
 	 *
 	 * @return AvgDsrService
 	 */
-	private function buildService(object $objectService, object $guarded, string $currentUid = 'admin', ?LoggerInterface $logger = null): AvgDsrService {
+	private function buildService(object $objectService, object $guarded, string $currentUid = 'admin', ?LoggerInterface $logger = null, ?InternalWriteMarker $marker = null): AvgDsrService {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static function (string $id) use ($objectService, $guarded) {
@@ -359,7 +360,7 @@ class AvgDsrServiceTest extends TestCase {
 		$userSession = $this->createMock(IUserSession::class);
 		$userSession->method('getUser')->willReturn($user);
 
-		return new AvgDsrService($container, $settings, $userSession, ($logger ?? $this->createMock(LoggerInterface::class)));
+		return new AvgDsrService($container, $settings, $userSession, ($logger ?? $this->createMock(LoggerInterface::class)), ($marker ?? new InternalWriteMarker()));
 	}//end buildService()
 
 	/**
@@ -720,5 +721,45 @@ class AvgDsrServiceTest extends TestCase {
 		};
 
 	}//end spyLogger()
+
+	/**
+	 * people-record-change-approval: an administrator's rectification is a
+	 * decided legal procedure, so it writes as humaniq's own write and is not
+	 * refused by the change-approval guard on the employee's fields.
+	 *
+	 * @return void
+	 */
+	public function testRectificationWritesAsHumaniqsOwnWrite(): void {
+		$marker = new InternalWriteMarker();
+		$guarded = new class($marker) {
+			/**
+			 * @var list<bool>
+			 */
+			public array $internal = [];
+
+			/**
+			 * @param InternalWriteMarker $marker The marker.
+			 */
+			public function __construct(private readonly InternalWriteMarker $marker) {
+			}//end __construct()
+
+			/**
+			 * @param string               $objectIdentifier Object.
+			 * @param array<string, mixed> $changes          Changes.
+			 *
+			 * @return array<string, mixed>|null
+			 */
+			public function rectify(string $objectIdentifier, array $changes): ?array {
+				$this->internal[] = $this->marker->isInternal();
+				return ['id' => $objectIdentifier];
+			}//end rectify()
+		};
+		$service = $this->buildService($this->createMock(\stdClass::class), $guarded, 'admin', null, $marker);
+
+		$service->rectifySubjectObject('emp-1', ['lastName' => 'Visser'], 'dsr-unknown');
+
+		$this->assertSame([true], $guarded->internal);
+		$this->assertFalse($marker->isInternal());
+	}//end testRectificationWritesAsHumaniqsOwnWrite()
 
 }//end class

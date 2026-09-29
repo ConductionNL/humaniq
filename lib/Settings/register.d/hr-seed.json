@@ -22,6 +22,11 @@
                 "nextcloudUserId": "admin",
                 "iban": "NL00BANK0123456789",
                 "tenaamstelling": "S. Jansen",
+                "straat": "Stationsplein",
+                "huisnummer": "1",
+                "postcode": "1234 AB",
+                "woonplaats": "Utrecht",
+                "land": "NL",
                 "administrationId": "ADM-001"
             },
             {

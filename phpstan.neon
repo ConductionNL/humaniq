@@ -31,6 +31,7 @@ parameters:
         - lib/Flow/PayrollApproveNode.php
         - lib/Flow/PayrollGlPostNode.php
         - lib/Flow/PayrollNetPayNode.php
+        - lib/Lifecycle/ChangeApproverRoleGuard.php
         - lib/Lifecycle/CompEffectiveDateGuard.php
         - lib/Notification/CaseManagerResolver.php
         - lib/Lifecycle/DecisionReasonGuard.php

@@ -109,12 +109,14 @@ class AvgDsrService {
 	 * @param SettingsService $settingsService The register-slug source.
 	 * @param IUserSession $userSession The current session, forwarded to `AvgDsrRequestStore` only (`handledBy`), not retained as a property here. The guarded service itself uses the ambient session for RBAC/tenant scoping -- no privileged-session establishment is required for it (unlike the previous `DsarService`-based design).
 	 * @param LoggerInterface $logger Logger. Never receives a raw bsn value (REQ-DSR-002).
+	 * @param InternalWriteMarker $marker Marks a rectification as humaniq's own write.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly SettingsService $settingsService,
 		IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		private readonly InternalWriteMarker $marker,
 	) {
 		$this->requestStore = new AvgDsrRequestStore($container, $settingsService, $userSession, $logger);
 
@@ -331,7 +333,11 @@ class AvgDsrService {
 	 */
 	public function rectifySubjectObject(string $objectIdentifier, array $changes, string $dsrRequestId): ?array {
 		$dsrRequest = $this->requestStore->load($dsrRequestId);
-		$result = $this->guardedService()->rectify($objectIdentifier, $changes);
+		// people-record-change-approval: a rectification is an administrator's
+		// decided legal procedure (AVG art. 16), so it writes as humaniq's own
+		// write and EmployeeGuardedFieldListener does not send it to a change
+		// request.
+		$result = $this->marker->runInternal(fn () => $this->guardedService()->rectify($objectIdentifier, $changes));
 
 		if ($dsrRequest !== null) {
 			$this->requestStore->recordRectifyOutcome($dsrRequest, $result, $changes);

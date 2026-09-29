@@ -1,6 +1,9 @@
-# employee-change-approval
+# employee-change-approval Specification
 
-## ADDED Requirements
+## Purpose
+Changes to an employee record run through an administered approval rule per kind of change: a guarded field changes only through a request its approver role accepts, and an employee sees their own record and asks for an address or bank account change. Built by people-record-change-approval (archived 2026-09-29).
+
+## Requirements
 
 ### Requirement: A guarded change SHALL take effect only after its approver approves it (REQ-ECR-001)
 
@@ -20,16 +23,22 @@ https://www.tenderned.nl/aankondigingen/overzicht/415705.
 - **THEN** `EmployeeDetail` still shows the old IBAN, and the request appears on
   `ChangeRequests` for an HR user with the old and new value side by side
 
+@e2e exclude the rule is enforced server-side in the object events; covered by EmployeeChangeRequestFlowTest::testABankAccountChangeWaitsForHrAndIsAppliedOnce
+
 #### Scenario: The wrong role cannot approve
 - **GIVEN** a salary change request under a rule naming approver `accountant`
 - **WHEN** a user who holds only the `hr` role tries `goedkeuren`
 - **THEN** the transition is refused and the salary is unchanged
+
+@e2e exclude the rule is enforced server-side in the object events; covered by ChangeApproverRoleGuardTest::testTheWrongRoleOrAdministrationIsRefused
 
 #### Scenario: An approved request is applied once
 - **GIVEN** a bank account request in `ingediend`
 - **WHEN** an HR user approves it
 - **THEN** the employee's IBAN equals the requested value and the request shows who
   approved it and when
+
+@e2e exclude the rule is enforced server-side in the object events; covered by EmployeeChangeRequestFlowTest::testABankAccountChangeWaitsForHrAndIsAppliedOnce
 
 ### Requirement: A guarded field SHALL NOT be saved around the request (REQ-ECR-002)
 
@@ -46,10 +55,14 @@ Rows: `td-mutation-approval` (humaniq matrix).
 - **THEN** the save is refused with a message that a salary change needs a change request,
   and the stored salary is unchanged
 
+@e2e exclude the rule is enforced server-side in the object events; covered by EmployeeChangeRequestFlowTest::testAGuardedFieldCannotBeSavedAroundTheRequest
+
 #### Scenario: An unguarded field saves directly
 - **GIVEN** no rule covers `a1CertificateNumber`
 - **WHEN** an HR adviser edits it on `EmployeeDetail`
 - **THEN** the change is saved at once
+
+@e2e exclude the rule is enforced server-side in the object events; covered by EmployeeChangeRequestFlowTest::testAGuardedFieldCannotBeSavedAroundTheRequest
 
 ### Requirement: An employee SHALL see their own record and ask for a change (REQ-ECR-003)
 
@@ -66,7 +79,11 @@ Rows: `ess-edit-details` (humaniq matrix).
 - **THEN** their record shows the new address immediately, and the applied request is on
   record with the old address
 
+@e2e exclude the rule is enforced server-side in the object events; covered by EmployeeChangeRequestFlowTest::testAnAddressChangeAppliesAtOnce
+
 #### Scenario: An employee sees only themselves
 - **GIVEN** an employee signed in to Nextcloud
 - **WHEN** they open `MijnGegevens`
 - **THEN** only the `Employee` whose `nextcloudUserId` is theirs is shown
+
+@e2e exclude the rule is enforced server-side in the object events; covered by the MijnGegevens base filter nextcloudUserId = @me in src/manifest.d/hr-change-requests.json, resolved by the library's resolveFilterTokens

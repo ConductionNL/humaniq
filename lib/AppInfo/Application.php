@@ -30,6 +30,7 @@ namespace OCA\Humaniq\AppInfo;
 
 use OCA\Humaniq\Command\RulesAuditCommand;
 use OCA\Humaniq\Command\RulesSeedTestDataCommand;
+use OCA\Humaniq\Lifecycle\ChangeApproverRoleGuard;
 use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
 use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
@@ -39,6 +40,8 @@ use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
+use OCA\Humaniq\Listener\ChangeRequestListener;
+use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
 use OCA\Humaniq\Listener\FrequentAbsenceListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
@@ -140,6 +143,19 @@ class Application extends App implements IBootstrap {
 		// approved/posted/paid. Unlike NoSelfApprovalGuard this guard loads the
 		// referenced run, so it needs the container (lazy ObjectService resolution)
 		// and IAppConfig (register slug), both autowired here.
+		// people-record-change-approval D2: only the approver role of a change
+		// request's kind decides on it. Keyed by its FQCN for the `requires`
+		// tag on EmployeeChangeRequest's goedkeuren and afwijzen.
+		$context->registerService(
+			ChangeApproverRoleGuard::class,
+			static function ($c): ChangeApproverRoleGuard {
+				return new ChangeApproverRoleGuard(
+					administrations: $c->get(\OCA\Humaniq\Service\AdministrationService::class),
+					groupManager: $c->get(\OCP\IGroupManager::class)
+				);
+			}
+		);
+
 		$context->registerService(
 			PayrollRunApprovedGuard::class,
 			static function ($c): PayrollRunApprovedGuard {
@@ -434,6 +450,7 @@ class Application extends App implements IBootstrap {
 		$this->registerAbsenceListeners($dispatcher);
 		$this->registerTravelListeners($dispatcher);
 		$this->registerTrainingListeners($dispatcher);
+		$this->registerChangeRequestListeners($dispatcher);
 
 	}//end boot()
 
@@ -662,5 +679,37 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerTrainingListeners()
+
+	/**
+	 * people-record-change-approval D1, D3 and D4: a change request is placed,
+	 * decided and applied on its own object events, and a direct update of a
+	 * guarded employee field is refused.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/employee-change-approval/spec.md#REQ-ECR-002
+	 */
+	private function registerChangeRequestListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class, ObjectCreatedEvent::class, ObjectUpdatedEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: ChangeRequestListener::class,
+				registers: null,
+				schemas: [ChangeRequestListener::REQUEST_SLUG]
+			);
+		}
+
+		$this->registerFilteredObjectListener(
+			dispatcher: $dispatcher,
+			event: ObjectUpdatingEvent::class,
+			listener: EmployeeGuardedFieldListener::class,
+			registers: null,
+			schemas: [EmployeeGuardedFieldListener::EMPLOYEE_SLUG]
+		);
+
+	}//end registerChangeRequestListeners()
 
 }//end class
