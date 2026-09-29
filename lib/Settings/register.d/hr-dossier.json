@@ -1,0 +1,501 @@
+{
+    "x-humaniq-fragment": "hr-dossier",
+    "components": {
+        "schemas": {
+            "DossierRequirement": {
+                "slug": "DossierRequirement",
+                "icon": "ClipboardCheckOutline",
+                "version": "0.1.0",
+                "title": "Dossier requirement",
+                "description": "A document every personnel file of a group of employees must hold, such as an ID, a certificate of conduct or a professional registration, and what counts as proof of it (people-dossier-completeness D1).",
+                "type": "object",
+                "required": [
+                    "code",
+                    "label",
+                    "scope",
+                    "evidenceKind"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "title": "Code",
+                        "description": "A short code for this requirement, such as vog. A supplied document names it to count as proof."
+                    },
+                    "label": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "The name of the document, as HR and employees see it."
+                    },
+                    "scope": {
+                        "type": "string",
+                        "enum": [
+                            "all",
+                            "contractType",
+                            "normfunctie",
+                            "orgUnit"
+                        ],
+                        "default": "all",
+                        "title": "Applies to",
+                        "description": "Which employees must have this document.",
+                        "x-enum-labels": {
+                            "all": "Everyone",
+                            "contractType": "A contract type",
+                            "normfunctie": "A reference job",
+                            "orgUnit": "An organisational unit"
+                        }
+                    },
+                    "scopeValues": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "nullable": true,
+                        "title": "Applies to values",
+                        "description": "The contract types, reference job ids or unit ids this requirement applies to. Leave empty when it applies to everyone.",
+                        "x-notes": "Matched against the employee's contracts (type, normfunctieId) or placements (orgUnitId) that run on the day of the check."
+                    },
+                    "evidenceKind": {
+                        "type": "string",
+                        "enum": [
+                            "personnel-document",
+                            "generated-document",
+                            "competence"
+                        ],
+                        "default": "personnel-document",
+                        "title": "Proof",
+                        "description": "What counts as proof: a document you add to the file, a document humaniq generated, or a registered competence.",
+                        "x-enum-labels": {
+                            "personnel-document": "A document added to the file",
+                            "generated-document": "A document humaniq generated",
+                            "competence": "A registered competence"
+                        }
+                    },
+                    "documentType": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Generated document type",
+                        "description": "For a generated document: its type, such as arbeidsovereenkomst."
+                    },
+                    "competenceCode": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Competence code",
+                        "description": "For a competence: its code, such as big-verpleegkundige."
+                    },
+                    "expires": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Expires",
+                        "description": "Whether the document has an expiry date."
+                    },
+                    "warnDaysBefore": {
+                        "type": "integer",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Warn days before expiry",
+                        "description": "How many days before the expiry date the file shows the document as expiring."
+                    },
+                    "maxAgeDaysAtStart": {
+                        "type": "integer",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Maximum age at start (days)",
+                        "description": "How old the document may be on the first day of employment. A certificate of conduct older than this at hire does not count."
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "default": true,
+                        "title": "Active",
+                        "description": "Only active requirements are checked."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration this requirement belongs to. Leave empty for every administration."
+                    }
+                }
+            },
+            "PersonnelDocument": {
+                "slug": "PersonnelDocument",
+                "icon": "FileAccountOutline",
+                "version": "0.1.0",
+                "title": "Personnel document",
+                "description": "One document an employee supplied for their personnel file, with its issue and expiry date and who checked it. The file itself is attached to this record (people-dossier-completeness D2).",
+                "type": "object",
+                "required": [
+                    "employeeId",
+                    "requirementCode"
+                ],
+                "configuration": {
+                    "x-openregister-calculations": {
+                        "daysUntilExpiry": {
+                            "type": "number",
+                            "materialise": true,
+                            "title": "Days until expiry",
+                            "description": "Days from today until the document expires. Empty when it does not expire.",
+                            "expression": {
+                                "if": [
+                                    {
+                                        "eq": [
+                                            {
+                                                "coalesce": [
+                                                    {
+                                                        "prop": "validUntil"
+                                                    },
+                                                    ""
+                                                ]
+                                            },
+                                            ""
+                                        ]
+                                    },
+                                    null,
+                                    {
+                                        "diffDays": [
+                                            {
+                                                "prop": "validUntil"
+                                            },
+                                            {
+                                                "formatDate": [
+                                                    {
+                                                        "now": []
+                                                    },
+                                                    "Y-m-d"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        "daysUntilWarning": {
+                            "type": "number",
+                            "materialise": true,
+                            "title": "Days until the expiry warning",
+                            "description": "Days from today until HR is warned that the document expires. Empty when it does not expire.",
+                            "expression": {
+                                "if": [
+                                    {
+                                        "eq": [
+                                            {
+                                                "coalesce": [
+                                                    {
+                                                        "prop": "validUntil"
+                                                    },
+                                                    ""
+                                                ]
+                                            },
+                                            ""
+                                        ]
+                                    },
+                                    null,
+                                    {
+                                        "-": [
+                                            {
+                                                "diffDays": [
+                                                    {
+                                                        "prop": "validUntil"
+                                                    },
+                                                    {
+                                                        "formatDate": [
+                                                            {
+                                                                "now": []
+                                                            },
+                                                            "Y-m-d"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "coalesce": [
+                                                    {
+                                                        "prop": "warnDaysBefore"
+                                                    },
+                                                    60
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "x-openregister-notifications": {
+                        "documentExpiringSoon": {
+                            "trigger": {
+                                "type": "calculatedChange",
+                                "field": "daysUntilWarning",
+                                "condition": {
+                                    "lte": 0
+                                },
+                                "previously": {
+                                    "gt": 0
+                                }
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "groups",
+                                    "groups": [
+                                        "humaniq-hr"
+                                    ]
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Personeelsdossier: {{requirementCode}} van {{employeeId}} verloopt op {{validUntil}}",
+                                "en": "Personnel file: {{requirementCode}} of {{employeeId}} expires on {{validUntil}}"
+                            },
+                            "message": {
+                                "nl": "Nog {{daysUntilExpiry}} dagen. Vraag een nieuw document op.",
+                                "en": "{{daysUntilExpiry}} days left. Ask for a new document."
+                            },
+                            "_note": "people-dossier-completeness D2 (REQ-DCP-002): fires once when the warning window opens. Declared here because platform-notifications is not built; the dialect is the one absence-deadlines-and-signals uses."
+                        },
+                        "documentExpired": {
+                            "trigger": {
+                                "type": "calculatedChange",
+                                "field": "daysUntilExpiry",
+                                "condition": {
+                                    "lt": 0
+                                },
+                                "previously": {
+                                    "gte": 0
+                                }
+                            },
+                            "enabled": true,
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "groups",
+                                    "groups": [
+                                        "humaniq-hr"
+                                    ]
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Personeelsdossier: {{requirementCode}} van {{employeeId}} is verlopen",
+                                "en": "Personnel file: {{requirementCode}} of {{employeeId}} has expired"
+                            },
+                            "message": {
+                                "nl": "Het document verliep op {{validUntil}}.",
+                                "en": "The document expired on {{validUntil}}."
+                            },
+                            "_note": "people-dossier-completeness D2 (REQ-DCP-002): fires once when the expiry date passes."
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Whose personnel file this document belongs to."
+                    },
+                    "requirementCode": {
+                        "type": "string",
+                        "title": "Requirement code",
+                        "description": "The code of the requirement this document proves, such as id or vog."
+                    },
+                    "issuedOn": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Issued on",
+                        "description": "The date on the document."
+                    },
+                    "validUntil": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Valid until",
+                        "description": "The expiry date. Leave empty when the document does not expire."
+                    },
+                    "warnDaysBefore": {
+                        "type": "integer",
+                        "nullable": true,
+                        "minimum": 0,
+                        "default": 60,
+                        "title": "Warn days before expiry",
+                        "description": "How many days before the expiry date HR gets a notification."
+                    },
+                    "verifiedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Checked by",
+                        "description": "Who looked at the original document."
+                    },
+                    "verifiedOn": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Checked on",
+                        "description": "When the original was checked."
+                    },
+                    "note": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Note",
+                        "description": "Anything worth knowing about this document."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration of the employee."
+                    }
+                }
+            },
+            "RightToWorkCheck": {
+                "slug": "RightToWorkCheck",
+                "icon": "ShieldCheckOutline",
+                "version": "0.1.0",
+                "title": "Right-to-work check",
+                "description": "The check of a new hire's identity document and right to work, with the rule's result. It stores no document number (people-dossier-completeness D4).",
+                "type": "object",
+                "required": [
+                    "employeeId",
+                    "result",
+                    "checkedOn"
+                ],
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Who was checked."
+                    },
+                    "onboardingId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Onboarding",
+                        "nullable": true,
+                        "title": "Onboarding",
+                        "description": "The onboarding case the check was made for."
+                    },
+                    "documentType": {
+                        "type": "string",
+                        "enum": [
+                            "paspoort",
+                            "identiteitskaart",
+                            "verblijfsdocument",
+                            "geen"
+                        ],
+                        "title": "Document type",
+                        "description": "The kind of document that was checked.",
+                        "x-enum-labels": {
+                            "paspoort": "Passport",
+                            "identiteitskaart": "Identity card",
+                            "verblijfsdocument": "Residence document",
+                            "geen": "None"
+                        }
+                    },
+                    "nationality": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Nationality",
+                        "description": "The nationality on the document, as a three-letter code such as NLD.",
+                        "authorization": {
+                            "read": [
+                                "humaniq-hr"
+                            ],
+                            "update": [
+                                "humaniq-hr"
+                            ]
+                        }
+                    },
+                    "documentExpiry": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Document expires on",
+                        "description": "The expiry date on the document."
+                    },
+                    "endorsement": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Work endorsement",
+                        "description": "What the residence document says about work, such as Arbeid vrij toegestaan.",
+                        "authorization": {
+                            "read": [
+                                "humaniq-hr"
+                            ],
+                            "update": [
+                                "humaniq-hr"
+                            ]
+                        }
+                    },
+                    "twvValidUntil": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Work permit valid until",
+                        "description": "The end date of a work permit (TWV), when there is one."
+                    },
+                    "method": {
+                        "type": "string",
+                        "enum": [
+                            "extractie",
+                            "handmatig"
+                        ],
+                        "title": "How it was read",
+                        "description": "Read from the machine-readable zone, or entered by hand.",
+                        "x-enum-labels": {
+                            "extractie": "Read from the machine-readable zone",
+                            "handmatig": "Entered by hand"
+                        }
+                    },
+                    "result": {
+                        "type": "string",
+                        "enum": [
+                            "geslaagd",
+                            "mislukt"
+                        ],
+                        "title": "Result",
+                        "description": "Passed or failed, by the stated rule.",
+                        "x-enum-labels": {
+                            "geslaagd": "Passed",
+                            "mislukt": "Failed"
+                        }
+                    },
+                    "reasonCode": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Reason code",
+                        "description": "Which step of the rule decided."
+                    },
+                    "reason": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Reason",
+                        "description": "Why the check passed or failed."
+                    },
+                    "checkedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Checked by",
+                        "description": "Who ran the check."
+                    },
+                    "checkedOn": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Checked on",
+                        "description": "The day of the check. It must be on or before the start date."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration of the employee."
+                    }
+                }
+            }
+        }
+    }
+}

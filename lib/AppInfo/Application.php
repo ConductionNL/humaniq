@@ -38,6 +38,7 @@ use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
+use OCA\Humaniq\Lifecycle\RightToWorkGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
 use OCA\Humaniq\Listener\ChangeRequestListener;
@@ -257,6 +258,20 @@ class Application extends App implements IBootstrap {
 			LeaveSettlementPeriodGuard::class,
 			static function ($c): LeaveSettlementPeriodGuard {
 				return new LeaveSettlementPeriodGuard();
+			}
+		);
+
+		// people-dossier-completeness D5: an onboarding case does not reach the
+		// first working day (gereed_melden, starten) without a passing
+		// right-to-work check dated on or before its start date. Keyed by its
+		// FQCN for the `requires` tag on those Onboarding transitions.
+		$context->registerService(
+			RightToWorkGuard::class,
+			static function ($c): RightToWorkGuard {
+				return new RightToWorkGuard(
+					gateway: $c->get(\OCA\Humaniq\Service\HoursRegisterGateway::class),
+					rule: $c->get(\OCA\Humaniq\Service\RightToWorkService::class)
+				);
 			}
 		);
 

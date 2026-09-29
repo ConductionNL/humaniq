@@ -131,7 +131,7 @@ class RightToWorkService {
 	 */
 	private function apply(array $facts, DateTimeImmutable $start): array {
 		$expiry = $this->date(value: $facts['documentExpiry']);
-		if ($facts['documentType'] === '' || $expiry === null) {
+		if ($facts['documentType'] === '' || $facts['documentType'] === 'geen' || $expiry === null) {
 			return $this->answer(facts: $facts, result: self::RESULT_FAIL, code: 'geen-document', reason: 'No identity document with an expiry date was recorded.');
 		}
 
