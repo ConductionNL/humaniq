@@ -564,6 +564,14 @@
 		"route": "/mijn/beoordelingen"
 	},
 	{
+		"id": "RelationsCases",
+		"route": "/relations-cases"
+	},
+	{
+		"id": "RelationsCaseDetail",
+		"route": "/relations-cases/:id"
+	},
+	{
 		"id": "PayrollAdjustments",
 		"route": "/payroll-adjustments"
 	},

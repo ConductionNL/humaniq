@@ -2744,6 +2744,41 @@
                 "note": "Zomervakantie van de leidinggevende.",
                 "administrationId": "ADM-001",
                 "_note": "self-service-approvals-inbox (2026-09-29): the spec's summer scenario. admin leads Directie and Consultancy (Sam Jansen's placements); hr-demo stands in from 14 July to 1 August 2026. A fixed period rather than the current month, because a seed cannot move with the calendar: shorten or move it on its page to try it today."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmployeeRelationsCase",
+                    "slug": "relations-case-visser-waarschuwing"
+                },
+                "employeeId": "@ref:employee-visser",
+                "kind": "schriftelijke-waarschuwing",
+                "openedOn": "2023-03-02",
+                "facts": "Drie keer te laat op het werk in maart 2023 zonder bericht vooraf.",
+                "measure": "Schriftelijke waarschuwing.",
+                "outcome": "Waarschuwing uitgereikt en besproken; afspraak dat verhindering voor 9.00 uur wordt gemeld.",
+                "documents": [
+                    "HR/Arbeidsrelaties/Visser/waarschuwingsbrief-2023-03-20.pdf"
+                ],
+                "closedOn": "2023-03-20",
+                "retainedUntil": "2025-03-20",
+                "status": "afgesloten",
+                "administrationId": "ADM-001",
+                "_note": "people-employee-relations-cases (2026-09-29): a closed written warning kept past its retention date, so occ humaniq:rules:audit flags it (nl-bewaartermijn-verstreken). The letter is a reference, not an object file (design D2 build note). userId and managerUserId are stamped by RelationsCaseListener on the next save."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmployeeRelationsCase",
+                    "slug": "relations-case-devries-klacht"
+                },
+                "employeeId": "@ref:employee-devries",
+                "kind": "klacht",
+                "openedOn": "2026-09-01",
+                "facts": "Klacht over structureel te hoge werkdruk in het team sinds de reorganisatie.",
+                "status": "in-behandeling",
+                "administrationId": "ADM-001",
+                "_note": "people-employee-relations-cases (2026-09-29): an open grievance. The employee does not see it in My warnings and measures; only closed warnings and measures are shown to the subject."
             }
         ]
     }

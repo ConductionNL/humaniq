@@ -1,6 +1,9 @@
-# employee-relations-cases
+# employee-relations-cases Specification
 
-## ADDED Requirements
+## Purpose
+Grievance, warning and disciplinary cases on the personnel file, readable only by HR, with a retention date. Built by people-employee-relations-cases (archived 2026-09-29).
+
+## Requirements
 
 ### Requirement: HR SHALL record employee relations cases (REQ-ERC-001)
 
@@ -17,10 +20,14 @@ Rows: `ppl-employee-relations` (humaniq matrix).
   its outcome
 - **THEN** the case shows as closed on the employee's relations list with the letter
 
+@e2e exclude the stamping and the closing rule are decided server-side; covered by RelationsCaseListenerTest::testANewCaseIsStampedWithTheAccountsItsAuthorizationReads and RelationsCaseDeclarationTest::testClosingNeedsAnOutcomeAndADate
+
 #### Scenario: A case cannot close without an outcome
 - **GIVEN** a case in progress with no outcome
 - **WHEN** HR tries to close it
 - **THEN** the transition is refused
+
+@e2e exclude OpenRegister's TransitionEngine enforces the declared inputs; covered by RelationsCaseDeclarationTest::testClosingNeedsAnOutcomeAndADate
 
 ### Requirement: Only HR SHALL read a case's content (REQ-ERC-002)
 
@@ -37,10 +44,14 @@ Rows: `ppl-employee-relations` (humaniq matrix).
 - **THEN** the case's kind and status are returned and its facts, measure, outcome and
   documents are not
 
+@e2e exclude OpenRegister enforces the authorization; covered by RelationsCaseDeclarationTest::testHrReadsAllTheManagerTheCaseAndTheSubjectAClosedMeasure and RelationsCaseListenerTest::testAHandSetAccountIsPutBack
+
 #### Scenario: The employee sees their own closed measure
 - **GIVEN** the same closed warning
 - **WHEN** the employee opens `MijnMaatregelen`
 - **THEN** they see the warning with its facts and letter, and see no open grievance cases
+
+@e2e exclude OpenRegister enforces the authorization; covered by RelationsCaseDeclarationTest::testHrReadsAllTheManagerTheCaseAndTheSubjectAClosedMeasure
 
 ### Requirement: A closed case SHALL carry a retention date (REQ-ERC-003)
 
@@ -53,3 +64,5 @@ Rows: `ppl-employee-relations` (humaniq matrix).
 - **GIVEN** a warning closed more than two years ago
 - **WHEN** the rules audit runs
 - **THEN** the case is flagged as past its retention date
+
+@e2e exclude the rules audit runs from occ; covered by NlDossierRetentionChecksTest::testAClosedRelationsCaseKeptPastItsDateIsFlagged and RelationsCaseListenerTest::testClosingSetsTheRetentionDateTwoYearsOn

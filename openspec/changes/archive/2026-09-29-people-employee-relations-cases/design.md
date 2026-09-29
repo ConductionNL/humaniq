@@ -89,3 +89,28 @@ joins the schemas `nl-bewaartermijn-verstreken` reads.
 
 - Should a grievance be visible to the employee who filed it while open? This design shows
   only closed warnings and measures to the subject.
+
+## Changes during the build (2026-09-29)
+
+- **Closing is declarative.** `afsluiten` declares `inputs` `outcome` and `closedOn` as
+  required; OpenRegister's TransitionEngine refuses the transition without them. No guard class.
+- **Retention by listener.** `RelationsCaseListener` sets `retainedUntil` to `closedOn` plus two
+  years when a case is saved as `afgesloten` without one; a date HR set is kept. A calculation
+  would overwrite HR's date, so the listener shape was used.
+- **Accounts are stamped, not typed.** The authorization matches on `userId` and
+  `managerUserId`, so the listener derives both from the employee (`nextcloudUserId`, and the
+  org chain through `HoursRegisterGateway::uniqueManagerUserIdFor()`) on every create and
+  update and puts a hand-set value back. Otherwise anyone with update rights could make a case
+  readable to another account.
+- **Schema-level read for the manager.** D2 gave the manager property-level reads; the manager
+  also needs a schema-level read (`managerUserId: $userId`) to see the case at all. The subject's
+  schema-level read carries the same condition as their property reads (`status` afgesloten,
+  `kind` in written warning or disciplinary measure).
+- **Letters as references, not object files.** OpenRegister serves an object's files to everyone
+  who may read the object, and the manager may read the case, so a letter attached as an object
+  file would reach the manager. `documents` holds references (paths in HR's files) under the
+  property rules instead. A Files widget on the detail page is deliberately absent.
+- **MijnMaatregelen is a menu preset**, My HR > My warnings and measures on `RelationsCases`
+  with `userId = @me`, the side activities precedent; the authorization does the filtering.
+- **Seeds use existing employees.** A closed warning for Noa Visser (closed 2023-03-20, kept
+  until 2025-03-20, so the rules audit flags it) and an open grievance for Sanne de Vries.
