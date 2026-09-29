@@ -33,6 +33,7 @@ use OCA\Humaniq\Event\EmployeeLeftEvent;
 use OCA\Humaniq\Event\LeaveApprovedEvent;
 use OCA\Humaniq\Event\SicknessReportedEvent;
 use OCA\Humaniq\Service\HrLifecycleEventService;
+use OCA\Humaniq\Service\HrLifecycleMoments;
 use OCA\Humaniq\Tests\Unit\Support\ApprovalsFixture;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCP\EventDispatcher\Event;
@@ -211,6 +212,7 @@ class HrLifecycleEventServiceTest extends TestCase {
 		);
 
 		return new HrLifecycleEventService(
+			moments: new HrLifecycleMoments($this->gateway()),
 			gateway: $this->gateway(),
 			container: new FakeContainer(['OCA\OpenRegister\Service\WebhookService' => $webhook]),
 			eventDispatcher: $dispatcher,

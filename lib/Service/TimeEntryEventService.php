@@ -196,7 +196,7 @@ class TimeEntryEventService {
 			$time = $this->now();
 		}
 
-		return CloudEventEnvelope::build(
+		return (new CloudEventEnvelope())->build(
 			type: self::EVENT_TYPE,
 			source: self::EVENT_SOURCE,
 			eventId: $uuid,

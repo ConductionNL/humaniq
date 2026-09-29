@@ -28,6 +28,7 @@ namespace OCA\Humaniq\Tests\Unit\Listener;
 
 use OCA\Humaniq\Listener\HrLifecycleEventListener;
 use OCA\Humaniq\Service\HrLifecycleEventService;
+use OCA\Humaniq\Service\HrLifecycleMoments;
 use OCA\Humaniq\Tests\Unit\Support\ApprovalsFixture;
 use OCA\Humaniq\Tests\Unit\Support\FakeContainer;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -84,6 +85,7 @@ class HrLifecycleEventListenerTest extends TestCase {
 
 		};
 		$service = new HrLifecycleEventService(
+			moments: new HrLifecycleMoments($this->gateway()),
 			gateway: $this->gateway(),
 			container: new FakeContainer(['OCA\OpenRegister\Service\WebhookService' => $webhook]),
 			eventDispatcher: $this->createMock(IEventDispatcher::class),

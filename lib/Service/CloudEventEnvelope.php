@@ -47,7 +47,7 @@ class CloudEventEnvelope {
 	 *
 	 * @spec openspec/specs/hr-lifecycle-events/spec.md#REQ-HLE-001
 	 */
-	public static function build(string $type, string $source, string $eventId, string $time, array $data, ?string $subject = null): array {
+	public function build(string $type, string $source, string $eventId, string $time, array $data, ?string $subject = null): array {
 		$envelope = [
 			'specversion' => '1.0',
 			'type' => $type,

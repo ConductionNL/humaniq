@@ -38,7 +38,6 @@ namespace OCA\Humaniq\Service;
 use OCA\Humaniq\Event\EmployeeJobChangedEvent;
 use OCA\Humaniq\Event\EmployeeJoinedEvent;
 use OCA\Humaniq\Event\EmployeeLeftEvent;
-use OCA\Humaniq\Event\HrLifecycleEvent;
 use OCA\Humaniq\Event\LeaveApprovedEvent;
 use OCA\Humaniq\Event\SicknessReportedEvent;
 use OCP\EventDispatcher\Event;
@@ -78,12 +77,14 @@ class HrLifecycleEventService {
 	/**
 	 * Constructor.
 	 *
-	 * @param HoursRegisterGateway $gateway Reads contracts, placements and employees.
+	 * @param HrLifecycleMoments $moments Detects the moments.
+	 * @param HoursRegisterGateway $gateway Reads the employee.
 	 * @param ContainerInterface $container Resolves OpenRegister's WebhookService lazily.
 	 * @param IEventDispatcher $eventDispatcher Dispatches the typed events.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
+		private readonly HrLifecycleMoments $moments,
 		private readonly HoursRegisterGateway $gateway,
 		private readonly ContainerInterface $container,
 		private readonly IEventDispatcher $eventDispatcher,
@@ -105,7 +106,7 @@ class HrLifecycleEventService {
 	 */
 	public function emit(string $slug, ?array $old, array $new): int {
 		$sent = 0;
-		foreach ($this->moments(slug: $slug, old: $old, new: $new, today: gmdate('Y-m-d')) as $moment) {
+		foreach ($this->moments->moments(slug: $slug, old: $old, new: $new, today: gmdate('Y-m-d')) as $moment) {
 			$employee = ($this->gateway->findObjectData($moment['employeeId'], 'Employee') ?? []);
 			$envelope = $this->envelope(moment: $moment, employee: $employee);
 			$this->dispatchTyped(moment: $moment, envelope: $envelope);
@@ -116,36 +117,6 @@ class HrLifecycleEventService {
 
 		return $sent;
 	}//end emit()
-
-	/**
-	 * The moments a write marks: `[{type, employeeId, occurredOn, subjectId, data}]`.
-	 *
-	 * @param string $slug The schema slug.
-	 * @param array<string, mixed>|null $old The stored record, null on create.
-	 * @param array<string, mixed> $new The saved record, with its id.
-	 * @param string $today The day, YYYY-MM-DD.
-	 *
-	 * @return array<int, array{type: string, employeeId: string, occurredOn: string, subjectId: string, data: array<string, mixed>}>
-	 *
-	 * @spec openspec/specs/hr-lifecycle-events/spec.md#REQ-HLE-001
-	 * @spec openspec/specs/hr-lifecycle-events/spec.md#REQ-HLE-002
-	 */
-	public function moments(string $slug, ?array $old, array $new, string $today): array {
-		$employeeId = trim((string)($new['employeeId'] ?? ''));
-		if ($employeeId === '') {
-			return [];
-		}
-
-		return match ($slug) {
-			'onboarding' => $this->onboarding(old: $old, new: $new, today: $today),
-			'offboarding' => $this->offboarding(old: $old, new: $new, today: $today),
-			'employmentcontract' => $this->contract(old: $old, new: $new, today: $today),
-			'orgassignment' => $this->placement(old: $old, new: $new, today: $today),
-			'leaverequest' => $this->leave(old: $old, new: $new, today: $today),
-			'sickleavecase' => $this->sickness(old: $old, new: $new, today: $today),
-			default => [],
-		};
-	}//end moments()
 
 	/**
 	 * The CloudEvent for one moment.
@@ -168,7 +139,7 @@ class HrLifecycleEventService {
 			$moment['data']
 		);
 
-		return CloudEventEnvelope::build(
+		return (new CloudEventEnvelope())->build(
 			type: self::TYPE_PREFIX . $moment['type'],
 			source: self::SOURCE,
 			eventId: $this->eventId(moment: $moment),
@@ -177,206 +148,6 @@ class HrLifecycleEventService {
 			subject: $moment['employeeId']
 		);
 	}//end envelope()
-
-	/**
-	 * Joining through a completed onboarding case.
-	 *
-	 * @param array<string, mixed>|null $old The stored case.
-	 * @param array<string, mixed> $new The saved case.
-	 * @param string $today The day.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function onboarding(?array $old, array $new, string $today): array {
-		if ($this->entered(old: $old, new: $new, field: 'status', value: 'afgerond') === false) {
-			return [];
-		}
-
-		$start = ($this->day(value: $new['startDate'] ?? null) ?? $today);
-
-		return [$this->joined(employeeId: (string)$new['employeeId'], start: $start, today: $today)];
-	}//end onboarding()
-
-	/**
-	 * Leaving through a completed offboarding case.
-	 *
-	 * @param array<string, mixed>|null $old The stored case.
-	 * @param array<string, mixed> $new The saved case.
-	 * @param string $today The day.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function offboarding(?array $old, array $new, string $today): array {
-		if ($this->entered(old: $old, new: $new, field: 'status', value: 'afgerond') === false) {
-			return [];
-		}
-
-		$last = ($this->day(value: $new['lastWorkingDay'] ?? null) ?? $today);
-
-		return [$this->moment(type: 'employee.left', employeeId: (string)$new['employeeId'], occurredOn: $last, subjectId: '', data: ['lastWorkingDay' => $last])];
-	}//end offboarding()
-
-	/**
-	 * A contract: the first one joins, the last one ending leaves, a new function is a job change.
-	 *
-	 * @param array<string, mixed>|null $old The stored contract.
-	 * @param array<string, mixed> $new The saved contract.
-	 * @param string $today The day.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function contract(?array $old, array $new, string $today): array {
-		$employeeId = (string)$new['employeeId'];
-		$others = $this->others(schema: 'EmploymentContract', employeeId: $employeeId, id: (string)($new['id'] ?? ''));
-		if ($old === null) {
-			if ($others !== []) {
-				return [];
-			}
-
-			return [$this->joined(employeeId: $employeeId, start: ($this->day(value: $new['startDate'] ?? null) ?? $today), today: $today)];
-		}
-
-		$moments = [];
-		$oldFunction = $this->text(value: $old['normfunctieId'] ?? null);
-		$newFunction = $this->text(value: $new['normfunctieId'] ?? null);
-		if ($oldFunction !== null && $newFunction !== null && $oldFunction !== $newFunction) {
-			$unit = $this->unitOn(employeeId: $employeeId, day: $today);
-			$moments[] = $this->moment(
-				type: 'employee.jobchanged',
-				employeeId: $employeeId,
-				occurredOn: $today,
-				subjectId: (string)($new['id'] ?? ''),
-				data: ['from' => ['orgUnitId' => $unit, 'normfunctieId' => $oldFunction], 'to' => ['orgUnitId' => $unit, 'normfunctieId' => $newFunction]]
-			);
-		}
-
-		$end = $this->day(value: $new['endDate'] ?? null);
-		$live = array_filter($others, fn (array $other): bool => ($this->day(value: $other['endDate'] ?? null) ?? '9999-12-31') >= $today);
-		if ($end !== null && $end < $today && $end !== $this->day(value: $old['endDate'] ?? null) && $live === []) {
-			$moments[] = $this->moment(type: 'employee.left', employeeId: $employeeId, occurredOn: $end, subjectId: '', data: ['lastWorkingDay' => $end]);
-		}
-
-		return $moments;
-	}//end contract()
-
-	/**
-	 * A new placement for someone who already had one is a job change.
-	 *
-	 * @param array<string, mixed>|null $old The stored placement.
-	 * @param array<string, mixed> $new The saved placement.
-	 * @param string $today The day.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function placement(?array $old, array $new, string $today): array {
-		if ($old !== null) {
-			return [];
-		}
-
-		$employeeId = (string)$new['employeeId'];
-		$others = $this->others(schema: 'OrgAssignment', employeeId: $employeeId, id: (string)($new['id'] ?? ''));
-		if ($others === []) {
-			return [];
-		}
-
-		usort($others, fn (array $a, array $b): int => (string)($b['startDate'] ?? '') <=> (string)($a['startDate'] ?? ''));
-
-		return [
-			$this->moment(
-				type: 'employee.jobchanged',
-				employeeId: $employeeId,
-				occurredOn: ($this->day(value: $new['startDate'] ?? null) ?? $today),
-				subjectId: (string)($new['id'] ?? ''),
-				data: ['from' => ['orgUnitId' => $this->text(value: $others[0]['orgUnitId'] ?? null), 'normfunctieId' => null], 'to' => ['orgUnitId' => $this->text(value: $new['orgUnitId'] ?? null), 'normfunctieId' => null]]
-			),
-		];
-	}//end placement()
-
-	/**
-	 * Leave approved, or an approved request no longer approved.
-	 *
-	 * @param array<string, mixed>|null $old The stored request.
-	 * @param array<string, mixed> $new The saved request.
-	 * @param string $today The day.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function leave(?array $old, array $new, string $today): array {
-		$type = null;
-		if ($this->entered(old: $old, new: $new, field: 'status', value: 'approved') === true) {
-			$type = 'leave.approved';
-		} else if ($old !== null && (string)($old['status'] ?? '') === 'approved' && (string)($new['status'] ?? '') !== 'approved') {
-			$type = 'leave.withdrawn';
-		}
-
-		if ($type === null) {
-			return [];
-		}
-
-		return [
-			$this->moment(
-				type: $type,
-				employeeId: (string)$new['employeeId'],
-				occurredOn: $today,
-				subjectId: (string)($new['id'] ?? ''),
-				data: ['startDate' => $this->day(value: $new['startDate'] ?? null), 'endDate' => $this->day(value: $new['endDate'] ?? null), 'hours' => (isset($new['hours']) === true ? (float)$new['hours'] : null)]
-			),
-		];
-	}//end leave()
-
-	/**
-	 * A sickness case reported, or recovered.
-	 *
-	 * @param array<string, mixed>|null $old The stored case.
-	 * @param array<string, mixed> $new The saved case.
-	 * @param string $today The day.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function sickness(?array $old, array $new, string $today): array {
-		$from = $this->day(value: $new['firstSickDay'] ?? null);
-		if ($old === null) {
-			return [$this->moment(type: 'sickness.reported', employeeId: (string)$new['employeeId'], occurredOn: ($from ?? $today), subjectId: (string)($new['id'] ?? ''), data: ['from' => $from, 'to' => null])];
-		}
-
-		if ($this->entered(old: $old, new: $new, field: 'status', value: 'hersteld') === false) {
-			return [];
-		}
-
-		$to = $this->day(value: $new['recoveredDate'] ?? null);
-
-		return [$this->moment(type: 'sickness.recovered', employeeId: (string)$new['employeeId'], occurredOn: ($to ?? $today), subjectId: (string)($new['id'] ?? ''), data: ['from' => $from, 'to' => $to])];
-	}//end sickness()
-
-	/**
-	 * A joined moment, with the unit the employee is placed in.
-	 *
-	 * @param string $employeeId The employee.
-	 * @param string $start The first day.
-	 * @param string $today The day.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function joined(string $employeeId, string $start, string $today): array {
-		$unit = $this->unitOn(employeeId: $employeeId, day: max($start, $today));
-
-		return $this->moment(type: 'employee.joined', employeeId: $employeeId, occurredOn: $start, subjectId: '', data: ['startDate' => $start, 'orgUnitId' => $unit]);
-	}//end joined()
-
-	/**
-	 * One moment.
-	 *
-	 * @param string $type The type after the prefix.
-	 * @param string $employeeId The employee.
-	 * @param string $occurredOn The day.
-	 * @param string $subjectId The record, '' for moments one person has once a day.
-	 * @param array<string, mixed> $data The moment's own fields.
-	 *
-	 * @return array{type: string, employeeId: string, occurredOn: string, subjectId: string, data: array<string, mixed>}
-	 */
-	private function moment(string $type, string $employeeId, string $occurredOn, string $subjectId, array $data): array {
-		return ['type' => $type, 'employeeId' => $employeeId, 'occurredOn' => $occurredOn, 'subjectId' => $subjectId, 'data' => $data];
-	}//end moment()
 
 	/**
 	 * A deterministic event id: the same moment always gets the same id, so a
@@ -391,58 +162,6 @@ class HrLifecycleEventService {
 
 		return substr($hash, 0, 8) . '-' . substr($hash, 8, 4) . '-' . substr($hash, 12, 4) . '-' . substr($hash, 16, 4) . '-' . substr($hash, 20, 12);
 	}//end eventId()
-
-	/**
-	 * The employee's other records of a schema.
-	 *
-	 * @param string $schema The schema.
-	 * @param string $employeeId The employee.
-	 * @param string $id The record to leave out.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function others(string $schema, string $employeeId, string $id): array {
-		return array_values(
-			array_filter(
-				$this->gateway->findFiltered($schema, ['employeeId' => $employeeId]),
-				static fn (array $row): bool => (string)($row['id'] ?? '') !== $id
-			)
-		);
-	}//end others()
-
-	/**
-	 * The unit the employee is placed in on a day, or null.
-	 *
-	 * @param string $employeeId The employee.
-	 * @param string $day The day.
-	 *
-	 * @return string|null
-	 */
-	private function unitOn(string $employeeId, string $day): ?string {
-		foreach ($this->gateway->findFiltered('OrgAssignment', ['employeeId' => $employeeId]) as $placement) {
-			$start = ($this->day(value: $placement['startDate'] ?? null) ?? '0000-01-01');
-			$end = ($this->day(value: $placement['endDate'] ?? null) ?? '9999-12-31');
-			if ($start <= $day && $day <= $end) {
-				return $this->text(value: $placement['orgUnitId'] ?? null);
-			}
-		}
-
-		return null;
-	}//end unitOn()
-
-	/**
-	 * Whether a field took this value on this write.
-	 *
-	 * @param array<string, mixed>|null $old The stored record.
-	 * @param array<string, mixed> $new The saved record.
-	 * @param string $field The field.
-	 * @param string $value The value.
-	 *
-	 * @return bool
-	 */
-	private function entered(?array $old, array $new, string $field, string $value): bool {
-		return (string)($new[$field] ?? '') === $value && (string)(($old ?? [])[$field] ?? '') !== $value;
-	}//end entered()
 
 	/**
 	 * Dispatch the typed event; a failure is logged and the webhook still goes.
@@ -464,7 +183,6 @@ class HrLifecycleEventService {
 		}
 
 		try {
-			/** @var HrLifecycleEvent $event */
 			$event = new $class(
 				eventId: (string)$envelope['id'],
 				employeeId: $moment['employeeId'],
@@ -499,19 +217,6 @@ class HrLifecycleEventService {
 			return false;
 		}
 	}//end send()
-
-	/**
-	 * The date part of a value, or null.
-	 *
-	 * @param mixed $value The value.
-	 *
-	 * @return string|null
-	 */
-	private function day(mixed $value): ?string {
-		$text = substr(trim((string)($value ?? '')), 0, 10);
-
-		return preg_match('/^\d{4}-\d{2}-\d{2}$/', $text) === 1 ? $text : null;
-	}//end day()
 
 	/**
 	 * A scalar as text, or null when empty.
