@@ -68,6 +68,9 @@ return [
         ['name' => 'employeeHistory#history', 'url' => '/api/employees/{id}/history', 'verb' => 'GET'],
         // people-dossier-completeness REQ-DCP-002: one personnel file's completeness, and every readable file with a gap.
         ['name' => 'dossier#status', 'url' => '/api/employees/{id}/dossier-status', 'verb' => 'GET'],
+        // people-flex-contract-rules: the fixed-term chain of a contract, and the on-call average hours (HR).
+        ['name' => 'flexContract#onCallAverages', 'url' => '/api/contracts/on-call-averages', 'verb' => 'GET'],
+        ['name' => 'flexContract#chain', 'url' => '/api/contracts/{id}/chain', 'verb' => 'GET'],
         ['name' => 'dossier#incomplete', 'url' => '/api/dossier/incomplete', 'verb' => 'GET'],
         // self-service-approvals-inbox REQ-API-001/002: the caller's approvals inbox, open or decided.
         ['name' => 'approvals#index', 'url' => '/api/approvals', 'verb' => 'GET'],
