@@ -160,6 +160,10 @@
 		"route": "/org-units/:id"
 	},
 	{
+		"id": "Organogram",
+		"route": "/org/chart"
+	},
+	{
 		"id": "ReviewCycleDetail",
 		"route": "/review-cycles/:id"
 	},
@@ -182,6 +186,10 @@
 	{
 		"id": "SickLeaveCaseDetail",
 		"route": "/sick-leave/:id"
+	},
+	{
+		"id": "PayTransparencyReport",
+		"route": "/reports/pay-transparency"
 	},
 	{
 		"id": "MijnHr",

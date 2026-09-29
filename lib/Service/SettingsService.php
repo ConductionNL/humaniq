@@ -496,6 +496,19 @@ class SettingsService {
 	}//end getDepartmentFiguresMinimumMembers()
 
 	/**
+	 * reporting-pay-transparency: the fewest women and the fewest men a group
+	 * needs before the pay transparency report shows its figures. App config
+	 * key `pay_transparency_minimum_group`, default 5.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/specs/pay-transparency/spec.md#REQ-PTR-002
+	 */
+	public function getPayTransparencyMinimumGroup(): int {
+		return max(1, $this->appConfig->getValueInt(Application::APP_ID, 'pay_transparency_minimum_group', 5));
+	}//end getPayTransparencyMinimumGroup()
+
+	/**
 	 * expenses-travel-calculation: the rate per kilometre the employer pays
 	 * for business and commuting travel. App config key
 	 * `mileage_rate_per_km` (for example `0.30`); null when unset or not a

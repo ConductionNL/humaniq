@@ -355,26 +355,13 @@ class HrDocumentService {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function jaaropgaafBacklog(?string $employeeId, int $year): array {
-		$employeeIds = [];
-		foreach ($this->loadAll(self::PAYSLIP_SCHEMA) as $payslip) {
-			$payslipEmployeeId = trim((string)($payslip['employeeId'] ?? ''));
-			if ($payslipEmployeeId === '') {
-				continue;
-			}
-
-			if ($employeeId !== null && $payslipEmployeeId !== $employeeId) {
-				continue;
-			}
-
-			if (str_starts_with((string)($payslip['period'] ?? ''), $year . '-') === false) {
-				continue;
-			}
-
-			$employeeIds[$payslipEmployeeId] = true;
+		$employeeIds = $this->jaaropgaafEmployeeIds($year);
+		if ($employeeId !== null) {
+			$employeeIds = array_values(array_intersect($employeeIds, [$employeeId]));
 		}
 
 		$results = [];
-		foreach (array_keys($employeeIds) as $eachEmployeeId) {
+		foreach ($employeeIds as $eachEmployeeId) {
 			$results[] = $this->generateJaaropgaaf($eachEmployeeId, $year, null);
 		}
 
@@ -440,6 +427,30 @@ class HrDocumentService {
 
 		return $outcome;
 	}//end generateLoonstrook()
+
+	/**
+	 * The employees with at least one payslip in the year: the ones a year's
+	 * annual statements cover (payroll-annual-statement-action D2).
+	 *
+	 * @param int $year The year.
+	 *
+	 * @return array<int, string> Employee ids, each once.
+	 *
+	 * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-002
+	 */
+	public function jaaropgaafEmployeeIds(int $year): array {
+		$employeeIds = [];
+		foreach ($this->loadAll(self::PAYSLIP_SCHEMA) as $payslip) {
+			$payslipEmployeeId = trim((string)($payslip['employeeId'] ?? ''));
+			if ($payslipEmployeeId === '' || str_starts_with((string)($payslip['period'] ?? ''), $year . '-') === false) {
+				continue;
+			}
+
+			$employeeIds[$payslipEmployeeId] = true;
+		}
+
+		return array_map('strval', array_keys($employeeIds));
+	}//end jaaropgaafEmployeeIds()
 
 	/**
 	 * Generate a `documentType: jaaropgaaf` document for one employee-year

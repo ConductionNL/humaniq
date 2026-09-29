@@ -59,7 +59,7 @@ class FieldAuthorizationDeclarationTest extends TestCase {
 	public function testEmployeeFieldsAreReadByHrPayrollAndTheEmployee(): void {
 		$props = $this->properties('hr-objects.json', 'Employee');
 		$subject = ['group' => 'authenticated', 'match' => ['nextcloudUserId' => '$userId']];
-		foreach (['bsn', 'dateOfBirth', 'identityDocumentVerified', 'identityDocumentRetainedUntil', 'iban', 'tenaamstelling', 'grossMonthlySalary'] as $field) {
+		foreach (['bsn', 'dateOfBirth', 'identityDocumentVerified', 'identityDocumentRetainedUntil', 'iban', 'tenaamstelling', 'grossMonthlySalary', 'gender'] as $field) {
 			self::assertSame([HumaniqRoles::HR_GROUP, HumaniqRoles::PAYROLL_GROUP, $subject], $props[$field]['authorization']['read'], $field);
 		}
 

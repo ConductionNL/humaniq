@@ -202,6 +202,12 @@
 					}
 				},
 				{
+					"id": "Organogram",
+					"label": "Organisation chart",
+					"icon": "SitemapOutline",
+					"route": "Organogram"
+				},
+				{
 					"id": "Formatieplaatsen",
 					"label": "Formation places",
 					"icon": "AccountGroupOutline",
@@ -707,6 +713,13 @@
 					"route": "IntegrationAccounts"
 				}
 			]
+		},
+		{
+			"id": "MySettings",
+			"label": "My settings",
+			"icon": "CogOutline",
+			"section": "settings",
+			"action": "user-settings"
 		}
 	]
 }

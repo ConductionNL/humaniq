@@ -12,9 +12,10 @@
  * guard -- an unknown or unauthorized contractId/payslipId never reaches
  * docudesk and never creates a GeneratedDocument), then delegates the actual
  * render/store to `HrDocumentService::generate()` /
- * `HrDocumentService::generateLoonstrook()`. `jaaropgaaf` is NOT accepted on
- * this endpoint -- the aggregate-then-render flow is occ-only in MVP
- * (design.md D6).
+ * `HrDocumentService::generateLoonstrook()`. Since
+ * payroll-annual-statement-action, `jaaropgaaf` resolves the posted
+ * `jaaropgaafId` the same way; a year's batch is queued by
+ * AnnualStatementBatchController.
  *
  * @category Controller
  * @package  OCA\Humaniq\Controller
@@ -30,6 +31,7 @@
  *
  * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
  * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
+ * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-001
  */
 
 declare(strict_types=1);
@@ -83,27 +85,33 @@ class DocumentController extends Controller {
 	 * `authorizePayslip()` (payslip-pdf-docudesk design.md D6) -- the
 	 * employeeId is taken from the resolved payslip, `contractId` stays
 	 * null. A missing subject param for the requested type -> 400.
-	 * `jaaropgaaf` is not accepted on this endpoint (occ-only in MVP).
+	 * `jaaropgaaf` resolves the posted `jaaropgaafId` the identical way via
+	 * `authorizeJaaropgaaf()` and renders that statement's employee and year
+	 * (payroll-annual-statement-action D1).
 	 *
 	 * @param string|null $contractId The EmploymentContract id (row-scoped, `@objectId` from the manifest action) -- required for the letter types.
 	 * @param string $documentType The document type (defaults to arbeidsovereenkomst).
 	 * @param string|null $payslipId The Payslip id (row-scoped, `@objectId` from the PayslipDetail action) -- required for `loonstrook`.
+	 * @param string|null $jaaropgaafId The Jaaropgaaf id (`@objectId` from the JaaropgaafDetail action) -- required for `jaaropgaaf`.
 	 *
 	 * @return JSONResponse The generation outcome, 400 on a missing subject param, or 404 when the subject does not resolve.
 	 *
 	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
 	 * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
+	 * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-001
 	 */
 	#[NoAdminRequired]
-	public function generate(?string $contractId = null, string $documentType = 'arbeidsovereenkomst', ?string $payslipId = null): JSONResponse {
+	public function generate(
+		?string $contractId = null,
+		string $documentType = 'arbeidsovereenkomst',
+		?string $payslipId = null,
+		?string $jaaropgaafId = null,
+	): JSONResponse {
 		$documentType = trim($documentType);
 		$userId = $this->userSession->getUser()?->getUID();
 
 		if ($documentType === 'jaaropgaaf') {
-			return new JSONResponse(
-				['error' => 'Jaaropgaaf genereren is niet beschikbaar via dit endpoint (alleen via occ humaniq:documents:generate).'],
-				Http::STATUS_BAD_REQUEST
-			);
+			return $this->generateStatement(jaaropgaafId: trim((string)$jaaropgaafId), userId: $userId);
 		}
 
 		if ($documentType === 'loonstrook') {
@@ -147,6 +155,63 @@ class DocumentController extends Controller {
 
 		return new JSONResponse($result);
 	}//end generate()
+
+	/**
+	 * Resolve one Jaaropgaaf under the caller's RBAC, then render it for its
+	 * own employee and year. A blank id is 400; an unreadable one is 404 and
+	 * nothing is rendered.
+	 *
+	 * @param string      $jaaropgaafId The Jaaropgaaf id.
+	 * @param string|null $userId       The acting user.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-001
+	 */
+	private function generateStatement(string $jaaropgaafId, ?string $userId): JSONResponse {
+		if ($jaaropgaafId === '') {
+			return new JSONResponse(['error' => 'jaaropgaafId is verplicht.'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$statement = $this->authorizeSubject(id: $jaaropgaafId, schema: 'Jaaropgaaf');
+		$employeeId = trim((string)($statement['employeeId'] ?? ''));
+		$year = (int)($statement['year'] ?? 0);
+		if ($statement === null || $employeeId === '' || $year === 0) {
+			return new JSONResponse(['error' => 'Jaaropgaaf niet gevonden.'], Http::STATUS_NOT_FOUND);
+		}
+
+		return new JSONResponse($this->hrDocumentService->generateJaaropgaaf($employeeId, $year, $userId));
+	}//end generateStatement()
+
+	/**
+	 * Resolve an object of the given schema under the caller's ambient RBAC;
+	 * null when it does not exist or the caller may not read it.
+	 *
+	 * @param string $id     The object id.
+	 * @param string $schema The schema.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-001
+	 */
+	private function authorizeSubject(string $id, string $schema): ?array {
+		try {
+			$row = $this->objectService()->find(
+				id: $id,
+				register: $this->settingsService->getRegisterSlug(),
+				schema: $schema
+			);
+		} catch (\Throwable $e) {
+			$this->logger->info('DocumentController: ' . $schema . ' ' . $id . ' kon niet worden opgehaald: ' . $e->getMessage());
+			return null;
+		}
+
+		if ($row === null) {
+			return null;
+		}
+
+		return $this->toArray($row);
+	}//end authorizeSubject()
 
 	/**
 	 * Resolve the posted contractId through OpenRegister's ObjectService

@@ -136,7 +136,7 @@
             "Timesheet": {
                 "slug": "Timesheet",
                 "icon": "ClockCheckOutline",
-                "version": "0.7.0",
+                "version": "0.8.0",
                 "title": "Timesheet",
                 "description": "The monthly collection of an employee's hour bookings (urenstaat). Totals are kept up to date automatically while the employee books; once submitted, a manager approves or rejects the whole month.",
                 "x-notes": "hours-process-redesign Decision 2: the period aggregate half of the former all-in-one schema — the approval lifecycle stays here and only here (a TimeEntry has none). The approval lifecycle is the correctly-homed HR/labour surface pipelinq's 'Timesheet approval' deep-link previously pointed at shillinq for; shillinq's UrenRegistratie is an append-only billing time-log with no approval state. hours/entryCount/projectId/costCenter/billable are server-recomputed aggregates (TimesheetAggregateListener, REQ-TEC-004) and the process fields are stamped on lifecycle edges (TimesheetProcessStampListener) — none of them is readOnly because humaniq's own listeners must write them and OpenRegister enforces readOnly on every UPDATE with no backend bypass; forms hide them via page-level includeFields allowlists instead. Two listeners write this schema (stamp + aggregate); both are recompute-style, so a stale intermediate total from concurrent entry writes is self-healed by the next write (accepted for dev-stage volumes).",
@@ -148,6 +148,58 @@
                 ],
                 "configuration": {
                     "x-openregister-notifications": {
+                            "timesheet-approved": {
+                                "trigger": {
+                                    "type": "transition",
+                                    "action": "approve"
+                                },
+                                "enabled": true,
+                                "originApp": "humaniq",
+                                "channels": [
+                                    "nc-notification"
+                                ],
+                                "recipients": [
+                                    {
+                                        "kind": "field",
+                                        "field": "userId"
+                                    }
+                                ],
+                                "subject": {
+                                    "nl": "Je urenstaat is goedgekeurd",
+                                    "en": "Your timesheet was approved"
+                                },
+                                "message": {
+                                    "nl": "Periode {{period}}.",
+                                    "en": "Period {{period}}."
+                                },
+                                "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+                            },
+                            "timesheet-rejected": {
+                                "trigger": {
+                                    "type": "transition",
+                                    "action": "reject"
+                                },
+                                "enabled": true,
+                                "originApp": "humaniq",
+                                "channels": [
+                                    "nc-notification"
+                                ],
+                                "recipients": [
+                                    {
+                                        "kind": "field",
+                                        "field": "userId"
+                                    }
+                                ],
+                                "subject": {
+                                    "nl": "Je urenstaat is afgewezen",
+                                    "en": "Your timesheet was rejected"
+                                },
+                                "message": {
+                                    "nl": "Periode {{period}}. Reden: {{rejectionReason}}",
+                                    "en": "Period {{period}}. Reason: {{rejectionReason}}"
+                                },
+                                "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+                            },
                         "timesheet-submitted": {
                             "trigger": {
                                 "type": "transition",

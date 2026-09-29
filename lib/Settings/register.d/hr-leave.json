@@ -5,7 +5,7 @@
             "LeaveRequest": {
                 "slug": "LeaveRequest",
                 "icon": "CalendarClock",
-                "version": "0.5.0",
+                "version": "0.6.0",
                 "title": "Leave request",
                 "description": "An employee request for leave (verlofaanvraag): a period of holiday, sick, unpaid, special, care or parental leave submitted for manager approval. The request lifecycle (draft → submitted → approved/rejected, with the shared no-self-approval separation-of-duties guard) is fully declarative per ADR-031, mirroring the Timesheet and Expense workflows. Leave is the HR/labour surface the portaliq fleet review flagged as missing in humaniq; external employees create and track these requests through the shared external portal (ADR-046), while approval stays a back-office manager action.",
                 "type": "object",
@@ -19,6 +19,58 @@
                 ],
                 "configuration": {
                     "x-openregister-notifications": {
+                            "leave-approved": {
+                                "trigger": {
+                                    "type": "transition",
+                                    "action": "approve"
+                                },
+                                "enabled": true,
+                                "originApp": "humaniq",
+                                "channels": [
+                                    "nc-notification"
+                                ],
+                                "recipients": [
+                                    {
+                                        "kind": "field",
+                                        "field": "userId"
+                                    }
+                                ],
+                                "subject": {
+                                    "nl": "Je verlofaanvraag is goedgekeurd",
+                                    "en": "Your leave request was approved"
+                                },
+                                "message": {
+                                    "nl": "Van {{startDate}} tot en met {{endDate}}.",
+                                    "en": "From {{startDate}} up to and including {{endDate}}."
+                                },
+                                "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+                            },
+                            "leave-rejected": {
+                                "trigger": {
+                                    "type": "transition",
+                                    "action": "reject"
+                                },
+                                "enabled": true,
+                                "originApp": "humaniq",
+                                "channels": [
+                                    "nc-notification"
+                                ],
+                                "recipients": [
+                                    {
+                                        "kind": "field",
+                                        "field": "userId"
+                                    }
+                                ],
+                                "subject": {
+                                    "nl": "Je verlofaanvraag is afgewezen",
+                                    "en": "Your leave request was rejected"
+                                },
+                                "message": {
+                                    "nl": "Van {{startDate}} tot en met {{endDate}}. Reden: {{rejectionReason}}",
+                                    "en": "From {{startDate}} up to and including {{endDate}}. Reason: {{rejectionReason}}"
+                                },
+                                "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+                            },
                         "leave-submitted": {
                             "trigger": {
                                 "type": "transition",
@@ -307,7 +359,7 @@
             "LeaveTransaction": {
                 "slug": "LeaveTransaction",
                 "icon": "SwapHorizontal",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Leave transaction",
                 "description": "An employee request to buy or sell leave hours (IKB-style flexibility, individueel keuzebudget): a declarative draft -> submitted -> approved/rejected -> settled lifecycle (leave-buy-sell), guarded by the reused NoSelfApprovalGuard for separation of duties. A sell may only ever draw down bovenwettelijkHours on the matching LeaveBalance: never entitledHours/usedHours, so it can never threaten the nl-verlof-wettelijk-minimum statutory floor. Settlement (LeaveBuySellSettlementService) writes the balance exactly once and stamps settledAmount, which PayrollRunService.generate() folds into the current run's Payslip.leaveBuySell as an already-computed payroll input, never an engine recompute.",
                 "type": "object",
@@ -323,6 +375,58 @@
                 ],
                 "configuration": {
                     "x-openregister-notifications": {
+                            "leave-transaction-approved": {
+                                "trigger": {
+                                    "type": "transition",
+                                    "action": "approve"
+                                },
+                                "enabled": true,
+                                "originApp": "humaniq",
+                                "channels": [
+                                    "nc-notification"
+                                ],
+                                "recipients": [
+                                    {
+                                        "kind": "field",
+                                        "field": "userId"
+                                    }
+                                ],
+                                "subject": {
+                                    "nl": "Je aanvraag om verlof te kopen of verkopen is goedgekeurd",
+                                    "en": "Your request to buy or sell leave was approved"
+                                },
+                                "message": {
+                                    "nl": "{{hours}} uur in {{year}}.",
+                                    "en": "{{hours}} hours in {{year}}."
+                                },
+                                "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+                            },
+                            "leave-transaction-rejected": {
+                                "trigger": {
+                                    "type": "transition",
+                                    "action": "reject"
+                                },
+                                "enabled": true,
+                                "originApp": "humaniq",
+                                "channels": [
+                                    "nc-notification"
+                                ],
+                                "recipients": [
+                                    {
+                                        "kind": "field",
+                                        "field": "userId"
+                                    }
+                                ],
+                                "subject": {
+                                    "nl": "Je aanvraag om verlof te kopen of verkopen is afgewezen",
+                                    "en": "Your request to buy or sell leave was rejected"
+                                },
+                                "message": {
+                                    "nl": "{{hours}} uur in {{year}}. Reden: {{rejectionReason}}",
+                                    "en": "{{hours}} hours in {{year}}. Reason: {{rejectionReason}}"
+                                },
+                                "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+                            },
                         "leave-transaction-submitted": {
                             "trigger": {
                                 "type": "transition",

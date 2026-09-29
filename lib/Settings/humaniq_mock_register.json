@@ -1736,6 +1736,39 @@
             "default": "NL",
             "description": "The country, as a two-letter code such as NL.",
             "x-notes": "ISO 3166-1 alpha-2 (people-record-change-approval D5)."
+          },
+          "gender": {
+            "title": "Gender for the pay report",
+            "type": "string",
+            "enum": [
+              "woman",
+              "man",
+              "other"
+            ],
+            "x-enum-labels": {
+              "woman": "Woman",
+              "man": "Man",
+              "other": "Other"
+            },
+            "nullable": true,
+            "default": null,
+            "description": "Used only for the gender pay gap report the pay transparency law asks for. Leave empty if unknown.",
+            "x-notes": "reporting-pay-transparency: the directive compares women and men; other and empty count in totals, not in the gap. Readable by HR, payroll and the employee.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "nextcloudUserId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-hr"
+              ]
+            }
           }
         },
         "required": [
@@ -2088,6 +2121,113 @@
                 "to": "reimbursed",
                 "description": "The approved claim is paid out to the employee; reimbursedAt records the payout date. Terminal."
               }
+            }
+          },
+          "x-openregister-notifications": {
+            "expense-approved": {
+              "trigger": {
+                "type": "transition",
+                "action": "approve"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "userId"
+                }
+              ],
+              "subject": {
+                "nl": "Je declaratie is goedgekeurd",
+                "en": "Your expense claim was approved"
+              },
+              "message": {
+                "nl": "{{title}}: {{amount}} {{currency}}.",
+                "en": "{{title}}: {{amount}} {{currency}}."
+              },
+              "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+            },
+            "expense-rejected": {
+              "trigger": {
+                "type": "transition",
+                "action": "reject"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "userId"
+                }
+              ],
+              "subject": {
+                "nl": "Je declaratie is afgewezen",
+                "en": "Your expense claim was rejected"
+              },
+              "message": {
+                "nl": "{{title}}: {{amount}} {{currency}}. Reden: {{rejectionReason}}",
+                "en": "{{title}}: {{amount}} {{currency}}. Reason: {{rejectionReason}}"
+              },
+              "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+            },
+            "expense-reimbursed": {
+              "trigger": {
+                "type": "transition",
+                "action": "reimburse"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "userId"
+                }
+              ],
+              "subject": {
+                "nl": "Je declaratie is uitbetaald",
+                "en": "Your expense claim was paid"
+              },
+              "message": {
+                "nl": "{{title}}: {{amount}} {{currency}}.",
+                "en": "{{title}}: {{amount}} {{currency}}."
+              },
+              "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+            },
+            "expense-submitted": {
+              "trigger": {
+                "type": "transition",
+                "action": "submit"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification",
+                "email"
+              ],
+              "recipients": [
+                {
+                  "kind": "expression",
+                  "resolver": "OCA\\Humaniq\\Notification\\ManagerOrDeputyRecipientResolver"
+                }
+              ],
+              "subject": {
+                "nl": "Een declaratie wacht op je goedkeuring",
+                "en": "An expense claim waits for your approval"
+              },
+              "message": {
+                "nl": "{{title}}: {{amount}} {{currency}}. Je vindt het bij Mijn goedkeuringen.",
+                "en": "{{title}}: {{amount}} {{currency}}. You find it under My approvals."
+              },
+              "_note": "self-service-approvals-inbox D3 (REQ-API-002), with the key and channels of platform-notifications D1/D2: the request's manager (managerUserId, or the org chart when nothing stamped one) and every deputy standing in for that manager today. One expression recipient rather than a field recipient plus the resolver, so a manager is never told twice. Declarative only, never an imperative dispatch (gate-18, ADR-031)."
             }
           }
         },
@@ -3053,6 +3193,87 @@
                 "description": "A manager rejects the submitted leave request (with a rejectionReason). The NoSelfApprovalGuard rejects self-rejection. The employee may correct the request and re-submit."
               }
             }
+          },
+          "x-openregister-notifications": {
+            "leave-approved": {
+              "trigger": {
+                "type": "transition",
+                "action": "approve"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "userId"
+                }
+              ],
+              "subject": {
+                "nl": "Je verlofaanvraag is goedgekeurd",
+                "en": "Your leave request was approved"
+              },
+              "message": {
+                "nl": "Van {{startDate}} tot en met {{endDate}}.",
+                "en": "From {{startDate}} up to and including {{endDate}}."
+              },
+              "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+            },
+            "leave-rejected": {
+              "trigger": {
+                "type": "transition",
+                "action": "reject"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "userId"
+                }
+              ],
+              "subject": {
+                "nl": "Je verlofaanvraag is afgewezen",
+                "en": "Your leave request was rejected"
+              },
+              "message": {
+                "nl": "Van {{startDate}} tot en met {{endDate}}. Reden: {{rejectionReason}}",
+                "en": "From {{startDate}} up to and including {{endDate}}. Reason: {{rejectionReason}}"
+              },
+              "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+            },
+            "leave-submitted": {
+              "trigger": {
+                "type": "transition",
+                "action": "submit"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification",
+                "email"
+              ],
+              "recipients": [
+                {
+                  "kind": "expression",
+                  "resolver": "OCA\\Humaniq\\Notification\\ManagerOrDeputyRecipientResolver"
+                }
+              ],
+              "subject": {
+                "nl": "Een verlofaanvraag wacht op je goedkeuring",
+                "en": "A leave request waits for your approval"
+              },
+              "message": {
+                "nl": "Verlof van {{startDate}} tot en met {{endDate}}. Je vindt het bij Mijn goedkeuringen.",
+                "en": "Leave from {{startDate}} to {{endDate}}. You find it under My approvals."
+              },
+              "_note": "self-service-approvals-inbox D3 (REQ-API-002), with the key and channels of platform-notifications D1/D2: the request's manager (managerUserId, or the org chart when nothing stamped one) and every deputy standing in for that manager today. One expression recipient rather than a field recipient plus the resolver, so a manager is never told twice. Declarative only, never an imperative dispatch (gate-18, ADR-031)."
+            }
           }
         },
         "properties": {
@@ -3242,6 +3463,87 @@
                 "requires": "OCA\\Humaniq\\Lifecycle\\LeaveSettlementPeriodGuard",
                 "description": "Settlement adjusts LeaveBalance.bovenwettelijkHours and stamps settledAmount. Fail-closed unless settlementPeriod is present and YYYY-MM-shaped; the actual balance write happens in LeaveBuySellSettlementService, never as a bare declarative transition (the CompAdjustmentDetail orphaned-capability precedent)."
               }
+            }
+          },
+          "x-openregister-notifications": {
+            "leave-transaction-approved": {
+              "trigger": {
+                "type": "transition",
+                "action": "approve"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "userId"
+                }
+              ],
+              "subject": {
+                "nl": "Je aanvraag om verlof te kopen of verkopen is goedgekeurd",
+                "en": "Your request to buy or sell leave was approved"
+              },
+              "message": {
+                "nl": "{{hours}} uur in {{year}}.",
+                "en": "{{hours}} hours in {{year}}."
+              },
+              "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+            },
+            "leave-transaction-rejected": {
+              "trigger": {
+                "type": "transition",
+                "action": "reject"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "userId"
+                }
+              ],
+              "subject": {
+                "nl": "Je aanvraag om verlof te kopen of verkopen is afgewezen",
+                "en": "Your request to buy or sell leave was rejected"
+              },
+              "message": {
+                "nl": "{{hours}} uur in {{year}}. Reden: {{rejectionReason}}",
+                "en": "{{hours}} hours in {{year}}. Reason: {{rejectionReason}}"
+              },
+              "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+            },
+            "leave-transaction-submitted": {
+              "trigger": {
+                "type": "transition",
+                "action": "submit"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification",
+                "email"
+              ],
+              "recipients": [
+                {
+                  "kind": "expression",
+                  "resolver": "OCA\\Humaniq\\Notification\\ManagerOrDeputyRecipientResolver"
+                }
+              ],
+              "subject": {
+                "nl": "Een verzoek om verlof te kopen of verkopen wacht op je goedkeuring",
+                "en": "A request to buy or sell leave waits for your approval"
+              },
+              "message": {
+                "nl": "{{hours}} uur in {{year}}. Je vindt het bij Mijn goedkeuringen.",
+                "en": "{{hours}} hours in {{year}}. You find it under My approvals."
+              },
+              "_note": "self-service-approvals-inbox D3 (REQ-API-002), with the key and channels of platform-notifications D1/D2: the request's manager (managerUserId, or the org chart when nothing stamped one) and every deputy standing in for that manager today. One expression recipient rather than a field recipient plus the resolver, so a manager is never told twice. Declarative only, never an imperative dispatch (gate-18, ADR-031). LeaveTransaction carries no managerUserId, so its manager always comes from the org chart."
             }
           }
         },
@@ -3916,6 +4218,13 @@
             "title": "Status",
             "description": "Retire a function instead of deleting it: contracts that point at it keep their meaning, and the rules audit asks you to give those contracts a current function.",
             "x-notes": "people-job-framework-maintenance D1/D4: retire, never delete; nl-hr21-vervallen-functie flags a live contract on a vervallen function."
+          },
+          "payCategory": {
+            "type": "string",
+            "nullable": true,
+            "title": "Pay category",
+            "description": "Functions in the same pay category count as equal work or work of equal value in the pay transparency report.",
+            "x-notes": "reporting-pay-transparency: the employer's grouping, set with gender-neutral criteria (skills, effort, responsibility, working conditions)."
           }
         }
       },
@@ -5773,6 +6082,35 @@
             "description": "The exact figures the payroll engine was given for this payslip, kept so the calculation can be reproduced later.",
             "x-notes": "audit-trail-payroll (REQ-AUDP-001): the exact CalculationInput (grossMonthlySalaryCents/taxTableColor/loonheffingskortingToegepast/dateOfBirth/period/awfTariff/aofTariff/whkPercentage/verzekeringsplichtig/jurisdiction) PayrollRunService::generate() resolved and fed to PayrollCalculator for this payslip, stored as a structured object (NOT a JSON string: OpenRegister's MagicMapper json_decodes any string column on read, so a string field would read back as an array and fail its own schema type on the next validated save -- hrmq#98 follow-up). Written once at generation time and replaced wholesale (never edited in place) on recalculation of a draft run, mirroring engineVersion/calculatedAt. Null for hand-entered payslips (payrollRunId null), identical to engineVersion's null-means-hand-entered convention. Lets `occ humaniq:payroll:reproduce` re-derive this payslip's figures independent of later Employee/EmploymentContract edits, and is checked for presence/consistency by nl-engine-provenance-complete."
           }
+        },
+        "configuration": {
+          "x-openregister-notifications": {
+            "payslip-ready": {
+              "trigger": {
+                "type": "created"
+              },
+              "enabled": false,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "userId"
+                }
+              ],
+              "subject": {
+                "nl": "Er staat een loonstrook voor je klaar",
+                "en": "A payslip is ready for you"
+              },
+              "message": {
+                "nl": "Periode {{period}}. Je vindt hem bij Mijn HR.",
+                "en": "Period {{period}}. You find it under My HR."
+              },
+              "_note": "platform-notifications D4: a payslip is created when a draft run is calculated, too early to tell the employee, so this rule ships switched off. Switch it on for an administration that creates payslips only at approval."
+            }
+          }
         }
       },
       "PensionFiling": {
@@ -6000,6 +6338,34 @@
                 "to": "besproken",
                 "description": "Correction edge: a vastgesteld verslag that turns out wrong is reopened to besproken for correction. Every path back to vastgesteld passes the NoSelfApprovalGuard again."
               }
+            }
+          },
+          "x-openregister-notifications": {
+            "review-finalised": {
+              "trigger": {
+                "type": "transition",
+                "action": "vaststellen"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "userId"
+                }
+              ],
+              "subject": {
+                "nl": "Je beoordeling is vastgesteld",
+                "en": "Your review was finalised"
+              },
+              "message": {
+                "nl": "Je vindt het verslag bij Mijn HR.",
+                "en": "You find the report under My HR."
+              },
+              "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
             }
           }
         },
@@ -7250,6 +7616,87 @@
                 "to": "draft",
                 "description": "Return an approved timesheet to draft for correction before it is consumed by payroll."
               }
+            }
+          },
+          "x-openregister-notifications": {
+            "timesheet-approved": {
+              "trigger": {
+                "type": "transition",
+                "action": "approve"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "userId"
+                }
+              ],
+              "subject": {
+                "nl": "Je urenstaat is goedgekeurd",
+                "en": "Your timesheet was approved"
+              },
+              "message": {
+                "nl": "Periode {{period}}.",
+                "en": "Period {{period}}."
+              },
+              "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+            },
+            "timesheet-rejected": {
+              "trigger": {
+                "type": "transition",
+                "action": "reject"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "userId"
+                }
+              ],
+              "subject": {
+                "nl": "Je urenstaat is afgewezen",
+                "en": "Your timesheet was rejected"
+              },
+              "message": {
+                "nl": "Periode {{period}}. Reden: {{rejectionReason}}",
+                "en": "Period {{period}}. Reason: {{rejectionReason}}"
+              },
+              "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+            },
+            "timesheet-submitted": {
+              "trigger": {
+                "type": "transition",
+                "action": "submit"
+              },
+              "enabled": true,
+              "originApp": "humaniq",
+              "channels": [
+                "nc-notification",
+                "email"
+              ],
+              "recipients": [
+                {
+                  "kind": "expression",
+                  "resolver": "OCA\\Humaniq\\Notification\\ManagerOrDeputyRecipientResolver"
+                }
+              ],
+              "subject": {
+                "nl": "Een urenstaat wacht op je goedkeuring",
+                "en": "A timesheet waits for your approval"
+              },
+              "message": {
+                "nl": "Periode {{period}}, {{hours}} uur. Je vindt het bij Mijn goedkeuringen.",
+                "en": "Period {{period}}, {{hours}} hours. You find it under My approvals."
+              },
+              "_note": "self-service-approvals-inbox D3 (REQ-API-002), with the key and channels of platform-notifications D1/D2: the request's manager (managerUserId, or the org chart when nothing stamped one) and every deputy standing in for that manager today. One expression recipient rather than a field recipient plus the resolver, so a manager is never told twice. Declarative only, never an imperative dispatch (gate-18, ADR-031)."
             }
           }
         },

@@ -23,6 +23,11 @@ return [
         // humaniq-docudesk-documents — guarded trigger for the EmploymentContractDetail
         // "Genereer arbeidsovereenkomst" manifest api-call action (design.md D7).
         ['name' => 'document#generate', 'url' => '/api/documents/generate', 'verb' => 'POST'],
+        // payroll-annual-statement-action: queue a finished year's annual statements (HR or payroll).
+        ['name' => 'annualStatementBatch#queueJaaropgaven', 'url' => '/api/documents/jaaropgaven', 'verb' => 'POST'],
+        // reporting-pay-transparency: the gender pay gap report (HR and accountants), and its CSV.
+        ['name' => 'payTransparency#report', 'url' => '/api/reports/pay-transparency', 'verb' => 'GET'],
+        ['name' => 'payTransparency#export', 'url' => '/api/reports/pay-transparency/export', 'verb' => 'POST'],
         // payroll-core-engine — guarded trigger for the PayrollRunDetail
         // "(Her)berekenen" manifest api-call action (design.md D6).
         ['name' => 'payroll#calculate', 'url' => '/api/payroll/calculate', 'verb' => 'POST'],
@@ -71,6 +76,8 @@ return [
         // people-flex-contract-rules: the fixed-term chain of a contract, and the on-call average hours (HR).
         ['name' => 'flexContract#onCallAverages', 'url' => '/api/contracts/on-call-averages', 'verb' => 'GET'],
         ['name' => 'flexContract#chain', 'url' => '/api/contracts/{id}/chain', 'verb' => 'GET'],
+        // people-org-chart-view: the organisation chart of the caller's administration on a date.
+        ['name' => 'orgChart#chart', 'url' => '/api/org/chart', 'verb' => 'GET'],
         ['name' => 'dossier#incomplete', 'url' => '/api/dossier/incomplete', 'verb' => 'GET'],
         // self-service-approvals-inbox REQ-API-001/002: the caller's approvals inbox, open or decided.
         ['name' => 'approvals#index', 'url' => '/api/approvals', 'verb' => 'GET'],

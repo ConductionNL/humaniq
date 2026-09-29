@@ -100,7 +100,7 @@
             "PerformanceReview": {
                 "slug": "PerformanceReview",
                 "icon": "ClipboardAccountOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Performance Review",
                 "description": "A single employee's beoordelingsdossier for one review cycle: rating, sterktes/ontwikkelpunten/afspraken and goals, on a concept -> ingediend -> besproken -> vastgesteld lifecycle with a heropenen correction edge. Under BW 7:669 lid 3 sub d a documented, vastgestelde beoordeling with a rating and concrete afspraken is the precondition for any underperformance dismissal. This object is that dossier. Goals are recorded INSIDE the review (no separate Goal entity, design D2): they freeze with the dossier under one lifecycle, one audit trail and one retention context.",
                 "type": "object",
@@ -111,6 +111,34 @@
                     "status"
                 ],
                 "configuration": {
+                    "x-openregister-notifications": {
+                        "review-finalised": {
+                            "trigger": {
+                                "type": "transition",
+                                "action": "vaststellen"
+                            },
+                            "enabled": true,
+                            "originApp": "humaniq",
+                            "channels": [
+                                "nc-notification"
+                            ],
+                            "recipients": [
+                                {
+                                    "kind": "field",
+                                    "field": "userId"
+                                }
+                            ],
+                            "subject": {
+                                "nl": "Je beoordeling is vastgesteld",
+                                "en": "Your review was finalised"
+                            },
+                            "message": {
+                                "nl": "Je vindt het verslag bij Mijn HR.",
+                                "en": "You find the report under My HR."
+                            },
+                            "_note": "platform-notifications D1/D2: the requester in userId hears the decision; a record without userId notifies nobody (nl-mss-manager-consistency audits the uid fields). Each user can switch it off in the humaniq user settings."
+                        }
+                    },
                     "x-openregister-lifecycle": {
                         "field": "status",
                         "initial": "concept",

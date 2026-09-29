@@ -9,6 +9,7 @@
                     "schema": "Employee",
                     "slug": "employee-jansen"
                 },
+                "gender": "man",
                 "employeeNumber": "EMP-0001",
                 "firstName": "Sam",
                 "lastName": "Jansen",
@@ -35,6 +36,7 @@
                     "schema": "Employee",
                     "slug": "employee-devries"
                 },
+                "gender": "woman",
                 "employeeNumber": "EMP-0002",
                 "firstName": "Sanne",
                 "lastName": "de Vries",
@@ -53,6 +55,7 @@
                     "schema": "Employee",
                     "slug": "employee-bakker"
                 },
+                "gender": "man",
                 "employeeNumber": "EMP-0003",
                 "firstName": "Milan",
                 "lastName": "Bakker",
@@ -71,6 +74,7 @@
                     "schema": "Employee",
                     "slug": "employee-degroot"
                 },
+                "gender": "woman",
                 "employeeNumber": "EMP-0006",
                 "firstName": "Wilma",
                 "lastName": "de Groot",
@@ -826,6 +830,7 @@
                     "schema": "Employee",
                     "slug": "employee-visser"
                 },
+                "gender": "woman",
                 "employeeNumber": "EMP-0004",
                 "firstName": "Noa",
                 "lastName": "Visser",
@@ -1103,6 +1108,7 @@
                     "schema": "Employee",
                     "slug": "employee-de-boer"
                 },
+                "gender": "man",
                 "employeeNumber": "EMP-0005",
                 "firstName": "Jesse",
                 "lastName": "de Boer",
@@ -1121,6 +1127,7 @@
                     "schema": "Employee",
                     "slug": "employee-loonverklaring-verlopen"
                 },
+                "gender": "woman",
                 "employeeNumber": "EMP-0090",
                 "firstName": "Ilse",
                 "lastName": "Wolters",
@@ -1139,6 +1146,7 @@
                     "schema": "Employee",
                     "slug": "employee-id-bewaartermijn-verstreken"
                 },
+                "gender": "man",
                 "employeeNumber": "EMP-0091",
                 "firstName": "Bram",
                 "lastName": "Koster",
@@ -1421,6 +1429,7 @@
                     "schema": "Employee",
                     "slug": "employee-meijer"
                 },
+                "gender": "woman",
                 "employeeNumber": "EMP-0031",
                 "firstName": "Sanne",
                 "lastName": "Meijer",
@@ -1509,6 +1518,7 @@
                     "schema": "Employee",
                     "slug": "employee-elidrissi"
                 },
+                "gender": "man",
                 "employeeNumber": "EMP-0032",
                 "firstName": "Ahmed",
                 "lastName": "El Idrissi",
@@ -1819,6 +1829,7 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-eigen-informatiebeheer"
                 },
+                "payCategory": "Adviserend",
                 "functiecode": "EIG-001",
                 "naam": "Adviseur informatiebeheer",
                 "functiegroep": "Informatie",
@@ -1837,6 +1848,7 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-001"
                 },
+                "payCategory": "Uitvoerend",
                 "bron": "hr21",
                 "status": "actief",
                 "functiecode": "HR21-001",
@@ -1852,6 +1864,7 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-002"
                 },
+                "payCategory": "Adviserend",
                 "bron": "hr21",
                 "status": "actief",
                 "functiecode": "HR21-002",
@@ -1867,6 +1880,7 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-003"
                 },
+                "payCategory": "Adviserend",
                 "bron": "hr21",
                 "status": "actief",
                 "functiecode": "HR21-003",
@@ -1882,6 +1896,7 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-004"
                 },
+                "payCategory": "Leidinggevend",
                 "bron": "hr21",
                 "status": "actief",
                 "functiecode": "HR21-004",
@@ -1897,6 +1912,7 @@
                     "schema": "Normfunctie",
                     "slug": "normfunctie-hr21-005"
                 },
+                "payCategory": "Leidinggevend",
                 "bron": "hr21",
                 "status": "actief",
                 "functiecode": "HR21-005",
@@ -2205,6 +2221,7 @@
                     "schema": "Employee",
                     "slug": "employee-ambtenaar-genormaliseerd"
                 },
+                "gender": "man",
                 "employeeNumber": "EMP-AOR-0001",
                 "firstName": "Wendel",
                 "lastName": "Postma",
@@ -2226,6 +2243,7 @@
                     "schema": "Employee",
                     "slug": "employee-ambtenaar-politie"
                 },
+                "gender": "man",
                 "employeeNumber": "EMP-AOR-0002",
                 "firstName": "Ravi",
                 "lastName": "Bhagwandin",
@@ -2247,6 +2265,7 @@
                     "schema": "Employee",
                     "slug": "employee-ambtenaar-eed-ontbreekt"
                 },
+                "gender": "woman",
                 "employeeNumber": "EMP-AOR-0003",
                 "firstName": "Ingrid",
                 "lastName": "Doornbos",
@@ -2377,6 +2396,7 @@
                     "schema": "Employee",
                     "slug": "employee-wnt-schoenmaker"
                 },
+                "gender": "woman",
                 "employeeNumber": "EMP-9001",
                 "firstName": "Trees",
                 "lastName": "Schoenmaker",
@@ -2396,6 +2416,7 @@
                     "schema": "Employee",
                     "slug": "employee-wnt-dijkstra"
                 },
+                "gender": "man",
                 "employeeNumber": "EMP-9002",
                 "firstName": "Ronald",
                 "lastName": "Dijkstra",
@@ -2415,6 +2436,7 @@
                     "schema": "Employee",
                     "slug": "employee-wnt-molenaar"
                 },
+                "gender": "woman",
                 "employeeNumber": "EMP-9003",
                 "firstName": "Ingrid",
                 "lastName": "Molenaar",

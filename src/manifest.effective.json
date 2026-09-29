@@ -440,6 +440,12 @@
 					}
 				},
 				{
+					"icon": "SitemapOutline",
+					"id": "Organogram",
+					"label": "Organisation chart",
+					"route": "Organogram"
+				},
+				{
 					"icon": "AccountGroupOutline",
 					"id": "Formatieplaatsen",
 					"label": "Formation places",
@@ -1017,6 +1023,13 @@
 			"order": 100,
 			"route": "FeaturesRoadmap",
 			"section": "footer"
+		},
+		{
+			"action": "user-settings",
+			"icon": "CogOutline",
+			"id": "MySettings",
+			"label": "My settings",
+			"section": "settings"
 		}
 	],
 	"pageTemplates": [
@@ -1972,9 +1985,18 @@
 						"id": "PerformanceReport",
 						"label": "Performance",
 						"route": "PerformanceReport"
+					},
+					{
+						"category": "pay",
+						"description": "The gender pay gap per pay category, as the pay transparency law asks.",
+						"icon": "ScaleBalance",
+						"id": "PayTransparencyReport",
+						"label": "Pay transparency",
+						"route": "PayTransparencyReport"
 					}
 				],
 				"categories": {
+					"pay": "Pay",
 					"people": "People",
 					"wellbeing": "Time away and performance"
 				},
@@ -7938,6 +7960,34 @@
 		},
 		{
 			"config": {
+				"_note": "people-org-chart-view D4 (REQ-OCV-001/002): a dashboard with one host widget (org-chart, OrgChartWidget.vue) over GET /api/org/chart: an expandable list (CnTreeView) and a drawn chart (CnRelationshipGraph, manual layout computed by OrgChartService). A dashboard, not type custom, because gate 69 ratchets custom pages.",
+				"description": "Your organisation on a date: every unit, its manager and how many people are placed in it.",
+				"layout": [
+					{
+						"gridHeight": 10,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "org-chart"
+					}
+				],
+				"widgets": [
+					{
+						"content": {},
+						"id": "org-chart",
+						"title": "Organisation chart",
+						"type": "org-chart"
+					}
+				]
+			},
+			"id": "Organogram",
+			"route": "/org/chart",
+			"title": "Organisation chart",
+			"type": "dashboard"
+		},
+		{
+			"config": {
 				"_note": "performance-reviews-mvp (2026-07-13): the orchestration half of the performance-review MVP (ADR-001 Rule 6 — sub-pages under the EXISTING Personeel/EmployeesGroup, no new top-level menu). The 'Cycle' data widget carries every field (name/year/type/status/startDate/endDate — no $ref to exclude, ReviewCycle has no outbound relations). The 'Beoordelingen in deze cyclus' object-list (PerformanceReview.cycleId = @objectId) is the cycle's in-progress roster, rowRoute to PerformanceReviewDetail. lifecycleActions expose exactly openen/sluiten (concept->open->gesloten, hr-performance.json) -- no re-open edge, a closed cycle is history (the Vacancy no-resurrection precedent). Audit history is a sidebar tab. goals-okr (2026-07-15) adds the 'OKR's in deze cyclus' object-list (Objective.cycleId = @objectId) — the review-period tie: an OKR set can optionally be tied to a beoordelingscyclus.",
 				"layout": [
 					{
@@ -8808,6 +8858,237 @@
 			"route": "/sick-leave/:id",
 			"title": "Sick leave case",
 			"type": "detail"
+		},
+		{
+			"_note": "reporting-pay-transparency REQ-PTR-001/002. The gender pay gap per pay category of equal work, from GET /api/reports/pay-transparency (HR and accountants of the active administration; anyone else gets 403 and an empty page). Hourly pay is the year's gross pay over hours paid; gaps are the men's figure minus the women's, as a percentage of the men's. A category with fewer women or men than app config pay_transparency_minimum_group (default 5) shows 'Too small to report' and no figure; the overall stats and quartiles stay empty when the whole administration is below it. The year filter's 'last' means the previous calendar year. The CSV header action always exports the previous calendar year: CnDashboardPage hands header actions no workspace context, so it cannot read the filter.",
+			"config": {
+				"description": "The gender pay gap in hourly pay, overall and per pay category, as the pay transparency law asks. Groups too small to keep people anonymous show no figures.",
+				"headerActions": [
+					{
+						"download": true,
+						"errorMessage": "Downloading the pay transparency report failed.",
+						"filename": "pay-transparency.csv",
+						"icon": "DownloadOutline",
+						"id": "export-pay-transparency",
+						"label": "Download last year's report (CSV)",
+						"method": "POST",
+						"params": {},
+						"type": "api-call",
+						"url": "/api/reports/pay-transparency/export"
+					}
+				],
+				"layout": [
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "pt-mean-gap"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 4,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "pt-median-gap"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 3,
+						"widgetId": "pt-variable-gap"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 2,
+						"id": 4,
+						"widgetId": "pt-categories"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 7,
+						"id": 5,
+						"widgetId": "pt-quartiles"
+					}
+				],
+				"pageFilters": [
+					{
+						"default": "last",
+						"key": "payTransparencyYear",
+						"label": "Year",
+						"options": [
+							{
+								"label": "Last calendar year",
+								"value": "last"
+							},
+							{
+								"label": "2026",
+								"value": "2026"
+							},
+							{
+								"label": "2025",
+								"value": "2025"
+							},
+							{
+								"label": "2024",
+								"value": "2024"
+							}
+						],
+						"type": "select"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"caption": "Hourly pay, men minus women, of the men's",
+							"endpointSource": {
+								"params": {
+									"year": "@workspace.payTransparencyYear?"
+								},
+								"url": "/apps/humaniq/api/reports/pay-transparency"
+							},
+							"format": {
+								"decimals": 1,
+								"style": "decimal"
+							},
+							"icon": "ScaleBalance",
+							"label": "Mean gap (%)",
+							"valueField": "overall.meanGap"
+						},
+						"icon": "ScaleBalance",
+						"id": "pt-mean-gap",
+						"title": "Mean gap (%)",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"caption": "Hourly pay, men minus women, of the men's",
+							"endpointSource": {
+								"params": {
+									"year": "@workspace.payTransparencyYear?"
+								},
+								"url": "/apps/humaniq/api/reports/pay-transparency"
+							},
+							"format": {
+								"decimals": 1,
+								"style": "decimal"
+							},
+							"icon": "ScaleBalance",
+							"label": "Median gap (%)",
+							"valueField": "overall.medianGap"
+						},
+						"icon": "ScaleBalance",
+						"id": "pt-median-gap",
+						"title": "Median gap (%)",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"caption": "Among those who received variable pay",
+							"endpointSource": {
+								"params": {
+									"year": "@workspace.payTransparencyYear?"
+								},
+								"url": "/apps/humaniq/api/reports/pay-transparency"
+							},
+							"format": {
+								"decimals": 1,
+								"style": "decimal"
+							},
+							"icon": "ChartBar",
+							"label": "Mean gap in variable pay (%)",
+							"valueField": "overall.variableMeanGap"
+						},
+						"icon": "ChartBar",
+						"id": "pt-variable-gap",
+						"title": "Mean gap in variable pay (%)",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Pay category"
+								},
+								{
+									"key": "women",
+									"label": "Women"
+								},
+								{
+									"key": "men",
+									"label": "Men"
+								},
+								{
+									"key": "meanGapText",
+									"label": "Mean gap"
+								},
+								{
+									"key": "medianGapText",
+									"label": "Median gap"
+								},
+								{
+									"key": "variableMeanGapText",
+									"label": "Gap in variable pay"
+								}
+							],
+							"emptyText": "No payslips in this year",
+							"endpointSource": {
+								"params": {
+									"year": "@workspace.payTransparencyYear?"
+								},
+								"responsePath": "categories",
+								"url": "/apps/humaniq/api/reports/pay-transparency"
+							}
+						},
+						"id": "pt-categories",
+						"title": "Per pay category",
+						"type": "object-table"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "quartile",
+									"label": "Quartile"
+								},
+								{
+									"key": "women",
+									"label": "Women"
+								},
+								{
+									"key": "men",
+									"label": "Men"
+								}
+							],
+							"emptyText": "Too small to report",
+							"endpointSource": {
+								"params": {
+									"year": "@workspace.payTransparencyYear?"
+								},
+								"responsePath": "quartiles",
+								"url": "/apps/humaniq/api/reports/pay-transparency"
+							}
+						},
+						"id": "pt-quartiles",
+						"title": "Women and men per pay quartile (%)",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "PayTransparencyReport",
+			"route": "/reports/pay-transparency",
+			"title": "Pay transparency",
+			"type": "dashboard"
 		},
 		{
 			"config": {
@@ -10688,7 +10969,22 @@
 			"type": "detail"
 		},
 		{
+			"actions": [
+				{
+					"confirm": true,
+					"errorMessage": "Queueing last year's annual statements failed.",
+					"icon": "FileDocumentPlusOutline",
+					"id": "generate-last-year-statements",
+					"label": "Generate last year's statements",
+					"method": "POST",
+					"params": {},
+					"successMessage": "Last year's annual statements are queued. They appear under Documents as each one is generated.",
+					"type": "api-call",
+					"url": "/api/documents/jaaropgaven"
+				}
+			],
 			"config": {
+				"_note": "payroll-annual-statement-action (2026-09-29): the header action queues last year's statements for every employee with payslips in that year (POST /api/documents/jaaropgaven, HR or payroll only, design D2/D3). It carries no year: another year goes through occ humaniq:documents:generate or the endpoint's year parameter.",
 				"columns": [
 					"employeeId",
 					"year",
@@ -10714,7 +11010,24 @@
 		},
 		{
 			"config": {
-				"_note": "payslip-pdf-docudesk (2026-07-14): the EmploymentContractDetail two-panel shape -- a leaf aggregate record with exactly one meaningful outbound ref (Employee), so jg-data (totals/payPeriodCount/verrekendeArbeidskorting/loonheffingennummer/aggregatedAt, excluding employeeId) sits at 8-wide and jg-related resolves+links the Employee at 4-wide. No lifecycleActions: Jaaropgaaf carries no x-openregister-lifecycle -- it is a pure data aggregate upserted server-side by HrDocumentService (design.md D2/D4), not a workflow. No files widget: the rendered PDF lives on the GeneratedDocument record that references this aggregate via jaaropgaafId (Related on GeneratedDocumentDetail resolves it), not here -- adding a files widget here would fabricate a second copy of the same document relationship. No child lists: nothing else in the schema references Jaaropgaaf by FK besides GeneratedDocument, which is reachable from the Documenten index instead. Audit history is a sidebar tab.",
+				"_note": "payslip-pdf-docudesk (2026-07-14): the EmploymentContractDetail two-panel shape -- a leaf aggregate record with exactly one meaningful outbound ref (Employee), so jg-data (totals/payPeriodCount/verrekendeArbeidskorting/loonheffingennummer/aggregatedAt, excluding employeeId) sits at 8-wide and jg-related resolves+links the Employee at 4-wide. No lifecycleActions: Jaaropgaaf carries no x-openregister-lifecycle -- it is a pure data aggregate upserted server-side by HrDocumentService (design.md D2/D4), not a workflow. payroll-annual-statement-action (2026-09-29): the page-level action \"Generate PDF\" posts {jaaropgaafId: @objectId, documentType: jaaropgaaf} to /api/documents/generate, resolved under the caller's RBAC by DocumentController before HrDocumentService refreshes the aggregate and renders it (idempotent: an existing PDF is reported, not rendered again). No files widget: the rendered PDF lives on the GeneratedDocument record that references this aggregate via jaaropgaafId (Related on GeneratedDocumentDetail resolves it), not here -- adding a files widget here would fabricate a second copy of the same document relationship. No child lists: nothing else in the schema references Jaaropgaaf by FK besides GeneratedDocument, which is reachable from the Documenten index instead. Audit history is a sidebar tab.",
+				"headerActions": [
+					{
+						"confirm": true,
+						"errorMessage": "Generating the annual statement PDF failed.",
+						"icon": "FileDocumentPlusOutline",
+						"id": "generate-jaaropgaaf",
+						"label": "Generate PDF",
+						"method": "POST",
+						"params": {
+							"documentType": "jaaropgaaf",
+							"jaaropgaafId": "@objectId"
+						},
+						"successMessage": "The annual statement PDF is being generated.",
+						"type": "api-call",
+						"url": "/api/documents/generate"
+					}
+				],
 				"layout": [
 					{
 						"gridHeight": 7,

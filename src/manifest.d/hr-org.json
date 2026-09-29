@@ -324,6 +324,34 @@
 					}
 				]
 			}
+		},
+		{
+			"id": "Organogram",
+			"route": "/org/chart",
+			"type": "dashboard",
+			"title": "Organisation chart",
+			"config": {
+				"description": "Your organisation on a date: every unit, its manager and how many people are placed in it.",
+				"_note": "people-org-chart-view D4 (REQ-OCV-001/002): a dashboard with one host widget (org-chart, OrgChartWidget.vue) over GET /api/org/chart: an expandable list (CnTreeView) and a drawn chart (CnRelationshipGraph, manual layout computed by OrgChartService). A dashboard, not type custom, because gate 69 ratchets custom pages.",
+				"widgets": [
+					{
+						"id": "org-chart",
+						"type": "org-chart",
+						"title": "Organisation chart",
+						"content": {}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "org-chart",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 10
+					}
+				]
+			}
 		}
 	],
 	"pageInstances": [
