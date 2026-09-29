@@ -6038,7 +6038,7 @@
    "id": "cmp-dsr-rectify",
    "area": "compliance",
    "name": "Correct an employee's data on request and record that you did.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "partial",
@@ -6054,10 +6054,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/213331029-Update-employee-data: HR edits employee attributes, and https://support.personio.de/hc/en-us/articles/18906413010589-Use-the-Personio-Audit-Log tracks changes to employee data showing who did what and when, with entries that cannot be changed."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/compliance-dsr-rectify-form on 2026-09-27 for the missing half: a Rectify action that collects the changes it sends; the occ path works. Before: appinfo/routes.php:97 POST /api/dsr/rectify -> AvgDsrController::rectify(); lib/Controller/AvgDsrController.php:206-232 requires a non-empty `changes` array (validateRectifyInput) before calling AvgDsrService::rectifySubjectObject(); src/manifest.d/hr-dsr.json:93-106 headerAction dsr-rectify only sends {employeeId, dsrRequestId}, never `changes`, the manifest v2 api-call action type has no free-text field-map prompt (design note at hr-dsr.json:41 names this a known fast-follow); lib/Command/AvgDsrRectifyCommand.php:76,102-107 shows the occ path DOES supply --changes and works",
-    "reachedOn": "DsrRequestDetail /dsr-requests/:id, 'Rectify' header button, clicking it always 400s because it never supplies the required changes payload; the same operation works via occ humaniq:avg:rectify --changes <json>",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-dsr.json DsrRequest.requestedChanges (field enum of ten Employee fields, value); src/manifest.d/hr-dsr.json dsr-rectify sends changes: @object.requestedChanges; lib/Controller/AvgDsrController.php validateRectifyInput() turns the list of pairs (or a map) into the change map and refuses any field outside RECTIFIABLE_FIELDS with 400; AvgDsrService::recordRectifyOutcome() records the outcome on the request. Tests: tests/Unit/Controller/AvgDsrControllerTest.php::testThePagesListOfPairsIsAppliedAsAMap and ::testAFieldOutsideTheListIsRefused, tests/Unit/Settings/DsrRectifyDeclarationTest.php.",
+    "reachedOn": "DsrRequestDetail /dsr-requests/:id: fill Requested changes on the request, then the Rectify header button; occ humaniq:avg:rectify --changes <json> still works",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-compliance-dsr-rectify-form",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

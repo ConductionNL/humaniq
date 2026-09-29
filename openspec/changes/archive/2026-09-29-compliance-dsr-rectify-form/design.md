@@ -63,3 +63,22 @@ before the service is called. A field outside the allowed list is refused with 4
 ## Open Questions
 
 - None.
+
+## Build-time changes (2026-09-29)
+
+Read against `development` 82dd772d plus humaniq#560 to #562 while building.
+
+- **The allowed list.** `AvgDsrController::RECTIFIABLE_FIELDS` and the schema enum hold the
+  same ten fields: `firstName`, `lastName`, `dateOfBirth`, `iban`, `tenaamstelling` and the
+  address fields `straat`, `huisnummer`, `postcode`, `woonplaats`, `land`, which Employee
+  already carries. A declaration test keeps the two lists equal.
+- **Both shapes are checked.** The allowed list applies to a map from an API caller as well
+  as to the page's list of pairs; a pair without a field is refused too. The occ command
+  calls `AvgDsrService` directly and is unchanged.
+- **The surface stays admin-only.** The scenario's "HR administrator" is an administrator:
+  the endpoint's guard (`DsarService::assertPrivileged()`) is unchanged.
+- **Seed.** `dsr-devries-rectify-surname` sits in `hr-dsr.json` next to the other DSR seeds,
+  on Sanne de Vries (`employee-devries`).
+- **Not checked here:** whether the library's edit form renders an array of pairs well. The
+  list is shown and edited through the `data` widget on `DsrRequestDetail`; the live check
+  in the PR says what to look at.

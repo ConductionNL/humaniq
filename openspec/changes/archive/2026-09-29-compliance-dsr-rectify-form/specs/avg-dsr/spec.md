@@ -18,7 +18,11 @@ Rows: `cmp-dsr-rectify` (humaniq matrix).
 - **THEN** the employee's last name is "de Vries-Jansen", the request records the change and
   who applied it, and no 400 is returned
 
+@e2e exclude the correction is applied server side by the guarded endpoint; covered by AvgDsrControllerTest::testThePagesListOfPairsIsAppliedAsAMap and DsrRectifyDeclarationTest::testTheRectifyActionSendsTheRequestedChanges
+
 #### Scenario: A field outside the list is refused
 - **GIVEN** a request whose requested changes include `grossMonthlySalary`
 - **WHEN** Rectify is pressed
 - **THEN** the endpoint refuses with 400 and the employee is unchanged
+
+@e2e exclude the refusal is server side; covered by AvgDsrControllerTest::testAFieldOutsideTheListIsRefused and DsrRectifyDeclarationTest::testTheSeededRequestFitsAndAForbiddenFieldDoesNot
