@@ -49,6 +49,7 @@ use OCA\Humaniq\Listener\TimeEstimateListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
 use OCA\Humaniq\Listener\TimesheetApprovalListener;
 use OCA\Humaniq\Listener\TimesheetProcessStampListener;
+use OCA\Humaniq\Listener\TravelAmountListener;
 use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
@@ -429,6 +430,7 @@ class Application extends App implements IBootstrap {
 
 		$this->registerLeaveListeners($dispatcher);
 		$this->registerAbsenceListeners($dispatcher);
+		$this->registerTravelListeners($dispatcher);
 
 	}//end boot()
 
@@ -598,5 +600,29 @@ class Application extends App implements IBootstrap {
 		}
 
 	}//end registerAbsenceListeners()
+
+	/**
+	 * expenses-travel-calculation D1 and D2: a travel claim gets its amount
+	 * from the distance and a commuting arrangement its monthly allowance,
+	 * stamped before the write is saved.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
+	 */
+	private function registerTravelListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: TravelAmountListener::class,
+				registers: null,
+				schemas: [TravelAmountListener::EXPENSE_SLUG, TravelAmountListener::COMMUTE_SLUG]
+			);
+		}
+
+	}//end registerTravelListeners()
 
 }//end class

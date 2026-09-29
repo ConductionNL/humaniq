@@ -170,6 +170,32 @@ class NlTravelExpenseChecksTest extends TestCase {
 	}//end testOverRateMileageClaimViolates()
 
 	/**
+	 * expenses-travel-calculation: an employer may pay above the tax-free
+	 * rate when the excess is recorded as taxable. The claim humaniq computed
+	 * at 0,30/km carries a taxable part of 7,00 and passes; a taxable part that
+	 * does not cover the excess still violates.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
+	 */
+	public function testAnOverRateClaimWhoseExcessIsTaxedPasses(): void {
+		$expense = [
+			'category' => 'travel',
+			'travelType' => 'business',
+			'distanceKm' => 100,
+			'amount' => 30.00,
+			'taxFreeAmount' => 23.00,
+			'taxableAmount' => 7.00,
+		];
+		$this->assertFalse($this->hasViolation(RuleEngine::evaluate('Expense', $expense, ['jurisdiction' => 'NL']), self::RULE_ID));
+
+		$expense['taxableAmount'] = 2.00;
+		$this->assertTrue($this->hasViolation(RuleEngine::evaluate('Expense', $expense, ['jurisdiction' => 'NL']), self::RULE_ID));
+
+	}//end testAnOverRateClaimWhoseExcessIsTaxedPasses()
+
+	/**
 	 * REQ-MILE-003 "At-or-under-rate mileage claim passes": the same claim at
 	 * EUR 0,23/km (exactly the onbelast rate) raises no violation.
 	 *

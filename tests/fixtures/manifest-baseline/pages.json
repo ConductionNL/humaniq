@@ -304,6 +304,22 @@
 		"route": "/expenses"
 	},
 	{
+		"id": "CommuteArrangements",
+		"route": "/commute-arrangements"
+	},
+	{
+		"id": "CommuteArrangementDetail",
+		"route": "/commute-arrangements/:id"
+	},
+	{
+		"id": "WpmReports",
+		"route": "/mobility-reports"
+	},
+	{
+		"id": "WpmReportDetail",
+		"route": "/mobility-reports/:id"
+	},
+	{
 		"id": "Formatieplaatsen",
 		"route": "/formation-places"
 	},

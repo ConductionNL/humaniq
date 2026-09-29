@@ -8286,6 +8286,434 @@
             "x-notes": "Multi-administratie scoping, as on OrgUnit."
           }
         }
+      },
+      "CommuteArrangement": {
+        "slug": "CommuteArrangement",
+        "icon": "CarOutline",
+        "version": "0.1.0",
+        "title": "Commuting arrangement",
+        "description": "One employee's commute between home and work, and the fixed monthly allowance humaniq calculates for it with the 214-day rule (expenses-travel-calculation). Only postcodes are stored, never a street address.",
+        "type": "object",
+        "x-schema-org": "schema:Trip",
+        "required": [
+          "employeeId",
+          "distanceKmOneWay",
+          "daysPerWeek",
+          "startDate",
+          "status"
+        ],
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "draft",
+            "terminal": [
+              "ended"
+            ],
+            "transitions": {
+              "submit": {
+                "from": [
+                  "draft",
+                  "rejected"
+                ],
+                "to": "submitted",
+                "description": "The employee submits the arrangement for approval. A rejected arrangement may be corrected and submitted again."
+              },
+              "approve": {
+                "from": [
+                  "submitted"
+                ],
+                "to": "approved",
+                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
+                "description": "HR approves the arrangement. The employee cannot approve their own."
+              },
+              "reject": {
+                "from": [
+                  "submitted"
+                ],
+                "to": "rejected",
+                "requires": "OCA\\Humaniq\\Lifecycle\\NoSelfApprovalGuard",
+                "description": "HR rejects the arrangement with a reason. The employee cannot reject their own."
+              },
+              "end": {
+                "from": [
+                  "approved"
+                ],
+                "to": "ended",
+                "description": "The arrangement stops, for example after a move or a new job. Set the end date first."
+              }
+            }
+          }
+        },
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Employee",
+            "title": "Employee",
+            "description": "Who commutes. This person cannot approve their own arrangement."
+          },
+          "originPostcode": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 7,
+            "title": "Home postcode",
+            "description": "The postcode you travel from, for example 2611 AB. Only the postcode is kept, never your street address.",
+            "x-notes": "expenses-travel-calculation D2: data minimisation, postcode only."
+          },
+          "destinationPostcode": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 7,
+            "title": "Work postcode",
+            "description": "The postcode of the place you work, for example 2628 CD."
+          },
+          "distanceKmOneWay": {
+            "type": "number",
+            "minimum": 0,
+            "title": "Distance one way (km)",
+            "description": "The distance from home to work in kilometres. Type it in, or let humaniq calculate it from the postcodes."
+          },
+          "distanceSource": {
+            "type": "string",
+            "nullable": true,
+            "title": "Distance source",
+            "description": "Whether the distance was typed in or came from a route planner.",
+            "x-enum-labels": {
+              "manual": "Typed in",
+              "routeplanner": "Route planner"
+            },
+            "enum": [
+              "manual",
+              "routeplanner"
+            ]
+          },
+          "routeProvider": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255,
+            "title": "Route planner",
+            "description": "Which route planner gave the distance. Filled in by humaniq.",
+            "x-notes": "expenses-travel-calculation D3: the integriq source name or slug that answered."
+          },
+          "daysPerWeek": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 7,
+            "title": "Days per week",
+            "description": "How many days a week you travel to work."
+          },
+          "transportMode": {
+            "type": "string",
+            "nullable": true,
+            "title": "Transport mode",
+            "description": "How you travel to work. Needed for the yearly mobility report.",
+            "x-notes": "expenses-travel-calculation D4: the mode the WPM report groups kilometres by. A trip without one is listed on the report, never counted under a guessed mode.",
+            "x-enum-labels": {
+              "car": "Car",
+              "van": "Light commercial vehicle",
+              "motorcycle": "Motorcycle",
+              "moped": "Moped",
+              "public-transport": "Public transport",
+              "bicycle": "Bicycle",
+              "e-bike": "E-bike",
+              "walking": "Walking",
+              "other": "Other"
+            },
+            "enum": [
+              "car",
+              "van",
+              "motorcycle",
+              "moped",
+              "public-transport",
+              "bicycle",
+              "e-bike",
+              "walking",
+              "other"
+            ]
+          },
+          "fuelType": {
+            "type": "string",
+            "nullable": true,
+            "title": "Fuel type",
+            "description": "The fuel of the vehicle, for a car, light commercial vehicle, motorcycle or moped. Leave empty for other ways of travelling.",
+            "x-notes": "expenses-travel-calculation D4: Asset.fuelType's values plus lpg.",
+            "x-enum-labels": {
+              "gasoline": "Petrol",
+              "diesel": "Diesel",
+              "hybrid": "Hybrid",
+              "fullyElectric": "Fully electric",
+              "hydrogen": "Hydrogen",
+              "lpg": "LPG",
+              "other": "Other"
+            },
+            "enum": [
+              "gasoline",
+              "diesel",
+              "hybrid",
+              "fullyElectric",
+              "hydrogen",
+              "lpg",
+              "other"
+            ]
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Start date",
+            "description": "The first day the arrangement applies."
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "title": "End date",
+            "description": "The last day the arrangement applies. Leave empty while it lasts."
+          },
+          "ratePerKm": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "title": "Rate per km",
+            "description": "The rate per kilometre the allowance was calculated with. Filled in by humaniq.",
+            "x-notes": "expenses-travel-calculation D2: stamped on save."
+          },
+          "monthlyAllowance": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "title": "Monthly allowance",
+            "description": "The fixed allowance per month: distance times two, times the rate, times 214 working days scaled by your days per week, divided by twelve. Filled in by humaniq.",
+            "x-notes": "expenses-travel-calculation D2, the 214-day rule."
+          },
+          "taxFreeMonthly": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "title": "Tax free per month",
+            "description": "The part of the monthly allowance that is paid tax free. Filled in by humaniq.",
+            "x-notes": "expenses-travel-calculation D2: the same formula at the corpus's tax-free rate, capped at the allowance."
+          },
+          "taxableMonthly": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "title": "Taxable per month",
+            "description": "The part of the monthly allowance above the tax-free rate. Filled in by humaniq.",
+            "x-notes": "expenses-travel-calculation D2."
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Where the arrangement has got to: draft, submitted, approved or rejected, then ended.",
+            "x-enum-labels": {
+              "draft": "Draft",
+              "submitted": "Submitted",
+              "approved": "Approved",
+              "rejected": "Rejected",
+              "ended": "Ended"
+            },
+            "enum": [
+              "draft",
+              "submitted",
+              "approved",
+              "rejected",
+              "ended"
+            ],
+            "default": "draft"
+          },
+          "approvedBy": {
+            "type": "string",
+            "nullable": true,
+            "title": "Approved by",
+            "description": "Who approved or rejected the arrangement. It cannot be the employee."
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "title": "Approved at",
+            "description": "When the arrangement was approved or rejected."
+          },
+          "rejectionReason": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000,
+            "title": "Rejection reason",
+            "description": "Why the arrangement was rejected, so the employee can correct it."
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true,
+            "title": "User ID",
+            "description": "The Nextcloud account of the employee. Filled in by humaniq.",
+            "x-notes": "Stamped from the Employee's nextcloudUserId by TravelAmountListener, so NoSelfApprovalGuard can compare accounts and the @me pages can filter."
+          },
+          "managerUserId": {
+            "type": "string",
+            "nullable": true,
+            "title": "Manager user id",
+            "description": "The Nextcloud account of the employee's manager."
+          },
+          "administrationId": {
+            "type": "string",
+            "nullable": true,
+            "title": "Administration",
+            "description": "Which administration this arrangement belongs to. Filled in from the employee.",
+            "x-notes": "Plain administratie key (ADR-062 rule 7), stamped from the Employee by TravelAmountListener."
+          }
+        }
+      },
+      "WpmReport": {
+        "slug": "WpmReport",
+        "icon": "ChartBar",
+        "version": "0.1.0",
+        "title": "Mobility report",
+        "description": "The yearly kilometres of business and commuting travel per transport mode and fuel type for one administration, for the werkgebonden personenmobiliteit (WPM) CO2 reporting duty (expenses-travel-calculation). humaniq compiles the figures; the employer files them with RVO.",
+        "type": "object",
+        "x-schema-org": "schema:Report",
+        "required": [
+          "administrationId",
+          "year"
+        ],
+        "properties": {
+          "administrationId": {
+            "type": "string",
+            "title": "Administration",
+            "description": "The administration the report covers."
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2100,
+            "title": "Year",
+            "description": "The calendar year the report covers."
+          },
+          "employeeCount": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0,
+            "title": "Employees",
+            "description": "How many people were employed at some time in the year. The reporting duty applies from 100."
+          },
+          "meetsThreshold": {
+            "type": "boolean",
+            "nullable": true,
+            "title": "Reporting duty applies",
+            "description": "Whether the administration employed 100 or more people in the year."
+          },
+          "businessKm": {
+            "type": "array",
+            "title": "Business kilometres",
+            "description": "Kilometres of approved and paid business claims, per transport mode and fuel type.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "transportMode": {
+                  "type": "string",
+                  "nullable": true,
+                  "title": "Transport mode",
+                  "description": "How the kilometres were travelled."
+                },
+                "fuelType": {
+                  "type": "string",
+                  "nullable": true,
+                  "title": "Fuel type",
+                  "description": "The fuel of the vehicle, empty for other ways of travelling."
+                },
+                "km": {
+                  "type": "number",
+                  "title": "Kilometres",
+                  "description": "The kilometres counted for this transport mode and fuel."
+                }
+              }
+            }
+          },
+          "commuteKm": {
+            "type": "array",
+            "title": "Commuting kilometres",
+            "description": "Kilometres derived from approved commuting arrangements with the 214-day rule, per transport mode and fuel type. An estimate, not a measurement.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "transportMode": {
+                  "type": "string",
+                  "nullable": true,
+                  "title": "Transport mode",
+                  "description": "How the kilometres were travelled."
+                },
+                "fuelType": {
+                  "type": "string",
+                  "nullable": true,
+                  "title": "Fuel type",
+                  "description": "The fuel of the vehicle, empty for other ways of travelling."
+                },
+                "km": {
+                  "type": "number",
+                  "title": "Kilometres",
+                  "description": "The kilometres counted for this transport mode and fuel."
+                }
+              }
+            }
+          },
+          "totalBusinessKm": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "title": "Total business km",
+            "description": "All business kilometres counted under a transport mode."
+          },
+          "totalCommuteKm": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "title": "Total commuting km",
+            "description": "All commuting kilometres counted under a transport mode."
+          },
+          "tripsWithoutMode": {
+            "type": "array",
+            "title": "Trips without a transport mode",
+            "description": "Claims and arrangements whose kilometres are not counted because they name no transport mode. Add the mode and compile again.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string",
+                  "title": "Record type",
+                  "description": "Whether this is a claim or a commuting arrangement."
+                },
+                "id": {
+                  "type": "string",
+                  "title": "Record",
+                  "description": "The claim or arrangement that names no transport mode."
+                },
+                "title": {
+                  "type": "string",
+                  "nullable": true,
+                  "title": "Title",
+                  "description": "The title of the claim, if it has one."
+                },
+                "km": {
+                  "type": "number",
+                  "title": "Kilometres",
+                  "description": "The kilometres that were not counted."
+                }
+              }
+            }
+          },
+          "compiledAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "title": "Compiled at",
+            "description": "When the figures were last compiled."
+          },
+          "compiledBy": {
+            "type": "string",
+            "nullable": true,
+            "title": "Compiled by",
+            "description": "Who compiled the figures last."
+          }
+        }
       }
     },
     "objects": [
@@ -11840,6 +12268,204 @@
         "validUntil": "2026-03-03",
         "status": "actief",
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "CommuteArrangement",
+          "slug": "commutearrangement-commutearrangement-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "distanceKmOneWay": 0.0,
+        "daysPerWeek": 0.0,
+        "startDate": "2026-03-01",
+        "status": "draft",
+        "originPostcode": "Voorbee",
+        "destinationPostcode": "Voorbee",
+        "distanceSource": "manual",
+        "routeProvider": "Voorbeeld Routeprovider 1",
+        "transportMode": "car",
+        "fuelType": "gasoline",
+        "endDate": "2026-03-01",
+        "ratePerKm": 0.0,
+        "monthlyAllowance": 0.0,
+        "taxFreeMonthly": 0.0,
+        "taxableMonthly": 0.0,
+        "approvedBy": "Voorbeeld Approvedby 1",
+        "approvedAt": "2026-03-01T09:00:00+00:00",
+        "rejectionReason": "Voorbeeld Rejectionreason 1",
+        "userId": "Voorbeeld Userid 1",
+        "managerUserId": "Voorbeeld Manageruserid 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "CommuteArrangement",
+          "slug": "commutearrangement-commutearrangement-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "distanceKmOneWay": 1.0,
+        "daysPerWeek": 1.0,
+        "startDate": "2026-03-02",
+        "status": "submitted",
+        "originPostcode": "Voorbee",
+        "destinationPostcode": "Voorbee",
+        "distanceSource": "routeplanner",
+        "routeProvider": "Voorbeeld Routeprovider 2",
+        "transportMode": "van",
+        "fuelType": "diesel",
+        "endDate": "2026-03-02",
+        "ratePerKm": 1.0,
+        "monthlyAllowance": 1.0,
+        "taxFreeMonthly": 1.0,
+        "taxableMonthly": 1.0,
+        "approvedBy": "Voorbeeld Approvedby 2",
+        "approvedAt": "2026-03-02T09:00:00+00:00",
+        "rejectionReason": "Voorbeeld Rejectionreason 2",
+        "userId": "Voorbeeld Userid 2",
+        "managerUserId": "Voorbeeld Manageruserid 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "CommuteArrangement",
+          "slug": "commutearrangement-commutearrangement-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "distanceKmOneWay": 2.0,
+        "daysPerWeek": 2.0,
+        "startDate": "2026-03-03",
+        "status": "approved",
+        "originPostcode": "Voorbee",
+        "destinationPostcode": "Voorbee",
+        "distanceSource": "manual",
+        "routeProvider": "Voorbeeld Routeprovider 3",
+        "transportMode": "motorcycle",
+        "fuelType": "hybrid",
+        "endDate": "2026-03-03",
+        "ratePerKm": 2.0,
+        "monthlyAllowance": 2.0,
+        "taxFreeMonthly": 2.0,
+        "taxableMonthly": 2.0,
+        "approvedBy": "Voorbeeld Approvedby 3",
+        "approvedAt": "2026-03-03T09:00:00+00:00",
+        "rejectionReason": "Voorbeeld Rejectionreason 3",
+        "userId": "Voorbeeld Userid 3",
+        "managerUserId": "Voorbeeld Manageruserid 3",
+        "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "WpmReport",
+          "slug": "wpmreport-wpmreport-1-1"
+        },
+        "administrationId": "Voorbeeld Administrationid 1",
+        "year": 2000,
+        "employeeCount": 0,
+        "meetsThreshold": true,
+        "businessKm": [
+          {
+            "transportMode": "Voorbeeld Transportmode 1",
+            "fuelType": "Voorbeeld Fueltype 1",
+            "km": 1.0
+          }
+        ],
+        "commuteKm": [
+          {
+            "transportMode": "Voorbeeld Transportmode 1",
+            "fuelType": "Voorbeeld Fueltype 1",
+            "km": 1.0
+          }
+        ],
+        "totalBusinessKm": 0.0,
+        "totalCommuteKm": 0.0,
+        "tripsWithoutMode": [
+          {
+            "schema": "Voorbeeld Schema 1",
+            "id": "Voorbeeld Id 1",
+            "title": "Voorbeeld Title 1",
+            "km": 1.0
+          }
+        ],
+        "compiledAt": "2026-03-01T09:00:00+00:00",
+        "compiledBy": "Voorbeeld Compiledby 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "WpmReport",
+          "slug": "wpmreport-wpmreport-2-2"
+        },
+        "administrationId": "Voorbeeld Administrationid 2",
+        "year": 2001,
+        "employeeCount": 1,
+        "meetsThreshold": false,
+        "businessKm": [
+          {
+            "transportMode": "Voorbeeld Transportmode 2",
+            "fuelType": "Voorbeeld Fueltype 2",
+            "km": 2.0
+          }
+        ],
+        "commuteKm": [
+          {
+            "transportMode": "Voorbeeld Transportmode 2",
+            "fuelType": "Voorbeeld Fueltype 2",
+            "km": 2.0
+          }
+        ],
+        "totalBusinessKm": 1.0,
+        "totalCommuteKm": 1.0,
+        "tripsWithoutMode": [
+          {
+            "schema": "Voorbeeld Schema 2",
+            "id": "Voorbeeld Id 2",
+            "title": "Voorbeeld Title 2",
+            "km": 2.0
+          }
+        ],
+        "compiledAt": "2026-03-02T09:00:00+00:00",
+        "compiledBy": "Voorbeeld Compiledby 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "WpmReport",
+          "slug": "wpmreport-wpmreport-3-3"
+        },
+        "administrationId": "Voorbeeld Administrationid 3",
+        "year": 2002,
+        "employeeCount": 2,
+        "meetsThreshold": true,
+        "businessKm": [
+          {
+            "transportMode": "Voorbeeld Transportmode 3",
+            "fuelType": "Voorbeeld Fueltype 3",
+            "km": 3.0
+          }
+        ],
+        "commuteKm": [
+          {
+            "transportMode": "Voorbeeld Transportmode 3",
+            "fuelType": "Voorbeeld Fueltype 3",
+            "km": 3.0
+          }
+        ],
+        "totalBusinessKm": 2.0,
+        "totalCommuteKm": 2.0,
+        "tripsWithoutMode": [
+          {
+            "schema": "Voorbeeld Schema 3",
+            "id": "Voorbeeld Id 3",
+            "title": "Voorbeeld Title 3",
+            "km": 3.0
+          }
+        ],
+        "compiledAt": "2026-03-03T09:00:00+00:00",
+        "compiledBy": "Voorbeeld Compiledby 3"
       }
     ]
   }

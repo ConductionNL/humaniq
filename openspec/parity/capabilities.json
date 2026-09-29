@@ -3482,7 +3482,7 @@
    "id": "exp-mileage",
    "area": "expenses",
    "name": "Log business mileage and have it paid at the tax-free rate.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -3498,9 +3498,11 @@
     "personio": "not checked: not settled: searched help centre for mileage and kilometre allowance; German company car valuation exists (https://support.personio.de/hc/en-us/articles/17363240160669-Manage-company-cars-in-Personio-Payroll) but nothing on business mileage claims; the marketplace category page does not state mileage features."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/expenses-travel-calculation on 2026-09-27 for the missing half: computing the claim amount from the distance at the tax-free rate. Before: lib/Settings/register.d/hr-expense.json:211-227 Expense.travelType/distanceKm fields (business/commute); no x-openregister-calculations derives amount from distanceKm, so the euro amount is typed by the employee, not computed; lib/Standards/rules/payroll.json:1358 nl-reiskosten-onbelast-tarief checks the amount against the tax-free per-km rate only via occ humaniq:rules:audit",
-    "reachedOn": "ExpenseDetail /expenses/:id, category=travel fields; compliance with the tax-free rate checked only by occ humaniq:rules:audit, no page enforcement at submit",
+    "state": "built",
+    "change": "2026-09-29-expenses-travel-calculation",
+    "evidence": "lib/Listener/TravelAmountListener.php stamps a travel claim with a distance before it is saved: amount = distance x the employer rate (app config mileage_rate_per_km, default the corpus tax-free rate), split into taxFreeAmount and taxableAmount by lib/Service/TravelAllowanceCalculator.php; nl-reiskosten-onbelast-tarief now holds only the tax-free part to the rate. Tests: tests/Unit/Listener/TravelAmountListenerTest.php (testAClaimWithOnlyADistanceGetsItsAmount, testAnEmployerRateAboveTheTaxFreeRateSplitsTheClaim), tests/Unit/Service/TravelAllowanceCalculatorTest.php, tests/Unit/AppInfo/TravelListenerWiringTest.php.",
+    "reachedOn": "ExpenseDetail /expenses/:id, 'Travel' block (distance, transport mode, rate per km, tax-free and taxable amount)",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -7211,7 +7213,7 @@
    "id": "td-commute-allowance",
    "area": "expenses",
    "name": "Calculate a commuting allowance from the travel distance and apply the tax-free rules.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -7227,9 +7229,11 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(commut\\w*|travel distance)\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/expenses-travel-calculation on 2026-09-27 for the missing half: calculating the commuting allowance from the distance with the tax-free rules and a route lookup. Before: lib/Settings/register.d/hr-expense.json:211-227 Expense.travelType business or commute with distanceKm, but the amount is typed by the employee (no calculation from distance); lib/Standards/Checks/NlTravelExpenseChecks.php:99 checks the per-km amount against the tax-free rate only via occ humaniq:rules:audit; no route planner lookup",
-    "reachedOn": "ExpenseDetail /expenses/:id travel fields; the tax-free check only via occ humaniq:rules:audit",
+    "state": "built",
+    "change": "2026-09-29-expenses-travel-calculation",
+    "evidence": "CommuteArrangement (lib/Settings/register.d/hr-expense.json) with submit, approve and reject under NoSelfApprovalGuard, and end; TravelAmountListener stamps monthlyAllowance = one-way km x 2 x rate x 214 x days/5 / 12 with its tax-free and taxable parts; POST /api/travel/route-distance (lib/Controller/TravelController.php, lib/Service/RouteDistanceService.php) fills the distance from an integriq route planner source and answers 409 without one. Tests: TravelAllowanceCalculatorTest::testTheSeededCommuteIs11813AMonth, TravelAmountListenerTest::testAnArrangementGetsItsMonthlyAllowanceAndTheEmployeesAccount, RouteDistanceServiceTest, TravelControllerTest.",
+    "reachedOn": "CommuteArrangements /commute-arrangements and CommuteArrangementDetail /commute-arrangements/:id ('Calculate distance'), menu Expenses > Commuting arrangements",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -7243,7 +7247,7 @@
    "id": "td-wpm-co2",
    "area": "reporting",
    "name": "Register commuting and business travel by transport mode for the employer's CO2 mobility reporting duty.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -7259,9 +7263,11 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(co2|emission)\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/expenses-travel-calculation on 2026-09-27. Before: grep -rniE 'co2|wpm|transportMode|vervoersmiddel' lib src: only Asset.fuelType for a company vehicle (lib/Settings/register.d/hr-assets.json:159); commuting and business trips carry no transport mode and nothing aggregates them for the WPM reporting duty",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "change": "2026-09-29-expenses-travel-calculation",
+    "evidence": "Expense and CommuteArrangement carry transportMode and fuelType; lib/Service/WpmReportService.php compiles business km from approved and reimbursed claims and commuting km from approved arrangements (214-day rule, pro rata per month) per mode and fuel, the headcount against 100, and the trips without a mode, into one WpmReport per administration and year via POST /api/travel/wpm-report (HR or admin). Tests: tests/Unit/Service/WpmReportServiceTest.php, TravelControllerTest::testOnlyHrCompilesTheMobilityReport.",
+    "reachedOn": "WpmReports /mobility-reports and WpmReportDetail /mobility-reports/:id ('Compile'), menu Expenses > Mobility reports",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",

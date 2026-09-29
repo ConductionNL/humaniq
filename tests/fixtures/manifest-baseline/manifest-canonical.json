@@ -574,6 +574,28 @@
 					"route": "Expenses"
 				},
 				{
+					"icon": "CarOutline",
+					"id": "CommuteArrangements",
+					"label": "Commuting arrangements",
+					"route": "CommuteArrangements",
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
+				},
+				{
+					"icon": "ChartBar",
+					"id": "WpmReports",
+					"label": "Mobility reports",
+					"route": "WpmReports",
+					"visibleIf": {
+						"user.administrationMode": {
+							"eq": "standard"
+						}
+					}
+				},
+				{
 					"icon": "CheckDecagramOutline",
 					"id": "ExpenseApproval",
 					"label": "Expense approval",
@@ -3698,7 +3720,7 @@
 		},
 		{
 			"config": {
-				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab. receipt-ocr (2026-07-16): page-level action \"Extract receipt data\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/expenses/extract-receipt with {expenseId: @objectId}, guarded server-side by ExpenseController::authorizeExpense() (resolve-first RBAC) then an admin-or-owner ownership check.",
+				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab. receipt-ocr (2026-07-16): page-level action \"Extract receipt data\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/expenses/extract-receipt with {expenseId: @objectId}, guarded server-side by ExpenseController::authorizeExpense() (resolve-first RBAC) then an admin-or-owner ownership check. expenses-travel-calculation (2026-09-29): a 'Travel' data widget at gridY 6 shows the trip (travelType, distanceKm, transportMode, fuelType) and what humaniq calculated from it (ratePerKm, taxFreeAmount, taxableAmount, amountSource, read-only: TravelAmountListener stamps them on save). Approval moves to gridY 10, the receipt to gridY 14, and Related grows to 12 rows to match the left column.",
 				"headerActions": [
 					{
 						"confirm": true,
@@ -3728,7 +3750,7 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 10,
+						"gridY": 14,
 						"id": 2,
 						"widgetId": "files"
 					},
@@ -3744,17 +3766,25 @@
 						"gridHeight": 4,
 						"gridWidth": 8,
 						"gridX": 0,
-						"gridY": 6,
+						"gridY": 10,
 						"id": 4,
 						"widgetId": "data-2"
 					},
 					{
-						"gridHeight": 8,
+						"gridHeight": 12,
 						"gridWidth": 4,
 						"gridX": 8,
 						"gridY": 2,
 						"id": 5,
 						"widgetId": "related"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 6,
+						"id": 6,
+						"widgetId": "data-3"
 					}
 				],
 				"lifecycleActions": {
@@ -3853,6 +3883,40 @@
 						"icon": "ClipboardList",
 						"id": "data",
 						"title": "Claim",
+						"type": "data"
+					},
+					{
+						"content": {
+							"columns": 2,
+							"include": [
+								"travelType",
+								"distanceKm",
+								"transportMode",
+								"fuelType",
+								"ratePerKm",
+								"taxFreeAmount",
+								"taxableAmount",
+								"amountSource"
+							],
+							"overrides": {
+								"amountSource": {
+									"editable": false
+								},
+								"ratePerKm": {
+									"editable": false
+								},
+								"taxFreeAmount": {
+									"editable": false
+								},
+								"taxableAmount": {
+									"editable": false
+								}
+							},
+							"title": "Travel"
+						},
+						"icon": "CarOutline",
+						"id": "data-3",
+						"title": "Travel",
 						"type": "data"
 					},
 					{
@@ -9685,6 +9749,304 @@
 			"route": "/expenses",
 			"title": "Expenses",
 			"type": "index"
+		},
+		{
+			"config": {
+				"columns": [
+					"employeeId",
+					"distanceKmOneWay",
+					"daysPerWeek",
+					"transportMode",
+					"monthlyAllowance",
+					"startDate",
+					"status"
+				],
+				"description": "Each employee's commute and the fixed monthly allowance humaniq calculates for it with the 214-day rule.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"status",
+					"transportMode"
+				],
+				"register": "humaniq",
+				"schema": "CommuteArrangement",
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				}
+			},
+			"id": "CommuteArrangements",
+			"route": "/commute-arrangements",
+			"title": "Commuting arrangements",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "expenses-travel-calculation (2026-09-29): one employee's commute. The data widget excludes employeeId (Related resolves it) and shows the calculated allowance read-only (TravelAmountListener stamps it on save). 'Calculate distance' posts {arrangementId: @objectId} to /api/travel/route-distance, which reads the arrangement under the caller's RBAC (404), lets only its employee before approval or HR/admin change it (403), and answers 409 when integriq or its route planner source is absent, keeping the typed distance. lifecycleActions mirror the schema: submit, approve/reject (NoSelfApprovalGuard), end.",
+				"headerActions": [
+					{
+						"confirm": false,
+						"errorMessage": "No route planner is available, so the distance you typed is kept.",
+						"icon": "CarOutline",
+						"id": "calculate-distance",
+						"label": "Calculate distance",
+						"method": "POST",
+						"params": {
+							"arrangementId": "@objectId"
+						},
+						"successMessage": "Distance calculated by the route planner.",
+						"type": "api-call",
+						"url": "/api/travel/route-distance"
+					}
+				],
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "submit",
+							"from": [
+								"draft",
+								"rejected"
+							],
+							"label": "Submit",
+							"to": "submitted"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"submitted"
+							],
+							"label": "Approve",
+							"to": "approved"
+						},
+						{
+							"action": "reject",
+							"from": [
+								"submitted"
+							],
+							"label": "Reject",
+							"to": "rejected"
+						},
+						{
+							"action": "end",
+							"from": [
+								"approved"
+							],
+							"label": "End",
+							"to": "ended"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "CommuteArrangement",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId",
+								"userId",
+								"managerUserId"
+							],
+							"overrides": {
+								"approvedAt": {
+									"editable": false
+								},
+								"approvedBy": {
+									"editable": false
+								},
+								"monthlyAllowance": {
+									"editable": false
+								},
+								"ratePerKm": {
+									"editable": false
+								},
+								"routeProvider": {
+									"editable": false
+								},
+								"status": {
+									"editable": false
+								},
+								"taxFreeMonthly": {
+									"editable": false
+								},
+								"taxableMonthly": {
+									"editable": false
+								}
+							},
+							"title": "Commute"
+						},
+						"icon": "CarOutline",
+						"id": "data",
+						"title": "Commute",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "CommuteArrangementDetail",
+			"route": "/commute-arrangements/:id",
+			"title": "Commuting arrangement",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"allowCreate": true,
+				"columns": [
+					"year",
+					"administrationId",
+					"employeeCount",
+					"meetsThreshold",
+					"totalBusinessKm",
+					"totalCommuteKm",
+					"compiledAt"
+				],
+				"description": "The yearly business and commuting kilometres per transport mode and fuel, for the CO2 reporting duty of employers with 100 or more employees. Add a year, then compile it.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"register": "humaniq",
+				"schema": "WpmReport",
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				}
+			},
+			"id": "WpmReports",
+			"route": "/mobility-reports",
+			"title": "Mobility reports",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "expenses-travel-calculation (2026-09-29): one administration's yearly WPM figures. 'Compile' posts {administrationId, year} from the object to /api/travel/wpm-report (HR of that administration or an administrator, 403 otherwise), which recomputes businessKm, commuteKm, the headcount against the threshold and tripsWithoutMode, and updates this record. Every figure is read-only: only compiling writes them.",
+				"headerActions": [
+					{
+						"confirm": false,
+						"errorMessage": "The mobility report could not be compiled. Only HR of this administration or an administrator can compile it.",
+						"icon": "ChartBar",
+						"id": "compile-wpm",
+						"label": "Compile",
+						"method": "POST",
+						"params": {
+							"administrationId": "@object.administrationId",
+							"year": "@object.year"
+						},
+						"successMessage": "Mobility report compiled.",
+						"type": "api-call",
+						"url": "/api/travel/wpm-report"
+					}
+				],
+				"layout": [
+					{
+						"gridHeight": 10,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 10,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "WpmReport",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"businessKm": {
+									"editable": false
+								},
+								"commuteKm": {
+									"editable": false
+								},
+								"compiledAt": {
+									"editable": false
+								},
+								"compiledBy": {
+									"editable": false
+								},
+								"employeeCount": {
+									"editable": false
+								},
+								"meetsThreshold": {
+									"editable": false
+								},
+								"totalBusinessKm": {
+									"editable": false
+								},
+								"totalCommuteKm": {
+									"editable": false
+								},
+								"tripsWithoutMode": {
+									"editable": false
+								}
+							},
+							"title": "Mobility report"
+						},
+						"icon": "ChartBar",
+						"id": "data",
+						"title": "Mobility report",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "WpmReportDetail",
+			"route": "/mobility-reports/:id",
+			"title": "Mobility report",
+			"type": "detail"
 		},
 		{
 			"config": {

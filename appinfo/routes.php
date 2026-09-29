@@ -142,6 +142,9 @@ return [
         ['name' => 'departmentFigures#units', 'url' => '/api/analytics/units', 'verb' => 'GET'],
         ['name' => 'departmentFigures#myUnits', 'url' => '/api/analytics/my-units', 'verb' => 'GET'],
         ['name' => 'departmentFigures#unitFigures', 'url' => '/api/analytics/unit-figures', 'verb' => 'GET'],
+        // expenses-travel-calculation: a commuting distance from the route planner, and the yearly mobility figures.
+        ['name' => 'travel#routeDistance', 'url' => '/api/travel/route-distance', 'verb' => 'POST'],
+        ['name' => 'travel#wpmReport', 'url' => '/api/travel/wpm-report', 'verb' => 'POST'],
         // hours-leaf-for-any-object — the three timer endpoints behind the hours
         // leaf. ONE constraint, no CRUD (ADR-022): entries are read and written
         // declaratively through OpenRegister's object API everywhere else, and

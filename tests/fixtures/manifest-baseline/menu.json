@@ -349,6 +349,28 @@
 				"route": "Expenses"
 			},
 			{
+				"id": "CommuteArrangements",
+				"label": "Commuting arrangements",
+				"icon": "CarOutline",
+				"route": "CommuteArrangements",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "standard"
+					}
+				}
+			},
+			{
+				"id": "WpmReports",
+				"label": "Mobility reports",
+				"icon": "ChartBar",
+				"route": "WpmReports",
+				"visibleIf": {
+					"user.administrationMode": {
+						"eq": "standard"
+					}
+				}
+			},
+			{
 				"id": "ExpenseApproval",
 				"label": "Expense approval",
 				"icon": "CheckDecagramOutline",

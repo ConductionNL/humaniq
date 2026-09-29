@@ -8,7 +8,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "Expense",
-				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab. receipt-ocr (2026-07-16): page-level action \"Extract receipt data\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/expenses/extract-receipt with {expenseId: @objectId}, guarded server-side by ExpenseController::authorizeExpense() (resolve-first RBAC) then an admin-or-owner ownership check.",
+				"_note": "Expense-reimbursement claim (onkostendeclaratie). A single Expense holds one claim (amount / currency / category / date + attached receipt) and a submit -> approve/reject -> reimburse lifecycle (x-openregister-lifecycle on `status`). Content starts at gridY 0 with the 'Claim' data (title/description/amount/currency/category/expenseDate/receiptFile) then 'Approval' (status/submittedAt/approvedBy/approvedAt/rejectionReason/reimbursedAt) below it, both excluding employeeId since Related already resolves the claiming Employee by name; an amount KPI stat sits top-right so the payout figure is unmissable, with Related beneath it matching the combined left-column height. The Files widget (receipt / bon) runs full-width AFTER the domain cards, same placement convention as Timesheet's approval evidence -- the approver reads the claim record first, then opens the receipt to verify it. NO email/calendar/talk -- Expense declares no comms linkedTypes; a reimbursement claim is a financial/HR record, not a correspondence thread. lifecycleActions expose submit/approve/reject/reimburse (approve/reject guarded server-side by NoSelfApprovalGuard; reimburse is terminal). Audit history is a sidebar tab. receipt-ocr (2026-07-16): page-level action \"Extract receipt data\" mirrors PayslipDetail's \"Genereer PDF\" shape -- POST /api/expenses/extract-receipt with {expenseId: @objectId}, guarded server-side by ExpenseController::authorizeExpense() (resolve-first RBAC) then an admin-or-owner ownership check. expenses-travel-calculation (2026-09-29): a 'Travel' data widget at gridY 6 shows the trip (travelType, distanceKm, transportMode, fuelType) and what humaniq calculated from it (ratePerKm, taxFreeAmount, taxableAmount, amountSource, read-only: TravelAmountListener stamps them on save). Approval moves to gridY 10, the receipt to gridY 14, and Related grows to 12 rows to match the left column.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -65,6 +65,40 @@
 								"vatAmount"
 							],
 							"title": "Claim"
+						}
+					},
+					{
+						"id": "data-3",
+						"type": "data",
+						"title": "Travel",
+						"icon": "CarOutline",
+						"content": {
+							"columns": 2,
+							"include": [
+								"travelType",
+								"distanceKm",
+								"transportMode",
+								"fuelType",
+								"ratePerKm",
+								"taxFreeAmount",
+								"taxableAmount",
+								"amountSource"
+							],
+							"title": "Travel",
+							"overrides": {
+								"ratePerKm": {
+									"editable": false
+								},
+								"taxFreeAmount": {
+									"editable": false
+								},
+								"taxableAmount": {
+									"editable": false
+								},
+								"amountSource": {
+									"editable": false
+								}
+							}
 						}
 					},
 					{
@@ -125,7 +159,7 @@
 						"id": 2,
 						"widgetId": "files",
 						"gridX": 0,
-						"gridY": 10,
+						"gridY": 14,
 						"gridWidth": 12,
 						"gridHeight": 4
 					},
@@ -141,7 +175,7 @@
 						"id": 4,
 						"widgetId": "data-2",
 						"gridX": 0,
-						"gridY": 6,
+						"gridY": 10,
 						"gridWidth": 8,
 						"gridHeight": 4
 					},
@@ -151,7 +185,15 @@
 						"gridX": 8,
 						"gridY": 2,
 						"gridWidth": 4,
-						"gridHeight": 8
+						"gridHeight": 12
+					},
+					{
+						"id": 6,
+						"widgetId": "data-3",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 8,
+						"gridHeight": 4
 					}
 				],
 				"lifecycleActions": {
@@ -239,6 +281,226 @@
 				"filter": {
 					"administrationId": "@workspace.activeAdministrationId?"
 				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "CommuteArrangement",
+			"params": {
+				"id": "CommuteArrangements",
+				"route": "/commute-arrangements",
+				"title": "Commuting arrangements",
+				"columns": [
+					"employeeId",
+					"distanceKmOneWay",
+					"daysPerWeek",
+					"transportMode",
+					"monthlyAllowance",
+					"startDate",
+					"status"
+				],
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				},
+				"filters": [
+					"status",
+					"transportMode"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Each employee's commute and the fixed monthly allowance humaniq calculates for it with the 214-day rule."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "CommuteArrangement",
+			"params": {
+				"id": "CommuteArrangementDetail",
+				"route": "/commute-arrangements/:id",
+				"title": "Commuting arrangement",
+				"dataTitle": "Commute",
+				"dataIcon": "CarOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"note": "expenses-travel-calculation (2026-09-29): one employee's commute. The data widget excludes employeeId (Related resolves it) and shows the calculated allowance read-only (TravelAmountListener stamps it on save). 'Calculate distance' posts {arrangementId: @objectId} to /api/travel/route-distance, which reads the arrangement under the caller's RBAC (404), lets only its employee before approval or HR/admin change it (403), and answers 409 when integriq or its route planner source is absent, keeping the typed distance. lifecycleActions mirror the schema: submit, approve/reject (NoSelfApprovalGuard), end.",
+				"exclude": [
+					"employeeId",
+					"userId",
+					"managerUserId"
+				],
+				"overrides": {
+					"monthlyAllowance": {
+						"editable": false
+					},
+					"taxFreeMonthly": {
+						"editable": false
+					},
+					"taxableMonthly": {
+						"editable": false
+					},
+					"ratePerKm": {
+						"editable": false
+					},
+					"routeProvider": {
+						"editable": false
+					},
+					"status": {
+						"editable": false
+					},
+					"approvedBy": {
+						"editable": false
+					},
+					"approvedAt": {
+						"editable": false
+					}
+				},
+				"headerActions": [
+					{
+						"id": "calculate-distance",
+						"label": "Calculate distance",
+						"type": "api-call",
+						"icon": "CarOutline",
+						"url": "/api/travel/route-distance",
+						"method": "POST",
+						"params": {
+							"arrangementId": "@objectId"
+						},
+						"confirm": false,
+						"successMessage": "Distance calculated by the route planner.",
+						"errorMessage": "No route planner is available, so the distance you typed is kept."
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "submit",
+							"from": [
+								"draft",
+								"rejected"
+							],
+							"to": "submitted",
+							"label": "Submit"
+						},
+						{
+							"action": "approve",
+							"from": [
+								"submitted"
+							],
+							"to": "approved",
+							"label": "Approve"
+						},
+						{
+							"action": "reject",
+							"from": [
+								"submitted"
+							],
+							"to": "rejected",
+							"label": "Reject"
+						},
+						{
+							"action": "end",
+							"from": [
+								"approved"
+							],
+							"to": "ended",
+							"label": "End"
+						}
+					]
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "WpmReport",
+			"params": {
+				"id": "WpmReports",
+				"route": "/mobility-reports",
+				"title": "Mobility reports",
+				"columns": [
+					"year",
+					"administrationId",
+					"employeeCount",
+					"meetsThreshold",
+					"totalBusinessKm",
+					"totalCommuteKm",
+					"compiledAt"
+				],
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				},
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"allowCreate": true,
+				"description": "The yearly business and commuting kilometres per transport mode and fuel, for the CO2 reporting duty of employers with 100 or more employees. Add a year, then compile it."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "WpmReport",
+			"params": {
+				"id": "WpmReportDetail",
+				"route": "/mobility-reports/:id",
+				"title": "Mobility report",
+				"dataTitle": "Mobility report",
+				"dataIcon": "ChartBar",
+				"relatedTitle": "Related",
+				"gridHeight": 10,
+				"note": "expenses-travel-calculation (2026-09-29): one administration's yearly WPM figures. 'Compile' posts {administrationId, year} from the object to /api/travel/wpm-report (HR of that administration or an administrator, 403 otherwise), which recomputes businessKm, commuteKm, the headcount against the threshold and tripsWithoutMode, and updates this record. Every figure is read-only: only compiling writes them.",
+				"overrides": {
+					"employeeCount": {
+						"editable": false
+					},
+					"meetsThreshold": {
+						"editable": false
+					},
+					"businessKm": {
+						"editable": false
+					},
+					"commuteKm": {
+						"editable": false
+					},
+					"totalBusinessKm": {
+						"editable": false
+					},
+					"totalCommuteKm": {
+						"editable": false
+					},
+					"tripsWithoutMode": {
+						"editable": false
+					},
+					"compiledAt": {
+						"editable": false
+					},
+					"compiledBy": {
+						"editable": false
+					}
+				},
+				"headerActions": [
+					{
+						"id": "compile-wpm",
+						"label": "Compile",
+						"type": "api-call",
+						"icon": "ChartBar",
+						"url": "/api/travel/wpm-report",
+						"method": "POST",
+						"params": {
+							"administrationId": "@object.administrationId",
+							"year": "@object.year"
+						},
+						"confirm": false,
+						"successMessage": "Mobility report compiled.",
+						"errorMessage": "The mobility report could not be compiled. Only HR of this administration or an administrator can compile it."
+					}
+				]
 			}
 		}
 	]
