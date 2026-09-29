@@ -1,6 +1,9 @@
-# hr-document-signing
+# hr-document-signing Specification
 
-## ADDED Requirements
+## Purpose
+Electronic signing of generated HR documents about an existing employee, with the status on the document and the written-contract flag closed on completion. Built by people-esign-hr-documents (archived 2026-09-29).
+
+## Requirements
 
 ### Requirement: A generated HR document about an employee SHALL be sendable for electronic signature (REQ-HDS-001)
 
@@ -20,10 +23,14 @@ Rows: `ppl-esign-documents` (humaniq matrix).
 - **THEN** a filinq signing request exists with `directie` first and `s.deboer` second, and
   the document shows signing status `PENDING`
 
+@e2e exclude the request goes to filinq, which needs a signed-in signer; covered by HrDocumentSigningServiceTest::testANewContractGoesOutForSigning and DocumentSigningControllerTest
+
 #### Scenario: A werkgeversverklaring needs only the employer
 - **GIVEN** a generated werkgeversverklaring
 - **WHEN** an HR adviser requests a signature
 - **THEN** the request has one signer, the administration's signatory
+
+@e2e exclude signer selection is server-side; covered by HrDocumentSigningServiceTest::testAnEmployerStatementNeedsOnlyTheEmployer
 
 #### Scenario: An employee without an account is told why
 - **GIVEN** a generated employment contract for a portal-only employee without a Nextcloud
@@ -31,6 +38,8 @@ Rows: `ppl-esign-documents` (humaniq matrix).
 - **WHEN** an HR adviser requests a signature
 - **THEN** no request is raised and the document shows `failed` with the reason
   `no-nextcloud-user-for-employee`
+
+@e2e exclude signer resolution is server-side; covered by HrDocumentSigningServiceTest::testAnEmployeeWithoutAnAccountIsToldWhy
 
 ### Requirement: The signing status SHALL be kept on the document, one request at a time (REQ-HDS-002)
 
@@ -47,6 +56,8 @@ Rows: `ppl-esign-documents` (humaniq matrix).
 - **THEN** the answer names the existing request and filinq holds one request for the
   document
 
+@e2e exclude idempotency is server-side; covered by HrDocumentSigningServiceTest::testADoubleClickRaisesOneRequest
+
 ### Requirement: A completed contract signature SHALL mark the contract as written (REQ-HDS-003)
 
 When the signing request of an `arbeidsovereenkomst` completes, humaniq SHALL set the linked
@@ -61,3 +72,5 @@ Rows: `ppl-esign-documents` (humaniq matrix).
 - **WHEN** both signers have signed and `occ humaniq:documents:sync-signatures` runs
 - **THEN** the contract's `writtenContract` is true and the document reads `COMPLETED` with
   today's completion time
+
+@e2e exclude the sync runs from occ; covered by HrDocumentSigningServiceTest::testACompletedContractIsMarkedWritten and ::testADeclinedContractChangesNothing

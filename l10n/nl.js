@@ -2826,7 +2826,20 @@ OC.L10N.register(
         "What the case is: a grievance, a conflict, a written warning, a disciplinary measure or something else.": "Waar het dossier over gaat: een klacht, een conflict, een schriftelijke waarschuwing, een disciplinaire maatregel of iets anders.",
         "Whom the case is about.": "Over wie het dossier gaat.",
         "Written warning": "Schriftelijke waarschuwing",
-        "A grievance, conflict, written warning or disciplinary measure on an employee's personnel file. Only HR reads what it says; the manager sees that it exists; the employee sees their own closed warnings and measures.": "Een klacht, conflict, schriftelijke waarschuwing of disciplinaire maatregel in het personeelsdossier. Alleen HR leest wat erin staat; de leidinggevende ziet dat het bestaat; de medewerker ziet de eigen afgesloten waarschuwingen en maatregelen."
+        "A grievance, conflict, written warning or disciplinary measure on an employee's personnel file. Only HR reads what it says; the manager sees that it exists; the employee sees their own closed warnings and measures.": "Een klacht, conflict, schriftelijke waarschuwing of disciplinaire maatregel in het personeelsdossier. Alleen HR leest wat erin staat; de leidinggevende ziet dat het bestaat; de medewerker ziet de eigen afgesloten waarschuwingen en maatregelen.",
+        "Being signed": "Wordt ondertekend",
+        "Request signature": "Ondertekening aanvragen",
+        "Signatory": "Ondertekenaar",
+        "Signed": "Ondertekend",
+        "Signed at": "Ondertekend op",
+        "Signing request": "Ondertekenverzoek",
+        "Signing status": "Status ondertekening",
+        "The Nextcloud account that signs HR documents for the employer. Left empty, the HR user who sends the document signs.": "Het Nextcloud-account dat HR-documenten namens de werkgever ondertekent. Leeg gelaten ondertekent de HR-medewerker die het document verstuurt.",
+        "The signing request in the document app. Filled in automatically.": "Het ondertekenverzoek in de documentenapp. Wordt automatisch ingevuld.",
+        "The signing request is on its way. Its status shows on this document.": "Het ondertekenverzoek is verstuurd. De status staat op dit document.",
+        "Waiting for signatures": "Wacht op handtekeningen",
+        "When the last signer signed.": "Wanneer de laatste ondertekenaar heeft getekend.",
+        "Where the electronic signature stands. A new request can be sent after a decline, cancellation, expiry or failure.": "Hoe het staat met de elektronische handtekening. Na een weigering, annulering, verlopen verzoek of fout kan een nieuw verzoek worden verstuurd."
     },
     "nplurals=2; plural=(n != 1);"
 )

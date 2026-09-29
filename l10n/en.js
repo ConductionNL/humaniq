@@ -2826,7 +2826,20 @@ OC.L10N.register(
         "What the case is: a grievance, a conflict, a written warning, a disciplinary measure or something else.": "What the case is: a grievance, a conflict, a written warning, a disciplinary measure or something else.",
         "Whom the case is about.": "Whom the case is about.",
         "Written warning": "Written warning",
-        "A grievance, conflict, written warning or disciplinary measure on an employee's personnel file. Only HR reads what it says; the manager sees that it exists; the employee sees their own closed warnings and measures.": "A grievance, conflict, written warning or disciplinary measure on an employee's personnel file. Only HR reads what it says; the manager sees that it exists; the employee sees their own closed warnings and measures."
+        "A grievance, conflict, written warning or disciplinary measure on an employee's personnel file. Only HR reads what it says; the manager sees that it exists; the employee sees their own closed warnings and measures.": "A grievance, conflict, written warning or disciplinary measure on an employee's personnel file. Only HR reads what it says; the manager sees that it exists; the employee sees their own closed warnings and measures.",
+        "Being signed": "Being signed",
+        "Request signature": "Request signature",
+        "Signatory": "Signatory",
+        "Signed": "Signed",
+        "Signed at": "Signed at",
+        "Signing request": "Signing request",
+        "Signing status": "Signing status",
+        "The Nextcloud account that signs HR documents for the employer. Left empty, the HR user who sends the document signs.": "The Nextcloud account that signs HR documents for the employer. Left empty, the HR user who sends the document signs.",
+        "The signing request in the document app. Filled in automatically.": "The signing request in the document app. Filled in automatically.",
+        "The signing request is on its way. Its status shows on this document.": "The signing request is on its way. Its status shows on this document.",
+        "Waiting for signatures": "Waiting for signatures",
+        "When the last signer signed.": "When the last signer signed.",
+        "Where the electronic signature stands. A new request can be sent after a decline, cancellation, expiry or failure.": "Where the electronic signature stands. A new request can be sent after a decline, cancellation, expiry or failure."
     },
     "nplurals=2; plural=(n != 1);"
 )
