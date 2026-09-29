@@ -49,7 +49,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service;
 
-use DateTimeImmutable;
 use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -57,6 +56,8 @@ use RuntimeException;
 
 /**
  * Server-side aggregation for the Dashboard's guarded trend endpoint.
+ *
+ * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
  */
 class AnalyticsService {
 
@@ -71,18 +72,23 @@ class AnalyticsService {
 		'approval-lead-time',
 		'billable-ratio',
 		'headcount',
+		'absence-frequency',
 	];
 
 	/**
-	 * Trailing-window period selectors, mirroring pipelinq's
-	 * `AnalyticsService::ALLOWED_PERIODS` shape (a window name, not a single
-	 * bucket): each resolves to a number of trailing CALENDAR-MONTH buckets
-	 * ending at the current month, since every metric here is bucketed
-	 * monthly (`PayrollRun.period`/`Timesheet.period`'s own `YYYY-MM` grain).
+	 * The schemas each metric reads (department-figures: loaded once, then
+	 * restricted per period to a unit's people).
 	 *
-	 * @var array<string, int>
+	 * @var array<string, array<int, string>>
 	 */
-	private const PERIOD_MONTHS = ['quarter' => 3, 'half-year' => 6, 'year' => 12];
+	private const METRIC_SCHEMAS = [
+		'absence-rate' => ['SickLeaveCase', 'EmploymentContract'],
+		'absence-frequency' => ['SickLeaveCase', 'EmploymentContract'],
+		'payroll-cost' => ['PayrollRun'],
+		'approval-lead-time' => self::APPROVAL_LEAD_TIME_SCHEMAS,
+		'billable-ratio' => ['Timesheet'],
+		'headcount' => ['Employee'],
+	];
 
 	/**
 	 * Default period window when the caller supplies none.
@@ -123,6 +129,8 @@ class AnalyticsService {
 	 * @param Percentile $percentile The median/p90 calculator (injected, never called statically — the phpmd StaticAccess fix).
 	 * @param LoggerInterface $logger Logger.
 	 * @param EmployeeTimeline $timeline Places employees on a timeline and counts them per period (the AbsenceProgression split precedent — see that class for why).
+	 * @param UnitTrends $unitTrends department-figures: a metric for one org unit's people, and the absence frequency.
+	 * @param TrendPeriods $periods The trailing month windows and date parsing (split out for phpmd's class-complexity ceiling).
 	 *
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
@@ -133,6 +141,8 @@ class AnalyticsService {
 		private readonly Percentile $percentile,
 		private readonly LoggerInterface $logger,
 		private readonly EmployeeTimeline $timeline = new EmployeeTimeline(),
+		private readonly UnitTrends $unitTrends = new UnitTrends(),
+		private readonly TrendPeriods $periods = new TrendPeriods(),
 	) {
 
 	}//end __construct()
@@ -142,38 +152,90 @@ class AnalyticsService {
 	 * charts.
 	 *
 	 * @param string $metric One of ALLOWED_TREND_METRICS.
-	 * @param string $period One of PERIOD_MONTHS' keys.
+	 * @param string $period One of TrendPeriods::PERIOD_MONTHS' keys.
 	 * @param string $administrationId The caller's ALREADY-AUTHORIZED active administration (REQ-DSI-005) — never resolved here.
+	 * @param string|null $orgUnitId department-figures: restrict to the people placed in this unit and its children.
+	 * @param int $minimumMembers department-figures: withhold a period with fewer people than this (0 for none).
 	 *
 	 * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
 	 *
 	 * @throws InvalidArgumentException When metric or period is not recognised.
 	 *
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-004
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-006
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-007
 	 */
-	public function getTrends(string $metric, string $period, string $administrationId): array {
+	public function getTrends(
+		string $metric,
+		string $period,
+		string $administrationId,
+		?string $orgUnitId=null,
+		int $minimumMembers=0,
+	): array {
 		if (in_array($metric, self::ALLOWED_TREND_METRICS, true) === false) {
 			throw new InvalidArgumentException('Unsupported metric');
 		}
 
-		if (isset(self::PERIOD_MONTHS[$period]) === false) {
-			throw new InvalidArgumentException('Invalid period');
+		$periodKeys = $this->periods->keys($period);
+		$rows = [];
+		foreach (self::METRIC_SCHEMAS[$metric] as $schema) {
+			$rows[$schema] = $this->loadFiltered($schema, $administrationId);
 		}
 
-		$periodKeys = $this->trailingPeriodKeys(self::PERIOD_MONTHS[$period]);
+		if ($orgUnitId === null || $orgUnitId === '') {
+			return ['metric' => $metric, 'period' => $period, 'series' => $this->seriesFor($metric, $periodKeys, $rows, null)];
+		}
 
-		$series = match ($metric) {
-			'absence-rate' => $this->absenceRateSeries($periodKeys, $administrationId),
-			'payroll-cost' => $this->payrollCostSeries($periodKeys, $administrationId),
-			'approval-lead-time' => $this->approvalLeadTimeSeries($periodKeys, $administrationId),
-			'billable-ratio' => $this->billableRatioSeries($periodKeys, $administrationId),
-			'headcount' => $this->headcountSeries($periodKeys, $administrationId),
-		};
+		$series = $this->unitTrends->series(
+			unit: ['id' => $orgUnitId, 'minimumMembers' => $minimumMembers, 'metric' => $metric],
+			periodKeys: $periodKeys,
+			rows: $rows,
+			load: fn (string $schema): array => $this->loadFiltered($schema, $administrationId),
+			seriesFor: fn (array $keys, array $unitRows, array $shares): array => $this->seriesFor($metric, $keys, $unitRows, $shares)
+		);
 
 		return ['metric' => $metric, 'period' => $period, 'series' => $series];
 	}//end getTrends()
+
+	/**
+	 * The rows of a schema in the caller's (already authorised)
+	 * administration.
+	 *
+	 * @param string $schema           The schema name.
+	 * @param string $administrationId The authorised administration.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
+	 */
+	public function rowsFor(string $schema, string $administrationId): array {
+		return $this->loadFiltered($schema, $administrationId);
+	}//end rowsFor()
+
+	/**
+	 * One metric's series over rows already loaded. With `$shares` the rows
+	 * are one unit's people for one period ({@see UnitTrends}).
+	 *
+	 * @param string                                          $metric     The metric.
+	 * @param array<int, string>                              $periodKeys `YYYY-MM` buckets.
+	 * @param array<string, array<int, array<string, mixed>>> $rows       Rows per schema.
+	 * @param array<string, float>|null                       $shares     A unit's people, or null for the administration.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
+	 */
+	private function seriesFor(string $metric, array $periodKeys, array $rows, ?array $shares): array {
+		return match ($metric) {
+			'absence-rate' => $this->absenceRateSeries($periodKeys, $rows['SickLeaveCase'], $rows['EmploymentContract']),
+			'absence-frequency' => $this->unitTrends->frequencySeries($periodKeys, $rows['SickLeaveCase'], $rows['EmploymentContract'], $shares),
+			'payroll-cost' => $this->payrollCostSeries($periodKeys, $rows['PayrollRun']),
+			'approval-lead-time' => $this->approvalLeadTimeSeries($periodKeys, $rows),
+			'billable-ratio' => $this->billableRatioSeries($periodKeys, $rows['Timesheet']),
+			default => $this->headcountSeries($periodKeys, $rows['Employee']),
+		};
+	}//end seriesFor()
 
 	/**
 	 * Absence-rate series (REQ-DSI-004): `AbsenceRateService::absenceRate()`
@@ -181,19 +243,18 @@ class AnalyticsService {
 	 * unmodified — `null` stays `null`.
 	 *
 	 * @param array<int, string> $periodKeys `YYYY-MM` buckets, oldest first.
-	 * @param string $administrationId The caller's active administration.
+	 * @param array<int, array<string, mixed>> $cases SickLeaveCase rows of the administration (or of a unit's people).
+	 * @param array<int, array<string, mixed>> $contracts EmploymentContract rows, likewise.
 	 *
 	 * @return array<int, array{date: string, value: float|null}>
 	 *
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
-	private function absenceRateSeries(array $periodKeys, string $administrationId): array {
-		$cases = $this->loadFiltered('SickLeaveCase', $administrationId);
-		$contracts = $this->loadFiltered('EmploymentContract', $administrationId);
+	private function absenceRateSeries(array $periodKeys, array $cases, array $contracts): array {
 
 		$series = [];
 		foreach ($periodKeys as $period) {
-			[$start, $end] = $this->periodBounds($period);
+			[$start, $end] = $this->periods->bounds($period);
 			$result = $this->absenceRateService->absenceRate($cases, $contracts, $start, $end);
 			$series[] = ['date' => $period, 'value' => $result['percentage']];
 		}
@@ -210,16 +271,16 @@ class AnalyticsService {
 	 * period does not read as a good (zero-cost) one.
 	 *
 	 * @param array<int, string> $periodKeys `YYYY-MM` buckets, oldest first.
-	 * @param string $administrationId The caller's active administration.
+	 * @param array<int, array<string, mixed>> $runs PayrollRun rows of the administration.
 	 *
 	 * @return array<int, array{date: string, value: float|null}>
 	 *
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
-	private function payrollCostSeries(array $periodKeys, string $administrationId): array {
+	private function payrollCostSeries(array $periodKeys, array $runs): array {
 		$sums = array_fill_keys($periodKeys, null);
 
-		foreach ($this->loadFiltered('PayrollRun', $administrationId) as $run) {
+		foreach ($runs as $run) {
 			$period = (string)($run['period'] ?? '');
 			if (array_key_exists($period, $sums) === false) {
 				continue;
@@ -265,17 +326,17 @@ class AnalyticsService {
 	 * ratio is a catastrophic reading — the two must not look alike.
 	 *
 	 * @param array<int, string> $periodKeys `YYYY-MM` buckets, oldest first.
-	 * @param string $administrationId The caller's active administration.
+	 * @param array<int, array<string, mixed>> $timesheets Timesheet rows of the administration (or of a unit's people).
 	 *
 	 * @return array<int, array{date: string, value: float|null}>
 	 *
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-002
 	 */
-	private function billableRatioSeries(array $periodKeys, string $administrationId): array {
+	private function billableRatioSeries(array $periodKeys, array $timesheets): array {
 		$billable = array_fill_keys($periodKeys, 0.0);
 		$total = array_fill_keys($periodKeys, 0.0);
 
-		foreach ($this->loadFiltered('Timesheet', $administrationId) as $row) {
+		foreach ($timesheets as $row) {
 			$period = (string)($row['period'] ?? '');
 			if (array_key_exists($period, $total) === false) {
 				continue;
@@ -316,14 +377,14 @@ class AnalyticsService {
 	 * headcount line that is real-looking and wrong.
 	 *
 	 * @param array<int, string> $periodKeys `YYYY-MM` buckets, oldest first.
-	 * @param string $administrationId The caller's active administration.
+	 * @param array<int, array<string, mixed>> $employees Employee rows of the administration (or of a unit's people).
 	 *
 	 * @return array<int, array{date: string, headcount: int, starters: int, leavers: int}>
 	 *
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md#REQ-DSI-003
 	 */
-	private function headcountSeries(array $periodKeys, string $administrationId): array {
-		$timeline = $this->timeline->place($this->loadFiltered('Employee', $administrationId));
+	private function headcountSeries(array $periodKeys, array $employees): array {
+		$timeline = $this->timeline->place($employees);
 
 		if ($timeline['excluded'] > 0) {
 			$this->logger->warning(
@@ -333,7 +394,7 @@ class AnalyticsService {
 
 		$series = [];
 		foreach ($periodKeys as $period) {
-			[$start, $end] = $this->periodBounds($period);
+			[$start, $end] = $this->periods->bounds($period);
 			$series[] = (['date' => $period] + $this->timeline->countOver($timeline['placed'], $start, $end));
 		}
 
@@ -349,17 +410,17 @@ class AnalyticsService {
 	 * time. An empty bucket yields `{median: null, p90: null}`.
 	 *
 	 * @param array<int, string> $periodKeys `YYYY-MM` buckets, oldest first.
-	 * @param string $administrationId The caller's active administration.
+	 * @param array<string, array<int, array<string, mixed>>> $rows Timesheet/Expense/LeaveRequest rows per schema.
 	 *
 	 * @return array<int, array{date: string, median: float|null, p90: float|null}>
 	 *
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
-	private function approvalLeadTimeSeries(array $periodKeys, string $administrationId): array {
+	private function approvalLeadTimeSeries(array $periodKeys, array $rows): array {
 		$durationsByPeriod = array_fill_keys($periodKeys, []);
 
 		foreach (self::APPROVAL_LEAD_TIME_SCHEMAS as $schema) {
-			foreach ($this->loadFiltered($schema, $administrationId) as $record) {
+			foreach (($rows[$schema] ?? []) as $record) {
 				$this->collectApprovalDuration($record, $durationsByPeriod);
 			}
 		}
@@ -393,8 +454,8 @@ class AnalyticsService {
 	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
 	 */
 	private function collectApprovalDuration(array $record, array &$durationsByPeriod): void {
-		$approvedAt = $this->parseDate($record['approvedAt'] ?? null);
-		$submittedAt = $this->parseDate($record['submittedAt'] ?? null);
+		$approvedAt = $this->periods->parseDate($record['approvedAt'] ?? null);
+		$submittedAt = $this->periods->parseDate($record['submittedAt'] ?? null);
 		if ($approvedAt === null || $submittedAt === null) {
 			return;
 		}
@@ -406,64 +467,6 @@ class AnalyticsService {
 
 		$durationsByPeriod[$period][] = (float)$approvedAt->diff($submittedAt)->days;
 	}//end collectApprovalDuration()
-
-	/**
-	 * The trailing `$months` calendar-month `YYYY-MM` buckets ending at (and
-	 * including) the current month, oldest first.
-	 *
-	 * @param int $months Number of trailing monthly buckets.
-	 *
-	 * @return array<int, string>
-	 *
-	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
-	 */
-	private function trailingPeriodKeys(int $months): array {
-		$keys = [];
-		$currentMonth = new DateTimeImmutable('first day of this month');
-		for ($offset = ($months - 1); $offset >= 0; $offset--) {
-			$keys[] = $currentMonth->modify(sprintf('-%d months', $offset))->format('Y-m');
-		}
-
-		return $keys;
-	}//end trailingPeriodKeys()
-
-	/**
-	 * First/last day of a `YYYY-MM` period, both at midnight. Built via the
-	 * constructor (`new DateTimeImmutable(...)`), not the static
-	 * `createFromFormat()` factory — PHP parses a bare `YYYY-MM-01` string
-	 * natively, and the constructor form is not a phpmd `StaticAccess` call.
-	 *
-	 * @param string $period `YYYY-MM`.
-	 *
-	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
-	 *
-	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
-	 */
-	private function periodBounds(string $period): array {
-		$start = new DateTimeImmutable($period . '-01');
-		return [$start, $start->modify('last day of this month')];
-	}//end periodBounds()
-
-	/**
-	 * Parse a stored date/date-time value.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return DateTimeImmutable|null Null when absent, blank, or unparseable.
-	 *
-	 * @spec openspec/changes/archive/2026-08-20-hrmq-dashboard-steering-indicators/specs/hrmq-dashboard-steering-indicators/spec.md
-	 */
-	private function parseDate(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (\Exception) {
-			return null;
-		}
-	}//end parseDate()
 
 	/**
 	 * Load all objects of a schema, filtered to those denormalized-scoped

@@ -31,7 +31,9 @@ namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\AnalyticsController;
 use OCA\Humaniq\Service\AdministrationService;
+use OCA\Humaniq\Service\AnalyticsAccess;
 use OCA\Humaniq\Service\AnalyticsService;
+use OCA\Humaniq\Service\DepartmentFiguresService;
 use OCA\Humaniq\Service\ObligationsService;
 use OCA\Humaniq\Service\SeriesLatest;
 use OCP\AppFramework\Http;
@@ -207,7 +209,7 @@ class AnalyticsControllerTest extends TestCase {
 			$request,
 			$analyticsService,
 			$this->createMock(ObligationsService::class),
-			$administrationService,
+			new AnalyticsAccess($administrationService, $this->createMock(DepartmentFiguresService::class)),
 			new SeriesLatest(),
 			$userSession,
 			$logger
@@ -265,6 +267,108 @@ class AnalyticsControllerTest extends TestCase {
 	}//end testUnsupportedMetricReturns400()
 
 	/**
+	 * department-figures: HR and accountants read any unit, without the
+	 * small-unit rule.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-001
+	 */
+	public function testHrAndAccountantReadAnyUnitWithoutTheSmallUnitRule(): void {
+		foreach (['hr', 'accountant'] as $role) {
+			$administrationService = $this->createMock(AdministrationService::class);
+			$administrationService->method('getActiveAdministrationId')->willReturn('ADM-001');
+			$administrationService->method('getActiveAdministrationRole')->willReturn($role);
+
+			$analyticsService = $this->createMock(AnalyticsService::class);
+			$analyticsService->expects($this->once())->method('getTrends')
+				->with('absence-rate', 'quarter', 'ADM-001', 'belastingen', 0)
+				->willReturn(['metric' => 'absence-rate', 'period' => 'quarter', 'series' => []]);
+
+			$figures = $this->createMock(DepartmentFiguresService::class);
+			$figures->expects($this->never())->method('managesUnit');
+
+			$controller = $this->buildController(
+				$analyticsService,
+				$this->createMock(ObligationsService::class),
+				$administrationService,
+				'staff',
+				['metric' => 'absence-rate', 'period' => 'quarter', 'orgUnitId' => 'belastingen'],
+				$figures
+			);
+
+			$this->assertSame(Http::STATUS_OK, $controller->trends()->getStatus());
+		}
+	}//end testHrAndAccountantReadAnyUnitWithoutTheSmallUnitRule()
+
+	/**
+	 * department-figures "A team leader reads their department": the unit's
+	 * manager is admitted for that unit, with the small-unit threshold.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-002
+	 */
+	public function testAManagerReadsTheirOwnUnitWithTheSmallUnitRule(): void {
+		$administrationService = $this->createMock(AdministrationService::class);
+		$administrationService->method('getActiveAdministrationId')->willReturn('ADM-001');
+		$administrationService->method('getActiveAdministrationRole')->willReturn('employee');
+
+		$figures = $this->createMock(DepartmentFiguresService::class);
+		$figures->method('managesUnit')->with('lead', 'ADM-001', 'burgerzaken')->willReturn(true);
+		$figures->method('minimumMembers')->willReturn(5);
+
+		$analyticsService = $this->createMock(AnalyticsService::class);
+		$analyticsService->expects($this->once())->method('getTrends')
+			->with('absence-rate', 'quarter', 'ADM-001', 'burgerzaken', 5)
+			->willReturn(['metric' => 'absence-rate', 'period' => 'quarter', 'series' => []]);
+
+		$controller = $this->buildController(
+			$analyticsService,
+			$this->createMock(ObligationsService::class),
+			$administrationService,
+			'lead',
+			['metric' => 'absence-rate', 'period' => 'quarter', 'orgUnitId' => 'burgerzaken'],
+			$figures
+		);
+
+		$this->assertSame(Http::STATUS_OK, $controller->trends()->getStatus());
+	}//end testAManagerReadsTheirOwnUnitWithTheSmallUnitRule()
+
+	/**
+	 * department-figures "Another team stays closed": a manager asking for a
+	 * unit they do not lead, or for the whole administration, is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/department-figures/spec.md#REQ-DPF-002
+	 */
+	public function testAManagerIsRefusedAnotherUnitAndTheWholeAdministration(): void {
+		foreach (['belastingen', ''] as $unit) {
+			$administrationService = $this->createMock(AdministrationService::class);
+			$administrationService->method('getActiveAdministrationId')->willReturn('ADM-001');
+			$administrationService->method('getActiveAdministrationRole')->willReturn('employee');
+
+			$figures = $this->createMock(DepartmentFiguresService::class);
+			$figures->method('managesUnit')->willReturn(false);
+
+			$analyticsService = $this->createMock(AnalyticsService::class);
+			$analyticsService->expects($this->never())->method('getTrends');
+
+			$controller = $this->buildController(
+				$analyticsService,
+				$this->createMock(ObligationsService::class),
+				$administrationService,
+				'lead',
+				['metric' => 'absence-rate', 'orgUnitId' => $unit],
+				$figures
+			);
+
+			$this->assertSame(Http::STATUS_FORBIDDEN, $controller->trends()->getStatus());
+		}
+	}//end testAManagerIsRefusedAnotherUnitAndTheWholeAdministration()
+
+	/**
 	 * Build an `AnalyticsController` with mocked collaborators and a session
 	 * resolving to `$userId` (null = no session).
 	 *
@@ -282,6 +386,7 @@ class AnalyticsControllerTest extends TestCase {
 		AdministrationService $administrationService,
 		?string $userId,
 		array $params = [],
+		?DepartmentFiguresService $departmentFigures = null,
 	): AnalyticsController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
@@ -299,7 +404,9 @@ class AnalyticsControllerTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return new AnalyticsController($request, $analyticsService, $obligationsService, $administrationService, new SeriesLatest(), $userSession, $logger);
+		$access = new AnalyticsAccess($administrationService, ($departmentFigures ?? $this->createMock(DepartmentFiguresService::class)));
+
+		return new AnalyticsController($request, $analyticsService, $obligationsService, $access, new SeriesLatest(), $userSession, $logger);
 	}//end buildController()
 
 }//end class

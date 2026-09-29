@@ -44,6 +44,14 @@
 		"route": "/features-roadmap"
 	},
 	{
+		"id": "MijnAfdeling",
+		"route": "/my-department"
+	},
+	{
+		"id": "MijnAfdelingUnit",
+		"route": "/my-department/:id"
+	},
+	{
 		"id": "TimeEntries",
 		"route": "/time-entries"
 	},

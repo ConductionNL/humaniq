@@ -87,3 +87,22 @@ one seed manager manages Team Burgerzaken.
 ## Open Questions
 
 - The threshold of five for small units is a setting default; the employer may raise it.
+
+## As built (2026-09-29)
+
+- The unit series live in `UnitTrends` and the month windows in `TrendPeriods`, both split out of
+  `AnalyticsService` so it stays under phpmd's complexity and coupling ceilings. `AnalyticsService`
+  keeps the administration-wide series and delegates to `UnitTrends` when an `orgUnitId` is given.
+- Access moved into `AnalyticsAccess` (hr and accountant read everything; a manager reads a unit
+  they lead or one under it, held to the small-unit threshold). `AnalyticsController::trends()`
+  uses it; the comparison, the manager's units and one unit's figures sit on a new
+  `DepartmentFiguresController` (`GET /api/analytics/units`, `/my-units`, `/unit-figures`).
+- The comparison shows the units under the top of the organisation when there is a single top
+  unit, and returns the wage cost of people placed in no compared unit as `notPlaced`, so the
+  parts add up to the total. A person in two compared units in one month is split between them.
+- The threshold is app config `department_figures_minimum_members`, default 5. A withheld figure
+  is `null` with `suppressed: "unit-too-small"`; the unit's size and open vacancies stay visible.
+- `MijnAfdeling` (`/my-department`) lists the units the caller leads; a row opens
+  `MijnAfdelingUnit` (`/my-department/:id`), which is how a manager of several units picks one.
+- No seed change: the seeded units hold one or two people, so a live look shows the withheld state
+  unless the threshold is lowered.

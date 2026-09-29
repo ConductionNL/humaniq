@@ -1,0 +1,370 @@
+{
+	"pages": [
+		{
+			"id": "MijnAfdeling",
+			"route": "/my-department",
+			"type": "dashboard",
+			"title": "My department",
+			"config": {
+				"description": "The departments you lead: absence, wage cost and open vacancies, as totals for the team.",
+				"_note": "department-figures REQ-DPF-002 (design.md D3/D4). A manager's own dashboard, reached from the My HR group. One row per unit the caller manages (OrgUnit.managerId is the caller's Employee), from GET /api/analytics/my-units, which answers an empty list to someone who manages nothing and never a figure per person. A unit with fewer people than the small-unit threshold (app config department_figures_minimum_members, default 5) shows its size and open vacancies but no absence or wage cost. A row opens MijnAfdelingUnit for that unit, which is how a manager of several units picks one.",
+				"widgets": [
+					{
+						"id": "my-units",
+						"type": "object-table",
+						"title": "Departments you lead",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/my-units",
+								"params": {
+									"period": "quarter"
+								},
+								"responsePath": "units"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Department",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "members",
+									"label": "People"
+								},
+								{
+									"key": "absenceRate",
+									"label": "Absence rate"
+								},
+								{
+									"key": "absenceFrequency",
+									"label": "Sick reports per employee per year"
+								},
+								{
+									"key": "wageCost",
+									"label": "Wage cost this quarter"
+								},
+								{
+									"key": "openVacancies",
+									"label": "Open vacancies"
+								}
+							],
+							"rowRoute": "MijnAfdelingUnit",
+							"emptyText": "You do not lead a department"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "my-units",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				]
+			}
+		},
+		{
+			"id": "MijnAfdelingUnit",
+			"route": "/my-department/:id",
+			"type": "detail",
+			"title": "My department",
+			"config": {
+				"register": "humaniq",
+				"schema": "OrgUnit",
+				"_note": "department-figures REQ-DPF-002. One department a manager leads: unit totals from GET /api/analytics/unit-figures (absence rate, frequency, wage cost over the quarter, open vacancies), formation from GET /api/formation/occupancy, and the absence rate and wage cost over the year from the trends endpoint with orgUnitId. Each endpoint admits hr and accountants, and otherwise only the manager of this unit or a unit above it; the figures of a unit under the small-unit threshold come back null with suppressed: unit-too-small.",
+				"widgets": [
+					{
+						"id": "unit-absence-rate",
+						"type": "stat",
+						"title": "Absence rate",
+						"icon": "AlertCircleOutline",
+						"content": {
+							"label": "Absence rate",
+							"icon": "AlertCircleOutline",
+							"caption": "Hidden when the team is too small to keep people anonymous",
+							"format": {
+								"style": "percent",
+								"decimals": 1
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/unit-figures",
+								"params": {
+									"orgUnitId": "@objectId",
+									"period": "quarter"
+								}
+							},
+							"valueField": "absenceRate"
+						}
+					},
+					{
+						"id": "unit-absence-frequency",
+						"type": "stat",
+						"title": "Sick reports per employee per year",
+						"icon": "EmoticonSickOutline",
+						"content": {
+							"label": "Sick reports per employee per year",
+							"icon": "EmoticonSickOutline",
+							"caption": "Hidden when the team is too small to keep people anonymous",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/unit-figures",
+								"params": {
+									"orgUnitId": "@objectId",
+									"period": "quarter"
+								}
+							},
+							"valueField": "absenceFrequency"
+						}
+					},
+					{
+						"id": "unit-wage-cost",
+						"type": "stat",
+						"title": "Wage cost this quarter",
+						"icon": "CashMultiple",
+						"content": {
+							"label": "Wage cost this quarter",
+							"icon": "CashMultiple",
+							"caption": "Hidden when the team is too small to keep people anonymous",
+							"format": {
+								"style": "currency",
+								"currency": "EUR",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/unit-figures",
+								"params": {
+									"orgUnitId": "@objectId",
+									"period": "quarter"
+								}
+							},
+							"valueField": "wageCost"
+						}
+					},
+					{
+						"id": "unit-open-vacancies",
+						"type": "stat",
+						"title": "Open vacancies",
+						"icon": "BriefcaseSearchOutline",
+						"content": {
+							"label": "Open vacancies",
+							"icon": "BriefcaseSearchOutline",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/unit-figures",
+								"params": {
+									"orgUnitId": "@objectId",
+									"period": "quarter"
+								}
+							},
+							"valueField": "openVacancies"
+						}
+					},
+					{
+						"id": "unit-budgeted-fte",
+						"type": "stat",
+						"title": "Budgeted FTE",
+						"icon": "CalculatorVariantOutline",
+						"content": {
+							"label": "Budgeted FTE",
+							"icon": "CalculatorVariantOutline",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/formation/occupancy",
+								"params": {
+									"orgUnitId": "@objectId"
+								}
+							},
+							"valueField": "total.budgetedFte"
+						}
+					},
+					{
+						"id": "unit-net-fte",
+						"type": "stat",
+						"title": "Net FTE",
+						"icon": "AccountClockOutline",
+						"content": {
+							"label": "Net FTE",
+							"icon": "AccountClockOutline",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/formation/occupancy",
+								"params": {
+									"orgUnitId": "@objectId"
+								}
+							},
+							"valueField": "total.netFte"
+						}
+					},
+					{
+						"id": "unit-vacant-fte",
+						"type": "stat",
+						"title": "Vacant FTE",
+						"icon": "AccountPlusOutline",
+						"content": {
+							"label": "Vacant FTE",
+							"icon": "AccountPlusOutline",
+							"format": {
+								"style": "number",
+								"decimals": 2
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/formation/occupancy",
+								"params": {
+									"orgUnitId": "@objectId"
+								}
+							},
+							"valueField": "total.vacantFte"
+						}
+					},
+					{
+						"id": "unit-absence-trend",
+						"type": "chart",
+						"title": "Absence rate over the year",
+						"content": {
+							"type": "line",
+							"height": "100%",
+							"valueFormat": "percent",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/trends",
+								"params": {
+									"metric": "absence-rate",
+									"period": "year",
+									"orgUnitId": "@objectId"
+								},
+								"responsePath": "series"
+							},
+							"labelsPath": "date",
+							"seriesFields": [
+								{
+									"name": "Absence rate",
+									"path": "value"
+								}
+							],
+							"emptyLabel": "No absence data yet"
+						}
+					},
+					{
+						"id": "unit-wage-cost-trend",
+						"type": "chart",
+						"title": "Wage cost over the year",
+						"content": {
+							"type": "line",
+							"height": "100%",
+							"valueFormat": {
+								"name": "currency",
+								"currency": "EUR",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/trends",
+								"params": {
+									"metric": "payroll-cost",
+									"period": "year",
+									"orgUnitId": "@objectId"
+								},
+								"responsePath": "series"
+							},
+							"labelsPath": "date",
+							"seriesFields": [
+								{
+									"name": "Wage cost",
+									"path": "value"
+								}
+							],
+							"emptyLabel": "No completed payroll runs yet"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": 1,
+						"widgetId": "unit-absence-rate",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 2,
+						"widgetId": "unit-absence-frequency",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 3,
+						"widgetId": "unit-wage-cost",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 4,
+						"widgetId": "unit-open-vacancies",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2
+					},
+					{
+						"id": 5,
+						"widgetId": "unit-budgeted-fte",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 6,
+						"widgetId": "unit-net-fte",
+						"gridX": 4,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 7,
+						"widgetId": "unit-vacant-fte",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 2
+					},
+					{
+						"id": 8,
+						"widgetId": "unit-absence-trend",
+						"gridX": 0,
+						"gridY": 4,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 9,
+						"widgetId": "unit-wage-cost-trend",
+						"gridX": 6,
+						"gridY": 4,
+						"gridWidth": 6,
+						"gridHeight": 4
+					}
+				]
+			}
+		}
+	],
+	"menu": []
+}

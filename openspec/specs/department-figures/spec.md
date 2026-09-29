@@ -1,6 +1,24 @@
-# department-figures
+---
+capability: department-figures
+status: done
+built_by: openspec/changes/archive/2026-09-29-reporting-department-figures
+---
 
-## ADDED Requirements
+# department-figures Specification
+
+**Status**: done
+**Scope**: humaniq
+
+**OpenSpec changes**: [reporting-department-figures](../../changes/archive/2026-09-29-reporting-department-figures/) _(archived 2026-09-29)_
+
+## Purpose
+
+Absence rate, absence frequency and wage cost per org unit, compared side by side for HR and
+accountants, and a manager's own dashboard with the totals of the units they lead. A unit counts
+the people placed in it or in the units under it, and a manager never sees a figure for a unit
+small enough to point at one person.
+
+## Requirements
 
 ### Requirement: Absence and wage cost SHALL be available per org unit (REQ-DPF-001)
 
@@ -11,6 +29,7 @@ period. The units of an administration SHALL add up to the administration's tota
 Rows: `abs-rate`, `rep-wage-costs` (humaniq matrix).
 
 #### Scenario: HR compares two teams
+@e2e exclude the chart renders the endpoint verbatim; covered by DepartmentFiguresServiceTest::testUnitsCarryTheirOwnRateAndFrequency and AnalyticsServiceTest::testAUnitsAbsenceRateCountsOnlyItsOwnPeople
 - **GIVEN** Team Burgerzaken with an absence rate of 7 percent and Team Belastingen with 3
   percent over the last six months
 - **WHEN** an HR adviser opens the unit comparison on `AbsenceReport`
@@ -18,6 +37,7 @@ Rows: `abs-rate`, `rep-wage-costs` (humaniq matrix).
   employee per year
 
 #### Scenario: A controller splits the wage cost
+@e2e exclude needs finalised payroll runs with payslips on seeded people; covered by DepartmentFiguresServiceTest::testTheUnitsWageCostsAddUpToTheAdministrationTotal and DepartmentFiguresTest::testWageCostAppliesTheRunsEmployerChargeRatio
 - **GIVEN** an administration whose June wage cost is 400,000
 - **WHEN** a user with the accountant role reads the June wage cost per unit
 - **THEN** each unit shows its share and the shares add up to 400,000
@@ -33,12 +53,14 @@ Rows: `td-manager-dashboard` (humaniq matrix), tender
 https://www.tenderned.nl/aankondigingen/overzicht/415227.
 
 #### Scenario: A team leader reads their department
+@e2e exclude the seeded units hold fewer people than the small-unit threshold, so a live run shows the withheld state; covered by DepartmentFiguresServiceTest::testAManagerSeesTheirUnitsAndASmallUnitIsWithheld and AnalyticsControllerTest::testAManagerReadsTheirOwnUnitWithTheSmallUnitRule
 - **GIVEN** the manager of Team Burgerzaken
 - **WHEN** they open `MijnAfdeling`
 - **THEN** they see the team's absence rate and frequency, net FTE against budget, vacancies and
   wage cost for the current period, and no individual's figure
 
 #### Scenario: Another team stays closed
+@e2e exclude an access refusal is asserted at the endpoint; covered by AnalyticsControllerTest::testAManagerIsRefusedAnotherUnitAndTheWholeAdministration and DepartmentFiguresControllerTest::testAManagerReadsOnlyTheUnitTheyLead
 - **GIVEN** the same manager
 - **WHEN** they request the trends for Team Belastingen
 - **THEN** the request is refused

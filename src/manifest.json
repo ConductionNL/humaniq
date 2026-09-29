@@ -650,6 +650,36 @@
 							],
 							"emptyText": "No open obligations"
 						}
+					},
+					{
+						"id": "chart-6",
+						"type": "chart",
+						"title": "Wage cost per department",
+						"_note": "department-figures REQ-DPF-001. The units one level below the top of the organisation (or the top units when there are several) side by side, from the guarded GET /api/analytics/units (DepartmentFiguresController, hr and accountant only). A unit counts the people placed in it or in the units under it. Wage cost is each person's payslip gross plus the run's employer charge share; a person placed in two compared units in a month is split between them, and the cost of people placed nowhere is returned as notPlaced, so the parts add up to the payroll cost.",
+						"content": {
+							"type": "bar",
+							"height": "100%",
+							"valueFormat": {
+								"name": "currency",
+								"currency": "EUR",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/units",
+								"params": {
+									"period": "quarter"
+								},
+								"responsePath": "units"
+							},
+							"labelsPath": "name",
+							"seriesFields": [
+								{
+									"name": "Wage cost",
+									"path": "wageCost"
+								}
+							],
+							"emptyLabel": "No completed payroll runs for any department yet"
+						}
 					}
 				],
 				"layout": [
@@ -727,6 +757,14 @@
 						"gridY": 10,
 						"gridWidth": 12,
 						"gridHeight": 5
+					},
+					{
+						"id": 10,
+						"widgetId": "chart-6",
+						"gridX": 0,
+						"gridY": 15,
+						"gridWidth": 12,
+						"gridHeight": 4
 					}
 				]
 			}
@@ -1227,6 +1265,56 @@
 								}
 							]
 						}
+					},
+					{
+						"id": "unit-absence-rate",
+						"type": "chart",
+						"title": "Absence rate per department",
+						"_note": "department-figures REQ-DPF-001. The units one level below the top of the organisation (or the top units when there are several) side by side, from the guarded GET /api/analytics/units (DepartmentFiguresController, hr and accountant only). A unit counts the people placed in it or in the units under it.",
+						"content": {
+							"type": "bar",
+							"height": "100%",
+							"valueFormat": "percent",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/units",
+								"params": {
+									"period": "half-year"
+								},
+								"responsePath": "units"
+							},
+							"labelsPath": "name",
+							"seriesFields": [
+								{
+									"name": "Absence rate",
+									"path": "absenceRate"
+								}
+							],
+							"emptyLabel": "No absence data for any department yet"
+						}
+					},
+					{
+						"id": "unit-absence-frequency",
+						"type": "chart",
+						"title": "Sick reports per employee per year, per department",
+						"content": {
+							"type": "bar",
+							"height": "100%",
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/units",
+								"params": {
+									"period": "half-year"
+								},
+								"responsePath": "units"
+							},
+							"labelsPath": "name",
+							"seriesFields": [
+								{
+									"name": "Sick reports per employee per year",
+									"path": "absenceFrequency"
+								}
+							],
+							"emptyLabel": "No sick reports for any department yet"
+						}
 					}
 				],
 				"layout": [
@@ -1290,6 +1378,24 @@
 						"gridX": 0,
 						"gridY": 6,
 						"gridWidth": 12,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "8",
+						"widgetId": "unit-absence-rate",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 6,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "9",
+						"widgetId": "unit-absence-frequency",
+						"gridX": 6,
+						"gridY": 10,
+						"gridWidth": 6,
 						"gridHeight": 4,
 						"showTitle": true
 					}
