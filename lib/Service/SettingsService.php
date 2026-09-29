@@ -496,6 +496,43 @@ class SettingsService {
 	}//end getDepartmentFiguresMinimumMembers()
 
 	/**
+	 * expenses-travel-calculation: the rate per kilometre the employer pays
+	 * for business and commuting travel. App config key
+	 * `mileage_rate_per_km` (for example `0.30`); null when unset or not a
+	 * positive number, and the caller then pays the tax-free rate from the
+	 * rule corpus.
+	 *
+	 * @return float|null
+	 *
+	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
+	 */
+	public function getMileageRatePerKm(): ?float {
+		$raw = trim(str_replace(',', '.', $this->appConfig->getValueString(Application::APP_ID, 'mileage_rate_per_km', '')));
+		if (is_numeric($raw) === false || (float)$raw <= 0.0) {
+			return null;
+		}
+
+		return (float)$raw;
+	}//end getMileageRatePerKm()
+
+	/**
+	 * expenses-travel-calculation: the integriq source that answers the road
+	 * distance between two postcodes (app config `route_distance_source`, a
+	 * source uuid) and the path on it (`route_distance_endpoint`, default
+	 * empty). Empty source means no route planner is configured.
+	 *
+	 * @return array{source: string, endpoint: string}
+	 *
+	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-003
+	 */
+	public function getRouteDistanceSource(): array {
+		return [
+			'source' => trim($this->appConfig->getValueString(Application::APP_ID, 'route_distance_source', '')),
+			'endpoint' => trim($this->appConfig->getValueString(Application::APP_ID, 'route_distance_endpoint', '')),
+		];
+	}//end getRouteDistanceSource()
+
+	/**
 	 * The annual bovenwettelijk (above-statutory) leave hours LeaveAccrualJob
 	 * accrues 1/12 of per month (leave-accrual-job design.md D3), configurable
 	 * via app config key `leave_bovenwettelijk_annual_hours`. Defaults to `0`

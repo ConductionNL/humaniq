@@ -115,10 +115,32 @@ final class NlTravelExpenseChecks implements CheckProvider {
 			return true;
 		}
 
-		$perKm = ((float)$amount / (float)$distanceKm);
+		// expenses-travel-calculation: the part of the amount recorded as
+		// taxable is not a tax-free reimbursement, so only the rest is held
+		// to the rate. A claim without the split is held whole, as before.
+		$taxable = ($o['taxableAmount'] ?? null);
+		$taxFreePaid = (float)$amount;
+		if (is_numeric($taxable) === true && (float)$taxable > 0.0) {
+			$taxFreePaid = ((float)$amount - (float)$taxable);
+		}
+
+		$perKm = ($taxFreePaid / (float)$distanceKm);
 
 		return self::perKmWithinRate($perKm, $rateEurPerKm);
 	}//end onbelastTariefSatisfied()
+
+	/**
+	 * The tax-free rate per kilometre from the rule corpus, or null when the
+	 * rule cannot be read. The one place the rate lives: the claim and
+	 * allowance calculation of expenses-travel-calculation reads it here too.
+	 *
+	 * @return float|null
+	 *
+	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
+	 */
+	public static function taxFreeRatePerKm(): ?float {
+		return self::rateEurPerKm();
+	}//end taxFreeRatePerKm()
 
 	/**
 	 * The nl-reiskosten-onbelast-tarief rule's parameters.rateEurPerKm, read

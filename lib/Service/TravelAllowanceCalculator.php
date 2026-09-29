@@ -98,9 +98,9 @@ class TravelAllowanceCalculator {
 	 */
 	public function yearlyCommuteKm(float $distanceKmOneWay, float $daysPerWeek, int $monthsActive, bool $rounded=true): float {
 		$months = max(0, min(12, $monthsActive));
-		$km = ($distanceKmOneWay * 2 * self::WORKING_DAYS_PER_YEAR * ($daysPerWeek / 5) * ($months / 12));
+		$kilometres = ($distanceKmOneWay * 2 * self::WORKING_DAYS_PER_YEAR * ($daysPerWeek / 5) * ($months / 12));
 
-		return $rounded === true ? round($km, 1) : $km;
+		return $rounded === true ? round($kilometres, 1) : $kilometres;
 	}//end yearlyCommuteKm()
 
 	/**
