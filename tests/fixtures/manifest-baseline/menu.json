@@ -118,6 +118,21 @@
 				"label": "My department",
 				"icon": "SitemapOutline",
 				"route": "MijnAfdeling"
+			},
+			{
+				"id": "MijnGoedkeuringen",
+				"label": "My approvals",
+				"icon": "ClipboardCheckOutline",
+				"route": "MijnGoedkeuringen"
+			},
+			{
+				"id": "MijnVervangers",
+				"label": "My deputies",
+				"icon": "AccountKeyOutline",
+				"route": "ManagerDeputies",
+				"query": {
+					"managerUserId": "@me"
+				}
 			}
 		],
 		"route": "MijnHr"

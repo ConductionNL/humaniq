@@ -343,6 +343,21 @@
 					"id": "MijnAfdeling",
 					"label": "My department",
 					"route": "MijnAfdeling"
+				},
+				{
+					"icon": "ClipboardCheckOutline",
+					"id": "MijnGoedkeuringen",
+					"label": "My approvals",
+					"route": "MijnGoedkeuringen"
+				},
+				{
+					"icon": "AccountKeyOutline",
+					"id": "MijnVervangers",
+					"label": "My deputies",
+					"query": {
+						"managerUserId": "@me"
+					},
+					"route": "ManagerDeputies"
 				}
 			],
 			"icon": "Account",
@@ -2718,6 +2733,52 @@
 			"route": "/features-roadmap",
 			"title": "Features & roadmap",
 			"type": "roadmap"
+		},
+		{
+			"config": {
+				"_note": "self-service-approvals-inbox REQ-API-001/002 (design.md D1, D4). One inbox across processes: leave requests, timesheets, expense claims and leave trades waiting for the caller as manager, or as the deputy of a manager today (ManagerDeputy). Both widgets read GET /api/approvals, which composes the rows under the caller's own rights. Approve and reject post OpenRegister's lifecycle transition, the same one the detail pages post, so NoSelfApprovalGuard and every other guard still applies. The three team approval pages stay until this inbox has been used for a while.",
+				"description": "Every request that waits for your decision, and what you decided in the last 90 days.",
+				"layout": [
+					{
+						"gridHeight": 7,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "approvals-open"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 7,
+						"id": 2,
+						"widgetId": "approvals-decided"
+					}
+				],
+				"widgets": [
+					{
+						"content": {
+							"state": "open"
+						},
+						"id": "approvals-open",
+						"title": "Waiting for you",
+						"type": "approvals-inbox"
+					},
+					{
+						"content": {
+							"state": "decided"
+						},
+						"id": "approvals-decided",
+						"title": "Decided by you",
+						"type": "approvals-inbox"
+					}
+				]
+			},
+			"id": "MijnGoedkeuringen",
+			"route": "/my-approvals",
+			"title": "My approvals",
+			"type": "dashboard"
 		},
 		{
 			"config": {
@@ -8768,6 +8829,87 @@
 			"route": "/mijn",
 			"title": "My HR",
 			"type": "dashboard"
+		},
+		{
+			"config": {
+				"_note": "self-service-approvals-inbox (2026-09-29): REQ-API-002. My HR > My deputies is a preset on this page (managerUserId = @me), not a second index. ManagerDeputyListener makes a record without a manager the writer's own, lets only the manager or HR write one, and refuses a self-deputy or a last day before the first.",
+				"columns": [
+					"managerUserId",
+					"deputyUserId",
+					"from",
+					"until",
+					"note"
+				],
+				"description": "Colleagues who stand in for a manager for a period. During it they see the manager's waiting requests and are told when one is submitted.",
+				"filters": [
+					"managerUserId",
+					"deputyUserId"
+				],
+				"register": "humaniq",
+				"schema": "ManagerDeputy",
+				"sort": {
+					"field": "from",
+					"order": "desc"
+				}
+			},
+			"id": "ManagerDeputies",
+			"route": "/manager-deputies",
+			"title": "Deputies",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "self-service-approvals-inbox (2026-09-29): D2. Shorten the period to end a deputy early; from the day after the last day the deputy no longer sees the requests.",
+				"layout": [
+					{
+						"gridHeight": 6,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "ManagerDeputy",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"title": "Deputy"
+						},
+						"icon": "AccountKeyOutline",
+						"id": "data",
+						"title": "Deputy",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "ManagerDeputyDetail",
+			"route": "/manager-deputies/:id",
+			"title": "Deputy",
+			"type": "detail"
 		},
 		{
 			"config": {
