@@ -1,0 +1,14 @@
+{
+    "id": "eea-nationalities",
+    "description": "Nationalities whose holders may work in the Netherlands without a residence document or work permit: the 27 EU member states, the three other EEA states and Switzerland. Codes are ISO 3166-1 alpha-3, the form the machine-readable zone of a passport or ID card uses. Germany writes D in the zone instead of DEU, so D is listed as an alias.",
+    "source": "Wet arbeid vreemdelingen art. 1 (EU/EER-onderdanen en Zwitsers zijn vrijgesteld van de TWV-plicht); EU member states per https://european-union.europa.eu/principles-countries-history/eu-countries_en; EEA per the EEA Agreement (IS, LI, NO); Switzerland per the EU-Switzerland agreement on the free movement of persons. Checked 2026-09-29.",
+    "codes": [
+        "AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA", "DEU", "GRC", "HUN", "IRL",
+        "ITA", "LVA", "LTU", "LUX", "MLT", "NLD", "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE",
+        "ISL", "LIE", "NOR",
+        "CHE"
+    ],
+    "aliases": {
+        "D": "DEU"
+    }
+}
