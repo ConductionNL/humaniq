@@ -71,6 +71,7 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 	use OCA\Humaniq\Listener\ChangeRequestListener;
 	use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
 	use OCA\Humaniq\Listener\FieldAccessListener;
+	use OCA\Humaniq\Listener\RightToWorkCheckListener;
 	use OCA\OpenRegister\Event\ObjectEventSubscription;
 	use OCP\EventDispatcher\IEventDispatcher;
 	use PHPUnit\Framework\TestCase;
@@ -141,6 +142,38 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
 			self::assertStringContainsString('$this->registerFieldAccessListener($dispatcher);', $boot);
 		}//end testTheFieldAccessListenerIsSubscribed()
+
+		/**
+		 * REQ-DCP-003: the right-to-work listener hears every write of a check,
+		 * before it is saved (the decision) and after (the follow-up).
+		 *
+		 * @return void
+		 */
+		public function testTheRightToWorkListenerIsSubscribed(): void {
+			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
+				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
+			}
+
+			ObjectEventSubscription::$recorded = [];
+			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+			$method = new \ReflectionMethod(Application::class, 'registerDossierListeners');
+			$method->invoke($app, $this->createMock(IEventDispatcher::class));
+
+			self::assertSame(
+				[
+					'OCA\OpenRegister\Event\ObjectCreatingEvent',
+					'OCA\OpenRegister\Event\ObjectUpdatingEvent',
+					'OCA\OpenRegister\Event\ObjectCreatedEvent',
+					'OCA\OpenRegister\Event\ObjectUpdatedEvent',
+				],
+				array_column(ObjectEventSubscription::$recorded, 'event')
+			);
+			self::assertSame([RightToWorkCheckListener::class], array_values(array_unique(array_column(ObjectEventSubscription::$recorded, 'listener'))));
+			self::assertSame(['righttoworkcheck'], ObjectEventSubscription::$recorded[0]['schemas']);
+
+			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+			self::assertStringContainsString('$this->registerDossierListeners($dispatcher);', $boot);
+		}//end testTheRightToWorkListenerIsSubscribed()
 
 	}//end class
 }

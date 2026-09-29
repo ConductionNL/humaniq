@@ -438,6 +438,13 @@
                         "title": "Work permit valid until",
                         "description": "The end date of a work permit (TWV), when there is one."
                     },
+                    "mrz": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Machine-readable zone",
+                        "description": "Paste the two or three lines at the bottom of the document, if you have them. They are checked and then removed: the document number is not stored.",
+                        "x-notes": "Write-only input. RightToWorkCheckListener reads it, verifies the ICAO 9303 check digits and sets it to null before the save (REQ-DCP-003: no document number is stored)."
+                    },
                     "method": {
                         "type": "string",
                         "enum": [
