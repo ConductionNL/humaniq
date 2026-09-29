@@ -1,0 +1,104 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "TrainingRecord",
+			"params": {
+				"id": "TrainingRecords",
+				"route": "/trainings",
+				"title": "Trainings",
+				"columns": [
+					"employeeId",
+					"title",
+					"plannedOn",
+					"status",
+					"completedOn",
+					"validUntil",
+					"competenceCode",
+					"source"
+				],
+				"sort": {
+					"field": "plannedOn",
+					"order": "desc"
+				},
+				"filters": [
+					"employeeId",
+					"status",
+					"title",
+					"source"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Plan a training for each employee and register who attended. Select several people to register a whole course at once.",
+				"note": "talent-training-and-lms (2026-09-29): REQ-TRN-001. One record per employee per training (D1); a group course is planned as one record per participant, and the two bulk actions register attendance for the selection through OpenRegister's transition endpoint, so the lifecycle and TrainingRecordListener run exactly as they do on the detail page. Sorted on plannedOn descending: the course that just ran is the one to register.",
+				"bulkActions": [
+					{
+						"id": "register-attended",
+						"label": "Register as attended",
+						"icon": "CheckCircleOutline",
+						"handler": "registerTrainingAttended"
+					},
+					{
+						"id": "register-not-attended",
+						"label": "Register as not attended",
+						"icon": "CloseCircleOutline",
+						"handler": "registerTrainingNotAttended"
+					}
+				]
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "TrainingRecord",
+			"params": {
+				"id": "TrainingRecordDetail",
+				"route": "/trainings/:id",
+				"title": "Training",
+				"dataTitle": "Training",
+				"dataIcon": "SchoolOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 9,
+				"note": "talent-training-and-lms (2026-09-29): REQ-TRN-001. The data widget shows the cost, the study-cost agreement and its repayment terms (the study-cost scenario) and excludes employeeId, which Related resolves. status, source and sourceRef are read-only: status moves through the two lifecycle actions, and a learniq record is written by LearniqCredentialListener. lifecycleActions mirror the schema's two transitions.",
+				"exclude": [
+					"employeeId"
+				],
+				"overrides": {
+					"status": {
+						"editable": false
+					},
+					"source": {
+						"editable": false
+					},
+					"sourceRef": {
+						"editable": false
+					}
+				},
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "registreren-gevolgd",
+							"from": [
+								"gepland",
+								"niet-gevolgd"
+							],
+							"to": "gevolgd",
+							"label": "Register as attended"
+						},
+						{
+							"action": "registreren-niet-gevolgd",
+							"from": [
+								"gepland"
+							],
+							"to": "niet-gevolgd",
+							"label": "Register as not attended"
+						}
+					]
+				}
+			}
+		}
+	]
+}

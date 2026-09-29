@@ -554,6 +554,12 @@
 					"route": "EmployeeCompetences"
 				},
 				{
+					"icon": "SchoolOutline",
+					"id": "TrainingRecords",
+					"label": "Trainings",
+					"route": "TrainingRecords"
+				},
+				{
 					"icon": "ShieldCheckOutline",
 					"id": "BhvCertificeringen",
 					"label": "Emergency response certifications",
@@ -4537,7 +4543,7 @@
 		},
 		{
 			"config": {
-				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history.",
+				"_note": "Hub archetype: Employee is the record every other HR/payroll schema in humaniq points AT (EmploymentContract.employeeId, Payslip.employeeId, Timesheet.employeeId, Expense.employeeId — all now canonical $ref relations, ADR-062 rule 7), so the page's job is to be the single place an HR/payroll admin lands to see one person's whole labour and pay picture. ADR-062 round-2 rework: the data widget is SPLIT into 'Person' (employeeNumber/firstName/lastName/dateOfBirth/bsn — the identity attributes) at 8-wide beside an in-grid stats-block (KPIs, top-right — replaces the deprecated summaryAggregates header chips) at 4-wide; 'Employment & compliance' (startDate/endDate/grossMonthlySalary/taxTableColor/ID-document retention/30%-ruling incl. start/end date + reduced-norm flag (30-procent-regeling)/A1 posting/jurisdiction-specific onboarding flags — 21 fields, genuinely this schema's bulk) runs full-width below since it has no natural width-4 partner. Contracts and Timesheets are paired FK-scoped lists, then Payslips (allowCreate:false — payroll-generated, not hand-created from here) and Expenses, then org-chart-basic (2026-07-13) adds an Assignments FK-scoped list (OrgAssignment.employeeId — the placements this employee holds across the org hierarchy) as a full-width row, and performance-reviews-mvp (2026-07-13) adds a Beoordelingen FK-scoped list (PerformanceReview.employeeId — the ADR-001 Rule 6 dossier anchoring: performance data lives on the personnel dossier, not a separate module) as a further full-width row, and goals-okr (2026-07-15) adds a Doelen & OKR's FK-scoped list (Objective.employeeId — the measurable, cross-review sibling of Beoordelingen; team objectives live on OrgUnit and do not appear here) as a further full-width row, and comp-cycles (2026-07-15) adds a Beloningsvoorstellen FK-scoped list (CompAdjustment.employeeId — the ADR-001 Rule 6 'Functie & comp' detail-surface anchoring: compensation-review proposals live on the personnel dossier, not a separate module) as a further full-width row, and leave-buy-sell (2026-07-15) adds a Verlof kopen/verkopen FK-scoped list (LeaveTransaction.employeeId, rowRoute LeaveTransactionDetail) as a further full-width row, before the personnel-file Files leaf, which shifts down again. Files is justified by identityDocumentVerified/identityDocumentRetainedUntil/loonheffingenVerklaringOnFile — real statutory document-retention fields on this schema, not a generic add. NO calendar/contacts/talk: Employee declares no appointment or comms linkedType — the person's own identity data lives on this record, it is not a link to a separate NC contact. No lifecycleActions — Employee carries no x-openregister-lifecycle. Audit history stays a sidebar tab. people-employment-history (2026-09-28): an Employments block (contracts active today side by side, summed hours and FTE, the year's leave balance once) and a History timeline, both the 'employee-history' host widget over GET /api/employees/{id}/employments and /history. talent-training-and-lms (2026-09-29): a Trainings object-list (TrainingRecord.employeeId = @objectId) lists every training on the personnel file with its status, validity and source (REQ-TRN-001).",
 				"layout": [
 					{
 						"gridHeight": 6,
@@ -4698,6 +4704,14 @@
 						"gridY": 62,
 						"id": 20,
 						"widgetId": "object-list-11"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 66,
+						"id": 21,
+						"widgetId": "object-list-12"
 					}
 				],
 				"register": "humaniq",
@@ -5289,6 +5303,52 @@
 						"icon": "EmoticonSickOutline",
 						"id": "object-list-11",
 						"title": "Sickness cases",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "title",
+									"label": "Training"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "completedOn",
+									"label": "Completed on"
+								},
+								{
+									"key": "validUntil",
+									"label": "Valid until"
+								},
+								{
+									"key": "source",
+									"label": "Source"
+								}
+							],
+							"emptyText": "No trainings yet",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"limit": 25,
+							"register": "humaniq",
+							"rowRoute": "TrainingRecordDetail",
+							"schema": "TrainingRecord",
+							"sort": {
+								"dir": "desc",
+								"field": "plannedOn"
+							},
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"viewAllRoute": "TrainingRecords"
+						},
+						"icon": "SchoolOutline",
+						"id": "object-list-12",
+						"title": "Trainings",
 						"type": "object-list"
 					}
 				]
@@ -12275,6 +12335,145 @@
 			"route": "/timesheets/team-approval",
 			"title": "Team timesheet approval",
 			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "talent-training-and-lms (2026-09-29): REQ-TRN-001. One record per employee per training (D1); a group course is planned as one record per participant, and the two bulk actions register attendance for the selection through OpenRegister's transition endpoint, so the lifecycle and TrainingRecordListener run exactly as they do on the detail page. Sorted on plannedOn descending: the course that just ran is the one to register.",
+				"bulkActions": [
+					{
+						"handler": "registerTrainingAttended",
+						"icon": "CheckCircleOutline",
+						"id": "register-attended",
+						"label": "Register as attended"
+					},
+					{
+						"handler": "registerTrainingNotAttended",
+						"icon": "CloseCircleOutline",
+						"id": "register-not-attended",
+						"label": "Register as not attended"
+					}
+				],
+				"columns": [
+					"employeeId",
+					"title",
+					"plannedOn",
+					"status",
+					"completedOn",
+					"validUntil",
+					"competenceCode",
+					"source"
+				],
+				"description": "Plan a training for each employee and register who attended. Select several people to register a whole course at once.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"employeeId",
+					"status",
+					"title",
+					"source"
+				],
+				"register": "humaniq",
+				"schema": "TrainingRecord",
+				"sort": {
+					"field": "plannedOn",
+					"order": "desc"
+				}
+			},
+			"id": "TrainingRecords",
+			"route": "/trainings",
+			"title": "Trainings",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "talent-training-and-lms (2026-09-29): REQ-TRN-001. The data widget shows the cost, the study-cost agreement and its repayment terms (the study-cost scenario) and excludes employeeId, which Related resolves. status, source and sourceRef are read-only: status moves through the two lifecycle actions, and a learniq record is written by LearniqCredentialListener. lifecycleActions mirror the schema's two transitions.",
+				"layout": [
+					{
+						"gridHeight": 9,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 9,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "registreren-gevolgd",
+							"from": [
+								"gepland",
+								"niet-gevolgd"
+							],
+							"label": "Register as attended",
+							"to": "gevolgd"
+						},
+						{
+							"action": "registreren-niet-gevolgd",
+							"from": [
+								"gepland"
+							],
+							"label": "Register as not attended",
+							"to": "niet-gevolgd"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "TrainingRecord",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"employeeId"
+							],
+							"overrides": {
+								"source": {
+									"editable": false
+								},
+								"sourceRef": {
+									"editable": false
+								},
+								"status": {
+									"editable": false
+								}
+							},
+							"title": "Training"
+						},
+						"icon": "SchoolOutline",
+						"id": "data",
+						"title": "Training",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "TrainingRecordDetail",
+			"route": "/trainings/:id",
+			"title": "Training",
+			"type": "detail"
 		},
 		{
 			"config": {

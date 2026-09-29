@@ -40,6 +40,8 @@ use OCP\IRequest;
 
 /**
  * Serves the people feed for learning platforms.
+ *
+ * @spec openspec/specs/training-and-lms-sync/spec.md#REQ-TRN-002
  */
 class LearningController extends Controller {
 

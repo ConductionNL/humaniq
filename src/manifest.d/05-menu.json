@@ -351,6 +351,12 @@
 					"route": "EmployeeCompetences"
 				},
 				{
+					"id": "TrainingRecords",
+					"label": "Trainings",
+					"icon": "SchoolOutline",
+					"route": "TrainingRecords"
+				},
+				{
 					"id": "BhvCertificeringen",
 					"label": "Emergency response certifications",
 					"icon": "ShieldCheckOutline",
