@@ -5,7 +5,7 @@
             "DsrRequest": {
                 "slug": "DsrRequest",
                 "icon": "ShieldAccountOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Data subject request",
                 "description": "One AVG (GDPR) data-subject-rights request lifecycle record (avg-dsr design.md D7, revised hrmq#99): the requesting subject (employeeId $ref Employee. The ONLY persisted subject-identifying field, design.md D1. The raw bsn value AvgDsrService resolves to call OpenRegister's guarded Gdpr\\DataSubjectRequestService is never written here), the right invoked, and the statutory deadline (receivedDate + 1 calendar month, AVG art. 12 lid 3, no extension in this MVP). Status is a plain enum, deliberately no x-openregister-lifecycle map (design.md D3/D5): every transition requires a caller-role (admin) check plus, for verwijdering, OpenRegister's own legal-hold/immutable-archival-status guard. None of which a lifecycle guard's (object, action, userId) contract can express, so AvgDsrService/AvgDsrController/the occ humaniq:avg:* commands own every transition instead. RetainedObjectRefs never carries a raw PII value. Only the uuid/reason refs OpenRegister's guarded erase() returns for a held object (hrmq#99).",
                 "type": "object",
@@ -26,7 +26,8 @@
                     "completedDate": {"title": "Completed date", "type": "string", "format": "date-time", "nullable": true, "description": "When the request was fulfilled or refused.", "x-notes": "When status became voldaan/afgewezen."},
                     "outcomeSummary": {"title": "Outcome summary", "type": "string", "nullable": true, "description": "What was done, in plain words. Never contains the personal data itself: only counts and field names.", "x-notes": "Human-readable outcome -- export confirmation, or erase's erased/retained/failed counts, or rectify's changed field NAMES only, never before/after PII values (design.md D6)."},
                     "retainedObjectRefs": {"title": "Retained object refs", "type": "string", "nullable": true, "description": "Records that could not be erased, with the reason why. Never contains personal data.", "x-notes": "JSON-encoded list of {uuid, reason} for objects OpenRegister's guarded Gdpr\\DataSubjectRequestService::erase() held back (legal hold or immutable archival status, hrmq#99) -- never a raw PII value. Also doubles as the erase-preview-recorded marker: previewErasure() always sets this field (even to an empty JSON array) before eraseSubject() will execute."},
-                    "rejectionReason": {"title": "Rejection reason", "type": "string", "nullable": true, "description": "Why the request was refused, or which records could not be handled and why. Only filled in on a refusal.", "x-notes": "Populated only when status becomes afgewezen -- which objects failed and why, or why a rectification could not be applied."}
+                    "rejectionReason": {"title": "Rejection reason", "type": "string", "nullable": true, "description": "Why the request was refused, or which records could not be handled and why. Only filled in on a refusal.", "x-notes": "Populated only when status becomes afgewezen -- which objects failed and why, or why a rectification could not be applied."},
+                    "requestedChanges": {"title": "Requested changes", "type": "array", "description": "The corrections the employee asked for: which field gets which new value. Rectify applies exactly these.", "x-notes": "compliance-dsr-rectify-form D1 (REQ-DSR-R01). Only the Employee fields a data subject may have corrected; AvgDsrController::RECTIFIABLE_FIELDS holds the same list and refuses any other field with 400. The dsr-rectify action on DsrRequestDetail sends this list as `changes`; the controller turns the pairs into the map AvgDsrService::rectifySubjectObject() takes. Salary and contract terms go through people-record-change-approval instead.", "items": {"type": "object", "required": ["field", "value"], "properties": {"field": {"title": "Field", "type": "string", "enum": ["firstName", "lastName", "dateOfBirth", "iban", "tenaamstelling", "straat", "huisnummer", "postcode", "woonplaats", "land"], "x-enum-labels": {"firstName": "First name", "lastName": "Last name", "dateOfBirth": "Date of birth", "iban": "Bank account (IBAN)", "tenaamstelling": "Account holder name", "straat": "Street", "huisnummer": "House number", "postcode": "Postcode", "woonplaats": "Town", "land": "Country"}, "description": "The employee field to correct."}, "value": {"title": "New value", "type": "string", "description": "The corrected value."}}}}
                 }
             }
         },
@@ -54,6 +55,21 @@
                 "status": "ontvangen",
                 "receivedDate": "2026-07-10",
                 "deadlineDate": "2026-08-10"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "DsrRequest",
+                    "slug": "dsr-devries-rectify-surname"
+                },
+                "employeeId": "@ref:employee-devries",
+                "right": "rectificatie",
+                "status": "ontvangen",
+                "receivedDate": "2026-09-15",
+                "deadlineDate": "2026-10-15",
+                "requestedChanges": [
+                    {"field": "lastName", "value": "de Vries-Jansen"}
+                ]
             }
         ]
     }

@@ -10876,7 +10876,7 @@
 		},
 		{
 			"config": {
-				"_note": "avg-dsr (2026-07-16): guarded api-call actions, NOT lifecycleActions -- DsrRequest.status carries no x-openregister-lifecycle map (design.md D3/D5): every transition requires a caller-role check (admin-ONLY, deliberately never widened to isAdminOrHr -- DsarService::assertPrivileged() hard-requires actual IGroupManager::isAdmin()) plus an explicitly-established DsarService-privileged session plus, for verwijdering, the statutory-retention guard (REQ-DSR-005) -- a retention-locked object (e.g. a Payslip inside its AWR 7-year window) is NEVER erased, always reported labelled 'retained (wettelijke bewaarplicht)'. Bevestig verwijdering REQUIRES a prior Voorbeeld verwijdering recorded on the SAME request (REQ-DSR-006). The Rectificeer action's `changes` payload is not yet collected via a prompt (the manifest v2 api-call action type has no free-text field-map prompt) -- the LoonbeslagDetail withdraw `reason` precedent; a prompt-collecting modal is a named fast-follow (README). Admin-only surface -- one notch stricter than the Payroll group's admin/HR posture. Audit history is a sidebar tab.",
+				"_note": "avg-dsr (2026-07-16): guarded api-call actions, NOT lifecycleActions -- DsrRequest.status carries no x-openregister-lifecycle map (design.md D3/D5): every transition requires a caller-role check (admin-ONLY, deliberately never widened to isAdminOrHr -- DsarService::assertPrivileged() hard-requires actual IGroupManager::isAdmin()) plus an explicitly-established DsarService-privileged session plus, for verwijdering, the statutory-retention guard (REQ-DSR-005) -- a retention-locked object (e.g. a Payslip inside its AWR 7-year window) is NEVER erased, always reported labelled 'retained (wettelijke bewaarplicht)'. Bevestig verwijdering REQUIRES a prior Voorbeeld verwijdering recorded on the SAME request (REQ-DSR-006). The Rectify action sends the request's own requestedChanges as `changes` (compliance-dsr-rectify-form D1): HR enters the corrections on the request's edit form, reviews them, then presses Rectify; a request without requestedChanges is blocked client side, and a field outside AvgDsrController::RECTIFIABLE_FIELDS is refused with 400. Admin-only surface -- one notch stricter than the Payroll group's admin/HR posture. Audit history is a sidebar tab.",
 				"headerActions": [
 					{
 						"confirm": false,
@@ -10932,6 +10932,7 @@
 						"label": "Rectify",
 						"method": "POST",
 						"params": {
+							"changes": "@object.requestedChanges",
 							"dsrRequestId": "@objectId",
 							"employeeId": "@object.employeeId"
 						},

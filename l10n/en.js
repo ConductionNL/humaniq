@@ -2677,7 +2677,16 @@ OC.L10N.register(
         "Waiting for you": "Waiting for you",
         "Why the manager is away, or what the deputy should know.": "Why the manager is away, or what the deputy should know.",
         "You decided nothing in the last 90 days.": "You decided nothing in the last 90 days.",
-        "{from} to {to}": "{from} to {to}"
+        "{from} to {to}": "{from} to {to}",
+        "Account holder name": "Account holder name",
+        "Bank account (IBAN)": "Bank account (IBAN)",
+        "Field": "Field",
+        "New value": "New value",
+        "Requested changes": "Requested changes",
+        "The corrected value.": "The corrected value.",
+        "The corrections the employee asked for: which field gets which new value. Rectify applies exactly these.": "The corrections the employee asked for: which field gets which new value. Rectify applies exactly these.",
+        "The employee field to correct.": "The employee field to correct.",
+        "Town": "Town"
     },
     "nplurals=2; plural=(n != 1);"
 )

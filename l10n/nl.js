@@ -2677,7 +2677,16 @@ OC.L10N.register(
         "Waiting for you": "Wacht op jou",
         "Why the manager is away, or what the deputy should know.": "Waarom de leidinggevende afwezig is, of wat de vervanger moet weten.",
         "You decided nothing in the last 90 days.": "Je hebt de afgelopen 90 dagen nergens over besloten.",
-        "{from} to {to}": "{from} tot en met {to}"
+        "{from} to {to}": "{from} tot en met {to}",
+        "Account holder name": "Tenaamstelling",
+        "Bank account (IBAN)": "Bankrekening (IBAN)",
+        "Field": "Veld",
+        "New value": "Nieuwe waarde",
+        "Requested changes": "Gevraagde correcties",
+        "The corrected value.": "De gecorrigeerde waarde.",
+        "The corrections the employee asked for: which field gets which new value. Rectify applies exactly these.": "De correcties die de medewerker vroeg: welk veld welke nieuwe waarde krijgt. Rectificeren voert precies deze door.",
+        "The employee field to correct.": "Het veld van de medewerker dat wordt gecorrigeerd.",
+        "Town": "Woonplaats"
     },
     "nplurals=2; plural=(n != 1);"
 )

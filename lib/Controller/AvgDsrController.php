@@ -71,6 +71,13 @@ use RuntimeException;
 class AvgDsrController extends Controller {
 
 	/**
+	 * The Employee fields a data subject may have corrected through a
+	 * rectification request (compliance-dsr-rectify-form D1). The same list is
+	 * the enum of DsrRequest.requestedChanges[].field.
+	 */
+	public const RECTIFIABLE_FIELDS = ['firstName', 'lastName', 'dateOfBirth', 'iban', 'tenaamstelling', 'straat', 'huisnummer', 'postcode', 'woonplaats', 'land'];
+
+	/**
 	 * @param IRequest $request The request object.
 	 * @param ContainerInterface $container DI container for the RBAC-guarded ObjectService resolve.
 	 * @param AvgDsrService $avgDsrService The DSR orchestration service.
@@ -195,18 +202,19 @@ class AvgDsrController extends Controller {
 	 * retention guard (REQ-DSR-007).
 	 *
 	 * @param string|null $employeeId The Employee id.
-	 * @param array<string,mixed>|null $changes Property -> new value map.
+	 * @param mixed $changes A list of {field, value} pairs (the page sends DsrRequest.requestedChanges) or a property -> new value map.
 	 * @param string|null $dsrRequestId The DsrRequest id this rectification is recorded against.
 	 *
-	 * @return JSONResponse The updated object, 400 on missing/invalid input or a failed rectification, 403 for a non-admin caller or a RuntimeException, 404 when the employee does not resolve.
+	 * @return JSONResponse The updated object, 400 on missing/invalid input, a field outside RECTIFIABLE_FIELDS or a failed rectification, 403 for a non-admin caller or a RuntimeException, 404 when the employee does not resolve.
 	 *
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-007
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-R01
 	 */
 	#[NoAdminRequired]
 	public function rectify(?string $employeeId = null, mixed $changes = null, ?string $dsrRequestId = null): JSONResponse {
-		$validationError = $this->validateRectifyInput($employeeId, $changes, $dsrRequestId);
-		if ($validationError !== null) {
-			return $validationError;
+		$changeMap = $this->validateRectifyInput($employeeId, $changes, $dsrRequestId);
+		if ($changeMap instanceof JSONResponse) {
+			return $changeMap;
 		}
 
 		// guardAdminAndEmployee() IS the admin gate + no-admin-idor guard
@@ -222,7 +230,7 @@ class AvgDsrController extends Controller {
 		}
 
 		try {
-			$result = $this->avgDsrService->rectifySubjectObject($guard, $changes, trim((string)$dsrRequestId));
+			$result = $this->avgDsrService->rectifySubjectObject($guard, $changeMap, trim((string)$dsrRequestId));
 		} catch (\RuntimeException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
 		}
@@ -235,29 +243,70 @@ class AvgDsrController extends Controller {
 	}//end rectify()
 
 	/**
-	 * Input validation for `rectify()` -- extracted to keep `rectify()`
-	 * itself simple: employeeId/dsrRequestId required, `changes` a non-empty
-	 * array.
+	 * Input validation for `rectify()`: employeeId and dsrRequestId required,
+	 * `changes` a non-empty correction. The page sends the request's
+	 * `requestedChanges` as a list of `{field, value}` pairs, an API caller may
+	 * send a property to value map; both become one map. A field outside
+	 * RECTIFIABLE_FIELDS is refused (compliance-dsr-rectify-form D2).
 	 *
 	 * @param string|null $employeeId The Employee id.
-	 * @param mixed $changes Property -> new value map.
+	 * @param mixed $changes A list of {field, value} pairs, or a property to value map.
 	 * @param string|null $dsrRequestId The DsrRequest id.
 	 *
-	 * @return JSONResponse|null A 400 response on invalid input, or null when valid.
+	 * @return array<string, mixed>|JSONResponse The change map, or a 400 response.
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-R01
 	 */
-	private function validateRectifyInput(?string $employeeId, mixed $changes, ?string $dsrRequestId): ?JSONResponse {
+	private function validateRectifyInput(?string $employeeId, mixed $changes, ?string $dsrRequestId): array|JSONResponse {
 		$employeeId = trim((string)$employeeId);
 		$dsrRequestId = trim((string)$dsrRequestId);
 		if ($employeeId === '' || $dsrRequestId === '') {
 			return new JSONResponse(['error' => 'employeeId en dsrRequestId zijn verplicht.'], Http::STATUS_BAD_REQUEST);
 		}
 
-		if (is_array($changes) === false || $changes === []) {
+		$map = $this->changeMap(changes: $changes);
+		if ($map === []) {
 			return new JSONResponse(['error' => 'changes is verplicht en moet een niet-lege object zijn.'], Http::STATUS_BAD_REQUEST);
 		}
 
-		return null;
+		$refused = array_diff(array_keys($map), self::RECTIFIABLE_FIELDS);
+		if ($refused !== []) {
+			return new JSONResponse(['error' => 'Deze velden kunnen niet via een rectificatieverzoek worden gewijzigd: ' . implode(', ', $refused) . '.'], Http::STATUS_BAD_REQUEST);
+		}
+
+		return $map;
 	}//end validateRectifyInput()
+
+	/**
+	 * One property to value map from either input shape; [] when there is none.
+	 *
+	 * @param mixed $changes A list of {field, value} pairs, or a map.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-R01
+	 */
+	private function changeMap(mixed $changes): array {
+		if (is_array($changes) === false || $changes === []) {
+			return [];
+		}
+
+		if (array_is_list($changes) === false) {
+			return $changes;
+		}
+
+		$map = [];
+		foreach ($changes as $pair) {
+			$field = trim((string)(is_array($pair) === true ? ($pair['field'] ?? '') : ''));
+			if ($field === '') {
+				return [];
+			}
+
+			$map[$field] = $pair['value'] ?? null;
+		}
+
+		return $map;
+	}//end changeMap()
 
 	/**
 	 * Whether the current caller is a Nextcloud admin -- the gate for every

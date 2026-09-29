@@ -195,6 +195,48 @@ class AvgDsrControllerTest extends TestCase {
 	}//end testRectifyHappyPathPassesEmployeeIdentifierDirectly()
 
 	/**
+	 * compliance-dsr-rectify-form, scenario "HR corrects a surname from the
+	 * page": the page sends the request's requestedChanges as a list of
+	 * {field, value} pairs, and the service receives the map it takes.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-R01
+	 */
+	public function testThePagesListOfPairsIsAppliedAsAMap(): void {
+		[$controller, , $service] = $this->buildController(isAdmin: true, employeeRow: ['id' => 'emp-1']);
+
+		$service->expects($this->once())
+			->method('rectifySubjectObject')
+			->with('emp-1', ['lastName' => 'de Vries-Jansen', 'postcode' => '8911 AB'], 'dsr-1')
+			->willReturn(['status' => 'rectified']);
+
+		$response = $controller->rectify('emp-1', [['field' => 'lastName', 'value' => 'de Vries-Jansen'], ['field' => 'postcode', 'value' => '8911 AB']], 'dsr-1');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+
+	}//end testThePagesListOfPairsIsAppliedAsAMap()
+
+	/**
+	 * Scenario "A field outside the list is refused": 400, and nothing is
+	 * applied, whichever shape the changes come in.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-R01
+	 */
+	public function testAFieldOutsideTheListIsRefused(): void {
+		[$controller, , $service] = $this->buildController(isAdmin: true, employeeRow: ['id' => 'emp-1']);
+
+		$service->expects($this->never())->method('rectifySubjectObject');
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $controller->rectify('emp-1', [['field' => 'grossMonthlySalary', 'value' => '9000']], 'dsr-1')->getStatus());
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $controller->rectify('emp-1', ['bsn' => '123456782'], 'dsr-1')->getStatus());
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $controller->rectify('emp-1', [['value' => 'no field']], 'dsr-1')->getStatus());
+
+	}//end testAFieldOutsideTheListIsRefused()
+
+	/**
 	 * Build an AvgDsrController with a fake container-resolved
 	 * ObjectService (`find()` returns the fixed `$employeeRow`, null
 	 * simulating unknown/unauthorized) and a mocked `AvgDsrService`.
