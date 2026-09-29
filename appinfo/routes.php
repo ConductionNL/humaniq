@@ -23,6 +23,8 @@ return [
         // humaniq-docudesk-documents — guarded trigger for the EmploymentContractDetail
         // "Genereer arbeidsovereenkomst" manifest api-call action (design.md D7).
         ['name' => 'document#generate', 'url' => '/api/documents/generate', 'verb' => 'POST'],
+        // payroll-annual-statement-action: queue a finished year's annual statements (HR or payroll).
+        ['name' => 'document#queueJaaropgaven', 'url' => '/api/documents/jaaropgaven', 'verb' => 'POST'],
         // payroll-core-engine — guarded trigger for the PayrollRunDetail
         // "(Her)berekenen" manifest api-call action (design.md D6).
         ['name' => 'payroll#calculate', 'url' => '/api/payroll/calculate', 'verb' => 'POST'],
