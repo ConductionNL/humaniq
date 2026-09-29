@@ -5,7 +5,7 @@
             "Employee": {
                 "slug": "Employee",
                 "icon": "AccountTieOutline",
-                "version": "0.11.0",
+                "version": "0.12.0",
                 "title": "Employee",
                 "description": "A natural person employed by the organisation. Carries the identity, payroll, and wage-tax attributes the payroll/wage-tax compliance checks read (BSN, tax table colour, ID-document retention, 30%-ruling, A1 posting, minimum-wage basis).",
                 "type": "object",
@@ -20,6 +20,7 @@
                     "firstName": {"title": "First name", "type": "string", "description": "Given name."},
                     "lastName": {"title": "Last name", "type": "string", "description": "Family name."},
                     "dateOfBirth": {"title": "Date of birth", "type": "string", "format": "date", "description": "The employee's date of birth.", "x-notes": "Date of birth (ISO 8601).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"nextcloudUserId": "$userId"}}], "update": ["humaniq-hr"]}},
+                    "shareBirthday": {"title": "Share my birthday", "type": "boolean", "default": false, "description": "Whether your team may see your birthday, without the year, in the daily team message.", "x-notes": "self-service-announcements-and-digest D4: opt-in, default false. TeamDigestNode reads day and month only for employees with true, and never writes the year into the message."},
                     "startDate": {"title": "Start date", "type": "string", "format": "date", "description": "When employment started.", "x-notes": "Employment start date (ISO 8601)."},
                     "endDate": {"title": "End date", "type": "string", "format": "date", "nullable": true, "description": "When employment ends. Leave empty while the employee is still with you.", "x-notes": "Employment end date, or null while active."},
                     "grossMonthlySalary": {"title": "Gross monthly salary", "type": "number", "description": "Gross monthly salary in the pay currency.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"nextcloudUserId": "$userId"}}], "update": ["humaniq-hr", "humaniq-payroll"]}},
