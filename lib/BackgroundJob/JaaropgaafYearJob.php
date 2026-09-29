@@ -84,7 +84,7 @@ class JaaropgaafYearJob extends QueuedJob {
 		}
 
 		$outcomes = $this->hrDocumentService->generateBacklog('jaaropgaaf', null, null, (string)$year);
-		$counts = array_count_values(array_map(static fn (array $o): string => (string)($o['status'] ?? 'unknown'), $outcomes));
+		$counts = array_count_values(array_map(static fn (array $outcome): string => (string)($outcome['status'] ?? 'unknown'), $outcomes));
 		$this->logger->info(
 			sprintf('humaniq: annual statements %s generated for %d employees', (string)$year, count($outcomes)),
 			['statuses' => $counts, 'queuedBy' => is_array($argument) === true ? ($argument['userId'] ?? null) : null]

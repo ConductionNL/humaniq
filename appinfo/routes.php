@@ -24,7 +24,7 @@ return [
         // "Genereer arbeidsovereenkomst" manifest api-call action (design.md D7).
         ['name' => 'document#generate', 'url' => '/api/documents/generate', 'verb' => 'POST'],
         // payroll-annual-statement-action: queue a finished year's annual statements (HR or payroll).
-        ['name' => 'document#queueJaaropgaven', 'url' => '/api/documents/jaaropgaven', 'verb' => 'POST'],
+        ['name' => 'annualStatementBatch#queueJaaropgaven', 'url' => '/api/documents/jaaropgaven', 'verb' => 'POST'],
         // reporting-pay-transparency: the gender pay gap report (HR and accountants), and its CSV.
         ['name' => 'payTransparency#report', 'url' => '/api/reports/pay-transparency', 'verb' => 'GET'],
         ['name' => 'payTransparency#export', 'url' => '/api/reports/pay-transparency/export', 'verb' => 'POST'],

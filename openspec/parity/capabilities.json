@@ -3955,7 +3955,7 @@
    },
    "built": {
     "state": "built",
-    "evidence": "lib/Controller/DocumentController.php generate() accepts documentType jaaropgaaf with a jaaropgaafId resolved under the caller's RBAC (404 otherwise) and calls HrDocumentService::generateJaaropgaaf(); queueJaaropgaven() behind POST /api/documents/jaaropgaven (HR or payroll, finished years only) queues lib/BackgroundJob/JaaropgaafYearJob.php, which runs the idempotent jaaropgaaf backlog. Tests: tests/Unit/Controller/DocumentControllerTest.php, tests/Unit/BackgroundJob/JaaropgaafYearJobTest.php.",
+    "evidence": "lib/Controller/DocumentController.php generate() accepts documentType jaaropgaaf with a jaaropgaafId resolved under the caller's RBAC (404 otherwise) and calls HrDocumentService::generateJaaropgaaf(); lib/Controller/AnnualStatementBatchController.php queueJaaropgaven() behind POST /api/documents/jaaropgaven (HR or payroll, finished years only) queues lib/BackgroundJob/JaaropgaafYearJob.php, which runs the idempotent jaaropgaaf backlog. Tests: tests/Unit/Controller/DocumentControllerTest.php, tests/Unit/Controller/AnnualStatementBatchControllerTest.php, tests/Unit/BackgroundJob/JaaropgaafYearJobTest.php.",
     "reachedOn": "JaaropgaafDetail /jaaropgaven/:id header action Generate PDF; Jaaropgaven /jaaropgaven action Generate last year's statements (menu Payroll)",
     "owner": "ConductionNL/humaniq",
     "change": "2026-09-29-payroll-annual-statement-action",
