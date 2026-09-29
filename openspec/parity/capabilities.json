@@ -556,7 +556,7 @@
    },
    "built": {
     "state": "built",
-    "evidence": "lib/Service/ContractChainService.php chainFor() composes the BW 7:668a chain (temporary, oproep and minijob contracts with an end date, gaps of at most six months; permanent with the fourth contract or past 36 months); lib/Standards/rules/labour.json nl-signaal-ketenregeling and its predicate in lib/Standards/Checks/NlSignalChecks.php flag a live third contract or a chain turning permanent within 60 days; lib/Controller/FlexContractController.php chain() serves GET /api/contracts/{id}/chain. Tests: tests/Unit/Service/ContractChainServiceTest.php, tests/Unit/Standards/Checks/NlFlexContractSignalsTest.php, tests/Unit/Controller/FlexContractControllerTest.php.",
+    "evidence": "lib/Service/ContractChainService.php chainFor() composes the BW 7:668a chain (temporary, oproep and minijob contracts with an end date, gaps of at most six months; permanent with the fourth contract or past 36 months); lib/Standards/rules/labour.json nl-signaal-ketenregeling and its predicate in lib/Standards/Checks/NlFlexContractChecks.php flag a live third contract or a chain turning permanent within 60 days; lib/Controller/FlexContractController.php chain() serves GET /api/contracts/{id}/chain. Tests: tests/Unit/Service/ContractChainServiceTest.php, tests/Unit/Standards/Checks/NlFlexContractSignalsTest.php, tests/Unit/Controller/FlexContractControllerTest.php.",
     "reachedOn": "EmploymentContractDetail /contracts/:id: the Fixed-term chain section (position, contracts allowed, months counted, permanent from); occ humaniq:rules:audit raises nl-signaal-ketenregeling",
     "owner": "ConductionNL/humaniq",
     "change": "2026-09-29-people-flex-contract-rules",

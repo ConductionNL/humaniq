@@ -26,7 +26,6 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Controller;
 
-use DateTimeImmutable;
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Service\ContractChainService;
 use OCA\Humaniq\Service\HoursRegisterGateway;
@@ -44,6 +43,8 @@ use OCP\IUserSession;
 
 /**
  * Serves the contract chain and the on-call overview.
+ *
+ * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-001
  */
 class FlexContractController extends Controller {
 
@@ -126,7 +127,7 @@ class FlexContractController extends Controller {
 			return new JSONResponse(['message' => 'Only HR can read the on-call overview.'], Http::STATUS_FORBIDDEN);
 		}
 
-		$window = $this->window(from: $from, to: $to);
+		$window = $this->averages->window(from: $from, to: $to);
 		if ($window === null) {
 			return new JSONResponse(['message' => 'from and to must be dates (YYYY-MM-DD), from not after to.'], Http::STATUS_BAD_REQUEST);
 		}
@@ -148,28 +149,6 @@ class FlexContractController extends Controller {
 
 		return new JSONResponse(['from' => $window[0], 'to' => $window[1], 'rows' => $rows]);
 	}//end onCallAverages()
-
-	/**
-	 * The window as two Y-m-d days, or null when it is not one.
-	 *
-	 * @param string|null $from The first day.
-	 * @param string|null $to   The last day.
-	 *
-	 * @return array{0: string, 1: string}|null
-	 */
-	private function window(?string $from, ?string $to): ?array {
-		$last = ($to ?? (new DateTimeImmutable('today'))->format('Y-m-d'));
-		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $last) !== 1) {
-			return null;
-		}
-
-		$first = ($from ?? (new DateTimeImmutable($last))->modify('-1 year')->modify('+1 day')->format('Y-m-d'));
-		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $first) !== 1 || $first > $last) {
-			return null;
-		}
-
-		return [$first, $last];
-	}//end window()
 
 	/**
 	 * Keep the contracts the caller may read.

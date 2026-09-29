@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
-use OCA\Humaniq\Standards\Checks\NlSignalChecks;
+use OCA\Humaniq\Standards\Checks\NlFlexContractChecks;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -54,7 +54,7 @@ class NlFlexContractSignalsTest extends TestCase {
 	 * @return bool
 	 */
 	private function chainSatisfied(array $contract, array $siblings): bool {
-		$check = NlSignalChecks::checks()['EmploymentContract']['nl-signaal-ketenregeling'];
+		$check = NlFlexContractChecks::checks()['EmploymentContract']['nl-signaal-ketenregeling'];
 
 		return $check($contract, ['signals' => ['contractsByEmployeeId' => ['emp-1' => $siblings]]]);
 	}//end chainSatisfied()
@@ -123,7 +123,7 @@ class NlFlexContractSignalsTest extends TestCase {
 	 * @return void
 	 */
 	public function testAThirteenMonthOnCallContractWithoutAnOfferIsFlagged(): void {
-		$check = NlSignalChecks::checks()['EmploymentContract']['nl-signaal-oproep-vaste-uren'];
+		$check = NlFlexContractChecks::checks()['EmploymentContract']['nl-signaal-oproep-vaste-uren'];
 		$contract = ['id' => 'o1', 'employeeId' => 'emp-1', 'type' => 'oproep', 'startDate' => $this->day('-13 months')];
 
 		self::assertFalse($check($contract));
@@ -139,7 +139,7 @@ class NlFlexContractSignalsTest extends TestCase {
 	 * @return void
 	 */
 	public function testOtherContractsAreNotFlaggedForTheOffer(): void {
-		$check = NlSignalChecks::checks()['EmploymentContract']['nl-signaal-oproep-vaste-uren'];
+		$check = NlFlexContractChecks::checks()['EmploymentContract']['nl-signaal-oproep-vaste-uren'];
 
 		self::assertTrue($check(['type' => 'oproep', 'startDate' => $this->day('-11 months')]));
 		self::assertTrue($check(['type' => 'oproep', 'startDate' => $this->day('-20 months'), 'endDate' => $this->day('-2 months')]));

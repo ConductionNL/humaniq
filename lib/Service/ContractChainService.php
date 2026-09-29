@@ -38,6 +38,8 @@ use Exception;
 
 /**
  * Composes the chain a contract belongs to.
+ *
+ * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-001
  */
 final class ContractChainService {
 
@@ -152,8 +154,8 @@ final class ContractChainService {
 	/**
 	 * Whether the next contract starts within six months after the previous one ended.
 	 *
-	 * @param array{start: DateTimeImmutable, end: DateTimeImmutable} $previous The earlier contract.
-	 * @param array{start: DateTimeImmutable, end: DateTimeImmutable} $next     The later contract.
+	 * @param array{id: string, start: DateTimeImmutable, end: DateTimeImmutable} $previous The earlier contract.
+	 * @param array{id: string, start: DateTimeImmutable, end: DateTimeImmutable} $next     The later contract.
 	 *
 	 * @return bool
 	 */

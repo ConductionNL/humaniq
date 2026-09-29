@@ -32,6 +32,8 @@ use DateTimeImmutable;
 
 /**
  * Averages approved hours per on-call contract.
+ *
+ * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-002
  */
 final class OnCallAverageService {
 
@@ -100,6 +102,31 @@ final class OnCallAverageService {
 
 		return $rows;
 	}//end averages()
+
+	/**
+	 * The window as two Y-m-d days, or null when it is not one. Without `to`
+	 * it ends today; without `from` it starts a year before `to`.
+	 *
+	 * @param string|null $from The first day.
+	 * @param string|null $to   The last day.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 *
+	 * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-002
+	 */
+	public function window(?string $from, ?string $to): ?array {
+		$last = ($to ?? (new DateTimeImmutable('today'))->format('Y-m-d'));
+		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $last) !== 1) {
+			return null;
+		}
+
+		$first = ($from ?? (new DateTimeImmutable($last))->modify('-1 year')->modify('+1 day')->format('Y-m-d'));
+		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $first) !== 1 || $first > $last) {
+			return null;
+		}
+
+		return [$first, $last];
+	}//end window()
 
 	/**
 	 * The approved hours of one employee between two days.

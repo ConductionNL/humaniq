@@ -124,3 +124,6 @@ lid 5) is violated when an `oproep` contract started more than 12 months ago and
   exists in the seed. The import stamps every seeded timesheet draft, so Ahmed El
   Idrissi's August hours count once that timesheet is approved.
 - **Open question answered.** Hours per week and per month only; days per week stays out.
+- **Predicates in their own provider.** Both rules live in
+  `lib/Standards/Checks/NlFlexContractChecks.php`, a sibling of `NlSignalChecks`, not in
+  it: adding them there took `NlSignalChecks` past the class complexity limit.
