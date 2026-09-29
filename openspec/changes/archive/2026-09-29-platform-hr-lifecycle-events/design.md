@@ -84,3 +84,30 @@ None. A live check subscribes a request-bin style test endpoint on a dev instanc
 
 - Should department changes of an org unit itself (a reorganisation) emit events for every
   member? This design emits only per assignment.
+
+## Build-time changes (2026-09-29)
+
+Read against `development` 82dd772d plus humaniq#560 and #561 while building.
+
+- **One base event class.** The five typed events extend `HrLifecycleEvent`, which carries the
+  CloudEvent id, the employee, their account, the administration, the day and the moment's
+  data. `LeaveApprovedEvent::isWithdrawn()` and `SicknessReportedEvent::isRecovered()` tell the
+  paired moments apart.
+- **The envelope is shared, the sending is not.** `CloudEventEnvelope::build()` makes the
+  envelope for both the time-entry event and these events; `TimeEntryEventService` output is
+  unchanged (its 14 tests pass as they were). Each service still hands its own event to
+  `WebhookService`.
+- **Edges as built.** A first contract means no other `EmploymentContract` for the employee;
+  a contract end counts as leaving only when its end date is before today and no other
+  contract of the employee is still running. A job change from a contract keeps the current
+  unit on both sides; one from a placement takes the unit of the employee's latest other
+  placement as `from`. A contract edit that changes neither function nor end date sends
+  nothing.
+- **Event ids.** An md5 of type, employee, day and record, shaped as a UUID. Joined and left
+  leave the record out, so a contract and an onboarding case that name the same day give
+  one id.
+- **Seeds send too.** Importing the seed creates contracts and sickness cases, so a
+  subscribed endpoint receives their events on install. Without a subscription nothing is
+  sent.
+- **Docs.** `docs/people/hr-events.md` is the event catalogue. The docs site was not built
+  here (its dependencies are not installed in this lane).

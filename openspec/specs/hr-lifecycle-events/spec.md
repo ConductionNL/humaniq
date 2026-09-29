@@ -1,6 +1,9 @@
-# hr-lifecycle-events
+# hr-lifecycle-events Specification
 
-## ADDED Requirements
+## Purpose
+humaniq tells other systems, and other Nextcloud apps, when someone joins, leaves or changes job, when leave is approved or withdrawn, and when sickness is reported or ends, with no more personal data than the moment needs. Built by platform-hr-lifecycle-events (archived 2026-09-29).
+
+## Requirements
 
 ### Requirement: humaniq SHALL emit an event for each HR moment (REQ-HLE-001)
 
@@ -18,10 +21,14 @@ https://www.tenderned.nl/aankondigingen/overzicht/415227.
 - **THEN** the endpoint receives one event naming the employee, their Nextcloud user id and the
   last working day
 
+@e2e exclude the event is detected and sent server side after the save; covered by HrLifecycleEventServiceTest::testCompletingAnOffboardingSendsOneLeftEvent
+
 #### Scenario: Saving twice does not send twice
 - **GIVEN** an approved leave request that already produced `leave.approved`
 - **WHEN** someone saves the request again without changing its status
 - **THEN** no second event is sent
+
+@e2e exclude the edge is compared server side; covered by HrLifecycleEventServiceTest::testSavingAnApprovedLeaveAgainSendsNothing and HrLifecycleEventListenerTest::testApprovingALeaveRequestCallsTheWebhookOnce
 
 ### Requirement: Event payloads SHALL carry no more than the moment needs (REQ-HLE-002)
 
@@ -36,3 +43,5 @@ Rows: `td-event-webhooks` (humaniq matrix).
 - **WHEN** HR registers a sickness case
 - **THEN** the event carries the employee and the first sick day, and no reason, percentage or
   note
+
+@e2e exclude the payload is built server side; covered by HrLifecycleEventServiceTest::testASickReportCarriesOnlyTheDates

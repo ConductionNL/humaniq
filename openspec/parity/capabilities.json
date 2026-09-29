@@ -7433,7 +7433,7 @@
    "id": "td-event-webhooks",
    "area": "platform",
    "name": "Send an event to other systems when someone joins, leaves, changes job, takes leave or reports sick.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -7449,10 +7449,12 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmWorkspaceNotificationsPlugin/entity/WorkspaceNotificationRegistration.php:33 webhooks exist only for daily birthday and leave-today messages to Slack, Teams or Google Chat; no joiner, leaver, job change or sickness events. Driven 2026-09-26 on the lab at v5.9: /admin/workspaceNotificationConfiguration offers notification type, platform (Slack incoming webhook), channel, sub unit, timezone and send time only."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/platform-hr-lifecycle-events on 2026-09-27 for the missing half: events for joining, leaving, job change, leave and sickness; the timesheet event is built. Before: lib/Service/TimeEntryEventService.php:6 emits a nl.conduction.hrmq.timeentry.approved CloudEvent through OpenRegister's WebhookService, called from lib/Listener/TimesheetApprovalListener.php:92; no event on joining, leaving, job change, leave or sickness in humaniq (OpenRegister's generic object webhooks could be configured by an admin outside humaniq)",
-    "reachedOn": "machine consumer of the timesheet-approved webhook; nothing else",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/HrLifecycleEventService.php detects employee.joined, employee.left, employee.jobchanged, leave.approved, leave.withdrawn, sickness.reported and sickness.recovered on the edge of a save and sends each as a CloudEvent through OpenRegister's WebhookService (envelope from lib/Service/CloudEventEnvelope.php, shared with the time-entry event) and as a typed event (lib/Event/HrLifecycleEvent.php and five subclasses); lib/Listener/HrLifecycleEventListener.php on EmploymentContract, Onboarding, Offboarding, OrgAssignment, LeaveRequest and SickLeaveCase. Tests: tests/Unit/Service/HrLifecycleEventServiceTest.php, tests/Unit/Listener/HrLifecycleEventListenerTest.php, tests/Unit/AppInfo/ChangeRequestListenerWiringTest.php::testTheHrLifecycleEventListenerIsSubscribed.",
+    "reachedOn": "OpenRegister webhook settings: subscribe an endpoint to nl.conduction.hrmq.*; typed events in OCA\\Humaniq\\Event for sibling apps; catalogue in docs/people/hr-events.md",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-platform-hr-lifecycle-events",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
