@@ -2737,7 +2737,12 @@ OC.L10N.register(
         "The whole organisation": "De hele organisatie",
         "Your organisation on a date: every unit, its manager and how many people are placed in it.": "Je organisatie op een datum: elke eenheid, de leidinggevende en hoeveel medewerkers erin geplaatst zijn.",
         "none": "geen",
-        "People placed: {count}": "Geplaatste medewerkers: {count}"
+        "People placed: {count}": "Geplaatste medewerkers: {count}",
+        "Generate last year's statements": "Genereer jaaropgaven vorig jaar",
+        "Last year's annual statements are queued. They appear under Documents as each one is generated.": "De jaaropgaven van vorig jaar staan in de wachtrij. Ze verschijnen onder Documenten zodra ze zijn gegenereerd.",
+        "Queueing last year's annual statements failed.": "De jaaropgaven van vorig jaar konden niet in de wachtrij worden gezet.",
+        "The annual statement PDF is being generated.": "De jaaropgaaf-PDF wordt gegenereerd.",
+        "Generating the annual statement PDF failed.": "Het genereren van de jaaropgaaf-PDF is mislukt."
     },
     "nplurals=2; plural=(n != 1);"
 )

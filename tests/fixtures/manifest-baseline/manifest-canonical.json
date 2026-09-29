@@ -10722,7 +10722,22 @@
 			"type": "detail"
 		},
 		{
+			"actions": [
+				{
+					"confirm": true,
+					"errorMessage": "Queueing last year's annual statements failed.",
+					"icon": "FileDocumentPlusOutline",
+					"id": "generate-last-year-statements",
+					"label": "Generate last year's statements",
+					"method": "POST",
+					"params": {},
+					"successMessage": "Last year's annual statements are queued. They appear under Documents as each one is generated.",
+					"type": "api-call",
+					"url": "/api/documents/jaaropgaven"
+				}
+			],
 			"config": {
+				"_note": "payroll-annual-statement-action (2026-09-29): the header action queues last year's statements for every employee with payslips in that year (POST /api/documents/jaaropgaven, HR or payroll only, design D2/D3). It carries no year: another year goes through occ humaniq:documents:generate or the endpoint's year parameter.",
 				"columns": [
 					"employeeId",
 					"year",
@@ -10748,7 +10763,24 @@
 		},
 		{
 			"config": {
-				"_note": "payslip-pdf-docudesk (2026-07-14): the EmploymentContractDetail two-panel shape -- a leaf aggregate record with exactly one meaningful outbound ref (Employee), so jg-data (totals/payPeriodCount/verrekendeArbeidskorting/loonheffingennummer/aggregatedAt, excluding employeeId) sits at 8-wide and jg-related resolves+links the Employee at 4-wide. No lifecycleActions: Jaaropgaaf carries no x-openregister-lifecycle -- it is a pure data aggregate upserted server-side by HrDocumentService (design.md D2/D4), not a workflow. No files widget: the rendered PDF lives on the GeneratedDocument record that references this aggregate via jaaropgaafId (Related on GeneratedDocumentDetail resolves it), not here -- adding a files widget here would fabricate a second copy of the same document relationship. No child lists: nothing else in the schema references Jaaropgaaf by FK besides GeneratedDocument, which is reachable from the Documenten index instead. Audit history is a sidebar tab.",
+				"_note": "payslip-pdf-docudesk (2026-07-14): the EmploymentContractDetail two-panel shape -- a leaf aggregate record with exactly one meaningful outbound ref (Employee), so jg-data (totals/payPeriodCount/verrekendeArbeidskorting/loonheffingennummer/aggregatedAt, excluding employeeId) sits at 8-wide and jg-related resolves+links the Employee at 4-wide. No lifecycleActions: Jaaropgaaf carries no x-openregister-lifecycle -- it is a pure data aggregate upserted server-side by HrDocumentService (design.md D2/D4), not a workflow. payroll-annual-statement-action (2026-09-29): the page-level action \"Generate PDF\" posts {jaaropgaafId: @objectId, documentType: jaaropgaaf} to /api/documents/generate, resolved under the caller's RBAC by DocumentController before HrDocumentService refreshes the aggregate and renders it (idempotent: an existing PDF is reported, not rendered again). No files widget: the rendered PDF lives on the GeneratedDocument record that references this aggregate via jaaropgaafId (Related on GeneratedDocumentDetail resolves it), not here -- adding a files widget here would fabricate a second copy of the same document relationship. No child lists: nothing else in the schema references Jaaropgaaf by FK besides GeneratedDocument, which is reachable from the Documenten index instead. Audit history is a sidebar tab.",
+				"headerActions": [
+					{
+						"confirm": true,
+						"errorMessage": "Generating the annual statement PDF failed.",
+						"icon": "FileDocumentPlusOutline",
+						"id": "generate-jaaropgaaf",
+						"label": "Generate PDF",
+						"method": "POST",
+						"params": {
+							"documentType": "jaaropgaaf",
+							"jaaropgaafId": "@objectId"
+						},
+						"successMessage": "The annual statement PDF is being generated.",
+						"type": "api-call",
+						"url": "/api/documents/generate"
+					}
+				],
 				"layout": [
 					{
 						"gridHeight": 7,

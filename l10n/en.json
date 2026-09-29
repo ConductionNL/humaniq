@@ -2736,7 +2736,12 @@
         "The whole organisation": "The whole organisation",
         "Your organisation on a date: every unit, its manager and how many people are placed in it.": "Your organisation on a date: every unit, its manager and how many people are placed in it.",
         "none": "none",
-        "People placed: {count}": "People placed: {count}"
+        "People placed: {count}": "People placed: {count}",
+        "Generate last year's statements": "Generate last year's statements",
+        "Last year's annual statements are queued. They appear under Documents as each one is generated.": "Last year's annual statements are queued. They appear under Documents as each one is generated.",
+        "Queueing last year's annual statements failed.": "Queueing last year's annual statements failed.",
+        "The annual statement PDF is being generated.": "The annual statement PDF is being generated.",
+        "Generating the annual statement PDF failed.": "Generating the annual statement PDF failed."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
