@@ -100,3 +100,30 @@ needed; the mutation's create is refused by a pre-save listener in the
 ## Open Questions
 
 - Should a scenario be able to copy another scenario's mutations? Not in this change.
+
+## Build-time changes (2026-09-29)
+
+Read against `development` 58668840 while building.
+
+- **FTE norm.** An FTE is `hoursPerWeek` over `AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK`
+  (40), the norm the formation occupancy already uses.
+- **Month rule.** A contract or a change counts in a month when it applies on the first of
+  that month; the answer states the rule in `basis.monthRule`.
+- **Salary share.** An occupant's salary is split over their contracts in proportion to
+  hours, so a person on two places is not counted twice. An approved, not yet applied
+  `CompAdjustment` (status `approved`, `proposedSalary` in cents) replaces the salary from
+  its effective date; an effective one is already in `grossMonthlySalary`.
+- **Scales.** Reference jobs are HR21, so a vacant place is priced from `cao-gemeenten`
+  through `CaoScaleLookup`. No CAO in the library carries a verified pay-scale leaf today,
+  so every vacant FTE is flagged `unpriced` until one does; occupied cost is unaffected.
+- **Holiday allowance** is the BW 7:634 minimum of 8 percent, a constructor default.
+- **Access** reuses `AnalyticsAccess::fullReaderAdministration()` (hr or accountant in the
+  active administration); every source is limited to that administration.
+- **An unknown scenario on a mutation** is left to the register's own reference check; the
+  listener only refuses a change to a fixed scenario. The demo import writes mutations on
+  placeholder scenarios, which a stricter rule would drop.
+- **Seeds** use the seed's own units: "Begroting 2027 basis" and "Begroting 2027 groei
+  backoffice" (+2.0 FTE Medewerker backoffice from 2027-03-01); there is no Burgerzaken seed.
+- **CSV export** is not built here: the export of an index or table belongs to the shared
+  library (`rep-export`, owned by nextcloud-vue `index-export-follows-the-page`). The budget
+  and comparison endpoints are plain JSON a spreadsheet can read.

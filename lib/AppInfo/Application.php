@@ -51,6 +51,7 @@ use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
 use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
 use OCA\Humaniq\Listener\RightToWorkCheckListener;
+use OCA\Humaniq\Listener\ScenarioMutationListener;
 use OCA\Humaniq\Listener\SideActivityListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimeEstimateListener;
@@ -471,6 +472,7 @@ class Application extends App implements IBootstrap {
 		$this->registerTrainingListeners($dispatcher);
 		$this->registerDossierListeners($dispatcher);
 		$this->registerSideActivityListeners($dispatcher);
+		$this->registerScenarioMutationListener($dispatcher);
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
 
@@ -758,6 +760,29 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerSideActivityListeners()
+
+	/**
+	 * reporting-personnel-budget-and-scenarios D4: a fixed formation scenario
+	 * accepts no new or changed mutations.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/personnel-budget/spec.md#REQ-PBS-002
+	 */
+	private function registerScenarioMutationListener(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: ScenarioMutationListener::class,
+				registers: null,
+				schemas: [ScenarioMutationListener::MUTATION_SLUG]
+			);
+		}
+
+	}//end registerScenarioMutationListener()
 
 	/**
 	 * people-record-change-approval D1, D3 and D4: a change request is placed,

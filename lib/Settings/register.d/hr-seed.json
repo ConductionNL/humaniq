@@ -2429,6 +2429,45 @@
                 "publish": false,
                 "administrationId": "ADM-001",
                 "_note": "people-secondment-and-side-activities (2026-09-29): a civil servant's paid board seat awaiting the manager's decision; her nevenwerkzaamhedenGemeld stays true because the register now holds a report."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "FormationScenario",
+                    "slug": "formation-scenario-2027-basis"
+                },
+                "name": "Begroting 2027 basis",
+                "year": 2027,
+                "caoRaisePercentage": 3,
+                "status": "concept",
+                "administrationId": "ADM-001",
+                "_note": "reporting-personnel-budget-and-scenarios (2026-09-29): the formation as it is, with a 3% CAO raise from 1 January 2027."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "FormationScenario",
+                    "slug": "formation-scenario-2027-groei"
+                },
+                "name": "Begroting 2027 groei backoffice",
+                "year": 2027,
+                "caoRaisePercentage": 3,
+                "status": "concept",
+                "administrationId": "ADM-001",
+                "_note": "reporting-personnel-budget-and-scenarios (2026-09-29): one change: the backoffice grows by 2.0 FTE from 1 March 2027. Compare it with the basis on its page."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ScenarioMutation",
+                    "slug": "scenario-mutation-2027-groei-backoffice"
+                },
+                "scenarioId": "@ref:formation-scenario-2027-groei",
+                "formatieplaatsId": "@ref:formatieplaats-backoffice-medewerker",
+                "fteDelta": 2.0,
+                "effectiveDate": "2027-03-01",
+                "note": "Meer capaciteit voor de dienstverlening.",
+                "administrationId": "ADM-001"
             }
         ]
     }

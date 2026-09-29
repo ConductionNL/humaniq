@@ -1,6 +1,9 @@
-# personnel-budget
+# personnel-budget Specification
 
-## ADDED Requirements
+## Purpose
+Next year's personnel cost of the formation, per unit, reference job and cost centre, computed on read from salaries, scale minimums, raises and surcharges, for scenarios of FTE changes that never touch the live formation. Built by reporting-personnel-budget-and-scenarios (archived 2026-09-29).
+
+## Requirements
 
 ### Requirement: humaniq SHALL compute a personnel budget for a year (REQ-PBS-001)
 
@@ -22,10 +25,14 @@ https://www.tenderned.nl/aankondigingen/overzicht/415705.
   vacant, with the salaries, the scale minimum, the months and the surcharge percentages
   it used
 
+@e2e exclude the budget is computed server-side and the refusal is a pre-save listener; covered by PersonnelBudgetServiceTest::testAHandComputedBudget and FormationBudgetControllerTest::testTheBudgetShowsTheCostCentre
+
 #### Scenario: A manager cannot read salaries through the budget
 - **GIVEN** a manager without the hr or accountant role
 - **WHEN** they request `GET /api/formation/budget` for their unit
 - **THEN** the request is refused
+
+@e2e exclude the budget is computed server-side and the refusal is a pre-save listener; covered by FormationBudgetControllerTest::testOnlyHrAndAccountantsReadTheBudget
 
 ### Requirement: Scenarios SHALL change FTE without touching the live formation (REQ-PBS-002)
 
@@ -43,7 +50,11 @@ https://www.tenderned.nl/aankondigingen/overzicht/415227.
 - **THEN** Team Burgerzaken shows 2.0 FTE more from March and the cost of ten months of
   that FTE, and the live place still shows its original budget
 
+@e2e exclude the budget is computed server-side and the refusal is a pre-save listener; covered by PersonnelBudgetServiceTest::testTheGrowthScenarioDiffersFromTheBaselineFromMarch
+
 #### Scenario: A fixed scenario is closed
 - **GIVEN** a scenario in status `vastgesteld`
 - **WHEN** someone adds a mutation to it
 - **THEN** the write is refused
+
+@e2e exclude the budget is computed server-side and the refusal is a pre-save listener; covered by ScenarioMutationListenerTest::testAFixedScenarioAcceptsNoMutation

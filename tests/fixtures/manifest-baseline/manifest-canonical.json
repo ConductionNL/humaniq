@@ -430,6 +430,12 @@
 					}
 				},
 				{
+					"icon": "ChartBoxOutline",
+					"id": "FormationScenarios",
+					"label": "Formation scenarios",
+					"route": "FormationScenarios"
+				},
+				{
 					"icon": "AccountArrowRightOutline",
 					"id": "OrgAssignments",
 					"label": "Placements",
@@ -4327,6 +4333,266 @@
 			"id": "FormatieplaatsDetail",
 			"route": "/formation-places/:id",
 			"title": "Formation place",
+			"type": "detail"
+		},
+		{
+			"config": {
+				"_note": "reporting-personnel-budget-and-scenarios (2026-09-29): REQ-PBS-001/002. The data widget holds the scenario's assumptions; Changes lists its ScenarioMutations (never written to a Formatieplaats); Budget per place and the total come from GET /api/formation/budget?scenarioId (PersonnelBudgetService, computed on read, HR and accountants only, 403 for others); Against the baseline comes from GET /api/formation/compare?a=b=this scenario (baseline = the formation without this scenario's changes). Built-in widgets only (ADR-049). Fix locks the scenario: ScenarioMutationListener refuses further changes.",
+				"layout": [
+					{
+						"gridHeight": 5,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 3,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					},
+					{
+						"gridHeight": 2,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 3,
+						"id": 3,
+						"widgetId": "budget-total"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 5,
+						"id": 4,
+						"widgetId": "object-list"
+					},
+					{
+						"gridHeight": 6,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 9,
+						"id": 5,
+						"widgetId": "budget-lines"
+					},
+					{
+						"gridHeight": 5,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 15,
+						"id": 6,
+						"widgetId": "budget-compare"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "vaststellen",
+							"from": [
+								"concept"
+							],
+							"label": "Fix",
+							"to": "vastgesteld"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "FormationScenario",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"title": "Scenario"
+						},
+						"icon": "ChartBoxOutline",
+						"id": "data",
+						"title": "Scenario",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					},
+					{
+						"content": {
+							"endpointSource": {
+								"params": {
+									"scenarioId": "@objectId"
+								},
+								"url": "/apps/humaniq/api/formation/budget"
+							},
+							"format": {
+								"currency": "EUR",
+								"style": "currency"
+							},
+							"icon": "CashMultiple",
+							"label": "Total personnel cost",
+							"valueField": "total"
+						},
+						"icon": "CashMultiple",
+						"id": "budget-total",
+						"title": "Total personnel cost",
+						"type": "stat"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "formatieplaatsId",
+									"label": "Formation place"
+								},
+								{
+									"key": "title",
+									"label": "New place"
+								},
+								{
+									"key": "fteDelta",
+									"label": "FTE change"
+								},
+								{
+									"key": "effectiveDate",
+									"label": "Effective date"
+								}
+							],
+							"emptyText": "No changes: this scenario is the formation as it is",
+							"filter": {
+								"scenarioId": "@objectId"
+							},
+							"limit": 25,
+							"register": "humaniq",
+							"rowRoute": "ScenarioMutationDetail",
+							"schema": "ScenarioMutation",
+							"sort": {
+								"dir": "asc",
+								"field": "effectiveDate"
+							},
+							"viewAllQuery": {
+								"scenarioId": "@objectId"
+							},
+							"viewAllRoute": "ScenarioMutations"
+						},
+						"icon": "PlusCircleOutline",
+						"id": "object-list",
+						"title": "Changes",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "title",
+									"label": "Formation place"
+								},
+								{
+									"key": "unitName",
+									"label": "Unit"
+								},
+								{
+									"key": "costCenter",
+									"label": "Cost centre"
+								},
+								{
+									"key": "occupiedCost",
+									"label": "Occupied"
+								},
+								{
+									"key": "vacantCost",
+									"label": "Vacant"
+								},
+								{
+									"key": "unpriced",
+									"label": "Vacancy unpriced"
+								},
+								{
+									"key": "holidayAllowance",
+									"label": "Holiday allowance"
+								},
+								{
+									"key": "employerCharges",
+									"label": "Employer charges"
+								},
+								{
+									"key": "total",
+									"label": "Total"
+								}
+							],
+							"emptyText": "No formation places",
+							"endpointSource": {
+								"params": {
+									"scenarioId": "@objectId"
+								},
+								"responsePath": "lines",
+								"url": "/apps/humaniq/api/formation/budget"
+							}
+						},
+						"id": "budget-lines",
+						"title": "Budget per place",
+						"type": "object-table"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"cellClass": "cn-cell--strong",
+									"key": "name",
+									"label": "Unit"
+								},
+								{
+									"key": "baselineFteDecember",
+									"label": "Baseline FTE in December"
+								},
+								{
+									"key": "aFteDecember",
+									"label": "Scenario FTE in December"
+								},
+								{
+									"key": "baselineCost",
+									"label": "Baseline cost"
+								},
+								{
+									"key": "aCost",
+									"label": "Scenario cost"
+								},
+								{
+									"key": "diffACost",
+									"label": "Difference"
+								}
+							],
+							"emptyText": "No units",
+							"endpointSource": {
+								"params": {
+									"a": "@objectId",
+									"b": "@objectId"
+								},
+								"responsePath": "unitRows",
+								"url": "/apps/humaniq/api/formation/compare"
+							},
+							"rowRoute": "OrgUnitDetail"
+						},
+						"id": "budget-compare",
+						"title": "Against the baseline",
+						"type": "object-table"
+					}
+				]
+			},
+			"id": "FormationScenarioDetail",
+			"route": "/formation-scenarios/:id",
+			"title": "Formation scenario",
 			"type": "detail"
 		},
 		{
@@ -11024,6 +11290,118 @@
 			"route": "/formation-places",
 			"title": "Formation places",
 			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "reporting-personnel-budget-and-scenarios (2026-09-29): REQ-PBS-001/002. The budget itself is on FormationScenarioDetail.",
+				"columns": [
+					"name",
+					"year",
+					"caoRaisePercentage",
+					"status"
+				],
+				"description": "What-ifs for next year's formation and what they cost. Open one to see its budget per place and how it differs from the formation as it is.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"status",
+					"year"
+				],
+				"register": "humaniq",
+				"schema": "FormationScenario",
+				"sort": {
+					"field": "year",
+					"order": "desc"
+				}
+			},
+			"id": "FormationScenarios",
+			"route": "/formation-scenarios",
+			"title": "Formation scenarios",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "reporting-personnel-budget-and-scenarios (2026-09-29): D1. ScenarioMutationListener refuses a change to a fixed scenario.",
+				"columns": [
+					"scenarioId",
+					"formatieplaatsId",
+					"title",
+					"fteDelta",
+					"effectiveDate"
+				],
+				"description": "FTE added to or removed from formation places in a scenario, or a new place. The live formation does not change.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"scenarioId"
+				],
+				"register": "humaniq",
+				"schema": "ScenarioMutation",
+				"sort": {
+					"field": "effectiveDate",
+					"order": "asc"
+				}
+			},
+			"id": "ScenarioMutations",
+			"route": "/scenario-changes",
+			"title": "Scenario changes",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "reporting-personnel-budget-and-scenarios (2026-09-29): D1. A plain record; its scenario decides whether it may still change.",
+				"layout": [
+					{
+						"gridHeight": 7,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 7,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "ScenarioMutation",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"title": "Scenario change"
+						},
+						"icon": "PlusCircleOutline",
+						"id": "data",
+						"title": "Scenario change",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "ScenarioMutationDetail",
+			"route": "/scenario-changes/:id",
+			"title": "Scenario change",
+			"type": "detail"
 		},
 		{
 			"config": {

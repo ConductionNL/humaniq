@@ -13435,6 +13435,96 @@
         "userId": "Voorbeeld Userid 3",
         "managerUserId": "Voorbeeld Manageruserid 3",
         "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "FormationScenario",
+          "slug": "formationscenario-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "year": 2000,
+        "caoRaisePercentage": 0,
+        "employerChargesPercentage": 0.0,
+        "status": "concept",
+        "note": "Voorbeeld Note 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "FormationScenario",
+          "slug": "formationscenario-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "year": 2001,
+        "caoRaisePercentage": 0,
+        "employerChargesPercentage": 1.0,
+        "status": "vastgesteld",
+        "note": "Voorbeeld Note 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "FormationScenario",
+          "slug": "formationscenario-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "year": 2002,
+        "caoRaisePercentage": 0,
+        "employerChargesPercentage": 2.0,
+        "status": "concept",
+        "note": "Voorbeeld Note 3",
+        "administrationId": "Voorbeeld Administrationid 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ScenarioMutation",
+          "slug": "scenariomutation-voorbeeld-title-1-1"
+        },
+        "scenarioId": "00000000-0000-4000-8000-000000000000",
+        "fteDelta": 1.0,
+        "effectiveDate": "2026-03-01",
+        "formatieplaatsId": "00000000-0000-4000-8000-000000000000",
+        "orgUnitId": "00000000-0000-4000-8000-000000000000",
+        "normfunctieId": "00000000-0000-4000-8000-000000000000",
+        "title": "Voorbeeld Title 1",
+        "note": "Voorbeeld Note 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ScenarioMutation",
+          "slug": "scenariomutation-voorbeeld-title-2-2"
+        },
+        "scenarioId": "00000000-0000-4000-8000-000000000001",
+        "fteDelta": 2.0,
+        "effectiveDate": "2026-03-02",
+        "formatieplaatsId": "00000000-0000-4000-8000-000000000001",
+        "orgUnitId": "00000000-0000-4000-8000-000000000001",
+        "normfunctieId": "00000000-0000-4000-8000-000000000001",
+        "title": "Voorbeeld Title 2",
+        "note": "Voorbeeld Note 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "ScenarioMutation",
+          "slug": "scenariomutation-voorbeeld-title-3-3"
+        },
+        "scenarioId": "00000000-0000-4000-8000-000000000002",
+        "fteDelta": 3.0,
+        "effectiveDate": "2026-03-03",
+        "formatieplaatsId": "00000000-0000-4000-8000-000000000002",
+        "orgUnitId": "00000000-0000-4000-8000-000000000002",
+        "normfunctieId": "00000000-0000-4000-8000-000000000002",
+        "title": "Voorbeeld Title 3",
+        "note": "Voorbeeld Note 3",
+        "administrationId": "Voorbeeld Administrationid 3"
       }
     ]
   }

@@ -61,6 +61,9 @@ return [
         ['name' => 'leaveSchedule#coverage', 'url' => '/api/leave/coverage', 'verb' => 'GET'],
         // people-formation-positions REQ-FRM-002: occupancy of a unit's formation places, computed on read.
         ['name' => 'formation#occupancy', 'url' => '/api/formation/occupancy', 'verb' => 'GET'],
+        // reporting-personnel-budget-and-scenarios D3/D4: a scenario's budget and two scenarios against the baseline (HR and accountants only).
+        ['name' => 'formationBudget#budget', 'url' => '/api/formation/budget', 'verb' => 'GET'],
+        ['name' => 'formationBudget#compare', 'url' => '/api/formation/compare', 'verb' => 'GET'],
         // people-employment-history REQ-EHI-001/003: one employee's history and concurrent employments, composed on read.
         ['name' => 'employeeHistory#history', 'url' => '/api/employees/{id}/history', 'verb' => 'GET'],
         // people-dossier-completeness REQ-DCP-002: one personnel file's completeness, and every readable file with a gap.

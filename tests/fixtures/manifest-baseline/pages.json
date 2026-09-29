@@ -92,6 +92,10 @@
 		"route": "/formation-places/:id"
 	},
 	{
+		"id": "FormationScenarioDetail",
+		"route": "/formation-scenarios/:id"
+	},
+	{
 		"id": "LeaveRequestDetail",
 		"route": "/leave-requests/:id"
 	},
@@ -366,6 +370,18 @@
 	{
 		"id": "Formatieplaatsen",
 		"route": "/formation-places"
+	},
+	{
+		"id": "FormationScenarios",
+		"route": "/formation-scenarios"
+	},
+	{
+		"id": "ScenarioMutations",
+		"route": "/scenario-changes"
+	},
+	{
+		"id": "ScenarioMutationDetail",
+		"route": "/scenario-changes/:id"
 	},
 	{
 		"id": "PayrollGLPosts",
