@@ -59,8 +59,9 @@ A dedicated HR group is the named fast-follow of `2026-07-15-avg-dsr` and
 
 ## What Changes
 
-- **Two Nextcloud groups.** humaniq creates and names an HR group and a payroll group
-  (defaults `humaniq-hr` and `humaniq-payroll`, configurable in the admin settings). Managers
+- **Two Nextcloud groups.** humaniq creates an HR group and a payroll group, `humaniq-hr`
+  and `humaniq-payroll`. The ids are fixed because the register's property authorization
+  names them literally (design D1, reversible). Managers
   stay defined by the org chart (`managerUserId`), employees by their own account (`userId`,
   `nextcloudUserId`).
 - **One role check for humaniq's own endpoints.** A single `HumaniqRoles` service answers "is
@@ -86,14 +87,19 @@ A dedicated HR group is the named fast-follow of `2026-07-15-avg-dsr` and
 
 ## Impact
 
-- `lib/Repair/EnsureRoleGroups.php` (new, registered in `appinfo/info.xml`),
-  `lib/Service/HumaniqRoles.php` (new), `lib/Service/SettingsService.php` (group ids).
-- The controllers that copy `isAdmin()`: `OfferController`,
-  `PayrollController`, `JurisdictionPackController`, `ExpenseController`,
-  `InterviewController`, `LoonbeslagController`.
-- `lib/Settings/register.d/hr-objects.json` (Employee, EmploymentContract, Payslip),
-  `hr-performance.json` (PerformanceReview gains `reviewerUserId`): property `authorization`.
-- `src/views` admin settings: the two group ids.
+- `lib/Repair/EnsureRoleGroups.php` (new, in `appinfo/info.xml` install and post-migration),
+  `lib/Service/HumaniqRoles.php` (new).
+- The controllers that copied `isAdmin()`: `OfferController`, `PayrollController`,
+  `ExpenseController`, `InterviewController`, `LoonbeslagController`.
+  `JurisdictionPackController` and `AvgDsrController` stay administrator-only (design D2).
+- `lib/Settings/register.d/hr-objects.json` (Employee, EmploymentContract gains `userId`,
+  Payslip), `hr-performance.json` (PerformanceReview gains `reviewerUserId`): property
+  `authorization`; register 0.26.0.
+- `lib/Listener/FieldAccessListener.php` and `lib/Service/FieldReadAccess.php` (new): uid
+  stamps and keeping values a full save would wipe; `EmployeeGuardedFieldListener` ignores a
+  carried value.
+- `AnalyticsService`, `RuleAuditService`, `PayrollAuditVerificationService`,
+  `PayrollReproduceService` read past the field strip (design D6).
 
 ## Out of scope
 
