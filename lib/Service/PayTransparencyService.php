@@ -220,14 +220,14 @@ class PayTransparencyService {
 	 * @spec openspec/specs/pay-transparency/spec.md#REQ-PTR-002
 	 */
 	private function indicators(array $people, int $threshold): array {
-		$women = array_values(array_filter($people, static fn (array $p): bool => $p['gender'] === 'woman'));
-		$men = array_values(array_filter($people, static fn (array $p): bool => $p['gender'] === 'man'));
+		$women = array_values(array_filter($people, static fn (array $person): bool => $person['gender'] === 'woman'));
+		$men = array_values(array_filter($people, static fn (array $person): bool => $person['gender'] === 'man'));
 		if (count($women) < $threshold || count($men) < $threshold) {
 			return ['tooSmall' => true];
 		}
 
-		$womenPaid = array_values(array_filter($women, static fn (array $p): bool => $p['variable'] > 0));
-		$menPaid = array_values(array_filter($men, static fn (array $p): bool => $p['variable'] > 0));
+		$womenPaid = array_values(array_filter($women, static fn (array $person): bool => $person['variable'] > 0));
+		$menPaid = array_values(array_filter($men, static fn (array $person): bool => $person['variable'] > 0));
 
 		return [
 			'tooSmall' => false,
@@ -250,13 +250,13 @@ class PayTransparencyService {
 	 * @return array<int, array{quartile: int, women: float, men: float}>
 	 */
 	private function quartiles(array $people): array {
-		$ranked = array_values(array_filter($people, static fn (array $p): bool => in_array($p['gender'], ['woman', 'man'], true)));
+		$ranked = array_values(array_filter($people, static fn (array $person): bool => in_array($person['gender'], ['woman', 'man'], true)));
 		usort($ranked, static fn (array $a, array $b): int => $a['hourly'] <=> $b['hourly']);
 		$count = count($ranked);
 		$quartiles = [];
 		for ($quartile = 1; $quartile <= 4; $quartile++) {
 			$slice = array_slice($ranked, (int)floor(($quartile - 1) * $count / 4), ((int)floor($quartile * $count / 4) - (int)floor(($quartile - 1) * $count / 4)));
-			$women = count(array_filter($slice, static fn (array $p): bool => $p['gender'] === 'woman'));
+			$women = count(array_filter($slice, static fn (array $person): bool => $person['gender'] === 'woman'));
 			$size = max(1, count($slice));
 			$quartiles[] = [
 				'quartile' => $quartile,
@@ -338,6 +338,6 @@ class PayTransparencyService {
 	 */
 	private function median(array $values): ?float {
 		sort($values);
-		return $this->percentile->value(array_values($values), 50.0);
+		return $this->percentile->value($values, 50.0);
 	}//end median()
 }//end class
