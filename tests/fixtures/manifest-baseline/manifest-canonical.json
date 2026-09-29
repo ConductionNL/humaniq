@@ -1023,6 +1023,13 @@
 			"order": 100,
 			"route": "FeaturesRoadmap",
 			"section": "footer"
+		},
+		{
+			"action": "user-settings",
+			"icon": "CogOutline",
+			"id": "MySettings",
+			"label": "My settings",
+			"section": "settings"
 		}
 	],
 	"pageTemplates": [

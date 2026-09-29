@@ -2778,7 +2778,8 @@ OC.L10N.register(
         "Used only for the gender pay gap report the pay transparency law asks for. Leave empty if unknown.": "Alleen gebruikt voor het loonkloofrapport dat de wet loontransparantie vraagt. Laat leeg als het onbekend is.",
         "Woman": "Vrouw",
         "Man": "Man",
-        "Functions in the same pay category count as equal work or work of equal value in the pay transparency report.": "Functies in dezelfde beloningscategorie gelden in het loontransparantierapport als gelijk of gelijkwaardig werk."
+        "Functions in the same pay category count as equal work or work of equal value in the pay transparency report.": "Functies in dezelfde beloningscategorie gelden in het loontransparantierapport als gelijk of gelijkwaardig werk.",
+        "My settings": "Mijn instellingen"
     },
     "nplurals=2; plural=(n != 1);"
 )

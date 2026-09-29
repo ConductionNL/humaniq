@@ -2778,7 +2778,8 @@ OC.L10N.register(
         "Used only for the gender pay gap report the pay transparency law asks for. Leave empty if unknown.": "Used only for the gender pay gap report the pay transparency law asks for. Leave empty if unknown.",
         "Woman": "Woman",
         "Man": "Man",
-        "Functions in the same pay category count as equal work or work of equal value in the pay transparency report.": "Functions in the same pay category count as equal work or work of equal value in the pay transparency report."
+        "Functions in the same pay category count as equal work or work of equal value in the pay transparency report.": "Functions in the same pay category count as equal work or work of equal value in the pay transparency report.",
+        "My settings": "My settings"
     },
     "nplurals=2; plural=(n != 1);"
 )
