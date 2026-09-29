@@ -212,7 +212,7 @@ class PersonnelBudgetServiceTest extends TestCase {
 		$scales = $this->createMock(CaoScaleLookup::class);
 		$scales->method('minimumCents')->willReturnCallback(static fn (string $cao, string $schaal): ?int => ($schaal === '8') ? 300000 : null);
 
-		return new PersonnelBudgetService(progression: new AbsenceProgression(), scales: $scales, holidayAllowancePercentage: 8.0);
+		return new PersonnelBudgetService(progression: new AbsenceProgression(), scales: $scales);
 	}//end service()
 
 }//end class

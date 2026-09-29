@@ -63,16 +63,26 @@ class ScenarioMutationListener implements IEventListener {
 	 * @spec openspec/specs/personnel-budget/spec.md#REQ-PBS-002
 	 */
 	public function handle(Event $event): void {
-		$entity = null;
 		if ($event instanceof \OCA\OpenRegister\Event\ObjectCreatingEvent) {
-			$entity = $event->getObject();
+			$this->check(event: $event, entity: $event->getObject());
+			return;
 		}
 
 		if ($event instanceof \OCA\OpenRegister\Event\ObjectUpdatingEvent) {
-			$entity = $event->getNewObject();
+			$this->check(event: $event, entity: $event->getNewObject());
 		}
+	}//end handle()
 
-		if ($entity === null || strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) !== self::MUTATION_SLUG) {
+	/**
+	 * Refuse a change to a fixed scenario, else stamp the scenario's administration.
+	 *
+	 * @param \OCA\OpenRegister\Event\ObjectCreatingEvent|\OCA\OpenRegister\Event\ObjectUpdatingEvent $event The pre-save event.
+	 * @param object $entity The mutation entity.
+	 *
+	 * @return void
+	 */
+	private function check(object $event, object $entity): void {
+		if (strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) !== self::MUTATION_SLUG) {
 			return;
 		}
 
@@ -91,6 +101,6 @@ class ScenarioMutationListener implements IEventListener {
 		}
 
 		$event->setModifiedData(['administrationId' => ($scenario['administrationId'] ?? null)]);
-	}//end handle()
+	}//end check()
 
 }//end class

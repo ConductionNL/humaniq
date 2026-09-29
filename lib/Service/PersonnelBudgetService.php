@@ -51,22 +51,17 @@ class PersonnelBudgetService {
 	public const REFERENCE_JOB_CAO = 'cao-gemeenten';
 
 	/**
-	 * Runs whose totals count as finalised.
-	 */
-	private const FINAL_RUN_STATES = ['approved', 'posted', 'paid'];
-
-	/**
 	 * Constructor.
 	 *
 	 * @param AbsenceProgression $progression The shared date parser.
 	 * @param CaoScaleLookup $scales Scale minimums.
-	 * @param float $holidayAllowancePercentage The holiday allowance (BW 7:634 minimum, 8%).
+	 * @param PersonnelBudgetTotals $totals Surcharges and roll-ups.
 	 * @param float $fullTimeHoursWeek The full-time week an FTE is measured against.
 	 */
 	public function __construct(
 		private readonly AbsenceProgression $progression,
 		private readonly CaoScaleLookup $scales,
-		private readonly float $holidayAllowancePercentage = 8.0,
+		private readonly PersonnelBudgetTotals $totals = new PersonnelBudgetTotals(),
 		private readonly float $fullTimeHoursWeek = AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK,
 	) {
 
@@ -85,16 +80,16 @@ class PersonnelBudgetService {
 	 */
 	public function budget(array $scenario, array $rows, int $year): array {
 		$raise = (1.0 + ((float)($scenario['caoRaisePercentage'] ?? 0) / 100.0));
-		$charges = $this->chargesBasis(scenario: $scenario, runs: (array)($rows['runs'] ?? []));
+		$charges = $this->totals->chargesBasis(scenario: $scenario, runs: (array)($rows['runs'] ?? []));
 		$scenarioId = (string)($scenario['id'] ?? '');
 		$mutations = array_values(
-			array_filter((array)($rows['mutations'] ?? []), static fn (array $m): bool => $scenarioId !== '' && (string)($m['scenarioId'] ?? '') === $scenarioId)
+			array_filter((array)($rows['mutations'] ?? []), static fn (array $mutation): bool => $scenarioId !== '' && (string)($mutation['scenarioId'] ?? '') === $scenarioId)
 		);
 
 		$lines = [];
 		foreach ($this->placesOf(rows: $rows, mutations: $mutations) as $place) {
 			$line = $this->placeLine(place: $place, mutations: $mutations, rows: $rows, year: $year, raise: $raise);
-			$lines[] = $this->withSurcharges(line: $line, chargesRatio: $charges['ratio']);
+			$lines[] = $this->totals->withSurcharges(line: $line, chargesRatio: $charges['ratio']);
 		}
 
 		return [
@@ -102,16 +97,16 @@ class PersonnelBudgetService {
 			'year' => $year,
 			'basis' => [
 				'caoRaisePercentage' => (float)($scenario['caoRaisePercentage'] ?? 0),
-				'holidayAllowancePercentage' => $this->holidayAllowancePercentage,
+				'holidayAllowancePercentage' => $this->totals->holidayAllowancePercentage(),
 				'employerChargesPercentage' => round(($charges['ratio'] * 100.0), 4),
 				'employerChargesBasis' => $charges['basis'],
 				'fullTimeHoursPerWeek' => $this->fullTimeHoursWeek,
 				'monthRule' => 'a contract or change counts in a month when it applies on the first of that month',
 			],
 			'lines' => $lines,
-			'byUnit' => $this->rollUp(lines: $lines, key: 'orgUnitId'),
-			'byFunction' => $this->rollUp(lines: $lines, key: 'normfunctieId'),
-			'byCostCenter' => $this->rollUp(lines: $lines, key: 'costCenter'),
+			'byUnit' => $this->totals->rollUp(lines: $lines, key: 'orgUnitId'),
+			'byFunction' => $this->totals->rollUp(lines: $lines, key: 'normfunctieId'),
+			'byCostCenter' => $this->totals->rollUp(lines: $lines, key: 'costCenter'),
 			'total' => round(array_sum(array_column($lines, 'total')), 2),
 		];
 	}//end budget()
@@ -330,83 +325,6 @@ class PersonnelBudgetService {
 
 		return ($cents === null) ? null : ($cents / 100.0);
 	}//end scaleMinimum()
-
-	/**
-	 * Add holiday allowance, employer charges and the total to a line.
-	 *
-	 * @param array<string, mixed> $line The line.
-	 * @param float $chargesRatio Employer charges over gross.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function withSurcharges(array $line, float $chargesRatio): array {
-		$base = ((float)$line['occupiedCost'] + (float)$line['vacantCost']);
-		$holiday = ($base * $this->holidayAllowancePercentage / 100.0);
-		$charges = (($base + $holiday) * $chargesRatio);
-		$line['occupiedCost'] = round((float)$line['occupiedCost'], 2);
-		$line['vacantCost'] = round((float)$line['vacantCost'], 2);
-		$line['holidayAllowance'] = round($holiday, 2);
-		$line['employerCharges'] = round($charges, 2);
-		$line['total'] = round(($base + $holiday + $charges), 2);
-
-		return $line;
-	}//end withSurcharges()
-
-	/**
-	 * Employer charges over gross from the last twelve finalised runs, else the scenario's percentage.
-	 *
-	 * @param array<string, mixed> $scenario The scenario.
-	 * @param array<int, array<string, mixed>> $runs The payroll runs.
-	 *
-	 * @return array{ratio: float, basis: string}
-	 */
-	private function chargesBasis(array $scenario, array $runs): array {
-		$administrationId = (string)($scenario['administrationId'] ?? '');
-		$final = array_values(
-			array_filter(
-				$runs,
-				static fn (array $run): bool => in_array(($run['status'] ?? ''), self::FINAL_RUN_STATES, true)
-					&& ($administrationId === '' || (string)($run['administrationId'] ?? $administrationId) === $administrationId)
-			)
-		);
-		usort($final, static fn (array $x, array $y): int => strcmp((string)($y['period'] ?? ''), (string)($x['period'] ?? '')));
-		$final = array_slice($final, 0, 12);
-		$gross = array_sum(array_map(static fn (array $run): float => (float)($run['totalGross'] ?? 0), $final));
-		if ($gross > 0.0) {
-			return ['ratio' => (array_sum(array_map(static fn (array $run): float => (float)($run['totalEmployerCharges'] ?? 0), $final)) / $gross), 'basis' => 'payroll-history'];
-		}
-
-		if (is_numeric($scenario['employerChargesPercentage'] ?? null) === true) {
-			return ['ratio' => ((float)$scenario['employerChargesPercentage'] / 100.0), 'basis' => 'scenario'];
-		}
-
-		return ['ratio' => 0.0, 'basis' => 'none'];
-	}//end chargesBasis()
-
-	/**
-	 * Sum lines per key, with the unit's budgeted FTE per month.
-	 *
-	 * @param array<int, array<string, mixed>> $lines The lines.
-	 * @param string $key orgUnitId, normfunctieId or costCenter.
-	 *
-	 * @return array<string, array<string, mixed>>
-	 */
-	private function rollUp(array $lines, string $key): array {
-		$out = [];
-		foreach ($lines as $line) {
-			$group = ($line[$key] !== '') ? (string)$line[$key] : 'none';
-			$out[$group] ??= ['name' => (($key === 'orgUnitId') ? $line['unitName'] : $group), 'occupiedCost' => 0.0, 'vacantCost' => 0.0, 'total' => 0.0, 'unpriced' => false, 'fteByMonth' => array_fill(0, 12, 0.0)];
-			$out[$group]['occupiedCost'] = round(($out[$group]['occupiedCost'] + $line['occupiedCost']), 2);
-			$out[$group]['vacantCost'] = round(($out[$group]['vacantCost'] + $line['vacantCost']), 2);
-			$out[$group]['total'] = round(($out[$group]['total'] + $line['total']), 2);
-			$out[$group]['unpriced'] = ($out[$group]['unpriced'] || $line['unpriced']);
-			foreach ($line['fteByMonth'] as $index => $month) {
-				$out[$group]['fteByMonth'][$index] = round(($out[$group]['fteByMonth'][$index] + $month['budgeted']), 4);
-			}
-		}
-
-		return $out;
-	}//end rollUp()
 
 	/**
 	 * Whether a row with a from and until date applies on a day.
