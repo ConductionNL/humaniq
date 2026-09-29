@@ -81,6 +81,162 @@
                         "x-notes": "Multi-administratie scoping, as on OrgUnit."
                     }
                 }
+            },
+            "FormationScenario": {
+                "slug": "FormationScenario",
+                "icon": "ChartBoxOutline",
+                "version": "0.1.0",
+                "title": "Formation scenario",
+                "description": "A what-if for next year's formation: FTE added to or removed from places from a date, and the CAO raise to assume. It never changes the live formation (reporting-personnel-budget-and-scenarios D1).",
+                "type": "object",
+                "required": [
+                    "name",
+                    "year"
+                ],
+                "x-openregister-lifecycle": {
+                    "field": "status",
+                    "initial": "concept",
+                    "terminal": [
+                        "vastgesteld"
+                    ],
+                    "transitions": {
+                        "vaststellen": {
+                            "from": [
+                                "concept"
+                            ],
+                            "to": "vastgesteld",
+                            "description": "The scenario is fixed as the budget. It accepts no new mutations after this."
+                        }
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "A name for the scenario, such as Budget 2027 growth."
+                    },
+                    "year": {
+                        "type": "integer",
+                        "minimum": 2000,
+                        "maximum": 2100,
+                        "title": "Budget year",
+                        "description": "The year the budget is for."
+                    },
+                    "caoRaisePercentage": {
+                        "type": "number",
+                        "default": 0,
+                        "title": "CAO raise (%)",
+                        "description": "The collective raise to assume from 1 January of the budget year."
+                    },
+                    "employerChargesPercentage": {
+                        "type": "number",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Employer charges (%)",
+                        "description": "Employer charges as a percentage of gross pay, used only when there are no finalised payroll runs to take the ratio from."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "concept",
+                            "vastgesteld"
+                        ],
+                        "default": "concept",
+                        "title": "Status",
+                        "description": "Draft or fixed. A fixed scenario accepts no new mutations.",
+                        "x-enum-labels": {
+                            "concept": "Draft",
+                            "vastgesteld": "Fixed"
+                        }
+                    },
+                    "note": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Note",
+                        "description": "What this scenario assumes."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration this scenario is for."
+                    }
+                }
+            },
+            "ScenarioMutation": {
+                "slug": "ScenarioMutation",
+                "icon": "PlusCircleOutline",
+                "version": "0.1.0",
+                "title": "Scenario mutation",
+                "description": "One change in a formation scenario: FTE added to or removed from a formation place, or a new place, from a date (reporting-personnel-budget-and-scenarios D1).",
+                "type": "object",
+                "required": [
+                    "scenarioId",
+                    "fteDelta",
+                    "effectiveDate"
+                ],
+                "properties": {
+                    "scenarioId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "FormationScenario",
+                        "title": "Scenario",
+                        "description": "The scenario this change belongs to."
+                    },
+                    "formatieplaatsId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Formatieplaats",
+                        "nullable": true,
+                        "title": "Formation place",
+                        "description": "The place that changes. Leave empty to propose a new place in a unit."
+                    },
+                    "orgUnitId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "OrgUnit",
+                        "nullable": true,
+                        "title": "Organisational unit",
+                        "description": "For a new place: the unit it belongs to."
+                    },
+                    "normfunctieId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Normfunctie",
+                        "nullable": true,
+                        "title": "Reference job",
+                        "description": "For a new place: its reference job, which prices it."
+                    },
+                    "title": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Title",
+                        "description": "For a new place: its name."
+                    },
+                    "fteDelta": {
+                        "type": "number",
+                        "title": "FTE change",
+                        "description": "FTE added (positive) or removed (negative)."
+                    },
+                    "effectiveDate": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Effective date",
+                        "description": "From when the change counts."
+                    },
+                    "note": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Note",
+                        "description": "Why this change."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration of the scenario."
+                    }
+                }
             }
         },
         "objects": [

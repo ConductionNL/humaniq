@@ -72,6 +72,7 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 	use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
 	use OCA\Humaniq\Listener\FieldAccessListener;
 	use OCA\Humaniq\Listener\RightToWorkCheckListener;
+	use OCA\Humaniq\Listener\ScenarioMutationListener;
 	use OCA\Humaniq\Listener\SideActivityListener;
 	use OCA\OpenRegister\Event\ObjectEventSubscription;
 	use OCP\EventDispatcher\IEventDispatcher;
@@ -212,6 +213,29 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
 			self::assertStringContainsString('$this->registerSideActivityListeners($dispatcher);', $boot);
 		}//end testTheSideActivityListenerIsSubscribed()
+
+		/**
+		 * REQ-PBS-002: the fixed-scenario refusal hears every mutation write before it is saved.
+		 *
+		 * @return void
+		 */
+		public function testTheScenarioMutationListenerIsSubscribed(): void {
+			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
+				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
+			}
+
+			ObjectEventSubscription::$recorded = [];
+			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+			$method = new \ReflectionMethod(Application::class, 'registerScenarioMutationListener');
+			$method->invoke($app, $this->createMock(IEventDispatcher::class));
+
+			self::assertSame(['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\OpenRegister\Event\ObjectUpdatingEvent'], array_column(ObjectEventSubscription::$recorded, 'event'));
+			self::assertSame([ScenarioMutationListener::class, ScenarioMutationListener::class], array_column(ObjectEventSubscription::$recorded, 'listener'));
+			self::assertSame(['scenariomutation'], ObjectEventSubscription::$recorded[0]['schemas']);
+
+			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+			self::assertStringContainsString('$this->registerScenarioMutationListener($dispatcher);', $boot);
+		}//end testTheScenarioMutationListenerIsSubscribed()
 
 	}//end class
 }
