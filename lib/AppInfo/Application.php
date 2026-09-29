@@ -55,6 +55,7 @@ use OCA\Humaniq\Listener\RegisterHoursLeafListener;
 use OCA\Humaniq\Listener\ResourceBookingOverlapListener;
 use OCA\Humaniq\Listener\RightToWorkCheckListener;
 use OCA\Humaniq\Listener\ScenarioMutationListener;
+use OCA\Humaniq\Listener\RelationsCaseListener;
 use OCA\Humaniq\Listener\SideActivityListener;
 use OCA\Humaniq\Listener\TimeEntryStampListener;
 use OCA\Humaniq\Listener\TimeEstimateListener;
@@ -477,6 +478,7 @@ class Application extends App implements IBootstrap {
 		$this->registerTrainingListeners($dispatcher);
 		$this->registerDossierListeners($dispatcher);
 		$this->registerSideActivityListeners($dispatcher);
+		$this->registerRelationsCaseListeners($dispatcher);
 		$this->registerScenarioMutationListener($dispatcher);
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
@@ -767,6 +769,30 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerSideActivityListeners()
+
+	/**
+	 * people-employee-relations-cases D2 and D3: a relations case carries the
+	 * accounts its authorization matches on, and a closed one its retention
+	 * date, stamped before the write is saved.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/employee-relations-cases/spec.md#REQ-ERC-002
+	 */
+	private function registerRelationsCaseListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: RelationsCaseListener::class,
+				registers: null,
+				schemas: [RelationsCaseListener::CASE_SLUG]
+			);
+		}
+
+	}//end registerRelationsCaseListeners()
 
 	/**
 	 * self-service-approvals-inbox D1 and D2: a deputy record is judged before

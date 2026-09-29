@@ -1,0 +1,93 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "EmployeeRelationsCase",
+			"params": {
+				"id": "RelationsCases",
+				"route": "/relations-cases",
+				"title": "Relations cases",
+				"columns": [
+					"employeeId",
+					"kind",
+					"openedOn",
+					"status",
+					"closedOn"
+				],
+				"sort": {
+					"field": "openedOn",
+					"order": "desc"
+				},
+				"filters": [
+					"kind",
+					"status",
+					"employeeId"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Grievances, conflicts, written warnings and disciplinary measures. Only HR reads what a case says; a manager sees that a case exists, and an employee sees their own closed warnings and measures.",
+				"note": "people-employee-relations-cases (2026-09-29): REQ-ERC-001/002. My HR > My warnings and measures is a preset on this page (userId = @me); OpenRegister's authorization shows the employee only their own closed warnings and measures, and the manager only kind, status and dates."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "EmployeeRelationsCase",
+			"params": {
+				"id": "RelationsCaseDetail",
+				"route": "/relations-cases/:id",
+				"title": "Relations case",
+				"dataTitle": "Relations case",
+				"dataIcon": "ScaleBalance",
+				"relatedTitle": "Related",
+				"gridHeight": 10,
+				"overrides": {
+					"status": {
+						"editable": false
+					},
+					"userId": {
+						"editable": false
+					},
+					"managerUserId": {
+						"editable": false
+					},
+					"administrationId": {
+						"editable": false
+					}
+				},
+				"note": "people-employee-relations-cases (2026-09-29): D1. Closing asks for the outcome and the closing date (lifecycle inputs); RelationsCaseListener sets the retention date two years on unless HR sets one. Letters go in Documents as references, not as object files: OpenRegister serves an object's files to everyone who may read the object, and the manager may read the case.",
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "in-behandeling-nemen",
+							"from": [
+								"geopend"
+							],
+							"to": "in-behandeling",
+							"label": "Start handling"
+						},
+						{
+							"action": "afsluiten",
+							"from": [
+								"in-behandeling"
+							],
+							"to": "afgesloten",
+							"label": "Close"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"afgesloten"
+							],
+							"to": "in-behandeling",
+							"label": "Reopen"
+						}
+					]
+				}
+			}
+		}
+	]
+}

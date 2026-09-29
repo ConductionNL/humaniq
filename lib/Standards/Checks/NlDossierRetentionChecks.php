@@ -98,6 +98,12 @@ final class NlDossierRetentionChecks implements CheckProvider {
 			'nl-bewaartermijn-verstreken' => static fn (array $object): bool => self::employeeDocumentsNotPastCeiling($object),
 		];
 
+		// people-employee-relations-cases D3: a closed employee relations case
+		// carries its own retention date (two years after closing by default).
+		$checks['EmployeeRelationsCase'] = [
+			'nl-bewaartermijn-verstreken' => static fn (array $object): bool => self::relationsCaseNotPastRetention($object),
+		];
+
 		return $checks;
 	}//end checks()
 
@@ -164,6 +170,29 @@ final class NlDossierRetentionChecks implements CheckProvider {
 		return self::heldPastCeiling($object, 'identityDocumentVerified', 'identityDocumentRetainedUntil') === false
 			&& self::heldPastCeiling($object, 'loonheffingenVerklaringOnFile', 'loonheffingenVerklaringRetainedUntil') === false;
 	}//end employeeDocumentsNotPastCeiling()
+
+	/**
+	 * A closed relations case must not be kept past its `retainedUntil`.
+	 * Vacuous while the case is open, without a date, or on an unparseable one.
+	 *
+	 * @param array<string, mixed> $object The EmployeeRelationsCase.
+	 *
+	 * @return bool True when the case is not past its retention date.
+	 *
+	 * @spec openspec/specs/employee-relations-cases/spec.md#REQ-ERC-003
+	 */
+	private static function relationsCaseNotPastRetention(array $object): bool {
+		if (($object['status'] ?? '') !== 'afgesloten') {
+			return true;
+		}
+
+		$ceiling = strtotime(trim((string)($object['retainedUntil'] ?? '')));
+		if ($ceiling === false) {
+			return true;
+		}
+
+		return $ceiling >= (new DateTimeImmutable('today'))->getTimestamp();
+	}//end relationsCaseNotPastRetention()
 
 	/**
 	 * True when one document is still held AND its recorded retention date has

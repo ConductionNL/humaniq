@@ -14075,6 +14075,78 @@
         "managerUserId": "Voorbeeld Manageruserid 3",
         "administrationId": "Voorbeeld Administrationid 3",
         "note": "Voorbeeld Note 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "EmployeeRelationsCase",
+          "slug": "employeerelationscase-employeerelationscase-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "kind": "klacht",
+        "openedOn": "2026-03-01",
+        "facts": "Voorbeeld Facts 1",
+        "measure": "Voorbeeld Measure 1",
+        "measureFrom": "2026-03-01",
+        "measureUntil": "2026-03-01",
+        "outcome": "Voorbeeld Outcome 1",
+        "documents": [
+          "Voorbeeld Documents 1"
+        ],
+        "closedOn": "2026-03-01",
+        "retainedUntil": "2026-03-01",
+        "status": "geopend",
+        "userId": "Voorbeeld Userid 1",
+        "managerUserId": "Voorbeeld Manageruserid 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "EmployeeRelationsCase",
+          "slug": "employeerelationscase-employeerelationscase-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "kind": "conflict",
+        "openedOn": "2026-03-02",
+        "facts": "Voorbeeld Facts 2",
+        "measure": "Voorbeeld Measure 2",
+        "measureFrom": "2026-03-02",
+        "measureUntil": "2026-03-02",
+        "outcome": "Voorbeeld Outcome 2",
+        "documents": [
+          "Voorbeeld Documents 2"
+        ],
+        "closedOn": "2026-03-02",
+        "retainedUntil": "2026-03-02",
+        "status": "in-behandeling",
+        "userId": "Voorbeeld Userid 2",
+        "managerUserId": "Voorbeeld Manageruserid 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "EmployeeRelationsCase",
+          "slug": "employeerelationscase-employeerelationscase-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "kind": "schriftelijke-waarschuwing",
+        "openedOn": "2026-03-03",
+        "facts": "Voorbeeld Facts 3",
+        "measure": "Voorbeeld Measure 3",
+        "measureFrom": "2026-03-03",
+        "measureUntil": "2026-03-03",
+        "outcome": "Voorbeeld Outcome 3",
+        "documents": [
+          "Voorbeeld Documents 3"
+        ],
+        "closedOn": "2026-03-03",
+        "retainedUntil": "2026-03-03",
+        "status": "afgesloten",
+        "userId": "Voorbeeld Userid 3",
+        "managerUserId": "Voorbeeld Manageruserid 3",
+        "administrationId": "Voorbeeld Administrationid 3"
       }
     ]
   }

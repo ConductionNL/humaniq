@@ -301,6 +301,15 @@
 					"route": "SideActivities"
 				},
 				{
+					"icon": "ScaleBalance",
+					"id": "MijnMaatregelen",
+					"label": "My warnings and measures",
+					"query": {
+						"userId": "@me"
+					},
+					"route": "RelationsCases"
+				},
+				{
 					"icon": "ClockOutline",
 					"id": "MijnAanwezigheid",
 					"label": "My attendance",
@@ -484,6 +493,12 @@
 					"id": "SideActivities",
 					"label": "Side activities",
 					"route": "SideActivities"
+				},
+				{
+					"icon": "ScaleBalance",
+					"id": "RelationsCases",
+					"label": "Relations cases",
+					"route": "RelationsCases"
 				},
 				{
 					"icon": "FileDocumentMultipleOutline",
@@ -5345,6 +5360,14 @@
 						"gridY": 79,
 						"id": 25,
 						"widgetId": "object-list-15"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 83,
+						"id": 26,
+						"widgetId": "object-list-16"
 					}
 				],
 				"register": "humaniq",
@@ -6143,6 +6166,44 @@
 						"icon": "BriefcaseOutline",
 						"id": "object-list-15",
 						"title": "Side activities",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "kind",
+									"label": "Kind"
+								},
+								{
+									"key": "openedOn",
+									"label": "Opened on"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"emptyText": "No relations cases",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"limit": 10,
+							"register": "humaniq",
+							"rowRoute": "RelationsCaseDetail",
+							"schema": "EmployeeRelationsCase",
+							"sort": {
+								"dir": "desc",
+								"field": "openedOn"
+							},
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"viewAllRoute": "RelationsCases"
+						},
+						"icon": "ScaleBalance",
+						"id": "object-list-16",
+						"title": "Relations cases",
 						"type": "object-list"
 					}
 				]
@@ -13709,6 +13770,134 @@
 			"route": "/mijn/beoordelingen",
 			"title": "My reviews",
 			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "people-employee-relations-cases (2026-09-29): REQ-ERC-001/002. My HR > My warnings and measures is a preset on this page (userId = @me); OpenRegister's authorization shows the employee only their own closed warnings and measures, and the manager only kind, status and dates.",
+				"columns": [
+					"employeeId",
+					"kind",
+					"openedOn",
+					"status",
+					"closedOn"
+				],
+				"description": "Grievances, conflicts, written warnings and disciplinary measures. Only HR reads what a case says; a manager sees that a case exists, and an employee sees their own closed warnings and measures.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"kind",
+					"status",
+					"employeeId"
+				],
+				"register": "humaniq",
+				"schema": "EmployeeRelationsCase",
+				"sort": {
+					"field": "openedOn",
+					"order": "desc"
+				}
+			},
+			"id": "RelationsCases",
+			"route": "/relations-cases",
+			"title": "Relations cases",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "people-employee-relations-cases (2026-09-29): D1. Closing asks for the outcome and the closing date (lifecycle inputs); RelationsCaseListener sets the retention date two years on unless HR sets one. Letters go in Documents as references, not as object files: OpenRegister serves an object's files to everyone who may read the object, and the manager may read the case.",
+				"layout": [
+					{
+						"gridHeight": 10,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 10,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "in-behandeling-nemen",
+							"from": [
+								"geopend"
+							],
+							"label": "Start handling",
+							"to": "in-behandeling"
+						},
+						{
+							"action": "afsluiten",
+							"from": [
+								"in-behandeling"
+							],
+							"label": "Close",
+							"to": "afgesloten"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"afgesloten"
+							],
+							"label": "Reopen",
+							"to": "in-behandeling"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "EmployeeRelationsCase",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"administrationId": {
+									"editable": false
+								},
+								"managerUserId": {
+									"editable": false
+								},
+								"status": {
+									"editable": false
+								},
+								"userId": {
+									"editable": false
+								}
+							},
+							"title": "Relations case"
+						},
+						"icon": "ScaleBalance",
+						"id": "data",
+						"title": "Relations case",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "RelationsCaseDetail",
+			"route": "/relations-cases/:id",
+			"title": "Relations case",
+			"type": "detail"
 		},
 		{
 			"config": {
