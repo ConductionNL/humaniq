@@ -55,6 +55,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Standards\Checks;
 
 use DateTimeImmutable;
+use OCA\Humaniq\Service\ContractChainService;
 
 /**
  * Contract-expiry signal + statutory aanzegtermijn executable checks.
@@ -96,6 +97,22 @@ final class NlSignalChecks implements CheckProvider {
 	private const BHV_WINDOW_DAYS = 90;
 
 	/**
+	 * `nl-signaal-ketenregeling` window, days (parameters.windowDays in
+	 * labour.json). The other chain parameters live on ContractChainService.
+	 *
+	 * @var int
+	 */
+	private const CHAIN_WINDOW_DAYS = 60;
+
+	/**
+	 * `nl-signaal-oproep-vaste-uren`: months after its start that an on-call
+	 * contract is owed a fixed-hours offer (parameters.months in labour.json).
+	 *
+	 * @var int
+	 */
+	private const ONCALL_OFFER_MONTHS = 12;
+
+	/**
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, callable>>
@@ -109,6 +126,12 @@ final class NlSignalChecks implements CheckProvider {
 				// BW art. 7:668 lid 1 -- written aanzegging at least one month
 				// before the end date of a fixed-term contract of >= 6 months.
 				'nl-aanzegtermijn-bewaking' => static fn (array $o): bool => self::aanzegtermijnSatisfied($o),
+				// BW 7:668a -- a fixed-term chain about to turn permanent
+				// (people-flex-contract-rules D2).
+				'nl-signaal-ketenregeling' => static fn (array $o, array $context): bool => self::ketenregelingSatisfied($o, $context),
+				// BW 7:628a lid 5 -- an on-call contract past twelve months
+				// without a recorded fixed-hours offer (D3).
+				'nl-signaal-oproep-vaste-uren' => static fn (array $o): bool => self::oproepAanbodSatisfied($o),
 			],
 			'BhvCertificering' => [
 				// bhv-organisatie -- expiring BHV-related certification is
@@ -212,6 +235,90 @@ final class NlSignalChecks implements CheckProvider {
 
 		return false;
 	}//end hasSuccessor()
+
+	/**
+	 * `nl-signaal-ketenregeling`: true unless the contract is live today and
+	 * either closes the third contract of its chain or its chain turns
+	 * permanent within CHAIN_WINDOW_DAYS. The chain is composed from the
+	 * `signals.contractsByEmployeeId` index by ContractChainService, the model
+	 * the contract page reads too.
+	 *
+	 * @param array<string, mixed> $o       The EmploymentContract.
+	 * @param array<string, mixed> $context Evaluation context; reads `signals.contractsByEmployeeId`.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-001
+	 */
+	private static function ketenregelingSatisfied(array $o, array $context): bool {
+		$start = strtotime((string)($o['startDate'] ?? ''));
+		$end = strtotime((string)($o['endDate'] ?? ''));
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
+		if ($start === false || $end === false || $start > $today || $end < $today) {
+			return true;
+		}
+
+		$ownId = (string)($o['id'] ?? $o['@self']['id'] ?? '');
+		if ($ownId === '') {
+			$ownId = '__self__';
+		}
+
+		$siblings = array_values(
+			array_filter(
+				self::contractsByEmployeeId($context)[(string)($o['employeeId'] ?? '')] ?? [],
+				static fn (array $row): bool => (string)($row['id'] ?? '') !== $ownId
+			)
+		);
+		$siblings[] = array_merge($o, ['id' => $ownId]);
+
+		$chain = (new ContractChainService())->chainFor(contracts: $siblings, contractId: $ownId);
+		if ($chain['position'] === 0) {
+			return true;
+		}
+
+		if ($chain['position'] >= ContractChainService::MAX_CONTRACTS) {
+			return false;
+		}
+
+		$permanentOn = strtotime((string)$chain['turnsPermanentOn']);
+		$windowEnd = strtotime('+' . self::CHAIN_WINDOW_DAYS . ' days', $today);
+
+		return $permanentOn === false || $permanentOn < $today || $permanentOn > $windowEnd;
+	}//end ketenregelingSatisfied()
+
+	/**
+	 * `nl-signaal-oproep-vaste-uren`: true unless the contract is an on-call
+	 * contract still running, started at least ONCALL_OFFER_MONTHS ago, with
+	 * no `vasteUrenAanbodOp` recorded.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-003
+	 */
+	private static function oproepAanbodSatisfied(array $o): bool {
+		if ((string)($o['type'] ?? '') !== 'oproep') {
+			return true;
+		}
+
+		$start = strtotime((string)($o['startDate'] ?? ''));
+		if ($start === false) {
+			return true;
+		}
+
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
+		$end = strtotime((string)($o['endDate'] ?? ''));
+		if ($end !== false && $end < $today) {
+			return true;
+		}
+
+		if (strtotime('+' . self::ONCALL_OFFER_MONTHS . ' months', $start) > $today) {
+			return true;
+		}
+
+		return trim((string)($o['vasteUrenAanbodOp'] ?? '')) !== '';
+	}//end oproepAanbodSatisfied()
 
 	/**
 	 * The `signals.contractsByEmployeeId` index from the context, or an empty
