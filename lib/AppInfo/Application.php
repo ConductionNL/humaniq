@@ -46,6 +46,7 @@ use OCA\Humaniq\Listener\ChangeRequestListener;
 use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
 use OCA\Humaniq\Listener\FieldAccessListener;
 use OCA\Humaniq\Listener\FrequentAbsenceListener;
+use OCA\Humaniq\Listener\HrLifecycleEventListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
 use OCA\Humaniq\Listener\ManagerDeputyListener;
@@ -65,6 +66,7 @@ use OCA\Humaniq\Listener\TravelAmountListener;
 use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
 use OCA\Humaniq\Payroll\PackRepository;
 use OCA\Humaniq\Payroll\PayrollCalculator;
+use OCA\Humaniq\Service\HrLifecycleEventService;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\JurisdictionPackService;
 use OCA\Humaniq\Service\ManagerDeputies;
@@ -479,6 +481,7 @@ class Application extends App implements IBootstrap {
 		$this->registerChangeRequestListeners($dispatcher);
 		$this->registerFieldAccessListener($dispatcher);
 		$this->registerApprovalsInboxListeners($dispatcher);
+		$this->registerHrLifecycleEventListener($dispatcher);
 
 	}//end boot()
 
@@ -798,6 +801,30 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerApprovalsInboxListeners()
+
+	/**
+	 * platform-hr-lifecycle-events D1: after a contract, onboarding or
+	 * offboarding case, placement, leave request or sickness case is saved,
+	 * the HR moments it marks are sent as CloudEvents and typed events.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/hr-lifecycle-events/spec.md#REQ-HLE-001
+	 */
+	private function registerHrLifecycleEventListener(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: HrLifecycleEventListener::class,
+				registers: null,
+				schemas: HrLifecycleEventService::SLUGS
+			);
+		}
+
+	}//end registerHrLifecycleEventListener()
 
 	/**
 	 * reporting-personnel-budget-and-scenarios D4: a fixed formation scenario
