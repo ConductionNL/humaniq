@@ -130,3 +130,21 @@ leave) keep the hours usable; the waiver is audited like any field write.
 
 - Should the warning also be stamped on the balance (`expiryWarnedAt`) as proof that the
   employer informed the employee?
+
+## Changes made while building (2026-09-29)
+
+- D1: on a tie of lapse dates statutory goes first; with carry-over `none` the bovenwettelijk
+  hours lapse on 31 December of their year, before the statutory hours, so they are drawn first.
+  That is the "lapses first" rule; under the default rule statutory always goes first.
+- D2: `capped` is two buckets: the hours above the cap lapse on 31 December, the capped part on
+  `bovenwettelijkExpiryDate`.
+- D3: no separate `LeaveExpiryService`. The calculator works out the lapse from the same buckets,
+  `LeaveBalanceProjectionService::recomputeAll($today)` writes it, and `LeaveAccrualJob::run()`
+  calls it daily whether or not accrual is on. A lapse is on the day after the expiry date.
+- D4: the warning is a `calculatedChange` on the materialised `daysUntilStatutoryLapse` (lte 60,
+  previously gt 60), the dialect people-dossier-completeness uses, instead of a scheduled filter.
+  The "lapses soon" view is a menu entry on `LeaveBalances` filtered on the materialised
+  `statutoryExpiresSoon` (statutory hours left, lapsing within 90 days), because the manifest has
+  no date-window token.
+- Seed: last year's balances for Jansen (8 hours lapsed) and Bakker (a waived lapse). The February
+  request seed was left out: it would contradict the seeded 2026 figures until the first recompute.
