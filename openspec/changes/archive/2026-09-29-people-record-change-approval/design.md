@@ -84,6 +84,26 @@ kind with approver `none` is applied at submission by the same service.
 for NL, free for other countries), `woonplaats`, `land` (ISO 3166 alpha-2, default `NL`).
 All nullable; titles and descriptions follow gate 28.
 
+## Build-time notes (2026-09-29)
+
+- The request starts in `ingediend` (a `concept` state exists for a saved draft, `indienen`
+  moves it on). `ChangeRequestListener` hands the object events to `ChangeRequestService`:
+  on create it fills `employeeId` from the requester's account when empty, merges the flat
+  form fields (`straat`, `huisnummer`, `postcode`, `woonplaats`, `land`, `iban`,
+  `tenaamstelling`) into `changes`, refuses a field the kind's rule does not cover, stamps
+  `previousValues`, `approverRole`, `requestedBy`, `userId`, `managerUserId`,
+  `administrationId`; a kind with approver `none` is approved at once only on the
+  employee's own record (someone else's waits for `hr`). A rejection without
+  `rejectionReason` is refused. The apply step records `appliedAt`, or `applyError` when
+  stale.
+- `ChangeApproverRoleGuard` includes the no-self rule itself (subject `userId` and
+  `requestedBy`), so the transition needs one `requires`.
+- `AvgDsrService::rectifySubjectObject()` now writes under `InternalWriteMarker`: an AVG
+  rectification is an administrator's decided procedure and must not be sent to a request.
+- `MijnGegevens` is the Employee index with base filter `nextcloudUserId: @me`;
+  `MijnWijzigingsverzoeken` the request index with `userId: @me`, whose create form is the
+  self-service request.
+
 ## Declarative-vs-imperative decision (ADR-031)
 
 | behaviour | path | why |

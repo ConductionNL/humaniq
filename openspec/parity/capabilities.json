@@ -5307,7 +5307,7 @@
    "id": "ess-edit-details",
    "area": "self-service",
    "name": "Let an employee update their own address or bank account, with approval where needed.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -5323,9 +5323,11 @@
     "personio": "https://support.personio.de/hc/en-us/articles/21453114449053-Set-up-employee-data-change-approval-workflows: admins define which changes to employee information need manual approval, based on the profile section updated, and which are approved automatically."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-record-change-approval on 2026-09-27. Before: grep -n iban/address lib/Settings/register.d/hr-objects.json: only Employee.iban exists, editable only on the HR-admin EmployeeDetail page (not @me-scoped); Employee declares no street/postcode/city address field at all; grep -rniF 'MijnGegevens|MijnProfiel|self.service.*edit' src/manifest.d src/manifest.json: no hits; no approval workflow for a personal-details change exists anywhere",
-    "reachedOn": "nothing reaches it: an employee cannot edit their own IBAN or address anywhere in the app",
+    "state": "built",
+    "change": "2026-09-29-people-record-change-approval",
+    "evidence": "Employee gains straat, huisnummer, postcode, woonplaats, land (hr-objects.json 0.9.0); My HR > My details (Employee index, base filter nextcloudUserId = @me) and My HR > My change requests (create form with the flat address and bank fields, employee filled from the account). An address change applies at once, a bank account change waits for HR. Tests: EmployeeChangeRequestFlowTest::testAnAddressChangeAppliesAtOnce, ::testABankAccountChangeWaitsForHrAndIsAppliedOnce.",
+    "reachedOn": "My HR > My details /my-details and My HR > My change requests /my-change-requests",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -6789,7 +6791,7 @@
    "id": "td-mutation-approval",
    "area": "people",
    "name": "Have a change to an employee record take effect only after the role set for that kind of change approves it.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -6805,9 +6807,11 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmPimPlugin/config/routes.yaml:56 job-details and other PIM updates save directly with no pending state; grep -riE 'mutation approval|change request' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-record-change-approval on 2026-09-27. Before: grep -rniF 'MijnGegevens|approval' on the Employee schema lib/Settings/register.d/hr-objects.json:5: Employee carries no x-openregister-lifecycle and no pending-change object; a change on EmployeeDetail is saved at once by whoever may edit it (same finding as ess-edit-details); no per-change-type approval role exists",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "change": "2026-09-29-people-record-change-approval",
+    "evidence": "lib/Settings/register.d/hr-change-requests.json EmployeeChangeRequest (lifecycle ingediend -> goedgekeurd/afgewezen, guard ChangeApproverRoleGuard) and ChangeApprovalRule (five seeded kinds); lib/Service/ChangeRequestService.php places, decides and applies a request with a staleness check; lib/Listener/EmployeeGuardedFieldListener.php refuses a direct update of a guarded Employee field, fail closed. Tests: tests/Unit/Listener/EmployeeChangeRequestFlowTest.php, tests/Unit/Lifecycle/ChangeApproverRoleGuardTest.php, tests/Unit/AppInfo/ChangeRequestListenerWiringTest.php.",
+    "reachedOn": "People > Change requests /change-requests and ChangeRequestDetail (Approve / Reject), People > Change approval rules; a guarded edit on EmployeeDetail is refused with the kind named",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
