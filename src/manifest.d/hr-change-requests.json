@@ -1,0 +1,211 @@
+{
+	"pageInstances": [
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "Employee",
+			"params": {
+				"id": "MijnGegevens",
+				"route": "/my-details",
+				"title": "My details",
+				"columns": [
+					"firstName",
+					"lastName",
+					"straat",
+					"huisnummer",
+					"postcode",
+					"woonplaats",
+					"iban"
+				],
+				"filter": {
+					"nextcloudUserId": "@me"
+				},
+				"allowCreate": false,
+				"description": "Your own record. To change your address or bank account, add a request under My change requests. An address change applies at once; a bank account change waits for HR.",
+				"note": "people-record-change-approval (2026-09-29): REQ-ECR-003. The Employee list scoped by the base filter nextcloudUserId = @me, so an employee only ever sees their own row (and OpenRegister RBAC still decides what they may read). No create: the record is HR's; a change goes through EmployeeChangeRequest on MijnWijzigingsverzoeken."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "EmployeeChangeRequest",
+			"params": {
+				"id": "MijnWijzigingsverzoeken",
+				"route": "/my-change-requests",
+				"title": "My change requests",
+				"columns": [
+					"changeKind",
+					"status",
+					"straat",
+					"postcode",
+					"woonplaats",
+					"iban",
+					"decidedAt",
+					"applyError"
+				],
+				"sort": {
+					"field": "decidedAt",
+					"order": "desc"
+				},
+				"filter": {
+					"userId": "@me"
+				},
+				"description": "Ask for a change of your address or bank account. Choose the kind of change and fill in only the new values; your record is filled in for you.",
+				"note": "people-record-change-approval (2026-09-29): REQ-ECR-003. The standard create form of EmployeeChangeRequest: employeeId is not required, ChangeRequestService fills it from the requester's own account, merges the flat address and bank fields into changes, and applies an address change at once (approver none, own record)."
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "EmployeeChangeRequest",
+			"params": {
+				"id": "ChangeRequests",
+				"route": "/change-requests",
+				"title": "Change requests",
+				"columns": [
+					"employeeId",
+					"changeKind",
+					"status",
+					"approverRole",
+					"requestedBy",
+					"decidedBy",
+					"decidedAt"
+				],
+				"sort": {
+					"field": "decidedAt",
+					"order": "asc"
+				},
+				"filters": [
+					"status",
+					"changeKind",
+					"approverRole",
+					"employeeId"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Changes to employee records that wait for approval. Open one to see the current and the proposed values side by side.",
+				"note": "people-record-change-approval (2026-09-29): REQ-ECR-001. The approval queue; ChangeApproverRoleGuard decides who may approve or reject each one."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "EmployeeChangeRequest",
+			"params": {
+				"id": "ChangeRequestDetail",
+				"route": "/change-requests/:id",
+				"title": "Change request",
+				"dataTitle": "Change request",
+				"dataIcon": "AccountEditOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 10,
+				"note": "people-record-change-approval (2026-09-29): REQ-ECR-001. The data widget shows previousValues (Current values) next to changes (Proposed values); every stamped field is read-only because ChangeRequestService fills it. lifecycleActions mirror the schema: goedkeuren and afwijzen, both guarded by ChangeApproverRoleGuard; a rejection needs rejectionReason (refused otherwise).",
+				"exclude": [
+					"employeeId",
+					"straat",
+					"huisnummer",
+					"postcode",
+					"woonplaats",
+					"land",
+					"iban",
+					"tenaamstelling"
+				],
+				"overrides": {
+					"previousValues": {
+						"editable": false
+					},
+					"approverRole": {
+						"editable": false
+					},
+					"requestedBy": {
+						"editable": false
+					},
+					"status": {
+						"editable": false
+					},
+					"decidedBy": {
+						"editable": false
+					},
+					"decidedAt": {
+						"editable": false
+					},
+					"appliedAt": {
+						"editable": false
+					},
+					"applyError": {
+						"editable": false
+					},
+					"userId": {
+						"editable": false
+					},
+					"managerUserId": {
+						"editable": false
+					}
+				},
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "goedkeuren",
+							"from": [
+								"ingediend"
+							],
+							"to": "goedgekeurd",
+							"label": "Approve"
+						},
+						{
+							"action": "afwijzen",
+							"from": [
+								"ingediend"
+							],
+							"to": "afgewezen",
+							"label": "Reject"
+						}
+					]
+				}
+			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "ChangeApprovalRule",
+			"params": {
+				"id": "ChangeApprovalRules",
+				"route": "/change-approval-rules",
+				"title": "Change approval rules",
+				"columns": [
+					"changeKind",
+					"approverRole",
+					"fields",
+					"administrationId"
+				],
+				"sort": {
+					"field": "changeKind",
+					"order": "asc"
+				},
+				"filters": [
+					"changeKind",
+					"approverRole"
+				],
+				"description": "Who approves each kind of change to an employee record. A field covered by a rule with an approver can only change through a change request.",
+				"note": "people-record-change-approval (2026-09-29): D2. Administered data, not code: the five seeded rules (adres none, bankrekening hr, persoonsgegevens hr, salaris accountant, contractvoorwaarden hr) apply to every administration without rules of its own."
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "ChangeApprovalRule",
+			"params": {
+				"id": "ChangeApprovalRuleDetail",
+				"route": "/change-approval-rules/:id",
+				"title": "Change approval rule",
+				"dataTitle": "Change approval rule",
+				"dataIcon": "ShieldAccountOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 5,
+				"note": "people-record-change-approval (2026-09-29): D2. A plain configuration record, no lifecycle."
+			}
+		}
+	]
+}
