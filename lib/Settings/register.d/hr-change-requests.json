@@ -1,0 +1,422 @@
+{
+    "x-humaniq-fragment": "hr-change-requests",
+    "components": {
+        "schemas": {
+            "EmployeeChangeRequest": {
+                "slug": "EmployeeChangeRequest",
+                "icon": "AccountEditOutline",
+                "version": "0.1.0",
+                "title": "Change request",
+                "description": "A proposed change to one employee record that waits for the role set for its kind of change. Approving it writes the proposed values to the employee; rejecting it writes nothing (people-record-change-approval D1).",
+                "type": "object",
+                "required": [
+                    "changeKind"
+                ],
+                "x-openregister-lifecycle": {
+                    "field": "status",
+                    "initial": "ingediend",
+                    "terminal": [
+                        "goedgekeurd",
+                        "afgewezen"
+                    ],
+                    "transitions": {
+                        "indienen": {
+                            "from": [
+                                "concept"
+                            ],
+                            "to": "ingediend",
+                            "description": "The request is sent to the approver its kind of change names."
+                        },
+                        "goedkeuren": {
+                            "from": [
+                                "ingediend"
+                            ],
+                            "to": "goedgekeurd",
+                            "requires": "OCA\\Humaniq\\Lifecycle\\ChangeApproverRoleGuard",
+                            "description": "The approver accepts the change; humaniq then writes the proposed values to the employee. Only a user with the approver role for the kind may do this, and never the employee it is about or the person who asked."
+                        },
+                        "afwijzen": {
+                            "from": [
+                                "ingediend"
+                            ],
+                            "to": "afgewezen",
+                            "requires": "OCA\\Humaniq\\Lifecycle\\ChangeApproverRoleGuard",
+                            "description": "The approver refuses the change with a reason. Nothing is written to the employee."
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Whose record this change is for. Left empty, it is your own record.",
+                        "x-notes": "Not required: ChangeRequestService fills it from the requester's own account on create (MijnGegevens), and refuses a request it cannot place."
+                    },
+                    "changeKind": {
+                        "type": "string",
+                        "enum": [
+                            "adres",
+                            "bankrekening",
+                            "persoonsgegevens",
+                            "salaris",
+                            "contractvoorwaarden"
+                        ],
+                        "x-enum-labels": {
+                            "adres": "Address",
+                            "bankrekening": "Bank account",
+                            "persoonsgegevens": "Personal details",
+                            "salaris": "Salary",
+                            "contractvoorwaarden": "Contract terms"
+                        },
+                        "title": "Kind of change",
+                        "description": "What sort of change this is. The rule for this kind decides who approves it."
+                    },
+                    "changes": {
+                        "type": "object",
+                        "title": "Proposed values",
+                        "description": "The new value for each field that changes, by its technical name. For an address or bank account you can use the fields below instead.",
+                        "x-notes": "Keys are Employee property names covered by the ChangeApprovalRule of changeKind; ChangeRequestService merges the flat address and bank fields into it on create and refuses any key the rule does not cover.",
+                        "nullable": true
+                    },
+                    "straat": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Street",
+                        "description": "The new street.",
+                        "x-notes": "Flat entry for the self-service form (people-record-change-approval, build-time addition); merged into changes on create."
+                    },
+                    "huisnummer": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "House number",
+                        "description": "The new house number, with any addition.",
+                        "x-notes": "Flat entry for the self-service form (people-record-change-approval, build-time addition); merged into changes on create."
+                    },
+                    "postcode": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Postcode",
+                        "description": "The new postcode, for example 1234 AB.",
+                        "x-notes": "Flat entry for the self-service form (people-record-change-approval, build-time addition); merged into changes on create."
+                    },
+                    "woonplaats": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "City",
+                        "description": "The new city or town.",
+                        "x-notes": "Flat entry for the self-service form (people-record-change-approval, build-time addition); merged into changes on create."
+                    },
+                    "land": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Country",
+                        "description": "The new country, as a two-letter code such as NL.",
+                        "x-notes": "Flat entry for the self-service form (people-record-change-approval, build-time addition); merged into changes on create."
+                    },
+                    "iban": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "IBAN",
+                        "description": "The new bank account for the salary payment.",
+                        "x-notes": "Flat entry for the self-service form (people-record-change-approval, build-time addition); merged into changes on create."
+                    },
+                    "tenaamstelling": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Account holder",
+                        "description": "The name the new bank account is held in.",
+                        "x-notes": "Flat entry for the self-service form (people-record-change-approval, build-time addition); merged into changes on create."
+                    },
+                    "previousValues": {
+                        "type": "object",
+                        "nullable": true,
+                        "title": "Current values",
+                        "description": "The values on the record when the request was made, filled in by humaniq.",
+                        "x-notes": "Stamped by ChangeRequestService at submission; the apply step refuses when the record no longer holds these values (D4 staleness check)."
+                    },
+                    "requestedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Requested by",
+                        "description": "Who asked for the change."
+                    },
+                    "approverRole": {
+                        "type": "string",
+                        "enum": [
+                            "hr",
+                            "accountant",
+                            "manager",
+                            "none"
+                        ],
+                        "x-enum-labels": {
+                            "hr": "HR",
+                            "accountant": "Accountant",
+                            "manager": "Manager",
+                            "none": "No approval needed"
+                        },
+                        "nullable": true,
+                        "title": "Approver",
+                        "description": "Who approves this change, copied from the rule for its kind when it was made."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "concept",
+                            "ingediend",
+                            "goedgekeurd",
+                            "afgewezen"
+                        ],
+                        "x-enum-labels": {
+                            "concept": "Draft",
+                            "ingediend": "Submitted",
+                            "goedgekeurd": "Approved",
+                            "afgewezen": "Rejected"
+                        },
+                        "default": "ingediend",
+                        "title": "Status",
+                        "description": "Where the request has got to.",
+                        "x-notes": "Governed by the x-openregister-lifecycle state machine."
+                    },
+                    "appliedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Applied at",
+                        "description": "When the new values were written to the employee."
+                    },
+                    "applyError": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Not applied because",
+                        "description": "Why the approved values were not written, for example because the record changed after the request was made. Make a new request."
+                    },
+                    "decidedBy": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Decided by",
+                        "description": "Who approved or rejected the request."
+                    },
+                    "decidedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Decided at",
+                        "description": "When the request was approved or rejected."
+                    },
+                    "rejectionReason": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Reason for rejection",
+                        "description": "Why the request was rejected."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Employee account",
+                        "description": "The employee's own account, filled in by humaniq.",
+                        "x-notes": "Denormalised Nextcloud uid of the subject (REQ-MHS-002 shape) so NoSelfApprovalGuard and the @me filter on MijnGegevens work."
+                    },
+                    "managerUserId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Manager account",
+                        "description": "The employee's manager, filled in by humaniq."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration this request belongs to."
+                    }
+                }
+            },
+            "ChangeApprovalRule": {
+                "slug": "ChangeApprovalRule",
+                "icon": "ShieldAccountOutline",
+                "version": "0.1.0",
+                "title": "Change approval rule",
+                "description": "Who approves one kind of change to an employee record, and which fields it covers. A field covered by a rule with an approver can only change through a change request (people-record-change-approval D2).",
+                "type": "object",
+                "required": [
+                    "changeKind",
+                    "fields",
+                    "approverRole"
+                ],
+                "properties": {
+                    "changeKind": {
+                        "type": "string",
+                        "enum": [
+                            "adres",
+                            "bankrekening",
+                            "persoonsgegevens",
+                            "salaris",
+                            "contractvoorwaarden"
+                        ],
+                        "x-enum-labels": {
+                            "adres": "Address",
+                            "bankrekening": "Bank account",
+                            "persoonsgegevens": "Personal details",
+                            "salaris": "Salary",
+                            "contractvoorwaarden": "Contract terms"
+                        },
+                        "title": "Kind of change",
+                        "description": "The kind of change this rule is for."
+                    },
+                    "fields": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "title": "Fields",
+                        "description": "The employee fields this kind of change covers, by their technical name, for example iban."
+                    },
+                    "approverRole": {
+                        "type": "string",
+                        "enum": [
+                            "hr",
+                            "accountant",
+                            "manager",
+                            "none"
+                        ],
+                        "x-enum-labels": {
+                            "hr": "HR",
+                            "accountant": "Accountant",
+                            "manager": "Manager",
+                            "none": "No approval needed"
+                        },
+                        "title": "Approver",
+                        "description": "Who approves this kind of change. With no approval needed, a request is applied at once and the fields can be edited directly."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration this rule applies to. Leave empty to apply it to every administration without a rule of its own."
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ChangeApprovalRule",
+                    "slug": "change-rule-adres"
+                },
+                "changeKind": "adres",
+                "fields": [
+                    "straat",
+                    "huisnummer",
+                    "postcode",
+                    "woonplaats",
+                    "land"
+                ],
+                "approverRole": "none"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ChangeApprovalRule",
+                    "slug": "change-rule-bankrekening"
+                },
+                "changeKind": "bankrekening",
+                "fields": [
+                    "iban",
+                    "tenaamstelling"
+                ],
+                "approverRole": "hr"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ChangeApprovalRule",
+                    "slug": "change-rule-persoonsgegevens"
+                },
+                "changeKind": "persoonsgegevens",
+                "fields": [
+                    "firstName",
+                    "lastName",
+                    "dateOfBirth",
+                    "bsn"
+                ],
+                "approverRole": "hr"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ChangeApprovalRule",
+                    "slug": "change-rule-salaris"
+                },
+                "changeKind": "salaris",
+                "fields": [
+                    "grossMonthlySalary"
+                ],
+                "approverRole": "accountant"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "ChangeApprovalRule",
+                    "slug": "change-rule-contractvoorwaarden"
+                },
+                "changeKind": "contractvoorwaarden",
+                "fields": [
+                    "startDate",
+                    "endDate"
+                ],
+                "approverRole": "hr"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmployeeChangeRequest",
+                    "slug": "change-request-jansen-adres"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "changeKind": "adres",
+                "changes": {
+                    "straat": "Stationsplein",
+                    "huisnummer": "1",
+                    "postcode": "1234 AB",
+                    "woonplaats": "Utrecht",
+                    "land": "NL"
+                },
+                "previousValues": {
+                    "straat": null,
+                    "huisnummer": null,
+                    "postcode": null,
+                    "woonplaats": null,
+                    "land": null
+                },
+                "requestedBy": "admin",
+                "approverRole": "none",
+                "status": "goedgekeurd",
+                "appliedAt": "2026-09-01T09:00:00+00:00",
+                "decidedAt": "2026-09-01T09:00:00+00:00",
+                "userId": "admin",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "EmployeeChangeRequest",
+                    "slug": "change-request-bakker-bankrekening"
+                },
+                "employeeId": "@ref:employee-bakker",
+                "changeKind": "bankrekening",
+                "changes": {
+                    "iban": "NL00BANK0123456789"
+                },
+                "previousValues": {
+                    "iban": null
+                },
+                "requestedBy": "admin",
+                "approverRole": "hr",
+                "status": "ingediend",
+                "administrationId": "ADM-001"
+            }
+        ]
+    }
+}

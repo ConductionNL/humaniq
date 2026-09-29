@@ -30,6 +30,7 @@ namespace OCA\Humaniq\AppInfo;
 
 use OCA\Humaniq\Command\RulesAuditCommand;
 use OCA\Humaniq\Command\RulesSeedTestDataCommand;
+use OCA\Humaniq\Lifecycle\ChangeApproverRoleGuard;
 use OCA\Humaniq\Lifecycle\CompEffectiveDateGuard;
 use OCA\Humaniq\Lifecycle\DecisionReasonGuard;
 use OCA\Humaniq\Lifecycle\LeaveBuySellApprovalGuard;
@@ -140,6 +141,19 @@ class Application extends App implements IBootstrap {
 		// approved/posted/paid. Unlike NoSelfApprovalGuard this guard loads the
 		// referenced run, so it needs the container (lazy ObjectService resolution)
 		// and IAppConfig (register slug), both autowired here.
+		// people-record-change-approval D2: only the approver role of a change
+		// request's kind decides on it. Keyed by its FQCN for the `requires`
+		// tag on EmployeeChangeRequest's goedkeuren and afwijzen.
+		$context->registerService(
+			ChangeApproverRoleGuard::class,
+			static function ($c): ChangeApproverRoleGuard {
+				return new ChangeApproverRoleGuard(
+					administrations: $c->get(\OCA\Humaniq\Service\AdministrationService::class),
+					groupManager: $c->get(\OCP\IGroupManager::class)
+				);
+			}
+		);
+
 		$context->registerService(
 			PayrollRunApprovedGuard::class,
 			static function ($c): PayrollRunApprovedGuard {
