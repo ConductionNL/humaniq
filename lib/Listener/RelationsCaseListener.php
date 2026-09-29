@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Listener;
 
+use DateTimeImmutable;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
@@ -86,18 +87,14 @@ class RelationsCaseListener implements IEventListener {
 	 * @spec openspec/specs/employee-relations-cases/spec.md#REQ-ERC-002
 	 */
 	public function handle(Event $event): void {
-		if ($this->marker->isInternal() === true) {
+		if ($this->marker->isInternal() === true
+			|| (($event instanceof ObjectCreatingEvent) === false && ($event instanceof ObjectUpdatingEvent) === false)
+		) {
 			return;
 		}
 
-		$entity = null;
-		if ($event instanceof ObjectCreatingEvent) {
-			$entity = $event->getObject();
-		} else if ($event instanceof ObjectUpdatingEvent) {
-			$entity = $event->getNewObject();
-		}
-
-		if ($entity === null || strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) !== self::CASE_SLUG) {
+		$entity = $this->entityOf($event);
+		if (strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) !== self::CASE_SLUG) {
 			return;
 		}
 
@@ -113,6 +110,21 @@ class RelationsCaseListener implements IEventListener {
 			$event->setModifiedData($stamps);
 		}
 	}//end handle()
+
+	/**
+	 * The object a create or update is about to save.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The pre-save event.
+	 *
+	 * @return object
+	 */
+	private function entityOf(ObjectCreatingEvent|ObjectUpdatingEvent $event): object {
+		if ($event instanceof ObjectCreatingEvent) {
+			return $event->getObject();
+		}
+
+		return $event->getNewObject();
+	}//end entityOf()
 
 	/**
 	 * The subject's and the manager's accounts and the administration, from the employee.
@@ -152,12 +164,11 @@ class RelationsCaseListener implements IEventListener {
 			return [];
 		}
 
-		$closed = \DateTimeImmutable::createFromFormat('!Y-m-d', $closedOn);
-		if ($closed === false) {
+		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $closedOn) !== 1) {
 			return [];
 		}
 
-		return ['retainedUntil' => $closed->modify(self::DEFAULT_RETENTION)->format('Y-m-d')];
+		return ['retainedUntil' => (new DateTimeImmutable($closedOn))->modify(self::DEFAULT_RETENTION)->format('Y-m-d')];
 	}//end retention()
 
 }//end class
