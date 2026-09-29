@@ -6897,7 +6897,7 @@
    "id": "td-secondment",
    "area": "people",
    "name": "Register an employee who is seconded to another organisation.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "unknown",
    "visma-raet": "unknown",
    "hr2day": "unknown",
@@ -6913,10 +6913,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(secondment|seconded)\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-secondment-and-side-activities on 2026-09-27. Before: grep -rniE 'detacher|seconded|secondment' lib/Settings src/manifest.d: the only hit is an x-notes remark in lib/Settings/register.d/hr-cost-rate.json:20 that the cost-rate field cannot tell a seconded employee apart; no field or schema records an outward secondment",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-secondment.json Secondment (lifecycle concept -> actief -> beeindigd, receiving organisation, KvK, period, hours per week, agreed rate); lib/Service/AgendaComposer.php secondmentEntries() and lib/Service/AvailabilityService.php dayShare() commit hoursPerWeek over the contracted week. Test: tests/Unit/Service/AgendaAndAvailabilityTest.php::testAnActiveSecondmentCommitsItsHours.",
+    "reachedOn": "People > Secondments /secondments and SecondmentDetail (Activate / End), the Secondments list on EmployeeDetail, the agenda (Seconded entries)",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-people-secondment-and-side-activities",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -6929,7 +6931,7 @@
    "id": "td-side-activities",
    "area": "people",
    "name": "Register an employee's side activities inside and outside the organisation.",
-   "humaniq": "partial",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "partial",
@@ -6945,10 +6947,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(side activit\\w*|nevenwerk\\w*)\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/people-secondment-and-side-activities on 2026-09-27 for the missing half: a register of the side activities themselves; the yes or no attestation is built. Before: lib/Settings/register.d/hr-objects.json:54 Employee.nevenwerkzaamhedenGemeld is a single yes or no attestation for civil servants, checked by rule nl-ambtenaar-nevenwerkzaamheden-melding (lib/Standards/rules/labour.json:451) only through occ humaniq:rules:audit; no register of the side activities themselves",
-    "reachedOn": "EmployeeDetail /employees/:id edit form (the boolean); the rule result only via occ humaniq:rules:audit",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-secondment.json SideActivity (lifecycle gemeld -> akkoord/afgewezen/beeindigd, NoSelfApprovalGuard and DecisionReasonGuard); lib/Listener/SideActivityListener.php and lib/Service/SideActivityRegister.php place a report on its employee and derive Employee.nevenwerkzaamhedenGemeld from the register. Tests: tests/Unit/Listener/SideActivityListenerTest.php, tests/Unit/AppInfo/ChangeRequestListenerWiringTest.php::testTheSideActivityListenerIsSubscribed.",
+    "reachedOn": "My HR > My side activities (preset userId = @me on /side-activities), People > Side activities and SideActivityDetail (Agree / Refuse / End), the Side activities list on EmployeeDetail",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-people-secondment-and-side-activities",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
