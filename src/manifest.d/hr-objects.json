@@ -804,6 +804,44 @@
 							},
 							"emptyText": "No side activities reported"
 						}
+					},
+					{
+						"id": "object-list-16",
+						"type": "object-list",
+						"title": "Relations cases",
+						"icon": "ScaleBalance",
+						"content": {
+							"register": "humaniq",
+							"schema": "EmployeeRelationsCase",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "openedOn",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "kind",
+									"label": "Kind"
+								},
+								{
+									"key": "openedOn",
+									"label": "Opened on"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 10,
+							"rowRoute": "RelationsCaseDetail",
+							"viewAllRoute": "RelationsCases",
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"emptyText": "No relations cases"
+						}
 					}
 				],
 				"layout": [
@@ -1004,6 +1042,14 @@
 						"widgetId": "object-list-15",
 						"gridX": 6,
 						"gridY": 79,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 26,
+						"widgetId": "object-list-16",
+						"gridX": 0,
+						"gridY": 83,
 						"gridWidth": 6,
 						"gridHeight": 4
 					}

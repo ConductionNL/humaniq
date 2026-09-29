@@ -76,6 +76,15 @@
 				}
 			},
 			{
+				"id": "MijnMaatregelen",
+				"label": "My warnings and measures",
+				"icon": "ScaleBalance",
+				"route": "RelationsCases",
+				"query": {
+					"userId": "@me"
+				}
+			},
+			{
 				"id": "MijnAanwezigheid",
 				"label": "My attendance",
 				"icon": "ClockOutline",
@@ -259,6 +268,12 @@
 				"label": "Side activities",
 				"icon": "BriefcaseOutline",
 				"route": "SideActivities"
+			},
+			{
+				"id": "RelationsCases",
+				"label": "Relations cases",
+				"icon": "ScaleBalance",
+				"route": "RelationsCases"
 			},
 			{
 				"id": "GeneratedDocuments",

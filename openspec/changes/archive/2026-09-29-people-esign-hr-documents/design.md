@@ -115,3 +115,26 @@ stamps `signingCompletedAt`. It never sets `writtenContract` to false.
 
 - Should humaniq subscribe to filinq's completion event instead of polling, once filinq's
   delegated signing contract is adopted fleet-wide (the `offer-esign` follow-up)?
+
+## Changes during the build (2026-09-29)
+
+- **The gateway is built inside OfferEsignService** from the collaborators it already had, so
+  the offer-esign tests pass unchanged (task 1.1's check) and the DI signature did not move.
+  `FilinqSigningGateway` is also a service of its own that `HrDocumentSigningService` receives.
+- **The PDF's file id is looked up, not stored.** `HrGeneratedDocument` records `filePath`,
+  not a file id; the service asks OpenRegister's `FileService::getFile()` for the file on the
+  document's object by its name. A document whose file is gone answers `failed` with "generate
+  it again".
+- **Every save carries the stored record.** OpenRegister's save replaces the object (missing
+  properties are written as null), so the document and the contract are re-read and merged
+  before each write. The contract write sets only `writtenContract`.
+- **Own controller.** `POST /api/documents/{id}/request-signature` lives in
+  `DocumentSigningController`: `DocumentController` sits at the phpmd coupling limit (the
+  annual statement batch moved out for the same reason).
+- **The action on the page.** `GeneratedDocumentDetail` uses the `dualDataScaffold` template,
+  which had no `headerActions` parameter; it gains one (dropped when absent, as in the
+  two-panel template). The action shows while the document is `generated`; the server
+  refuses the other types.
+- **Seeds.** ADM-001's signatory is `admin`. The two seeded documents with a signing status
+  were left out: a seeded `COMPLETED` or `PENDING` with no request in filinq would be a record
+  that says something false, and the sync would report it not found.

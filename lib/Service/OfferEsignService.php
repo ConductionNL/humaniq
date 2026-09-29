@@ -97,33 +97,15 @@ namespace OCA\Humaniq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Humaniq\Support\FleetAppId;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 
 /**
  * Generates an offer letter and raises a docudesk e-signature request for a
  * recruiting Application at the `aanbod` stage.
  */
 class OfferEsignService {
-
-	/**
-	 * The app id docudesk registers under (IAppManager::isInstalled probe).
-	 *
-	 * @var string
-	 */
-	private const DOCUMENT_APP = 'filinq';
-
-	/**
-	 * docudesk's signing-request lifecycle service, resolved by string FQCN
-	 * only -- the VERIFIED real contract (design.md Context): `createRequest`
-	 * reads `signers`, NOT `signerIds`.
-	 *
-	 * @var string
-	 */
-	private const SIGNING_SERVICE_CLASS = 'Service\SigningService';
 
 	/**
 	 * @var string
@@ -147,6 +129,16 @@ class OfferEsignService {
 	private const ACTIVE_SIGNING_STATUSES = ['PENDING', 'IN_PROGRESS'];
 
 	/**
+	 * The shared filinq signing gateway (people-esign-hr-documents D1).
+	 *
+	 * @var FilinqSigningGateway
+	 */
+	private readonly FilinqSigningGateway $signing;
+
+	/**
+	 * Builds the shared FilinqSigningGateway from the same collaborators, so
+	 * the offer path and the HR document path raise requests one way.
+	 *
 	 * @param ContainerInterface $container DI container for lazy SigningService resolution.
 	 * @param IAppManager $appManager To duck-type-probe docudesk's presence.
 	 * @param SettingsService $settingsService Register slug, offer-deadline config.
@@ -156,15 +148,15 @@ class OfferEsignService {
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
-		private readonly IAppManager $appManager,
+		ContainerInterface $container,
+		IAppManager $appManager,
 		private readonly SettingsService $settingsService,
 		private readonly OfferLetterService $letterService,
 		private readonly OfferApplicationRepository $applications,
 		private readonly OfferSigningRecoveryService $signingRecovery,
 		private readonly LoggerInterface $logger,
 	) {
-
+		$this->signing = new FilinqSigningGateway(container: $container, appManager: $appManager, recovery: $signingRecovery, logger: $logger);
 	}//end __construct()
 
 	/**
@@ -336,11 +328,7 @@ class OfferEsignService {
 			return;
 		}
 
-		try {
-			$this->signingService()->cancelRequest($oldRequestId);
-		} catch (\Throwable $e) {
-			$this->logger->info('OfferEsignService: kon oude signing-request ' . $oldRequestId . ' niet annuleren (wordt genegeerd): ' . $e->getMessage());
-		}
+		$this->signing->cancel($oldRequestId);
 
 	}//end supersedeStaleRequest()
 
@@ -416,17 +404,15 @@ class OfferEsignService {
 			'correlationId' => $applicationId,
 		];
 
-		$signingService = $this->signingService();
-		try {
-			$created = $signingService->createRequest($requestData);
-		} catch (\Throwable $e) {
+		$created = $this->signing->create($requestData);
+		if ($created['status'] === 'failed') {
 			// Never let RuntimeException('No authenticated user') (design.md
 			// D5 -- always true for a genuine occ CLI process) escape.
 			// createRequest() writes the signing-request row BEFORE the
 			// signer-record write that can throw, so a best-effort recovery
 			// is attempted (design.md D8, defect-3) rather than silently
 			// stranding the orphan.
-			$recoveredRequestId = $this->signingRecovery->recoverOrphanedRequestId($signingService, $applicationId, $fileId);
+			$recoveredRequestId = $created['requestId'];
 
 			$fields = ['offerSigningStatus' => 'failed'];
 			if ($recoveredRequestId !== null) {
@@ -435,16 +421,16 @@ class OfferEsignService {
 
 			$application = $this->applications->save($application, $fields);
 
-			$message = 'Aanvragen van de e-handtekening via docudesk is mislukt: ' . $e->getMessage();
+			$message = 'Aanvragen van de e-handtekening via docudesk is mislukt: ' . (string)$created['error'];
 			$message .= ($recoveredRequestId !== null)
 				? ' Een gedeeltelijk aangemaakte signing-request (' . $recoveredRequestId . ') is teruggevonden en blijft bereikbaar via syncSignatureStatus/cancelRequest.'
 				: ' Kon een eventueel gedeeltelijk aangemaakte signing-request niet eenduidig terugvinden -- zoek zo nodig handmatig in het signingRequest-register op correlationId="' . $applicationId . '".';
 
 			return $this->outcome($applicationId, $application, 'failed', $message);
-		}//end try
+		}//end if
 
-		$requestId = (string)($created['id'] ?? $created['uuid'] ?? '');
-		$newStatus = (string)($created['status'] ?? 'PENDING');
+		$requestId = (string)$created['requestId'];
+		$newStatus = $created['status'];
 
 		$application = $this->applications->save(
 			$application,
@@ -541,7 +527,7 @@ class OfferEsignService {
 		}
 
 		try {
-			$request = $this->signingService()->getRequest($requestId);
+			$request = $this->signing->read($requestId);
 		} catch (\Throwable $e) {
 			// Not-found (or any other read failure): log + leave the
 			// Application's fields unchanged rather than throwing (REQ-OFFR-006).
@@ -572,17 +558,7 @@ class OfferEsignService {
 	 * @return bool
 	 */
 	private function docudeskAvailable(): bool {
-		if (FleetAppId::isInstalled($this->appManager, self::DOCUMENT_APP) === false) {
-			return false;
-		}
-
-		try {
-			$this->signingService();
-		} catch (\Throwable $e) {
-			return false;
-		}
-
-		return $this->letterService->available();
+		return $this->signing->available() === true && $this->letterService->available() === true;
 	}//end docudeskAvailable()
 
 	/**
@@ -606,17 +582,5 @@ class OfferEsignService {
 		];
 
 	}//end outcome()
-
-	/**
-	 * @return mixed docudesk's SigningService, resolved by string FQCN only.
-	 */
-	private function signingService(): mixed {
-		// Throws when no candidate namespace resolves, preserving the
-		// container->get() contract the *Available() probes below rely on:
-		// a null return here would read as "resolved fine" and let the
-		// caller proceed against nothing.
-		return FleetAppId::getService($this->container, self::DOCUMENT_APP, self::SIGNING_SERVICE_CLASS)
-			?? throw new RuntimeException('filinq service '.self::SIGNING_SERVICE_CLASS.' is not available under any known namespace.');
-	}//end signingService()
 
 }//end class

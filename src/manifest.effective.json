@@ -301,6 +301,15 @@
 					"route": "SideActivities"
 				},
 				{
+					"icon": "ScaleBalance",
+					"id": "MijnMaatregelen",
+					"label": "My warnings and measures",
+					"query": {
+						"userId": "@me"
+					},
+					"route": "RelationsCases"
+				},
+				{
 					"icon": "ClockOutline",
 					"id": "MijnAanwezigheid",
 					"label": "My attendance",
@@ -484,6 +493,12 @@
 					"id": "SideActivities",
 					"label": "Side activities",
 					"route": "SideActivities"
+				},
+				{
+					"icon": "ScaleBalance",
+					"id": "RelationsCases",
+					"label": "Relations cases",
+					"route": "RelationsCases"
 				},
 				{
 					"icon": "FileDocumentMultipleOutline",
@@ -1260,6 +1275,7 @@
 			"page": {
 				"config": {
 					"_note": "{{note}}",
+					"headerActions": "{{headerActions}}",
 					"layout": [
 						{
 							"gridHeight": 3,
@@ -1397,6 +1413,10 @@
 				},
 				{
 					"name": "hiddenTabs",
+					"required": false
+				},
+				{
+					"name": "headerActions",
 					"required": false
 				},
 				{
@@ -5345,6 +5365,14 @@
 						"gridY": 79,
 						"id": 25,
 						"widgetId": "object-list-15"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 83,
+						"id": 26,
+						"widgetId": "object-list-16"
 					}
 				],
 				"register": "humaniq",
@@ -6143,6 +6171,44 @@
 						"icon": "BriefcaseOutline",
 						"id": "object-list-15",
 						"title": "Side activities",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "kind",
+									"label": "Kind"
+								},
+								{
+									"key": "openedOn",
+									"label": "Opened on"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"emptyText": "No relations cases",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"limit": 10,
+							"register": "humaniq",
+							"rowRoute": "RelationsCaseDetail",
+							"schema": "EmployeeRelationsCase",
+							"sort": {
+								"dir": "desc",
+								"field": "openedOn"
+							},
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"viewAllRoute": "RelationsCases"
+						},
+						"icon": "ScaleBalance",
+						"id": "object-list-16",
+						"title": "Relations cases",
 						"type": "object-list"
 					}
 				]
@@ -10912,7 +10978,24 @@
 		},
 		{
 			"config": {
-				"_note": "humaniq-docudesk-documents (2026-07-13): GeneratedDocument is humaniq's log of ONE docudesk render+store handoff (design.md D1), the PayrollGLPostDetail split applied to a document instead of a ledger entry -- gd-status leads with the outcome facts (status/generatedAt/errorMessage), gd-related resolves the Employee and (nullable) EmploymentContract, gd-data carries the remaining fields (documentType/templateRef/filePath) below. No lifecycleActions -- HrDocumentService drives every transition server-side, exactly the PayrollGLPostDetail precedent. Unlike every other humaniq detail page this one IS a document, so the sidebar keeps the library's default Files tab (the stored PDF -- design.md D4, 'the whole point') alongside the default Audit Trail tab, hiding only Notes/Tags/Tasks which carry no meaning here: the custom audit-only `tabs` override the rest of humaniq uses would suppress Files too (CnObjectSidebar's open-enum `tabs` widget registry has no `files` entry), so this page opts into `hiddenTabs` instead of `tabs` -- a deliberate, documented deviation from the fleet's usual sidebar convention, needed to actually show the per-object file. payslip-pdf-docudesk (2026-07-14): gd-data additionally excludes the new payslipId/jaaropgaafId $ref fields -- gd-related resolves both.",
+				"_note": "humaniq-docudesk-documents (2026-07-13): GeneratedDocument is humaniq's log of ONE docudesk render+store handoff (design.md D1), the PayrollGLPostDetail split applied to a document instead of a ledger entry -- gd-status leads with the outcome facts (status/generatedAt/errorMessage), gd-related resolves the Employee and (nullable) EmploymentContract, gd-data carries the remaining fields (documentType/templateRef/filePath) below. No lifecycleActions -- HrDocumentService drives every transition server-side, exactly the PayrollGLPostDetail precedent. Unlike every other humaniq detail page this one IS a document, so the sidebar keeps the library's default Files tab (the stored PDF -- design.md D4, 'the whole point') alongside the default Audit Trail tab, hiding only Notes/Tags/Tasks which carry no meaning here: the custom audit-only `tabs` override the rest of humaniq uses would suppress Files too (CnObjectSidebar's open-enum `tabs` widget registry has no `files` entry), so this page opts into `hiddenTabs` instead of `tabs` -- a deliberate, documented deviation from the fleet's usual sidebar convention, needed to actually show the per-object file. payslip-pdf-docudesk (2026-07-14): gd-data additionally excludes the new payslipId/jaaropgaafId $ref fields -- gd-related resolves both. people-esign-hr-documents (2026-09-29): Request signature (HR or admin) raises a filinq signing request on the stored PDF; the server refuses a payslip or annual statement and answers the running request on a second press. occ humaniq:documents:sync-signatures writes the status back.",
+				"headerActions": [
+					{
+						"confirm": false,
+						"icon": "FileSign",
+						"id": "request-signature",
+						"label": "Request signature",
+						"method": "POST",
+						"successMessage": "The signing request is on its way. Its status shows on this document.",
+						"type": "api-call",
+						"url": "/api/documents/@objectId/request-signature",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "generated"
+						}
+					}
+				],
 				"layout": [
 					{
 						"gridHeight": 3,
@@ -10957,10 +11040,18 @@
 							"include": [
 								"status",
 								"generatedAt",
-								"errorMessage"
+								"errorMessage",
+								"signingStatus",
+								"signingCompletedAt"
 							],
 							"overrides": {
 								"generatedAt": {
+									"editable": false
+								},
+								"signingCompletedAt": {
+									"editable": false
+								},
+								"signingStatus": {
 									"editable": false
 								},
 								"status": {
@@ -10981,7 +11072,8 @@
 								"employeeId",
 								"contractId",
 								"payslipId",
-								"jaaropgaafId"
+								"jaaropgaafId",
+								"signingRequestId"
 							],
 							"title": "Document"
 						},
@@ -13709,6 +13801,134 @@
 			"route": "/mijn/beoordelingen",
 			"title": "My reviews",
 			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "people-employee-relations-cases (2026-09-29): REQ-ERC-001/002. My HR > My warnings and measures is a preset on this page (userId = @me); OpenRegister's authorization shows the employee only their own closed warnings and measures, and the manager only kind, status and dates.",
+				"columns": [
+					"employeeId",
+					"kind",
+					"openedOn",
+					"status",
+					"closedOn"
+				],
+				"description": "Grievances, conflicts, written warnings and disciplinary measures. Only HR reads what a case says; a manager sees that a case exists, and an employee sees their own closed warnings and measures.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"kind",
+					"status",
+					"employeeId"
+				],
+				"register": "humaniq",
+				"schema": "EmployeeRelationsCase",
+				"sort": {
+					"field": "openedOn",
+					"order": "desc"
+				}
+			},
+			"id": "RelationsCases",
+			"route": "/relations-cases",
+			"title": "Relations cases",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "people-employee-relations-cases (2026-09-29): D1. Closing asks for the outcome and the closing date (lifecycle inputs); RelationsCaseListener sets the retention date two years on unless HR sets one. Letters go in Documents as references, not as object files: OpenRegister serves an object's files to everyone who may read the object, and the manager may read the case.",
+				"layout": [
+					{
+						"gridHeight": 10,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 10,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"lifecycleActions": {
+					"field": "status",
+					"transitions": [
+						{
+							"action": "in-behandeling-nemen",
+							"from": [
+								"geopend"
+							],
+							"label": "Start handling",
+							"to": "in-behandeling"
+						},
+						{
+							"action": "afsluiten",
+							"from": [
+								"in-behandeling"
+							],
+							"label": "Close",
+							"to": "afgesloten"
+						},
+						{
+							"action": "heropenen",
+							"from": [
+								"afgesloten"
+							],
+							"label": "Reopen",
+							"to": "in-behandeling"
+						}
+					]
+				},
+				"register": "humaniq",
+				"schema": "EmployeeRelationsCase",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"administrationId": {
+									"editable": false
+								},
+								"managerUserId": {
+									"editable": false
+								},
+								"status": {
+									"editable": false
+								},
+								"userId": {
+									"editable": false
+								}
+							},
+							"title": "Relations case"
+						},
+						"icon": "ScaleBalance",
+						"id": "data",
+						"title": "Relations case",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "RelationsCaseDetail",
+			"route": "/relations-cases/:id",
+			"title": "Relations case",
+			"type": "detail"
 		},
 		{
 			"config": {

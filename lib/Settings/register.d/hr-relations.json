@@ -1,0 +1,342 @@
+{
+    "x-humaniq-fragment": "hr-relations",
+    "components": {
+        "schemas": {
+            "EmployeeRelationsCase": {
+                "slug": "EmployeeRelationsCase",
+                "icon": "ScaleBalance",
+                "version": "0.1.0",
+                "title": "Employee relations case",
+                "description": "A grievance, conflict, written warning or disciplinary measure on an employee's personnel file. Only HR reads what it says; the manager sees that it exists; the employee sees their own closed warnings and measures.",
+                "type": "object",
+                "required": [
+                    "employeeId",
+                    "kind",
+                    "openedOn"
+                ],
+                "x-notes": "people-employee-relations-cases D1-D3. Schema-level authorization: HR all verbs; the manager (managerUserId) and the subject (userId, only a closed warning or measure) read. Property-level: facts, measure, its period, outcome and documents read by HR and by the subject of a closed warning or measure, never by the manager. userId, managerUserId and administrationId are stamped from the employee by RelationsCaseListener.",
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "managerUserId": "$userId"
+                            }
+                        },
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "userId": "$userId",
+                                "status": "afgesloten",
+                                "kind": {
+                                    "$in": [
+                                        "schriftelijke-waarschuwing",
+                                        "disciplinaire-maatregel"
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    "create": [
+                        "humaniq-hr"
+                    ],
+                    "update": [
+                        "humaniq-hr"
+                    ],
+                    "delete": [
+                        "humaniq-hr"
+                    ]
+                },
+                "x-openregister-lifecycle": {
+                    "field": "status",
+                    "initial": "geopend",
+                    "terminal": [],
+                    "transitions": {
+                        "in-behandeling-nemen": {
+                            "from": [
+                                "geopend"
+                            ],
+                            "to": "in-behandeling",
+                            "description": "HR starts handling the case."
+                        },
+                        "afsluiten": {
+                            "from": [
+                                "in-behandeling"
+                            ],
+                            "to": "afgesloten",
+                            "inputs": [
+                                {
+                                    "field": "outcome",
+                                    "required": true
+                                },
+                                {
+                                    "field": "closedOn",
+                                    "required": true
+                                }
+                            ],
+                            "description": "The case is closed with its outcome and closing date. Refused without either."
+                        },
+                        "heropenen": {
+                            "from": [
+                                "afgesloten"
+                            ],
+                            "to": "in-behandeling",
+                            "description": "The case is taken up again."
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Whom the case is about."
+                    },
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            "klacht",
+                            "conflict",
+                            "schriftelijke-waarschuwing",
+                            "disciplinaire-maatregel",
+                            "anders"
+                        ],
+                        "x-enum-labels": {
+                            "klacht": "Grievance",
+                            "conflict": "Conflict",
+                            "schriftelijke-waarschuwing": "Written warning",
+                            "disciplinaire-maatregel": "Disciplinary measure",
+                            "anders": "Other"
+                        },
+                        "title": "Kind",
+                        "description": "What the case is: a grievance, a conflict, a written warning, a disciplinary measure or something else."
+                    },
+                    "openedOn": {
+                        "type": "string",
+                        "title": "Opened on",
+                        "description": "The date the case was opened.",
+                        "format": "date"
+                    },
+                    "facts": {
+                        "type": "string",
+                        "title": "Facts",
+                        "description": "What happened, as HR recorded it.",
+                        "nullable": true,
+                        "authorization": {
+                            "read": [
+                                "humaniq-hr",
+                                {
+                                    "group": "authenticated",
+                                    "match": {
+                                        "userId": "$userId",
+                                        "status": "afgesloten",
+                                        "kind": {
+                                            "$in": [
+                                                "schriftelijke-waarschuwing",
+                                                "disciplinaire-maatregel"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ],
+                            "update": [
+                                "humaniq-hr"
+                            ]
+                        }
+                    },
+                    "measure": {
+                        "type": "string",
+                        "title": "Measure",
+                        "description": "The measure taken, for example a suspension.",
+                        "nullable": true,
+                        "authorization": {
+                            "read": [
+                                "humaniq-hr",
+                                {
+                                    "group": "authenticated",
+                                    "match": {
+                                        "userId": "$userId",
+                                        "status": "afgesloten",
+                                        "kind": {
+                                            "$in": [
+                                                "schriftelijke-waarschuwing",
+                                                "disciplinaire-maatregel"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ],
+                            "update": [
+                                "humaniq-hr"
+                            ]
+                        }
+                    },
+                    "measureFrom": {
+                        "type": "string",
+                        "title": "Measure from",
+                        "description": "The first day of the measure.",
+                        "format": "date",
+                        "nullable": true,
+                        "authorization": {
+                            "read": [
+                                "humaniq-hr",
+                                {
+                                    "group": "authenticated",
+                                    "match": {
+                                        "userId": "$userId",
+                                        "status": "afgesloten",
+                                        "kind": {
+                                            "$in": [
+                                                "schriftelijke-waarschuwing",
+                                                "disciplinaire-maatregel"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ],
+                            "update": [
+                                "humaniq-hr"
+                            ]
+                        }
+                    },
+                    "measureUntil": {
+                        "type": "string",
+                        "title": "Measure until",
+                        "description": "The last day of the measure.",
+                        "format": "date",
+                        "nullable": true,
+                        "authorization": {
+                            "read": [
+                                "humaniq-hr",
+                                {
+                                    "group": "authenticated",
+                                    "match": {
+                                        "userId": "$userId",
+                                        "status": "afgesloten",
+                                        "kind": {
+                                            "$in": [
+                                                "schriftelijke-waarschuwing",
+                                                "disciplinaire-maatregel"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ],
+                            "update": [
+                                "humaniq-hr"
+                            ]
+                        }
+                    },
+                    "outcome": {
+                        "type": "string",
+                        "title": "Outcome",
+                        "description": "How the case ended. Needed to close it.",
+                        "nullable": true,
+                        "authorization": {
+                            "read": [
+                                "humaniq-hr",
+                                {
+                                    "group": "authenticated",
+                                    "match": {
+                                        "userId": "$userId",
+                                        "status": "afgesloten",
+                                        "kind": {
+                                            "$in": [
+                                                "schriftelijke-waarschuwing",
+                                                "disciplinaire-maatregel"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ],
+                            "update": [
+                                "humaniq-hr"
+                            ]
+                        }
+                    },
+                    "documents": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "nullable": true,
+                        "title": "Documents",
+                        "description": "Letters and other documents on the case, such as the warning letter.",
+                        "authorization": {
+                            "read": [
+                                "humaniq-hr",
+                                {
+                                    "group": "authenticated",
+                                    "match": {
+                                        "userId": "$userId",
+                                        "status": "afgesloten",
+                                        "kind": {
+                                            "$in": [
+                                                "schriftelijke-waarschuwing",
+                                                "disciplinaire-maatregel"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ],
+                            "update": [
+                                "humaniq-hr"
+                            ]
+                        }
+                    },
+                    "closedOn": {
+                        "type": "string",
+                        "title": "Closed on",
+                        "description": "The date the case was closed. Needed to close it.",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "retainedUntil": {
+                        "type": "string",
+                        "title": "Kept until",
+                        "description": "The date after which the case should be removed. Two years after closing unless HR sets another date.",
+                        "format": "date",
+                        "nullable": true,
+                        "x-notes": "people-employee-relations-cases D3: stamped by RelationsCaseListener as closedOn plus two years when the case closes without one; the retention check nl-bewaartermijn-verstreken flags a closed case kept past it. Default from the Autoriteit Persoonsgegevens guidance on personnel files (https://autoriteitpersoonsgegevens.nl/themas/werk-en-uitkering/personeelsdossier)."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "geopend",
+                            "in-behandeling",
+                            "afgesloten"
+                        ],
+                        "x-enum-labels": {
+                            "geopend": "Opened",
+                            "in-behandeling": "In progress",
+                            "afgesloten": "Closed"
+                        },
+                        "default": "geopend",
+                        "title": "Status",
+                        "description": "Opened, in progress or closed."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "title": "Employee account",
+                        "description": "The employee's Nextcloud account. Filled in automatically.",
+                        "nullable": true
+                    },
+                    "managerUserId": {
+                        "type": "string",
+                        "title": "Manager account",
+                        "description": "The employee's manager, who sees that a case exists but not what it says. Filled in automatically.",
+                        "nullable": true
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "title": "Administration",
+                        "description": "The administration of the employee. Filled in automatically.",
+                        "nullable": true
+                    }
+                }
+            }
+        }
+    }
+}

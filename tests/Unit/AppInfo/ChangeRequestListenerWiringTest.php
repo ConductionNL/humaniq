@@ -76,6 +76,7 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 	use OCA\Humaniq\Listener\HrLifecycleEventListener;
 	use OCA\Humaniq\Listener\RightToWorkCheckListener;
 	use OCA\Humaniq\Listener\ScenarioMutationListener;
+	use OCA\Humaniq\Listener\RelationsCaseListener;
 	use OCA\Humaniq\Listener\SideActivityListener;
 	use OCA\OpenRegister\Event\ObjectEventSubscription;
 	use OCP\EventDispatcher\IEventDispatcher;
@@ -216,6 +217,33 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo {
 			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
 			self::assertStringContainsString('$this->registerSideActivityListeners($dispatcher);', $boot);
 		}//end testTheSideActivityListenerIsSubscribed()
+
+		/**
+		 * REQ-ERC-002: a relations case is stamped before every create and update.
+		 *
+		 * @return void
+		 */
+		public function testTheRelationsCaseListenerIsSubscribed(): void {
+			if (property_exists(ObjectEventSubscription::class, 'recorded') === false) {
+				self::markTestSkipped('The real OpenRegister subscription class is loaded; its registry is not observable here.');
+			}
+
+			ObjectEventSubscription::$recorded = [];
+			$app = (new \ReflectionClass(Application::class))->newInstanceWithoutConstructor();
+			$method = new \ReflectionMethod(Application::class, 'registerRelationsCaseListeners');
+			$method->invoke($app, $this->createMock(IEventDispatcher::class));
+
+			$events = [];
+			foreach (ObjectEventSubscription::$recorded as $entry) {
+				self::assertSame(RelationsCaseListener::class, $entry['listener']);
+				self::assertSame([RelationsCaseListener::CASE_SLUG], $entry['schemas']);
+				$events[] = $entry['event'];
+			}
+
+			self::assertSame(['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\OpenRegister\Event\ObjectUpdatingEvent'], $events);
+			$boot = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+			self::assertStringContainsString('$this->registerRelationsCaseListeners($dispatcher);', $boot);
+		}//end testTheRelationsCaseListenerIsSubscribed()
 
 		/**
 		 * REQ-PBS-002: the fixed-scenario refusal hears every mutation write before it is saved.
