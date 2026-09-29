@@ -34,3 +34,9 @@ So a caller outside HR learns nothing new about an employee they do not manage.
 `findAll(['filters' => ['employee' => $id, 'status' => 'active'], 'limit' => 1])` after
 `setRegister()`/`setSchema()`, as every other humaniq caller does. The test double now
 declares the real signature.
+
+## Where the code lives
+
+`CostRateAccess` holds every read a rate is computed from: the employee and contract under the
+caller's access, the planninq projects and the system reads for a project manager, and the choice
+of the contract running in the period. The controller composes the answer only.
