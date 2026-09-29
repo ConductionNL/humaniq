@@ -646,7 +646,7 @@
 					},
 					{
 						"id": "dossier-status",
-						"type": "object-table",
+						"type": "endpoint-table",
 						"title": "Dossier status",
 						"content": {
 							"endpointSource": {

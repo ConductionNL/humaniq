@@ -4603,7 +4603,7 @@
 						},
 						"id": "budget-lines",
 						"title": "Budget per place",
-						"type": "object-table"
+						"type": "endpoint-table"
 					},
 					{
 						"content": {
@@ -4647,7 +4647,7 @@
 						},
 						"id": "budget-compare",
 						"title": "Against the baseline",
-						"type": "object-table"
+						"type": "endpoint-table"
 					}
 				]
 			},
@@ -5868,7 +5868,7 @@
 						},
 						"id": "dossier-status",
 						"title": "Dossier status",
-						"type": "object-table"
+						"type": "endpoint-table"
 					},
 					{
 						"content": {
@@ -7723,7 +7723,7 @@
 						},
 						"id": "formation-places",
 						"title": "Formation",
-						"type": "object-table"
+						"type": "endpoint-table"
 					}
 				]
 			},

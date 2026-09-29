@@ -581,6 +581,62 @@ function executeProbeBundle(bundlePath) {
 }
 
 // ---------------------------------------------------------------------------
+// Detail-page endpoint tables
+// ---------------------------------------------------------------------------
+
+/**
+ * A detail page mounts every `config.widgets` entry through CnDetailWidgetHost,
+ * which resolves a library type with widgetDispatch.resolveRegistryRenderer.
+ * That function CANONICALISES before the lookup, so `object-table` becomes
+ * `table`, whose renderer is CnObjectListWidget: it reads content.register /
+ * content.schema and has no `endpointSource` at all. An `object-table` with an
+ * `endpointSource` therefore renders its empty text on a detail page, while
+ * the same widget on a dashboard (CnDashboardPage looks the type up as
+ * written first) renders its rows. OrgUnitDetail's formation places,
+ * EmployeeDetail's personnel-file status and both FormationScenarioDetail
+ * tables shipped that way.
+ *
+ * Rule: on a `type:"detail"` page, a widget whose content carries an
+ * `endpointSource` must use a type src/registry.js registers (humaniq's
+ * `endpoint-table` mounts CnWidgetObjectTable, which honours it). The rule
+ * reads the installed library first: once widgetDispatch looks the type up as
+ * written, it reports that and stops, so it retires with the defect.
+ *
+ * @param {object} manifest The effective manifest.
+ * @param {Set<string>} registryKeys Keys of src/registry.js's default export.
+ * @param {string} ncVuePkgDir The installed @conduction/nextcloud-vue.
+ * @return {Array<string>} One line per offending widget.
+ * @spec exclude build-time manifest check, not product code
+ */
+function detailEndpointTableFindings(manifest, registryKeys, ncVuePkgDir) {
+	const dispatchPath = path.join(ncVuePkgDir, "dist", "esm", "utils", "widgetDispatch.js");
+	const dispatch = fs.readFileSync(dispatchPath, "utf8");
+	const resolver = dispatch.slice(dispatch.indexOf("function resolveRegistryRenderer"));
+	const canonicalFirst = /const entry = getWidgetTypeEntry\(canonicalWidgetType\(def\.type\)\);?/.test(
+		resolver.slice(0, 1200),
+	);
+	if (!canonicalFirst) {
+		console.log(
+			"[validate-widget-keys] detail endpoint tables: the installed widgetDispatch no longer canonicalises first; this rule has nothing left to guard.",
+		);
+		return [];
+	}
+	const findings = [];
+	for (const page of manifest.pages || []) {
+		if (page.type !== "detail") continue;
+		for (const widget of (page.config && page.config.widgets) || []) {
+			const content = widget.content || {};
+			if (!content.endpointSource) continue;
+			if (registryKeys.has(widget.type)) continue;
+			findings.push(
+				`${page.id} widget "${widget.id}" (type "${widget.type}") reads endpointSource, which the detail host's renderer for that type ignores`,
+			);
+		}
+	}
+	return findings;
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -696,6 +752,22 @@ async function main() {
 			for (const loc of usages.get(key)) {
 				console.error(`      ${loc}`);
 			}
+		}
+		process.exit(1);
+	}
+
+	const endpointFindings = detailEndpointTableFindings(
+		manifest,
+		registryKeys,
+		ncVuePkgDir,
+	);
+	if (endpointFindings.length > 0) {
+		console.error("");
+		console.error(
+			"[validate-widget-keys] FAIL — detail-page widget(s) whose rows would never load:",
+		);
+		for (const line of endpointFindings) {
+			console.error(`  - ${line}`);
 		}
 		process.exit(1);
 	}

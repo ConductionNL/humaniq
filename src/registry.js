@@ -111,6 +111,7 @@ import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
 import TrendChartWidget from './widgets/TrendChartWidget.vue'
 import { proposeRaiseForSelection } from './dialogs/proposeRaiseForSelection.js'
 import { registerTrainingAttended, registerTrainingNotAttended } from './dialogs/registerTrainingAttendance.js'
+import EndpointTableWidget from './widgets/EndpointTableWidget.js'
 
 export default {
 	// --- Flows (ADR-110 Decision 4). Only the SIDEBAR is an app component;
@@ -184,6 +185,17 @@ export default {
 		allowedSlots: ['body'],
 		propsSchema: null,
 		_note: 'self-service-approvals-inbox REQ-API-001/002: the My approvals inbox over GET /api/approvals, open (waiting for the caller as manager or deputy, approve and reject in place through the OpenRegister transition) or decided (the last 90 days with each timeline). Composed server side under the caller\'s own rights; the widget only renders and posts the transition.',
+	},
+	// @custom-widget-ratchet exclude on a detail page no built-in widget key reaches a table that reads endpointSource: CnDetailWidgetHost canonicalises object-table to table, whose renderer CnObjectListWidget ignores endpointSource in nextcloud-vue 2.57.1; this mounts the library's own CnWidgetObjectTable
+	'endpoint-table': {
+		kind: 'widget',
+		component: EndpointTableWidget,
+		defaultSize: { w: 12, h: 4 },
+		minSize: { w: 4, h: 2 },
+		maxSize: { w: 12, h: 10 },
+		allowedSlots: ['body'],
+		propsSchema: null,
+		_note: 'A table whose rows come from a humaniq endpoint (content.endpointSource), on detail pages: formation places on a unit, personnel-file status on an employee, the budget and comparison of a formation scenario. Dashboards keep type object-table, which CnDashboardPage resolves as written.',
 	},
 	// @custom-widget-ratchet exclude no built-in widget key renders a dated timeline whose rows each link to a different detail page; object-table's rowRoute is one static route for every row, and CnTimelineView has no widget key of its own
 	'employee-history': {
