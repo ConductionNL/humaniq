@@ -8714,6 +8714,164 @@
             "description": "Who compiled the figures last."
           }
         }
+      },
+      "TrainingRecord": {
+        "slug": "TrainingRecord",
+        "icon": "SchoolOutline",
+        "version": "0.1.0",
+        "title": "Training record",
+        "description": "One training one employee is planned for or followed, as the personnel file shows it: whether they attended, until when the certificate counts, what it cost and any study-cost agreement. The course itself lives in the learning app; this is the HR fact (talent-training-and-lms D1).",
+        "type": "object",
+        "required": [
+          "employeeId",
+          "title"
+        ],
+        "x-openregister-lifecycle": {
+          "field": "status",
+          "initial": "gepland",
+          "terminal": [
+            "gevolgd"
+          ],
+          "transitions": {
+            "registreren-gevolgd": {
+              "from": [
+                "gepland",
+                "niet-gevolgd"
+              ],
+              "to": "gevolgd",
+              "description": "HR registers that the employee attended. A training with a competence code then grants or extends that competence."
+            },
+            "registreren-niet-gevolgd": {
+              "from": [
+                "gepland"
+              ],
+              "to": "niet-gevolgd",
+              "description": "HR registers that the employee did not attend. It can still be registered as attended later."
+            }
+          }
+        },
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Employee",
+            "title": "Employee",
+            "description": "Who is planned for or followed this training."
+          },
+          "title": {
+            "type": "string",
+            "title": "Training",
+            "description": "What the training is called, for example BHV herhaling."
+          },
+          "provider": {
+            "type": "string",
+            "nullable": true,
+            "title": "Provider",
+            "description": "Who gives the training."
+          },
+          "plannedOn": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "title": "Planned on",
+            "description": "The day the training takes place, or starts."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "gepland",
+              "gevolgd",
+              "niet-gevolgd"
+            ],
+            "x-enum-labels": {
+              "gepland": "Planned",
+              "gevolgd": "Attended",
+              "niet-gevolgd": "Not attended"
+            },
+            "default": "gepland",
+            "title": "Status",
+            "description": "Whether the employee has attended the training.",
+            "x-notes": "Governed by the x-openregister-lifecycle state machine (gepland -> gevolgd or niet-gevolgd; niet-gevolgd -> gevolgd). A record from learniq is created as gevolgd."
+          },
+          "completedOn": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "title": "Completed on",
+            "description": "The day the employee finished the training. Left empty, the planned day is used once it is registered as attended."
+          },
+          "validityMonths": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true,
+            "title": "Valid for (months)",
+            "description": "How many months the certificate counts after the training. Used to fill in the valid until date once it is registered as attended.",
+            "x-notes": "talent-training-and-lms D1 addition at build time: a planned group course knows its validity in months, not its end date, so TrainingRecordListener derives validUntil = completedOn + validityMonths on the gevolgd write when validUntil is empty."
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "title": "Valid until",
+            "description": "The last day the certificate counts. Leave empty when it does not expire."
+          },
+          "competenceCode": {
+            "type": "string",
+            "nullable": true,
+            "title": "Competence",
+            "description": "The competence this training grants once attended, for example bhv. Leave empty when it grants none.",
+            "x-notes": "Matched against EmployeeCompetence.competenceCode by TrainingCompetenceWriter (D2)."
+          },
+          "costEur": {
+            "type": "number",
+            "minimum": 0,
+            "nullable": true,
+            "title": "Cost",
+            "description": "What the training costs the employer, in euros."
+          },
+          "studiekostenbeding": {
+            "type": "boolean",
+            "default": false,
+            "title": "Study-cost agreement",
+            "description": "Whether the employee agreed to repay part of the cost when they leave early."
+          },
+          "terugbetalingsregeling": {
+            "type": "string",
+            "nullable": true,
+            "title": "Repayment terms",
+            "description": "What the employee repays and when, as agreed. humaniq does not calculate the amount."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "hr",
+              "learniq",
+              "lms"
+            ],
+            "x-enum-labels": {
+              "hr": "HR",
+              "learniq": "Learning app",
+              "lms": "External learning platform"
+            },
+            "default": "hr",
+            "title": "Source",
+            "description": "Where this record came from."
+          },
+          "sourceRef": {
+            "type": "string",
+            "nullable": true,
+            "title": "Source reference",
+            "description": "The id of the certificate in the learning app or platform this record came from.",
+            "x-notes": "For source learniq, the Credential uuid; LearniqCredentialListener uses it to write one record per credential (D4)."
+          },
+          "administrationId": {
+            "type": "string",
+            "nullable": true,
+            "title": "Administration",
+            "description": "The administration this record belongs to.",
+            "x-notes": "Multi-administratie scoping; filled from the employee by TrainingRecordListener when left empty."
+          }
+        }
       }
     },
     "objects": [
@@ -12466,6 +12624,72 @@
         ],
         "compiledAt": "2026-03-03T09:00:00+00:00",
         "compiledBy": "Voorbeeld Compiledby 3"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "TrainingRecord",
+          "slug": "trainingrecord-voorbeeld-title-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "title": "Voorbeeld Title 1",
+        "provider": "Voorbeeld Provider 1",
+        "plannedOn": "2026-03-01",
+        "status": "gepland",
+        "completedOn": "2026-03-01",
+        "validityMonths": 1,
+        "validUntil": "2026-03-01",
+        "competenceCode": "Voorbeeld Competencecode 1",
+        "costEur": 0.0,
+        "studiekostenbeding": false,
+        "terugbetalingsregeling": "Voorbeeld Terugbetalingsregeling 1",
+        "source": "hr",
+        "sourceRef": "Voorbeeld Sourceref 1",
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "TrainingRecord",
+          "slug": "trainingrecord-voorbeeld-title-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "title": "Voorbeeld Title 2",
+        "provider": "Voorbeeld Provider 2",
+        "plannedOn": "2026-03-02",
+        "status": "gevolgd",
+        "completedOn": "2026-03-02",
+        "validityMonths": 2,
+        "validUntil": "2026-03-02",
+        "competenceCode": "Voorbeeld Competencecode 2",
+        "costEur": 1.0,
+        "studiekostenbeding": false,
+        "terugbetalingsregeling": "Voorbeeld Terugbetalingsregeling 2",
+        "source": "learniq",
+        "sourceRef": "Voorbeeld Sourceref 2",
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "TrainingRecord",
+          "slug": "trainingrecord-voorbeeld-title-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "title": "Voorbeeld Title 3",
+        "provider": "Voorbeeld Provider 3",
+        "plannedOn": "2026-03-03",
+        "status": "niet-gevolgd",
+        "completedOn": "2026-03-03",
+        "validityMonths": 3,
+        "validUntil": "2026-03-03",
+        "competenceCode": "Voorbeeld Competencecode 3",
+        "costEur": 2.0,
+        "studiekostenbeding": false,
+        "terugbetalingsregeling": "Voorbeeld Terugbetalingsregeling 3",
+        "source": "lms",
+        "sourceRef": "Voorbeeld Sourceref 3",
+        "administrationId": "Voorbeeld Administrationid 3"
       }
     ]
   }

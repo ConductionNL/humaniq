@@ -1,6 +1,9 @@
-# training-and-lms-sync
+# training-and-lms-sync Specification
 
-## ADDED Requirements
+## Purpose
+The personnel file keeps a training record per employee (planned, attended or not, its cost and any study-cost agreement), an attended training grants its competence, learning platforms read one minimal people feed, and credentials learniq issues come back as training records. Built by talent-training-and-lms (archived 2026-09-29).
+
+## Requirements
 
 ### Requirement: HR SHALL plan training per employee and register attendance (REQ-TRN-001)
 
@@ -20,10 +23,14 @@ Rows: `tal-training` (humaniq matrix).
 - **THEN** the two have a current `bhv` competence valid for a year, the third has none, and
   each personnel file lists the training with its status
 
+@e2e exclude the competence is written server-side by the listener after the transition; covered by TrainingRecordListenerTest::testTwoOfThreeAttendTheFirstAidCourse (bulk registration posts the same transition per record)
+
 #### Scenario: A study-cost agreement is on file
 - **GIVEN** an employee starting a paid post-graduate course
 - **WHEN** HR records it with a cost of 2,400 euros and a study-cost agreement
 - **THEN** `TrainingRecordDetail` shows the cost, the agreement and its repayment terms
+
+@e2e exclude a data widget over schema fields with no custom code; the fields are asserted in the register fragment by TrainingRecordListenerTest::testTwoOfThreeAttendTheFirstAidCourse (schema validation) and shown on the seeded training-devries-master-hrm record
 
 ### Requirement: humaniq SHALL publish one minimal people feed for learning platforms (REQ-TRN-002)
 
@@ -31,6 +38,13 @@ Rows: `tal-training` (humaniq matrix).
 current org unit and role, managers and employment dates, and SHALL return no other employee
 field. It SHALL accept `modifiedSince` and return only employees whose record, placement or
 unit changed after it. It SHALL return only employees the caller may read.
+
+#### Scenario: A caller only receives the people they may read
+- **GIVEN** an integration account that may read the employees of one team
+- **WHEN** it reads the feed
+- **THEN** it receives those employees and nobody else
+
+@e2e exclude an API feed for an integration account, no page; covered by LearningControllerTest::testACallerOnlyReceivesEmployeesTheyMayRead
 
 Rows: `td-lms-sync` (humaniq matrix), tender https://www.tenderned.nl/aankondigingen/overzicht/415227.
 
@@ -40,10 +54,14 @@ Rows: `td-lms-sync` (humaniq matrix), tender https://www.tenderned.nl/aankondigi
 - **THEN** the employee is returned with org unit HR and HR's manager, and without BSN or
   salary
 
+@e2e exclude an API feed for an integration account, no page; covered by LearningPeopleFeedTest::testAMoveToAnotherTeamReachesThePlatform and LearningPeopleFeedTest::testARowHoldsExactlyTheFeedFields
+
 #### Scenario: A leaver drops out
 - **GIVEN** an employee whose `endDate` passed last week
 - **WHEN** the feed is read
 - **THEN** the employee is not in it
+
+@e2e exclude an API feed for an integration account, no page; covered by LearningPeopleFeedTest::testALeaverDropsOut
 
 ### Requirement: Completed learniq credentials SHALL become training records (REQ-TRN-003)
 
@@ -60,3 +78,5 @@ Rows: `tal-training`, `td-lms-sync` (humaniq matrix).
 - **WHEN** learniq issues `a.visser` a credential for "Privacy basics" expiring in two years
 - **THEN** `EmployeeDetail` lists "Privacy basics" as `gevolgd` with that expiry and source
   learniq
+
+@e2e exclude needs learniq installed and a completed course; covered by LearniqCredentialListenerTest::testACompletedCourseLandsOnThePersonnelFileOnce

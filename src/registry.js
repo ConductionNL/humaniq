@@ -109,6 +109,7 @@ import EmployeeHistoryWidget from './widgets/EmployeeHistoryWidget.vue'
 import LifecycleActionsWidget from './widgets/LifecycleActionsWidget.vue'
 import TrendChartWidget from './widgets/TrendChartWidget.vue'
 import { proposeRaiseForSelection } from './dialogs/proposeRaiseForSelection.js'
+import { registerTrainingAttended, registerTrainingNotAttended } from './dialogs/registerTrainingAttendance.js'
 
 export default {
 	// --- Flows (ADR-110 Decision 4). Only the SIDEBAR is an app component;
@@ -130,6 +131,16 @@ export default {
 	proposeRaiseForSelection: {
 		kind: 'handler',
 		handler: proposeRaiseForSelection,
+	},
+	// talent-training-and-lms: the Trainings list's two bulk actions register
+	// attendance for the selection, one transition per record.
+	registerTrainingAttended: {
+		kind: 'handler',
+		handler: registerTrainingAttended,
+	},
+	registerTrainingNotAttended: {
+		kind: 'handler',
+		handler: registerTrainingNotAttended,
 	},
 
 	ProformaPayslip: {

@@ -40,6 +40,7 @@ use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
 use OCA\Humaniq\Listener\FrequentAbsenceListener;
+use OCA\Humaniq\Listener\LearniqCredentialListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
 use OCA\Humaniq\Listener\RegisterAgendaLeafListener;
 use OCA\Humaniq\Listener\RegisterHoursLeafListener;
@@ -49,6 +50,7 @@ use OCA\Humaniq\Listener\TimeEstimateListener;
 use OCA\Humaniq\Listener\TimesheetAggregateListener;
 use OCA\Humaniq\Listener\TimesheetApprovalListener;
 use OCA\Humaniq\Listener\TimesheetProcessStampListener;
+use OCA\Humaniq\Listener\TrainingRecordListener;
 use OCA\Humaniq\Listener\TravelAmountListener;
 use OCA\Humaniq\Listener\WorkingPatternOverlapListener;
 use OCA\Humaniq\Payroll\PackRepository;
@@ -431,6 +433,7 @@ class Application extends App implements IBootstrap {
 		$this->registerLeaveListeners($dispatcher);
 		$this->registerAbsenceListeners($dispatcher);
 		$this->registerTravelListeners($dispatcher);
+		$this->registerTrainingListeners($dispatcher);
 
 	}//end boot()
 
@@ -624,5 +627,40 @@ class Application extends App implements IBootstrap {
 		}
 
 	}//end registerTravelListeners()
+
+	/**
+	 * talent-training-and-lms D1, D2 and D4: an attended training gets its
+	 * dates and administration before it is saved and grants its competence
+	 * after, and a learniq credential becomes a training record.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/training-and-lms-sync/spec.md#REQ-TRN-001
+	 */
+	private function registerTrainingListeners(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class, ObjectCreatedEvent::class, ObjectUpdatedEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: TrainingRecordListener::class,
+				registers: null,
+				schemas: [TrainingRecordListener::TRAINING_SLUG]
+			);
+		}
+
+		// D4: a credential learniq issues comes back as a training record.
+		// Scoped to learniq's register, so humaniq never hears another app's
+		// credentials, and a no-op on an instance without learniq.
+		$this->registerFilteredObjectListener(
+			dispatcher: $dispatcher,
+			event: ObjectCreatedEvent::class,
+			listener: LearniqCredentialListener::class,
+			registers: LearniqCredentialListener::LEARNIQ_REGISTERS,
+			schemas: [LearniqCredentialListener::CREDENTIAL_SLUG]
+		);
+
+	}//end registerTrainingListeners()
 
 }//end class

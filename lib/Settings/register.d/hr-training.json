@@ -1,0 +1,221 @@
+{
+    "x-humaniq-fragment": "hr-training",
+    "components": {
+        "schemas": {
+            "TrainingRecord": {
+                "slug": "TrainingRecord",
+                "icon": "SchoolOutline",
+                "version": "0.1.0",
+                "title": "Training record",
+                "description": "One training one employee is planned for or followed, as the personnel file shows it: whether they attended, until when the certificate counts, what it cost and any study-cost agreement. The course itself lives in the learning app; this is the HR fact (talent-training-and-lms D1).",
+                "type": "object",
+                "required": [
+                    "employeeId",
+                    "title"
+                ],
+                "x-openregister-lifecycle": {
+                    "field": "status",
+                    "initial": "gepland",
+                    "terminal": [
+                        "gevolgd"
+                    ],
+                    "transitions": {
+                        "registreren-gevolgd": {
+                            "from": [
+                                "gepland",
+                                "niet-gevolgd"
+                            ],
+                            "to": "gevolgd",
+                            "description": "HR registers that the employee attended. A training with a competence code then grants or extends that competence."
+                        },
+                        "registreren-niet-gevolgd": {
+                            "from": [
+                                "gepland"
+                            ],
+                            "to": "niet-gevolgd",
+                            "description": "HR registers that the employee did not attend. It can still be registered as attended later."
+                        }
+                    }
+                },
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "Who is planned for or followed this training."
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Training",
+                        "description": "What the training is called, for example BHV herhaling."
+                    },
+                    "provider": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Provider",
+                        "description": "Who gives the training."
+                    },
+                    "plannedOn": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Planned on",
+                        "description": "The day the training takes place, or starts."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "gepland",
+                            "gevolgd",
+                            "niet-gevolgd"
+                        ],
+                        "x-enum-labels": {
+                            "gepland": "Planned",
+                            "gevolgd": "Attended",
+                            "niet-gevolgd": "Not attended"
+                        },
+                        "default": "gepland",
+                        "title": "Status",
+                        "description": "Whether the employee has attended the training.",
+                        "x-notes": "Governed by the x-openregister-lifecycle state machine (gepland -> gevolgd or niet-gevolgd; niet-gevolgd -> gevolgd). A record from learniq is created as gevolgd."
+                    },
+                    "completedOn": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Completed on",
+                        "description": "The day the employee finished the training. Left empty, the planned day is used once it is registered as attended."
+                    },
+                    "validityMonths": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "nullable": true,
+                        "title": "Valid for (months)",
+                        "description": "How many months the certificate counts after the training. Used to fill in the valid until date once it is registered as attended.",
+                        "x-notes": "talent-training-and-lms D1 addition at build time: a planned group course knows its validity in months, not its end date, so TrainingRecordListener derives validUntil = completedOn + validityMonths on the gevolgd write when validUntil is empty."
+                    },
+                    "validUntil": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "Valid until",
+                        "description": "The last day the certificate counts. Leave empty when it does not expire."
+                    },
+                    "competenceCode": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Competence",
+                        "description": "The competence this training grants once attended, for example bhv. Leave empty when it grants none.",
+                        "x-notes": "Matched against EmployeeCompetence.competenceCode by TrainingCompetenceWriter (D2)."
+                    },
+                    "costEur": {
+                        "type": "number",
+                        "minimum": 0,
+                        "nullable": true,
+                        "title": "Cost",
+                        "description": "What the training costs the employer, in euros."
+                    },
+                    "studiekostenbeding": {
+                        "type": "boolean",
+                        "default": false,
+                        "title": "Study-cost agreement",
+                        "description": "Whether the employee agreed to repay part of the cost when they leave early."
+                    },
+                    "terugbetalingsregeling": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Repayment terms",
+                        "description": "What the employee repays and when, as agreed. humaniq does not calculate the amount."
+                    },
+                    "source": {
+                        "type": "string",
+                        "enum": [
+                            "hr",
+                            "learniq",
+                            "lms"
+                        ],
+                        "x-enum-labels": {
+                            "hr": "HR",
+                            "learniq": "Learning app",
+                            "lms": "External learning platform"
+                        },
+                        "default": "hr",
+                        "title": "Source",
+                        "description": "Where this record came from."
+                    },
+                    "sourceRef": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Source reference",
+                        "description": "The id of the certificate in the learning app or platform this record came from.",
+                        "x-notes": "For source learniq, the Credential uuid; LearniqCredentialListener uses it to write one record per credential (D4)."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The administration this record belongs to.",
+                        "x-notes": "Multi-administratie scoping; filled from the employee by TrainingRecordListener when left empty."
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TrainingRecord",
+                    "slug": "training-jansen-bhv-herhaling"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "title": "BHV herhaling",
+                "provider": "Veiligheidsinstituut Oost",
+                "plannedOn": "2026-03-12",
+                "status": "gevolgd",
+                "completedOn": "2026-03-12",
+                "validityMonths": 12,
+                "validUntil": "2027-03-12",
+                "competenceCode": "bhv",
+                "costEur": 245.00,
+                "studiekostenbeding": false,
+                "source": "hr",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TrainingRecord",
+                    "slug": "training-jansen-privacy"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "title": "Privacy in de praktijk",
+                "provider": "Eigen organisatie",
+                "plannedOn": "2026-11-05",
+                "status": "gepland",
+                "validityMonths": 24,
+                "competenceCode": "avg-basis",
+                "studiekostenbeding": false,
+                "source": "hr",
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "TrainingRecord",
+                    "slug": "training-devries-master-hrm"
+                },
+                "employeeId": "@ref:employee-devries",
+                "title": "Master human resource management",
+                "provider": "Hogeschool Utrecht",
+                "plannedOn": "2026-09-01",
+                "status": "gepland",
+                "costEur": 2400.00,
+                "studiekostenbeding": true,
+                "terugbetalingsregeling": "Bij vertrek binnen een jaar na afronding 100 procent terug, binnen twee jaar 50 procent.",
+                "source": "hr",
+                "administrationId": "ADM-001"
+            }
+        ]
+    }
+}

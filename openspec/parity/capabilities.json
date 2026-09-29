@@ -5118,7 +5118,7 @@
    "id": "tal-training",
    "area": "talent",
    "name": "Plan training and register who attended.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -5134,9 +5134,11 @@
     "personio": "https://support.personio.de/hc/en-us/articles/4426926314269-Add-courses-and-sessions-in-Personio, https://support.personio.de/hc/en-us/articles/4800049162397-Invite-Participants-to-Training-Sessions and https://support.personio.de/hc/en-us/articles/4426976022045-Manage-courses-and-sessions: plan courses and sessions, invite participants and keep participation records."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/talent-training-and-lms on 2026-09-27. Before: grep -rliF opleiding lib/Settings/register.d src/manifest.d: only hr-stagiair.json (a school-programme field on an intern, not course/attendance tracking) and hr-bhv.json (safety-certificate specific); no Training/Course schema or page anywhere; lib/Support/FleetAppId.php:77 lists 'learniq' as a resolvable sibling id, but grep -rn \"'learniq'\" lib --include=*.php outside FleetAppId.php: no hits, so nothing in humaniq actually calls it",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "change": "2026-09-29-talent-training-and-lms",
+    "evidence": "lib/Settings/register.d/hr-training.json TrainingRecord (status gepland/gevolgd/niet-gevolgd with an x-openregister-lifecycle, completedOn, validityMonths, validUntil, competenceCode, costEur, studiekostenbeding, terugbetalingsregeling, source, sourceRef); lib/Listener/TrainingRecordListener.php fills the dates and administration on the attended write and lib/Service/TrainingCompetenceWriter.php grants or extends the EmployeeCompetence, never shortening one; src/dialogs/registerTrainingAttendance.js registers a selection as attended or not through OpenRegister's transition endpoint. Tests: tests/Unit/Listener/TrainingRecordListenerTest.php (testTwoOfThreeAttendTheFirstAidCourse, testALaterValidityExtendsTheCompetence, testAnEarlierValidityNeverShortensTheCompetence), tests/Unit/AppInfo/TrainingListenerWiringTest.php.",
+    "reachedOn": "Trainings /trainings (menu Leave & absence > Trainings, bulk actions Register as attended / Register as not attended), TrainingRecordDetail /trainings/:id, EmployeeDetail 'Trainings' list",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
@@ -7441,7 +7443,7 @@
    "id": "td-lms-sync",
    "area": "platform",
    "name": "Keep employees, roles and organisation data in sync with a learning management system.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "partial",
    "visma-raet": "yes",
    "hr2day": "unknown",
@@ -7457,9 +7459,11 @@
     "orangehrm": "orangehrm@v5.9 grep -riE '\\b(lms|learning management|moodle)\\b' src/plugins src/client/src finds no match"
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/talent-training-and-lms on 2026-09-27. Before: grep -rniE 'learniq|scholiq|\\blms\\b|studytube' lib src: only the fleet app id map in lib/Support/FleetAppId.php and src/main.js; no sync of employees, roles or organisation data to a learning platform",
-    "reachedOn": "nothing reaches it",
+    "state": "built",
+    "change": "2026-09-29-talent-training-and-lms",
+    "evidence": "GET /apps/humaniq/api/learning/people (lib/Controller/LearningController.php, lib/Service/LearningPeopleFeed.php): per active employee id, name, Nextcloud account, current org unit and role, manager accounts, employment dates and modified, filtered by the caller's RBAC through RbacObjectReader, with modifiedSince; lib/Listener/LearniqCredentialListener.php turns a credential learniq saves in its register into one TrainingRecord (source learniq, sourceRef the credential id). Tests: tests/Unit/Service/LearningPeopleFeedTest.php, tests/Unit/Controller/LearningControllerTest.php, tests/Unit/Listener/LearniqCredentialListenerTest.php.",
+    "reachedOn": "GET /apps/humaniq/api/learning/people for an integration account (integriq or learniq reads it); learniq credentials appear on EmployeeDetail 'Trainings' with source Learning app",
+    "readOn": "2026-09-29",
     "owner": "ConductionNL/humaniq"
    },
    "provider": "humaniq",
