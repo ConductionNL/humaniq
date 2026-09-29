@@ -593,6 +593,22 @@ class AnalyticsServiceTest extends TestCase {
 	}//end buildService()
 
 	/**
+	 * REQ-RFA-002: payslip amounts a team leader may not read one by one
+	 * still feed the unit's wage cost, so the figures read the register past
+	 * the per-field strip.
+	 *
+	 * @return void
+	 */
+	public function testUnitFiguresReadPayslipsPastTheFieldStrip(): void {
+		$objects = $this->fakeObjectService(['Payslip' => [['administrationId' => 'ADM-001', 'grossPay' => 3800.0]]]);
+
+		$rows = $this->buildServiceWithObjectService($objects)->rowsFor('Payslip', 'ADM-001');
+
+		$this->assertSame(3800.0, $rows[0]['grossPay']);
+		$this->assertSame(['Payslip' => false], $objects->rbac);
+	}//end testUnitFiguresReadPayslipsPastTheFieldStrip()
+
+	/**
 	 * Build an `AnalyticsService` around an already-built fake ObjectService
 	 * (so a test can inspect the fake afterwards — e.g. which schemas were
 	 * queried).
@@ -632,6 +648,13 @@ class AnalyticsServiceTest extends TestCase {
 			public array $schemasQueried = [];
 
 			/**
+			 * The _rbac flag each schema was last read with.
+			 *
+			 * @var array<string, bool>
+			 */
+			public array $rbac = [];
+
+			/**
 			 * @var string
 			 */
 			private string $schema = '';
@@ -666,10 +689,12 @@ class AnalyticsServiceTest extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $options Ignored.
+			 * @param bool                 $_rbac   Recorded per schema.
 			 *
 			 * @return array<int, mixed>
 			 */
-			public function findAll(array $options): array {
+			public function findAll(array $options, bool $_rbac=true): array {
+				$this->rbac[$this->schema] = $_rbac;
 				return ($this->rowsBySchema[$this->schema] ?? []);
 			}
 		};

@@ -42,6 +42,7 @@ use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
 use OCA\Humaniq\Lifecycle\TimesheetNotEmptyGuard;
 use OCA\Humaniq\Listener\ChangeRequestListener;
 use OCA\Humaniq\Listener\EmployeeGuardedFieldListener;
+use OCA\Humaniq\Listener\FieldAccessListener;
 use OCA\Humaniq\Listener\FrequentAbsenceListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
@@ -451,6 +452,7 @@ class Application extends App implements IBootstrap {
 		$this->registerTravelListeners($dispatcher);
 		$this->registerTrainingListeners($dispatcher);
 		$this->registerChangeRequestListeners($dispatcher);
+		$this->registerFieldAccessListener($dispatcher);
 
 	}//end boot()
 
@@ -711,5 +713,30 @@ class Application extends App implements IBootstrap {
 		);
 
 	}//end registerChangeRequestListeners()
+
+	/**
+	 * Register the field access listener (compliance-roles-and-field-access
+	 * D3 to D5): before every create and update of the four schemas with
+	 * field-level authorization it stamps the account uids the rules match on
+	 * and keeps a protected value that the save would otherwise wipe.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/humaniq-roles-and-field-access/spec.md#REQ-RFA-002
+	 */
+	private function registerFieldAccessListener(IEventDispatcher $dispatcher): void {
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: FieldAccessListener::class,
+				registers: null,
+				schemas: FieldAccessListener::SLUGS
+			);
+		}
+
+	}//end registerFieldAccessListener()
 
 }//end class

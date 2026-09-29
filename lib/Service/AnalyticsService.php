@@ -504,10 +504,16 @@ class AnalyticsService {
 	 */
 	private function loadAll(string $schema): array {
 		try {
+			// Read past the per-field strip (compliance-roles-and-field-access
+			// D6): a team leader is authorised for the unit's figures by
+			// AnalyticsAccess and is shown aggregates only, which the payslip
+			// amounts they may not read individually still have to feed. Rows
+			// are unaffected: no humaniq schema declares object-level
+			// authorization.
 			$rows = $this->objectService()
 				->setRegister($this->settingsService->getRegisterSlug())
 				->setSchema($schema)
-				->findAll(['limit' => self::LOAD_LIMIT]);
+				->findAll(['limit' => self::LOAD_LIMIT], false);
 		} catch (\Throwable $e) {
 			$this->logger->warning('AnalyticsService: could not load ' . $schema . ': ' . $e->getMessage());
 			return [];

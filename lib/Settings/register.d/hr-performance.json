@@ -100,7 +100,7 @@
             "PerformanceReview": {
                 "slug": "PerformanceReview",
                 "icon": "ClipboardAccountOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Performance Review",
                 "description": "A single employee's beoordelingsdossier for one review cycle: rating, sterktes/ontwikkelpunten/afspraken and goals, on a concept -> ingediend -> besproken -> vastgesteld lifecycle with a heropenen correction edge. Under BW 7:669 lid 3 sub d a documented, vastgestelde beoordeling with a rating and concrete afspraken is the precondition for any underperformance dismissal. This object is that dossier. Goals are recorded INSIDE the review (no separate Goal entity, design D2): they freeze with the dossier under one lifecycle, one audit trail and one retention context.",
                 "type": "object",
@@ -171,6 +171,12 @@
                         "title": "Reviewer",
                         "description": "The manager holding the review conversation.", "x-notes": "Optional reference to the manager/Employee conducting the beoordelingsgesprek."
                     },
+                    "reviewerUserId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Reviewer account",
+                        "description": "The reviewer's Nextcloud account. Filled in automatically from the reviewer.", "x-notes": "Denormalized Nextcloud user id of the reviewer, stamped from the reviewer Employee's nextcloudUserId by FieldAccessListener on every save (compliance-roles-and-field-access D4). The content authorization matches on it; never a $ref."
+                    },
                     "status": {
                         "type": "string",
                         "title": "Status",
@@ -185,6 +191,7 @@
                         "default": "concept"
                     },
                     "rating": {
+                        "authorization": {"read": [{"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}], "update": [{"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}]},
                         "type": "string",
                         "nullable": true,
                         "title": "Rating",
@@ -199,6 +206,7 @@
                         ]
                     },
                     "sterktes": {
+                        "authorization": {"read": [{"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}], "update": [{"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}]},
                         "type": "string",
                         "nullable": true,
                         "title": "Strengths",
@@ -206,6 +214,7 @@
                         "maxLength": 4000
                     },
                     "ontwikkelpunten": {
+                        "authorization": {"read": [{"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}], "update": [{"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}]},
                         "type": "string",
                         "nullable": true,
                         "title": "Development areas",
@@ -213,6 +222,7 @@
                         "maxLength": 4000
                     },
                     "afspraken": {
+                        "authorization": {"read": [{"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}], "update": [{"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}]},
                         "type": "string",
                         "nullable": true,
                         "title": "Agreed actions",
@@ -220,6 +230,7 @@
                         "maxLength": 4000
                     },
                     "goals": {
+                        "authorization": {"read": [{"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}], "update": [{"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"reviewerUserId": "$userId"}}]},
                         "type": "array",
                         "title": "Goals",
                         "description": "Goals agreed as part of this review. They stay with the review; carry one over by entering it again in the next one.", "x-notes": "Goals agreed as part of this review, recorded INSIDE the review rather than as a separate Goal entity (design D2) -- they freeze with the dossier under the same lifecycle, audit trail and retention context. A carried-over goal is re-entered in the next review; goals are not tracked across cycles in this MVP.",
