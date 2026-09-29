@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\TravelAllowanceCalculator;
+use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -90,5 +91,31 @@ class TravelAllowanceCalculatorTest extends TestCase {
 		self::assertSame(6163.2, $calculator->yearlyCommuteKm(distanceKmOneWay: 18.0, daysPerWeek: 4.0, monthsActive: 12));
 		self::assertSame(3081.6, $calculator->yearlyCommuteKm(distanceKmOneWay: 18.0, daysPerWeek: 4.0, monthsActive: 6));
 	}//end testYearlyCommuteKilometresArePaidProRata()
+
+	/**
+	 * The seeded mileage claim and commute carry exactly what the calculator
+	 * gives, and each validates against its schema.
+	 *
+	 * @return void
+	 */
+	public function testTheSeedCarriesTheCalculatedFigures(): void {
+		$seed = json_decode((string)file_get_contents(dirname(__DIR__, 3) . '/lib/Settings/register.d/hr-seed.json'), true);
+		$bySlug = [];
+		foreach ($seed['components']['objects'] as $object) {
+			$bySlug[$object['@self']['slug']] = $object;
+		}
+
+		$calculator = new TravelAllowanceCalculator();
+		$claim = $bySlug['expense-devries-mileage'];
+		$commute = $bySlug['commute-jansen'];
+		self::assertSame($calculator->claim(150.0, 0.23, 0.23), ['amount' => (float)$claim['amount'], 'taxFreeAmount' => (float)$claim['taxFreeAmount'], 'taxableAmount' => (float)$claim['taxableAmount']]);
+		self::assertSame($calculator->monthly(18.0, 4.0, 0.23, 0.23), ['monthlyAllowance' => (float)$commute['monthlyAllowance'], 'taxFreeMonthly' => (float)$commute['taxFreeMonthly'], 'taxableMonthly' => (float)$commute['taxableMonthly']]);
+
+		foreach (['Expense' => $claim, 'CommuteArrangement' => $commute] as $schema => $object) {
+			unset($object['@self']);
+			$object['employeeId'] = '0127394a-be27-48b4-a592-b6a41774b221';
+			self::assertSame([], RegisterSchemaValidator::errors($schema, $object), $schema);
+		}
+	}//end testTheSeedCarriesTheCalculatedFigures()
 
 }//end class

@@ -285,7 +285,7 @@
                         "x-notes": "expenses-travel-calculation D4: the mode the WPM report groups kilometres by. A trip without one is listed on the report, never counted under a guessed mode.",
                         "x-enum-labels": {
                             "car": "Car",
-                            "van": "Van",
+                            "van": "Light commercial vehicle",
                             "motorcycle": "Motorcycle",
                             "moped": "Moped",
                             "public-transport": "Public transport",
@@ -310,7 +310,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Fuel type",
-                        "description": "The fuel of the vehicle, for a car, van, motorcycle or moped. Leave empty for other ways of travelling.",
+                        "description": "The fuel of the vehicle, for a car, light commercial vehicle, motorcycle or moped. Leave empty for other ways of travelling.",
                         "x-notes": "expenses-travel-calculation D4: Asset.fuelType's values plus lpg.",
                         "x-enum-labels": {
                             "gasoline": "Petrol",
@@ -456,7 +456,7 @@
                         "x-notes": "expenses-travel-calculation D4: the mode the WPM report groups kilometres by. A trip without one is listed on the report, never counted under a guessed mode.",
                         "x-enum-labels": {
                             "car": "Car",
-                            "van": "Van",
+                            "van": "Light commercial vehicle",
                             "motorcycle": "Motorcycle",
                             "moped": "Moped",
                             "public-transport": "Public transport",
@@ -481,7 +481,7 @@
                         "type": "string",
                         "nullable": true,
                         "title": "Fuel type",
-                        "description": "The fuel of the vehicle, for a car, van, motorcycle or moped. Leave empty for other ways of travelling.",
+                        "description": "The fuel of the vehicle, for a car, light commercial vehicle, motorcycle or moped. Leave empty for other ways of travelling.",
                         "x-notes": "expenses-travel-calculation D4: Asset.fuelType's values plus lpg.",
                         "x-enum-labels": {
                             "gasoline": "Petrol",
