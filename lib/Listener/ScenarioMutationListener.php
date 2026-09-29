@@ -78,8 +78,14 @@ class ScenarioMutationListener implements IEventListener {
 
 		$scenarioId = trim((string)(($entity->getObject() ?? [])['scenarioId'] ?? ''));
 		$scenario = ($scenarioId === '') ? null : $this->gateway->findObjectData($scenarioId, 'FormationScenario');
-		if ($scenario === null || ($scenario['status'] ?? 'concept') === 'vastgesteld') {
-			$event->setErrors(['message' => ($scenario === null) ? 'This change names no existing scenario.' : 'This scenario is fixed and accepts no changes.']);
+		if ($scenario === null) {
+			// The register's own $ref check decides whether the scenario must exist;
+			// this rule is only about a fixed one.
+			return;
+		}
+
+		if (($scenario['status'] ?? 'concept') === 'vastgesteld') {
+			$event->setErrors(['message' => 'This scenario is fixed and accepts no changes.']);
 			$event->stopPropagation();
 			return;
 		}

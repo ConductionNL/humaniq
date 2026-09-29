@@ -89,6 +89,8 @@ class FormationBudgetControllerTest extends TestCase {
 		$data = $this->controller('hr')->compare('sc-1', 'sc-1')->getData();
 
 		self::assertArrayHasKey('unit-1', $data['units']);
+		self::assertSame('Team Burgerzaken', $data['unitRows'][0]['name']);
+		self::assertEqualsWithDelta(0.0, $data['unitRows'][0]['diffACost'], 0.001);
 	}//end testTheComparisonAnswersPerUnit()
 
 	/**

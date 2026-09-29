@@ -92,16 +92,18 @@ class ScenarioMutationListenerTest extends TestCase {
 	}//end testADraftScenarioAcceptsAMutation()
 
 	/**
-	 * A mutation naming no existing scenario is refused.
+	 * A mutation naming a scenario this listener cannot find is left to the
+	 * register's own reference check, and is not stamped.
 	 *
 	 * @return void
 	 */
-	public function testAnUnknownScenarioIsRefused(): void {
+	public function testAnUnknownScenarioIsLeftToTheRegister(): void {
 		$event = new ObjectCreatingEvent($this->entity(['scenarioId' => 'nope', 'fteDelta' => 1.0, 'effectiveDate' => '2027-03-01']));
 		$this->listener()->handle($event);
 
-		self::assertNotSame([], $event->getErrors());
-	}//end testAnUnknownScenarioIsRefused()
+		self::assertSame([], $event->getErrors());
+		self::assertSame([], $event->getModifiedData());
+	}//end testAnUnknownScenarioIsLeftToTheRegister()
 
 	/**
 	 * A ScenarioMutation entity.

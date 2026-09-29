@@ -192,6 +192,12 @@
 					}
 				},
 				{
+					"id": "FormationScenarios",
+					"label": "Formation scenarios",
+					"icon": "ChartBoxOutline",
+					"route": "FormationScenarios"
+				},
+				{
 					"id": "OrgAssignments",
 					"label": "Placements",
 					"icon": "AccountArrowRightOutline",

@@ -131,7 +131,21 @@ class FormationBudgetController extends Controller {
 		}
 
 		$compare = $this->budget->compare(a: $first, b: $second, rows: $this->rows(administrationId: $administrationId), year: ($year ?? (int)($first['year'] ?? 0)));
-		$compare['unitRows'] = array_values($compare['units']);
+		$compare['unitRows'] = array_map(
+			static fn (array $unit): array => [
+				'id' => $unit['orgUnitId'],
+				'name' => $unit['name'],
+				'baselineCost' => $unit['baseline']['cost'],
+				'aCost' => $unit['a']['cost'],
+				'bCost' => $unit['b']['cost'],
+				'diffACost' => $unit['diffA']['cost'],
+				'diffBCost' => $unit['diffB']['cost'],
+				'baselineFteDecember' => ($unit['baseline']['fteByMonth'][11] ?? 0.0),
+				'aFteDecember' => ($unit['a']['fteByMonth'][11] ?? 0.0),
+				'bFteDecember' => ($unit['b']['fteByMonth'][11] ?? 0.0),
+			],
+			array_values($compare['units'])
+		);
 
 		return new JSONResponse($compare);
 	}//end compare()
