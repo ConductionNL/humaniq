@@ -337,10 +337,13 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 			'status' => 'approved',
 		];
 
-		$rows = $this->fixture([$request], ['usedHours' => 40.0]);
+		$rows = $this->fixture(
+			[$request],
+			['usedHours' => 40.0, 'usedStatutoryHours' => 40.0, 'usedBovenwettelijkHours' => 0.0, 'expiredHours' => 0.0, 'bovenwettelijkExpiryDate' => '2031-12-31']
+		);
 
 		[$service, $fake] = $this->service($rows);
-		$service->projectForRequest($request);
+		$service->projectForRequest($request, '2026-03-10');
 
 		$this->assertSame([], $fake->saved);
 
@@ -565,4 +568,67 @@ class LeaveBalanceProjectionServiceTest extends TestCase {
 
 	}//end testWorkingDayCountingEdgeCases()
 
-}//end class
+
+	/**
+	 * The fields last written onto one balance.
+	 *
+	 * @param object $fake The fake ObjectService.
+	 * @param string $id The balance id.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function writtenBalance(object $fake, string $id): ?array {
+		$found = null;
+		foreach ($fake->saved as $write) {
+			if ($write['schema'] === 'LeaveBalance' && (string)($write['object']['id'] ?? '') === $id) {
+				$found = $write['object'];
+			}
+		}
+
+		return $found;
+	}//end writtenBalance()
+
+	/**
+	 * February leave draws last year's statutory hours first (REQ-LEX-001).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-expiry-and-carry-over/spec.md#Requirement:-Leave-taken-SHALL-draw-from-the-hours-that-lapse-first-(REQ-LEX-001)
+	 */
+	public function testLastYearsHoursGoFirst(): void {
+		$old = ['id' => 'req-old', 'employeeId' => 'emp-1', 'leaveType' => 'holiday', 'startDate' => '2025-06-02', 'endDate' => '2025-06-20', 'hours' => 144, 'status' => 'approved'];
+		$february = ['id' => 'req-feb', 'employeeId' => 'emp-1', 'leaveType' => 'holiday', 'startDate' => '2026-02-09', 'endDate' => '2026-02-11', 'hours' => 24, 'status' => 'approved'];
+		$rows = $this->fixture([$old, $february]);
+		$rows['LeaveBalance'][] = array_merge($rows['LeaveBalance'][0], ['id' => 'bal-2025', 'year' => 2025, 'usedHours' => 144.0]);
+
+		[$service, $fake] = $this->service($rows);
+		$service->projectForRequest($february, '2026-03-10');
+
+		$this->assertSame(160.0, $this->writtenBalance($fake, 'bal-2025')['usedStatutoryHours'] ?? null);
+		$this->assertSame(8.0, $this->writtenBalance($fake, 'bal-1')['usedStatutoryHours'] ?? null);
+		$this->assertSame(8.0, $this->writtenBalance($fake, 'bal-1')['usedHours'] ?? null);
+	}//end testLastYearsHoursGoFirst()
+
+	/**
+	 * On 2 July the hours left of last year lapse, and a waiver keeps them (REQ-LEX-003).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leave-expiry-and-carry-over/spec.md#Requirement:-Statutory-hours-SHALL-lapse-on-their-expiry-date-unless-HR-waives-it-(REQ-LEX-003)
+	 */
+	public function testTheDailyRunLapsesLastYearsHoursUnlessWaived(): void {
+		$rows = [
+			'LeaveBalance' => [
+				['id' => 'bal-a', 'employeeId' => 'emp-1', 'leaveType' => 'holiday', 'year' => 2025, 'entitledHours' => 8.0, 'bovenwettelijkHours' => 0.0, 'usedHours' => 0.0, 'expiryDate' => '2026-07-01'],
+				['id' => 'bal-b', 'employeeId' => 'emp-2', 'leaveType' => 'holiday', 'year' => 2025, 'entitledHours' => 8.0, 'bovenwettelijkHours' => 0.0, 'usedHours' => 0.0, 'expiryDate' => '2026-07-01', 'expiryWaived' => true, 'expiryWaivedReason' => 'long-term sickness'],
+			],
+			'LeaveRequest' => [],
+		];
+
+		[$service, $fake] = $this->service($rows);
+		$service->recomputeAll('2026-07-02');
+
+		$this->assertSame(8.0, $this->writtenBalance($fake, 'bal-a')['expiredHours'] ?? null);
+		$this->assertSame(0.0, $this->writtenBalance($fake, 'bal-b')['expiredHours'] ?? null);
+	}//end testTheDailyRunLapsesLastYearsHoursUnlessWaived()
+}

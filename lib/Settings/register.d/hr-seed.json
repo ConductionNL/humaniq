@@ -687,6 +687,50 @@
             {
                 "@self": {
                     "register": "humaniq",
+                    "schema": "LeaveBalance",
+                    "slug": "leavebalance-jansen-2025-holiday"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "year": 2025,
+                "leaveType": "holiday",
+                "contractHoursPerWeek": 40,
+                "entitledHours": 160,
+                "bovenwettelijkHours": 0,
+                "usedHours": 152,
+                "usedStatutoryHours": 152,
+                "usedBovenwettelijkHours": 0,
+                "expiredHours": 8,
+                "expiryDate": "2026-07-01",
+                "bovenwettelijkExpiryDate": "2030-12-31",
+                "userId": "admin",
+                "administrationId": "ADM-001",
+                "_note": "leave-expiry-and-carry-over (REQ-LEX-003): last year's balance past 1 July with 8 statutory hours left, which have lapsed. The daily LeaveAccrualJob recomputes these figures from the approved requests."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "LeaveBalance",
+                    "slug": "leavebalance-bakker-2025-holiday"
+                },
+                "employeeId": "@ref:employee-bakker",
+                "year": 2025,
+                "leaveType": "holiday",
+                "contractHoursPerWeek": 36,
+                "entitledHours": 120,
+                "bovenwettelijkHours": 0,
+                "usedHours": 96,
+                "usedStatutoryHours": 96,
+                "usedBovenwettelijkHours": 0,
+                "expiredHours": 0,
+                "expiryDate": "2026-07-01",
+                "expiryWaived": true,
+                "expiryWaivedReason": "Long-term sickness from March to August 2026: the leave could not be taken.",
+                "administrationId": "ADM-001",
+                "_note": "leave-expiry-and-carry-over (REQ-LEX-003): a waived lapse; the 24 statutory hours stay usable."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
                     "schema": "SickLeaveCase",
                     "slug": "sickcase-jansen-flu"
                 },

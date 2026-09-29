@@ -5,7 +5,7 @@
             "LeaveType": {
                 "slug": "LeaveType",
                 "icon": "CalendarStarOutline",
-                "version": "0.1.0",
+                "version": "0.2.0",
                 "title": "Leave type",
                 "description": "A kind of leave an employer offers, administered rather than enumerated: a code, a label, whether it draws from a balance, whether it needs a reason or a document, and how far ahead it may be requested. Adding zorgverlof is writing an object, not changing a schema and shipping a release (leave-against-a-department-schedule, REQ-LVM-T01). A LeaveRequest carries the code of its type, so a request written before this schema existed still resolves to the type whose code it already holds.",
                 "type": "object",
@@ -57,6 +57,36 @@
                         "default": true,
                         "title": "Active",
                         "description": "Whether this kind of leave is offered on new requests. A retired type still resolves on the requests that already carry it."
+                    },
+                    "carryOverRule": {
+                        "type": "string",
+                        "enum": [
+                            "all",
+                            "capped",
+                            "none"
+                        ],
+                        "default": "all",
+                        "title": "Carry-over of above-statutory hours",
+                        "description": "What happens to unused above-statutory hours at the end of the year: all carry over, up to a cap, or none.",
+                        "x-enum-labels": {
+                            "all": "All",
+                            "capped": "Up to a cap",
+                            "none": "None"
+                        },
+                        "x-notes": "leave-expiry-and-carry-over REQ-LEX-002. Statutory hours always carry until 1 July of the next year; no rule shortens that."
+                    },
+                    "carryOverCapHours": {
+                        "type": "number",
+                        "nullable": true,
+                        "title": "Carry-over cap in hours",
+                        "description": "With carry-over up to a cap: how many above-statutory hours stay usable after 31 December. The rest lapses."
+                    },
+                    "bovenwettelijkExpiryYears": {
+                        "type": "integer",
+                        "default": 5,
+                        "minimum": 0,
+                        "title": "Above-statutory hours lapse after (years)",
+                        "description": "How many years after the year above-statutory hours stay usable, until 31 December. Five by default, the limitation period."
                     }
                 }
             }

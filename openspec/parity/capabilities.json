@@ -1821,7 +1821,7 @@
    "id": "lve-expiry",
    "area": "leave",
    "name": "Have statutory leave expire after its legal term and warn before it does.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "yes",
    "hr2day": "yes",
@@ -1837,10 +1837,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/28446992415901-Use-time-off-policy-templates: the Netherlands template sets statutory and non-statutory entitlements with different carryover expiration dates, and https://support.personio.de/hc/en-us/articles/18252734824349-Set-up-statutory-and-non-statutory-entitlement uses up the entitlement expiring first; no page read describes a warning before leave expires."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/leave-expiry-and-carry-over on 2026-09-27 for the missing half: acting on the expiry date and warning before it; the date is stored. Before: lib/Standards/Checks/NlLeaveChecks.php:135-149 nl-verlof-vervaltermijn only checks that LeaveBalance.expiryDate equals 1 July of year+1 (a data-integrity audit run via occ humaniq:rules:audit, lib/Command/RulesAuditCommand.php); grep -rn expiryDate lib/ shows the value is never read anywhere else (not by the remainingHours calculation, not by any write path that would zero or remove expired hours); grep -rniF notification lib/Listener lib/BackgroundJob: no hits for a pre-expiry reminder",
-    "reachedOn": "occ humaniq:rules:audit only, no page; no warning mechanism found",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/LeaveAllocationCalculator.php lapses what is left in a bucket after its expiry date unless LeaveBalance.expiryWaived; lib/Service/LeaveBalanceProjectionService.php::recomputeAll() writes expiredHours daily from lib/BackgroundJob/LeaveAccrualJob.php::run(); remainingHours subtracts expiredHours; the statutory-leave-lapses-soon notification (calculatedChange on daysUntilStatutoryLapse, 60 days) in lib/Settings/register.d/hr-leave.json goes to the employee and humaniq-hr. Tests: tests/Unit/Service/LeaveAllocationCalculatorTest.php, tests/Unit/Service/LeaveBalanceProjectionServiceTest.php, tests/Unit/BackgroundJob/LeaveAccrualJobTest.php::testTheDailyRunAppliesTheLapsesDueToday, tests/Unit/Settings/LeaveExpiryDeclarationTest.php.",
+    "reachedOn": "Leave balances (/leave-balances) columns Lapsed hours and Remaining hours; menu Leave that lapses soon; the Nextcloud notification",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-leave-expiry-and-carry-over",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -2044,7 +2046,7 @@
    "id": "lve-year-end",
    "area": "leave",
    "name": "Carry leave over to the next year according to the rules.",
-   "humaniq": "no",
+   "humaniq": "yes",
    "afas": "yes",
    "visma-raet": "partial",
    "hr2day": "yes",
@@ -2060,10 +2062,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/34330701068701-Create-time-off-policies: the carryover section lets unused entitlement carry to following years with a limit on amount and a usage limit in months; https://support.personio.de/hc/en-us/articles/360007040017-Edit-carryover-settings-for-time-off."
    },
    "built": {
-    "state": "specified",
-    "evidence": "Specified in openspec/changes/leave-expiry-and-carry-over on 2026-09-27. Before: grep -rniF 'year.end|carry.over|jaarovergang|year transition' lib/ src/manifest.d src/manifest.json openspec/specs (outside payroll): no hits; lib/BackgroundJob/LeaveAccrualJob.php grants each year's statutory entitlement fresh on the year's first accrual with no code reading or carrying forward the prior year's remainingHours into the new year's entitledHours",
-    "reachedOn": "nothing reaches it",
-    "owner": "ConductionNL/humaniq"
+    "state": "built",
+    "evidence": "lib/Service/LeaveAllocationCalculator.php draws each approved request from the bucket that is valid on the leave day and lapses first across every balance of the employee and leave type, so last year's hours are used before this year's; LeaveType.carryOverRule all/capped/none with carryOverCapHours and bovenwettelijkExpiryYears decides how bovenwettelijk hours carry. Tests: tests/Unit/Service/LeaveAllocationCalculatorTest.php, tests/Unit/Service/LeaveBalanceProjectionServiceTest.php::testLastYearsHoursGoFirst.",
+    "reachedOn": "Leave balances (/leave-balances) used, lapsed and remaining hours per year; Leave types carry-over fields",
+    "owner": "ConductionNL/humaniq",
+    "change": "2026-09-29-leave-expiry-and-carry-over",
+    "readOn": "2026-09-29"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",

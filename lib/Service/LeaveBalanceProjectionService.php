@@ -88,12 +88,14 @@ class LeaveBalanceProjectionService {
 	 * `leave-balance-auto-provision`.
 	 *
 	 * @param array<string, mixed> $request The changed LeaveRequest row.
+	 * @param string|null $today The date lapses are measured on, `Y-m-d`; today when null.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-001
+	 * @spec openspec/specs/leave-expiry-and-carry-over/spec.md#Requirement:-Leave-taken-SHALL-draw-from-the-hours-that-lapse-first-(REQ-LEX-001)
 	 */
-	public function projectForRequest(array $request): void {
+	public function projectForRequest(array $request, ?string $today = null): void {
 		$employeeId = trim((string)($request['employeeId'] ?? ''));
 		$leaveType = trim((string)($request['leaveType'] ?? ''));
 		if ($employeeId === '' || $leaveType === '') {
@@ -112,95 +114,151 @@ class LeaveBalanceProjectionService {
 			return;
 		}
 
-		$startYear = (int)substr((string)($request['startDate'] ?? ''), 0, 4);
-		$endYear = (int)substr((string)($request['endDate'] ?? ''), 0, 4);
-		if ($startYear === 0) {
-			return;
-		}
-
-		if ($endYear < $startYear) {
-			$endYear = $startYear;
-		}
-
-		$allRequests = $this->loadAll('LeaveRequest');
-		$allBalances = $this->loadAll('LeaveBalance');
-
-		for ($year = $startYear; $year <= $endYear; $year++) {
-			$this->projectYear(
-				allRequests: $allRequests,
-				allBalances: $allBalances,
-				employeeId: $employeeId,
-				year: $year,
-				leaveType: $leaveType
-			);
-		}//end for
+		$this->recompute(
+			employeeId: $employeeId,
+			leaveType: $leaveType,
+			allRequests: $this->loadAll('LeaveRequest'),
+			allBalances: $this->loadAll('LeaveBalance'),
+			type: $this->resolveLeaveType($request),
+			today: ($today ?? date('Y-m-d'))
+		);
 
 	}//end projectForRequest()
 
 	/**
-	 * Project one employee's used hours for one year and leave type.
+	 * Recompute every balance of every employee and leave type, and so apply
+	 * the lapses due on `$today`. Run daily by LeaveAccrualJob.
 	 *
-	 * A year with no administered balance posts nothing and says so: there is
-	 * no row to write to, and creating one here would invent an entitlement.
+	 * @param string $today The date lapses are measured on, `Y-m-d`.
 	 *
-	 * @param array<array<string, mixed>> $allRequests Every LeaveRequest.
-	 * @param array<array<string, mixed>> $allBalances Every LeaveBalance.
-	 * @param string $employeeId The employee.
-	 * @param int $year The balance year.
-	 * @param string $leaveType The leave type.
+	 * @return int The number of balances written.
 	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/leave-management/spec.md#REQ-LEAVE-POST-001
+	 * @spec openspec/specs/leave-expiry-and-carry-over/spec.md#Requirement:-Statutory-hours-SHALL-lapse-on-their-expiry-date-unless-HR-waives-it-(REQ-LEX-003)
 	 */
-	private function projectYear(
+	public function recomputeAll(string $today): int {
+		$allBalances = $this->loadAll('LeaveBalance');
+		$allRequests = $this->loadAll('LeaveRequest');
+		// loadAll answers an empty list on a read failure, and no type means
+		// "draws from the balance", as before types existed.
+		$types = $this->loadAll('LeaveType');
+
+		$groups = [];
+		foreach ($allBalances as $balance) {
+			$key = (string)($balance['employeeId'] ?? '') . '|' . (string)($balance['leaveType'] ?? '');
+			$groups[$key] = [(string)($balance['employeeId'] ?? ''), (string)($balance['leaveType'] ?? '')];
+		}
+
+		$written = 0;
+		foreach ($groups as [$employeeId, $leaveType]) {
+			if ($employeeId === '' || $leaveType === '') {
+				continue;
+			}
+
+			$type = $this->leaveTypes->resolve(request: ['leaveType' => $leaveType], types: $types);
+			if ($this->leaveTypes->drawsFromBalance($type) === false) {
+				continue;
+			}
+
+			$written += $this->recompute(
+				employeeId: $employeeId,
+				leaveType: $leaveType,
+				allRequests: $allRequests,
+				allBalances: $allBalances,
+				type: $type,
+				today: $today
+			);
+		}
+
+		return $written;
+	}//end recomputeAll()
+
+	/**
+	 * Recompute every balance of one employee and leave type: which bucket
+	 * each approved request drew from, and what has lapsed by `$today`.
+	 *
+	 * Never creates a balance: hours in a year with no balance and no earlier
+	 * bucket to draw from are logged and left unplaced.
+	 *
+	 * @param string $employeeId The employee.
+	 * @param string $leaveType The leave type code.
+	 * @param array<int, array<string, mixed>> $allRequests Every LeaveRequest.
+	 * @param array<int, array<string, mixed>> $allBalances Every LeaveBalance.
+	 * @param array<string, mixed>|null $type The administered LeaveType.
+	 * @param string $today The date lapses are measured on.
+	 *
+	 * @return int The number of balances written.
+	 *
+	 * @spec openspec/specs/leave-expiry-and-carry-over/spec.md#Requirement:-Leave-taken-SHALL-draw-from-the-hours-that-lapse-first-(REQ-LEX-001)
+	 */
+	private function recompute(
+		string $employeeId,
+		string $leaveType,
 		array $allRequests,
 		array $allBalances,
-		string $employeeId,
-		int $year,
-		string $leaveType
-	): void {
-		$balance = $this->matchBalance($allBalances, $employeeId, $year, $leaveType);
-		if ($balance === null) {
+		?array $type,
+		string $today
+	): int {
+		$balances = [];
+		foreach ($allBalances as $balance) {
+			if ((string)($balance['employeeId'] ?? '') === $employeeId && (string)($balance['leaveType'] ?? '') === $leaveType) {
+				$balances[] = $balance;
+			}
+		}
+
+		if ($balances === []) {
 			$this->logger->info(
-				sprintf(
-					'humaniq: no LeaveBalance for employee %s, year %d, type %s, so nothing was projected.',
-					$employeeId,
-					$year,
-					$leaveType
-				)
+				sprintf('humaniq: no LeaveBalance for employee %s, type %s, so nothing was projected.', $employeeId, $leaveType)
 			);
-			return;
+			return 0;
 		}
 
-		$contractHours = null;
-		if (($balance['contractHoursPerWeek'] ?? null) !== null) {
-			$contractHours = (float)$balance['contractHoursPerWeek'];
-		}
-
-		$projection = LeaveHoursCalculator::usedHoursFor(
-			$allRequests,
-			$employeeId,
-			$year,
-			$leaveType,
-			$contractHours
+		$calculator = new LeaveAllocationCalculator();
+		$allocation = $calculator->allocate(
+			balances: $balances,
+			uses: $this->usesOf(calculator: $calculator, requests: $allRequests, balances: $balances, employeeId: $employeeId, leaveType: $leaveType),
+			leaveType: $type,
+			today: $today
 		);
-		if ($projection['underivable'] !== []) {
+
+		$written = 0;
+		foreach ($balances as $balance) {
+			$id = trim((string)($balance['id'] ?? ($balance['@self']['id'] ?? '')));
+			if (isset($allocation[$id]) === true && $this->writeAllocation(balance: $balance, figures: $allocation[$id]) === true) {
+				$written++;
+			}
+		}
+
+		return $written;
+	}//end recompute()
+
+	/**
+	 * The hours taken per request per year, naming the requests whose hours
+	 * cannot be derived.
+	 *
+	 * @param LeaveAllocationCalculator $calculator The calculator.
+	 * @param array<int, array<string, mixed>> $requests Every LeaveRequest.
+	 * @param array<int, array<string, mixed>> $balances The employee's balances of this type.
+	 * @param string $employeeId The employee.
+	 * @param string $leaveType The leave type.
+	 *
+	 * @return array<int, array{date: string, year: int, hours: float}>
+	 */
+	private function usesOf(LeaveAllocationCalculator $calculator, array $requests, array $balances, string $employeeId, string $leaveType): array {
+		$found = $calculator->usesFrom(requests: $requests, balances: $balances, employeeId: $employeeId, leaveType: $leaveType);
+		if ($found['underivable'] !== []) {
 			$this->logger->warning(
 				sprintf(
-					'humaniq: %d leave request(s) carry no hours and no contract hours per week, so they counted as zero against employee %s year %d type %s: %s',
-					count($projection['underivable']),
+					'humaniq: %d leave request(s) carry no hours and no contract hours per week, so they counted as zero against employee %s type %s: %s',
+					count($found['underivable']),
 					$employeeId,
-					$year,
 					$leaveType,
-					implode(', ', $projection['underivable'])
+					implode(', ', $found['underivable'])
 				)
 			);
 		}
 
-		$this->writeUsedHours($balance, $projection['usedHours']);
-
-	}//end projectYear()
+		return $found['uses'];
+	}//end usesOf()
 
 	/**
 	 * The administered `LeaveType` a request means, or null when none is
@@ -230,23 +288,33 @@ class LeaveBalanceProjectionService {
 	}//end resolveLeaveType()
 
 	/**
-	 * Write the recomputed usage onto a balance, skipping an unchanged value.
+	 * Write the recomputed allocation and lapse onto a balance, skipping an unchanged one.
 	 *
 	 * @param array<string, mixed> $balance The resolved LeaveBalance row.
-	 * @param float $usedHours The recomputed usage.
+	 * @param array<string, mixed> $figures usedStatutoryHours, usedBovenwettelijkHours, usedHours, expiredHours, bovenwettelijkExpiryDate.
 	 *
-	 * @return void
+	 * @return bool Whether a write was issued.
 	 */
-	private function writeUsedHours(array $balance, float $usedHours): void {
-		$current = round((float)($balance['usedHours'] ?? 0), 2);
-		if ($current === $usedHours) {
-			// Idempotent: an unchanged projection issues no write, so a replayed
-			// event cannot churn the object store or its audit trail.
-			return;
+	private function writeAllocation(array $balance, array $figures): bool {
+		$changed = false;
+		foreach ($figures as $field => $value) {
+			$current = $balance[$field] ?? null;
+			if (is_float($value) === true) {
+				$current = round((float)($current ?? 0), 2);
+			}
+
+			if ($current !== $value) {
+				$changed = true;
+			}
 		}
 
-		$payload = $balance;
-		$payload['usedHours'] = $usedHours;
+		if ($changed === false) {
+			// Idempotent: an unchanged projection issues no write, so a replayed
+			// event cannot churn the object store or its audit trail.
+			return false;
+		}
+
+		$payload = array_merge($balance, $figures);
 		unset($payload['@self']);
 
 		$uuid = trim((string)($balance['id'] ?? ($balance['@self']['id'] ?? '')));
@@ -262,35 +330,13 @@ class LeaveBalanceProjectionService {
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
-				'humaniq: could not write usedHours onto LeaveBalance ' . $uuid . ': ' . $e->getMessage()
+				'humaniq: could not write the allocation onto LeaveBalance ' . $uuid . ': ' . $e->getMessage()
 			);
+			return false;
 		}
 
-	}//end writeUsedHours()
-
-	/**
-	 * Find the balance for one employee, year and leave type.
-	 *
-	 * @param array<int, array<string, mixed>> $balances Every LeaveBalance in scope.
-	 * @param string $employeeId The employee.
-	 * @param int $year The calendar year.
-	 * @param string $leaveType The leave type.
-	 *
-	 * @return array<string, mixed>|null The matching balance, or null when there is none.
-	 */
-	private function matchBalance(array $balances, string $employeeId, int $year, string $leaveType): ?array {
-		foreach ($balances as $balance) {
-			if ((string)($balance['employeeId'] ?? '') === $employeeId
-				&& (int)($balance['year'] ?? 0) === $year
-				&& (string)($balance['leaveType'] ?? '') === $leaveType
-			) {
-				return $balance;
-			}
-		}
-
-		return null;
-
-	}//end matchBalance()
+		return true;
+	}//end writeAllocation()
 
 	/**
 	 * Load every row of one schema.
