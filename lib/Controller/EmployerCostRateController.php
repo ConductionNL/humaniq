@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\CostRateAccess;
 use OCA\Humaniq\Service\EmployeeCostRateService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Controller;
@@ -34,6 +35,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -65,6 +67,8 @@ class EmployerCostRateController extends Controller {
 	 * @param ContainerInterface $container DI container, for the RBAC-guarded ObjectService resolve.
 	 * @param EmployeeCostRateService $costRates The cost-rate resolver.
 	 * @param SettingsService $settings Register-slug lookup.
+	 * @param CostRateAccess $access The project-manager path and the contract choice.
+	 * @param IUserSession $userSession The caller.
 	 * @param LoggerInterface $logger PSR logger.
 	 *
 	 * @return void
@@ -76,6 +80,8 @@ class EmployerCostRateController extends Controller {
 		private readonly ContainerInterface $container,
 		private readonly EmployeeCostRateService $costRates,
 		private readonly SettingsService $settings,
+		private readonly CostRateAccess $access,
+		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -115,19 +121,30 @@ class EmployerCostRateController extends Controller {
 		// kind of value an unguarded id would leak, so an unresolvable or
 		// unauthorised id must be indistinguishable from a missing one.
 		$employee = $this->findEmployeeForCaller($employeeId);
-		if ($employee === null) {
-			return new JSONResponse(['error' => 'Employee not found.'], Http::STATUS_NOT_FOUND);
-		}
-
-		$contract = $this->activeContract($employee);
+		$period = ($period ?? date('Y-m'));
 
 		try {
-			$rate = $this->costRates->resolve(
-				employee: $employee,
-				contract: $contract,
-				period: ($period ?? date('Y-m')),
-				extraAdditions: $additions
-			);
+			$rate = null;
+			if ($employee !== null) {
+				$rate = $this->costRates->resolve(
+					employee: $employee,
+					contract: $this->activeContract(employee: $employee, period: $period),
+					period: $period,
+					extraAdditions: $additions
+				);
+			}
+
+			if ($rate === null) {
+				// DECISIONS row 8 (Ruben, 29 Sep 2026): a project manager of a
+				// project the employee works on gets the derived rate while the
+				// salary stays hidden. Only reached when the caller's own read
+				// gave no employee or no wage base, so a caller who can read the
+				// salary keeps the full answer and anyone else learns nothing.
+				$managed = $this->projectManagerRate(employeeId: $employeeId, period: $period, additions: $additions);
+				if ($managed !== null) {
+					return new JSONResponse($managed);
+				}
+			}
 		} catch (\InvalidArgumentException $e) {
 			// The service refuses an indefensible composition — an override
 			// with no reason, an addition with no basis, overtime stacked on
@@ -136,6 +153,10 @@ class EmployerCostRateController extends Controller {
 		} catch (\Throwable $e) {
 			$this->logger->error('EmployerCostRateController: ' . $e->getMessage());
 			return new JSONResponse(['error' => 'Could not resolve the cost rate.'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+		if ($employee === null) {
+			return new JSONResponse(['error' => 'Employee not found.'], Http::STATUS_NOT_FOUND);
 		}
 
 		if ($rate === null) {
@@ -154,7 +175,7 @@ class EmployerCostRateController extends Controller {
 		return new JSONResponse(
 			[
 				'employeeId' => $employeeId,
-				'period' => ($period ?? date('Y-m')),
+				'period' => $period,
 				'currency' => 'EUR',
 			] + $rate
 		);
@@ -207,7 +228,53 @@ class EmployerCostRateController extends Controller {
 	}//end findEmployeeForCaller()
 
 	/**
-	 * Find the employee's active EmploymentContract, if any.
+	 * The reduced answer for a project manager of a project the employee works
+	 * on, or null when the caller is not one or no wage base exists.
+	 *
+	 * The employee and contract are read without the caller's field access and
+	 * never leave this method: the answer carries the hourly figures only, not
+	 * the salary, the contract or the wage basis (for an override that is HR's
+	 * own free-text reason).
+	 *
+	 * @param string $employeeId The Employee object id.
+	 * @param string $period Costing period `YYYY-MM`.
+	 * @param array<int, array<string, mixed>> $additions Caller-computed additions.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md#Requirement:-A-project-manager-gets-the-derived-rate-of-the-people-on-the-project,-never-their-salary-(REQ-ECR-PM)
+	 */
+	private function projectManagerRate(string $employeeId, string $period, array $additions): ?array {
+		$uid = (string)($this->userSession->getUser()?->getUID() ?? '');
+		$employee = $this->access->employeeManagedBy(uid: $uid, employeeId: $employeeId);
+		if ($employee === null) {
+			return null;
+		}
+
+		$rate = $this->costRates->resolve(
+			employee: $employee,
+			contract: $this->access->contractFor(employeeId: $employeeId, period: $period),
+			period: $period,
+			extraAdditions: $additions
+		);
+		if ($rate === null) {
+			return null;
+		}
+
+		return [
+			'employeeId' => $employeeId,
+			'period' => $period,
+			'currency' => 'EUR',
+			'access' => 'project-manager',
+			'totalCentsPerHour' => $rate['totalCentsPerHour'],
+			'wageCostCents' => $rate['wageCostCents'],
+			'additions' => $rate['additions'],
+		];
+	}//end projectManagerRate()
+
+	/**
+	 * Find the employee's EmploymentContract that runs in the period, under the
+	 * caller's RBAC, if any.
 	 *
 	 * Returns null rather than throwing when none is found: the service then
 	 * falls back to a reasoned override, and answers null itself if there is
@@ -216,34 +283,38 @@ class EmployerCostRateController extends Controller {
 	 * taking the contract from the caller stops it silently costing against a
 	 * different contract than the caller believes it is using.
 	 *
-	 * @param array<string, mixed> $employee The employee.
+	 * The lookup uses OpenRegister's real `findAll(array $config, ...)`
+	 * signature. It used to pass named `register`/`schema`/`filters`
+	 * arguments that method does not have, and filtered on `employee` and
+	 * `status`, which the contract schema does not carry: the error was caught
+	 * and no contract-derived rate was ever produced.
 	 *
-	 * @return array<string, mixed>|null The active contract, or null.
+	 * @param array<string, mixed> $employee The employee.
+	 * @param string $period Costing period `YYYY-MM`.
+	 *
+	 * @return array<string, mixed>|null The contract, or null.
 	 *
 	 * @spec openspec/specs/employer-hourly-cost-rate/spec.md
 	 */
-	private function activeContract(array $employee): ?array {
+	private function activeContract(array $employee, string $period): ?array {
 		$employeeId = (string)($employee['id'] ?? '');
 		if ($employeeId === '') {
 			return null;
 		}
 
 		try {
-			$found = $this->objectService()->findAll(
-				register: $this->settings->getRegisterSlug(),
-				schema: 'EmploymentContract',
-				filters: ['employee' => $employeeId, 'status' => 'active']
-			);
+			$found = $this->objectService()
+				->setRegister($this->settings->getRegisterSlug())
+				->setSchema('EmploymentContract')
+				->findAll(['limit' => 100, 'filters' => ['employeeId' => $employeeId]]);
 		} catch (\Throwable $e) {
-			$this->logger->info('EmployerCostRateController: no active contract for ' . $employeeId . ': ' . $e->getMessage());
+			$this->logger->info('EmployerCostRateController: no contract for ' . $employeeId . ': ' . $e->getMessage());
 			return null;
 		}
 
-		foreach (($found ?? []) as $row) {
-			return $this->toArray($row);
-		}
+		$rows = array_map(fn (mixed $row): array => $this->toArray($row), (is_array($found) === true ? $found : []));
 
-		return null;
+		return $this->access->pickActive(rows: array_values($rows), employeeId: $employeeId, period: $period);
 	}//end activeContract()
 
 	/**
