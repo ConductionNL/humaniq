@@ -386,6 +386,9 @@ class PayrollGLPostService {
 			'description' => sprintf('Loonjournaalpost %s — humaniq loonrun %s', $period, $payrollRunId),
 			'lines' => $lines,
 			'journalType' => 'manual',
+			// The sub-ledger this journal comes from: shillinq's payroll
+			// control-account role admits only humaniq's postings (humaniq#549).
+			'sourceApp' => 'humaniq',
 			'approvalState' => 'not-required',
 			'administrationId' => $administrationId,
 			'state' => 'draft',

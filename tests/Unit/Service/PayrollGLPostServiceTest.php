@@ -33,6 +33,7 @@ namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\SettingsService;
+use OCA\Humaniq\Tests\Unit\Support\RegisterSchemaValidator;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -365,6 +366,29 @@ class PayrollGLPostServiceTest extends TestCase {
 		$this->assertSame('posted', $glPostSaves[0]['status']);
 
 	}//end testPostRunPostsSuccessfullyAndUpdatesTheRun()
+
+	/**
+	 * The journal names humaniq as its sub-ledger, so shillinq's payroll
+	 * control-account role lets it post (humaniq#549, shillinq#1776), and the
+	 * exact payload passes shillinq's real JournalEntry schema.
+	 *
+	 * @return void
+	 */
+	public function testThePayrollJournalNamesHumaniqAsItsSourceLedgerAndFitsShillinqsSchema(): void {
+		[$service, $fake] = $this->service();
+
+		$service->postRun($this->payrollRun());
+
+		$journalSaves = $this->savedFor($fake, 'JournalEntry');
+		$this->assertCount(1, $journalSaves);
+		$this->assertSame('humaniq', ($journalSaves[0]['sourceApp'] ?? null));
+
+		$fixture = json_decode((string)file_get_contents(dirname(__DIR__, 2) . '/fixtures/shillinq/journal-entry-schema.json'), true);
+		$schema = $fixture['JournalEntry'];
+		$this->assertContains('humaniq', $schema['properties']['sourceApp']['enum']);
+		$this->assertSame([], RegisterSchemaValidator::errorsAgainst($schema, $journalSaves[0]));
+
+	}//end testThePayrollJournalNamesHumaniqAsItsSourceLedgerAndFitsShillinqsSchema()
 
 	/**
 	 * @return void
